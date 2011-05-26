@@ -10,7 +10,7 @@ setup(
     author = "Andrew P. Davison", # add your name here if you contribute to the code
     author_email = "andrewpdavison@gmail.com",
     description = "A tool reading, writing and generally working with 9ML files.",
-    license = "CeCILL http://www.cecill.info",
+    license = "BSD 3 License",
     keywords = "computational neuroscience modeling interoperability XML",
     url = "http://nineml.incf.org",
     classifiers = ['Development Status :: 2 - Pre-Alpha',
