@@ -34,6 +34,7 @@ import urllib
 from lxml import etree
 from lxml.builder import E
 from operator import and_, or_
+from nineml.abstraction_layer import ComponentClass, csa, parse as al_parse
 
 nineml_namespace = 'http://nineml.org/9ML/0.1'
 NINEML = "{%s}" % nineml_namespace
@@ -202,25 +203,41 @@ class Definition(object):
     """
     element_name = "definition"
 
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, component):
+        self._component = None
+        if isinstance(component, basestring):
+            self.url = component
+        elif isinstance(component, (ComponentClass, csa.ConnectionSetTemplate)):
+            self._component = component
+        else:
+            raise TypeError()
 
-    def __eq__(self, other):
+    def __eq__(self, other): #
         return self.url == other.url
 
     def __ne__(self, other):
         return not self == other
 
     def __hash__(self):
-        return hash(self.url)
+        if self._component:
+            return hash(self._component)
+        else:
+            return hash(self.url)
+
+    @property
+    def component(self):
+        return self.retrieve()
 
     def retrieve(self):
-        f = urllib.urlopen(self.url)
-        content = f.read()
-        f.close()
-        return content
+        if not self._component:
+            f = urllib.urlopen(self.url)
+            try:
+                self._component = al_parse(f)
+            finally:
+                f.close()    
+        return self._component
 
-    def to_xml(self):
+    def to_xml(self): #
         return E(self.element_name, (E.url(self.url)))
 
     @classmethod
@@ -255,7 +272,7 @@ class BaseComponent(object):
             self.definition = definition
             assert reference is None, "Cannot give both definition and reference."
         elif isinstance(definition, basestring): # should also check is a valid uri
-            self.definition = Definition(url=definition)
+            self.definition = Definition(definition)
             assert reference is None, "Cannot give both definition and reference."
         elif definition is None:
             assert reference is not None, "Either definition or reference must be given."
@@ -270,6 +287,8 @@ class BaseComponent(object):
         else:
             raise Exception()
         self.reference = reference
+        if not self.unresolved:
+            self.check_parameters()
 
     def __eq__(self, other):
         assert isinstance(other, self.__class__)
@@ -288,7 +307,7 @@ class BaseComponent(object):
     def __repr__(self):
         if self.definition:
             return '%s(name="%s", definition="%s")' % (self.__class__.__name__,
-                                                       self.name, self.definition.url)
+                                                       self.name, self.definition)
         else:
             return '%s(name="%s", UNRESOLVED)' % (self.__class__.__name__, self.name)
 
@@ -306,10 +325,26 @@ class BaseComponent(object):
         assert self.reference == other_component.name
         self.definition = other_component.definition
         self.parameters.complete(other_component.parameters) # note that this behaves oppositely to dict.update
+        self.check_parameters()
     
     def get_definition(self):
-        import nineml.abstraction_layer
-        return nineml.abstraction_layer.parse(self.definition.url)
+        if not self.definition.component:
+            self.definition.retrieve()
+        return self.definition.component
+    
+    def check_parameters(self):
+        # this checks the names, also need to check dimensions, ranges, once those are in the AL
+        user_parameters = set(self.parameters.iterkeys())
+        definition_parameters = set(p.name for p in self.definition.component.parameters)
+        msg = []
+        diff_a = user_parameters.difference(definition_parameters)
+        diff_b = definition_parameters.difference(user_parameters)
+        if diff_a:
+            msg.append("User parameters contains the following parameters that are not present in the definition: %s" % ",".join(diff_a))
+        if diff_b:
+            msg.append("Definition contains the following parameters that are not present in the user parameters: %s" % ",".join(diff_b))
+        if msg:
+            raise Exception(". ".join(msg)) # need a more specific type of Exception
     
     def to_xml(self):
         element = E(self.element_name,
