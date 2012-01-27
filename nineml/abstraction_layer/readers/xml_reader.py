@@ -54,6 +54,44 @@ class XMLLoader(object):
     
         subnodes = self.loadBlocks( element, blocks=blocks)
     
+        #
+        # DNikolic 27.01.2012
+        #
+        #dynamics = nineml.utility.expect_single(subnodes["Dynamics"])
+        _dynamics        = None
+        _parameters      = None
+        _analog_ports    = None
+        _event_ports     = None
+        _subnodes        = None
+        _portconnections = None
+        if subnodes:
+            if "Dynamics" in subnodes and len(subnodes["Dynamics"]) > 0:
+                _dynamics = nineml.utility.expect_single(subnodes["Dynamics"])
+            if "Parameter" in subnodes:
+                _parameters = subnodes["Parameter" ]
+            if "AnalogPort" in subnodes:
+                _analog_ports = subnodes["AnalogPort"]
+            if "EventPort" in subnodes:
+                _event_ports = subnodes["EventPort"]
+            if "Subnode" in subnodes:
+                _subnodes = dict(subnodes['Subnode'] )
+            if "ConnectPorts" in subnodes:
+                _portconnections = subnodes["ConnectPorts"]
+        #print('dynamics = ', _dynamics)
+        #print('parameters = ', _parameters)
+        #print('subnodes = ', _subnodes)
+        #print('portconnections = ', _portconnections)
+        #print('analog_ports = ', _analog_ports)
+
+        return nineml.al.ComponentClass(name=element.get('name'),
+                              parameters = _parameters,
+                              analog_ports = _analog_ports,
+                              event_ports = _event_ports,
+                              dynamics = _dynamics,
+                              subnodes = _subnodes,
+                              portconnections = _portconnections)
+
+        """ OLD CODE:
         dynamics = nineml.utility.expect_single(subnodes["Dynamics"])
         return nineml.al.ComponentClass(name=element.get('name'),
                               parameters = subnodes["Parameter" ] ,
@@ -62,7 +100,11 @@ class XMLLoader(object):
                               dynamics = dynamics,
                               subnodes = dict(subnodes['Subnode'] ),
                               portconnections = subnodes["ConnectPorts"])
+        """
 
+        # END OF CHANGES
+        # DNikolic 12.12.2011
+        #
 
        
     def load_parameter(self, element):
