@@ -16,7 +16,7 @@ __actionName__ = '__NINEML_ACTION__'
 ___import_exception___ = None
 ___import_exception_traceback___ = None
 try:
-    baseFolder = '/home/ciroki/Data/NineML/nineml-model-tree/lib9ml/python/dae_impl'
+    baseFolder = '/home/ciroki/Data/NineML/experimental/lib9ml/python/dae_impl'
     sys.path.append(baseFolder)
     os.environ['HOME'] = tempfile.gettempdir()
     #print(os.environ, file=sys.stderr)

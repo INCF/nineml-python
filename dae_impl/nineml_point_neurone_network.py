@@ -24,6 +24,7 @@ from daetools.pyDAE import *
 from nineml_daetools_component import ninemlRNG, createPoissonSpikeTimes, daetools_spike_source, al_component_info, dae_component, dae_component_setup, fixObjectName
 from daetools.solvers import pySuperLU
 
+from sedml_support import *
 import subprocess
 
 class MemoryMonitor(object):
@@ -629,11 +630,11 @@ class daetools_projection:
         #graph.layout()
         #graph.write('{0}.dot'.format(self.name))
         #graph.draw('{0}.png'.format(self.name))
-        
+
 class point_neurone_simulation(pyActivity.daeSimulation):
     """
     """
-    count = 0
+    #count = 0
     def __init__(self, neurone, neurone_parameters, neurone_report_variables):
         """
         :rtype: None
@@ -654,9 +655,10 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.TimeHorizon       = timeHorizon
         
         self.Initialize(self.daesolver, datareporter, log)
-        if point_neurone_simulation.count == 0:
-            self.m.SaveModelReport(self.m.Name + "__.xml")
-        point_neurone_simulation.count += 1
+        
+        #if point_neurone_simulation.count == 0:
+        #    self.m.SaveModelReport(self.m.Name + "__.xml")
+        #point_neurone_simulation.count += 1
         
     def SetUpParametersAndDomains(self):
         """
@@ -683,58 +685,93 @@ class point_neurone_simulation(pyActivity.daeSimulation):
 class point_neurone_network_simulation:
     """
     """
-    def __init__(self, network, log, datareporter, reportingInterval, timeHorizon):
+    def __init__(self, network, reportingInterval, timeHorizon, report_variables, plots_to_create):
         """
         :rtype: None
         :raises: RuntimeError
         """
-        self.log                = log
-        self.datareporter       = datareporter
-        self.reportingInterval  = reportingInterval
-        self.timeHorizon        = timeHorizon        
-        self.simulations        = {}
-        self.event_queue        = {}
-        self.number_of_vars     = 0
+        self.network             = network
+        self.reportingInterval   = reportingInterval
+        self.timeHorizon         = timeHorizon        
+        self.log                 = daeLogs.daePythonStdOutLog()
+        self.datareporter        = pyDataReporting.daeTCPIPDataReporter()
+        self.simulations         = {}
+        self.event_queue         = {}
+        self.number_of_vars      = 0
+        self.number_of_neurones  = 0
+        self.average_firing_rate = {}
+
+        simName = 'Brette' + strftime(" [%d.%m.%Y %H:%M:%S]", localtime())
+        if(self.datareporter.Connect("", simName) == False):
+            raise RuntimeError('Cannot connect the data reporter')
         
-        self.event_port = None
-        for group_name, group in network._groups.iteritems():
+        dae_component_setup._random_number_generators = network.randomNumberGenerators
+
+        try:
+            self.log.Enabled = False
+            
+            self.event_port = None
             # Setup neurones in populations
-            for population_name, population in group._populations.iteritems():
-                for neurone in population.neurones:
-                    simulation = point_neurone_simulation(neurone, population._parameters, {})
-                    neurone.event_queue = self.event_queue
-                    self.simulations[neurone.Name] = simulation
-                    
-                    if not self.event_port:
-                        self.event_port = neurone.getOutletEventPort()
+            for group_name, group in network._groups.iteritems():
+                for population_name, population in group._populations.iteritems():
+                    print("Creating the population: {0}...".format(population_name))
+                    for neurone in population.neurones:
+                        simulation = point_neurone_simulation(neurone, population._parameters, {})
+                        neurone.event_queue = self.event_queue
+                        self.simulations[neurone.Name] = simulation
+                        
+                        self.number_of_neurones += 1
+                        if not self.event_port:
+                            self.event_port = neurone.getOutletEventPort()
+        
+        except:
+            raise
+        
+        finally:
+            self.log.Enabled = True
 
     def InitializeAndSolveInitial(self):
-        self.number_of_vars = 0
-        for target_neuron_name, simulation in self.simulations.iteritems():
-            simulation.init(self.log, self.datareporter, self.reportingInterval, self.timeHorizon)
-            self.number_of_vars += simulation.daesolver.NumberOfVariables
+        try:
+            self.log.Enabled = False
             
-            simulation.SolveInitial()
-            simulation.CleanUpSetupData()
+            count = 0
+            self.number_of_vars = 0
+            for target_neuron_name, simulation in self.simulations.iteritems():
+                simulation.init(self.log, self.datareporter, self.reportingInterval, self.timeHorizon)
+                self.number_of_vars += simulation.daesolver.NumberOfVariables
+                
+                simulation.SolveInitial()
+                simulation.CleanUpSetupData()
+                
+                count += 1
+                print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(count, self.number_of_neurones, self.number_of_vars), "\r",
+                sys.stdout.flush()
         
-        print('Total number of variables: {0}'.format(self.number_of_vars))
-        print('garbage before collect:\n'.format(gc.garbage))
+        except:
+            raise
+        
+        finally:
+            print '\n   Done\n'
+            self.log.Enabled = True
+        
+        #print('garbage before collect:\n'.format(gc.garbage))
         collected = gc.collect()
-        print "Garbage collector: collected %d objects." % (collected)  
-        print('garbage after collect:\n'.format(gc.garbage))
+        #print "Garbage collector: collected %d objects." % (collected)  
+        #print('garbage after collect:\n'.format(gc.garbage))
     
     def Run(self):
         times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
         for t in times:
             self.event_queue[float(t)] = []
 
+        prev_time = 0.0
         (next_time, send_events_to) = sorted(self.event_queue.iteritems())[0]
         del self.event_queue[next_time] 
         while next_time <= self.timeHorizon:
             #print(sorted(self.event_queue.iteritems()))
             #print('next_time = {0}\nsend_events_to = {1}\n'.format(next_time, send_events_to))
             
-            print("Integrating to " + str(next_time) + " ... ")
+            print("Integrating from {0} to {1}...".format(prev_time, next_time))
             for target_neuron_name, simulation in self.simulations.iteritems():
                 simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
                 #simulation.ReportData(next_time)
@@ -747,11 +784,22 @@ class point_neurone_network_simulation:
             if len(self.event_queue) == 0:
                 break
             
+            prev_time      = next_time
             next_time      = min(self.event_queue.keys())
             send_events_to = self.event_queue[next_time]
             del self.event_queue[next_time] 
             
         print('Neurone [{0}] spike events: {1}'.format(self.event_port.CanonicalName, self.event_port.Events))
+        
+        for group_name, group in self.network._groups.iteritems():
+            for population_name, population in group._populations.iteritems():
+                count = 0
+                for neurone in population.neurones:
+                    event_port = neurone.getOutletEventPort()
+                    count += len(event_port.Events)
+                
+                self.average_firing_rate[population_name] = count / (self.timeHorizon * len(population.neurones))
+                print('Population [{0}] average firing rate: {1}'.format(population_name, self.average_firing_rate[population_name]))
         
     def Finalize(self):
         # Finalize
@@ -770,6 +818,8 @@ def readCSV_pyNN(filename):
         w = float(connection[2]) * 1E-6 # nS -> S
         d = float(connection[3]) * 1E-3 # ms -> s
         connections_out.append((s, t, w, d))
+        
+    print filename, len(connections_out)
     return connections_out
 
 def unique(connections):
@@ -792,14 +842,17 @@ def profile_simulate():
     s = stats.load("nineml_point_neurone_network.profile")
     s.strip_dirs().sort_stats("time").print_stats()
 
-def create_ul_model():
+def get_ul_model_and_simulation_inputs():
+    ###############################################################################
+    #                           NineML UserLayer Model
+    ###############################################################################
     catalog = "file:///home/ciroki/Data/NineML/experimental/lib9ml/python/dae_impl/"
 
     rnd_uniform = {
                     'lowerBound': (-0.060, "dimensionless"),
                     'upperBound': (-0.040, "dimensionless")
                 }
-    uniform_distribution = nineml.user_layer.RandomDistribution("uniform(-0.060, -0.040)", catalog + "uniform_distribution.xml", rnd_uniform)
+    uni_distr = nineml.user_layer.RandomDistribution("uniform(-0.060, -0.040)", catalog + "uniform_distribution.xml", rnd_uniform)
     
     poisson_params = {
                     'rate'     : (100.00, 'Hz'),
@@ -808,14 +861,14 @@ def create_ul_model():
                     }
     
     neurone_params = {
-                    'tspike' :    ( -1.000, 's'),
-                    'V' :         (uniform_distribution, 'V'),
-                    'gl' :        ( 1.0E-8, 'S'),
-                    'vreset' :    ( -0.060, 'V'),
-                    'taurefrac' : (  0.001, 's'),
-                    'vthresh' :   ( -0.040, 'V'),
-                    'vrest' :     ( -0.060, 'V'),
-                    'cm' :        ( 0.2E-9, 'F')
+                    'tspike' :    ( -1.000,   's'),
+                    'V' :         (uni_distr, 'V'),
+                    'gl' :        ( 1.0E-8,   'S'),
+                    'vreset' :    ( -0.060,   'V'),
+                    'taurefrac' : (  0.001,   's'),
+                    'vthresh' :   ( -0.040,   'V'),
+                    'vrest' :     ( -0.060,   'V'),
+                    'cm' :        ( 0.2E-9,   'F')
                     }
     
     psr_poisson_params = {
@@ -900,12 +953,45 @@ def create_ul_model():
     group.add(projection_inh_exc)
 
     # Create a network and add the group to it
-    model = nineml.user_layer.Model("Simple 9ML example model")
-    model.add_group(group)
-    model.write("Brette et al., J. Computational Neuroscience (2007).xml")
+    ul_model = nineml.user_layer.Model("Simple 9ML example model")
+    ul_model.add_group(group)
+    ul_model.write("Brette et al., J. Computational Neuroscience (2007).xml")
 
-    return model
+    ###############################################################################
+    #                            SED-ML experiment
+    ###############################################################################
+    timeHorizon       = 0.0600
+    reportingInterval = 0.0001
+    noPoints          = 1 + int(timeHorizon / reportingInterval)
     
+    sedml_simulation = sedmlUniformTimeCourseSimulation('Brette simulation', 'Brette 2007 simulation', 0.0, 0.0, timeHorizon, noPoints, 'KISAO:0000283')
+    
+    sedml_model      = sedmlModel('Brette model', 'Brette model', 'urn:sedml:language:nineml', ul_model) 
+    
+    sedml_task       = sedmlTask('task1', 'task1', sedml_model, sedml_simulation)
+    
+    sedml_variable_time  = sedmlVariable('time', 'time',    sedml_task, symbol='urn:sedml:symbol:time')
+    sedml_variable_excV  = sedmlVariable('excV', 'Voltage', sedml_task, target='Group 1/Excitatory population/V[0]')
+    sedml_variable_inhV  = sedmlVariable('inhV', 'Voltage', sedml_task, target='Group 1/Inhibitory population/V[0]')
+
+    sedml_data_generator_time = sedmlDataGenerator('DG time', 'DG time', [sedml_variable_time])
+    sedml_data_generator_excV = sedmlDataGenerator('DG excV', 'DG excV', [sedml_variable_excV])
+    sedml_data_generator_inhV = sedmlDataGenerator('DG inhV', 'DG inhV', [sedml_variable_inhV])
+
+    curve_excV = sedmlCurve('ExcV', 'ExcV', False, False, sedml_data_generator_time, sedml_data_generator_excV)
+    curve_inhV = sedmlCurve('InhV', 'InhV', False, False, sedml_data_generator_time, sedml_data_generator_inhV)
+
+    plot_excV  = sedmlPlot2D('Plot excV', 'Plot excV', [curve_excV])
+    plot_inhV  = sedmlPlot2D('Plot inhV', 'Plot inhV', [curve_inhV])
+
+    sedml_experiment = sedmlExperiment([sedml_simulation], 
+                                       [sedml_model], 
+                                       [sedml_task], 
+                                       [sedml_data_generator_time, sedml_data_generator_excV, sedml_data_generator_inhV],
+                                       [plot_excV, plot_inhV])
+    
+    return sedml_experiment.get_daetools_simulation_inputs()
+
 def simulate():
     #gc.enable()
     #gc.set_debug(gc.DEBUG_STATS | gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE | gc.DEBUG_INSTANCES | gc.DEBUG_OBJECTS | gc.DEBUG_SAVEALL)
@@ -922,36 +1008,32 @@ def simulate():
         simulation_finalize_time_start = 0
         simulation_finalize_time_end = 0
 
-        ul_model = create_ul_model()
+        # 1. Get UL Model and simulation inputs from SED-ML file 
+        ul_model, timeHorizon, reportingInterval, variables_to_report, plots_to_generate = get_ul_model_and_simulation_inputs()
+        #print ul_model, timeHorizon, reportingInterval, variables_to_report, plots_to_generate
+
+        # 2. Create daetools point neurone network
         network_create_time_start = time()
         network = daetools_point_neurone_network(ul_model)
         network_create_time_end = time()
         
-        dae_component_setup._random_number_generators = network.randomNumberGenerators
-        
-        reportingInterval = 0.0001
-        timeHorizon       = 0.0600
-
-        log          = daeLogs.daePythonStdOutLog()
-        datareporter = pyDataReporting.daeTCPIPDataReporter()
-        simName = 'Brette' + strftime(" [%d.%m.%Y %H:%M:%S]", localtime())
-        if(datareporter.Connect("", simName) == False):
-            sys.exit()
-        
+        # 3. Create daetools point neurone network simulation
         simulation_create_time_start = time()
-        simulation = point_neurone_network_simulation(network, log, datareporter, reportingInterval, timeHorizon)
+        simulation = point_neurone_network_simulation(network, reportingInterval, timeHorizon, variables_to_report, plots_to_generate)
         del ul_model
-        del network
         simulation_create_time_end = time()
         
+        # 4. Initialize the simulation and apply the parameters values and initial conditions
         simulation_initialize_and_solve_initial_time_start = time()
         simulation.InitializeAndSolveInitial()
         simulation_initialize_and_solve_initial_time_end = time()
         
+        # 5. Run the simulation
         simulation_run_time_start = time()
         simulation.Run()
         simulation_run_time_end = time()
         
+        # 5. Finalize the simulation
         simulation_finalize_time_start = time()
         simulation.Finalize()
         simulation_finalize_time_end = time()
@@ -959,10 +1041,10 @@ def simulate():
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         messages = traceback.format_tb(exc_traceback)
-        print(e)
         print('\n'.join(messages))
+        print(e)
     
-    print('Simulation statistics:      ')
+    print('Simulation statistics:          ')
     print('  Network create time:                       {0:>8.3f}s'.format(network_create_time_end - network_create_time_start))
     print('  Simulation create time:                    {0:>8.3f}s'.format(simulation_create_time_end - simulation_create_time_start))
     print('  Simulation initialize/solve initial time:  {0:>8.3f}s'.format(simulation_initialize_and_solve_initial_time_end - simulation_initialize_and_solve_initial_time_start))
