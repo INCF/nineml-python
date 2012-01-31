@@ -955,6 +955,8 @@ class dae_component_setup:
         if model.Nitems == 0:
             return
         
+        model.SetReportingOn(True)
+        
         dae_variables = model._getStateVariables(model)
         dae_aliases   = model._getAliases(model)
         

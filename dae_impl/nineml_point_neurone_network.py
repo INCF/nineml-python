@@ -11,7 +11,7 @@
 """
 
 #from __future__ import print_function
-import os, sys, urllib, re, traceback, csv, gc
+import os, sys, urllib, re, traceback, csv, gc, subprocess
 from time import localtime, strftime, time
 import numpy, numpy.random
 
@@ -25,7 +25,11 @@ from nineml_daetools_component import ninemlRNG, createPoissonSpikeTimes, daetoo
 from daetools.solvers import pySuperLU
 
 from sedml_support import *
-import subprocess
+
+import matplotlib
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+
 
 class MemoryMonitor(object):
     """
@@ -200,7 +204,7 @@ def create_al_from_ul_component(ul_component, random_number_generators):
 
 class explicit_connections_generator_interface:
     """
-    The simplest implementation of the ConnectionGenerator interface (Mikael Djurfeldt)
+    The simplest implementation of the ConnectionGenerator interface (M. Djurfeldt)
     built on top of the explicit list of connections.
     
     **Achtung, Achtung!** All indexes are zero-index based, for both source and target populations.
@@ -389,10 +393,10 @@ class daetools_group:
         self._populations = {}
         self._projections = {}
         
-        for name, ul_population in list(ul_group.populations.items()):
-            self._populations[name] = daetools_population(name, ul_population, network, len(self._populations))
+        for i, (name, ul_population) in enumerate(ul_group.populations.iteritems()):
+            self._populations[name] = daetools_population(name, ul_population, network, i)
         
-        for name, ul_projection in list(ul_group.projections.items()):
+        for i, (name, ul_projection) in enumerate(ul_group.projections.items()):
             self._projections[name] = daetools_projection(name, ul_projection, self, network)
     
     def __repr__(self):
@@ -441,6 +445,7 @@ class daetools_population:
         self._population_id  = population_id
         self._parameters     = network.getComponentParameters(ul_population.prototype.name)
         
+        print 'Population {0}, {1}'.format(self._name, self._population_id) 
         _component_info  = network.getComponentInfo(ul_population.prototype.name) 
         
         self.neurones = [
@@ -520,20 +525,6 @@ class daetools_projection:
         else: # It should be the CSA component then
             self._handleConnectionRuleComponent(_connection_rule)
 
-            
-            neurones    = []
-            connections = []
-            dot_graph_template = '''
-            digraph finite_state_machine {{
-                rankdir=LR;
-                node [shape=ellipse]; {0};
-                {1}
-            }}
-            '''
-            if len(regimes_list) > 1:
-                dot_graph = dot_graph_template.format(' '.join(regimes_list), '\n'.join(transitions_list))
-                graph     = dot2tex.dot2tex(dot_graph, autosize=True, texmode='math', format='tikz', crop=True, figonly=True)
-
         # Now we are done with connections. Initialize synapses
         for i, neurone in enumerate(target_population.neurones):
             synapse = self._synapses[i]
@@ -589,6 +580,8 @@ class daetools_projection:
         #    graph.add_node(neurone.Name)
         #for i, neurone in enumerate(source_population.neurones):
         #    graph.add_node(neurone.Name)
+        
+        print '{0}({1}) -> {2}({3})'.format(source_population._name, source_population._population_id, target_population._name, target_population._population_id)
         
         for connection in cgi:
             size = len(connection)
@@ -700,8 +693,9 @@ class point_neurone_network_simulation:
         self.number_of_vars      = 0
         self.number_of_neurones  = 0
         self.average_firing_rate = {}
+        self.raster_plot_data    = []
 
-        simName = 'Brette' + strftime(" [%d.%m.%Y %H:%M:%S]", localtime())
+        simName = network._name + strftime(" [%d.%m.%Y %H:%M:%S]", localtime())
         if(self.datareporter.Connect("", simName) == False):
             raise RuntimeError('Cannot connect the data reporter')
         
@@ -710,7 +704,6 @@ class point_neurone_network_simulation:
         try:
             self.log.Enabled = False
             
-            self.event_port = None
             # Setup neurones in populations
             for group_name, group in network._groups.iteritems():
                 for population_name, population in group._populations.iteritems():
@@ -719,10 +712,7 @@ class point_neurone_network_simulation:
                         simulation = point_neurone_simulation(neurone, population._parameters, {})
                         neurone.event_queue = self.event_queue
                         self.simulations[neurone.Name] = simulation
-                        
                         self.number_of_neurones += 1
-                        if not self.event_port:
-                            self.event_port = neurone.getOutletEventPort()
         
         except:
             raise
@@ -734,24 +724,25 @@ class point_neurone_network_simulation:
         try:
             self.log.Enabled = False
             
-            count = 0
             self.number_of_vars = 0
-            for target_neuron_name, simulation in self.simulations.iteritems():
+            for i, (target_neuron_name, simulation) in enumerate(self.simulations.iteritems()):
                 simulation.init(self.log, self.datareporter, self.reportingInterval, self.timeHorizon)
                 self.number_of_vars += simulation.daesolver.NumberOfVariables
                 
-                simulation.SolveInitial()
-                simulation.CleanUpSetupData()
+                simulation.m.SaveModelReport('__xml'+simulation.m.Name + ".xml")
+                simulation.m.SaveRuntimeModelReport('__xml'+simulation.m.Name + "-rt.xml")
                 
-                count += 1
-                print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(count, self.number_of_neurones, self.number_of_vars), "\r",
+                simulation.SolveInitial()
+                #simulation.CleanUpSetupData()
+                
+                print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(i, self.number_of_neurones, self.number_of_vars), "\r",
                 sys.stdout.flush()
         
         except:
             raise
         
         finally:
-            print '\n   Done\n'
+            print '\n'
             self.log.Enabled = True
         
         #print('garbage before collect:\n'.format(gc.garbage))
@@ -774,7 +765,7 @@ class point_neurone_network_simulation:
             print("Integrating from {0} to {1}...".format(prev_time, next_time))
             for target_neuron_name, simulation in self.simulations.iteritems():
                 simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
-                #simulation.ReportData(next_time)
+                simulation.ReportData(next_time)
                 simulation.Log.SetProgress(int(100.0 * simulation.CurrentTime/simulation.TimeHorizon))
             
             for port in send_events_to:
@@ -788,21 +779,88 @@ class point_neurone_network_simulation:
             next_time      = min(self.event_queue.keys())
             send_events_to = self.event_queue[next_time]
             del self.event_queue[next_time] 
-            
-        print('Neurone [{0}] spike events: {1}'.format(self.event_port.CanonicalName, self.event_port.Events))
         
+        print('Simulation has ended successfuly.')
+        print('Processing the results...')
+        
+        self.processResults()
+        
+    def processResults(self):
+        simulation_name = self.network._name
+        
+        neurone_index = 0
+        population_events = {}
         for group_name, group in self.network._groups.iteritems():
             for population_name, population in group._populations.iteritems():
                 count = 0
+                events = []
                 for neurone in population.neurones:
                     event_port = neurone.getOutletEventPort()
                     count += len(event_port.Events)
+                    for (t, data) in event_port.Events:
+                        self.raster_plot_data.append((t, neurone_index))
+                        events.append((t, neurone_index))
+                    neurone_index += 1
                 
+                population_events[population_name] = sorted(events)
                 self.average_firing_rate[population_name] = count / (self.timeHorizon * len(population.neurones))
-                print('Population [{0}] average firing rate: {1}'.format(population_name, self.average_firing_rate[population_name]))
+                print('  [{0}] average firing rate: {1} Hz'.format(population_name, self.average_firing_rate[population_name]))
         
+        self.raster_plot_data.sort()
+        #events = [str(item) for item in self.raster_plot_data.iteritems()]
+        #print('\n'.join(events))
+        
+        #
+        # Save the raster plot file (.ras)
+        #
+        f = open('{0}.ras'.format(simulation_name), "w")
+        f.write('# size = {0}\n'.format(self.number_of_neurones))
+        f.write('# first_index = {0}\n'.format(0))
+        f.write('# first_id = {0}\n'.format(0))
+        f.write('# n = {0}\n'.format(len(self.raster_plot_data)))
+        f.write('# variable = spikes\n')
+        f.write('# last_id = {0}\n'.format(self.number_of_neurones - 1))
+        f.write('# dt = {0}\n'.format(0.0))
+        f.write('# label = {0}\n'.format('spikes'))
+        for t, index in self.raster_plot_data:
+            f.write('%.14e\t%d\n' % (t, index))
+        f.close()
+        
+        #
+        # Save the raster plot image file (.png)
+        #
+        colors = ['black', 'blue', 'red', 'green', 'c', 'm', 'k', 'y']
+        font5  = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=5)
+        font8  = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=8)
+        font10 = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=10)
+        
+        figure = Figure(figsize=(6, 6))
+        canvas = FigureCanvas(figure)
+        axes = figure.add_subplot(111)
+        #axes.set_title('Raster plot', fontsize = 12)
+        axes.set_xlabel('Time, s', fontproperties = font10)
+        axes.set_ylabel('Neurones', fontproperties = font10)
+        axes.grid(True, linestyle = '-', color = '0.75')
+        for i, (population_name, events) in enumerate(population_events.iteritems()):
+            color_index = i % len(colors)
+            if len(events) > 0:
+                times   = [item[0] for item in events]
+                indexes = [item[1] for item in events]
+                axes.scatter(times, indexes, label = population_name, s = 4, color = colors[color_index])
+        
+        #box = axes.get_position()
+        #axes.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
+        #axes.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.05), mode = 'expand', prop = font5, ncol = 2, scatterpoints = 1, fancybox = True)
+        axes.legend(loc = 0, prop = font5, scatterpoints = 1, fancybox = False)
+        axes.set_xbound(lower = 0.0, upper = self.timeHorizon)
+        axes.set_ybound(lower = 0,   upper = self.number_of_neurones - 1)
+        for xlabel in axes.get_xticklabels():
+            xlabel.set_fontproperties(font8)
+        for ylabel in axes.get_yticklabels():
+            ylabel.set_fontproperties(font8)
+        canvas.print_figure('{0}.png'.format(simulation_name), dpi = 300)        
+    
     def Finalize(self):
-        # Finalize
         for target_neuron_name, simulation in self.simulations.iteritems():
             simulation.Finalize()
         
@@ -819,7 +877,7 @@ def readCSV_pyNN(filename):
         d = float(connection[3]) * 1E-3 # ms -> s
         connections_out.append((s, t, w, d))
         
-    print filename, len(connections_out)
+    print('Parsed [{0}] file; number of connections: {1}'.format(filename, len(connections_out)))
     return connections_out
 
 def unique(connections):
@@ -903,11 +961,11 @@ def get_ul_model_and_simulation_inputs():
     grid2D          = nineml.user_layer.Structure("2D grid", catalog + "2Dgrid.xml")
     connection_type = nineml.user_layer.ConnectionType("Static weights and delays", catalog + "static_weights_delays.xml")
     
-    population_excitatory = nineml.user_layer.Population("Excitatory population", 800, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
-    population_inhibitory = nineml.user_layer.Population("Inhibitory population", 200, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
+    population_excitatory = nineml.user_layer.Population("Excitatory population",  80, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
+    population_inhibitory = nineml.user_layer.Population("Inhibitory population",  20, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
     population_poisson    = nineml.user_layer.Population("Poisson population",     20, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
-    connections_folder      = '1000/'
+    connections_folder      = '' #'1000/'
     connections_exc_exc     = readCSV_pyNN(connections_folder + 'e2e.conn')
     connections_exc_inh     = readCSV_pyNN(connections_folder + 'e2i.conn')
     connections_inh_inh     = readCSV_pyNN(connections_folder + 'i2i.conn')
@@ -953,9 +1011,10 @@ def get_ul_model_and_simulation_inputs():
     group.add(projection_inh_exc)
 
     # Create a network and add the group to it
-    ul_model = nineml.user_layer.Model("Simple 9ML example model")
+    name = 'Brette(2007)'
+    ul_model = nineml.user_layer.Model(name)
     ul_model.add_group(group)
-    ul_model.write("Brette et al., J. Computational Neuroscience (2007).xml")
+    ul_model.write("%s.xml" % name)
 
     ###############################################################################
     #                            SED-ML experiment
