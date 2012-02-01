@@ -416,6 +416,7 @@ class dae_component(daeModel):
         self.target_synapses                = []    
         self.incoming_synapses              = []    
         self.event_queue                    = [] 
+        self.simulation                     = None
 
     def CleanUpSetupData(self):
         del self.info
@@ -895,7 +896,7 @@ class dae_component(daeModel):
                             wrapperIdentifiers.current_index = stn_i
                             expression = num.Node.evaluate(wrapperIdentifiers, dictFunctions)
                             setVariableValues.append( (variable, expression) )
-                            #print('\t\ton_event setVariableValues', repr(expression))
+                            #print('\t\ton_event setVariableValues', repr(variable), repr(expression))
 
                         for (port_name, value) in trigger_events:
                             if not port_name in self.nineml_outlet_event_ports:
@@ -955,7 +956,8 @@ class dae_component_setup:
         if model.Nitems == 0:
             return
         
-        model.SetReportingOn(True)
+        # Reporting is off by default for all variables
+        #model.SetReportingOn(True)
         
         dae_variables = model._getStateVariables(model)
         dae_aliases   = model._getAliases(model)

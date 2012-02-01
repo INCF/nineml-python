@@ -75,13 +75,13 @@ class on_spikeout_action(pyCore.daeAction):
         # The floating point value of the data sent with the event is a current time 
         time         = float(self.eventPort.EventData)
         delayed_time = 0.0
-        for synapse, event_port_index, delay in self.neurone.target_synapses:
+        for (synapse, event_port_index, delay, target_neurone) in self.neurone.target_synapses:
             inlet_event_port = synapse.getInletEventPort(event_port_index)
             delayed_time = time + delay
             if delayed_time in self.neurone.event_queue:
-                self.neurone.event_queue[delayed_time].append(inlet_event_port)
+                self.neurone.event_queue[delayed_time].append( (inlet_event_port, target_neurone) )
             else:
-                self.neurone.event_queue[delayed_time] = [inlet_event_port]
+                self.neurone.event_queue[delayed_time] = [ (inlet_event_port, target_neurone) ]
 
 def create_neurone(name, component_info, rng, parameters):
     """
@@ -445,7 +445,6 @@ class daetools_population:
         self._population_id  = population_id
         self._parameters     = network.getComponentParameters(ul_population.prototype.name)
         
-        print 'Population {0}, {1}'.format(self._name, self._population_id) 
         _component_info  = network.getComponentInfo(ul_population.prototype.name) 
         
         self.neurones = [
@@ -581,8 +580,6 @@ class daetools_projection:
         #for i, neurone in enumerate(source_population.neurones):
         #    graph.add_node(neurone.Name)
         
-        print '{0}({1}) -> {2}({3})'.format(source_population._name, source_population._population_id, target_population._name, target_population._population_id)
-        
         for connection in cgi:
             size = len(connection)
             if(size < 2):
@@ -614,7 +611,7 @@ class daetools_projection:
             # Add a new item to the list of connected synapse event ports and connection delays.
             # Here we cannot add an event port directly since it does not exist yet.
             # Hence, we add the synapse object and the index of the event port.
-            source_neurone.target_synapses.append( (synapse, synapse.Nitems, delay) )
+            source_neurone.target_synapses.append( (synapse, synapse.Nitems, delay, target_neurone) )
             synapse.Nitems += 1
             
             # Increase the number of connections in the synapse
@@ -634,6 +631,8 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         :raises: RuntimeError
         """
         pyActivity.daeSimulation.__init__(self)
+        
+        neurone.simulation = self
         
         self.m                        = neurone
         self.neurone_parameters       = neurone_parameters
@@ -726,17 +725,17 @@ class point_neurone_network_simulation:
             
             self.number_of_vars = 0
             for i, (target_neuron_name, simulation) in enumerate(self.simulations.iteritems()):
+                print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(i, self.number_of_neurones, self.number_of_vars), "\r",
+                sys.stdout.flush()
+                
                 simulation.init(self.log, self.datareporter, self.reportingInterval, self.timeHorizon)
                 self.number_of_vars += simulation.daesolver.NumberOfVariables
                 
-                simulation.m.SaveModelReport('__xml'+simulation.m.Name + ".xml")
-                simulation.m.SaveRuntimeModelReport('__xml'+simulation.m.Name + "-rt.xml")
+                #simulation.m.SaveModelReport('__xml'+simulation.m.Name + ".xml")
+                #simulation.m.SaveRuntimeModelReport('__xml'+simulation.m.Name + "-rt.xml")
                 
                 simulation.SolveInitial()
-                #simulation.CleanUpSetupData()
-                
-                print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(i, self.number_of_neurones, self.number_of_vars), "\r",
-                sys.stdout.flush()
+                simulation.CleanUpSetupData()
         
         except:
             raise
@@ -765,11 +764,12 @@ class point_neurone_network_simulation:
             print("Integrating from {0} to {1}...".format(prev_time, next_time))
             for target_neuron_name, simulation in self.simulations.iteritems():
                 simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
-                simulation.ReportData(next_time)
+                #simulation.ReportData(next_time)
                 simulation.Log.SetProgress(int(100.0 * simulation.CurrentTime/simulation.TimeHorizon))
             
-            for port in send_events_to:
+            for port, neurone in send_events_to:
                 port.ReceiveEvent(next_time)
+                neurone.simulation.Reinitialize()
                 
             # Take the next time and ports where events should be sent and remove them from the 'event_queue' dictionary
             if len(self.event_queue) == 0:
@@ -846,7 +846,7 @@ class point_neurone_network_simulation:
             if len(events) > 0:
                 times   = [item[0] for item in events]
                 indexes = [item[1] for item in events]
-                axes.scatter(times, indexes, label = population_name, s = 4, color = colors[color_index])
+                axes.scatter(times, indexes, label = population_name, marker = 's', s = 1, color = colors[color_index])
         
         #box = axes.get_position()
         #axes.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
@@ -938,14 +938,14 @@ def get_ul_model_and_simulation_inputs():
 
     psr_excitatory_params = {
                             'vrev' : (  0.000, 'V'),
-                            'q'    : ( 4.0E-9, 'S'),
+                            'q'    : (16.0E-9, 'S'), # 4.0E-9
                             'tau'  : (  0.005, 's'),
                             'g'    : (  0.000, 'S')
                             }
                     
     psr_inhibitory_params = {
                             'vrev' : ( -0.080, 'V'),
-                            'q'    : (51.0E-9, 'S'),
+                            'q'    : (200.0E-9, 'S'), # 51.0E-9
                             'tau'  : (  0.010, 's'),
                             'g'    : (  0.000, 'S')
                             }
@@ -961,11 +961,11 @@ def get_ul_model_and_simulation_inputs():
     grid2D          = nineml.user_layer.Structure("2D grid", catalog + "2Dgrid.xml")
     connection_type = nineml.user_layer.ConnectionType("Static weights and delays", catalog + "static_weights_delays.xml")
     
-    population_excitatory = nineml.user_layer.Population("Excitatory population",  80, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
-    population_inhibitory = nineml.user_layer.Population("Inhibitory population",  20, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
-    population_poisson    = nineml.user_layer.Population("Poisson population",     20, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
+    population_excitatory = nineml.user_layer.Population("Excitatory population",  800, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
+    population_inhibitory = nineml.user_layer.Population("Inhibitory population",  200, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
+    population_poisson    = nineml.user_layer.Population("Poisson population",      20, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
-    connections_folder      = '' #'1000/'
+    connections_folder      = '1000/'
     connections_exc_exc     = readCSV_pyNN(connections_folder + 'e2e.conn')
     connections_exc_inh     = readCSV_pyNN(connections_folder + 'e2i.conn')
     connections_inh_inh     = readCSV_pyNN(connections_folder + 'i2i.conn')
@@ -1019,8 +1019,8 @@ def get_ul_model_and_simulation_inputs():
     ###############################################################################
     #                            SED-ML experiment
     ###############################################################################
-    timeHorizon       = 0.0600
-    reportingInterval = 0.0001
+    timeHorizon       = 0.1000 # seconds
+    reportingInterval = 0.0001 # seconds
     noPoints          = 1 + int(timeHorizon / reportingInterval)
     
     sedml_simulation = sedmlUniformTimeCourseSimulation('Brette simulation', 'Brette 2007 simulation', 0.0, 0.0, timeHorizon, noPoints, 'KISAO:0000283')
