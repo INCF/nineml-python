@@ -25,6 +25,7 @@ from nineml_daetools_component import ninemlRNG, createPoissonSpikeTimes, daetoo
 from daetools.solvers import pySuperLU
 
 from sedml_support import *
+from path_parser import CanonicalNameParser
 
 import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -677,14 +678,14 @@ class point_neurone_simulation(pyActivity.daeSimulation):
 class point_neurone_network_simulation:
     """
     """
-    def __init__(self, network, reportingInterval, timeHorizon, report_variables, plots_to_create):
+    def __init__(self, sedml_experiment):
         """
         :rtype: None
         :raises: RuntimeError
         """
-        self.network             = network
-        self.reportingInterval   = reportingInterval
-        self.timeHorizon         = timeHorizon        
+        self.network             = None
+        self.reportingInterval   = 0.0
+        self.timeHorizon         = 0.0        
         self.log                 = daeLogs.daePythonStdOutLog()
         self.datareporter        = pyDataReporting.daeTCPIPDataReporter()
         self.simulations         = {}
@@ -693,18 +694,24 @@ class point_neurone_network_simulation:
         self.number_of_neurones  = 0
         self.average_firing_rate = {}
         self.raster_plot_data    = []
+        self.pathParser          = CanonicalNameParser()
 
-        simName = network._name + strftime(" [%d.%m.%Y %H:%M:%S]", localtime())
+        # Create daetools_point_neurone_network object and the simulation runtime information
+        self.processSEDMLExperiment(sedml_experiment)
+        
+        # Connect the DataReporter
+        simName = self.network._name + strftime(" [%d.%m.%Y %H:%M:%S]", localtime())
         if(self.datareporter.Connect("", simName) == False):
             raise RuntimeError('Cannot connect the data reporter')
         
-        dae_component_setup._random_number_generators = network.randomNumberGenerators
+        # Set the random number generators of the dae_component_setup
+        dae_component_setup._random_number_generators = self.network.randomNumberGenerators
 
+        # Setup neurones in populations
         try:
             self.log.Enabled = False
             
-            # Setup neurones in populations
-            for group_name, group in network._groups.iteritems():
+            for group_name, group in self.network._groups.iteritems():
                 for population_name, population in group._populations.iteritems():
                     print("Creating the population: {0}...".format(population_name))
                     for neurone in population.neurones:
@@ -725,7 +732,7 @@ class point_neurone_network_simulation:
             
             self.number_of_vars = 0
             for i, (target_neuron_name, simulation) in enumerate(self.simulations.iteritems()):
-                print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(i, self.number_of_neurones, self.number_of_vars), "\r",
+                print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(i+1, self.number_of_neurones, self.number_of_vars), "\r",
                 sys.stdout.flush()
                 
                 simulation.init(self.log, self.datareporter, self.reportingInterval, self.timeHorizon)
@@ -744,37 +751,47 @@ class point_neurone_network_simulation:
             print '\n'
             self.log.Enabled = True
         
+        # Run the garbage collector to free some memory
         #print('garbage before collect:\n'.format(gc.garbage))
         collected = gc.collect()
         #print "Garbage collector: collected %d objects." % (collected)  
         #print('garbage after collect:\n'.format(gc.garbage))
     
     def Run(self):
+        # First add reporting times to the event queue
         times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
         for t in times:
             self.event_queue[float(t)] = []
 
+        # Get the first event from the queue
         prev_time = 0.0
         (next_time, send_events_to) = sorted(self.event_queue.iteritems())[0]
         del self.event_queue[next_time] 
+        
+        # Iterate over the queue. The (delayed) events will be added to the queue as they are trigerred.
         while next_time <= self.timeHorizon:
             #print(sorted(self.event_queue.iteritems()))
             #print('next_time = {0}\nsend_events_to = {1}\n'.format(next_time, send_events_to))
+            self.log.Message("Integrating from {0} to {1}...".format(prev_time, next_time), 0)
             
-            print("Integrating from {0} to {1}...".format(prev_time, next_time))
+            # Integrate each neurone until the *next_time* is reached and report the data
             for target_neuron_name, simulation in self.simulations.iteritems():
                 simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
                 #simulation.ReportData(next_time)
-                simulation.Log.SetProgress(int(100.0 * simulation.CurrentTime/simulation.TimeHorizon))
             
+            # Set the progress to the console
+            self.log.SetProgress(100.0 * next_time / self.timeHorizon)
+            
+            # Trigger the events scheduled at the current *next_time*
             for port, neurone in send_events_to:
                 port.ReceiveEvent(next_time)
                 neurone.simulation.Reinitialize()
                 
-            # Take the next time and ports where events should be sent and remove them from the 'event_queue' dictionary
+            # End the loop if the event queue is empty 
             if len(self.event_queue) == 0:
                 break
             
+            # Take the next time and ports where events should be sent and remove them from the 'event_queue' dictionary
             prev_time      = next_time
             next_time      = min(self.event_queue.keys())
             send_events_to = self.event_queue[next_time]
@@ -783,8 +800,57 @@ class point_neurone_network_simulation:
         print('Simulation has ended successfuly.')
         print('Processing the results...')
         
+        # Finally, process the results (generate 2D plots and raster plots, etc)
         self.processResults()
         
+    def processSEDMLExperiment(self, sedml_experiment):
+        variables_to_report = []
+        plots_to_generate   = []
+        
+        ul_model = sedml_experiment.get_ul_model()
+        self.network = daetools_point_neurone_network(ul_model)
+
+        simulation = sedml_experiment.get_simulation()
+        if not simulation:
+            raise RuntimeError('')
+        
+        self.reportingInterval = float(simulation.outputEndTime - simulation.outputStartTime) / (simulation.numberOfPoints - 1)
+        self.timeHorizon       = float(simulation.outputEndTime)
+        
+        #self.tasks           = list(tasks)
+        #self.data_generators = list(data_generators)
+        #self.outputs         = list(outputs)
+    
+        for data_generator in sedml_experiment.data_generators:
+            pass
+        
+        for data_generator in sedml_experiment.data_generators:
+            pass
+        
+        for output in sedml_experiment.outputs:
+            pass
+        
+    """
+    def getListOfNeuronesFromCanonicalName(self, canonicalName):
+        self.pathParser
+        #print('  relativeName = {0} for root = {1} and canonicalName = {2}'.format(relativeName, rootModel.CanonicalName, canonicalName))
+        listCanonicalName = canonicalName.split('.')
+        neurones   = listCanonicalName[-1]
+        objectPath = listCanonicalName[:-1]
+
+        
+        root = rootModel
+        if len(objectPath) > 0:
+            for name in objectPath:
+                root = findObjectInModel(root, name, look_for_models = True)
+                if root == None:
+                    raise RuntimeError('Could not locate object {0} in {1}'.format(name, ".".join(objectPath)))
+
+        # Now we have the model where port should be located (root)
+        # Search for the 'name' in the 'root' model (in the types of objects given in **kwargs)
+        return findObjectInModel(root, objectName, **kwargs)
+    """
+    
     def processResults(self):
         simulation_name = self.network._name
         
@@ -829,12 +895,15 @@ class point_neurone_network_simulation:
         #
         # Save the raster plot image file (.png)
         #
+        matplotlib.rcParams['font.family'] = 'serif'
+        matplotlib.rcParams['font.size']   = 6
+        
         colors = ['black', 'blue', 'red', 'green', 'c', 'm', 'k', 'y']
         font5  = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=5)
         font8  = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=8)
         font10 = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=10)
         
-        figure = Figure(figsize=(6, 6))
+        figure = Figure(figsize=(8, 6))
         canvas = FigureCanvas(figure)
         axes = figure.add_subplot(111)
         #axes.set_title('Raster plot', fontsize = 12)
@@ -848,10 +917,10 @@ class point_neurone_network_simulation:
                 indexes = [item[1] for item in events]
                 axes.scatter(times, indexes, label = population_name, marker = 's', s = 1, color = colors[color_index])
         
-        #box = axes.get_position()
-        #axes.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
-        #axes.legend(loc = 'upper center', bbox_to_anchor = (0.5, -0.05), mode = 'expand', prop = font5, ncol = 2, scatterpoints = 1, fancybox = True)
-        axes.legend(loc = 0, prop = font5, scatterpoints = 1, fancybox = False)
+        box = axes.get_position()
+        axes.set_position([box.x0, box.y0, box.width * 0.9, box.height])
+        axes.legend(loc = 'center left', bbox_to_anchor = (1, 0.5), prop = font5, ncol = 1, scatterpoints = 1, fancybox = True)
+        #axes.legend(loc = 0, prop = font5, scatterpoints = 1, fancybox = False)
         axes.set_xbound(lower = 0.0, upper = self.timeHorizon)
         axes.set_ybound(lower = 0,   upper = self.number_of_neurones - 1)
         for xlabel in axes.get_xticklabels():
@@ -963,7 +1032,7 @@ def get_ul_model_and_simulation_inputs():
     
     population_excitatory = nineml.user_layer.Population("Excitatory population",  800, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
     population_inhibitory = nineml.user_layer.Population("Inhibitory population",  200, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
-    population_poisson    = nineml.user_layer.Population("Poisson population",      20, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
+    population_poisson    = nineml.user_layer.Population("Poisson population",     20, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
     connections_folder      = '1000/'
     connections_exc_exc     = readCSV_pyNN(connections_folder + 'e2e.conn')
@@ -1049,7 +1118,7 @@ def get_ul_model_and_simulation_inputs():
                                        [sedml_data_generator_time, sedml_data_generator_excV, sedml_data_generator_inhV],
                                        [plot_excV, plot_inhV])
     
-    return sedml_experiment.get_daetools_simulation_inputs()
+    return sedml_experiment
 
 def simulate():
     #gc.enable()
@@ -1058,8 +1127,6 @@ def simulate():
     try:
         network_create_time_start = 0
         network_create_time_end = 0
-        simulation_create_time_start = 0
-        simulation_create_time_end = 0
         simulation_initialize_and_solve_initial_time_start = 0
         simulation_initialize_and_solve_initial_time_end = 0
         simulation_run_time_start = 0
@@ -1067,20 +1134,13 @@ def simulate():
         simulation_finalize_time_start = 0
         simulation_finalize_time_end = 0
 
-        # 1. Get UL Model and simulation inputs from SED-ML file 
-        ul_model, timeHorizon, reportingInterval, variables_to_report, plots_to_generate = get_ul_model_and_simulation_inputs()
-        #print ul_model, timeHorizon, reportingInterval, variables_to_report, plots_to_generate
+        # 1. Get a SED-ML experiment object 
+        sedml_experiment = get_ul_model_and_simulation_inputs()
 
-        # 2. Create daetools point neurone network
-        network_create_time_start = time()
-        network = daetools_point_neurone_network(ul_model)
-        network_create_time_end = time()
-        
         # 3. Create daetools point neurone network simulation
-        simulation_create_time_start = time()
-        simulation = point_neurone_network_simulation(network, reportingInterval, timeHorizon, variables_to_report, plots_to_generate)
-        del ul_model
-        simulation_create_time_end = time()
+        network_create_time_start = time()
+        simulation = point_neurone_network_simulation(sedml_experiment)
+        network_create_time_end = time()
         
         # 4. Initialize the simulation and apply the parameters values and initial conditions
         simulation_initialize_and_solve_initial_time_start = time()
@@ -1105,7 +1165,6 @@ def simulate():
     
     print('Simulation statistics:          ')
     print('  Network create time:                       {0:>8.3f}s'.format(network_create_time_end - network_create_time_start))
-    print('  Simulation create time:                    {0:>8.3f}s'.format(simulation_create_time_end - simulation_create_time_start))
     print('  Simulation initialize/solve initial time:  {0:>8.3f}s'.format(simulation_initialize_and_solve_initial_time_end - simulation_initialize_and_solve_initial_time_start))
     print('  Simulation run time:                       {0:>8.3f}s'.format(simulation_run_time_end - simulation_run_time_start))
     print('  Simulation finalize time:                  {0:>8.3f}s'.format(simulation_finalize_time_end - simulation_finalize_time_start))

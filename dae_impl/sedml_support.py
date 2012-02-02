@@ -111,6 +111,18 @@ class sedmlVariable(sedmlBase):
                                                           self.target,
                                                           self.symbol)
 
+class sedmlDataSet(sedmlBase):
+    def __init__(self, id, name, label, dataGenerator):
+        sedmlBase.__init__(self, id, name)
+        
+        self.label         = str(label)
+        self.dataGenerator = dataGenerator
+    
+    def __repr__(self):
+        return 'sedmlDataSet({0}, {1}, {2})'.format(sedmlBase.__repr__(self), 
+                                                    self.label, 
+                                                    self.dataGenerator)
+
 class sedmlPlot2D(sedmlBase):
     def __init__(self, id, name, curves):
         sedmlBase.__init__(self, id, name)
@@ -135,6 +147,23 @@ class sedmlCurve(sedmlBase):
                                                             self.logY,
                                                             self.xDataRefference,
                                                             self.yDataRefference)
+class sedmlRasterPlot(sedmlBase):
+    def __init__(self, id, name, dataRefference):
+        sedmlBase.__init__(self, id, name)
+        
+        self.dataRefference = str(dataRefference)
+    
+    def __repr__(self):
+        return 'sedmlCurve({0}, {1})'.format(sedmlBase.__repr__(self), self.dataRefference)
+
+class sedmlReport(sedmlBase):
+    def __init__(self, id, name, dataSets):
+        sedmlBase.__init__(self, id, name)
+        
+        self.dataSets = list(dataSets)
+    
+    def __repr__(self):
+        return 'sedmlReport({0}, {1})'.format(sedmlBase.__repr__(self), self.dataSets)
 
 class sedmlExperiment:
     def __init__(self, simulations, models, tasks, data_generators, outputs):
@@ -158,35 +187,16 @@ class sedmlExperiment:
             res += repr(o) + '\n'
         res += ')'
         return res
-    
-    def to_xml(self):
-        pass
-
-    @classmethod
-    def from_xml(cls):
-        simulations     = []
-        models          = []
-        tasks           = []
-        data_generators = []
-        outputs         = []
-
-        return cls(simulations, models, tasks, data_generators, outputs)
      
-    def get_daetools_simulation_inputs(self):
-        variables_to_report = []
-        plots_to_generate   = []
-        
+    def get_simulation(self):
         if len(self.simulations) != 1:
             raise RuntimeError('')
+        return self.simulations[0]
+    
+    def get_ul_model(self):
         if len(self.models) != 1:
             raise RuntimeError('')
-        
-        simulation        = self.simulations[0]
-        ul_model          = self.models[0].getUserLayerModel()
-        reportingInterval = float(simulation.outputEndTime - simulation.outputStartTime) / (simulation.numberOfPoints - 1)
-        timeHorizon       = float(simulation.outputEndTime)
-         
-        return (ul_model, timeHorizon, reportingInterval, variables_to_report, plots_to_generate)
+        return self.models[0].getUserLayerModel()
          
 if __name__ == "__main__":
     sedml_simulation = sedmlUniformTimeCourseSimulation('Brette simulation', 'Brette 2007 simulation', 0.0, 0.0, 0.06, 600, 'KISAO:0000283')
