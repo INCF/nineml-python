@@ -31,6 +31,10 @@ import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 
+try:
+    from _heapq import heappush, heappop, heapify, heapreplace
+except ImportError:
+    from heapq import heappush, heappop, heapify, heapreplace
 
 class MemoryMonitor(object):
     """
@@ -79,10 +83,7 @@ class on_spikeout_action(pyCore.daeAction):
         for (synapse, event_port_index, delay, target_neurone) in self.neurone.target_synapses:
             inlet_event_port = synapse.getInletEventPort(event_port_index)
             delayed_time = time + delay
-            if delayed_time in self.neurone.event_queue:
-                self.neurone.event_queue[delayed_time].append( (inlet_event_port, target_neurone) )
-            else:
-                self.neurone.event_queue[delayed_time] = [ (inlet_event_port, target_neurone) ]
+            heappush(self.neurone.events_heap, (delayed_time, inlet_event_port, target_neurone))
 
 def create_neurone(name, component_info, rng, parameters):
     """
@@ -98,8 +99,6 @@ def create_neurone(name, component_info, rng, parameters):
     :rtype: dae_component object
     :raises: RuntimeError 
     """
-    #print('create_neurone: {0}'.format(name))
-    
     neurone = None
     if component_info.name == 'SpikeSourcePoisson':
         if 'rate' in parameters:
@@ -625,7 +624,6 @@ class daetools_projection:
 class point_neurone_simulation(pyActivity.daeSimulation):
     """
     """
-    #count = 0
     def __init__(self, neurone, neurone_parameters, neurone_report_variables):
         """
         :rtype: None
@@ -638,21 +636,32 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.m                        = neurone
         self.neurone_parameters       = neurone_parameters
         self.neurone_report_variables = neurone_report_variables
-        
-        self.daesolver    = pyIDAS.daeIDAS()
-        self.lasolver     = pySuperLU.daeCreateSuperLUSolver()
+        self.forthcoming_events       = []
+        self.daesolver                = pyIDAS.daeIDAS()
+        self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
         self.daesolver.SetLASolver(self.lasolver)
 
     def init(self, log, datareporter, reportingInterval, timeHorizon):
         self.ReportingInterval = reportingInterval
         self.TimeHorizon       = timeHorizon
-        
         self.Initialize(self.daesolver, datareporter, log)
         
-        #if point_neurone_simulation.count == 0:
-        #    self.m.SaveModelReport(self.m.Name + "__.xml")
-        #point_neurone_simulation.count += 1
+    def simulateUntilTime(self, next_time):
+        for (t_event, inlet_event_port) in self.forthcoming_events:
+            print('Neurone {0} {1} : {2}'.format(self.m.CanonicalName, t_event, inlet_event_port.CanonicalName))
+            self.IntegrateUntilTime(t_event, pyActivity.eDoNotStopAtDiscontinuity, False)
+            inlet_event_port.ReceiveEvent(t_event)
+            self.Reinitialize()
         
+        if self.CurrentTime < next_time:
+            self.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
+        
+        # Clear the list of events
+        self.forthcoming_events = []
+        
+        # Report data
+        #self.ReportData(next_time)
+            
     def SetUpParametersAndDomains(self):
         """
         :rtype: None
@@ -689,13 +698,15 @@ class point_neurone_network_simulation:
         self.log                 = daeLogs.daePythonStdOutLog()
         self.datareporter        = pyDataReporting.daeTCPIPDataReporter()
         self.simulations         = {}
-        self.event_queue         = {}
+        self.events_heap         = []
         self.number_of_vars      = 0
         self.number_of_neurones  = 0
         self.average_firing_rate = {}
         self.raster_plot_data    = []
         self.pathParser          = CanonicalNameParser()
 
+        heapify(self.events_heap)
+        
         # Create daetools_point_neurone_network object and the simulation runtime information
         self.processSEDMLExperiment(sedml_experiment)
         
@@ -716,7 +727,7 @@ class point_neurone_network_simulation:
                     print("Creating the population: {0}...".format(population_name))
                     for neurone in population.neurones:
                         simulation = point_neurone_simulation(neurone, population._parameters, {})
-                        neurone.event_queue = self.event_queue
+                        neurone.events_heap = self.events_heap
                         self.simulations[neurone.Name] = simulation
                         self.number_of_neurones += 1
         
@@ -758,45 +769,39 @@ class point_neurone_network_simulation:
         #print('garbage after collect:\n'.format(gc.garbage))
     
     def Run(self):
-        # First add reporting times to the event queue
-        times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
-        for t in times:
-            self.event_queue[float(t)] = []
+        # First create the reporting times list
+        reporting_times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
 
-        # Get the first event from the queue
         prev_time = 0.0
-        (next_time, send_events_to) = sorted(self.event_queue.iteritems())[0]
-        del self.event_queue[next_time] 
-        
         # Iterate over the queue. The (delayed) events will be added to the queue as they are trigerred.
-        while next_time <= self.timeHorizon:
-            #print(sorted(self.event_queue.iteritems()))
+        for next_time in reporting_times:
+            #print(sorted(self.events_heap))
             #print('next_time = {0}\nsend_events_to = {1}\n'.format(next_time, send_events_to))
             self.log.Message("Integrating from {0} to {1}...".format(prev_time, next_time), 0)
             
+            try:
+                while True:
+                    # Get the first item from the heap
+                    (t_event, inlet_event_port, target_neurone) = heappop(self.events_heap)
+                    
+                    # If out of the interval put it back
+                    if t_event > next_time:
+                        heappush(self.events_heap, (t_event, inlet_event_port, target_neurone))
+                        break
+                    
+                    target_neurone.simulation.forthcoming_events.append( (t_event, inlet_event_port) )
+            
+            except IndexError:
+                pass
+                
             # Integrate each neurone until the *next_time* is reached and report the data
             for target_neuron_name, simulation in self.simulations.iteritems():
-                simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
-                #simulation.ReportData(next_time)
+                simulation.simulateUntilTime(next_time)
             
             # Set the progress to the console
             self.log.SetProgress(100.0 * next_time / self.timeHorizon)
-            
-            # Trigger the events scheduled at the current *next_time*
-            for port, neurone in send_events_to:
-                port.ReceiveEvent(next_time)
-                neurone.simulation.Reinitialize()
-                
-            # End the loop if the event queue is empty 
-            if len(self.event_queue) == 0:
-                break
-            
-            # Take the next time and ports where events should be sent and remove them from the 'event_queue' dictionary
-            prev_time      = next_time
-            next_time      = min(self.event_queue.keys())
-            send_events_to = self.event_queue[next_time]
-            del self.event_queue[next_time] 
-        
+            prev_time = next_time
+                    
         print('Simulation has ended successfuly.')
         print('Processing the results...')
         
@@ -962,9 +967,12 @@ def unique(connections):
 def profile_simulate():
     import hotshot
     from hotshot import stats
-    #prof = hotshot.Profile("nineml_point_neurone_network.profile")
-    #prof.runcall(simulate)
-    #prof.close()
+    prof = hotshot.Profile("nineml_point_neurone_network.profile", lineevents = 1)
+    try:
+        prof.runcall(simulate)
+    except:
+        pass
+    prof.close()
     
     s = stats.load("nineml_point_neurone_network.profile")
     s.strip_dirs().sort_stats("time").print_stats()
@@ -1030,8 +1038,8 @@ def get_ul_model_and_simulation_inputs():
     grid2D          = nineml.user_layer.Structure("2D grid", catalog + "2Dgrid.xml")
     connection_type = nineml.user_layer.ConnectionType("Static weights and delays", catalog + "static_weights_delays.xml")
     
-    population_excitatory = nineml.user_layer.Population("Excitatory population",  800, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
-    population_inhibitory = nineml.user_layer.Population("Inhibitory population",  200, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
+    population_excitatory = nineml.user_layer.Population("Excitatory population", 800, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
+    population_inhibitory = nineml.user_layer.Population("Inhibitory population", 200, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
     population_poisson    = nineml.user_layer.Population("Poisson population",     20, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
     connections_folder      = '1000/'
@@ -1088,7 +1096,7 @@ def get_ul_model_and_simulation_inputs():
     ###############################################################################
     #                            SED-ML experiment
     ###############################################################################
-    timeHorizon       = 0.1000 # seconds
+    timeHorizon       = 0.0300 # seconds
     reportingInterval = 0.0001 # seconds
     noPoints          = 1 + int(timeHorizon / reportingInterval)
     
@@ -1171,6 +1179,6 @@ def simulate():
     print('  Total run time:                            {0:>8.3f}s'.format(simulation_finalize_time_end - network_create_time_start))
    
 if __name__ == "__main__":
-    simulate()
-    #profile_simulate()
+    #simulate()
+    profile_simulate()
     

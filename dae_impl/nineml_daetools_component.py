@@ -419,10 +419,12 @@ class dae_component(daeModel):
         self.simulation                     = None
 
     def CleanUpSetupData(self):
+        return
+        
         del self.info
         del self.nineml_parameters
-        del self.nineml_aliases
-        del self.nineml_variables
+        #del self.nineml_aliases
+        #del self.nineml_variables
         del self.nineml_inlet_ports
         del self.nineml_outlet_ports
         del self.nineml_reduce_ports
