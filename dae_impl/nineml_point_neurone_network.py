@@ -32,7 +32,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 try:
-    from _heapq import heappush, heappop, heapify, heapreplace
+    from heapq import heappush, heappop, heapify, heapreplace
 except ImportError:
     from heapq import heappush, heappop, heapify, heapreplace
 
@@ -638,14 +638,15 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.neurone_report_variables = neurone_report_variables
         self.forthcoming_events       = []
         self.daesolver                = pyIDAS.daeIDAS()
-        self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
-        self.daesolver.SetLASolver(self.lasolver)
+        #self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
+        #self.daesolver.SetLASolver(self.lasolver)
 
     def init(self, log, datareporter, reportingInterval, timeHorizon):
         self.ReportingInterval = reportingInterval
         self.TimeHorizon       = timeHorizon
         self.Initialize(self.daesolver, datareporter, log)
         
+    """
     def simulateUntilTime(self, next_time):
         for (t_event, inlet_event_port) in self.forthcoming_events:
             print('Neurone {0} {1} : {2}'.format(self.m.CanonicalName, t_event, inlet_event_port.CanonicalName))
@@ -661,7 +662,7 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         
         # Report data
         #self.ReportData(next_time)
-            
+    """        
     def SetUpParametersAndDomains(self):
         """
         :rtype: None
@@ -697,7 +698,7 @@ class point_neurone_network_simulation:
         self.timeHorizon         = 0.0        
         self.log                 = daeLogs.daePythonStdOutLog()
         self.datareporter        = pyDataReporting.daeTCPIPDataReporter()
-        self.simulations         = {}
+        self.simulations         = []
         self.events_heap         = []
         self.number_of_vars      = 0
         self.number_of_neurones  = 0
@@ -728,8 +729,10 @@ class point_neurone_network_simulation:
                     for neurone in population.neurones:
                         simulation = point_neurone_simulation(neurone, population._parameters, {})
                         neurone.events_heap = self.events_heap
-                        self.simulations[neurone.Name] = simulation
+                        self.simulations.append(simulation)
                         self.number_of_neurones += 1
+            
+            self.simulations = sorted(self.simulations)
         
         except:
             raise
@@ -742,7 +745,7 @@ class point_neurone_network_simulation:
             self.log.Enabled = False
             
             self.number_of_vars = 0
-            for i, (target_neuron_name, simulation) in enumerate(self.simulations.iteritems()):
+            for i, simulation in enumerate(self.simulations):
                 print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(i+1, self.number_of_neurones, self.number_of_vars), "\r",
                 sys.stdout.flush()
                 
@@ -771,12 +774,11 @@ class point_neurone_network_simulation:
     def Run(self):
         # First create the reporting times list
         reporting_times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
-
+        print reporting_times
+        
         prev_time = 0.0
         # Iterate over the queue. The (delayed) events will be added to the queue as they are trigerred.
         for next_time in reporting_times:
-            #print(sorted(self.events_heap))
-            #print('next_time = {0}\nsend_events_to = {1}\n'.format(next_time, send_events_to))
             self.log.Message("Integrating from {0} to {1}...".format(prev_time, next_time), 0)
             
             try:
@@ -789,14 +791,24 @@ class point_neurone_network_simulation:
                         heappush(self.events_heap, (t_event, inlet_event_port, target_neurone))
                         break
                     
-                    target_neurone.simulation.forthcoming_events.append( (t_event, inlet_event_port) )
+                    #target_neurone.simulation.forthcoming_events.append( (t_event, inlet_event_port) )
+                    
+                    #print('{0} --> {1}s (trigger event on {2})'.format(target_neurone.Name, t_event, inlet_event_port.CanonicalName))
+                    target_neurone.simulation.IntegrateUntilTime(t_event, pyActivity.eDoNotStopAtDiscontinuity, False)
+                    inlet_event_port.ReceiveEvent(t_event)
+                    target_neurone.simulation.Reinitialize()
             
             except IndexError:
                 pass
                 
             # Integrate each neurone until the *next_time* is reached and report the data
-            for target_neuron_name, simulation in self.simulations.iteritems():
-                simulation.simulateUntilTime(next_time)
+            for simulation in self.simulations:
+                #print('{0}........ {1} {2} {3}'.format(simulation.m.Name, 
+                #                                       simulation.CurrentTime, 
+                #                                       '<' if simulation.CurrentTime < next_time else '=' , 
+                #                                       next_time))
+                if simulation.CurrentTime < next_time:
+                    simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
             
             # Set the progress to the console
             self.log.SetProgress(100.0 * next_time / self.timeHorizon)
@@ -935,7 +947,7 @@ class point_neurone_network_simulation:
         canvas.print_figure('{0}.png'.format(simulation_name), dpi = 300)        
     
     def Finalize(self):
-        for target_neuron_name, simulation in self.simulations.iteritems():
+        for simulation in self.simulations:
             simulation.Finalize()
         
 def readCSV_pyNN(filename):
@@ -967,6 +979,7 @@ def unique(connections):
 def profile_simulate():
     import hotshot
     from hotshot import stats
+    
     prof = hotshot.Profile("nineml_point_neurone_network.profile", lineevents = 1)
     try:
         prof.runcall(simulate)
@@ -1179,6 +1192,6 @@ def simulate():
     print('  Total run time:                            {0:>8.3f}s'.format(simulation_finalize_time_end - network_create_time_start))
    
 if __name__ == "__main__":
-    #simulate()
-    profile_simulate()
+    simulate()
+    #profile_simulate()
     
