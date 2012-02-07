@@ -32,7 +32,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 try:
-    from heapq import heappush, heappop, heapify, heapreplace
+    from _heapq import heappush, heappop, heapify, heapreplace
 except ImportError:
     from heapq import heappush, heappop, heapify, heapreplace
 
@@ -638,8 +638,8 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.neurone_report_variables = neurone_report_variables
         self.forthcoming_events       = []
         self.daesolver                = pyIDAS.daeIDAS()
-        #self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
-        #self.daesolver.SetLASolver(self.lasolver)
+        self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
+        self.daesolver.SetLASolver(self.lasolver)
 
     def init(self, log, datareporter, reportingInterval, timeHorizon):
         self.ReportingInterval = reportingInterval
@@ -1028,14 +1028,14 @@ def get_ul_model_and_simulation_inputs():
 
     psr_excitatory_params = {
                             'vrev' : (  0.000, 'V'),
-                            'q'    : (16.0E-9, 'S'), # 4.0E-9
+                            'q'    : ( 4.0E-9, 'S'), # 4.0E-9
                             'tau'  : (  0.005, 's'),
                             'g'    : (  0.000, 'S')
                             }
                     
     psr_inhibitory_params = {
                             'vrev' : ( -0.080, 'V'),
-                            'q'    : (200.0E-9, 'S'), # 51.0E-9
+                            'q'    : (51.0E-9, 'S'), # 51.0E-9
                             'tau'  : (  0.010, 's'),
                             'g'    : (  0.000, 'S')
                             }
