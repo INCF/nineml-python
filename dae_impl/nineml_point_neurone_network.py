@@ -21,8 +21,11 @@ from nineml.abstraction_layer import readers
 from nineml.abstraction_layer.testing_utils import TestableComponent
 
 from daetools.pyDAE import *
-from nineml_daetools_component import ninemlRNG, createPoissonSpikeTimes, daetools_spike_source, al_component_info, dae_component, dae_component_setup, fixObjectName
 from daetools.solvers import pySuperLU
+
+import nineml_daetools_component
+from nineml_daetools_component import ninemlRNG, createPoissonSpikeTimes, daetools_spike_source, al_component_info
+from nineml_daetools_component import dae_component, dae_component_setup, fixObjectName
 
 from sedml_support import *
 from path_parser import CanonicalNameParser
@@ -301,7 +304,6 @@ class daetools_point_neurone_network:
         self._components      = {}
         self._groups          = {}
         self._rngs            = {}
-        self._global_rng      = numpy.random.RandomState()
         
         for name, ul_component in list(ul_model.components.items()):
             self._components[name] = create_al_from_ul_component(ul_component, self._rngs)
@@ -375,7 +377,7 @@ class daetools_point_neurone_network:
     
     @property
     def globalRandomNumberGenerator(self):
-        return self._global_rng
+        return nineml_daetools_component._global_rng_
 
 class daetools_group:
     """
@@ -774,7 +776,7 @@ class point_neurone_network_simulation:
     def Run(self):
         # First create the reporting times list
         reporting_times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
-        print reporting_times
+        #print reporting_times
         
         prev_time = 0.0
         # Iterate over the queue. The (delayed) events will be added to the queue as they are trigerred.

@@ -19,6 +19,8 @@ class ninemlRNG(object):
     poisson     = 3
     exponential = 4
     
+    debug_seed = 100
+    
     def __init__(self, distribution, **kwargs):
         self.distribution = distribution
         self.rng          = numpy.random.RandomState()
@@ -78,28 +80,30 @@ class ninemlRNG(object):
         :rtype: ninemlRNG object
         :raises: RuntimeError
         """
+        seed = ninemlRNG.debug_seed
+        
         if al_component.name == 'uniform_distribution':
             lowerBound = parameters['lowerBound'][0]
             upperBound = parameters['upperBound'][0]
-            rng = ninemlRNG(ninemlRNG.uniform, lowerBound = lowerBound, upperBound = upperBound, seed = None)
+            rng = ninemlRNG(ninemlRNG.uniform, lowerBound = lowerBound, upperBound = upperBound, seed = seed)
         
         elif al_component.name == 'normal_distribution':
             centre = parameters['centre'][0]
             width  = parameters['width'][0]
-            rng = ninemlRNG(ninemlRNG.normal, centre = centre, width = width, seed = None)
+            rng = ninemlRNG(ninemlRNG.normal, centre = centre, width = width, seed = seed)
         
         elif al_component.name == 'binomial_distribution':
             n = parameters['n'][0]
             p = parameters['p'][0]
-            rng = ninemlRNG(ninemlRNG.binomial, n = n, p = p, seed = None)
+            rng = ninemlRNG(ninemlRNG.binomial, n = n, p = p, seed = seed)
         
         elif al_component.name == 'poisson_distribution':
             lamb = parameters['lamb'][0]
-            rng = ninemlRNG(ninemlRNG.poisson, lamb = lamb, seed = None)
+            rng = ninemlRNG(ninemlRNG.poisson, lamb = lamb, seed = seed)
         
         elif al_component.name == 'exponential_distribution':
             beta = parameters['beta'][0]
-            rng = ninemlRNG(ninemlRNG.exponential, beta = beta, seed = None)
+            rng = ninemlRNG(ninemlRNG.exponential, beta = beta, seed = seed)
         
         else:
             raise RuntimeError('Unsupported random distribution component: {0}'.format(al_component.name))
@@ -107,6 +111,7 @@ class ninemlRNG(object):
         return rng
 
 _global_rng_ = numpy.random.RandomState()
+_global_rng_.seed(ninemlRNG.debug_seed)
 
 def random_uniform(lowerBound = 0.0, upperBound = 1.0):
     res = _global_rng_.uniform(lowerBound, upperBound, 1)
