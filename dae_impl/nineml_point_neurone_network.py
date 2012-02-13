@@ -699,7 +699,7 @@ class point_neurone_network_simulation:
         self.reportingInterval   = 0.0
         self.timeHorizon         = 0.0        
         self.log                 = daeLogs.daePythonStdOutLog()
-        self.datareporter        = pyDataReporting.daeTCPIPDataReporter()
+        self.datareporter        = daeBlackHoleDataReporter() #pyDataReporting.daeTCPIPDataReporter()
         self.simulations         = []
         self.events_heap         = []
         self.number_of_vars      = 0
@@ -996,8 +996,24 @@ def get_ul_model_and_simulation_inputs():
     ###############################################################################
     #                           NineML UserLayer Model
     ###############################################################################
-    catalog = "file:///home/ciroki/Data/NineML/experimental/lib9ml/python/dae_impl/"
+    N_neurons = 100
+    N_exc     = int(N_neurons * 0.8)
+    N_inh     = int(N_neurons * 0.2)
+    N_poisson = 20
 
+    if N_neurons == 100:
+        connections_folder = ''
+    elif N_neurons == 1000:
+        connections_folder = '1000/'
+    elif N_neurons == 2000:
+        connections_folder = '2000/'
+    elif N_neurons == 2000:
+        connections_folder = '4000/'
+    else:
+        raise RuntimeError('The number of neurones can be 100, 1000, 2000 or 4000')
+
+    catalog = 'file://{0}/'.format(sys.path[0])
+    
     rnd_uniform = {
                     'lowerBound': (-0.060, "dimensionless"),
                     'upperBound': (-0.040, "dimensionless")
@@ -1030,14 +1046,14 @@ def get_ul_model_and_simulation_inputs():
 
     psr_excitatory_params = {
                             'vrev' : (  0.000, 'V'),
-                            'q'    : ( 4.0E-9, 'S'), # 4.0E-9
+                            'q'    : ( 4.0E-9, 'S'),
                             'tau'  : (  0.005, 's'),
                             'g'    : (  0.000, 'S')
                             }
                     
     psr_inhibitory_params = {
                             'vrev' : ( -0.080, 'V'),
-                            'q'    : (51.0E-9, 'S'), # 51.0E-9
+                            'q'    : (51.0E-9, 'S'),
                             'tau'  : (  0.010, 's'),
                             'g'    : (  0.000, 'S')
                             }
@@ -1053,11 +1069,10 @@ def get_ul_model_and_simulation_inputs():
     grid2D          = nineml.user_layer.Structure("2D grid", catalog + "2Dgrid.xml")
     connection_type = nineml.user_layer.ConnectionType("Static weights and delays", catalog + "static_weights_delays.xml")
     
-    population_excitatory = nineml.user_layer.Population("Excitatory population", 800, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
-    population_inhibitory = nineml.user_layer.Population("Inhibitory population", 200, neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
-    population_poisson    = nineml.user_layer.Population("Poisson population",     20, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
+    population_excitatory = nineml.user_layer.Population("Excitatory population", N_exc,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
+    population_inhibitory = nineml.user_layer.Population("Inhibitory population", N_inh,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
+    population_poisson    = nineml.user_layer.Population("Poisson population",    N_poisson, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
-    connections_folder      = '1000/'
     connections_exc_exc     = readCSV_pyNN(connections_folder + 'e2e.conn')
     connections_exc_inh     = readCSV_pyNN(connections_folder + 'e2i.conn')
     connections_inh_inh     = readCSV_pyNN(connections_folder + 'i2i.conn')
