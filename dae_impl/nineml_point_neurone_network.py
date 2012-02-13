@@ -640,8 +640,8 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.neurone_report_variables = neurone_report_variables
         self.forthcoming_events       = []
         self.daesolver                = pyIDAS.daeIDAS()
-        self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
-        self.daesolver.SetLASolver(self.lasolver)
+        #self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
+        #self.daesolver.SetLASolver(self.lasolver)
 
     def init(self, log, datareporter, reportingInterval, timeHorizon):
         self.ReportingInterval = reportingInterval
