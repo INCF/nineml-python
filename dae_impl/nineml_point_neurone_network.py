@@ -1111,7 +1111,7 @@ def get_ul_model_and_simulation_inputs():
     ###############################################################################
     #                            SED-ML experiment
     ###############################################################################
-    timeHorizon       = 0.0300 # seconds
+    timeHorizon       = 0.1000 # seconds
     reportingInterval = 0.0001 # seconds
     noPoints          = 1 + int(timeHorizon / reportingInterval)
     
