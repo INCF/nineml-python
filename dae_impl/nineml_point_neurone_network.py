@@ -640,8 +640,12 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.neurone_report_variables = neurone_report_variables
         self.forthcoming_events       = []
         self.daesolver                = pyIDAS.daeIDAS()
+        # SuperLU LA Solver
         #self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
         #self.daesolver.SetLASolver(self.lasolver)
+        
+        # Lapack LA Solver
+        self.daesolver.SetLASolver(pyIDAS.eSundialsLapack)
 
     def init(self, log, datareporter, reportingInterval, timeHorizon):
         self.ReportingInterval = reportingInterval
@@ -996,7 +1000,7 @@ def get_ul_model_and_simulation_inputs():
     ###############################################################################
     #                           NineML UserLayer Model
     ###############################################################################
-    N_neurons = 100
+    N_neurons = 1000
     N_exc     = int(N_neurons * 0.8)
     N_inh     = int(N_neurons * 0.2)
     N_poisson = 20
@@ -1007,7 +1011,7 @@ def get_ul_model_and_simulation_inputs():
         connections_folder = '1000/'
     elif N_neurons == 2000:
         connections_folder = '2000/'
-    elif N_neurons == 2000:
+    elif N_neurons == 4000:
         connections_folder = '4000/'
     else:
         raise RuntimeError('The number of neurones can be 100, 1000, 2000 or 4000')
