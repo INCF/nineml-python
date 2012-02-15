@@ -44,7 +44,7 @@ class ConnectionGenerator:
         """
         Initializes and returns the iterator.
         
-        :rtype: explicit_connections_generator_interface object (self)
+        :rtype: ConnectionGenerator-derived object (self)
         :raises: 
         """
         self.start()
@@ -61,3 +61,96 @@ class ConnectionGenerator:
         """
         raise NotImplementedError
         return (0, 0)
+
+"""
+                    ACHTUNG, ACHTUNG!
+
+ * A name of the class? ExplicitListOfConnections?
+ * Should we put it here or in a separate file?
+ * Should we use Abstract Base Class (abc) package for ConnectionGenerator interface (see geometry.py file)?
+ * Should we implement masks here as well?
+"""
+class ExplicitListOfConnections(ConnectionGenerator):
+    """
+    The implementation of the ConnectionGenerator interface for the explicit list of connections.
+    
+    **Achtung, Achtung!** 
+    All indexes are zero based, for both source and target populations.
+    """
+    def __init__(self, connections):
+        """
+        Initializes the list of connections that the simulator can iterate on.
+        
+        :param connections: a list of tuples: (int, int) or (int, int, weight) or (int, int, weight, delay) 
+                            or (int, int, weight, delay, parameters)
+    
+        :rtype:        
+        :raises: RuntimeError 
+        """
+        if not connections or len(connections) == 0:
+            raise RuntimeError('The connections argument is either None or an empty list')
+        
+        n_values = len(connections[0])
+        if n_values < 2:
+            raise RuntimeError('The number of items in each connection must be at least 2')
+        
+        for c in connections:
+            if len(c) != n_values:
+                raise RuntimeError('An invalid number of items in the connection: {0}; it should be {1}'.format(c, n_values))
+        
+        self._connections = connections
+        self._current     = 0
+    
+    @property
+    def size(self):
+        """
+        :rtype: Integer (the number of the connections).
+        :raises:  
+        """
+        return len(self._connections)
+        
+    @property
+    def arity(self):
+        """
+        Returns the number of values stored in an individual connection. It can be zero.
+        The first two are always weight and delay; the rest are connection specific parameters.
+        
+        :rtype: Integer
+        :raises: IndexError
+        """
+        return len(self._connections[0]) - 2
+    
+    def __iter__(self):
+        """
+        Initializes and returns the iterator.
+        
+        :rtype: explicit_connections_generator_interface object (self)
+        :raises: 
+        """
+        self.start()
+        return self
+    
+    def start(self):
+        """
+        Initializes the iterator.
+        
+        :rtype:
+        :raises: 
+        """
+        self._current = 0
+    
+    def next(self):
+        """
+        Returns the connection and moves the counter to the next one.
+        The connection is a tuple: (source_index, target_index, [zero or more floating point values])
+        
+        :rtype: tuple
+        :raises: StopIteration (as required by the python iterator concept)
+        """
+        if self._current >= len(self._connections):
+            raise StopIteration
+        
+        connection = self._connections[self._current]
+        self._current += 1
+        
+        return connection
