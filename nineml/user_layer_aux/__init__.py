@@ -1,1 +1,1 @@
-from connection_generator import ConnectionGenerator
+from connection_generator import *
