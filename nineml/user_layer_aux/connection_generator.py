@@ -53,7 +53,7 @@ class ConnectionGenerator:
         """
         raise NotImplementedError        
 
-    def setMask (self, masks, local):
+    def setMasks (self, masks, local):
         """
         For a parallel simulator, we want to know the masks for all ranks
         """
