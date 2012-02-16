@@ -1,10 +1,31 @@
 class IntervalSet:
-    def __init__ (self, initializer):
-        pass
+    def __init__ (self, intervals = [], skip = 1):
+        """
+        intervals is a list of 2-tuples (FROM, TO) representing all
+        integers i, FROM <= i <= TO
+        """
+        self.intervals = intervals
+        self._skip = skip
+
+    @property
+    def skip (self):
+        return _skip
+
+    def __iter__ (self):
+        return self.intervals.__iter__ ()
+
 
 class Mask:
-    def __init__ (self, sourceSkip = 1, targetSkip = 1, sources = [], targets = []):
-        pass
+    def __init__ (self,
+                  sources = [], targets = [],
+                  sourceSkip = 1, targetSkip = 1):
+        """
+        sources and targets are lists of 2-tuples (FROM, TO)
+        representing all integers i, FROM <= i <= TO
+        """
+        self.sources = IntervalSet (sources, sourceSkip)
+        self.targets = IntervalSet (targets, targetSkip)
+
 
 class ConnectionGenerator:
     """
@@ -21,6 +42,22 @@ class ConnectionGenerator:
         """
         raise NotImplementedError
         return 0
+
+    def setMask (self, mask):
+        """
+        Inform the generator of which source and target indexes exist
+        (must always be called before any of the methods below)
+   
+        skip (specified in mask) can be used in round-robin allocation
+        schemes.
+        """
+        raise NotImplementedError        
+
+    def setMask (self, masks, local):
+        """
+        For a parallel simulator, we want to know the masks for all ranks
+        """
+        raise NotImplementedError
     
     @property
     def size(self):
