@@ -17,7 +17,8 @@ import numpy, numpy.random
 
 import nineml
 import nineml.user_layer
-from nineml.user_layer_aux import connection_generator, geometry
+from nineml.user_layer_aux import connection_generator, explicit_list_of_connections_generator
+from nineml.user_layer_aux import geometry
 from nineml.abstraction_layer import readers
 from nineml.abstraction_layer.testing_utils import TestableComponent
 
@@ -435,20 +436,26 @@ class daetools_projection:
             neurone.incoming_synapses.append( (self._synapses[i], psr_parameters) ) 
         
         ul_connection_rule = network.getULComponent(ul_projection.rule.name)
-        if hasattr(ul_connection_rule, 'connections'): # Explicit connections
-            connections = getattr(ul_connection_rule, 'connections') 
-            cgi = connection_generator.ExplicitListOfConnections(connections)
-            self._createConnections(cgi, source_population, target_population)
+        mask = connection_generator.Mask([ (0, ul_projection.source.number) ], [ (0, ul_projection.target.number) ], 1, 1)
+        cgi = self.createCGI(ul_connection_rule)
+        cgi.setMask(mask)
+        self._createConnections(cgi, source_population, target_population)
         
-        else: # It should be the CSA component then
-            self._handleConnectionRuleComponent(_connection_rule)
-
         # Now we are done with connections. Initialize synapses
         for i, neurone in enumerate(target_population.neurones):
             synapse = self._synapses[i]
             synapse.initialize()
             neurone.connectAnaloguePorts(synapse, neurone)
 
+    def createCGI(self, ul_connection_rule):
+        if hasattr(ul_connection_rule, 'connections'): # Explicit connections
+            connections = getattr(ul_connection_rule, 'connections') 
+            cgi = explicit_list_of_connections_generator.ExplicitListOfConnections(connections)
+            return cgi
+        
+        else: # It should be the CSA component then
+            return None
+        
     def __repr__(self):
         res = 'daetools_projection({0})\n'.format(self.name)
         #res += '  source_population:\n'
@@ -471,21 +478,12 @@ class daetools_projection:
         """
         return self._synapses[index]
 
-    def _handleConnectionRuleComponent(self, al_connection_rule):
-        """
-        :param al_connection_rule: AL Component object (CSA or other)
-        
-        :rtype: None
-        :raises: RuntimeError
-        """
-        raise RuntimeError('Support for connection rule component not implemented yet')
-
     def _createConnections(self, cgi, source_population, target_population):
         """
         Iterates over ConnectionGeneratorInterface object and creates connections.
         Based on the connections, connects source->target neurones and (optionally) sets weights and delays
         
-        :param cgi: ConnectionGeneratorInterface object
+        :param cgi: ConnectionGenerator interface object
         
         :rtype: None
         :raises: RuntimeError
@@ -499,6 +497,7 @@ class daetools_projection:
         #for i, neurone in enumerate(source_population.neurones):
         #    graph.add_node(neurone.Name)
         
+        count = 0
         for connection in cgi:
             size = len(connection)
             if(size < 2):
@@ -532,9 +531,12 @@ class daetools_projection:
             # Hence, we add the synapse object and the index of the event port.
             source_neurone.target_synapses.append( (synapse, synapse.Nitems, delay, target_neurone) )
             synapse.Nitems += 1
+            count += 1
             
             # Increase the number of connections in the synapse
             # ACHTUNG!! Here we should set the weight somehow but that is undefined at the moment
+        
+        print('{0}: created {1} connections'.format(self.name, count))
         
         #graph.layout()
         #graph.write('{0}.dot'.format(self.name))

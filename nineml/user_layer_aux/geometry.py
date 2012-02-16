@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import math
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 
 class StructureInterface(object):
     """
@@ -26,7 +26,7 @@ class StructureInterface(object):
         :param target_index: Integer
         
         :rtype: Float
-        :raises: RuntimeError, IndexError, NotImplementedError
+        :raises: RuntimeError, IndexError, TypeError
         """
         pass
 
@@ -38,17 +38,17 @@ class StructureInterface(object):
         :param index: Integer
         
         :rtype: Float
-        :raises: RuntimeError, IndexError, NotImplementedError
+        :raises: RuntimeError, IndexError, TypeError
         """
         pass
 
-    @abstractmethod
+    @abstractproperty
     def positions(self):
         """
         Returns a list of coordinates (list of tuples: (x, y, z); units: ???) for all points in the structure.
         
         :rtype: list of (float, float, float) tuples
-        :raises: RuntimeError, IndexError, NotImplementedError
+        :raises: RuntimeError, IndexError, TypeError
         """
         pass
 
@@ -59,18 +59,19 @@ class UnstructuredGrid(StructureInterface):
         if not isinstance(positions, list):
             raise RuntimeError('')
         
-        self.positions = positions
+        self._positions = positions
     
     def metric(self, source_index, target_index):
-        (sx, sy, sz) = self.positions[source_index]
-        (tx, ty, tz) = self.positions[target_index]
+        (sx, sy, sz) = self._positions[source_index]
+        (tx, ty, tz) = self._positions[target_index]
         return math.sqrt( (sx - tx) ** 2 + (sy - ty) ** 2 + (sz - tz) ** 2 )
 
     def position(self, index):
-        return self.positions[index]
+        return self._positions[index]
     
+    @property
     def positions(self):
-        return self.positions
+        return self._positions
         
 class Grid2D(UnstructuredGrid):
     def __init__(self, x0, y0, width, height, Nx, Ny):
@@ -97,5 +98,6 @@ if __name__ == "__main__":
     grid2d = Grid2D(0.0, 0.0, 0.1, 0.1, 20, 20)
     print(grid2d)
     print(repr(grid2d))
+    print(grid2d.positions)
     
     
