@@ -5,6 +5,7 @@
    :synopsis: 
 
 .. moduleauthor:: Mikael Djurfeldt <mikael.djurfeldt@incf.org>
+.. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
 """
 
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -67,7 +68,7 @@ class ConnectionGenerator:
         pass
 
     @abstractmethod
-    def setMask (self, mask):
+    def setMask(self, mask):
         """
         Inform the generator of which source and target indexes exist
         (must always be called before any of the methods below)
@@ -79,34 +80,27 @@ class ConnectionGenerator:
         :raises: TypeError
         """
         pass        
-
-    def setMasks (self, masks, local):
-        """
-        For a parallel simulator, we want to know the masks for all ranks
-        
-        :rtype: None
-        :raises: TypeError
-        """
-        self.setMask(masks[local])
     
     @abstractmethod
     def __iter__(self):
         """
-        Initializes and returns the iterator.
+        Initializes and returns an iterator.
+        Items are tuples (source_index, target_index, parameter0, parameter1, ...).
+        The number of parameters is equal to arity.
         
-        :rtype: ConnectionGenerator-derived object (self)
+        :rtype: Iterator
         :raises: TypeError
         """
         pass
-    
-    @abstractmethod
-    def next(self):
+
+    def setMasks(self, masks, local):
         """
-        Returns the connection and moves the counter to the next one.
-        The connection is a tuple: (source_index, target_index, [parameters]).
-        The number of parameters returned is equal to *arity*.
+        For a parallel simulator, we want to know the masks for all ranks
         
-        :rtype: tuple
-        :raises: TypeError, StopIteration (as required by the python iterator concept)
+        :param masks: list of Mask objects 
+        :param mask: integer 
+
+        :rtype: None
+        :raises: 
         """
-        pass
+        self.setMask(masks[local])

@@ -436,7 +436,7 @@ class daetools_projection:
             neurone.incoming_synapses.append( (self._synapses[i], psr_parameters) ) 
         
         ul_connection_rule = network.getULComponent(ul_projection.rule.name)
-        mask = connection_generator.Mask([ (0, ul_projection.source.number) ], [ (0, ul_projection.target.number) ], 1, 1)
+        mask = connection_generator.Mask([(0, ul_projection.source.number)], [(0, ul_projection.target.number)], 1, 1)
         cgi = self.createCGI(ul_connection_rule)
         cgi.setMask(mask)
         self._createConnections(cgi, source_population, target_population)
@@ -498,7 +498,7 @@ class daetools_projection:
         #    graph.add_node(neurone.Name)
         
         count = 0
-        for connection in cgi:
+        for connection in cgi.iterConnections():
             size = len(connection)
             if(size < 2):
                 raise RuntimeError('Not enough data in the explicit lists of connections')
@@ -650,7 +650,7 @@ class point_neurone_network_simulation:
             
             for group_name, group in self.network._groups.iteritems():
                 for population_name, population in group._populations.iteritems():
-                    print("Creating the population: {0}...".format(population_name))
+                    print("Creating simulations for: {0}...".format(population_name))
                     for neurone in population.neurones:
                         simulation = point_neurone_simulation(neurone, population._parameters, {})
                         neurone.events_heap = self.events_heap
