@@ -30,7 +30,7 @@ from nineml_daetools_component import ninemlRNG, createPoissonSpikeTimes, daetoo
 from nineml_daetools_component import dae_component, dae_component_setup, fixObjectName
 
 from sedml_support import *
-from path_parser import CanonicalNameParser
+from path_parser import CanonicalNameParser, pathItem
 
 import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -388,7 +388,7 @@ class daetools_population:
         :raises: IndexError
         """
         return self.neurones[int(index)]
-    
+
     def __repr__(self):
         res = 'daetools_population({0})\n'.format(self._name)
         res += '  neurones:\n'
@@ -469,7 +469,7 @@ class daetools_projection:
         #res += '  connection_type:\n'
         #res += '    {0}\n'.format(self._connection_type)
         return res
-
+        
     def getSynapse(self, index):
         """
         :param name: integer
@@ -498,7 +498,7 @@ class daetools_projection:
         #    graph.add_node(neurone.Name)
         
         count = 0
-        for connection in cgi.iterConnections():
+        for connection in cgi:
             size = len(connection)
             if(size < 2):
                 raise RuntimeError('Not enough data in the explicit lists of connections')
@@ -559,6 +559,7 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.neurone_report_variables = neurone_report_variables
         self.forthcoming_events       = []
         self.daesolver                = pyIDAS.daeIDAS()
+        
         # SuperLU LA Solver
         #self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
         #self.daesolver.SetLASolver(self.lasolver)
@@ -571,23 +572,6 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.TimeHorizon       = timeHorizon
         self.Initialize(self.daesolver, datareporter, log)
         
-    """
-    def simulateUntilTime(self, next_time):
-        for (t_event, inlet_event_port) in self.forthcoming_events:
-            print('Neurone {0} {1} : {2}'.format(self.m.CanonicalName, t_event, inlet_event_port.CanonicalName))
-            self.IntegrateUntilTime(t_event, pyActivity.eDoNotStopAtDiscontinuity, False)
-            inlet_event_port.ReceiveEvent(t_event)
-            self.Reinitialize()
-        
-        if self.CurrentTime < next_time:
-            self.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
-        
-        # Clear the list of events
-        self.forthcoming_events = []
-        
-        # Report data
-        #self.ReportData(next_time)
-    """        
     def SetUpParametersAndDomains(self):
         """
         :rtype: None
@@ -622,7 +606,7 @@ class point_neurone_network_simulation:
         self.reportingInterval   = 0.0
         self.timeHorizon         = 0.0        
         self.log                 = daeLogs.daePythonStdOutLog()
-        self.datareporter        = daeBlackHoleDataReporter() #pyDataReporting.daeTCPIPDataReporter()
+        self.datareporter        = pyDataReporting.daeTCPIPDataReporter() #daeBlackHoleDataReporter() #pyDataReporting.daeTCPIPDataReporter()
         self.simulations         = []
         self.events_heap         = []
         self.number_of_vars      = 0
@@ -630,6 +614,8 @@ class point_neurone_network_simulation:
         self.average_firing_rate = {}
         self.raster_plot_data    = []
         self.pathParser          = CanonicalNameParser()
+        self.report_variables    = {}
+        self.outputs             = []
 
         heapify(self.events_heap)
         
@@ -734,6 +720,7 @@ class point_neurone_network_simulation:
                 #                                       next_time))
                 if simulation.CurrentTime < next_time:
                     simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
+                simulation.ReportData(next_time)
             
             # Set the progress to the console
             self.log.SetProgress(100.0 * next_time / self.timeHorizon)
@@ -746,53 +733,72 @@ class point_neurone_network_simulation:
         self.processResults()
         
     def processSEDMLExperiment(self, sedml_experiment):
-        variables_to_report = []
-        plots_to_generate   = []
-        
-        ul_model = sedml_experiment.get_ul_model()
+        if len(sedml_experiment.tasks) != 1:
+            raise RuntimeError('The number of tasks must be one')
+        sedml_task = sedml_experiment.tasks[0]
+ 
+        ul_model     = sedml_task.model.getUserLayerModel()
         self.network = daetools_point_neurone_network(ul_model)
-
-        simulation = sedml_experiment.get_simulation()
-        if not simulation:
-            raise RuntimeError('')
         
-        self.reportingInterval = float(simulation.outputEndTime - simulation.outputStartTime) / (simulation.numberOfPoints - 1)
-        self.timeHorizon       = float(simulation.outputEndTime)
-        
-        #self.tasks           = list(tasks)
-        #self.data_generators = list(data_generators)
-        #self.outputs         = list(outputs)
-    
-        for data_generator in sedml_experiment.data_generators:
-            pass
+        self.reportingInterval = float(sedml_task.simulation.outputEndTime - sedml_task.simulation.outputStartTime) / (sedml_task.simulation.numberOfPoints - 1)
+        self.timeHorizon       = float(sedml_task.simulation.outputEndTime)
         
         for data_generator in sedml_experiment.data_generators:
-            pass
-        
+            for variable in data_generator.variables:
+                if variable.target:
+                    try:
+                        items = self.pathParser.parse(str(variable.target))
+                    except Exception as e:
+                        RuntimeError('Invalid SED-ML variable name: {0}'.format(variable.target))
+                    
+                    if len(items) != 3:
+                        raise RuntimeError('Invalid SED-ML variable name: {0}'.format(variable.target))
+                    
+                    if items[0].Type != pathItem.typeID:
+                        raise RuntimeError('Invalid SED-ML variable name: {0}'.format(variable.target))
+                    group = self.network.getGroup(items[0].Name)       
+                    
+                    if items[1].Type != pathItem.typeIndexedID:
+                        raise RuntimeError('Invalid SED-ML variable name: {0}'.format(variable.target))
+                    population = group.getPopulation(items[1].Name)  
+                    neurone = population.getNeurone(items[1].Index)
+                    
+                    if items[2].Type != pathItem.typeID:
+                        raise RuntimeError('Invalid SED-ML variable name: {0}'.format(variable.target))
+                    variable_name = items[2].Name
+                    
+                    if variable_name in neurone.nineml_aliases:
+                        dae_variable = neurone.nineml_aliases[variable_name]
+                    
+                    elif variable_name in neurone.nineml_variables:
+                        dae_variable = neurone.nineml_variables[variable_name]
+                    
+                    elif variable_name in neurone.nineml_inlet_ports:
+                        dae_variable = neurone.nineml_inlet_ports[variable_name]
+                    
+                    elif variable_name in neurone.nineml_reduce_ports:
+                        dae_variable = neurone.nineml_reduce_ports[variable_name]
+                    
+                    else:
+                        raise RuntimeError('Cannot find variable: {0}'.format(variable.target))
+                        
+                    print('SED-ML variable: {0}'.format(dae_variable.CanonicalName))
+                    self.report_variables[variable.target] = dae_variable
+                    dae_variable.ReportingOn = True
+                    
+                elif variable.symbol:
+                    if variable.symbol == 'urn:sedml:symbol:time':
+                        print('variable : time')
+                        self.report_variables['time'] = None
+                    else:
+                        raise RuntimeError('Unsupported SED-ML symbol: {0}'.format(variable.symbol))
+                
+                else:
+                    raise RuntimeError('Both variable symbol and target are None')
+                
         for output in sedml_experiment.outputs:
             pass
         
-    """
-    def getListOfNeuronesFromCanonicalName(self, canonicalName):
-        self.pathParser
-        #print('  relativeName = {0} for root = {1} and canonicalName = {2}'.format(relativeName, rootModel.CanonicalName, canonicalName))
-        listCanonicalName = canonicalName.split('.')
-        neurones   = listCanonicalName[-1]
-        objectPath = listCanonicalName[:-1]
-
-        
-        root = rootModel
-        if len(objectPath) > 0:
-            for name in objectPath:
-                root = findObjectInModel(root, name, look_for_models = True)
-                if root == None:
-                    raise RuntimeError('Could not locate object {0} in {1}'.format(name, ".".join(objectPath)))
-
-        # Now we have the model where port should be located (root)
-        # Search for the 'name' in the 'root' model (in the types of objects given in **kwargs)
-        return findObjectInModel(root, objectName, **kwargs)
-    """
-    
     def processResults(self):
         simulation_name = self.network._name
         
@@ -1060,8 +1066,8 @@ def get_ul_model_and_simulation_inputs():
     sedml_task       = sedmlTask('task1', 'task1', sedml_model, sedml_simulation)
     
     sedml_variable_time  = sedmlVariable('time', 'time',    sedml_task, symbol='urn:sedml:symbol:time')
-    sedml_variable_excV  = sedmlVariable('excV', 'Voltage', sedml_task, target='Group 1/Excitatory population/V[0]')
-    sedml_variable_inhV  = sedmlVariable('inhV', 'Voltage', sedml_task, target='Group 1/Inhibitory population/V[0]')
+    sedml_variable_excV  = sedmlVariable('excV', 'Voltage', sedml_task, target='Group 1.Excitatory population[0].V')
+    sedml_variable_inhV  = sedmlVariable('inhV', 'Voltage', sedml_task, target='Group 1.Inhibitory population[0].V')
 
     sedml_data_generator_time = sedmlDataGenerator('DG time', 'DG time', [sedml_variable_time])
     sedml_data_generator_excV = sedmlDataGenerator('DG excV', 'DG excV', [sedml_variable_excV])

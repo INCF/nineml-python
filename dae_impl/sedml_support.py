@@ -63,7 +63,7 @@ class sedmlModel(sedmlBase):
             return self.ul_model
         else:
             # Here we should load the UserLayer model using the supplied URN
-            # However, the loading user layer xml files is not supported at the moment
+            # However, loading user layer xml files is not supported at the moment
             raise RuntimeError('')
 
 class sedmlTask(sedmlBase):
@@ -204,8 +204,8 @@ if __name__ == "__main__":
     sedml_task       = sedmlTask('task1', 'task1', sedml_model, sedml_simulation)
     
     sedml_variable_time  = sedmlVariable('time', 'time',    sedml_task, symbol='urn:sedml:symbol:time')
-    sedml_variable_excV  = sedmlVariable('excV', 'Voltage', sedml_task, target='Group 1/Excitatory population/V[0]')
-    sedml_variable_inhV  = sedmlVariable('inhV', 'Voltage', sedml_task, target='Group 1/Inhibitory population/V[0]')
+    sedml_variable_excV  = sedmlVariable('excV', 'Voltage', sedml_task, target='Group 1.Excitatory population[0].V')
+    sedml_variable_inhV  = sedmlVariable('inhV', 'Voltage', sedml_task, target='Group 1.Inhibitory population[0].V')
 
     sedml_data_generator_time = sedmlDataGenerator('DG time', 'DG time', [sedml_variable_time])
     sedml_data_generator_excV = sedmlDataGenerator('DG excV', 'DG excV', [sedml_variable_excV])
