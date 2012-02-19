@@ -17,7 +17,7 @@ import numpy, numpy.random
 
 import nineml
 import nineml.user_layer
-from nineml.user_layer_aux import connection_generator, explicit_list_of_connections_generator
+from nineml.user_layer_aux import connection_generator, explicit_list_of_connections
 from nineml.user_layer_aux import geometry
 from nineml.abstraction_layer import readers
 from nineml.abstraction_layer.testing_utils import TestableComponent
@@ -450,7 +450,7 @@ class daetools_projection:
     def createCGI(self, ul_connection_rule):
         if hasattr(ul_connection_rule, 'connections'): # Explicit connections
             connections = getattr(ul_connection_rule, 'connections') 
-            cgi = explicit_list_of_connections_generator.ExplicitListOfConnections(connections)
+            cgi = explicit_list_of_connections.ExplicitListOfConnections(connections)
             return cgi
         
         else: # It should be the CSA component then
