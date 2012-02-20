@@ -5,7 +5,7 @@
     <AnalogPort mode="send" name="I"/>
     <EventPort mode="recv" name="spikeinput"/>
     <Parameter dimension="??" name="tau"/>
-    <Parameter dimension="??" name="q"/>
+    <Parameter dimension="??" name="weight"/>
     <Parameter dimension="??" name="vrev"/>
     <Dynamics>
       <Regime name="cobadefaultregime">
@@ -14,7 +14,7 @@
         </TimeDerivative>
         <OnEvent target_regime="cobadefaultregime" src_port="spikeinput">
           <StateAssignment variable="g">
-            <MathInline>g+q</MathInline>
+            <MathInline>g+weight</MathInline>
           </StateAssignment>
         </OnEvent>
       </Regime>

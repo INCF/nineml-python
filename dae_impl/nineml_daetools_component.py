@@ -157,6 +157,7 @@ class daetools_spike_source(pyCore.daeModel):
 
         self.on_spike_out_action  = None
         self.target_synapses      = []    
+        self.incoming_synapses    = []    
         self.event_queue          = [] 
         self.incoming_synapses    = []
         self.Nitems               = 0
@@ -420,6 +421,7 @@ class dae_component(daeModel):
         self.on_spike_out_action            = None
         self.target_synapses                = []    
         self.incoming_synapses              = []    
+        self.synapse_weights                = []
         self.event_queue                    = [] 
         self.simulation                     = None
 
@@ -687,16 +689,6 @@ class dae_component(daeModel):
             ports.update(sub_comp._getReducePorts(parent))
         return ports
     
-    """
-    def findPort(self, relativeName):
-        ports = self._addAllPorts(self)
-        print(ports)
-        
-        if relativeName in ports:
-            return ports[relativeName]
-        return None
-    """
-    
     def _getExpressionParserIdentifiers(self):
         dictIdentifiers = {}
         dictFunctions   = {}
@@ -769,7 +761,6 @@ class dae_component(daeModel):
                 raise RuntimeError('')
             n = eq.DistributeOnDomain(varFrom.Domains[0], eClosedClosed)
             eq.Residual = varFrom(n) - varTo(n)
-            #print('\tport_connection', repr(varFrom(n) - varTo(n)))
         
         else:
             raise RuntimeError('Cannot generate a port connection equation for the port connection {0} -> {1}'.format(varFrom.CanonicalName, varTo.CanonicalName))
@@ -806,14 +797,12 @@ class dae_component(daeModel):
         else:
             raise RuntimeError('')
         
-        #print('\treduce_port_connection', repr(residual))
         eq.Residual = residual
         
     def DeclareEquations(self):
         if self.Nitems == 0:
             return
         
-        #print('\nDeclareEquations in {0}\n'.format(self.CanonicalName))
         wrapperIdentifiers, dictFunctions = self._getExpressionParserIdentifiers()
         
         # 1a) Create aliases (algebraic equations)
@@ -823,7 +812,6 @@ class dae_component(daeModel):
             wrapperIdentifiers.current_index = n
             residual = var(n) - num.Node.evaluate(wrapperIdentifiers, dictFunctions)
             eq.Residual = residual
-            #print('\tAlias', repr(residual))
         
         # 1b) Create equations for ordinary analogue port connections
         for (varFrom, varTo) in self.nineml_port_connections:
@@ -839,12 +827,10 @@ class dae_component(daeModel):
                 # 2a) Create STN for model
                 stn = self.STN('{0}({1})'.format(dae_component.ninemlSTNRegimesName, stn_i))
                 self.nineml_stns.append(stn)
-                #print('STN {0}\n'.format(stn.CanonicalName))
 
                 for (regime_name, odes, on_conditions, on_events) in self.info.nineml_regimes:
                     # 2b) Create State for each regime
                     self.STATE(regime_name)
-                    #print('\tState {0}\n'.format(regime_name))
 
                     # 2c) Create equations for all state variables/time derivatives
                     for (var_name, num) in odes:
@@ -856,7 +842,6 @@ class dae_component(daeModel):
                         wrapperIdentifiers.current_index = stn_i
                         residual = variable.dt(stn_i) - num.Node.evaluate(wrapperIdentifiers, dictFunctions)                        
                         eq.Residual = residual
-                        #print('\t\tODE', var_name, repr(residual))
                             
                     # 2d) Create on_condition actions
                     for (condition_num, switch_to, set_variable_values, trigger_events) in on_conditions:
@@ -871,7 +856,6 @@ class dae_component(daeModel):
                             wrapperIdentifiers.current_index = stn_i
                             expression = num.Node.evaluate(wrapperIdentifiers, dictFunctions)
                             setVariableValues.append( (variable, expression) )
-                            #print('\t\ton_condition setVariableValues', repr(expression))
 
                         for (port_name, value) in trigger_events:
                             if not port_name in self.nineml_outlet_event_ports:
@@ -903,7 +887,6 @@ class dae_component(daeModel):
                             wrapperIdentifiers.current_index = stn_i
                             expression = num.Node.evaluate(wrapperIdentifiers, dictFunctions)
                             setVariableValues.append( (variable, expression) )
-                            #print('\t\ton_event setVariableValues', repr(variable), repr(expression))
 
                         for (port_name, value) in trigger_events:
                             if not port_name in self.nineml_outlet_event_ports:
@@ -938,25 +921,25 @@ class dae_component_setup:
         if model.N.NumberOfPoints == 0:
             model.N.CreateArray(model.Nitems)
         
-        for paramCanonicalName, parameter in dae_parameters.iteritems():
-            if not paramCanonicalName in parameters:
-                raise RuntimeError('Could not find a value for the parameter {0}'.format(paramCanonicalName))
+        for paramRelativeName, parameter in dae_parameters.iteritems():
+            if not paramRelativeName in parameters:
+                raise RuntimeError('Could not find a value for the parameter {0}'.format(paramRelativeName))
             
-            value = parameters[paramCanonicalName]
+            value = parameters[paramRelativeName]
             
             if isinstance(value, tuple) and isinstance(value[0], (long, int, float)):
-                v = dae_component_setup.getValue(value, paramCanonicalName)
+                v = dae_component_setup.getValue(value, paramRelativeName)
                 parameter.SetValues(v)
             
             elif isinstance(value, tuple) and isinstance(value[0], nineml.user_layer.RandomDistribution):
-                rng = dae_component_setup.getValue(value, paramCanonicalName)
+                rng = dae_component_setup.getValue(value, paramRelativeName)
                 n   = parameter.Domains[0].NumberOfPoints
                 for i in xrange(0, n):
                     v = float(rng.next())
                     parameter.SetValue(i, v)
             
             else:
-                raise RuntimeError('Invalid parameter: {0} value type specified: {1}-{2}'.format(paramCanonicalName, value, type(value)))
+                raise RuntimeError('Invalid parameter: {0} value type specified: {1}-{2}'.format(paramRelativeName, value, type(value)))
     
     @staticmethod      
     def SetUpVariables(model, parameters, report_variables):
@@ -964,39 +947,60 @@ class dae_component_setup:
             return
         
         # Reporting is off by default for all variables
-        #model.SetReportingOn(True)
+        #model.SetReportingOn(False)
         
         dae_variables = model._getStateVariables(model)
         dae_aliases   = model._getAliases(model)
         
-        for varCanonicalName, variable in dae_variables.iteritems():
-            if not varCanonicalName in parameters:
-                raise RuntimeError('Could not find an initial condition for the variable {0}'.format(varCanonicalName))
+        for varRelativeName, variable in dae_variables.iteritems():
+            if not varRelativeName in parameters:
+                raise RuntimeError('Could not find an initial condition for the variable {0}'.format(varRelativeName))
             
-            value = parameters[varCanonicalName]
+            value = parameters[varRelativeName]
             
             if isinstance(value, tuple) and isinstance(value[0], (long, int, float)):
-                v = dae_component_setup.getValue(value, varCanonicalName)
+                v = dae_component_setup.getValue(value, varRelativeName)
                 variable.SetInitialConditions(v)
             
             elif isinstance(value, tuple) and isinstance(value[0], nineml.user_layer.RandomDistribution):
-                rng = dae_component_setup.getValue(value, varCanonicalName)
+                rng = dae_component_setup.getValue(value, varRelativeName)
                 n = variable.Domains[0].NumberOfPoints
                 for i in xrange(0, n):
                     v = float(rng.next())
                     variable.SetInitialCondition(i, v)
             
             else:
-                raise RuntimeError('Invalid state variable: {0} initial consition type specified: {1}-{2}'.format(varCanonicalName, value, type(value)))
+                raise RuntimeError('Invalid state variable: {0} initial consition type specified: {1}-{2}'.format(varRelativeName, value, type(value)))
+        """
+        for varRelativeName in report_variables:
+            if varRelativeName in dae_variables:
+                variable = dae_variables[varRelativeName]
+                variable.ReportingOn = True
+            elif varRelativeName in dae_aliases:
+                variable = dae_aliases[varRelativeName]
+                variable.ReportingOn = True
+        """
         
-        for varCanonicalName in report_variables:
-            if varCanonicalName in dae_variables:
-                variable = dae_variables[varCanonicalName]
-                variable.ReportingOn = True
-            elif varCanonicalName in dae_aliases:
-                variable = dae_aliases[varCanonicalName]
-                variable.ReportingOn = True
-    
+    @staticmethod      
+    def SetWeights(model, weights):
+        if model.Nitems != len(weights):
+            raise RuntimeError('The number of weights not equal to the number of synapses in the synapse {0}'.format(model.Name))
+        
+        if model.Nitems == 0:
+            return
+            
+        dae_parameters = model._getParameters(model)
+        if 'weight' in dae_parameters:
+            paramWeight = dae_parameters['weight']
+        else:
+            raise RuntimeError('Could not find a parameter with the name [weight] in the synapse {0}'.format(model.Name))
+        
+        #print('Set the weights for: {0}'.format(model.CanonicalName))
+        for i, weight in enumerate(weights):
+            #print('Old weight = {0}; new weight = {1}'.format(paramWeight.GetValue(i), weight))
+            #paramWeight.SetValue(i, weight)
+            pass
+            
     @staticmethod
     def getValue(value, name):
         """

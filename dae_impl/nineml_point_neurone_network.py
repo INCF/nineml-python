@@ -398,8 +398,8 @@ class daetools_population:
 
 class daetools_projection:
     """
-    Data members:    
-     * name : string
+    ACHTUNG, ACHTUNG!!
+    Currently, we support only populations of spiking neurones (not groups).
     """
     def __init__(self, name, ul_projection, group, network):
         """
@@ -412,6 +412,11 @@ class daetools_projection:
         :raises: RuntimeError
         """
         self.name = fixObjectName(name)
+        
+        if not isinstance(ul_projection.source.prototype, nineml.user_layer.SpikingNodeType):
+            raise RuntimeError('Currently, only populations of spiking neurones (not groups) are supported')
+        if not isinstance(ul_projection.target.prototype, nineml.user_layer.SpikingNodeType):
+            raise RuntimeError('Currently, only populations of spiking neurones (not groups) are supported')
         
         source_population  = group.getPopulation(ul_projection.source.name)
         target_population  = group.getPopulation(ul_projection.target.name)
@@ -531,6 +536,7 @@ class daetools_projection:
             # Hence, we add the synapse object and the index of the event port.
             source_neurone.target_synapses.append( (synapse, synapse.Nitems, delay, target_neurone) )
             synapse.Nitems += 1
+            synapse.synapse_weights.append(weight)
             count += 1
             
             # Increase the number of connections in the synapse
@@ -561,11 +567,11 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         self.daesolver                = pyIDAS.daeIDAS()
         
         # SuperLU LA Solver
-        #self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
-        #self.daesolver.SetLASolver(self.lasolver)
+        self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
+        self.daesolver.SetLASolver(self.lasolver)
         
         # Lapack LA Solver
-        self.daesolver.SetLASolver(pyIDAS.eSundialsLapack)
+        #self.daesolver.SetLASolver(pyIDAS.eSundialsLapack)
 
     def init(self, log, datareporter, reportingInterval, timeHorizon):
         self.ReportingInterval = reportingInterval
@@ -577,9 +583,14 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         :rtype: None
         :raises: RuntimeError
         """
+        # 1. Set the neurone model parameters
         dae_component_setup.SetUpParametersAndDomains(self.m, self.neurone_parameters)
+        
+        # 2a. Set the incoming synapses' parameters (for they belong to this neurone)
+        # 2b. Set the incoming synapses' weights
         for (synapse, synapse_parameters) in self.m.incoming_synapses:
             dae_component_setup.SetUpParametersAndDomains(synapse, synapse_parameters)
+            dae_component_setup.SetWeights(synapse, synapse.synapse_weights)            
         
     def SetUpVariables(self):
         """
@@ -967,24 +978,24 @@ def get_ul_model_and_simulation_inputs():
                     }
     
     psr_poisson_params = {
-                        'vrev' : (   0.000, 'V'),
-                        'q'    : (100.0E-9, 'S'),
-                        'tau'  : (   0.005, 's'),
-                        'g'    : (   0.000, 'S')
+                        'vrev'   : (   0.000, 'V'),
+                        'weight' : (100.0E-9, 'S'),
+                        'tau'    : (   0.005, 's'),
+                        'g'      : (   0.000, 'S')
                         }
 
     psr_excitatory_params = {
-                            'vrev' : (  0.000, 'V'),
-                            'q'    : ( 4.0E-9, 'S'),
-                            'tau'  : (  0.005, 's'),
-                            'g'    : (  0.000, 'S')
+                            'vrev'  : (  0.000, 'V'),
+                            'weight': ( 4.0E-9, 'S'),
+                            'tau'   : (  0.005, 's'),
+                            'g'     : (  0.000, 'S')
                             }
                     
     psr_inhibitory_params = {
-                            'vrev' : ( -0.080, 'V'),
-                            'q'    : (51.0E-9, 'S'),
-                            'tau'  : (  0.010, 's'),
-                            'g'    : (  0.000, 'S')
+                            'vrev'   : (  -0.080, 'V'),
+                            'weight' : (-51.0E-9, 'S'),
+                            'tau'    : (   0.010, 's'),
+                            'g'      : (   0.000, 'S')
                             }
     
     neurone_IAF     = nineml.user_layer.SpikingNodeType("IAF neurones", catalog + "iaf.xml", neurone_params)

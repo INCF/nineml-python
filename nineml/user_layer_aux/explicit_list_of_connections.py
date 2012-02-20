@@ -4,6 +4,7 @@
    :platform: Unix, Windows
    :synopsis: 
 
+.. moduleauthor:: Mikael Djurfeldt <mikael.djurfeldt@incf.org>
 .. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
 """
 
