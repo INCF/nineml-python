@@ -1,4 +1,5 @@
-from nineml.user_layer_aux.connection_generator import ConnectionGenerator, callCgClosure, cgClosureFromURI
+from nineml.user_layer_aux.connection_generator import ConnectionGenerator, cgClosureFromURI
+from nineml.user_layer_aux.cg_closure import cgClosureFromURI
 from nineml.user_layer_aux.explicit_list_of_connections import ExplicitListOfConnections
 
 #memoizedConnectionGenerators = {}
@@ -9,10 +10,10 @@ def cgFromProjection (projection):
     # Should we really test for explicit list by testing for attribute?
     if hasattr (rule, 'connections'):
         connections = getattr (rule, 'connections') 
-        cg = explicit_list_of_connections_generator.ExplicitListOfConnections (connections)
+        cg = ExplicitListOfConnections (connections)
         return cg
 
     # Assembling a CG instantiation
     cgClosure = cgClosureFromURI (rule.definition.url)
-    cg = callCgClosure (cgClosure, rule.parameters)
+    cg = cgClosure (rule.parameters)
     return cg
