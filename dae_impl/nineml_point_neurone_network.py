@@ -1,16 +1,12 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 .. module:: nineml_point_neurone_network
    :platform: Unix, Windows
-   :synopsis: A useful module indeed.
+   :synopsis:
 
 .. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
-
 """
 
-#from __future__ import print_function
 import os, sys, urllib, re, traceback, csv, gc, subprocess
 from time import localtime, strftime, time
 import numpy, numpy.random
@@ -88,6 +84,7 @@ class on_spikeout_action(pyCore.daeAction):
         for (synapse, event_port_index, delay, target_neurone) in self.neurone.target_synapses:
             inlet_event_port = synapse.getInletEventPort(event_port_index)
             delayed_time = time + delay
+            #print('    {0} should be triggered at {1}'.format(target_neurone.Name, delayed_time))
             heappush(self.neurone.events_heap, (delayed_time, inlet_event_port, target_neurone))
 
 def create_neurone(name, component_info, rng, parameters):
@@ -411,7 +408,8 @@ class daetools_projection:
         :rtype:
         :raises: RuntimeError
         """
-        self.name = fixObjectName(name)
+        self.name          = fixObjectName(name)
+        self.minimal_delay = 1.0e10
         
         if not isinstance(ul_projection.source.prototype, nineml.user_layer.SpikingNodeType):
             raise RuntimeError('Currently, only populations of spiking neurones (not groups) are supported')
@@ -529,6 +527,9 @@ class daetools_projection:
             target_neurone = target_population.getNeurone(target_index)
             synapse        = self.getSynapse(target_index)
             
+            if delay < self.minimal_delay:
+                self.minimal_delay = delay
+            
             #graph.add_edge(source_neurone.Name, target_neurone.Name)
             
             # Add a new item to the list of connected synapse event ports and connection delays.
@@ -620,13 +621,16 @@ class point_neurone_network_simulation:
         self.datareporter        = pyDataReporting.daeTCPIPDataReporter() #daeBlackHoleDataReporter() #pyDataReporting.daeTCPIPDataReporter()
         self.simulations         = []
         self.events_heap         = []
-        self.number_of_vars      = 0
-        self.number_of_neurones  = 0
         self.average_firing_rate = {}
         self.raster_plot_data    = []
         self.pathParser          = CanonicalNameParser()
         self.report_variables    = {}
         self.outputs             = []
+        self.number_of_equations = 0
+        self.number_of_neurones  = 0
+        self.number_of_synapses  = 0
+        self.spike_count         = 0
+        self.minimal_delay       = 1.0E10
 
         heapify(self.events_heap)
         
@@ -646,6 +650,10 @@ class point_neurone_network_simulation:
             self.log.Enabled = False
             
             for group_name, group in self.network._groups.iteritems():
+                for projection_name, projection in group._projections.iteritems():
+                    if projection.minimal_delay < self.minimal_delay:
+                        self.minimal_delay = projection.minimal_delay
+                    
                 for population_name, population in group._populations.iteritems():
                     print("Creating simulations for: {0}...".format(population_name))
                     for neurone in population.neurones:
@@ -653,9 +661,26 @@ class point_neurone_network_simulation:
                         neurone.events_heap = self.events_heap
                         self.simulations.append(simulation)
                         self.number_of_neurones += 1
+                        for (synapse, params) in neurone.incoming_synapses:
+                            self.number_of_synapses += synapse.Nitems                            
             
             self.simulations = sorted(self.simulations)
-        
+            
+            if self.minimal_delay < self.reportingInterval:
+                raise RuntimeError('The minimal delay ({0}s) is greater than the reporting interval ({1}s)'.format(self.minimal_delay, self.reportingInterval))
+            print('The minimal delay: {0}s'.format(self.minimal_delay))
+            
+            """
+            for simulation in self.simulations:
+                print('{0}  FIREs AT:'.format(simulation.m.CanonicalName))
+                for spike_time in simulation.m.initialEvents:
+                    for (synapse, event_port_index, delay, target_neurone) in simulation.m.target_synapses:
+                        inlet_event_port = synapse.getInletEventPort(event_port_index)
+                        delayed_time = spike_time + delay
+                        print('    {0} -> {1}'.format(spike_time, delayed_time))
+                        heappush(self.events_heap, (delayed_time, inlet_event_port, target_neurone))
+            """
+                    
         except:
             raise
         
@@ -666,13 +691,13 @@ class point_neurone_network_simulation:
         try:
             self.log.Enabled = False
             
-            self.number_of_vars = 0
+            self.number_of_equations = 0
             for i, simulation in enumerate(self.simulations):
-                print 'Setting up the neurone {0} out of {1} (total number of variables: {2})...'.format(i+1, self.number_of_neurones, self.number_of_vars), "\r",
+                print 'Setting up the neurone {0} out of {1} (total number of equations: {2})...'.format(i+1, self.number_of_neurones, self.number_of_equations), "\r",
                 sys.stdout.flush()
                 
                 simulation.init(self.log, self.datareporter, self.reportingInterval, self.timeHorizon)
-                self.number_of_vars += simulation.daesolver.NumberOfVariables
+                self.number_of_equations += simulation.daesolver.NumberOfVariables
                 
                 #simulation.m.SaveModelReport('__xml'+simulation.m.Name + ".xml")
                 #simulation.m.SaveRuntimeModelReport('__xml'+simulation.m.Name + "-rt.xml")
@@ -693,10 +718,10 @@ class point_neurone_network_simulation:
         #print "Garbage collector: collected %d objects." % (collected)  
         #print('garbage after collect:\n'.format(gc.garbage))
     
+    """
     def Run(self):
         # First create the reporting times list
         reporting_times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
-        #print reporting_times
         
         prev_time = 0.0
         # Iterate over the queue. The (delayed) events will be added to the queue as they are trigerred.
@@ -713,12 +738,54 @@ class point_neurone_network_simulation:
                         heappush(self.events_heap, (t_event, inlet_event_port, target_neurone))
                         break
                     
-                    #target_neurone.simulation.forthcoming_events.append( (t_event, inlet_event_port) )
+                    print('{0} integrate until {1}s (trigger event on {2}, current time = {3})'.format(target_neurone.Name, t_event, inlet_event_port.CanonicalName, target_neurone.simulation.CurrentTime))
+                    target_neurone.simulation.IntegrateUntilTime(t_event, pyActivity.eDoNotStopAtDiscontinuity, False)
+                    inlet_event_port.ReceiveEvent(t_event)
+                    target_neurone.simulation.Reinitialize()
+                    target_neurone.simulation.ReportData(t_event)
+            
+            except IndexError:
+                pass
+                
+            # Integrate each neurone until the *next_time* is reached and report the data
+            #for simulation in self.simulations:
+            #    simulation.ReportData(simulation.CurrentTime)
+            
+            # Set the progress to the console
+            self.log.SetProgress(100.0 * next_time / self.timeHorizon)
+            prev_time = next_time
+                    
+        print('Simulation has ended successfuly.')
+        print('Processing the results...')
+        
+        # Finally, process the results (generate 2D plots and raster plots, etc)
+        self.processResults()
+    """
+    
+    def Run(self):
+        # First create the reporting times list
+        reporting_times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
+        
+        prev_time = 0.0
+        # Iterate over the queue. The (delayed) events will be added to the queue as they are trigerred.
+        for next_time in reporting_times:
+            self.log.Message("Simulating from {0}s to {1}s...".format(prev_time, next_time), 0)
+            
+            try:
+                while True:
+                    # Get the first item from the heap
+                    (t_event, inlet_event_port, target_neurone) = heappop(self.events_heap)
+                    
+                    # If out of the interval put it back
+                    if t_event > next_time:
+                        heappush(self.events_heap, (t_event, inlet_event_port, target_neurone))
+                        break
                     
                     #print('{0} --> {1}s (trigger event on {2})'.format(target_neurone.Name, t_event, inlet_event_port.CanonicalName))
                     target_neurone.simulation.IntegrateUntilTime(t_event, pyActivity.eDoNotStopAtDiscontinuity, False)
                     inlet_event_port.ReceiveEvent(t_event)
                     target_neurone.simulation.Reinitialize()
+                    self.spike_count += 1
             
             except IndexError:
                 pass
@@ -731,7 +798,7 @@ class point_neurone_network_simulation:
                 #                                       next_time))
                 if simulation.CurrentTime < next_time:
                     simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
-                simulation.ReportData(next_time)
+                #simulation.ReportData(next_time)
             
             # Set the progress to the console
             self.log.SetProgress(100.0 * next_time / self.timeHorizon)
@@ -742,7 +809,7 @@ class point_neurone_network_simulation:
         
         # Finally, process the results (generate 2D plots and raster plots, etc)
         self.processResults()
-        
+    
     def processSEDMLExperiment(self, sedml_experiment):
         if len(sedml_experiment.tasks) != 1:
             raise RuntimeError('The number of tasks must be one')
@@ -812,6 +879,12 @@ class point_neurone_network_simulation:
         
     def processResults(self):
         simulation_name = self.network._name
+        
+        print('  Total number of equations: {0:>10d}'.format(self.number_of_equations))
+        print('  Total number of neurones:  {0:>10d}'.format(self.number_of_neurones))
+        print('  Total number of synapses:  {0:>10d}'.format(self.number_of_synapses))
+        print('  Total number of spikes:    {0:>10d}'.format(self.spike_count))
+        print('  Minimal network delay:     {0:>8e}s'.format(self.minimal_delay))
         
         neurone_index = 0
         population_events = {}
@@ -992,10 +1065,10 @@ def get_ul_model_and_simulation_inputs():
                             }
                     
     psr_inhibitory_params = {
-                            'vrev'   : (  -0.080, 'V'),
-                            'weight' : (-51.0E-9, 'S'),
-                            'tau'    : (   0.010, 's'),
-                            'g'      : (   0.000, 'S')
+                            'vrev'   : ( -0.080, 'V'),
+                            'weight' : (51.0E-9, 'S'),
+                            'tau'    : (  0.010, 's'),
+                            'g'      : (  0.000, 'S')
                             }
     
     neurone_IAF     = nineml.user_layer.SpikingNodeType("IAF neurones", catalog + "iaf.xml", neurone_params)
@@ -1080,9 +1153,11 @@ def get_ul_model_and_simulation_inputs():
     sedml_variable_excV  = sedmlVariable('excV', 'Voltage', sedml_task, target='Group 1.Excitatory population[0].V')
     sedml_variable_inhV  = sedmlVariable('inhV', 'Voltage', sedml_task, target='Group 1.Inhibitory population[0].V')
 
+    inh_neurones = [0, 14, 56, 120]
+    exc_neurones = [57, 195, 207, 227, 254, 278, 377, 390, 429, 453, 456, 490, 643, 657, 737]
     sedml_data_generator_time = sedmlDataGenerator('DG time', 'DG time', [sedml_variable_time])
-    sedml_data_generator_excV = sedmlDataGenerator('DG excV', 'DG excV', [sedml_variable_excV])
-    sedml_data_generator_inhV = sedmlDataGenerator('DG inhV', 'DG inhV', [sedml_variable_inhV])
+    sedml_data_generator_excV = sedmlDataGenerator('DG excV', 'DG excV', [sedmlVariable('excV', 'V', sedml_task, target='Group 1.Excitatory population[{0}].V'.format(i)) for i in exc_neurones])
+    sedml_data_generator_inhV = sedmlDataGenerator('DG inhV', 'DG inhV', [sedmlVariable('inhV', 'V', sedml_task, target='Group 1.Inhibitory population[{0}].V'.format(i)) for i in inh_neurones])
 
     curve_excV = sedmlCurve('ExcV', 'ExcV', False, False, sedml_data_generator_time, sedml_data_generator_excV)
     curve_inhV = sedmlCurve('InhV', 'InhV', False, False, sedml_data_generator_time, sedml_data_generator_inhV)

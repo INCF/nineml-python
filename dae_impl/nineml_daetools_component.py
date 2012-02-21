@@ -1,7 +1,12 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""
+.. module:: nineml_daetools_component.py
+   :platform: Unix, Windows
+   :synopsis: 
 
-#from __future__ import print_function
+.. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
+"""
+
 import nineml
 from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
 from nineml.abstraction_layer import ComponentClass
@@ -158,7 +163,7 @@ class daetools_spike_source(pyCore.daeModel):
         self.on_spike_out_action  = None
         self.target_synapses      = []    
         self.incoming_synapses    = []    
-        self.event_queue          = [] 
+        self.events_heap          = None 
         self.incoming_synapses    = []
         self.Nitems               = 0
 
@@ -167,13 +172,16 @@ class daetools_spike_source(pyCore.daeModel):
         
         # Add one 'send' event port
         self.spikeoutput = pyCore.daeEventPort("spikeoutput", eOutletPort, self, "Spike outlet event port")
-        #self.nineml_event_ports.append(self.spikeoutput)
         
         # A list of spike event times
         self.spiketimes = list(spiketimes)
 
     def initialize(self):
         pass
+    
+    @property
+    def initialEvents(self):
+        return self.spiketimes
     
     def CleanUpSetupData(self):
         pass
@@ -194,7 +202,7 @@ class daetools_spike_source(pyCore.daeModel):
         eq.Residual = self.event()
 
         self.END_STN()
-    
+        
     def getOutletEventPort(self): 
         return self.spikeoutput
 
@@ -422,7 +430,7 @@ class dae_component(daeModel):
         self.target_synapses                = []    
         self.incoming_synapses              = []    
         self.synapse_weights                = []
-        self.event_queue                    = [] 
+        self.events_heap                    = None 
         self.simulation                     = None
 
     def CleanUpSetupData(self):
@@ -543,6 +551,10 @@ class dae_component(daeModel):
 
             else:
                 raise RuntimeError('Cannot connect analogue ports {0} and {1}'.format(nameFrom, nameTo))
+    
+    @property
+    def initialEvents(self):
+        return []
     
     def __str__(self):
         res = ''
@@ -947,7 +959,7 @@ class dae_component_setup:
             return
         
         # Reporting is off by default for all variables
-        #model.SetReportingOn(False)
+        model.SetReportingOn(True)
         
         dae_variables = model._getStateVariables(model)
         dae_aliases   = model._getAliases(model)
@@ -998,8 +1010,7 @@ class dae_component_setup:
         #print('Set the weights for: {0}'.format(model.CanonicalName))
         for i, weight in enumerate(weights):
             #print('Old weight = {0}; new weight = {1}'.format(paramWeight.GetValue(i), weight))
-            #paramWeight.SetValue(i, weight)
-            pass
+            paramWeight.SetValue(i, weight)
             
     @staticmethod
     def getValue(value, name):
