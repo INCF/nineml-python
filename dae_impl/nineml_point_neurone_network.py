@@ -606,6 +606,38 @@ class point_neurone_simulation(pyActivity.daeSimulation):
         pyActivity.daeSimulation.CleanUpSetupData(self)
         self.m.CleanUpSetupData()
         
+class PointNeuroneDataReporter(daeDataReporterLocal):
+    def __init__(self):
+        daeDataReporterLocal.__init__(self)
+
+    def Connect(self, ConnectionString, ProcessName):
+        """
+        Virtual function, a part of the daetools daeDataReporter interface,
+        called to connect the data reporter to the corresponding data receiver.
+        Here everything is kept in the data reporter so just return True always.
+        """
+        self.ProcessName = ProcessName
+        return True
+
+    def Disconnect(self):
+        """
+        Virtual function, a part of the daetools daeDataReporter interface,
+        called to disconnect the data reporter from the corresponding data receiver.
+        Here it always returns True.
+        """
+        return True
+
+    def IsConnected(self):
+        """
+        Virtual function, a part of the daetools daeDataReporter interface,
+        called to test if the data reporter is connected to the corresponding data receiver.
+        Here it always returns True.
+        """
+        return True
+
+    def createReportData(self, plots, folder):
+        pass
+
 class point_neurone_network_simulation:
     """
     """
@@ -614,18 +646,19 @@ class point_neurone_network_simulation:
         :rtype: None
         :raises: RuntimeError
         """
+        self.name                = ''
         self.network             = None
         self.reportingInterval   = 0.0
         self.timeHorizon         = 0.0        
         self.log                 = daeLogs.daePythonStdOutLog()
-        self.datareporter        = pyDataReporting.daeTCPIPDataReporter() #daeBlackHoleDataReporter() #pyDataReporting.daeTCPIPDataReporter()
+        self.datareporter        = PointNeuroneDataReporter() #daeBlackHoleDataReporter() #pyDataReporting.daeTCPIPDataReporter()
         self.simulations         = []
         self.events_heap         = []
         self.average_firing_rate = {}
         self.raster_plot_data    = []
         self.pathParser          = CanonicalNameParser()
         self.report_variables    = {}
-        self.outputs             = []
+        self.output_plots        = []
         self.number_of_equations = 0
         self.number_of_neurones  = 0
         self.number_of_synapses  = 0
@@ -638,8 +671,8 @@ class point_neurone_network_simulation:
         self.processSEDMLExperiment(sedml_experiment)
         
         # Connect the DataReporter
-        simName = self.network._name + strftime(" [%d.%m.%Y %H:%M:%S]", localtime())
-        if(self.datareporter.Connect("", simName) == False):
+        simName = self.name + strftime(" [%d.%m.%Y %H.%M.%S]", localtime())
+        if not self.datareporter.Connect("", simName):
             raise RuntimeError('Cannot connect the data reporter')
         
         # Set the random number generators of the dae_component_setup
@@ -664,23 +697,11 @@ class point_neurone_network_simulation:
                         for (synapse, params) in neurone.incoming_synapses:
                             self.number_of_synapses += synapse.Nitems                            
             
-            self.simulations = sorted(self.simulations)
+            self.simulations.sort()
             
             if self.minimal_delay < self.reportingInterval:
                 raise RuntimeError('The minimal delay ({0}s) is greater than the reporting interval ({1}s)'.format(self.minimal_delay, self.reportingInterval))
-            print('The minimal delay: {0}s'.format(self.minimal_delay))
             
-            """
-            for simulation in self.simulations:
-                print('{0}  FIREs AT:'.format(simulation.m.CanonicalName))
-                for spike_time in simulation.m.initialEvents:
-                    for (synapse, event_port_index, delay, target_neurone) in simulation.m.target_synapses:
-                        inlet_event_port = synapse.getInletEventPort(event_port_index)
-                        delayed_time = spike_time + delay
-                        print('    {0} -> {1}'.format(spike_time, delayed_time))
-                        heappush(self.events_heap, (delayed_time, inlet_event_port, target_neurone))
-            """
-                    
         except:
             raise
         
@@ -699,9 +720,6 @@ class point_neurone_network_simulation:
                 simulation.init(self.log, self.datareporter, self.reportingInterval, self.timeHorizon)
                 self.number_of_equations += simulation.daesolver.NumberOfVariables
                 
-                #simulation.m.SaveModelReport('__xml'+simulation.m.Name + ".xml")
-                #simulation.m.SaveRuntimeModelReport('__xml'+simulation.m.Name + "-rt.xml")
-                
                 simulation.SolveInitial()
                 simulation.CleanUpSetupData()
         
@@ -717,50 +735,6 @@ class point_neurone_network_simulation:
         collected = gc.collect()
         #print "Garbage collector: collected %d objects." % (collected)  
         #print('garbage after collect:\n'.format(gc.garbage))
-    
-    """
-    def Run(self):
-        # First create the reporting times list
-        reporting_times = numpy.arange(self.reportingInterval, self.timeHorizon, self.reportingInterval)
-        
-        prev_time = 0.0
-        # Iterate over the queue. The (delayed) events will be added to the queue as they are trigerred.
-        for next_time in reporting_times:
-            self.log.Message("Integrating from {0} to {1}...".format(prev_time, next_time), 0)
-            
-            try:
-                while True:
-                    # Get the first item from the heap
-                    (t_event, inlet_event_port, target_neurone) = heappop(self.events_heap)
-                    
-                    # If out of the interval put it back
-                    if t_event > next_time:
-                        heappush(self.events_heap, (t_event, inlet_event_port, target_neurone))
-                        break
-                    
-                    print('{0} integrate until {1}s (trigger event on {2}, current time = {3})'.format(target_neurone.Name, t_event, inlet_event_port.CanonicalName, target_neurone.simulation.CurrentTime))
-                    target_neurone.simulation.IntegrateUntilTime(t_event, pyActivity.eDoNotStopAtDiscontinuity, False)
-                    inlet_event_port.ReceiveEvent(t_event)
-                    target_neurone.simulation.Reinitialize()
-                    target_neurone.simulation.ReportData(t_event)
-            
-            except IndexError:
-                pass
-                
-            # Integrate each neurone until the *next_time* is reached and report the data
-            #for simulation in self.simulations:
-            #    simulation.ReportData(simulation.CurrentTime)
-            
-            # Set the progress to the console
-            self.log.SetProgress(100.0 * next_time / self.timeHorizon)
-            prev_time = next_time
-                    
-        print('Simulation has ended successfuly.')
-        print('Processing the results...')
-        
-        # Finally, process the results (generate 2D plots and raster plots, etc)
-        self.processResults()
-    """
     
     def Run(self):
         # First create the reporting times list
@@ -798,7 +772,7 @@ class point_neurone_network_simulation:
                 #                                       next_time))
                 if simulation.CurrentTime < next_time:
                     simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
-                #simulation.ReportData(next_time)
+                simulation.ReportData(next_time)
             
             # Set the progress to the console
             self.log.SetProgress(100.0 * next_time / self.timeHorizon)
@@ -812,9 +786,10 @@ class point_neurone_network_simulation:
     
     def processSEDMLExperiment(self, sedml_experiment):
         if len(sedml_experiment.tasks) != 1:
-            raise RuntimeError('The number of tasks must be one')
+            raise RuntimeError('The number of SED-ML tasks must be one')
         sedml_task = sedml_experiment.tasks[0]
  
+        self.name    = sedml_task.simulation.name
         ul_model     = sedml_task.model.getUserLayerModel()
         self.network = daetools_point_neurone_network(ul_model)
         
@@ -858,34 +833,61 @@ class point_neurone_network_simulation:
                         dae_variable = neurone.nineml_reduce_ports[variable_name]
                     
                     else:
-                        raise RuntimeError('Cannot find variable: {0}'.format(variable.target))
+                        raise RuntimeError('Cannot find SED-ML variable: {0}'.format(variable.target))
                         
-                    print('SED-ML variable: {0}'.format(dae_variable.CanonicalName))
                     self.report_variables[variable.target] = dae_variable
                     dae_variable.ReportingOn = True
                     
                 elif variable.symbol:
                     if variable.symbol == 'urn:sedml:symbol:time':
-                        print('variable : time')
                         self.report_variables['time'] = None
                     else:
                         raise RuntimeError('Unsupported SED-ML symbol: {0}'.format(variable.symbol))
                 
                 else:
-                    raise RuntimeError('Both variable symbol and target are None')
-                
+                    raise RuntimeError('Both SED-ML variable symbol and target are None')
+              
         for output in sedml_experiment.outputs:
-            pass
+            variable_names  = []
+            x_label         = 'Time, s'
+            y_labels        = []
+            x_log           = False
+            y_log           = False
+            
+            for curve in output.curves:
+                if curve.logX:
+                    x_log = True
+                if curve.logY:
+                    y_log = True
+                
+                x_dg = curve.xDataRefference
+                y_dg = curve.yDataRefference
+                
+                if (len(x_dg.variables) != 1) or (not x_dg.variables[0].symbol) or (x_dg.variables[0].symbol != 'urn:sedml:symbol:time'):
+                    raise RuntimeError('The number of variables in data referrence: {0} must be one with the symbol = urn:sedml:symbol:time'.format(x_dg.id))
+                
+                for variable in y_dg.variables:
+                    if not variable.target:
+                        raise RuntimeError('SED-ML variable: {0} target is invalid'.format(variable.name))
+                    if not variable.target in self.report_variables:
+                        raise RuntimeError('SED-ML variable {0} does not exist in the network'.format(variable.name))
+                    
+                    variable_names.append(self.report_variables[variable.target].CanonicalName)
+                    y_labels.append(variable.name)
+            
+            self.output_plots.append( (output.name, variable_names, x_label, y_labels, x_log, y_log) )
         
     def processResults(self):
-        simulation_name = self.network._name
+        results_dir = '{0} {1}'.format(self.name, strftime("[%d.%m.%Y %H.%M.%S]", localtime()))
+        os.mkdir(results_dir)
         
         print('  Total number of equations: {0:>10d}'.format(self.number_of_equations))
         print('  Total number of neurones:  {0:>10d}'.format(self.number_of_neurones))
         print('  Total number of synapses:  {0:>10d}'.format(self.number_of_synapses))
         print('  Total number of spikes:    {0:>10d}'.format(self.spike_count))
-        print('  Minimal network delay:     {0:>8e}s'.format(self.minimal_delay))
+        print('  Minimal network delay:     {0:>10.6f} s'.format(self.minimal_delay))
         
+        # 1. Create a raster plot file (.ras)
         neurone_index = 0
         population_events = {}
         for group_name, group in self.network._groups.iteritems():
@@ -905,62 +907,170 @@ class point_neurone_network_simulation:
                 print('  [{0}] average firing rate: {1} Hz'.format(population_name, self.average_firing_rate[population_name]))
         
         self.raster_plot_data.sort()
-        #events = [str(item) for item in self.raster_plot_data.iteritems()]
-        #print('\n'.join(events))
+        self.createRasterFile(os.path.join(results_dir, 'raster-plot.ras'), self.raster_plot_data, self.number_of_neurones)
         
-        #
-        # Save the raster plot file (.ras)
-        #
-        f = open('{0}.ras'.format(simulation_name), "w")
-        f.write('# size = {0}\n'.format(self.number_of_neurones))
+        # 2. Create a raster plot image (.png)
+        pop_times   = []
+        pop_indexes = []
+        pop_names   = []
+        for i, (population_name, events) in enumerate(population_events.iteritems()):
+            if len(events) > 0:
+                pop_times.append( [item[0] for item in events] )
+                pop_indexes.append( [item[1] for item in events] )
+                pop_names.append( population_name )
+        self.createRasterPlot(os.path.join(results_dir, 'raster-plot.png'), pop_times, pop_indexes, pop_names)
+        
+        # 3. Create 2D plots (.png)
+        for (name, variable_names, x_label, y_labels, x_log, y_log) in self.output_plots:
+            x_values = []
+            y_values = []
+            for var_canonical_name in variable_names:
+                for variable in self.datareporter.Process.Variables:
+                    if var_canonical_name == variable.Name:
+                        x_values.append(variable.TimeValues)
+                        y_values.append(variable.Values.reshape(len(variable.Values)))
+            
+            self.create2DPlot(os.path.join(results_dir, '{0}.png'.format(name)), x_values, y_values, x_label, y_labels, x_log, y_log)
+
+    @staticmethod
+    def createRasterFile(filename, data, n):
+        """
+        :param data: list of floats
+        :param n: integer
+        :param filename: string
+        
+        :rtype: None
+        :raises: IOError
+        """
+        f = open(filename, "w")
+        f.write('# size = {0}\n'.format(n))
         f.write('# first_index = {0}\n'.format(0))
         f.write('# first_id = {0}\n'.format(0))
-        f.write('# n = {0}\n'.format(len(self.raster_plot_data)))
+        f.write('# n = {0}\n'.format(len(data)))
         f.write('# variable = spikes\n')
-        f.write('# last_id = {0}\n'.format(self.number_of_neurones - 1))
+        f.write('# last_id = {0}\n'.format(n - 1))
         f.write('# dt = {0}\n'.format(0.0))
         f.write('# label = {0}\n'.format('spikes'))
-        for t, index in self.raster_plot_data:
+        for t, index in data:
             f.write('%.14e\t%d\n' % (t, index))
         f.close()
+
+    @staticmethod
+    def createRasterPlot(filename, pop_times, pop_indexes, pop_names):
+        """
+        :param pop_times: 2D list (list of float lists)
+        :param pop_indexes: 2D list (list of integer lists)
+        :param pop_names: string list
+        :param filename: string
         
-        #
-        # Save the raster plot image file (.png)
-        #
-        matplotlib.rcParams['font.family'] = 'serif'
-        matplotlib.rcParams['font.size']   = 6
-        
-        colors = ['black', 'blue', 'red', 'green', 'c', 'm', 'k', 'y']
-        font5  = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=5)
-        font8  = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=8)
-        font10 = matplotlib.font_manager.FontProperties(family='serif', style='normal', variant='normal', weight='normal', size=10)
+        :rtype: None
+        :raises: ValueError, IOError
+        """
+        font = {'family' : 'serif',
+                'weight' : 'normal',
+                'size'   : 8}
+        matplotlib.rc('font', **font)
+        params = {'axes.labelsize' : 10,
+                  'legend.fontsize': 5,
+                  'text.fontsize'  : 8,
+                  'xtick.labelsize': 8,
+                  'ytick.labelsize': 8,
+                  'text.usetex':     False}
+        matplotlib.rcParams.update(params)
+
+        colors = ['red', 'blue', 'green', 'black', 'c', 'm', 'k', 'y']
         
         figure = Figure(figsize=(8, 6))
         canvas = FigureCanvas(figure)
         axes = figure.add_subplot(111)
-        #axes.set_title('Raster plot', fontsize = 12)
-        axes.set_xlabel('Time, s', fontproperties = font10)
-        axes.set_ylabel('Neurones', fontproperties = font10)
+        
+        axes.set_xlabel('Time, s')
+        axes.set_ylabel('Neurones')
         axes.grid(True, linestyle = '-', color = '0.75')
-        for i, (population_name, events) in enumerate(population_events.iteritems()):
-            color_index = i % len(colors)
-            if len(events) > 0:
-                times   = [item[0] for item in events]
-                indexes = [item[1] for item in events]
-                axes.scatter(times, indexes, label = population_name, marker = 's', s = 1, color = colors[color_index])
+        
+        i = 0
+        min_times   = 1.0E10
+        max_times   = 0.0
+        min_indexes = 1E10
+        max_indexes = 0
+        for (times, indexes, name) in zip(pop_times, pop_indexes, pop_names):
+            color = colors[i % len(colors)]
+            if len(times) > 0:
+                axes.scatter(times, indexes, label = name, marker = 's', s = 1, color = color)
+                
+                min_times   = min(min_times,   min(times))
+                max_times   = max(max_times,   max(times))
+                min_indexes = min(min_indexes, min(indexes))
+                max_indexes = max(max_indexes, max(indexes)) + 1
+            i += 1
         
         box = axes.get_position()
         axes.set_position([box.x0, box.y0, box.width * 0.9, box.height])
-        axes.legend(loc = 'center left', bbox_to_anchor = (1, 0.5), prop = font5, ncol = 1, scatterpoints = 1, fancybox = True)
-        #axes.legend(loc = 0, prop = font5, scatterpoints = 1, fancybox = False)
-        axes.set_xbound(lower = 0.0, upper = self.timeHorizon)
-        axes.set_ybound(lower = 0,   upper = self.number_of_neurones - 1)
-        for xlabel in axes.get_xticklabels():
-            xlabel.set_fontproperties(font8)
-        for ylabel in axes.get_yticklabels():
-            ylabel.set_fontproperties(font8)
-        canvas.print_figure('{0}.png'.format(simulation_name), dpi = 300)        
+        axes.legend(loc = 'center left', bbox_to_anchor = (1, 0.5), ncol = 1, scatterpoints = 1, fancybox = True)
+        
+        axes.set_xbound(lower = min_times,   upper = max_times)
+        axes.set_ybound(lower = min_indexes, upper = max_indexes)
+        
+        canvas.print_figure(filename, dpi = 300)        
     
+    @staticmethod
+    def create2DPlot(filename, x_values, y_values, x_label, y_labels, x_log, y_log):
+        """
+        :param x_values: 2D list (list of float lists)
+        :param y_values: 2D list (list of float lists)
+        :param x_label: string
+        :param y_labels: string list
+        :param filename: string
+        
+        :rtype: None
+        :raises: ValueError, IOError
+        """
+        font = {'family' : 'serif',
+                'weight' : 'normal',
+                'size'   : 8}
+        matplotlib.rc('font', **font)
+        params = {'axes.labelsize':  9,
+                  'legend.fontsize': 5,
+                  'text.fontsize':   8,
+                  'xtick.labelsize': 8,
+                  'ytick.labelsize': 8,
+                  'text.usetex':     False}
+        matplotlib.rcParams.update(params)
+        
+        colors = ['red', 'blue', 'green', 'black', 'c', 'm', 'k', 'y']
+
+        figure = Figure(figsize=(8, 6))
+        canvas = FigureCanvas(figure)
+        axes = figure.add_subplot(111)
+        axes.set_xlabel(x_label)
+        axes.grid(True, linestyle = '-', color = '0.75')
+        
+        i = 0
+        for (x, y, label) in zip(x_values, y_values, y_labels):
+            color = colors[i % len(colors)]
+            axes.plot(x, y, label = label, 
+                            color = color, 
+                            linewidth = 0.5, 
+                            linestyle = 'solid', 
+                            marker  ='o', 
+                            markersize = 2, 
+                            markerfacecolor = color, 
+                            markeredgecolor = color)
+            i += 1
+            
+        axes.legend(loc = 0, ncol = 1, fancybox = True)
+        
+        if x_log:
+            axes.set_xscale('log')
+        else:
+            axes.set_xscale('linear')
+        if y_log:
+            axes.set_yscale('log')
+        else:
+            axes.set_yscale('linear')
+        
+        canvas.print_figure(filename, dpi = 300)        
+        
     def Finalize(self):
         for simulation in self.simulations:
             simulation.Finalize()
@@ -1009,7 +1119,7 @@ def get_ul_model_and_simulation_inputs():
     ###############################################################################
     #                           NineML UserLayer Model
     ###############################################################################
-    N_neurons = 1000
+    N_neurons = 100
     N_exc     = int(N_neurons * 0.8)
     N_inh     = int(N_neurons * 0.2)
     N_poisson = 20
@@ -1027,48 +1137,48 @@ def get_ul_model_and_simulation_inputs():
 
     catalog = 'file://{0}/'.format(sys.path[0])
     
-    rnd_uniform = {
-                    'lowerBound': (-0.060, "dimensionless"),
-                    'upperBound': (-0.040, "dimensionless")
-                }
-    uni_distr = nineml.user_layer.RandomDistribution("uniform(-0.060, -0.040)", catalog + "uniform_distribution.xml", rnd_uniform)
+    rnd_uniform_params = {
+                          'lowerBound': (-0.060, "dimensionless"),
+                          'upperBound': (-0.040, "dimensionless")
+                         }
+    uni_distr = nineml.user_layer.RandomDistribution("uniform(-0.060, -0.040)", catalog + "uniform_distribution.xml", rnd_uniform_params)
     
     poisson_params = {
-                    'rate'     : (100.00, 'Hz'),
-                    'duration' : (  0.05, 's'),
-                    't0'       : (  0.00, 's')
+                      'rate'     : (100.00, 'Hz'),
+                      'duration' : (  0.05, 's'),
+                      't0'       : (  0.00, 's')
                     }
     
     neurone_params = {
-                    'tspike' :    ( -1.000,   's'),
-                    'V' :         (uni_distr, 'V'),
-                    'gl' :        ( 1.0E-8,   'S'),
-                    'vreset' :    ( -0.060,   'V'),
-                    'taurefrac' : (  0.001,   's'),
-                    'vthresh' :   ( -0.040,   'V'),
-                    'vrest' :     ( -0.060,   'V'),
-                    'cm' :        ( 0.2E-9,   'F')
-                    }
+                      'tspike' :    ( -1.000,   's'),
+                      'V' :         (uni_distr, 'V'),
+                      'gl' :        ( 1.0E-8,   'S'),
+                      'vreset' :    ( -0.060,   'V'),
+                      'taurefrac' : (  0.001,   's'),
+                      'vthresh' :   ( -0.040,   'V'),
+                      'vrest' :     ( -0.060,   'V'),
+                      'cm' :        ( 0.2E-9,   'F')
+                     }
     
     psr_poisson_params = {
-                        'vrev'   : (   0.000, 'V'),
-                        'weight' : (100.0E-9, 'S'),
-                        'tau'    : (   0.005, 's'),
-                        'g'      : (   0.000, 'S')
-                        }
+                          'vrev'   : (   0.000, 'V'),
+                          'weight' : (100.0E-9, 'S'),
+                          'tau'    : (   0.005, 's'),
+                          'g'      : (   0.000, 'S')
+                         }
 
     psr_excitatory_params = {
-                            'vrev'  : (  0.000, 'V'),
-                            'weight': ( 4.0E-9, 'S'),
-                            'tau'   : (  0.005, 's'),
-                            'g'     : (  0.000, 'S')
+                             'vrev'  : (  0.000, 'V'),
+                             'weight': ( 4.0E-9, 'S'),
+                             'tau'   : (  0.005, 's'),
+                             'g'     : (  0.000, 'S')
                             }
                     
     psr_inhibitory_params = {
-                            'vrev'   : ( -0.080, 'V'),
-                            'weight' : (51.0E-9, 'S'),
-                            'tau'    : (  0.010, 's'),
-                            'g'      : (  0.000, 'S')
+                             'vrev'   : ( -0.080, 'V'),
+                             'weight' : (51.0E-9, 'S'),
+                             'tau'    : (  0.010, 's'),
+                             'g'      : (  0.000, 'S')
                             }
     
     neurone_IAF     = nineml.user_layer.SpikingNodeType("IAF neurones", catalog + "iaf.xml", neurone_params)
@@ -1143,21 +1253,19 @@ def get_ul_model_and_simulation_inputs():
     reportingInterval = 0.0001 # seconds
     noPoints          = 1 + int(timeHorizon / reportingInterval)
     
-    sedml_simulation = sedmlUniformTimeCourseSimulation('Brette simulation', 'Brette 2007 simulation', 0.0, 0.0, timeHorizon, noPoints, 'KISAO:0000283')
+    sedml_simulation = sedmlUniformTimeCourseSimulation('simulation', 'Brette 2007 simulation', 0.0, 0.0, timeHorizon, noPoints, 'KISAO:0000283')
     
-    sedml_model      = sedmlModel('Brette model', 'Brette model', 'urn:sedml:language:nineml', ul_model) 
+    sedml_model      = sedmlModel('model', 'Brette 2007 model', 'urn:sedml:language:nineml', ul_model) 
     
-    sedml_task       = sedmlTask('task1', 'task1', sedml_model, sedml_simulation)
+    sedml_task       = sedmlTask('task', 'Brette 2007 task', sedml_model, sedml_simulation)
     
-    sedml_variable_time  = sedmlVariable('time', 'time',    sedml_task, symbol='urn:sedml:symbol:time')
-    sedml_variable_excV  = sedmlVariable('excV', 'Voltage', sedml_task, target='Group 1.Excitatory population[0].V')
-    sedml_variable_inhV  = sedmlVariable('inhV', 'Voltage', sedml_task, target='Group 1.Inhibitory population[0].V')
+    sedml_variable_time  = sedmlVariable('time', 'Time',    sedml_task, symbol='urn:sedml:symbol:time')
+    sedml_variable_excV  = sedmlVariable('excV', 'Excitatory neurone[0] voltage, V', sedml_task, target='Group 1.Excitatory population[0].V')
+    sedml_variable_inhV  = sedmlVariable('inhV', 'Inhibitory neurone[5] voltage, V', sedml_task, target='Group 1.Inhibitory population[5].V')
 
-    inh_neurones = [0, 14, 56, 120]
-    exc_neurones = [57, 195, 207, 227, 254, 278, 377, 390, 429, 453, 456, 490, 643, 657, 737]
     sedml_data_generator_time = sedmlDataGenerator('DG time', 'DG time', [sedml_variable_time])
-    sedml_data_generator_excV = sedmlDataGenerator('DG excV', 'DG excV', [sedmlVariable('excV', 'V', sedml_task, target='Group 1.Excitatory population[{0}].V'.format(i)) for i in exc_neurones])
-    sedml_data_generator_inhV = sedmlDataGenerator('DG inhV', 'DG inhV', [sedmlVariable('inhV', 'V', sedml_task, target='Group 1.Inhibitory population[{0}].V'.format(i)) for i in inh_neurones])
+    sedml_data_generator_excV = sedmlDataGenerator('DG excV', 'DG excV', [sedml_variable_excV])
+    sedml_data_generator_inhV = sedmlDataGenerator('DG inhV', 'DG inhV', [sedml_variable_inhV])
 
     curve_excV = sedmlCurve('ExcV', 'ExcV', False, False, sedml_data_generator_time, sedml_data_generator_excV)
     curve_inhV = sedmlCurve('InhV', 'InhV', False, False, sedml_data_generator_time, sedml_data_generator_inhV)
@@ -1213,8 +1321,8 @@ def simulate():
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         messages = traceback.format_tb(exc_traceback)
-        print('\n'.join(messages))
         print(e)
+        print('\n'.join(messages))
     
     print('Simulation statistics:          ')
     print('  Network create time:                       {0:>8.3f}s'.format(network_create_time_end - network_create_time_start))

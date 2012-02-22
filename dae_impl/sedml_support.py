@@ -138,8 +138,8 @@ class sedmlCurve(sedmlBase):
         
         self.logX            = bool(logX)
         self.logY            = bool(logY)
-        self.xDataRefference = str(xDataRefference)
-        self.yDataRefference = str(yDataRefference)
+        self.xDataRefference = xDataRefference
+        self.yDataRefference = yDataRefference
     
     def __repr__(self):
         return 'sedmlCurve({0}, {1}, {2}, {3}, {4})'.format(sedmlBase.__repr__(self), 
@@ -147,6 +147,7 @@ class sedmlCurve(sedmlBase):
                                                             self.logY,
                                                             self.xDataRefference,
                                                             self.yDataRefference)
+"""
 class sedmlRasterPlot(sedmlBase):
     def __init__(self, id, name, dataRefference):
         sedmlBase.__init__(self, id, name)
@@ -164,6 +165,7 @@ class sedmlReport(sedmlBase):
     
     def __repr__(self):
         return 'sedmlReport({0}, {1})'.format(sedmlBase.__repr__(self), self.dataSets)
+"""
 
 class sedmlExperiment:
     def __init__(self, simulations, models, tasks, data_generators, outputs):
