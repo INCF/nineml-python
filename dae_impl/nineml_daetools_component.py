@@ -17,7 +17,7 @@ import expression_parser
 import units_parser
 from daetools.pyDAE import *
 
-class ninemlRNG(object):
+class daetoolsRNG(object):
     uniform     = 0
     normal      = 1
     binomial    = 2
@@ -33,22 +33,22 @@ class ninemlRNG(object):
         if self.seed:
             self.rng.seed(self.seed)
         
-        if self.distribution == ninemlRNG.uniform:
+        if self.distribution == daetoolsRNG.uniform:
             self.lowerBound = kwargs.get('lowerBound')
             self.upperBound = kwargs.get('upperBound')
         
-        elif self.distribution == ninemlRNG.normal:
+        elif self.distribution == daetoolsRNG.normal:
             self.centre = kwargs.get('centre')
             self.width  = kwargs.get('width')
         
-        elif self.distribution == ninemlRNG.binomial:
+        elif self.distribution == daetoolsRNG.binomial:
             self.n = kwargs.get('n')
             self.p = kwargs.get('p')
         
-        elif self.distribution == ninemlRNG.poisson:
+        elif self.distribution == daetoolsRNG.poisson:
             self.lamb = kwargs.get('lamb')
         
-        elif self.distribution == ninemlRNG.exponential:
+        elif self.distribution == daetoolsRNG.exponential:
             self.beta = kwargs.get('beta')
         
         else:
@@ -56,59 +56,59 @@ class ninemlRNG(object):
    
     def next(self):
         res = [0.0]
-        if self.distribution == ninemlRNG.uniform:
+        if self.distribution == daetoolsRNG.uniform:
             res = self.rng.uniform(self.lowerBound, self.upperBound, 1)
         
-        elif self.distribution == ninemlRNG.normal:
+        elif self.distribution == daetoolsRNG.normal:
             res = self.rng.normal(self.centre, self.width)
         
-        elif self.distribution == ninemlRNG.binomial:
+        elif self.distribution == daetoolsRNG.binomial:
             res = self.rng.binomial(self.n, self.p)
         
-        elif self.distribution == ninemlRNG.poisson:
+        elif self.distribution == daetoolsRNG.poisson:
             res = self.rng.poisson(self.lamb)
         
-        elif self.distribution == ninemlRNG.exponential:
+        elif self.distribution == daetoolsRNG.exponential:
             res = self.rng.exponential(self.beta)
         
         return float(res[0])
         
     @classmethod
-    def create_rng(cls, al_component, parameters):
+    def createRNG(cls, al_component, parameters):
         """
         Creates numpy RNG based on the AL Component object and parameters from the UL component. 
         
-        :param cls: ninemlRNG class
+        :param cls: daetoolsRNG class
         :param al_component: AL Component object
         :param parameters: python dictionary 'name' : (value, units)
         
-        :rtype: ninemlRNG object
+        :rtype: daetoolsRNG object
         :raises: RuntimeError
         """
-        seed = ninemlRNG.debug_seed
+        seed = daetoolsRNG.debug_seed
         
         if al_component.name == 'uniform_distribution':
             lowerBound = parameters['lowerBound'][0]
             upperBound = parameters['upperBound'][0]
-            rng = ninemlRNG(ninemlRNG.uniform, lowerBound = lowerBound, upperBound = upperBound, seed = seed)
+            rng = daetoolsRNG(daetoolsRNG.uniform, lowerBound = lowerBound, upperBound = upperBound, seed = seed)
         
         elif al_component.name == 'normal_distribution':
             centre = parameters['centre'][0]
             width  = parameters['width'][0]
-            rng = ninemlRNG(ninemlRNG.normal, centre = centre, width = width, seed = seed)
+            rng = daetoolsRNG(daetoolsRNG.normal, centre = centre, width = width, seed = seed)
         
         elif al_component.name == 'binomial_distribution':
             n = parameters['n'][0]
             p = parameters['p'][0]
-            rng = ninemlRNG(ninemlRNG.binomial, n = n, p = p, seed = seed)
+            rng = daetoolsRNG(daetoolsRNG.binomial, n = n, p = p, seed = seed)
         
         elif al_component.name == 'poisson_distribution':
             lamb = parameters['lamb'][0]
-            rng = ninemlRNG(ninemlRNG.poisson, lamb = lamb, seed = seed)
+            rng = daetoolsRNG(daetoolsRNG.poisson, lamb = lamb, seed = seed)
         
         elif al_component.name == 'exponential_distribution':
             beta = parameters['beta'][0]
-            rng = ninemlRNG(ninemlRNG.exponential, beta = beta, seed = seed)
+            rng = daetoolsRNG(daetoolsRNG.exponential, beta = beta, seed = seed)
         
         else:
             raise RuntimeError('Unsupported random distribution component: {0}'.format(al_component.name))
@@ -116,7 +116,7 @@ class ninemlRNG(object):
         return rng
 
 _global_rng_ = numpy.random.RandomState()
-_global_rng_.seed(ninemlRNG.debug_seed)
+_global_rng_.seed(daetoolsRNG.debug_seed)
 
 def random_uniform(lowerBound = 0.0, upperBound = 1.0):
     res = _global_rng_.uniform(lowerBound, upperBound, 1)
@@ -152,10 +152,11 @@ def fixObjectName(name):
 
 dae_nineml_t = daeVariableType("dae_nineml_t", unit(), -1.0e+20, 1.0e+20, 0.0, 1e-12)
 
-class daetools_spike_source(pyCore.daeModel):
+class daetoolsSpikeSource(pyCore.daeModel):
     """
     Used to generate spikes according to the predefined sequence.
-    The component has no parameters
+    The component has no parameters, just a dummy variable *event* and 
+    corresponding equation in the STN.
     """
     def __init__(self, spiketimes, Name, Parent = None, Description = ""):
         pyCore.daeModel.__init__(self, Name, Parent, Description)
@@ -255,21 +256,19 @@ __equation_parser__ = expression_parser.ExpressionParser()
 def createPoissonSpikeTimes(rate, duration, t0, rng_poisson, lambda_, rng_uniform):
     n  = int(rng_poisson.poisson(lambda_, 1))
     spiketimes = sorted(rng_uniform.uniform(t0, t0+duration, n))
-    #print(lam, n, spiketimes)
     return spiketimes
 
-class al_component_info(object):
+class daetoolsComponentInfo(object):
     """
     """
     def __init__(self, name, al_component):
         """
         Iterates over *Parameters*, *State variables*, *Aliases*, *Analogue ports*, *Event ports*, 
-        *Sub-nodes* and *Port connections* and creates corresponding daetools objects.
+        *Sub-nodes* and *Port connections* and creates data structures needed to repeadetly create
+        daetools models (daetoolsComponent objects).
         
         :param name: string
-        :param ninemlComponent: AL component object
-        :param Parent: daeModel-derived object
-        :param Description: string
+        :param al_component: AL component object
             
         :raises: RuntimeError
         """
@@ -385,7 +384,7 @@ class al_component_info(object):
 
         # 8) Create sub-nodes
         for name, subcomponent in list(self.al_component.subnodes.items()):
-            self.nineml_subcomponents.append( al_component_info(name, subcomponent) )
+            self.nineml_subcomponents.append( daetoolsComponentInfo(name, subcomponent) )
 
     def __str__(self):
         res = ''
@@ -403,7 +402,7 @@ class al_component_info(object):
             res += 'Subcomponent: {0}\n{1}\n'.format(subcomponent.name, subcomponent)
         return res
     
-class dae_component(daeModel):
+class daetoolsComponent(daeModel):
     ninemlSTNRegimesName = 'NineML_Regimes_STN'
     
     def __init__(self, info, Name, Parent = None, Description = ''):
@@ -438,10 +437,13 @@ class dae_component(daeModel):
         
         del self.info
         del self.nineml_parameters
-        #del self.nineml_aliases
-        #del self.nineml_variables
-        #del self.nineml_inlet_ports
-        #del self.nineml_reduce_ports
+        """
+        Cannot delete the following;
+        del self.nineml_aliases
+        del self.nineml_variables
+        del self.nineml_inlet_ports
+        del self.nineml_reduce_ports
+        """
         del self.nineml_outlet_ports
         del self.nineml_port_connections
         del self.nineml_reduce_port_connections
@@ -511,7 +513,7 @@ class dae_component(daeModel):
                 
         # 6) Create sub-components
         for sub_info in self.info.nineml_subcomponents:
-            subcomponent = dae_component(sub_info, sub_info.name, self, '')
+            subcomponent = daetoolsComponent(sub_info, sub_info.name, self, '')
             subcomponent.Nitems = self.Nitems
             subcomponent.initialize(self.N)
             self.nineml_subcomponents.append(subcomponent)
@@ -580,10 +582,10 @@ class dae_component(daeModel):
         It adds new items into the *nineml_port_connections* and 
         *nineml_reduce_port_connections* dictionaries. The corresponding 
         equations will be created during a call to *DeclareEquations* function.
-        The created equations will be a part of the *self* dae_component.
+        The created equations will be a part of the *self* daetoolsComponent.
         
-        :param source: dae_component object (representing a synapse)
-        :param target: dae_component object (representing a neurone) 
+        :param source: daetoolsComponent object (representing a synapse)
+        :param target: daetoolsComponent object (representing a neurone) 
         
         :raises: RuntimeError
         """
@@ -837,7 +839,7 @@ class dae_component(daeModel):
         if len(self.info.nineml_regimes) > 0:
             for stn_i in range(0, self.Nitems):
                 # 2a) Create STN for model
-                stn = self.STN('{0}({1})'.format(dae_component.ninemlSTNRegimesName, stn_i))
+                stn = self.STN('{0}({1})'.format(daetoolsComponent.ninemlSTNRegimesName, stn_i))
                 self.nineml_stns.append(stn)
 
                 for (regime_name, odes, on_conditions, on_events) in self.info.nineml_regimes:
@@ -912,7 +914,7 @@ class dae_component(daeModel):
                                                     
                 self.END_STN()
     
-class dae_component_setup:
+class daetoolsComponentSetup:
     """
     Sets the parameter values, initial conditions and other processing needed,
     without a need for the separate object to wrap it.
@@ -924,7 +926,7 @@ class dae_component_setup:
     _random_number_generators = {}
     
     @staticmethod
-    def SetUpParametersAndDomains(model, parameters):
+    def setUpParametersAndDomains(model, parameters):
         if model.Nitems == 0:
             return
         
@@ -940,11 +942,11 @@ class dae_component_setup:
             value = parameters[paramRelativeName]
             
             if isinstance(value, tuple) and isinstance(value[0], (long, int, float)):
-                v = dae_component_setup.getValue(value, paramRelativeName)
+                v = daetoolsComponentSetup.getValue(value, paramRelativeName)
                 parameter.SetValues(v)
             
             elif isinstance(value, tuple) and isinstance(value[0], nineml.user_layer.RandomDistribution):
-                rng = dae_component_setup.getValue(value, paramRelativeName)
+                rng = daetoolsComponentSetup.getValue(value, paramRelativeName)
                 n   = parameter.Domains[0].NumberOfPoints
                 for i in xrange(0, n):
                     v = float(rng.next())
@@ -954,7 +956,7 @@ class dae_component_setup:
                 raise RuntimeError('Invalid parameter: {0} value type specified: {1}-{2}'.format(paramRelativeName, value, type(value)))
     
     @staticmethod      
-    def SetUpVariables(model, parameters, report_variables):
+    def setUpVariables(model, parameters, report_variables):
         if model.Nitems == 0:
             return
         
@@ -971,11 +973,11 @@ class dae_component_setup:
             value = parameters[varRelativeName]
             
             if isinstance(value, tuple) and isinstance(value[0], (long, int, float)):
-                v = dae_component_setup.getValue(value, varRelativeName)
+                v = daetoolsComponentSetup.getValue(value, varRelativeName)
                 variable.SetInitialConditions(v)
             
             elif isinstance(value, tuple) and isinstance(value[0], nineml.user_layer.RandomDistribution):
-                rng = dae_component_setup.getValue(value, varRelativeName)
+                rng = daetoolsComponentSetup.getValue(value, varRelativeName)
                 n = variable.Domains[0].NumberOfPoints
                 for i in xrange(0, n):
                     v = float(rng.next())
@@ -983,7 +985,7 @@ class dae_component_setup:
             
             else:
                 raise RuntimeError('Invalid state variable: {0} initial consition type specified: {1}-{2}'.format(varRelativeName, value, type(value)))
-        """
+        
         for varRelativeName in report_variables:
             if varRelativeName in dae_variables:
                 variable = dae_variables[varRelativeName]
@@ -991,10 +993,9 @@ class dae_component_setup:
             elif varRelativeName in dae_aliases:
                 variable = dae_aliases[varRelativeName]
                 variable.ReportingOn = True
-        """
-        
+                
     @staticmethod      
-    def SetWeights(model, weights):
+    def setWeights(model, weights):
         if model.Nitems != len(weights):
             raise RuntimeError('The number of weights not equal to the number of synapses in the synapse {0}'.format(model.Name))
         
@@ -1032,10 +1033,10 @@ class dae_component_setup:
                 return float(_value)
             
             elif isinstance(_value, nineml.user_layer.RandomDistribution): # A RandomDistribution component
-                if not _value.name in dae_component_setup._random_number_generators:
+                if not _value.name in daetoolsComponentSetup._random_number_generators:
                     raise RuntimeError('Cannot find RandomDistribution component {0}'.format(_value.name))
                 
-                rng = dae_component_setup._random_number_generators[_value.name]
+                rng = daetoolsComponentSetup._random_number_generators[_value.name]
                 return rng
             
             else: # Something is wrong
@@ -1044,9 +1045,9 @@ class dae_component_setup:
         else:
             raise RuntimeError('Invalid parameter: {0} value type specified: {1}-{2}'.format(name, value, type(value)))
 
-class dae_component_simulation(daeSimulation):
+class daeComponentSimulation(daeSimulation):
     """
-    dae_component_simulation carries out the simulation of the given (top level) model.
+    daeComponentSimulation carries out the simulation of the given (top level) model.
     Used only for simulation of the single AL component (wrapped into the nineml_daetools_bridge object),
     by the NineML WebApp and nineml_desktop_app.
     """
@@ -1068,7 +1069,7 @@ class dae_component_simulation(daeSimulation):
         self.ReportingInterval = reportingInterval
         self.m                 = model
         
-        dae_component_setup._random_number_generators = random_number_generators
+        daetoolsComponentSetup._random_number_generators = random_number_generators
     
     def SetUpParametersAndDomains(self):
         """
@@ -1077,7 +1078,7 @@ class dae_component_simulation(daeSimulation):
         :rtype: None
         :raises: RuntimeError
         """
-        dae_component_setup.SetUpParametersAndDomains(self.m, self.parameters)
+        daetoolsComponentSetup.setUpParametersAndDomains(self.m, self.parameters)
         
     def SetUpVariables(self):
         """
@@ -1086,11 +1087,11 @@ class dae_component_simulation(daeSimulation):
         :rtype: None
         :raises: RuntimeError
         """
-        dae_component_setup.SetUpVariables(self.m, self.parameters, self.report_variables)
+        daetoolsComponentSetup.setUpVariables(self.m, self.parameters, self.report_variables)
 
 def doSimulation(info):
     start_time = time()
-    dae_comp = dae_component(info, 'hierachical_iaf_1coba', None, '')
+    dae_comp = daetoolsComponent(info, 'hierachical_iaf_1coba', None, '')
     dae_comp.Nitems = 1
     dae_comp.initialize()
     #print(dae_comp)
@@ -1121,7 +1122,7 @@ def doSimulation(info):
     datareporter = daeBlackHoleDataReporter() #daeTCPIPDataReporter()
     
     create_time = time()
-    simulation   = dae_component_simulation(dae_comp, parameters, report_variables, 1.0, 0.01, {})
+    simulation   = daeComponentSimulation(dae_comp, parameters, report_variables, 1.0, 0.01, {})
     print('Simulation create time = {0}'.format(time() - create_time))
     
     from daetools.solvers import pySuperLU as superlu
@@ -1161,7 +1162,7 @@ if __name__ == "__main__":
     if not al_component:
         raise RuntimeError('Cannot load NineML component')
     
-    info = al_component_info('hierachical_iaf_1coba', al_component)
+    info = daetoolsComponentInfo('hierachical_iaf_1coba', al_component)
     #print(info)
     
     overall_start_time = time()

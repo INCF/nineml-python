@@ -67,7 +67,7 @@ class ExplicitListOfConnections(ConnectionGenerator):
     def iterconnections(self):
         """
         A generator function that returns an iterator over target-index-sorted connections.
-        The connections returned are sorted by the target neurone indexes.
+        The connections returned are target neurone sorted.
         
         :rtype: iterator
         :raises:

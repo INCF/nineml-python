@@ -55,7 +55,7 @@ class Geometry(object):
     def metric(self, source_index, target_index):
         """
         Returns a distance between two points (units: ???) specified by the *source_index*
-        and the *source_index* arguments.
+        and the *target_index* arguments.
         
         :param source_index: Integer
         :param target_index: Integer
