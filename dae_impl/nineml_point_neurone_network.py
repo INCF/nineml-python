@@ -1125,7 +1125,7 @@ def get_ul_model_and_simulation_inputs():
     N_poisson = 20
 
     if N_neurons == 100:
-        connections_folder = ''
+        connections_folder = '100/'
     elif N_neurons == 1000:
         connections_folder = '1000/'
     elif N_neurons == 2000:
