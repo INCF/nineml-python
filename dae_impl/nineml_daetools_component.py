@@ -961,7 +961,7 @@ class daetoolsComponentSetup:
             return
         
         # Reporting is off by default for all variables
-        model.SetReportingOn(True)
+        #model.SetReportingOn(True)
         
         dae_variables = model._getStateVariables(model)
         dae_aliases   = model._getAliases(model)

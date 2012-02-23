@@ -73,7 +73,7 @@ class OnSpikeOutAction(pyCore.daeAction):
     daeAction-derived class that handles all trigerred events from neurones.
     When a spike is fired the function Execute() is called which adds a delay
     to the firing time and places the event into a priority queue. 
-    Currently the priority queue is a global (network-wide) object.
+    Currently, the priority queue is a global (network-wide) object.
     """
     def __init__(self, neurone, eventPort):
         pyCore.daeAction.__init__(self)
@@ -144,7 +144,20 @@ def creatALFromULComponent(ul_component, random_number_generators):
     """
     Creates AL component referenced in the given UL component and does some additional
     processing depending on its type. Returns an AL Component object. 
-    It always checks if the url is valid and throws an exception if it ain't.
+    An exception can be thrown for the following reasons:
+      - The component at the specified URL does not exist, invalid url, etc.
+      - The component exists but the parser cannot parse it
+      - Vatican
+      - The Illuminati
+      - Jesuits
+      - WZO
+      - Freemasons
+      - The Knights of Malta
+      - Ordo Templis Orientis
+      - The Golden Dawn
+      - The Order of the Rose Cross
+      - The Order of the Quest
+      - Communists
     
     :param ul_component: UL Component object
     :param random_number_generators: python dictionary 'UL Component name' : daetoolsRNG object (numpy RandomState based)
@@ -153,20 +166,6 @@ def creatALFromULComponent(ul_component, random_number_generators):
     :raises: RuntimeError 
     """
     
-    # An exception can occur for the following reasons:
-    #  - The component at the specified URL does not exist
-    #  - The component exists but the parser cannot parse it
-    #  - Vatican
-    #  - The Illuminati
-    #  - Jesuits
-    #  - WZO
-    #  - Freemasons
-    #  - The Knights of Malta
-    #  - Ordo Templis Orientis
-    #  - The Golden Dawn
-    #  - The Order of the Rose Cross
-    #  - The Order of the Quest
-    #  - Communists
     try:
         # First check if the component exists; if not - raise an exception.
         f = urllib.urlopen(ul_component.definition.url)
@@ -641,7 +640,8 @@ class daetoolsPointNeuroneSimulation(pyActivity.daeSimulation):
     def CleanUpSetupData(self):
         pyActivity.daeSimulation.CleanUpSetupData(self)
         self.m.CleanUpSetupData()
-        
+
+'''
 class daetoolsNetworkDataReporter(daeDataReporterLocal):
     def __init__(self):
         daeDataReporterLocal.__init__(self)
@@ -670,6 +670,7 @@ class daetoolsNetworkDataReporter(daeDataReporterLocal):
         Here it always returns True.
         """
         return True
+'''
 
 class daetoolsPointNeuroneNetworkSimulation:
     """
@@ -684,7 +685,7 @@ class daetoolsPointNeuroneNetworkSimulation:
         self.reportingInterval   = 0.0
         self.timeHorizon         = 0.0        
         self.log                 = daeLogs.daePythonStdOutLog()
-        self.datareporter        = daetoolsNetworkDataReporter() #pyDataReporting.daeTCPIPDataReporter()
+        self.datareporter        = pyDataReporting.daeNoOpDataReporter() #pyDataReporting.daeTCPIPDataReporter()
         self.simulations         = []
         self.events_heap         = []
         self.average_firing_rate = {}
@@ -789,9 +790,14 @@ class daetoolsPointNeuroneNetworkSimulation:
                         break
                     
                     #print('{0} --> {1}s (trigger event on {2})'.format(target_neurone.Name, t_event, inlet_event_port.CanonicalName))
-                    target_neurone.simulation.IntegrateUntilTime(t_event, pyActivity.eDoNotStopAtDiscontinuity, False)
+                    
+                    # Integrate until next event time and report the data if there is a discontinuity
+                    target_neurone.simulation.IntegrateUntilTime(t_event, pyActivity.eDoNotStopAtDiscontinuity, True)
+                    
+                    # Trigger the event and reinitialize the system
                     inlet_event_port.ReceiveEvent(t_event)
                     target_neurone.simulation.Reinitialize()
+                    
                     self.spike_count += 1
             
             except IndexError:
@@ -804,7 +810,7 @@ class daetoolsPointNeuroneNetworkSimulation:
                 #                                       '<' if simulation.CurrentTime < next_time else '=' , 
                 #                                       next_time))
                 if simulation.CurrentTime < next_time:
-                    simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, False)
+                    simulation.IntegrateUntilTime(next_time, pyActivity.eDoNotStopAtDiscontinuity, True)
                 simulation.ReportData(next_time)
             
             # Set the progress
@@ -918,7 +924,7 @@ class daetoolsPointNeuroneNetworkSimulation:
         print('  Total number of neurones:  {0:>10d}'.format(self.number_of_neurones))
         print('  Total number of synapses:  {0:>10d}'.format(self.number_of_synapses))
         print('  Total number of spikes:    {0:>10d}'.format(self.spike_count))
-        print('  Minimal network delay:     {0:>10.6f} s'.format(self.minimal_delay))
+        print('  Minimal network delay:   {0:>10.6f} s'.format(self.minimal_delay))
         
         # 1. Create a raster plot file (.ras)
         neurone_index = 0
@@ -937,7 +943,7 @@ class daetoolsPointNeuroneNetworkSimulation:
                 
                 population_events[population_name] = sorted(events)
                 self.average_firing_rate[population_name] = count / (self.timeHorizon * len(population.neurones))
-                print('  [{0}] average firing rate: {1} Hz'.format(population_name, self.average_firing_rate[population_name]))
+                print('  [{0}] average firing rate: {1:.3f} Hz'.format(population_name, self.average_firing_rate[population_name]))
         
         self.raster_plot_data.sort()
         self.createRasterFile(os.path.join(results_dir, 'raster-plot.ras'), self.raster_plot_data, self.number_of_neurones)
@@ -1072,7 +1078,7 @@ class daetoolsPointNeuroneNetworkSimulation:
                   'text.usetex':     False}
         matplotlib.rcParams.update(params)
         
-        colors = ['red', 'blue', 'green', 'black', 'c', 'm', 'k', 'y']
+        colors = ['blue', 'red', 'green', 'black', 'c', 'm', 'k', 'y']
 
         figure = Figure(figsize=(8, 6))
         canvas = FigureCanvas(figure)
@@ -1161,7 +1167,7 @@ def getULModelAndSimulationInputs():
     else:
         raise RuntimeError('The number of neurones can be 100, 1000 or 2000')
 
-    catalog = 'file://{0}/'.format(sys.path[0])
+    catalog = 'file://{0}/catalog/'.format(sys.path[0])
     
     rnd_uniform_params = {
                           'lowerBound': (-0.060, "dimensionless"),
