@@ -8,7 +8,7 @@
 .. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
 """
 
-from connection_generator import ConnectionGenerator
+from nineml.connection_generator import ConnectionGenerator
 
 class ExplicitListOfConnections(ConnectionGenerator):
     """
