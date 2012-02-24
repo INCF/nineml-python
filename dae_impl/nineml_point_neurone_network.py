@@ -15,10 +15,8 @@ import nineml
 import nineml.user_layer
 from nineml.user_layer_aux import connection_generator, explicit_list_of_connections
 from nineml.user_layer_aux import geometry
-from nineml.abstraction_layer import readers
-from nineml.abstraction_layer.testing_utils import TestableComponent
 
-from daetools.pyDAE import *
+from daetools.pyDAE import daeLogs, pyCore, pyActivity, pyDataReporting, pyIDAS, pyUnits
 from daetools.solvers import pySuperLU
 
 import nineml_daetools_component
@@ -37,25 +35,6 @@ try:
 except ImportError:
     from heapq import heappush, heappop, heapify, heapreplace
 
-class MemoryMonitor(object):
-    """
-    Usage:
-    memory_mon  = MemoryMonitor('ciroki')
-    print 'Memory usage = {0} MB'.format(memory_mon.usage()/1000.0)
-    """
-    def __init__(self, username):
-        """Create new MemoryMonitor instance."""
-        self.username = username
-
-    def usage(self):
-        """Return int containing memory used by user's processes."""
-        self.process = subprocess.Popen("ps -u %s -o rss | awk '{sum+=$1} END {print sum}'" % self.username,
-                                        shell=True,
-                                        stdout=subprocess.PIPE,
-                                        )
-        self.stdout_list = self.process.communicate()[0].split('\n')
-        return int(self.stdout_list[0])
-
 def fixParametersDictionary(parameters):
     """
     :param parameters: ParameterSet object.
@@ -68,7 +47,7 @@ def fixParametersDictionary(parameters):
         new_parameters[name] = (parameter.value, parameter.unit) 
     return new_parameters
 
-class OnSpikeOutAction(pyCore.daeAction):
+class daetoolsOnSpikeOutAction(pyCore.daeAction):
     """
     daeAction-derived class that handles all trigerred events from neurones.
     When a spike is fired the function Execute() is called which adds a delay
@@ -95,8 +74,9 @@ class OnSpikeOutAction(pyCore.daeAction):
 
 def createNeurone(name, component_info, rng, parameters):
     """
-    Creates 'daetoolsComponent' object for a given 'daetoolsComponentInfo' object.
+    Returns daetoolsComponent object based on the supplied daetoolsComponentInfo object.
     There are some special cases which are handled individually such as:
+     
      * SpikeSourcePoisson
     
     :param name: string
@@ -135,7 +115,7 @@ def createNeurone(name, component_info, rng, parameters):
         neurone.initialize()
     
     spike_event_port = neurone.getOutletEventPort()
-    neurone.on_spike_out_action = OnSpikeOutAction(neurone, spike_event_port)
+    neurone.on_spike_out_action = daetoolsOnSpikeOutAction(neurone, spike_event_port)
     neurone.ON_EVENT(spike_event_port, userDefinedActions = [neurone.on_spike_out_action])
     
     return neurone
@@ -145,36 +125,35 @@ def creatALFromULComponent(ul_component, random_number_generators):
     Creates AL component referenced in the given UL component and does some additional
     processing depending on its type. Returns an AL Component object. 
     An exception can be thrown for the following reasons:
-      - The component at the specified URL does not exist, invalid url, etc.
-      - The component exists but the parser cannot parse it
-      - Vatican
-      - The Illuminati
-      - Jesuits
-      - WZO
-      - Freemasons
-      - The Knights of Malta
-      - Ordo Templis Orientis
-      - The Golden Dawn
-      - The Order of the Rose Cross
-      - The Order of the Quest
-      - Communists
+     
+     * The component at the specified URL does not exist, invalid url, etc.
+     * The component exists but the parser cannot parse it
+     * Vatican
+     * The Illuminati
+     * Jesuits
+     * WZO
+     * Freemasons
+     * The Knights of Malta
+     * The Order of the Rose Cross
+     * Communists
     
     :param ul_component: UL Component object
     :param random_number_generators: python dictionary 'UL Component name' : daetoolsRNG object (numpy RandomState based)
     
-    :rtype: tuple (AL Component object, list component_data)
+    :rtype: tuple (daetoolsComponentInfo object, AL Component object, UL Component object, dictionary with parameters)
     :raises: RuntimeError 
     """
     
     try:
-        # First check if the component exists; if not - raise an exception.
+        # Check if the URL is valid and load it
         f = urllib.urlopen(ul_component.definition.url)
     
     except Exception as e:
         raise RuntimeError('Cannot resolve the component: {0}, definition url: {1}, error: {2}'.format(ul_component.name, ul_component.definition.url, str(e)))
     
     try:
-        # Try to load the component
+        # Parse the xml file and create the component-info object needed 
+        # to repeatedly instantiate neurones/synapses:
         al_component   = nineml.abstraction_layer.readers.XMLReader.read(ul_component.definition.url) 
         component_info = daetoolsComponentInfo(al_component.name, al_component)
         parameters     = fixParametersDictionary(ul_component.parameters)
@@ -183,7 +162,7 @@ def creatALFromULComponent(ul_component, random_number_generators):
         raise RuntimeError('The component: {0} failed to parse: {1}'.format(ul_component.name, str(e)))
 
     # Do the additional processing, depending on the component's type.
-    # Should be completed (if needed) in the future.
+    # Should be completed (as needed) in the future.
     try:
         if isinstance(ul_component, nineml.user_layer.ConnectionRule):
             pass
@@ -209,17 +188,15 @@ def creatALFromULComponent(ul_component, random_number_generators):
             if not ul_component.name in random_number_generators:
                 rng = daetoolsRNG.createRNG(al_component, parameters)
                 random_number_generators[ul_component.name] = rng
-        
-        else:
-            RuntimeError('Unsupported UL Component type: {0}, component name: {1}'.format(type(ul_component), ul_component.name))
     
     except Exception as e:
         raise RuntimeError('The component: {0} failed to parse: {1}'.format(ul_component.name, str(e)))
     
     return (component_info, al_component, ul_component, parameters)
 
-class daetoolsPointNeuroneNetwork:
+class daetoolsPointNeuroneNetwork(object):
     """
+    Wraps and handles user-layer Model objects.
     """
     def __init__(self, ul_model):
         """
@@ -232,10 +209,10 @@ class daetoolsPointNeuroneNetwork:
         self._groups          = {}
         self._rngs            = {}
         
-        for name, ul_component in list(ul_model.components.items()):
+        for name, ul_component in ul_model.components.iteritems():
             self._components[name] = creatALFromULComponent(ul_component, self._rngs)
         
-        for name, ul_group in list(ul_model.groups.items()):
+        for name, ul_group in ul_model.groups.iteritems():
             self._groups[name] = daetoolsGroup(name, ul_group, self)
         
     def __repr__(self):
@@ -311,8 +288,9 @@ class daetoolsPointNeuroneNetwork:
     def globalRandomNumberGenerator(self):
         return nineml_daetools_component._global_rng_
 
-class daetoolsGroup:
+class daetoolsGroup(object):
     """
+    Wraps and handles user-layer Group objects.
     """
     def __init__(self, name, ul_group, network):
         """
@@ -365,8 +343,9 @@ class daetoolsGroup:
             raise RuntimeError('Projection [{0}] does not exist in the group'.format(name)) 
         return self._projections[name]
 
-class daetoolsPopulation:
+class daetoolsPopulation(object):
     """
+    A class that wraps and handles user-layer Population objects.
     """
     def __init__(self, name, ul_population, network, population_id):
         """
@@ -409,8 +388,9 @@ class daetoolsPopulation:
             res += '  {0}\n'.format(repr(o))
         return res
 
-class daetoolsProjection:
+class daetoolsProjection(object):
     """
+    Wraps and handles user-layer Projection objects.
     ACHTUNG, ACHTUNG!!
     Currently, we support only populations of spiking neurones (not groups).
     """
@@ -468,7 +448,7 @@ class daetoolsProjection:
 
     def createCGI(self, ul_connection_rule):
         """
-        A function to create CG-derived object from the ConnectionRule object.
+        Creates CG-derived object from the ConnectionRule object.
         
         ACHTUNG, ACHTUNG!!!
         This function is going to be replaced by the auxiliary function function developed by Mikael.
@@ -483,16 +463,6 @@ class daetoolsProjection:
         
     def __repr__(self):
         res = 'daetoolsProjection({0})\n'.format(self.name)
-        #res += '  source_population:\n'
-        #res += '    {0}\n'.format(self._source_population)
-        #res += '  target_population:\n'
-        #res += '    {0}\n'.format(self._target_population)
-        #res += '  psr:\n'
-        #res += '    {0}\n'.format(self._psr)
-        #res += '  connection_rule:\n'
-        #res += '    {0}\n'.format(self._connection_rule)
-        #res += '  connection_type:\n'
-        #res += '    {0}\n'.format(self._connection_type)
         return res
         
     def getSynapse(self, index):
@@ -572,6 +542,7 @@ class daetoolsProjection:
 
 class daetoolsPointNeuroneSimulation(pyActivity.daeSimulation):
     """
+    Simulates a single neurone with all *incoming* synapses.
     """
     def __init__(self, neurone, neurone_parameters, neurone_report_variables):
         """
@@ -596,17 +567,17 @@ class daetoolsPointNeuroneSimulation(pyActivity.daeSimulation):
         Uncomment one of 3 options below and comment the rest.
         
         Some hints:
-         - For smaller networks: it does not really matter which solver.
-         - For medium networks: dense Lapack.
-         - For large networks: SuperLU
+         * For smaller networks: it does not really matter which solver.
+         * For medium networks: dense Lapack.
+         * For large networks: SuperLU
         """
         # 1. No need to do anything (Sundials LU is the default solver)
         
-        # 2. SuperLU LA Solver
+        # 2. SuperLU LA Solver (uncomment the lines below)
         #self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
         #self.daesolver.SetLASolver(self.lasolver)
         
-        # 3. Lapack LA Solver
+        # 3. Lapack LA Solver (uncomment the lines below)
         self.daesolver.SetLASolver(pyIDAS.eSundialsLapack)
 
     def init(self, log, datareporter, reportingInterval, timeHorizon):
@@ -641,39 +612,11 @@ class daetoolsPointNeuroneSimulation(pyActivity.daeSimulation):
         pyActivity.daeSimulation.CleanUpSetupData(self)
         self.m.CleanUpSetupData()
 
-'''
-class daetoolsNetworkDataReporter(daeDataReporterLocal):
-    def __init__(self):
-        daeDataReporterLocal.__init__(self)
-
-    def Connect(self, ConnectionString, ProcessName):
-        """
-        Virtual function, a part of the daetools daeDataReporter interface,
-        called to connect the data reporter to the corresponding data receiver.
-        Here everything is kept in the data reporter so just return True always.
-        """
-        self.ProcessName = ProcessName
-        return True
-
-    def Disconnect(self):
-        """
-        Virtual function, a part of the daetools daeDataReporter interface,
-        called to disconnect the data reporter from the corresponding data receiver.
-        Here it always returns True.
-        """
-        return True
-
-    def IsConnected(self):
-        """
-        Virtual function, a part of the daetools daeDataReporter interface,
-        called to test if the data reporter is connected to the corresponding data receiver.
-        Here it always returns True.
-        """
-        return True
-'''
-
-class daetoolsPointNeuroneNetworkSimulation:
+class daetoolsPointNeuroneNetworkSimulation(object):
     """
+    Simulates a network of neurones (specified by a daetoolsPointNeuroneNetworkSimulation object) 
+    and produces outputs according to information in a SED-ML experiment object.
+    The daetoolsPointNeuroneNetworkSimulation object can be obtained from the SED-ML experiment object.
     """
     def __init__(self, sedml_experiment):
         """
@@ -1136,6 +1079,9 @@ def readCSV_pyNN(filename):
     return connections_out
         
 def profileSimulate():
+    """
+    Some voodoo mojo stuff needed to profile the script.
+    """
     import hotshot
     from hotshot import stats
     
@@ -1150,10 +1096,16 @@ def profileSimulate():
     s.strip_dirs().sort_stats("time").print_stats()
 
 def getULModelAndSimulationInputs():
+    """
+    Returns a sedmlExperiment object including a neural-network 
+    (in an user-layer Model object), run-time simulation data and
+    information needed to produce results.
+    """
+    
     ###############################################################################
     #                           NineML UserLayer Model
     ###############################################################################
-    N_neurons = 1000
+    N_neurons = 100
     N_exc     = int(N_neurons * 0.8)
     N_inh     = int(N_neurons * 0.2)
     N_poisson = 20
@@ -1221,8 +1173,8 @@ def getULModelAndSimulationInputs():
     psr_excitatory  = nineml.user_layer.SynapseType("COBA excitatory", catalog + "coba_synapse.xml", psr_excitatory_params)
     psr_inhibitory  = nineml.user_layer.SynapseType("COBA inhibitory", catalog + "coba_synapse.xml", psr_inhibitory_params)
     
-    grid2D          = nineml.user_layer.Structure("2D grid", catalog + "2Dgrid.xml")
-    connection_type = nineml.user_layer.ConnectionType("Static weights and delays", catalog + "static_weights_delays.xml")
+    grid2D          = nineml.user_layer.Structure("Structure - not used", catalog + "2Dgrid.xml")
+    connection_type = nineml.user_layer.ConnectionType("ConnectionType - not used", catalog + "static_weights_delays.xml")
     
     population_excitatory = nineml.user_layer.Population("Excitatory population", N_exc,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
     population_inhibitory = nineml.user_layer.Population("Inhibitory population", N_inh,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
@@ -1242,6 +1194,7 @@ def getULModelAndSimulationInputs():
     connection_rule_poisson_exc = nineml.user_layer.ConnectionRule("Explicit Connections poisson_exc", catalog + "explicit_list_of_connections.xml")
     connection_rule_poisson_inh = nineml.user_layer.ConnectionRule("Explicit Connections poisson_inh", catalog + "explicit_list_of_connections.xml")
 
+    # A temporal workaround until the support for explicit connections is finished
     setattr(connection_rule_exc_exc,     'connections', connections_exc_exc)
     setattr(connection_rule_exc_inh,     'connections', connections_exc_inh)
     setattr(connection_rule_inh_inh,     'connections', connections_inh_inh)
@@ -1351,6 +1304,13 @@ def simulate():
         simulation_finalize_time_start = time()
         simulation.finalize()
         simulation_finalize_time_end = time()
+        
+        print('Simulation statistics:          ')
+        print('  Network create time:                       {0:>8.3f}s'.format(network_create_time_end - network_create_time_start))
+        print('  Simulation initialize/solve initial time:  {0:>8.3f}s'.format(simulation_initialize_and_solve_initial_time_end - simulation_initialize_and_solve_initial_time_start))
+        print('  Simulation run time:                       {0:>8.3f}s'.format(simulation_run_time_end - simulation_run_time_start))
+        print('  Simulation finalize time:                  {0:>8.3f}s'.format(simulation_finalize_time_end - simulation_finalize_time_start))
+        print('  Total run time:                            {0:>8.3f}s'.format(simulation_finalize_time_end - network_create_time_start))
     
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -1358,13 +1318,6 @@ def simulate():
         print(e)
         print('\n'.join(messages))
     
-    print('Simulation statistics:          ')
-    print('  Network create time:                       {0:>8.3f}s'.format(network_create_time_end - network_create_time_start))
-    print('  Simulation initialize/solve initial time:  {0:>8.3f}s'.format(simulation_initialize_and_solve_initial_time_end - simulation_initialize_and_solve_initial_time_start))
-    print('  Simulation run time:                       {0:>8.3f}s'.format(simulation_run_time_end - simulation_run_time_start))
-    print('  Simulation finalize time:                  {0:>8.3f}s'.format(simulation_finalize_time_end - simulation_finalize_time_start))
-    print('  Total run time:                            {0:>8.3f}s'.format(simulation_finalize_time_end - network_create_time_start))
-   
 if __name__ == "__main__":
     simulate()
     #profileSimulate()

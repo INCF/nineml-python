@@ -15,7 +15,12 @@ import numpy.random
 from time import localtime, strftime, time
 import expression_parser
 import units_parser
-from daetools.pyDAE import *
+from daetools.pyDAE import daeLogs, daeVariableTypes, pyCore, pyActivity, pyDataReporting, pyIDAS, pyUnits
+from daetools.solvers import pySuperLU
+
+_global_seed_ = 100
+_global_rng_  = numpy.random.RandomState()
+_global_rng_.seed(_global_seed_)
 
 class daetoolsRNG(object):
     uniform     = 0
@@ -23,8 +28,6 @@ class daetoolsRNG(object):
     binomial    = 2
     poisson     = 3
     exponential = 4
-    
-    debug_seed = 100
     
     def __init__(self, distribution, **kwargs):
         self.distribution = distribution
@@ -85,7 +88,7 @@ class daetoolsRNG(object):
         :rtype: daetoolsRNG object
         :raises: RuntimeError
         """
-        seed = daetoolsRNG.debug_seed
+        seed = _global_seed_
         
         if al_component.name == 'uniform_distribution':
             lowerBound = parameters['lowerBound'][0]
@@ -114,9 +117,6 @@ class daetoolsRNG(object):
             raise RuntimeError('Unsupported random distribution component: {0}'.format(al_component.name))
 
         return rng
-
-_global_rng_ = numpy.random.RandomState()
-_global_rng_.seed(daetoolsRNG.debug_seed)
 
 def random_uniform(lowerBound = 0.0, upperBound = 1.0):
     res = _global_rng_.uniform(lowerBound, upperBound, 1)
@@ -147,10 +147,9 @@ def fixObjectName(name):
     :rtype: string
     :raises:
     """
-    new_name = name.replace(' ', '_')
-    return new_name
+    return name.replace(' ', '_')
 
-dae_nineml_t = daeVariableType("dae_nineml_t", unit(), -1.0e+20, 1.0e+20, 0.0, 1e-12)
+dae_nineml_t = pyCore.daeVariableType("dae_nineml_t", pyUnits.unit(), -1.0e+20, 1.0e+20, 0.0, 1e-12)
 
 class daetoolsSpikeSource(pyCore.daeModel):
     """
@@ -169,10 +168,10 @@ class daetoolsSpikeSource(pyCore.daeModel):
         self.Nitems               = 0
 
         # A dummy variable
-        self.event = pyCore.daeVariable("event", time_t, self, "")
+        self.event = pyCore.daeVariable("event", daeVariableTypes.time_t, self, "")
         
         # Add one 'send' event port
-        self.spikeoutput = pyCore.daeEventPort("spikeoutput", eOutletPort, self, "Spike outlet event port")
+        self.spikeoutput = pyCore.daeEventPort("spikeoutput", pyCore.eOutletPort, self, "Spike outlet event port")
         
         # A list of spike event times
         self.spiketimes = list(spiketimes)
@@ -194,8 +193,8 @@ class daetoolsSpikeSource(pyCore.daeModel):
             self.STATE('State_{0}'.format(i))
             eq = self.CreateEquation("event")
             eq.Residual = self.event() - t
-            self.ON_CONDITION(Time() >= t,  switchTo      = 'State_{0}'.format(i+1),
-                                            triggerEvents = [(self.spikeoutput, Time())])
+            self.ON_CONDITION(pyCore.Time() >= t, switchTo      = 'State_{0}'.format(i+1),
+                                                  triggerEvents = [(self.spikeoutput, pyCore.Time())])
 
         self.STATE('State_{0}'.format(len(self.spiketimes)))
 
@@ -234,10 +233,10 @@ class daetoolsVariableParameterDictionaryWrapper(object):
         with the index equal to the *current_index* argument.
         """
         obj = self.dictIDs[key]
-        if isinstance(obj, adouble):
+        if isinstance(obj, pyCore.adouble):
             return obj
         
-        elif isinstance(obj, (daeParameter, daeVariable)):
+        elif isinstance(obj, (pyCore.daeParameter, pyCore.daeVariable)):
             if self.current_index == None:
                 if len(obj.Domains) > 0:
                     raise RuntimeError('')
@@ -251,7 +250,7 @@ class daetoolsVariableParameterDictionaryWrapper(object):
         else:
             raise RuntimeError('')
 
-__equation_parser__ = expression_parser.ExpressionParser()
+_equation_parser_ = expression_parser.ExpressionParser()
 
 def createPoissonSpikeTimes(rate, duration, t0, rng_poisson, lambda_, rng_uniform):
     n  = int(rng_poisson.poisson(lambda_, 1))
@@ -290,7 +289,7 @@ class daetoolsComponentInfo(object):
         
         # 1) Create parameters
         for param in self.al_component.parameters:
-            self.nineml_parameters.append( (param.name, unit()) )
+            self.nineml_parameters.append( (param.name, pyUnits.unit()) )
 
         # 2) Create state-variables (diff. variables)
         for var in self.al_component.state_variables:
@@ -298,25 +297,25 @@ class daetoolsComponentInfo(object):
 
         # 3) Create alias variables (algebraic) and parse rhs
         for alias in self.al_component.aliases:
-            self.nineml_aliases.append( (alias.lhs, dae_nineml_t, __equation_parser__.parse(alias.rhs)) )
+            self.nineml_aliases.append( (alias.lhs, dae_nineml_t, _equation_parser_.parse(alias.rhs)) )
 
         # 4) Create analog-ports and reduce-ports
         for analog_port in self.al_component.analog_ports:
             if analog_port.mode == 'send':
-                self.nineml_analog_ports.append( (analog_port.name, eOutletPort, dae_nineml_t) )
+                self.nineml_analog_ports.append( (analog_port.name, pyCore.eOutletPort, dae_nineml_t) )
             elif analog_port.mode == 'recv':
-                self.nineml_analog_ports.append( (analog_port.name, eInletPort, dae_nineml_t) )
+                self.nineml_analog_ports.append( (analog_port.name, pyCore.eInletPort, dae_nineml_t) )
             elif analog_port.mode == 'reduce':
-                self.nineml_reduce_ports.append( (analog_port.name, eInletPort, dae_nineml_t) )
+                self.nineml_reduce_ports.append( (analog_port.name, pyCore.eInletPort, dae_nineml_t) )
             else:
                 raise RuntimeError("")
 
         # 5) Create event-ports
         for event_port in self.al_component.event_ports:
             if event_port.mode == 'send':
-                self.nineml_event_ports.append( (event_port.name, eOutletPort) )
+                self.nineml_event_ports.append( (event_port.name, pyCore.eOutletPort) )
             elif event_port.mode == 'recv':
-                self.nineml_event_ports.append( (event_port.name, eInletPort) )
+                self.nineml_event_ports.append( (event_port.name, pyCore.eInletPort) )
             else:
                 raise RuntimeError("")
 
@@ -348,17 +347,17 @@ class daetoolsComponentInfo(object):
                     map_statevars_timederivs[time_deriv.dependent_variable] = time_deriv.rhs
 
                 for var_name, rhs in list(map_statevars_timederivs.items()):
-                    odes.append( (var_name, __equation_parser__.parse(rhs)) )
+                    odes.append( (var_name, _equation_parser_.parse(rhs)) )
                         
                 # 2d) Create on_condition actions
                 for on_condition in regime.on_conditions:
-                    condition         = __equation_parser__.parse(on_condition.trigger.rhs)
+                    condition         = _equation_parser_.parse(on_condition.trigger.rhs)
                     switchTo          = on_condition.target_regime.name
                     triggerEvents     = []
                     setVariableValues = []
 
                     for state_assignment in on_condition.state_assignments:
-                        setVariableValues.append( (state_assignment.lhs, __equation_parser__.parse(state_assignment.rhs)) )
+                        setVariableValues.append( (state_assignment.lhs, _equation_parser_.parse(state_assignment.rhs)) )
 
                     for event_output in on_condition.event_outputs:
                         triggerEvents.append( (event_output.port_name, 0) )
@@ -373,7 +372,7 @@ class daetoolsComponentInfo(object):
                     setVariableValues = []
 
                     for state_assignment in on_event.state_assignments:
-                        setVariableValues.append( (state_assignment.lhs, __equation_parser__.parse(state_assignment.rhs)) )
+                        setVariableValues.append( (state_assignment.lhs, _equation_parser_.parse(state_assignment.rhs)) )
 
                     for event_output in on_event.event_outputs:
                         triggerEvents.append( (event_output.port_name, 0) )
@@ -402,11 +401,11 @@ class daetoolsComponentInfo(object):
             res += 'Subcomponent: {0}\n{1}\n'.format(subcomponent.name, subcomponent)
         return res
     
-class daetoolsComponent(daeModel):
+class daetoolsComponent(pyCore.daeModel):
     ninemlSTNRegimesName = 'NineML_Regimes_STN'
     
     def __init__(self, info, Name, Parent = None, Description = ''):
-        daeModel.__init__(self, Name, Parent, Description)
+        pyCore.daeModel.__init__(self, Name, Parent, Description)
         
         self.info                           = info
         self.Nitems                         = 0
@@ -472,25 +471,25 @@ class daetoolsComponent(daeModel):
         if domainN:
             self.N = domainN
         else:
-            self.N = daeDomain("N", self, unit(), "N domain")
+            self.N = pyCore.daeDomain("N", self, pyUnits.unit(), "N domain")
         domains = [self.N]
         
         # 1) Create parameters
         for (name, units) in self.info.nineml_parameters:
-            self.nineml_parameters[name] = daeParameter(name, units, self, "", domains)
+            self.nineml_parameters[name] = pyCore.daeParameter(name, units, self, "", domains)
 
         # 2) Create state-variables (diff. variables)
         for (name, var_type) in self.info.nineml_state_variables:
-            self.nineml_variables[name] = daeVariable(name, var_type, self, "", domains)
+            self.nineml_variables[name] = pyCore.daeVariable(name, var_type, self, "", domains)
 
         # 3) Create alias variables (algebraic)
         for (name, var_type, node) in self.info.nineml_aliases:
-            self.nineml_aliases[name] = ( daeVariable(name, var_type, self, "", domains), node )
+            self.nineml_aliases[name] = ( pyCore.daeVariable(name, var_type, self, "", domains), node )
 
         # 4a) Create analog-ports
         for (name, port_type, var_type) in self.info.nineml_analog_ports:
-            if port_type == eInletPort:
-                self.nineml_inlet_ports[name] = daeVariable(name, var_type, self, "", domains)
+            if port_type == pyCore.eInletPort:
+                self.nineml_inlet_ports[name] = pyCore.daeVariable(name, var_type, self, "", domains)
             else:
                 if name in self.nineml_variables:
                     self.nineml_outlet_ports[name] = self.nineml_variables[name]
@@ -501,15 +500,15 @@ class daetoolsComponent(daeModel):
         
         # 4b) Create reduce-ports
         for (name, port_type, var_type) in self.info.nineml_reduce_ports:
-            self.nineml_reduce_ports[name] = daeVariable(name, var_type, self, "", domains)
+            self.nineml_reduce_ports[name] = pyCore.daeVariable(name, var_type, self, "", domains)
 
         # 5) Create event-ports
         for (name, port_type) in self.info.nineml_event_ports:
-            if port_type == eInletPort:
-                self.nineml_inlet_event_ports[name]  = [ daeEventPort('{0}({1})'.format(name, i), port_type, self, "") for i in range(0, self.Nitems) ]
+            if port_type == pyCore.eInletPort:
+                self.nineml_inlet_event_ports[name]  = [ pyCore.daeEventPort('{0}({1})'.format(name, i), port_type, self, "") for i in range(0, self.Nitems) ]
                     
             else:
-                self.nineml_outlet_event_ports[name] = [ daeEventPort('{0}({1})'.format(name, i), port_type, self, "") for i in range(0, self.Nitems) ]
+                self.nineml_outlet_event_ports[name] = [ pyCore.daeEventPort('{0}({1})'.format(name, i), port_type, self, "") for i in range(0, self.Nitems) ]
                 
         # 6) Create sub-components
         for sub_info in self.info.nineml_subcomponents:
@@ -658,7 +657,7 @@ class daetoolsComponent(daeModel):
     def _getParameters(self, parent):
         parameters = {}
         for (name, parameter) in self.nineml_parameters.iteritems():
-            parameters[ daeGetRelativeName(parent, parameter) ] = parameter
+            parameters[ pyCore.daeGetRelativeName(parent, parameter) ] = parameter
         for sub_comp in self.nineml_subcomponents:
             parameters.update(sub_comp._getParameters(parent))
         return parameters
@@ -666,7 +665,7 @@ class daetoolsComponent(daeModel):
     def _getStateVariables(self, parent):
         variables = {}
         for (name, variable) in self.nineml_variables.iteritems():
-            variables[ daeGetRelativeName(parent, variable) ] = variable
+            variables[ pyCore.daeGetRelativeName(parent, variable) ] = variable
         for sub_comp in self.nineml_subcomponents:
             variables.update(sub_comp._getStateVariables(parent))
         return variables
@@ -674,7 +673,7 @@ class daetoolsComponent(daeModel):
     def _getAliases(self, parent):
         aliases = {}
         for (name, (alias_var, node)) in self.nineml_aliases.iteritems():
-            aliases[ daeGetRelativeName(parent, alias_var) ] = alias_var
+            aliases[ pyCore.daeGetRelativeName(parent, alias_var) ] = alias_var
         for sub_comp in self.nineml_subcomponents:
             aliases.update(sub_comp._getAliases(parent))
         return aliases
@@ -682,7 +681,7 @@ class daetoolsComponent(daeModel):
     def _getInletPorts(self, parent):
         ports = {}
         for (name, port) in self.nineml_inlet_ports.iteritems():
-            ports[ daeGetRelativeName(parent, port) ] = port
+            ports[ pyCore.daeGetRelativeName(parent, port) ] = port
         for sub_comp in self.nineml_subcomponents:
             ports.update(sub_comp._getInletPorts(parent))
         return ports
@@ -690,7 +689,7 @@ class daetoolsComponent(daeModel):
     def _getOutletPorts(self, parent):
         ports = {}
         for (name, port) in self.nineml_outlet_ports.iteritems():
-            ports[ daeGetRelativeName(parent, port) ] = port
+            ports[ pyCore.daeGetRelativeName(parent, port) ] = port
         for sub_comp in self.nineml_subcomponents:
             ports.update(sub_comp._getOutletPorts(parent))
         return ports
@@ -698,7 +697,7 @@ class daetoolsComponent(daeModel):
     def _getReducePorts(self, parent):
         ports = {}
         for (name, port) in self.nineml_reduce_ports.iteritems():
-            ports[ daeGetRelativeName(parent, port) ] = port
+            ports[ pyCore.daeGetRelativeName(parent, port) ] = port
         for sub_comp in self.nineml_subcomponents:
             ports.update(sub_comp._getReducePorts(parent))
         return ports
@@ -707,9 +706,9 @@ class daetoolsComponent(daeModel):
         dictIdentifiers = {}
         dictFunctions   = {}
         
-        dictIdentifiers['pi'] = Constant(math.pi)
-        dictIdentifiers['e']  = Constant(math.e)
-        dictIdentifiers['t']  = Time()
+        dictIdentifiers['pi'] = pyCore.Constant(math.pi)
+        dictIdentifiers['e']  = pyCore.Constant(math.e)
+        dictIdentifiers['t']  = pyCore.Time()
         
         for parameter in self.Parameters:
             dictIdentifiers[parameter.Name] = parameter
@@ -718,29 +717,29 @@ class daetoolsComponent(daeModel):
             dictIdentifiers[variable.Name] = variable
 
         # Standard math. functions (single argument)
-        dictFunctions['__create_constant__'] = Constant
-        dictFunctions['sin']   = Sin
-        dictFunctions['cos']   = Cos
-        dictFunctions['tan']   = Tan
-        dictFunctions['asin']  = ASin
-        dictFunctions['acos']  = ACos
-        dictFunctions['atan']  = ATan
-        dictFunctions['sinh']  = Sinh
-        dictFunctions['cosh']  = Cosh
-        dictFunctions['tanh']  = Tanh
-        dictFunctions['asinh'] = ASinh
-        dictFunctions['acosh'] = ACosh
-        dictFunctions['atanh'] = ATanh
-        dictFunctions['log10'] = Log10
-        dictFunctions['log']   = Log
-        dictFunctions['sqrt']  = Sqrt
-        dictFunctions['exp']   = Exp
-        dictFunctions['floor'] = Floor
-        dictFunctions['ceil']  = Ceil
-        dictFunctions['fabs']  = Abs
+        dictFunctions['__create_constant__'] = pyCore.Constant
+        dictFunctions['sin']   = pyCore.Sin
+        dictFunctions['cos']   = pyCore.Cos
+        dictFunctions['tan']   = pyCore.Tan
+        dictFunctions['asin']  = pyCore.ASin
+        dictFunctions['acos']  = pyCore.ACos
+        dictFunctions['atan']  = pyCore.ATan
+        dictFunctions['sinh']  = pyCore.Sinh
+        dictFunctions['cosh']  = pyCore.Cosh
+        dictFunctions['tanh']  = pyCore.Tanh
+        dictFunctions['asinh'] = pyCore.ASinh
+        dictFunctions['acosh'] = pyCore.ACosh
+        dictFunctions['atanh'] = pyCore.ATanh
+        dictFunctions['log10'] = pyCore.Log10
+        dictFunctions['log']   = pyCore.Log
+        dictFunctions['sqrt']  = pyCore.Sqrt
+        dictFunctions['exp']   = pyCore.Exp
+        dictFunctions['floor'] = pyCore.Floor
+        dictFunctions['ceil']  = pyCore.Ceil
+        dictFunctions['fabs']  = pyCore.Abs
 
         # Non-standard functions (multiple arguments)
-        dictFunctions['pow']   = Pow
+        dictFunctions['pow']   = pyCore.Pow
 
         # Random distributions, non-standard functions
         # Achtung!! Should be used only in StateAssignments statements
@@ -761,11 +760,11 @@ class daetoolsComponent(daeModel):
             eq.Residual = varFrom(0) - varTo(0)
             
         elif fromSize == 1:
-            n = eq.DistributeOnDomain(varTo.Domains[0], eClosedClosed)
+            n = eq.DistributeOnDomain(varTo.Domains[0], pyCore.eClosedClosed)
             eq.Residual = varFrom(0) - varTo(n)
         
         elif toSize == 1:
-            n = eq.DistributeOnDomain(varFrom.Domains[0], eClosedClosed)
+            n = eq.DistributeOnDomain(varFrom.Domains[0], pyCore.eClosedClosed)
             eq.Residual = varFrom(n) - varTo(0)
         
         elif fromSize > 1 and toSize > 1:
@@ -773,7 +772,7 @@ class daetoolsComponent(daeModel):
                 raise RuntimeError('')
             if fromSize != toSize:
                 raise RuntimeError('')
-            n = eq.DistributeOnDomain(varFrom.Domains[0], eClosedClosed)
+            n = eq.DistributeOnDomain(varFrom.Domains[0], pyCore.eClosedClosed)
             eq.Residual = varFrom(n) - varTo(n)
         
         else:
@@ -794,11 +793,11 @@ class daetoolsComponent(daeModel):
         if target_domain.NumberOfPoints == 1:
             residual = target_variable(0)
             for source_variable in source_variables:
-                nr = daeIndexRange(source_variable.Domains[0])
+                nr = pyCore.daeIndexRange(source_variable.Domains[0])
                 residual = residual - self.sum(source_variable.array(nr))
         
         elif target_domain.NumberOfPoints > 1:
-            n = eq.DistributeOnDomain(target_domain, eClosedClosed)
+            n = eq.DistributeOnDomain(target_domain, pyCore.eClosedClosed)
             residual = target_variable(n)
             for source_variable in source_variables:
                 source_domain = source_variable.Domains[0]
@@ -822,7 +821,7 @@ class daetoolsComponent(daeModel):
         # 1a) Create aliases (algebraic equations)
         for (name, (var, num)) in self.nineml_aliases.iteritems():
             eq = self.CreateEquation(name, "")
-            n = eq.DistributeOnDomain(self.N, eClosedClosed)
+            n = eq.DistributeOnDomain(self.N, pyCore.eClosedClosed)
             wrapperIdentifiers.current_index = n
             residual = var(n) - num.Node.evaluate(wrapperIdentifiers, dictFunctions)
             eq.Residual = residual
@@ -875,7 +874,7 @@ class daetoolsComponent(daeModel):
                             if not port_name in self.nineml_outlet_event_ports:
                                 raise RuntimeError('Cannot find event port {0}'.format(port_name))
                             event_port = self.nineml_outlet_event_ports[port_name][stn_i]
-                            triggerEvents.append( (event_port, Time()) )
+                            triggerEvents.append( (event_port, pyCore.Time()) )
 
                         self.ON_CONDITION(condition, switchTo          = switch_to,
                                                      setVariableValues = setVariableValues,
@@ -906,7 +905,7 @@ class daetoolsComponent(daeModel):
                             if not port_name in self.nineml_outlet_event_ports:
                                 raise RuntimeError('Cannot find event port {0}'.format(port_name))
                             event_port = self.nineml_outlet_event_ports[port_name][stn_i]
-                            triggerEvents.append( (event_port, Time()) )
+                            triggerEvents.append( (event_port, pyCore.Time()) )
 
                         self.ON_EVENT(source_event_port, switchToStates    = switchToStates,
                                                          setVariableValues = setVariableValues,
@@ -914,14 +913,15 @@ class daetoolsComponent(daeModel):
                                                     
                 self.END_STN()
     
-class daetoolsComponentSetup:
+class daetoolsComponentSetup(object):
     """
     Sets the parameter values, initial conditions and other processing needed,
     without a need for the separate object to wrap it.
-    It defines two functions which are used by the simulation:
+    It defines three functions which are used by the simulation:
     
-    * SetUpParametersAndDomains
-    * SetUpVariables
+    * setUpParametersAndDomains
+    * setUpVariables
+    * setWeights
     """
     _random_number_generators = {}
     
@@ -1044,131 +1044,3 @@ class daetoolsComponentSetup:
         
         else:
             raise RuntimeError('Invalid parameter: {0} value type specified: {1}-{2}'.format(name, value, type(value)))
-
-class daeComponentSimulation(daeSimulation):
-    """
-    daeComponentSimulation carries out the simulation of the given (top level) model.
-    Used only for simulation of the single AL component (wrapped into the nineml_daetools_bridge object),
-    by the NineML WebApp and nineml_desktop_app.
-    """
-    def __init__(self, model, parameters, report_variables, timeHorizon, reportingInterval, random_number_generators):
-        """
-        Initializes nineml_daetools_simulation object.
-        
-        :param model: nineml_daetools_bridge object
-        :param **kwargs: python dictionaries containing parameters values, initial conditions, reporting interval, time horizon, etc
-        
-        :rtype: None
-        :raises: RuntimeError
-        """
-        daeSimulation.__init__(self)
-        
-        self.parameters        = parameters 
-        self.report_variables  = report_variables
-        self.TimeHorizon       = timeHorizon
-        self.ReportingInterval = reportingInterval
-        self.m                 = model
-        
-        daetoolsComponentSetup._random_number_generators = random_number_generators
-    
-    def SetUpParametersAndDomains(self):
-        """
-        Sets the parameter values. Called automatically by the simulation.
-        
-        :rtype: None
-        :raises: RuntimeError
-        """
-        daetoolsComponentSetup.setUpParametersAndDomains(self.m, self.parameters)
-        
-    def SetUpVariables(self):
-        """
-        Sets the initial conditions and other stuff. Called automatically by the simulation.
-        
-        :rtype: None
-        :raises: RuntimeError
-        """
-        daetoolsComponentSetup.setUpVariables(self.m, self.parameters, self.report_variables)
-
-def doSimulation(info):
-    start_time = time()
-    dae_comp = daetoolsComponent(info, 'hierachical_iaf_1coba', None, '')
-    dae_comp.Nitems = 1
-    dae_comp.initialize()
-    #print(dae_comp)
-    print('Model create time = {0}'.format(time() - start_time))
-    
-    parameters = {
-        "iaf.gl":         (   1E-8, "S"), 
-        "iaf.vreset":     ( -0.060, "V"), 
-        "iaf.taurefrac":  (  0.001, "s"), 
-        "iaf.vthresh":    ( -0.040, "V"), 
-        "iaf.vrest":      ( -0.060, "V"), 
-        "iaf.cm":         ( 0.2E-9, "F"),
-        
-        "cobaExcit.vrev": (  0.000, "V"), 
-        "cobaExcit.q":    ( 4.0E-9, "S"), 
-        "cobaExcit.tau":  (  0.005, "s"), 
-        
-        "iaf.tspike":     (-1.00,   "s"), 
-        "iaf.V":          (-0.045,  "V"), 
-        "cobaExcit.g":    ( 0.00,   "S")
-    }
-    
-    report_variables = ["cobaExcit.I", "iaf.V"] 
-    
-    # Create Log, Solver, DataReporter and Simulation object
-    log          = daeBaseLog()
-    daesolver    = daeIDAS()
-    datareporter = daeBlackHoleDataReporter() #daeTCPIPDataReporter()
-    
-    create_time = time()
-    simulation   = daeComponentSimulation(dae_comp, parameters, report_variables, 1.0, 0.01, {})
-    print('Simulation create time = {0}'.format(time() - create_time))
-    
-    from daetools.solvers import pySuperLU as superlu
-    lasolver = superlu.daeCreateSuperLUSolver()
-    daesolver.SetLASolver(lasolver)
-
-    # Connect data reporter
-    simName = simulation.m.Name + strftime(" [%d.%m.%Y %H:%M:%S]", localtime())
-    if(datareporter.Connect("", simName) == False):
-        sys.exit()
-
-    #simulation.m.SetReportingOn(True)
-
-    # Initialize the simulation
-    init_time = time()
-    simulation.Initialize(daesolver, datareporter, log)
-    print('Initialize time = {0}'.format(time() - init_time))
-
-    # Save the model report and the runtime model report
-    simulation.m.SaveModelReport(simulation.m.Name + "__.xml")
-    simulation.m.Models[0].SaveModelReport(simulation.m.Models[0].Name + "__.xml")
-    simulation.m.Models[1].SaveModelReport(simulation.m.Models[1].Name + "__.xml")
-    simulation.m.SaveRuntimeModelReport(simulation.m.Name + "-rt__.xml")
-    
-    # Solve at time=0 (initialization)
-    solve_init_time = time()
-    simulation.SolveInitial()
-    print('SolveInitial time = {0}'.format(time() - solve_init_time))
-
-    # Run
-    simulation.Run()
-    simulation.Finalize()
-    print('Simulation total time = {0}'.format(time() - start_time))
-    
-if __name__ == "__main__":
-    al_component  = TestableComponent('hierachical_iaf_1coba')()
-    if not al_component:
-        raise RuntimeError('Cannot load NineML component')
-    
-    info = daetoolsComponentInfo('hierachical_iaf_1coba', al_component)
-    #print(info)
-    
-    overall_start_time = time()
-    
-    for i in range(0, 1):
-        print('  Iteration {0}'.format(i))
-        doSimulation(info)
-    
-    print('Overall time time = {0}'.format(time() - overall_start_time))

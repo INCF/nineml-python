@@ -17,11 +17,11 @@ class sedmlUniformTimeCourseSimulation(sedmlBase):
         sedmlBase.__init__(self, id, name)
         
         if float(initialTime) != 0.0:
-            raise RuntimeError('')
+            raise RuntimeError('SED-ML: the initial time has to be 0.0')
         if float(outputStartTime) != 0.0:
-            raise RuntimeError('')
+            raise RuntimeError('SED-ML: the output start time has to be 0.0')
         if float(outputEndTime) <= float(outputStartTime):
-            raise RuntimeError('')
+            raise RuntimeError('SED-ML: the output start time is greater than the output end time')
             
         self.initialTime     = 0.0
         self.outputStartTime = 0.0
@@ -47,11 +47,10 @@ class sedmlModel(sedmlBase):
         
         if isinstance(source, str):
             self.urn = source # URN
-        
         elif isinstance(source, nineml.user_layer.Model):
             self.ul_model = source # python NineML UL Model object
         else:
-            raise RuntimeError('')
+            raise RuntimeError('SED-ML: invalid user-layer reference')
             
     def __repr__(self):
         return 'sedmlModel({0}, {1}, {2})'.format(sedmlBase.__repr__(self), 
@@ -96,9 +95,9 @@ class sedmlVariable(sedmlBase):
         self.symbol = None
         
         if target == None and symbol == None:
-            raise RuntimeError('')
+            raise RuntimeError('SED-ML: both target abd symbol are None')
         elif target != None and symbol != None:
-            raise RuntimeError('')
+            raise RuntimeError('SED-ML: target and symbol cannot be specified at the same time')
 
         if target != None:
             self.target = str(target)
@@ -147,25 +146,6 @@ class sedmlCurve(sedmlBase):
                                                             self.logY,
                                                             self.xDataRefference,
                                                             self.yDataRefference)
-"""
-class sedmlRasterPlot(sedmlBase):
-    def __init__(self, id, name, dataRefference):
-        sedmlBase.__init__(self, id, name)
-        
-        self.dataRefference = str(dataRefference)
-    
-    def __repr__(self):
-        return 'sedmlCurve({0}, {1})'.format(sedmlBase.__repr__(self), self.dataRefference)
-
-class sedmlReport(sedmlBase):
-    def __init__(self, id, name, dataSets):
-        sedmlBase.__init__(self, id, name)
-        
-        self.dataSets = list(dataSets)
-    
-    def __repr__(self):
-        return 'sedmlReport({0}, {1})'.format(sedmlBase.__repr__(self), self.dataSets)
-"""
 
 class sedmlExperiment:
     def __init__(self, simulations, models, tasks, data_generators, outputs):
@@ -192,12 +172,12 @@ class sedmlExperiment:
      
     def get_simulation(self):
         if len(self.simulations) != 1:
-            raise RuntimeError('')
+            raise RuntimeError('SED-ML: the number of simulations has to be zero')
         return self.simulations[0]
     
     def get_ul_model(self):
         if len(self.models) != 1:
-            raise RuntimeError('')
+            raise RuntimeError('SED-ML: the number of models has to be zero')
         return self.models[0].getUserLayerModel()
          
 if __name__ == "__main__":
