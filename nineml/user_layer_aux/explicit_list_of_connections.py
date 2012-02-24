@@ -35,8 +35,7 @@ class ExplicitListOfConnections(ConnectionGenerator):
         self._connections = connections
         self._mask        = None
     
-    @property
-    def size(self):
+    def __len__(self):
         return len(self._connections)
         
     @property
