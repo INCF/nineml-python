@@ -10,6 +10,12 @@
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
+try:
+    from lxml import etree
+    from lxml.builder import E
+except ImportError:
+    pass
+
 class IntervalSet:
     def __init__ (self, intervals = [], skip = 1):
         """
@@ -47,16 +53,6 @@ class ConnectionGenerator:
     __metaclass__ = ABCMeta
     
     @abstractproperty
-    def size(self):
-        """
-        Returns the number of connections in the generator.
-        
-        :rtype: Integer (the number of the connections).
-        :raises: TypeError 
-        """
-        pass
-    
-    @abstractproperty
     def arity(self):
         """
         Returns the number of parameters specified for an individual
@@ -81,6 +77,28 @@ class ConnectionGenerator:
         """
         pass        
     
+    def setMasks(self, masks, local):
+        """
+        For a parallel simulator, we want to know the masks for all ranks
+        
+        :param masks: list of Mask objects 
+        :param mask: integer 
+
+        :rtype: None
+        :raises: 
+        """
+        self.setMask(masks[local])
+
+    @abstractmethod
+    def __len__(self):
+        """
+        Returns the number of connections in the generator.
+        
+        :rtype: Integer (the number of the connections).
+        :raises: TypeError 
+        """
+        pass
+    
     @abstractmethod
     def __iter__(self):
         """
@@ -93,14 +111,14 @@ class ConnectionGenerator:
         """
         pass
 
-    def setMasks(self, masks, local):
-        """
-        For a parallel simulator, we want to know the masks for all ranks
-        
-        :param masks: list of Mask objects 
-        :param mask: integer 
+    tagMap = {}
 
-        :rtype: None
-        :raises: 
-        """
-        self.setMask(masks[local])
+    @classmethod
+    def selectImplementation (cls, tag, module):
+        cls.tagMap[tag] = module
+
+    @classmethod
+    def fromXML (cls, root):
+        assert root.tag in tagMap, 'found no implementation for XML tag %s' % root.tag
+        module = cls.tagMap[root.tag]
+        return module.connectionGeneratorFromXML (root)
