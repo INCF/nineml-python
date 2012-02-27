@@ -1,1 +1,1 @@
-from connection_generator import *
+from nineml.connection_generator import *

@@ -103,7 +103,7 @@ class XMLLoader(object):
         """
 
         # END OF CHANGES
-        # DNikolic 12.12.2011
+        # DNikolic 27.01.2011
         #
 
        
