@@ -16,6 +16,7 @@ import nineml.user_layer
 import nineml.connection_generator as connection_generator
 from nineml.user_layer_aux import explicit_list_of_connections
 from nineml.user_layer_aux import geometry
+from nineml.user_layer_aux import ConnectionGenerator
 from nineml.user_layer_aux import connectionGeneratorFromProjection
 
 from daetools.pyDAE import daeLogs, pyCore, pyActivity, pyDataReporting, pyIDAS, pyUnits
@@ -36,6 +37,11 @@ try:
     from _heapq import heappush, heappop, heapify, heapreplace
 except ImportError:
     from heapq import heappush, heappop, heapify, heapreplace
+
+# Select implementation for CSA connection-rule language
+import csa
+ConnectionGenerator.selectImplementation \
+  ('{http://software.incf.org/software/csa/1.0}CSA', csa)
 
 def fixParametersDictionary(parameters):
     """
@@ -437,7 +443,7 @@ class daetoolsProjection(object):
             neurone.incoming_synapses.append( (self._synapses[i], psr_parameters) ) 
         
         #ul_connection_rule = network.getULComponent(ul_projection.rule.name)
-        mask = connection_generator.Mask([(0, ul_projection.source.number)], [(0, ul_projection.target.number)], 1, 1)
+        mask = connection_generator.Mask([(0, ul_projection.source.number - 1)], [(0, ul_projection.target.number - 1)])
         cgi = connectionGeneratorFromProjection(ul_projection, None)
         cgi.setMask(mask)
         self.createConnections(cgi, source_population, target_population)
@@ -1169,14 +1175,19 @@ def getULModelAndSimulationInputs():
     population_inhibitory = nineml.user_layer.Population("Inhibitory population", N_inh,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
     population_poisson    = nineml.user_layer.Population("Poisson population",    N_poisson, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
-    connections_exc_exc     = readCSV_pyNN(os.path.join(connections_folder, 'e2e.conn'))
+    #connections_exc_exc     = readCSV_pyNN(os.path.join(connections_folder, 'e2e.conn'))
     connections_exc_inh     = readCSV_pyNN(os.path.join(connections_folder, 'e2i.conn'))
     connections_inh_inh     = readCSV_pyNN(os.path.join(connections_folder, 'i2i.conn'))
     connections_inh_exc     = readCSV_pyNN(os.path.join(connections_folder, 'i2e.conn'))
     connections_poisson_exc = readCSV_pyNN(os.path.join(connections_folder, 'ext2e.conn'))
     connections_poisson_inh = readCSV_pyNN(os.path.join(connections_folder, 'ext2i.conn'))
     
-    connection_rule_exc_exc     = nineml.user_layer.ConnectionRule("Explicit Connections exc_exc",     os.path.join(catalog, "explicit_list_of_connections.xml"))
+    #connection_rule_exc_exc     = nineml.user_layer.ConnectionRule("Explicit Connections exc_exc",     os.path.join(catalog, "explicit_list_of_connections.xml"))
+    connection_rule_exc_exc     = nineml.user_layer.ConnectionRule("Connections exc_exc",     os.path.join(catalog, "random_fixed_probability_w_d.xml"),
+              { 'p'      : (0.02, None),
+                'weight' : (0.004, None),
+                'delay'  : (0.2, None) })
+    
     connection_rule_exc_inh     = nineml.user_layer.ConnectionRule("Explicit Connections exc_inh",     os.path.join(catalog, "explicit_list_of_connections.xml"))
     connection_rule_inh_inh     = nineml.user_layer.ConnectionRule("Explicit Connections inh_inh",     os.path.join(catalog, "explicit_list_of_connections.xml"))
     connection_rule_inh_exc     = nineml.user_layer.ConnectionRule("Explicit Connections inh_exc",     os.path.join(catalog, "explicit_list_of_connections.xml"))
@@ -1184,7 +1195,7 @@ def getULModelAndSimulationInputs():
     connection_rule_poisson_inh = nineml.user_layer.ConnectionRule("Explicit Connections poisson_inh", os.path.join(catalog, "explicit_list_of_connections.xml"))
 
     # A temporal workaround until the support for explicit connections is finished
-    setattr(connection_rule_exc_exc,     'connections', connections_exc_exc)
+    #setattr(connection_rule_exc_exc,     'connections', connections_exc_exc)
     setattr(connection_rule_exc_inh,     'connections', connections_exc_inh)
     setattr(connection_rule_inh_inh,     'connections', connections_inh_inh)
     setattr(connection_rule_inh_exc,     'connections', connections_inh_exc)
