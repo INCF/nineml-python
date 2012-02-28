@@ -1,4 +1,4 @@
-from lxml import etree
+from nineml.abstraction_layer.readers import XMLReader
 
 class CgClosure:
     def __init__ (self, formals, pyFunc):
@@ -6,13 +6,9 @@ class CgClosure:
         self.function = pyFunc
 
     def __call__ (self, parameterSet):
-        args = map (lambda name: parameterSet[name].value, self.formals)
+        args = map (lambda p: parameterSet[p.name].value, self.formals)
         return self.function (*args)
 
-def cgClosureFromURI (uri):
-    # Need to obtain XML file here
-    filename = uri
-    
-    doc = etree.parse (filename)
-    root = doc.getroot ()
-    
+def alConnectionRuleFromURI (uri):
+    component = XMLReader.read (uri)
+    return CgClosure (component.parameters, component.connection_rule)
