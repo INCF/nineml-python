@@ -499,16 +499,17 @@ class daetoolsProjection(object):
             parameters   = []
             
             if cgi.arity == 1:
-                weight = float(connection[2])
+                weight = float(connection[2]) * 1E-6 # nS -> S
             elif cgi.arity == 2:
-                weight = float(connection[2])
-                delay  = float(connection[3])
+                weight = float(connection[2]) * 1E-6 # nS -> S
+                delay  = float(connection[3]) * 1E-3 # ms -> s
             elif cgi.arity >= 3:
-                weight = float(connection[2])
-                delay  = float(connection[3])
+                weight = float(connection[2]) * 1E-6 # nS -> S
+                delay  = float(connection[3]) * 1E-3 # ms -> s
                 for i in range(4, size):
                     parameters.append(float(connection[i]))           
             
+            print(source_index, target_index, weight, delay)
             source_neurone = source_population.getNeurone(source_index)
             target_neurone = target_population.getNeurone(target_index)
             synapse        = self.getSynapse(target_index)
@@ -1064,8 +1065,8 @@ def readCSV_pyNN(filename):
     for connection in connections:
         s = int(float(connection[0]))
         t = int(float(connection[1]))
-        w = float(connection[2]) * 1E-6 # nS -> S
-        d = float(connection[3]) * 1E-3 # ms -> s
+        w = float(connection[2]) # nS
+        d = float(connection[3]) # ms
         connections_out.append((s, t, w, d))
         
     print('Parsed [{0}] file; number of connections: {1}'.format(filename, len(connections_out)))
