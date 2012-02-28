@@ -1098,6 +1098,7 @@ def getULModelAndSimulationInputs():
     ###############################################################################
     #                           NineML UserLayer Model
     ###############################################################################
+    useCSA    = True
     N_neurons = 100
     N_exc     = int(N_neurons * 0.8)
     N_inh     = int(N_neurons * 0.2)
@@ -1112,9 +1113,8 @@ def getULModelAndSimulationInputs():
     else:
         raise RuntimeError('The number of neurones can be 100, 1000 or 2000')
 
-    catalog = 'file://' + os.path.join(sys.path[0], 'catalog')
-    print catalog
-    #catalog = 'catalog'
+    #catalog = 'file://' + os.path.join(sys.path[0], 'catalog')
+    catalog = 'catalog'
        
     rnd_uniform_params = {
                           'lowerBound': (-0.060, "dimensionless"),
@@ -1175,32 +1175,52 @@ def getULModelAndSimulationInputs():
     population_inhibitory = nineml.user_layer.Population("Inhibitory population", N_inh,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
     population_poisson    = nineml.user_layer.Population("Poisson population",    N_poisson, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
-    #connections_exc_exc     = readCSV_pyNN(os.path.join(connections_folder, 'e2e.conn'))
-    connections_exc_inh     = readCSV_pyNN(os.path.join(connections_folder, 'e2i.conn'))
-    connections_inh_inh     = readCSV_pyNN(os.path.join(connections_folder, 'i2i.conn'))
-    connections_inh_exc     = readCSV_pyNN(os.path.join(connections_folder, 'i2e.conn'))
-    connections_poisson_exc = readCSV_pyNN(os.path.join(connections_folder, 'ext2e.conn'))
-    connections_poisson_inh = readCSV_pyNN(os.path.join(connections_folder, 'ext2i.conn'))
+    if useCSA:
+        exc_params = {
+                       'p'      : (0.020, None),
+                       'weight' : (0.004, 'nS'),
+                       'delay'  : (0.200, 'ms')
+                     }
+        inh_params = {
+                       'p'      : (0.020, None),
+                       'weight' : (0.051, 'nS'),
+                       'delay'  : (0.200, 'ms')
+                     }
+        poi_params = {
+                       'p'      : (0.020,  None),
+                       'weight' : (0.100, 'nS'),
+                       'delay'  : (0.200, 'ms')
+                     }
+        
+        connection_rule_exc_exc     = nineml.user_layer.ConnectionRule("Connections exc_exc",     os.path.join(catalog, "random_fixed_probability_w_d.xml"), exc_params)
+        connection_rule_exc_inh     = nineml.user_layer.ConnectionRule("Connections exc_inh",     os.path.join(catalog, "random_fixed_probability_w_d.xml"), exc_params)
+        connection_rule_inh_inh     = nineml.user_layer.ConnectionRule("Connections inh_inh",     os.path.join(catalog, "random_fixed_probability_w_d.xml"), inh_params)
+        connection_rule_inh_exc     = nineml.user_layer.ConnectionRule("Connections inh_exc",     os.path.join(catalog, "random_fixed_probability_w_d.xml"), inh_params)
+        connection_rule_poisson_exc = nineml.user_layer.ConnectionRule("Connections poisson_exc", os.path.join(catalog, "random_fixed_probability_w_d.xml"), poi_params)
+        connection_rule_poisson_inh = nineml.user_layer.ConnectionRule("Connections poisson_inh", os.path.join(catalog, "random_fixed_probability_w_d.xml"), poi_params)
     
-    #connection_rule_exc_exc     = nineml.user_layer.ConnectionRule("Explicit Connections exc_exc",     os.path.join(catalog, "explicit_list_of_connections.xml"))
-    connection_rule_exc_exc     = nineml.user_layer.ConnectionRule("Connections exc_exc",     os.path.join(catalog, "random_fixed_probability_w_d.xml"),
-              { 'p'      : (0.02, None),
-                'weight' : (0.004, None),
-                'delay'  : (0.2, None) })
-    
-    connection_rule_exc_inh     = nineml.user_layer.ConnectionRule("Explicit Connections exc_inh",     os.path.join(catalog, "explicit_list_of_connections.xml"))
-    connection_rule_inh_inh     = nineml.user_layer.ConnectionRule("Explicit Connections inh_inh",     os.path.join(catalog, "explicit_list_of_connections.xml"))
-    connection_rule_inh_exc     = nineml.user_layer.ConnectionRule("Explicit Connections inh_exc",     os.path.join(catalog, "explicit_list_of_connections.xml"))
-    connection_rule_poisson_exc = nineml.user_layer.ConnectionRule("Explicit Connections poisson_exc", os.path.join(catalog, "explicit_list_of_connections.xml"))
-    connection_rule_poisson_inh = nineml.user_layer.ConnectionRule("Explicit Connections poisson_inh", os.path.join(catalog, "explicit_list_of_connections.xml"))
-
-    # A temporal workaround until the support for explicit connections is finished
-    #setattr(connection_rule_exc_exc,     'connections', connections_exc_exc)
-    setattr(connection_rule_exc_inh,     'connections', connections_exc_inh)
-    setattr(connection_rule_inh_inh,     'connections', connections_inh_inh)
-    setattr(connection_rule_inh_exc,     'connections', connections_inh_exc)
-    setattr(connection_rule_poisson_exc, 'connections', connections_poisson_exc)
-    setattr(connection_rule_poisson_inh, 'connections', connections_poisson_inh)
+    else:
+        connections_exc_exc     = readCSV_pyNN(os.path.join(connections_folder, 'e2e.conn'))
+        connections_exc_inh     = readCSV_pyNN(os.path.join(connections_folder, 'e2i.conn'))
+        connections_inh_inh     = readCSV_pyNN(os.path.join(connections_folder, 'i2i.conn'))
+        connections_inh_exc     = readCSV_pyNN(os.path.join(connections_folder, 'i2e.conn'))
+        connections_poisson_exc = readCSV_pyNN(os.path.join(connections_folder, 'ext2e.conn'))
+        connections_poisson_inh = readCSV_pyNN(os.path.join(connections_folder, 'ext2i.conn'))
+        
+        connection_rule_exc_exc     = nineml.user_layer.ConnectionRule("Explicit Connections exc_exc",     os.path.join(catalog, "explicit_list_of_connections.xml"))
+        connection_rule_exc_inh     = nineml.user_layer.ConnectionRule("Explicit Connections exc_inh",     os.path.join(catalog, "explicit_list_of_connections.xml"))
+        connection_rule_inh_inh     = nineml.user_layer.ConnectionRule("Explicit Connections inh_inh",     os.path.join(catalog, "explicit_list_of_connections.xml"))
+        connection_rule_inh_exc     = nineml.user_layer.ConnectionRule("Explicit Connections inh_exc",     os.path.join(catalog, "explicit_list_of_connections.xml"))
+        connection_rule_poisson_exc = nineml.user_layer.ConnectionRule("Explicit Connections poisson_exc", os.path.join(catalog, "explicit_list_of_connections.xml"))
+        connection_rule_poisson_inh = nineml.user_layer.ConnectionRule("Explicit Connections poisson_inh", os.path.join(catalog, "explicit_list_of_connections.xml"))
+        
+        # A temporal workaround until the support for explicit connections is finished
+        setattr(connection_rule_exc_exc,     'connections', connections_exc_exc)
+        setattr(connection_rule_exc_inh,     'connections', connections_exc_inh)
+        setattr(connection_rule_inh_inh,     'connections', connections_inh_inh)
+        setattr(connection_rule_inh_exc,     'connections', connections_inh_exc)
+        setattr(connection_rule_poisson_exc, 'connections', connections_poisson_exc)
+        setattr(connection_rule_poisson_inh, 'connections', connections_poisson_inh)
 
     projection_exc_exc     = nineml.user_layer.Projection("Projection exc_exc",     population_excitatory, population_excitatory, connection_rule_exc_exc,     psr_excitatory, connection_type)
     projection_exc_inh     = nineml.user_layer.Projection("Projection exc_inh",     population_excitatory, population_inhibitory, connection_rule_exc_inh,     psr_excitatory, connection_type)
