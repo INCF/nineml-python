@@ -119,6 +119,10 @@ class ConnectionGenerator:
 
     @classmethod
     def fromXML (cls, root):
-        assert root.tag in tagMap, 'found no implementation for XML tag %s' % root.tag
+        """
+        Returns a connection generator closure.
+        """
+        if not root.tag in cls.tagMap:
+            raise NotImplementedError ('found no implementation for XML tag %s' % root.tag)
         module = cls.tagMap[root.tag]
-        return module.connectionGeneratorFromXML (root)
+        return module.connectionGeneratorClosureFromXML (root)
