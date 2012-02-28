@@ -16,6 +16,7 @@ import nineml.user_layer
 import nineml.connection_generator as connection_generator
 from nineml.user_layer_aux import explicit_list_of_connections
 from nineml.user_layer_aux import geometry
+from nineml.user_layer_aux import connectionGeneratorFromProjection
 
 from daetools.pyDAE import daeLogs, pyCore, pyActivity, pyDataReporting, pyIDAS, pyUnits
 from daetools.solvers import pySuperLU
@@ -435,9 +436,9 @@ class daetoolsProjection(object):
         for i, neurone in enumerate(target_population.neurones):
             neurone.incoming_synapses.append( (self._synapses[i], psr_parameters) ) 
         
-        ul_connection_rule = network.getULComponent(ul_projection.rule.name)
+        #ul_connection_rule = network.getULComponent(ul_projection.rule.name)
         mask = connection_generator.Mask([(0, ul_projection.source.number)], [(0, ul_projection.target.number)], 1, 1)
-        cgi = self.createCGI(ul_connection_rule)
+        cgi = connectionGeneratorFromProjection(ul_projection, None)
         cgi.setMask(mask)
         self.createConnections(cgi, source_population, target_population)
         
@@ -447,21 +448,6 @@ class daetoolsProjection(object):
             synapse.initialize()
             neurone.connectAnaloguePorts(synapse, neurone)
 
-    def createCGI(self, ul_connection_rule):
-        """
-        Creates CG-derived object from the ConnectionRule object.
-        
-        ACHTUNG, ACHTUNG!!!
-        This function is going to be replaced by the auxiliary function function developed by Mikael.
-        """
-        if hasattr(ul_connection_rule, 'connections'): # Explicit connections
-            connections = getattr(ul_connection_rule, 'connections') 
-            cgi = explicit_list_of_connections.ExplicitListOfConnections(connections)
-            return cgi
-        
-        else: # It should be the CSA component then
-            return None
-        
     def __repr__(self):
         res = 'daetoolsProjection({0})\n'.format(self.name)
         return res
