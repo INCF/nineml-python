@@ -144,6 +144,7 @@ def creatALFromULComponent(ul_component, random_number_generators):
      * The Knights of Malta
      * The Order of the Rose Cross
      * Communists
+     * :-)
     
     :param ul_component: UL Component object
     :param random_number_generators: python dictionary 'UL Component name' : daetoolsRNG object (numpy RandomState based)
@@ -477,15 +478,6 @@ class daetoolsProjection(object):
         :rtype: None
         :raises: RuntimeError
         """
-        #import pygraphviz
-        #graph = pygraphviz.AGraph(strict=False,directed=True)
-        #graph.node_attr['shape']='circle'
-        
-        #for i, neurone in enumerate(target_population.neurones):
-        #    graph.add_node(neurone.Name)
-        #for i, neurone in enumerate(source_population.neurones):
-        #    graph.add_node(neurone.Name)
-        
         count = 0
         for connection in cgi:
             size = len(connection)
@@ -509,15 +501,12 @@ class daetoolsProjection(object):
                 for i in range(4, size):
                     parameters.append(float(connection[i]))           
             
-            print(source_index, target_index, weight, delay)
             source_neurone = source_population.getNeurone(source_index)
             target_neurone = target_population.getNeurone(target_index)
             synapse        = self.getSynapse(target_index)
             
             if delay < self.minimal_delay:
                 self.minimal_delay = delay
-            
-            #graph.add_edge(source_neurone.Name, target_neurone.Name)
             
             # Add the new item to the list of connected synapse event ports and connection delays.
             # Here we cannot add an event port directly since it does not exist yet.
@@ -529,10 +518,6 @@ class daetoolsProjection(object):
             count += 1
         
         print('{0}: created {1} connections'.format(self.name, count))
-        
-        #graph.layout()
-        #graph.write('{0}.dot'.format(self.name))
-        #graph.draw('{0}.png'.format(self.name))
 
 class daetoolsPointNeuroneSimulation(pyActivity.daeSimulation):
     """
@@ -561,7 +546,7 @@ class daetoolsPointNeuroneSimulation(pyActivity.daeSimulation):
         Uncomment one of 3 options below and comment the rest.
         
         Some hints:
-         * For smaller networks: it does not really matter which solver.
+         * For small networks: some dense it does not really matter which solver.
          * For medium networks: dense Lapack.
          * For large networks: SuperLU
         """
@@ -861,7 +846,7 @@ class daetoolsPointNeuroneNetworkSimulation(object):
         print('  Total number of neurones:  {0:>10d}'.format(self.number_of_neurones))
         print('  Total number of synapses:  {0:>10d}'.format(self.number_of_synapses))
         print('  Total number of spikes:    {0:>10d}'.format(self.spike_count))
-        print('  Minimal network delay:   {0:>10.6f} s'.format(self.minimal_delay))
+        print('  Minimal network delay:    {0:>10.6f}s'.format(self.minimal_delay))
         
         # 1. Create a raster plot file (.ras)
         neurone_index = 0
@@ -1058,7 +1043,7 @@ def readCSV_pyNN(filename):
     Reads pyNN .conn files and returns a list of connections: [(int, int, float, float), ...]
     
     ACHTUNG, ACHTUNG!!!
-    Weights are given in nano-Siemens and delays in mili-seconds and converted to Siemens and seconds.
+    Weights are given in nano-Siemens and delays in mili-seconds!
     """
     connections_out = []
     connections = csv.reader(open(filename, 'rb'), delimiter='\t')
@@ -1100,7 +1085,7 @@ def getULModelAndSimulationInputs():
     #                           NineML UserLayer Model
     ###############################################################################
     useCSA    = True
-    N_neurons = 100
+    N_neurons = 1000
     N_exc     = int(N_neurons * 0.8)
     N_inh     = int(N_neurons * 0.2)
     N_poisson = 20
@@ -1176,6 +1161,7 @@ def getULModelAndSimulationInputs():
     population_inhibitory = nineml.user_layer.Population("Inhibitory population", N_inh,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
     population_poisson    = nineml.user_layer.Population("Poisson population",    N_poisson, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
+    # Create connection rules (using CSA or lists of explicit connections)
     if useCSA:
         exc_params = {
                        'p'      : (0.020, None),
@@ -1223,6 +1209,7 @@ def getULModelAndSimulationInputs():
         setattr(connection_rule_poisson_exc, 'connections', connections_poisson_exc)
         setattr(connection_rule_poisson_inh, 'connections', connections_poisson_inh)
 
+    # Create projections
     projection_exc_exc     = nineml.user_layer.Projection("Projection exc_exc",     population_excitatory, population_excitatory, connection_rule_exc_exc,     psr_excitatory, connection_type)
     projection_exc_inh     = nineml.user_layer.Projection("Projection exc_inh",     population_excitatory, population_inhibitory, connection_rule_exc_inh,     psr_excitatory, connection_type)
     projection_inh_inh     = nineml.user_layer.Projection("Projection inh_inh",     population_inhibitory, population_inhibitory, connection_rule_inh_inh,     psr_inhibitory, connection_type)
@@ -1247,7 +1234,7 @@ def getULModelAndSimulationInputs():
     group.add(projection_inh_exc)
 
     # Create a network and add the group to it
-    name = 'Brette(2007)'
+    name = 'Brette (2007)'
     ul_model = nineml.user_layer.Model(name)
     ul_model.add_group(group)
     ul_model.write("%s.xml" % name)
