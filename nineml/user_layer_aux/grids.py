@@ -54,7 +54,7 @@ def createUnstructuredGrid(ul_population):
     
     elif ul_population.positions.structure:
         try:
-            # Try to load the structure component
+            # Try to load the Structure component
             al_structure = nineml.abstraction_layer.readers.XMLReader.read(ul_population.positions.structure.definition.url) 
         
         except Exception as e:
@@ -113,7 +113,7 @@ class Grid2D(UnstructuredGrid):
         positions = [ (x0 + i*dx, y0 + j*dy, 0.0) for i in xrange(0, Nx) for j in xrange(0, Ny) ]
         
         # Keep only N positions!
-        UnstructuredGrid.__init__(self, positions[0 : self.N])
+        UnstructuredGrid.__init__(self, positions[0 : self.N-1])
     
     def __str__(self):
         return str(self.positions)
