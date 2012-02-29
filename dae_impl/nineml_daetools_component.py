@@ -8,7 +8,6 @@
 """
 
 import nineml
-#from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
 from nineml.abstraction_layer import ComponentClass
 import os, sys, math
 import numpy.random
@@ -18,11 +17,19 @@ import units_parser
 from daetools.pyDAE import daeLogs, daeVariableTypes, pyCore, pyActivity, pyDataReporting, pyIDAS, pyUnits
 from daetools.solvers import pySuperLU
 
+"""
+ACHTUNG, ACHTUNG!!
+How should the global seed be initialized? 
+If it is None then numpy gets it from the OS.
+"""
 _global_seed_ = 100
 _global_rng_  = numpy.random.RandomState()
 _global_rng_.seed(_global_seed_)
 
 class daetoolsRNG(object):
+    """
+    """
+    
     uniform     = 0
     normal      = 1
     binomial    = 2
@@ -80,6 +87,9 @@ class daetoolsRNG(object):
     def createRNG(cls, al_component, parameters):
         """
         Creates numpy RNG based on the AL Component object and parameters from the UL component. 
+        
+        ACHTUNG, ACHTUNG!!
+        Perhaps, the component names should be standardized to some convention?
         
         :param cls: daetoolsRNG class
         :param al_component: AL Component object
@@ -742,7 +752,11 @@ class daetoolsComponent(pyCore.daeModel):
         dictFunctions['pow']   = pyCore.Pow
 
         # Random distributions, non-standard functions
-        # Achtung!! Should be used only in StateAssignments statements
+        """ 
+        ACHTUNG, ACHTUNG!! 
+        According to the NineML docs, these function can be used only in StateAssignments statements.
+        However, it is available for the equations/logical-conditions too. Could it be a problem?
+        """
         dictFunctions['random.uniform']     = random_uniform
         dictFunctions['random.normal']      = random_normal
         dictFunctions['random.binomial']    = random_binomial
@@ -752,6 +766,8 @@ class daetoolsComponent(pyCore.daeModel):
         return daetoolsVariableParameterDictionaryWrapper(dictIdentifiers), dictFunctions        
     
     def _generatePortConnectionEquation(self, varFrom, varTo):
+        """
+        """
         fromSize = varFrom.Domains[0].NumberOfPoints
         toSize   = varTo.Domains[0].NumberOfPoints
         

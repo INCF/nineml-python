@@ -96,7 +96,13 @@ def createNeurone(name, component_info, rng, parameters):
     :raises: RuntimeError 
     """
     neurone = None
-    if component_info.name == 'SpikeSourcePoisson':
+    """
+    ACHTUNG, ACHTUNG!!
+    We should handle components' with names that mean something. How can we know that 
+    the spike_source_poisson component should be treated differently by a simulator?
+    The same stands for other types of components.
+    """
+    if component_info.name == 'spike_source_poisson':
         if 'rate' in parameters:
             rate = float(parameters['rate'][0])
         else:
@@ -400,6 +406,7 @@ class daetoolsPopulation(object):
 class daetoolsProjection(object):
     """
     Wraps and handles user-layer Projection objects.
+    
     ACHTUNG, ACHTUNG!!
     Currently, we support only populations of spiking neurones (not groups).
     """
@@ -1155,7 +1162,7 @@ def getULModelAndSimulationInputs():
     psr_inhibitory  = nineml.user_layer.SynapseType("COBA inhibitory", os.path.join(catalog, "coba_synapse.xml"), psr_inhibitory_params)
     
     grid2D          = nineml.user_layer.Structure("Structure - not used", os.path.join(catalog, "2Dgrid.xml"))
-    connection_type = nineml.user_layer.ConnectionType("ConnectionType - not used", os.path.join(catalog, "static_weights_delays.xml"))
+    connection_type = nineml.user_layer.ConnectionType("ConnectionType - not used", os.path.join(catalog, "not_used.xml"))
     
     population_excitatory = nineml.user_layer.Population("Excitatory population", N_exc,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
     population_inhibitory = nineml.user_layer.Population("Inhibitory population", N_inh,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
