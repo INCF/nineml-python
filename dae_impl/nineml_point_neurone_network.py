@@ -14,10 +14,10 @@ import numpy, numpy.random
 import nineml
 import nineml.user_layer
 import nineml.connection_generator as connection_generator
+import nineml.geometry as geometry
 from nineml.user_layer_aux import explicit_list_of_connections
-from nineml.user_layer_aux import geometry
 from nineml.user_layer_aux import ConnectionGenerator
-from nineml.user_layer_aux import connectionGeneratorFromProjection
+from nineml.user_layer_aux import connectionGeneratorFromProjection, geometryFromProjection
 
 from daetools.pyDAE import daeLogs, pyCore, pyActivity, pyDataReporting, pyIDAS, pyUnits
 from daetools.solvers import pySuperLU
@@ -450,9 +450,13 @@ class daetoolsProjection(object):
         for i, neurone in enumerate(target_population.neurones):
             neurone.incoming_synapses.append( (self._synapses[i], psr_parameters) ) 
         
-        #ul_connection_rule = network.getULComponent(ul_projection.rule.name)
+        # Create an object that supports the Geometry interface 
+        geometry = geometryFromProjection(ul_projection)
+        #print('Metric({0},{1}) = {2}'.format(0, 15, geometry.metric(0, 15)))
+        
+        # Create an object that supports the ConnectionGenerator interface and set-up connections
         mask = connection_generator.Mask([(0, ul_projection.source.number - 1)], [(0, ul_projection.target.number - 1)])
-        cgi = connectionGeneratorFromProjection(ul_projection, None)
+        cgi = connectionGeneratorFromProjection(ul_projection, geometry)
         cgi.setMask(mask)
         self.createConnections(cgi, source_population, target_population)
         
@@ -1092,7 +1096,7 @@ def getULModelAndSimulationInputs():
     #                           NineML UserLayer Model
     ###############################################################################
     useCSA    = True
-    N_neurons = 1000
+    N_neurons = 100
     N_exc     = int(N_neurons * 0.8)
     N_inh     = int(N_neurons * 0.2)
     N_poisson = 20
@@ -1161,7 +1165,16 @@ def getULModelAndSimulationInputs():
     psr_excitatory  = nineml.user_layer.SynapseType("COBA excitatory", os.path.join(catalog, "coba_synapse.xml"), psr_excitatory_params)
     psr_inhibitory  = nineml.user_layer.SynapseType("COBA inhibitory", os.path.join(catalog, "coba_synapse.xml"), psr_inhibitory_params)
     
-    grid2D          = nineml.user_layer.Structure("Structure - not used", os.path.join(catalog, "2Dgrid.xml"))
+    grid2d_params = {
+                      'x0'            : (0.00, 'm'),
+                      'y0'            : (0.00, 'm'), 
+                      'dx'            : (1E-5, 'm'),
+                      'dy'            : (1E-5, 'm'),
+                      'fillOrder'     : (0.00, ' '),
+                      'aspectRatioXY' : (0.00, ' ')
+                    }
+    grid2D          = nineml.user_layer.Structure("2D Grid", os.path.join(catalog, "grid_2d.xml"), grid2d_params)
+    
     connection_type = nineml.user_layer.ConnectionType("ConnectionType - not used", os.path.join(catalog, "not_used.xml"))
     
     population_excitatory = nineml.user_layer.Population("Excitatory population", N_exc,     neurone_IAF,     nineml.user_layer.PositionList(structure=grid2D))
