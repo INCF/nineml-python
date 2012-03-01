@@ -22,7 +22,7 @@ ACHTUNG, ACHTUNG!!
 How should the global seed be initialized? 
 If it is None then numpy gets it from the OS.
 """
-_global_seed_ = 100
+_global_seed_ = None
 _global_rng_  = numpy.random.RandomState()
 _global_rng_.seed(_global_seed_)
 

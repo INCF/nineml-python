@@ -1095,24 +1095,41 @@ def getULModelAndSimulationInputs():
     ###############################################################################
     #                           NineML UserLayer Model
     ###############################################################################
-    useCSA    = True
+    """
+    If True use CSA to handle connections; 
+    otherwise use the lists of explicit connections
+    """
+    useCSA = True
+    
+    """
+    If explicit lists of connections are used then the number of neurones can be 100, 1000 and 2000
+    since we have generated connections only for that numbers.
+    Otherwise, CSA can handle any number.
+    """
     N_neurons = 100
     N_exc     = int(N_neurons * 0.8)
     N_inh     = int(N_neurons * 0.2)
     N_poisson = 20
+    
+    connections_folder = str(N_neurons)
 
-    if N_neurons == 100:
-        connections_folder = '100'
-    elif N_neurons == 1000:
-        connections_folder = '1000'
-    elif N_neurons == 2000:
-        connections_folder = '2000'
-    else:
-        raise RuntimeError('The number of neurones can be 100, 1000 or 2000')
-
-    #catalog = 'file://' + os.path.join(sys.path[0], 'catalog')
+    if not useCSA:
+        if N_neurons not in [100, 1000, 2000]:
+            raise RuntimeError('If explicit lists of connections are used then the number of neurones can only be 100, 1000 and 2000')
+    
+    """
+    Ideally the catalog folder should be:
+       catalog = 'file://' + os.path.join(sys.path[0], 'catalog')
+    but for some reasons it can't be resolved in windows. 
+    """
     catalog = 'catalog'
        
+    """
+    All parameters values are in base SI units. The values are adopted from the Brette et al paper.
+    Their values are for the network with 4000 neurones; the weights here should be changed to
+    account for the lower number of neurones.
+    """
+    
     rnd_uniform_params = {
                           'lowerBound': (-0.060, "dimensionless"),
                           'upperBound': (-0.040, "dimensionless")
@@ -1173,7 +1190,7 @@ def getULModelAndSimulationInputs():
                       'fillOrder'     : (0.00, ' '),
                       'aspectRatioXY' : (0.00, ' ')
                     }
-    grid2D          = nineml.user_layer.Structure("2D Grid", os.path.join(catalog, "grid_2d.xml"), grid2d_params)
+    grid2D = nineml.user_layer.Structure("2D Grid", os.path.join(catalog, "grid_2d.xml"), grid2d_params)
     
     connection_type = nineml.user_layer.ConnectionType("ConnectionType - not used", os.path.join(catalog, "not_used.xml"))
     
@@ -1262,7 +1279,7 @@ def getULModelAndSimulationInputs():
     ###############################################################################
     #                            SED-ML experiment
     ###############################################################################
-    timeHorizon       = 0.1000 # seconds
+    timeHorizon       = 0.2000 # seconds
     reportingInterval = 0.0001 # seconds
     noPoints          = 1 + int(timeHorizon / reportingInterval)
     
