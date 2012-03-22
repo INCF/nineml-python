@@ -1,12 +1,21 @@
 #!/usr/bin/env python
-import os, sys, traceback, httplib, urllib, zipfile, StringIO
+import os, sys, traceback, math, httplib, urllib, zipfile, StringIO
 from time import localtime, strftime, time
 
-import numpy as np
+import numpy
+
+import vtk
+from vtk.hybrid import vtkVRMLImporter
+
 from enthought.mayavi import mlab
 from enthought.tvtk.api import tvtk
 from enthought.mayavi.sources.vrml_importer import VRMLImporter
 from enthought.mayavi.api import Engine
+from enthought.mayavi.sources.vtk_data_source import VTKDataSource
+
+from enthought.traits.api import HasTraits, Range, Instance, on_trait_change, Array, Tuple, Str
+from enthought.traits.ui.api import View, Item, HSplit, Group, HGroup
+from enthought.mayavi.core.ui.api import MayaviScene, MlabSceneModel, SceneEditor
 
 import nineml
 import nineml.connection_generator as connection_generator
@@ -19,70 +28,67 @@ from lxml.builder import E
 
 import csa
 
-class Neurone(object):
-    def __init__(self, x, y, z, index):
-        self.x           = x
-        self.y           = y
-        self.z           = z
-        self.index       = index
-        self.connections = []
+class vtkPointsGeometry(geometry.Geometry):
+    """
+    Implementation of the Geometry interface. 
+    It is a wrapper on top the vtkPoints objects.
+    """
+    def __init__(self, source_vtkpoints, target_vtkpoints):
+        self.source_vtkpoints = source_vtkpoints
+        self.target_vtkpoints = target_vtkpoints
+    
+    def metric(self, source_index, target_index):
+        (x1, y1, z1) = self.source_vtkpoints.GetPoint(source_index)
+        (x2, y2, z2) = self.target_vtkpoints.GetPoint(target_index)
+        return math.sqrt( (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2 )
+    
+    def sourcePosition(self, index):
+        return self.source_vtkpoints.GetPoint(index)
+    
+    def targetPosition(self, index):
+        return self.target_vtkpoints.GetPoint(index)
         
-class Projection(object):
-    def __init__(self, xs, ys, zs, xt, yt, zt):
-        self.xs = xs
-        self.ys = ys
-        self.zs = zs
-        self.Ns = len(xs)
-        self.xt = xt
-        self.yt = yt
-        self.zt = zt
-        self.Nt = len(xt)
-        self.figure = mlab.figure()
-        self.connections = []
+class Projection(HasTraits):
+    meridional = Range(1, 30,  6)
+    transverse = Range(0, 30, 11)
+    scene      = Instance(MlabSceneModel, ())
+    
+    def __init__(self, source_vrml_filename, target_vrml_filename):
+        HasTraits.__init__(self)
         
-        source_grid = grids.UnstructuredGrid(zip(xs, ys, zs))
-        target_grid = grids.UnstructuredGrid(zip(xt, yt, zt))
+        print self.scene
+        print self.scene.mlab
         
-        geometry = grids.GeometryImplementation(source_grid, target_grid)
-        print('Metric({0},{1}) = {2}'.format(0, 5, geometry.metric(0, 5)))
+        #self.figure = self.scene.mlab.figure()
         
-        p      = 0.10 # fraction
+        self.source_vrml_filename = source_vrml_filename
+        self.target_vrml_filename = target_vrml_filename
+        
+        self.source_actor, self.source_vtkpoints = Projection.loadVRMLFile(source_vrml_filename)
+        self.target_actor, self.target_vtkpoints = Projection.loadVRMLFile(target_vrml_filename)
+        
+        self.Ns = self.source_vtkpoints.GetNumberOfPoints()
+        self.Nt = self.target_vtkpoints.GetNumberOfPoints()
+        
+        self.lines = []
+        self.geometry = vtkPointsGeometry(self.source_vtkpoints, self.target_vtkpoints)
+        print('Metric({0},{1}) = {2}'.format(0, 5, self.geometry.metric(0, 5)))
+        
+        p      = 0.0001 # fraction
         weight = 0.04 # nS
         delay  = 0.20 # ms
         cset = csa.cset(csa.random(p), weight, delay)
         cg = csa.CSAConnectionGenerator(cset)
-        mask = connection_generator.Mask([(0, self.Ns - 1)], [(0, self.Nt - 1)])
+        mask = connection_generator.Mask([(0, 1)], [(0, self.Nt - 1)])
         cg.setMask(mask)
         print cg, len(cg), cg.arity
         self.createConnections(cg)
-       
-        '''
-        xml = """
-            <CSA xmlns="http://software.incf.org/software/csa/1.0">
-            <bind>
-                <closure/>
-                <bvar><ci>p</ci></bvar>
-                <bvar><ci>weight</ci></bvar>
-                <bvar><ci>delay</ci></bvar>
-                <apply>
-                    <cset/>
-                    <apply>
-                        <randomMask/>
-                        <ci>p</ci>
-                    </apply>
-                    <ci>weight</ci>
-                    <ci>delay</ci>
-                </apply>
-            </bind>
-            </CSA>
-            """
-        root = etree.fromstring(xml)
-        print etree.tostring(root)
+        self.plot()
         
-        cg = csa.connectionGeneratorClosureFromXML(root)
-        print cg
-        '''
-        
+    @on_trait_change('meridional,transverse')
+    def update_plot(self):
+        print 'm = {0} t = {1}'.format(self.meridional, self.transverse)
+    
     def createConnections(self, cgi):
         count = 0
         for connection in cgi:
@@ -107,26 +113,61 @@ class Projection(object):
                 for i in range(4, size):
                     parameters.append(float(connection[i]))           
             
-            print connection
+            #print connection
             self.addConnectionLine(source_index, target_index)
 
     def addConnectionLine(self, source_index, target_index):
-        x1 = self.xs[source_index]
-        y1 = self.ys[source_index]
-        z1 = self.zs[source_index]
-        x2 = self.xt[target_index]
-        y2 = self.yt[target_index]
-        z2 = self.zt[target_index]
+        x1, y1, z1 = self.geometry.sourcePosition(source_index)
+        x2, y2, z2 = self.geometry.targetPosition(target_index)
         
-        line = tvtk.LineSource(point1=(x1, y1, z1), point2=(x2, y2, z2))
+        line       = tvtk.LineSource(point1=(x1, y1, z1), point2=(x2, y2, z2))
         lineMapper = tvtk.PolyDataMapper(input=line.output)
         lineActor  = tvtk.Actor(mapper=lineMapper)
-        self.figure.scene.add_actor(lineActor)
+        self.scene.add_actor(lineActor)
+        
+        #self.lines.append(([x1, x2], [y1, y2], [z1, z2]))
     
     def plot(self):
-        mlab.points3d(self.xs, self.ys, self.zs, scale_mode='none', scale_factor=.05, color=(0, 1, 1), figure = self.figure)
-        mlab.points3d(self.xt, self.yt, self.zt, scale_mode='none', scale_factor=.05, color=(0, 1, 0), figure = self.figure)
-        mlab.show()
+        #engine = Engine()
+        #engine.start()
+        #scene = engine.new_scene()
+        #svrml = VRMLImporter()
+        #svrml.initialize(self.source_vrml)
+        #tvrml = VRMLImporter()
+        #tvrml.initialize(self.target_vrml)
+        #engine.add_source(svrml)
+        #engine.add_source(tvrml)
+        
+        """
+        x = numpy.zeros(self.Ns)
+        y = numpy.zeros(self.Ns)
+        z = numpy.zeros(self.Ns)
+        for i in xrange(0, self.Ns):
+            c = self.source_vtkpoints.GetPoint(i)
+            x[i] = c[0]
+            y[i] = c[1]
+            z[i] = c[2]
+        mlab.points3d(x, y, z, figure = self.figure)
+        
+        x = numpy.zeros(self.Nt)
+        y = numpy.zeros(self.Nt)
+        z = numpy.zeros(self.Nt)
+        for i in xrange(0, self.Nt):
+            c = self.target_vtkpoints.GetPoint(i)
+            x[i] = c[0]
+            y[i] = c[1]
+            z[i] = c[2]
+        mlab.points3d(x, y, z, figure = self.figure)
+        """
+        #for (x, y, z) in self.lines:
+        #    print x, y, z
+        #    engine.add_source( mlab.pipeline.line_source(x, y, z) )
+
+        sa = tvtk.to_tvtk(self.source_actor)
+        self.figure.scene.add_actor(sa)
+        ta = tvtk.to_tvtk(self.target_actor)
+        self.scene.add_actor(ta)
+        #mlab.show()
     
     @staticmethod
     def retreiveFrom_3dbar(cafDatasetName, structureName, qualityPreset = 'high', outputFormat = 'vrml'):
@@ -165,43 +206,34 @@ class Projection(object):
         http_connection.close()
         return outputFileName
 
+    @staticmethod
+    def loadVRMLFile(wrl_filename):
+        """
+        Opens a .wrl file, reads the points in it and returns 
+        3 numpy arrays with x, y, z coordinates
+        """
+        vrml = vtkVRMLImporter()
+        vrml.SetFileName(wrl_filename)
+        vrml.Read()
+        vrml.Update()
+        actors = vrml.GetRenderer().GetActors()
+        actors.InitTraversal()
+        actor = actors.GetNextActor()
+        dataset = actor.GetMapper().GetInput()
+        dataset.Update()
+        vtkpoints = dataset.GetPoints() 
+        Np = vtkpoints.GetNumberOfPoints()
+        return actor, vtkpoints
+    
+    # the layout of the dialog created
+    view = View(Item('scene', editor=SceneEditor(scene_class=MayaviScene),
+                    height=250, width=300, show_label=False),
+                    HGroup('_', 'meridional', 'transverse', ),
+                )
+    
 if __name__ == "__main__":
-    """
-    scene_Hyp = Projection.retreiveFrom_3dbar('whs_0.5', 'Hyp', 'high', 'vrml')
-    scene_Cx  = Projection.retreiveFrom_3dbar('whs_0.5', 'Cx',  'high', 'vrml')
+    scene_Hyp = 'scene_Hyp.wrl' #Projection.retreiveFrom_3dbar('whs_0.5', 'Hyp', 'high', 'vrml')
+    scene_Cx  = 'scene_Cx.wrl' #Projection.retreiveFrom_3dbar('whs_0.5', 'Cx',  'high', 'vrml')
     
-    hypothalamus = VRMLImporter()
-    hypothalamus.initialize(scene_Hyp)
-    cortex = VRMLImporter()
-    cortex.initialize(scene_Cx)
-    
-    #print hypothalamus.render()
-    #hypothalamus.add_actors()
-    #print hypothalamus.print_traits()
-    
-    e = Engine()
-    e.start()
-    s = e.new_scene()
-    e.add_source(hypothalamus)
-    e.add_source(cortex)
-
-    cortex.add_actors()
-    hypothalamus.add_actors()
-    #print cortex.actors[0].mapper.input.points.to_array()
-    
-    mlab.show()
-    sys.exit()
-    """
-    N = 20
-    
-    x1 = np.zeros(N)
-    y1 = np.zeros(N)
-    z1 = np.linspace(0, 1, N)
-    
-    x2 = np.zeros(N) + 1
-    y2 = np.zeros(N)
-    z2 = np.linspace(0, 1, N)
-
-    p = Projection(x1, y1, z1, x2, y2, z2)
-    p.plot()
-    
+    p = Projection(scene_Hyp, scene_Cx)
+    p.configure_traits()
