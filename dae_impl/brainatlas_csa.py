@@ -13,9 +13,10 @@ from enthought.mayavi.sources.vrml_importer import VRMLImporter
 from enthought.mayavi.api import Engine
 from enthought.mayavi.sources.vtk_data_source import VTKDataSource
 
-from enthought.traits.api import HasTraits, Range, Instance, on_trait_change, Array, Tuple, Str
+from enthought.traits.api import HasTraits, Trait, Range, Instance, on_trait_change, Array, Tuple, Str
 from enthought.traits.ui.api import View, Item, HSplit, Group, HGroup
 from enthought.mayavi.core.ui.api import MayaviScene, MlabSceneModel, SceneEditor
+from enthought.tvtk.pyface.picker import Picker, DefaultPickHandler, PickHandler
 
 import nineml
 import nineml.connection_generator as connection_generator
@@ -47,49 +48,99 @@ class vtkPointsGeometry(geometry.Geometry):
     
     def targetPosition(self, index):
         return self.target_vtkpoints.GetPoint(index)
+"""        
+class P(Picker):
+    def __init__(self, renwin, **traits):
+        super(P, self).__init__(renwin, **traits)
+    def pick(self, x, y):
+        super(P, self).pick(x, y)
+        print x, y
         
+class SceneModel(MlabSceneModel):
+    picker = None
+    def __init__(self, parent = None, **traits):
+        super(SceneModel, self).__init__(parent, **traits)
+"""
+
 class Projection(HasTraits):
-    meridional = Range(1, 30,  6)
-    transverse = Range(0, 30, 11)
-    scene      = Instance(MlabSceneModel, ())
+    source_index = Str('0', desc = 'Source neurone index', auto_set=False, enter_set=True)
+    scene        = Instance(MlabSceneModel, ())
     
     def __init__(self, source_vrml_filename, target_vrml_filename):
         HasTraits.__init__(self)
-        
+        #self.scene.picker = P(self.scene.render_window)
+        #self.picker.pick_handler = None #Trait(DefaultPickHandler(), Instance(PickHandler)) 
+        #.pointpicker.add_observer('EndPickEvent', self.picker_callback)
         print self.scene
-        print self.scene.mlab
-        
-        #self.figure = self.scene.mlab.figure()
+        print dir(self.scene)
+        print self.scene.interactor
+        #self.scene.scene.interactor.add_observer('EndPickEvent', self.picker_callback)
         
         self.source_vrml_filename = source_vrml_filename
         self.target_vrml_filename = target_vrml_filename
         
-        self.source_actor, self.source_vtkpoints = Projection.loadVRMLFile(source_vrml_filename)
-        self.target_actor, self.target_vtkpoints = Projection.loadVRMLFile(target_vrml_filename)
+        source_actor, source_dataset, source_vtkpoints = Projection.loadVRMLFile(source_vrml_filename)
+        target_actor, target_dataset, target_vtkpoints = Projection.loadVRMLFile(target_vrml_filename)
         
-        self.Ns = self.source_vtkpoints.GetNumberOfPoints()
-        self.Nt = self.target_vtkpoints.GetNumberOfPoints()
+        self.source_actor = tvtk.to_tvtk(source_actor)
+        self.target_actor = tvtk.to_tvtk(target_actor)
         
-        self.lines = []
-        self.geometry = vtkPointsGeometry(self.source_vtkpoints, self.target_vtkpoints)
+        self.source_dataset = source_dataset
+        self.target_dataset = target_dataset
+        
+        #print vtk.IsSurfaceClosed()
+        sep = vtk.vtkSelectEnclosedPoints()
+        sep.SetSurface(self.source_dataset)
+        print sep.IsInsideSurface(0.0, -0.4, -0.6)
+        
+        cell = self.source_dataset.FindPoint(0, 0, 0)
+        print cell
+        print source_vtkpoints.GetPoint(cell)
+        
+        self.Ns = source_vtkpoints.GetNumberOfPoints()
+        self.Nt = target_vtkpoints.GetNumberOfPoints()
+        
+        self.lineActors = []
+        self.geometry = vtkPointsGeometry(source_vtkpoints, target_vtkpoints)
         print('Metric({0},{1}) = {2}'.format(0, 5, self.geometry.metric(0, 5)))
+        
+        self.createConnections(0)
+        self.plot()
+        
+    @on_trait_change('source_index')
+    def update_plot(self):
+        # Remove actors
+        self.scene.remove_actors(self.lineActors)
+        
+        #self.scene.remove_actor(self.source_actor)
+        self.scene.remove_actor(self.target_actor)
+        
+        # Get the index
+        source_index = int(self.source_index)
+        print 'source_index = {0}'.format(self.source_index)
+        self.createConnections(source_index)
+        self.plot()
+        
+    def picker_callback(self, picker_obj, evt):
+        picked = picker_obj.actors
+        if obj in [o._vtk_obj for o in picked]:
+            print obj
+    
+    def createConnections(self, source_index):
+        if source_index >= self.Ns:
+            return
         
         p      = 0.0001 # fraction
         weight = 0.04 # nS
         delay  = 0.20 # ms
         cset = csa.cset(csa.random(p), weight, delay)
-        cg = csa.CSAConnectionGenerator(cset)
-        mask = connection_generator.Mask([(0, 1)], [(0, self.Nt - 1)])
-        cg.setMask(mask)
-        print cg, len(cg), cg.arity
-        self.createConnections(cg)
-        self.plot()
+        cgi = csa.CSAConnectionGenerator(cset)
+        mask = connection_generator.Mask([(source_index, source_index)], [(0, self.Nt - 1)])
+        cgi.setMask(mask)
+        print cgi, len(cgi), cgi.arity
         
-    @on_trait_change('meridional,transverse')
-    def update_plot(self):
-        print 'm = {0} t = {1}'.format(self.meridional, self.transverse)
-    
-    def createConnections(self, cgi):
+        self.lineActors = []
+        
         count = 0
         for connection in cgi:
             size = len(connection)
@@ -113,61 +164,22 @@ class Projection(HasTraits):
                 for i in range(4, size):
                     parameters.append(float(connection[i]))           
             
-            #print connection
-            self.addConnectionLine(source_index, target_index)
+            x1, y1, z1 = self.geometry.sourcePosition(source_index)
+            x2, y2, z2 = self.geometry.targetPosition(target_index)
+            
+            line       = tvtk.LineSource(point1=(x1, y1, z1), point2=(x2, y2, z2))
+            lineMapper = tvtk.PolyDataMapper(input=line.output)
+            lineActor  = tvtk.Actor(mapper=lineMapper)
+            
+            self.lineActors.append(lineActor)
 
-    def addConnectionLine(self, source_index, target_index):
-        x1, y1, z1 = self.geometry.sourcePosition(source_index)
-        x2, y2, z2 = self.geometry.targetPosition(target_index)
-        
-        line       = tvtk.LineSource(point1=(x1, y1, z1), point2=(x2, y2, z2))
-        lineMapper = tvtk.PolyDataMapper(input=line.output)
-        lineActor  = tvtk.Actor(mapper=lineMapper)
-        self.scene.add_actor(lineActor)
-        
-        #self.lines.append(([x1, x2], [y1, y2], [z1, z2]))
-    
     def plot(self):
-        #engine = Engine()
-        #engine.start()
-        #scene = engine.new_scene()
-        #svrml = VRMLImporter()
-        #svrml.initialize(self.source_vrml)
-        #tvrml = VRMLImporter()
-        #tvrml.initialize(self.target_vrml)
-        #engine.add_source(svrml)
-        #engine.add_source(tvrml)
+        self.scene.add_actors(self.lineActors)
         
-        """
-        x = numpy.zeros(self.Ns)
-        y = numpy.zeros(self.Ns)
-        z = numpy.zeros(self.Ns)
-        for i in xrange(0, self.Ns):
-            c = self.source_vtkpoints.GetPoint(i)
-            x[i] = c[0]
-            y[i] = c[1]
-            z[i] = c[2]
-        mlab.points3d(x, y, z, figure = self.figure)
-        
-        x = numpy.zeros(self.Nt)
-        y = numpy.zeros(self.Nt)
-        z = numpy.zeros(self.Nt)
-        for i in xrange(0, self.Nt):
-            c = self.target_vtkpoints.GetPoint(i)
-            x[i] = c[0]
-            y[i] = c[1]
-            z[i] = c[2]
-        mlab.points3d(x, y, z, figure = self.figure)
-        """
-        #for (x, y, z) in self.lines:
-        #    print x, y, z
-        #    engine.add_source( mlab.pipeline.line_source(x, y, z) )
-
-        sa = tvtk.to_tvtk(self.source_actor)
-        self.figure.scene.add_actor(sa)
-        ta = tvtk.to_tvtk(self.target_actor)
-        self.scene.add_actor(ta)
-        #mlab.show()
+        #self.figure.scene.add_actor(self.source_actor)
+        self.scene.add_actor(self.target_actor)
+        self.scene.reset_zoom()
+        #self.scene.isometric_view()
     
     @staticmethod
     def retreiveFrom_3dbar(cafDatasetName, structureName, qualityPreset = 'high', outputFormat = 'vrml'):
@@ -220,15 +232,16 @@ class Projection(HasTraits):
         actors.InitTraversal()
         actor = actors.GetNextActor()
         dataset = actor.GetMapper().GetInput()
+        #print dataset
         dataset.Update()
         vtkpoints = dataset.GetPoints() 
         Np = vtkpoints.GetNumberOfPoints()
-        return actor, vtkpoints
+        return actor, dataset, vtkpoints
     
     # the layout of the dialog created
     view = View(Item('scene', editor=SceneEditor(scene_class=MayaviScene),
-                    height=250, width=300, show_label=False),
-                    HGroup('_', 'meridional', 'transverse', ),
+                    height=600, width=800, show_label=False),
+                    HGroup('_', 'source_index', ),
                 )
     
 if __name__ == "__main__":
