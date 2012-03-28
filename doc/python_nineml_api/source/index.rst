@@ -65,9 +65,6 @@ copy and paste the same code 15 times, *for each simulator*. By factoring out
 basic functionality, we make our workflow much more manageable.
 
 
-.. comment::
-
-    There is more about the NineML design and specification :doc:`here</src_rst/overview/nineml_overview>` 
 
 
 
