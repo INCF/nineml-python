@@ -71,14 +71,43 @@ class Projection(object):
         source_actor, source_dataset, source_vtkpoints = Projection.loadVRMLFile(source_vrml_filename)
         target_actor, target_dataset, target_vtkpoints = Projection.loadVRMLFile(target_vrml_filename)
         
+        out = target_dataset
+        out.Update()
+        cellArray = out.GetPolys()
+        cellArray.InitTraversal()
+        print cellArray
+        print cellArray.GetNumberOfCells() 
+
+        extrude = vtk.vtkLinearExtrusionFilter()
+        extrude.SetInput(target_dataset)
+        extrude.SetScaleFactor(0.1)
+        extrude.CappingOn()
+        extrude.SetExtrusionTypeToNormalExtrusion()
+        #extrude.SetVector(1, 0, 0)
+        
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInput(extrude.GetOutput())           
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+        actor.GetProperty().SetRepresentationToPoints()
+        
+        out = extrude.GetOutput()
+        out.Update()
+        cellArray = out.GetPolys()
+        cellArray.InitTraversal()
+        print cellArray
+        print cellArray.GetNumberOfCells() 
+        
+
         self.source_actor = tvtk.to_tvtk(source_actor)
-        self.target_actor = tvtk.to_tvtk(target_actor)
+        self.target_actor = tvtk.to_tvtk(actor)
         
         self.source_dataset = source_dataset
         self.target_dataset = target_dataset
         
         self.Ns = source_vtkpoints.GetNumberOfPoints()
         self.Nt = target_vtkpoints.GetNumberOfPoints()
+        print('Ns = {0}, Nt = {1}'.format(self.Ns, self.Nt))
         
         self.geometry = vtkPointsGeometry(source_vtkpoints, target_vtkpoints)
         print('Metric({0},{1}) = {2}'.format(0, 5, self.geometry.metric(0, 5)))
@@ -97,7 +126,7 @@ class Projection(object):
         if source_index >= self.Ns:
             raise RuntimeError('Source index out of bounds')
         
-        p      = 0.001 # fraction
+        p      = 0.020 # fraction
         weight = 0.040 # nS
         delay  = 0.200 # ms
         
@@ -193,7 +222,7 @@ class Projection(object):
     @staticmethod
     def loadVRMLFile(wrl_filename):
         """
-        Opens a .wrl file, reads the points in it,  
+        Opens a .wrl file, reads the points from it,  
         and returns vtkActor, vtkPolyData and vtkPoints objects
         """
         vrml = vtkVRMLImporter()
@@ -205,13 +234,14 @@ class Projection(object):
         actor = actors.GetNextActor()
         dataset = actor.GetMapper().GetInput()
         dataset.Update()
+        #print dataset
         vtkpoints = dataset.GetPoints() 
         Np = vtkpoints.GetNumberOfPoints()
         return actor, dataset, vtkpoints
     
 if __name__ == "__main__":
     scene_Hyp = 'scene_Hyp.wrl'
-    scene_Cx  = 'scene_Cx.wrl'
+    scene_Cx  = 'extract.wrl' #'scene_Cx.wrl'
     
     if not os.path.isfile(scene_Hyp):
         Projection.retreiveFrom_3dbar('whs_0.5', 'Hyp', 'high', 'vrml')
