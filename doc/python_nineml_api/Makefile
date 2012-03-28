@@ -47,6 +47,7 @@ spell:
 clean:
 	-rm -rf source/src_rst/reference/nineml.abstraction_layer.*.rst
 	-rm -rf source/src_rst/reference/nineml.utility.*.rst
+	-rm -rf source/_static/images/build
 	-rm -rf $(BUILDDIR)/*
 	-rm -rf _static/*
 

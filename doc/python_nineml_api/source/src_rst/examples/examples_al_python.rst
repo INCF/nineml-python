@@ -8,57 +8,57 @@ Example - aeIF
 ~~~~~~~~~~~~~~
 
 
-.. literalinclude:: /../../../examples/AL/components_done/aeIF.py  
+.. literalinclude:: /../../../examples/AL/sample_components/aeIF.py  
 
 
 Example - Coba Synapse
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/coba_synapse.py  
+.. literalinclude:: /../../../examples/AL/sample_components/coba_synapse.py  
 
 
 Example - Destexhe Synapse
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/destexhe_ampa.py  
+.. literalinclude:: /../../../examples/AL/sample_components/destexhe_ampa.py  
 
 
 Example - HH
 ~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/hh.py  
+.. literalinclude:: /../../../examples/AL/sample_components/hh.py  
 
 
 Example - IAF SFA RelRef
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/iaf_sfa_relref.py  
+.. literalinclude:: /../../../examples/AL/sample_components/iaf_sfa_relref.py  
 
 
 Example - IF Cond Exp
 ~~~~~~~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/if_cond_exp.py  
+.. literalinclude:: /../../../examples/AL/sample_components/if_cond_exp.py  
 
 
 Example - Iz1
 ~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/izhikevich2.py  
+.. literalinclude:: /../../../examples/AL/sample_components/izhikevich2.py  
 
 
 Example - Iz2
 ~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/izhikevich.py  
+.. literalinclude:: /../../../examples/AL/sample_components/izhikevich.py  
 
 
 Example - Leaky Iaf
 ~~~~~~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/leaky_iaf.py  
+.. literalinclude:: /../../../examples/AL/sample_components/leaky_iaf.py  
 
 
 Example - Morris Lecar
 ~~~~~~~~~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/morris_lecar.py  
+.. literalinclude:: /../../../examples/AL/sample_components/morris_lecar.py  
 
 
 Example - NMDA
 ~~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../../examples/AL/components_done/nmda.py
+.. literalinclude:: /../../../examples/AL/sample_components/nmda.py
 
 
 

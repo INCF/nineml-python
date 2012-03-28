@@ -51,8 +51,7 @@ Event-port.
 
 We can build a |COMPONENTCLASS|  with this interface with the following code:
 
-
-.. literalinclude:: /tutorial_example_code/example1_izikevich_interface.py
+.. literalinclude:: /../../../nineml/examples/AL/doc_tutorials/example1_izikevich_interface.py
 
 If you try running this code, you will receive the following error::
 
@@ -87,7 +86,7 @@ For this model, the differential-equations governing the state variables never
 change, so we only need a single regime.
 
 
-.. literalinclude:: /tutorial_example_code/example1b_izikevich_statevariables.py
+.. literalinclude:: /../../../nineml/examples/AL/doc_tutorials/example1b_izikevich_statevariables.py
 
 In this case, we have specified the state-variables for this component by
 explicitly providing a list of the state-variables to the ``Dynamics`` blocks.
@@ -140,7 +139,7 @@ useful if we want to use this component as part of a larger system. Since we
 only have a single regime, we will not change regime. 
 
 
-.. literalinclude:: /tutorial_example_code/example1c_izikevich_transition.py
+.. literalinclude:: /../../../nineml/examples/AL/doc_tutorials/example1c_izikevich_transition.py
 
 
 
@@ -153,7 +152,7 @@ regime and the refractory regime. Just for fun, we'll define the component in a
 single step:
 
 
-.. literalinclude:: /tutorial_example_code/example2_leaky_iaf_2regime.py
+.. literalinclude:: /../../../nineml/examples/AL/doc_tutorials/example2_leaky_iaf_2regime.py
 
 Note that here we used the *name* of the regime in the ``to`` argument to the
 ``On`` transition constructor, rather than a ``Regime`` object. These references
@@ -178,7 +177,7 @@ up re-using calculations. For example, if we want to define a conductance-based
 synapse in NineML, then we would like to specify the current in the
 post-synaptic neuron.
 
-.. literalinclude:: /tutorial_example_code/example3_cobasynapse.py
+.. literalinclude:: /../../../nineml/examples/AL/doc_tutorials/example3_cobasynapse.py
 
 .. note::
 
