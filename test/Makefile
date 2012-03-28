@@ -1,5 +1,9 @@
 
 
+test:
+	nosetests unit/nineml_test/
+
+
 clean:
 	rm -rf coverage_htmlout/ .coverage output/ nineml_mechanisms/
 
