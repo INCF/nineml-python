@@ -71,6 +71,98 @@ class Projection(object):
         source_actor, source_dataset, source_vtkpoints = Projection.loadVRMLFile(source_vrml_filename)
         target_actor, target_dataset, target_vtkpoints = Projection.loadVRMLFile(target_vrml_filename)
         
+        cylinder = vtk.vtkCylinder()
+        cylinder.SetRadius(1)
+        cylinder.SetCenter(0, 0, 0)
+        rotate = vtk.vtkTransform()
+        rotate.RotateX(90)
+        cylinder.SetTransform(rotate)
+        
+        plane = vtk.vtkPlane()
+        plane.SetOrigin(0, 0, 2)
+        plane.SetNormal(0, 0, 1)
+        
+        planeClipper = vtk.vtkClipPolyData()
+        planeClipper.SetInput(target_dataset)
+        planeClipper.SetClipFunction(plane)
+        planeClipper.GenerateClipScalarsOn()
+        planeClipper.GenerateClippedOutputOn()
+        planeClipper.SetValue(0.5)
+        
+        #print planeClipper.GetOutput()
+        cylinderClipper = vtk.vtkClipPolyData()
+        cylinderClipper.SetInput(planeClipper.GetOutput())
+        cylinderClipper.SetClipFunction(cylinder)
+        cylinderClipper.GenerateClipScalarsOn()
+        cylinderClipper.GenerateClippedOutputOn()
+        cylinderClipper.SetValue(0.5)
+        
+        """
+        cutStrips = vtk.vtkStripper()
+        cutStrips.SetInputConnection(cylinderClipper.GetClippedOutputPort())
+        cutStrips.Update()
+        cutPoly = vtk.vtkPolyData()
+        cutPoly.SetPoints(cutStrips.GetOutput().GetPoints())
+        cutPoly.SetPolys(cutStrips.GetOutput().GetLines())
+        """
+        out = cylinderClipper.GetClippedOutput()
+        out.Update()
+        
+        # ACHTUNG, ACHTUNG!!
+        # Bounds are in milimeters
+        # Get the cube enclosing the cut part and generate neurones uniformly, every 50um
+        xl, xh, yl, yh, zl, zh = out.GetBounds()
+        nx = int(abs(xh - xl) * 1E-3 / 50E-6)
+        ny = int(abs(yh - yl) * 1E-3 / 50E-6)
+        nz = int(abs(zh - zl) * 1E-3 / 50E-6)
+        print xl, xh, yl, yh, zl, zh
+        print nx, ny, nz
+        #grid = numpy.mgrid[xl : xh : nx * 1j, yl : yh : ny * 1j, zl : zh : nz * 1j]
+        #print grid.shape, grid
+        
+        poly = vtk.vtkPolyData()
+        points = vtk.vtkPoints()
+        vertices = vtk.vtkCellArray()
+        for x in range(0, nx+1):
+            for y in range(0, ny+1):
+                for z in range(0, nz+1):
+                    pid = points.InsertNextPoint(xl + 50E-3*x, yl + 50E-3*y, zl + 50E-3*z)
+                    vertices.InsertNextCell(1)
+                    vertices.InsertCellPoint(pid)
+        #print points
+        poly.SetPoints(points)
+        poly.SetVerts(vertices)
+        
+        neuronesMapper = vtk.vtkPolyDataMapper()
+        neuronesMapper.SetInput(poly)
+        
+        neuronesActor = vtk.vtkActor()
+        neuronesActor.SetMapper(neuronesMapper)
+        neuronesActor.GetProperty().SetColor(vtk.util.colors.green)
+        neuronesActor.GetProperty().SetRepresentationToPoints()
+        
+        clipMapper = vtk.vtkPolyDataMapper()
+        clipMapper.SetInputConnection(cylinderClipper.GetClippedOutputPort())
+        clipMapper.ScalarVisibilityOff()
+        
+        backProp = vtk.vtkProperty()
+        backProp.SetDiffuseColor(vtk.util.colors.tomato)
+        
+        cylinderActor = vtk.vtkActor()
+        cylinderActor.SetMapper(clipMapper)
+        cylinderActor.GetProperty().SetColor(vtk.util.colors.peacock)
+        cylinderActor.SetBackfaceProperty(backProp)
+
+        #clippedMapper = vtk.vtkPolyDataMapper()
+        #clippedMapper.SetInputConnection(clipper.GetOutputPort())
+        #clippedMapper.ScalarVisibilityOff()
+        #
+        #cortexActor = vtk.vtkActor()
+        #cortexActor.SetMapper(clippedMapper)
+        #cortexActor.GetProperty().SetRepresentationToPoints()
+        target_actor.GetProperty().SetRepresentationToPoints()
+
+        """
         out = target_dataset
         out.Update()
         cellArray = out.GetPolys()
@@ -97,10 +189,12 @@ class Projection(object):
         cellArray.InitTraversal()
         print cellArray
         print cellArray.GetNumberOfCells() 
-        
+        """
 
-        self.source_actor = tvtk.to_tvtk(source_actor)
-        self.target_actor = tvtk.to_tvtk(actor)
+        self.source_actor  = tvtk.to_tvtk(source_actor)
+        self.cylinderActor = tvtk.to_tvtk(cylinderActor)
+        self.cortexActor   = tvtk.to_tvtk(target_actor)
+        self.neuronesActor = tvtk.to_tvtk(neuronesActor)
         
         self.source_dataset = source_dataset
         self.target_dataset = target_dataset
@@ -126,7 +220,7 @@ class Projection(object):
         if source_index >= self.Ns:
             raise RuntimeError('Source index out of bounds')
         
-        p      = 0.020 # fraction
+        p      = 0.002 # fraction
         weight = 0.040 # nS
         delay  = 0.200 # ms
         
@@ -171,13 +265,15 @@ class Projection(object):
 
     def plot(self):
         # Add CSA connection lines 
-        self.figure.scene.add_actors(self.lineActors)
+        #self.figure.scene.add_actors(self.lineActors)
         
         # Add the source volume 
-        self.figure.scene.add_actor(self.source_actor)
+        #self.figure.scene.add_actor(self.source_actor)
         
         # Add the target volume
-        self.figure.scene.add_actor(self.target_actor)
+        self.figure.scene.add_actor(self.cylinderActor)
+        #self.figure.scene.add_actor(self.cortexActor)
+        self.figure.scene.add_actor(self.neuronesActor)
         
         # Fit everything into a window
         self.figure.scene.reset_zoom()
@@ -241,7 +337,7 @@ class Projection(object):
     
 if __name__ == "__main__":
     scene_Hyp = 'scene_Hyp.wrl'
-    scene_Cx  = 'extract.wrl' #'scene_Cx.wrl'
+    scene_Cx  = 'scene_Cx.wrl' #'extract.wrl'
     
     if not os.path.isfile(scene_Hyp):
         Projection.retreiveFrom_3dbar('whs_0.5', 'Hyp', 'high', 'vrml')
