@@ -1,6 +1,6 @@
 include distribute_setup.py
 prune nineml/examples
-graft nineml/examples/AL/components_done
+graft nineml/examples/AL/sample_components
 graft nineml/examples/AL/demos
 graft nineml/examples/AL/doc_tutorials
 graft nineml/examples/UL

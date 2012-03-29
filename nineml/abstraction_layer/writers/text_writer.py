@@ -1,5 +1,4 @@
-
-from Cheetah.Template import Template
+import nineml
 
 def dump_reduced(component, filename):
     pass
@@ -79,24 +78,18 @@ tmpl = """
     """
 
 
-#assert component.is_flat()
-
-#data = { 'component':component }
-#f = open(filename,"w")
-#s = Template(tmpl, data).respond()
-#f.write(s)
-#f.close()
-
-
 class TextWriter(object):
     """TextWriter DocString"""
 
 
     @classmethod
     def write(cls, component, filename):
-        #assert component.is_flat()
+
+        if not component.is_flat():
+            component = nineml.al.flattening.flatten(component)
 
 
+        from Cheetah.Template import Template
         data = { 'component':component }
         f = open(filename,"w")
         s = Template(tmpl, data).respond()
