@@ -127,6 +127,7 @@ class Projection(object):
         cutPolyCylinder = vtk.vtkPolyData()
         cutPolyCylinder.SetPoints(cutStrips.GetOutput().GetPoints())
         cutPolyCylinder.SetPolys(cutStrips.GetOutput().GetLines())
+        #print cutPolyCylinder
 
         """
         dataset = vtk.vtkImplicitDataSet()
@@ -164,9 +165,11 @@ class Projection(object):
         # the beginning and end of the polygons and triangulate them.
         cutTriangles = vtk.vtkTriangleFilter()
         cutTriangles.SetInput(cutPolyCylinder)
+        
         cutMapper = vtk.vtkPolyDataMapper()
-        cutMapper.SetInput(cutPolyCylinder)
-        cutMapper.SetInputConnection(cutTriangles.GetOutputPort())
+        cutMapper.SetInput(cutTriangles.GetOutput())
+        #cutMapper.SetInputConnection(cutStrips.GetOutputPort())
+        
         cutActor = vtk.vtkActor()
         cutActor.SetMapper(cutMapper)
         cutActor.GetProperty().SetColor(vtk.util.colors.peacock)
@@ -217,7 +220,7 @@ class Projection(object):
                     pid = points.InsertNextPoint(xl + delta*x, yl + delta*y, zl + delta*z)
                     vertices.InsertNextCell(1)
                     vertices.InsertCellPoint(pid)
-        print self.neurones
+        #print self.neurones
         poly.SetPoints(points)
         poly.SetVerts(vertices)
         
@@ -240,28 +243,33 @@ class Projection(object):
         cylinderActor.SetBackfaceProperty(backProp)
         """
         
-        """
-        extract = vtk.vtkExtractGeometry()
-        extract.SetInputConnection(sample.GetOutputPort())
-        extract.SetImplicitFunction(union)
-        shrink = vtk.vtkShrinkFilter()
-        shrink.SetInputConnection(extract.GetOutputPort())
-        shrink.SetShrinkFactor(0.5)
-        dataMapper = vtk.vtkDataSetMapper()
-        dataMapper.SetInputConnection(shrink.GetOutputPort())
-        dataActor = vtk.vtkActor()
-        dataActor.SetMapper(dataMapper)
+        box = vtk.vtkBox()
+        box.SetBounds(xl, xh, yl, yh, zl, zh)
+        
+        select = vtk.vtkExtractGeometry()
+        select.SetInputConnection(cutTriangles.GetOutputPort())
+        select.SetImplicitFunction(box)
+        #select.ExtractInsideOn()
+        
+        pd = select.GetOutput()
+        pd.Update()
+        print pd
+        
+        surfaceFilter = vtk.vtkDataSetSurfaceFilter()
+        surfaceFilter.SetInput(select.GetOutput())
         """
         select = vtk.vtkSelectEnclosedPoints()
         select.SetInput(poly)
         select.SetSurfaceConnection(cutTriangles.GetOutputPort())
+        """
         
-        interMapper = vtk.vtkPolyDataMapper()
-        interMapper.SetInputConnection(select.GetOutputPort())
+        interMapper = vtk.vtkPolyDataMapper() #vtkDataSetMapper()
+        interMapper.SetInput(surfaceFilter.GetOutput())
         interMapper.ScalarVisibilityOff()
         
         interActor = vtk.vtkActor()
         interActor.SetMapper(interMapper)
+        interActor.GetProperty().SetRepresentationToWireframe()
         
         self.source_actor  = tvtk.to_tvtk(source_actor)
         self.cylinderActor = tvtk.to_tvtk(cutActor)
@@ -346,8 +354,8 @@ class Projection(object):
         self.figure.scene.add_actor(self.interActor)
         
         # Add the target volume
-        self.figure.scene.add_actor(self.cylinderActor)
-        self.figure.scene.add_actor(self.cortexActor)
+        #self.figure.scene.add_actor(self.cylinderActor)
+        #self.figure.scene.add_actor(self.cortexActor)
         #self.figure.scene.add_actor(self.neuronesActor)
         
         # Fit everything into a window
