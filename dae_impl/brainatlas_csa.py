@@ -63,6 +63,7 @@ class Projection(object):
         self.figure = mlab.figure()
         self.figure.on_mouse_pick(self.picker_callback)
 
+        self.neurones  = []
         self.lineActors = []
         
         self.source_vrml_filename = source_vrml_filename
@@ -200,6 +201,7 @@ class Projection(object):
         nx = int(abs(xh - xl) / delta)
         ny = int(abs(yh - yl) / delta)
         nz = int(abs(zh - zl) / delta)
+        
         print xl, xh, yl, yh, zl, zh
         print nx, ny, nz
         #grid = numpy.mgrid[xl : xh : nx * 1j, yl : yh : ny * 1j, zl : zh : nz * 1j]
@@ -211,10 +213,11 @@ class Projection(object):
         for x in range(0, nx+1):
             for y in range(0, ny+1):
                 for z in range(0, nz+1):
+                    self.neurones.append( (xl + delta*x, yl + delta*y, zl + delta*z) )
                     pid = points.InsertNextPoint(xl + delta*x, yl + delta*y, zl + delta*z)
                     vertices.InsertNextCell(1)
                     vertices.InsertCellPoint(pid)
-        #print points
+        print self.neurones
         poly.SetPoints(points)
         poly.SetVerts(vertices)
         
