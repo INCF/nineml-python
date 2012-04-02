@@ -57,7 +57,94 @@ class vtkPointsGeometry(geometry.Geometry):
     
     def targetPosition(self, index):
         return self.target_vtkpoints.GetPoint(index)
-       
+
+def closeSurface(meshin):
+    meshout = vtk.vtkPolyData()
+    
+    poly = vtk.vtkCleanPolyData()
+    poly.PointMergingOn()
+    #poly.ConvertLinesToPointsOn() 
+    #poly.ConvertPolysToLinesOn() 
+    #poly.ConvertStripsToPolysOn()
+    poly.SetInput(meshin)
+    poly.Update()
+    
+    boundaryEdges = vtk.vtkFeatureEdges()
+    boundaryEdges.SetInput(meshin)
+    boundaryEdges.SetBoundaryEdges(1)
+    boundaryEdges.SetFeatureEdges(0)
+    boundaryEdges.SetNonManifoldEdges(0)
+    boundaryEdges.SetManifoldEdges(0)
+    boundaryEdges.Update()
+
+    nombre = boundaryEdges.GetOutput().GetNumberOfLines()
+    pointsNumber = nombre
+    print 'Number of open lines 1: ', nombre
+    
+    """
+    region  = vtk.vtkPolyDataConnectivityFilter()
+    region.SetInput(poly.GetOutput())
+    region.SetExtractionMode(1)
+    region.Update()
+
+    bouchon     = vtk.vtkStripper()
+    bouchon.SetInput(region.GetOutput())
+    """
+    
+    region      = vtk.vtkPolyDataConnectivityFilter()
+    meshAppend  = vtk.vtkAppendPolyData()
+    bouchon     = vtk.vtkStripper()
+    bouchonPoly = vtk.vtkPolyData()
+    bouchontri  = vtk.vtkTriangleFilter()
+
+    meshAppend.AddInput(poly.GetOutput())
+    meshAppend.AddInput(bouchontri.GetOutput())
+
+    region.SetInput(boundaryEdges.GetOutput())
+    region.SetExtractionModeToAllRegions() #SetExtractionMode(1)
+
+    bouchon.SetInput(region.GetOutput())
+
+    bouchontri.SetInput(bouchonPoly)
+
+    poly.SetInput(meshAppend.GetOutput())
+    poly.SetTolerance(0.0)
+    poly.SetConvertLinesToPoints(0)
+    poly.SetConvertPolysToLines(0)
+    poly.SetConvertStripsToPolys(0)
+
+    boundaryEdges.SetInput(poly.GetOutput())
+    while nombre != 0:
+        region.Update()
+                                        
+        # creating polygonal patches
+        bouchon.Update()
+        print 'ujaaaaaa'
+
+        bouchonPoly.Initialize()
+        bouchonPoly.SetPoints(bouchon.GetOutput().GetPoints())
+        bouchonPoly.SetPolys(bouchon.GetOutput().GetLines())
+        bouchonPoly.Update()
+        print 'ujaaaaaa'
+
+        # triangulate the polygonal patch 
+        bouchontri.Update()
+
+        # patch (add the patch to the mesh)
+        meshAppend.Update()
+
+        # remove duplicated edges and points
+        poly.Update()
+
+        # update the number of border edges
+        boundaryEdges.Update()
+
+        nombre = boundaryEdges.GetOutput().GetNumberOfLines()
+        print 'Left {0}'.format((pointsNumber - nombre) / pointsNumber)
+
+    meshout.DeepCopy(poly.GetOutput())
+    return meshout
+    
 class Projection(object):
     def __init__(self, source_vrml_filename, target_vrml_filename):
         self.figure = mlab.figure()
@@ -71,6 +158,8 @@ class Projection(object):
         
         source_actor, source_dataset, source_vtkpoints = Projection.loadVRMLFile(source_vrml_filename)
         target_actor, target_dataset, target_vtkpoints = Projection.loadVRMLFile(target_vrml_filename)
+        
+        print 'Np = ', target_vtkpoints.GetNumberOfPoints()
         
         target_actor.GetProperty().SetRepresentationToPoints()
         
@@ -196,14 +285,13 @@ class Projection(object):
         # Bounds are in milimeters
         # Get the cube enclosing the cut part and generate neurones uniformly, every 50um
         
-        out = cutPolyCylinder
-        out.Update()
+        cutPolyCylinder.Update()
         
-        xl, xh, yl, yh, zl, zh = out.GetBounds()
-        delta = 100E-3
-        nx = int(abs(xh - xl) / delta)
-        ny = int(abs(yh - yl) / delta)
-        nz = int(abs(zh - zl) / delta)
+        xl, xh, yl, yh, zl, zh = target_dataset.GetBounds()
+        delta = 1000E-3
+        nx = int(abs(xh - xl) / delta) + 1
+        ny = int(abs(yh - yl) / delta) + 1
+        nz = int(abs(zh - zl) / delta) + 1
         
         print xl, xh, yl, yh, zl, zh
         print nx, ny, nz
@@ -213,9 +301,9 @@ class Projection(object):
         poly = vtk.vtkPolyData()
         points = vtk.vtkPoints()
         vertices = vtk.vtkCellArray()
-        for x in range(0, nx+1):
-            for y in range(0, ny+1):
-                for z in range(0, nz+1):
+        for x in range(0, nx):
+            for y in range(0, ny):
+                for z in range(0, nz):
                     self.neurones.append( (xl + delta*x, yl + delta*y, zl + delta*z) )
                     pid = points.InsertNextPoint(xl + delta*x, yl + delta*y, zl + delta*z)
                     vertices.InsertNextCell(1)
@@ -223,6 +311,8 @@ class Projection(object):
         #print self.neurones
         poly.SetPoints(points)
         poly.SetVerts(vertices)
+        poly.Update()
+        print 'POLY = ', poly
         
         neuronesMapper = vtk.vtkPolyDataMapper()
         neuronesMapper.SetInput(poly)
@@ -243,6 +333,7 @@ class Projection(object):
         cylinderActor.SetBackfaceProperty(backProp)
         """
         
+        """
         box = vtk.vtkBox()
         box.SetBounds(xl, xh, yl, yh, zl, zh)
         
@@ -250,26 +341,85 @@ class Projection(object):
         select.SetInputConnection(cutTriangles.GetOutputPort())
         select.SetImplicitFunction(box)
         #select.ExtractInsideOn()
-        
-        pd = select.GetOutput()
-        pd.Update()
-        print pd
-        
-        surfaceFilter = vtk.vtkDataSetSurfaceFilter()
-        surfaceFilter.SetInput(select.GetOutput())
         """
+        
+        #meshout = closeSurface(cutPolyCylinder)
+        
+        cleanPoly = vtk.vtkCleanPolyData()
+        cleanPoly.PointMergingOn()
+        cleanPoly.ConvertLinesToPointsOn() 
+        cleanPoly.ConvertPolysToLinesOn() 
+        cleanPoly.ConvertStripsToPolysOn()
+        cleanPoly.SetInput(target_dataset)
+        cleanPoly.Update()
+        
+        region  = vtk.vtkPolyDataConnectivityFilter()
+        region.SetInput(cleanPoly.GetOutput())
+        region.SetExtractionModeToLargestRegion()
+        region.Update()
+        out = region.GetOutput()
+        out.Update()
+        
+        cutTriangles = vtk.vtkTriangleFilter()
+        cutTriangles.SetInput(out)
+        
+        stripper = vtk.vtkStripper()
+        stripper.SetInput(cutTriangles.GetOutput())
+        stripper_out = stripper.GetOutput()
+        stripper_out.Update()
+        #print stripper_out
+        
+        strippedPoly = vtk.vtkPolyData()
+        strippedPoly.Initialize()
+        strippedPoly.SetPoints(stripper.GetOutput().GetPoints())
+        strippedPoly.SetPolys(stripper.GetOutput().GetStrips())
+        strippedPoly.Update()
+        #print strippedPoly
+        
+        """
+        feature = vtk.vtkFeatureEdges()
+        feature.SetInput(strippedPoly)
+        feature.SetBoundaryEdges(1)
+        feature.SetFeatureEdges(0)
+        feature.SetNonManifoldEdges(0)
+        feature.SetManifoldEdges(0)
+        feature.Update()
+        featureOut = feature.GetOutput()
+        featureOut.Update()
+        lines = featureOut.GetLines()
+        print lines
+        nombre = featureOut.GetNumberOfLines()
+        print 'Number of open lines: ', nombre
+        """
+        
+        dataset = vtk.vtkImplicitDataSet()
+        dataset.SetDataSet(strippedPoly)
+        
         select = vtk.vtkSelectEnclosedPoints()
         select.SetInput(poly)
-        select.SetSurfaceConnection(cutTriangles.GetOutputPort())
-        """
+        select.SetSurface(strippedPoly)
+        #select.CheckSurfaceOn()
+        select.Update()
+        selectOut = select.GetOutput()
+        print selectOut.GetPoints()
+        print selectOut.GetVerts()
         
+        pointsInPoly = vtk.vtkPolyData()
+        pointsInPoly.Initialize()
+        pointsInPoly.SetPoints(selectOut.GetPoints())
+        pointsInPoly.SetVerts(selectOut.GetVerts())
+        pointsInPoly.Update()
+        print pointsInPoly
+       
         interMapper = vtk.vtkPolyDataMapper() #vtkDataSetMapper()
-        interMapper.SetInput(surfaceFilter.GetOutput())
+        interMapper.SetInput(selectOut) #feature.GetOutput())
         interMapper.ScalarVisibilityOff()
         
         interActor = vtk.vtkActor()
         interActor.SetMapper(interMapper)
-        interActor.GetProperty().SetRepresentationToWireframe()
+        interActor.GetProperty().SetRepresentationToPoints()
+        interActor.GetProperty().SetColor(vtk.util.colors.white)
+        interActor.SetBackfaceProperty(backProp)
         
         self.source_actor  = tvtk.to_tvtk(source_actor)
         self.cylinderActor = tvtk.to_tvtk(cutActor)
