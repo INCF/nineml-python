@@ -163,96 +163,54 @@ class Projection(object):
         print 'Np = ', target_vtkpoints.GetNumberOfPoints()
         
         target_dataset.Update()
-        print "target_dataset", target_dataset
+        #print "target_dataset", target_dataset
         
         #print dir(target_dataset)
         #print dir(target_actor)
         targetNormals = vtk.vtkPolyDataNormals()
         targetNormals.SetInput(target_dataset)
         
+        dataset = vtk.vtkImplicitDataSet()
+        dataset.SetDataSet(target_dataset)
+        
         backProp = vtk.vtkProperty()
         backProp.SetDiffuseColor(vtk.util.colors.tomato)
         
-        cylinder = vtk.vtkCylinder()
-        cylinder.SetRadius(1)
-        cylinder.SetCenter(0, 0, 0)
-        rotate = vtk.vtkTransform()
-        rotate.RotateX(90)
-        rotate.RotateY(30)
-        cylinder.SetTransform(rotate)
+        _radius = 0.8
+        _x = 2
+        _y = 0
+        _z = 3.2
+        sphere = vtk.vtkSphere()
+        sphere.SetRadius(_radius)
+        sphere.SetCenter(_x, _y, _z)
         
-        plane = vtk.vtkPlane()
-        plane.SetOrigin(0, 0, 1)
-        plane.SetNormal(0, 0, 1)
+        sphereSource = vtk.vtkSphereSource()
+        sphereSource.SetRadius(_radius)
+        sphereSource.SetCenter(_x, _y, _z)
+        sphereSource.SetThetaResolution(30)
+        sphereSource.SetPhiResolution(30)
         
-        """
-        cutPlane = vtk.vtkCutter()
-        cutPlane.SetInputConnection(targetNormals.GetOutputPort())
-        cutPlane.SetCutFunction(plane)
-        cutPlane.GenerateCutScalarsOn()
-        cutPlane.SetValue(0, 0.5)
-        cutStrips = vtk.vtkStripper()
-        cutStrips.SetInputConnection(cutPlane.GetOutputPort())
-        cutStrips.Update()
-        cutPolyPlane = vtk.vtkPolyData()
-        cutPolyPlane.SetPoints(cutStrips.GetOutput().GetPoints())
-        cutPolyPlane.SetPolys(cutStrips.GetOutput().GetLines())
-        """
+        sphereMapper = vtk.vtkPolyDataMapper()
+        sphereMapper.SetInput(sphereSource.GetOutput())
+        sphereMapper.ScalarVisibilityOff()
         
-        planeClipper = vtk.vtkClipPolyData()
-        planeClipper.SetInput(target_dataset)
-        planeClipper.SetClipFunction(plane)
-        planeClipper.GenerateClipScalarsOn()
-        planeClipper.GenerateClippedOutputOn()
-        planeClipper.SetValue(0.5)
+        sphereActor = vtk.vtkActor()
+        sphereActor.SetMapper(sphereMapper)
+        sphereActor.GetProperty().SetColor(vtk.util.colors.yellow)
+        
+        
+        clipCortex = vtk.vtkClipPolyData()
+        clipCortex.SetInput(target_dataset)
+        clipCortex.SetClipFunction(sphere)
+        clipCortex.GenerateClipScalarsOn()
+        clipCortex.GenerateClippedOutputOn()
+        #clipCortex.SetValue(0.5)
+        
+        clipPoly = clipCortex.GetClippedOutput()
+        clipPoly.Update()
 
-        cutCylinder = vtk.vtkCutter()
-        cutCylinder.SetInput(planeClipper.GetOutput())
-        cutCylinder.SetCutFunction(cylinder)
-        cutCylinder.GenerateCutScalarsOn()
-        cutCylinder.SetValue(0, 0.5)
-        
-        cutStrips = vtk.vtkStripper()
-        cutStrips.SetInputConnection(cutCylinder.GetOutputPort())
-        cutStrips.Update()
-        cutPolyCylinder = vtk.vtkPolyData()
-        cutPolyCylinder.SetPoints(cutStrips.GetOutput().GetPoints())
-        cutPolyCylinder.SetPolys(cutStrips.GetOutput().GetLines())
-        #print cutPolyCylinder
-        
-        # Triangle filter is robust enough to ignore the duplicate point at
-        # the beginning and end of the polygons and triangulate them.
-        cutTriangles = vtk.vtkTriangleFilter()
-        cutTriangles.SetInput(cutPolyCylinder)
-        
-        out = cutTriangles.GetOutput()
-        out.Update()
-        points = out.GetPoints()
-        print "points", points
-        
-        poly = vtk.vtkPolyData()
-        poly.SetPoints(points)
-        poly.Update()
-        print "poly", poly
-        
-        edges = vtk.vtkExtractEdges()
-        edges.SetInput(cutPolyCylinder) #cutTriangles.GetOutput())
-        
-        sf = vtk.vtkSurfaceReconstructionFilter()
-        sf.SetInput(edges.GetOutput())
-        
-        cf = vtk.vtkContourFilter()
-        cf.SetInputConnection(sf.GetOutputPort())
-        cf.SetValue(0, 0.0)
-
-        reverse = vtk.vtkReverseSense()
-        reverse.SetInputConnection(cf.GetOutputPort())
-        reverse.ReverseCellsOn()
-        reverse.ReverseNormalsOn()
-        
         cutMapper = vtk.vtkPolyDataMapper()
-        cutMapper.SetInput(reverse.GetOutput())
-        #cutMapper.SetInputConnection(reverse.GetOutputPort())
+        cutMapper.SetInputConnection(clipCortex.GetClippedOutputPort()) #SetInput(strippedPoly)
         cutMapper.ScalarVisibilityOff()
         
         cutActor = vtk.vtkActor()
@@ -260,31 +218,11 @@ class Projection(object):
         cutActor.GetProperty().SetColor(vtk.util.colors.peacock)
         cutActor.SetBackfaceProperty(backProp)
        
-        """
-        planeClipper = vtk.vtkClipPolyData()
-        planeClipper.SetInput(target_dataset)
-        planeClipper.SetClipFunction(plane)
-        planeClipper.GenerateClipScalarsOn()
-        planeClipper.GenerateClippedOutputOn()
-        planeClipper.SetValue(0.5)
-        
-        #print planeClipper.GetOutput()
-        cylinderClipper = vtk.vtkClipPolyData()
-        cylinderClipper.SetInput(planeClipper.GetOutput())
-        cylinderClipper.SetClipFunction(cylinder)
-        cylinderClipper.GenerateClipScalarsOn()
-        cylinderClipper.GenerateClippedOutputOn()
-        cylinderClipper.SetValue(0.5)
-        """
-        
         # ACHTUNG, ACHTUNG!!
         # Bounds are in milimeters
-        # Get the cube enclosing the cut part and generate neurones uniformly, every 50um
-        
-        cutPolyCylinder.Update()
-        
-        xl, xh, yl, yh, zl, zh = target_dataset.GetBounds()
-        delta = 1000E-3
+        # Get the cube enclosing the cut part and generate neurones uniformly, every 100um
+        xl, xh, yl, yh, zl, zh = clipPoly.GetBounds()
+        delta = 0.1 # mm
         nx = int(abs(xh - xl) / delta) + 1
         ny = int(abs(yh - yl) / delta) + 1
         nz = int(abs(zh - zl) / delta) + 1
@@ -294,7 +232,7 @@ class Projection(object):
         #grid = numpy.mgrid[xl : xh : nx * 1j, yl : yh : ny * 1j, zl : zh : nz * 1j]
         #print grid.shape, grid
         
-        poly = vtk.vtkPolyData()
+        neuronesPoly = vtk.vtkPolyData()
         points = vtk.vtkPoints()
         vertices = vtk.vtkCellArray()
         for x in range(0, nx):
@@ -305,206 +243,71 @@ class Projection(object):
                     vertices.InsertNextCell(1)
                     vertices.InsertCellPoint(pid)
         #print self.neurones
-        poly.SetPoints(points)
-        poly.SetVerts(vertices)
-        poly.Update()
-        #print 'POLY = ', poly
+        neuronesPoly.SetPoints(points)
+        neuronesPoly.SetVerts(vertices)
+        neuronesPoly.Update()
+        #print 'neuronesPoly = ', neuronesPoly
         
         neuronesMapper = vtk.vtkPolyDataMapper()
-        neuronesMapper.SetInput(poly)
+        neuronesMapper.SetInput(neuronesPoly)
         
         neuronesActor = vtk.vtkActor()
         neuronesActor.SetMapper(neuronesMapper)
-        neuronesActor.GetProperty().SetColor(vtk.util.colors.green)
+        neuronesActor.GetProperty().SetColor(vtk.util.colors.white)
 
-        """
-        clipMapper = vtk.vtkPolyDataMapper()
-        clipMapper.SetInputConnection(cylinderClipper.GetClippedOutputPort())
-        clipMapper.ScalarVisibilityOff()
-        
-        cylinderActor = vtk.vtkActor()
-        cylinderActor.SetMapper(clipMapper)
-        cylinderActor.GetProperty().SetColor(vtk.util.colors.peacock)
-        cylinderActor.SetBackfaceProperty(backProp)
-        """
-        
-        """
-        box = vtk.vtkBox()
-        box.SetBounds(xl, xh, yl, yh, zl, zh)
-        
-        select = vtk.vtkExtractGeometry()
-        select.SetInputConnection(cutTriangles.GetOutputPort())
-        select.SetImplicitFunction(box)
-        #select.ExtractInsideOn()
-        """
-        
-        #meshout = closeSurface(cutPolyCylinder)
-        
-        cleanPoly = vtk.vtkCleanPolyData()
-        cleanPoly.PointMergingOn()
-        cleanPoly.ConvertLinesToPointsOn() 
-        cleanPoly.ConvertPolysToLinesOn() 
-        cleanPoly.ConvertStripsToPolysOn()
-        cleanPoly.SetInput(target_dataset)
-        cleanPoly.Update()
-        
-        region  = vtk.vtkPolyDataConnectivityFilter()
-        region.SetInput(cleanPoly.GetOutput())
-        region.SetExtractionModeToLargestRegion()
-        region.Update()
-        out = region.GetOutput()
-        out.Update()
-        
-        cutTriangles = vtk.vtkTriangleFilter()
-        cutTriangles.SetInput(out)
-        
-        stripper = vtk.vtkStripper()
-        stripper.SetInput(cutTriangles.GetOutput())
-        stripper_out = stripper.GetOutput()
-        stripper_out.Update()
-        #print stripper_out
-        
-        strippedPoly = vtk.vtkPolyData()
-        strippedPoly.Initialize()
-        strippedPoly.SetPoints(stripper.GetOutput().GetPoints())
-        strippedPoly.SetPolys(stripper.GetOutput().GetStrips())
-        strippedPoly.Update()
-        #print strippedPoly
-        
-        """
-        feature = vtk.vtkFeatureEdges()
-        feature.SetInput(strippedPoly)
-        feature.SetBoundaryEdges(1)
-        feature.SetFeatureEdges(0)
-        feature.SetNonManifoldEdges(0)
-        feature.SetManifoldEdges(0)
-        feature.Update()
-        featureOut = feature.GetOutput()
-        featureOut.Update()
-        lines = featureOut.GetLines()
-        print lines
-        nombre = featureOut.GetNumberOfLines()
-        print 'Number of open lines: ', nombre
-        """
+        neuronesClipper = vtk.vtkClipPolyData()
+        neuronesClipper.SetInput(neuronesPoly)
+        neuronesClipper.SetClipFunction(sphere)
+        neuronesClipper.GenerateClipScalarsOn()
+        neuronesClipper.GenerateClippedOutputOn()
+        #neuronesClipper.SetValue(0.5)
         
         dataset = vtk.vtkImplicitDataSet()
-        dataset.SetDataSet(stripper.GetOutput())
+        dataset.SetDataSet(neuronesActor.GetMapper().GetInput())
         
-        select = vtk.vtkSelectEnclosedPoints()
-        select.SetInput(poly)
-        select.SetSurface(strippedPoly)
-        #select.CheckSurfaceOn()
-        select.Update()
-        selectOut = select.GetOutput()
-        #print selectOut.GetPoints()
-        #print selectOut.GetVerts()
+        #sphereSource.SetRadius(0.75)
+        neuronesClipper2 = vtk.vtkClipPolyData()
+        neuronesClipper2.SetInput(sphereSource.GetOutput())
+        neuronesClipper2.SetClipFunction(dataset)
+        neuronesClipper2.GenerateClipScalarsOn()
+        neuronesClipper2.GenerateClippedOutputOn()
+        #neuronesClipper2.SetValue(0.5)
         
-        pointsInPoly = vtk.vtkPolyData()
-        pointsInPoly.Initialize()
-        pointsInPoly.SetPoints(selectOut.GetPoints())
-        pointsInPoly.SetVerts(selectOut.GetVerts())
-        pointsInPoly.Update()
-        #print pointsInPoly
-       
-        interMapper = vtk.vtkPolyDataMapper() #vtkDataSetMapper()
-        interMapper.SetInput(selectOut) #feature.GetOutput())
-        interMapper.ScalarVisibilityOff()
+        """
+        sf = vtk.vtkSurfaceReconstructionFilter()
+        sf.SetInput(poly)
         
-        interActor = vtk.vtkActor()
-        interActor.SetMapper(interMapper)
-        interActor.GetProperty().SetRepresentationToPoints()
-        interActor.GetProperty().SetColor(vtk.util.colors.white)
-        interActor.SetBackfaceProperty(backProp)
+        cf = vtk.vtkContourFilter()
+        cf.SetInputConnection(sf.GetOutputPort())
+        cf.SetValue(0, 0.0)
         
+        reverse = vtk.vtkReverseSense()
+        reverse.SetInputConnection(cf.GetOutputPort())
+        reverse.ReverseCellsOn()
+        reverse.ReverseNormalsOn()
+        """
         
-        sphere = vtk.vtkSphereSource()
-        sphere.SetRadius(0.7)
-        #sphere.SetResolution(50)
-        sphere.SetCenter(1, 0, 3.5)
-        
-        cylS = vtk.vtkCylinderSource()
-        cylS.SetRadius(1)
-        cylS.SetResolution(50)
-        cylS.SetHeight(3)
-        cylS.SetCenter(0.5, 0, 4)
-        cylS.CappingOff()
-        
-        cylSMapper = vtk.vtkPolyDataMapper()
-        cylSMapper.SetInputConnection(sphere.GetOutputPort())
-        
-        cylSOriginalActor = vtk.vtkActor()
-        cylSOriginalActor.SetMapper(cylSMapper)
-        cylSOriginalActor.GetProperty().SetColor(vtk.util.colors.yellow)
-        
-        cylSActor = vtk.vtkActor()
-        cylSActor.SetMapper(cylSMapper)
-        cylSActor.GetProperty().SetColor(vtk.util.colors.yellow)
-        #cylSActor.RotateY(30)
-        cylSActor.RotateX(90)
-        #cylSActor.RotateZ(180)
-        #cylSActor.Translate(0, 0, 3)
-        
-        dataset = vtk.vtkImplicitDataSet()
-        dataset.SetDataSet(target_dataset)
-        
-        normals = vtk.vtkPolyDataNormals()
-        normals.SetInput(cylSActor.GetMapper().GetInput())
-        
-        cut = vtk.vtkCutter()
-        cut.SetInput(cylSActor.GetMapper().GetInput())
-        cut.SetCutFunction(dataset)
-        cut.GenerateCutScalarsOn()
-        cut.SetValue(0, 0.5)
-        
-        cutStrips = vtk.vtkStripper()
-        cutStrips.SetInputConnection(cut.GetOutputPort())
-        cutStrips.PassThroughCellIdsOn()
-        cutStrips.PassThroughPointIdsOn()
-        cutStrips.Update()
-        
-        cutPolyCylinder = vtk.vtkPolyData()
-        cutPolyCylinder.Initialize()
-        cutPolyCylinder.SetPoints(cutStrips.GetOutput().GetPoints())
-        cutPolyCylinder.SetPolys(cutStrips.GetOutput().GetLines())
+        #outline = vtk.vtkOutlineFilter() 
+        #outline.SetInputConnection(neuronesClipper.GetClippedOutputPort())
 
-        poly = vtk.vtkPolyData()
-        vertices = vtk.vtkCellArray()
-        for i in range(0, target_vtkpoints.GetNumberOfPoints()):
-            vertices.InsertNextCell(1)
-            vertices.InsertCellPoint(i)
-        poly.SetPoints(target_vtkpoints)
-        poly.SetVerts(vertices)
-        poly.Update()
+        extractedNeuronesMapper = vtk.vtkPolyDataMapper()
+        extractedNeuronesMapper.SetInputConnection(neuronesClipper.GetClippedOutputPort())
         
-        cutTriangles = vtk.vtkTriangleFilter()
-        cutTriangles.SetInput(poly)
-        o = cutTriangles.GetOutput()
-        o.Update()
-        #print o
+        extractedNeuronesActor = vtk.vtkActor()
+        extractedNeuronesActor.SetMapper(extractedNeuronesMapper)
+        extractedNeuronesActor.GetProperty().SetColor(vtk.util.colors.white)
         
-        cutMapper = vtk.vtkPolyDataMapper()
-        cutMapper.SetInput(cutTriangles.GetOutput())
-        cutcylActor = vtk.vtkActor()
-        cutcylActor.SetMapper(cutMapper)
-        cutcylActor.GetProperty().SetColor(vtk.util.colors.peacock)
-        cutcylActor.SetBackfaceProperty(backProp)
-        cutcylActor.GetProperty().SetRepresentationToPoints()
-                
         neuronesActor.GetProperty().SetRepresentationToPoints()
+        extractedNeuronesActor.GetProperty().SetRepresentationToPoints()
         cutActor.GetProperty().SetRepresentationToWireframe()
-        cylSOriginalActor.GetProperty().SetRepresentationToWireframe()
-        target_actor.GetProperty().SetRepresentationToWireframe()
+        sphereActor.GetProperty().SetRepresentationToWireframe()
+        target_actor.GetProperty().SetRepresentationToSurface()
         
-        self.source_actor  = tvtk.to_tvtk(source_actor)
-        self.cylinderActor = tvtk.to_tvtk(cutActor)
-        self.cutcylOrigActor = tvtk.to_tvtk(cylSOriginalActor)
-        self.cutcylActor   = tvtk.to_tvtk(cutcylActor)
-        self.cortexActor   = tvtk.to_tvtk(target_actor)
-        self.neuronesActor = tvtk.to_tvtk(neuronesActor)
-        self.interActor    = tvtk.to_tvtk(interActor)
-        
-        self.actors.append(self.cortexActor)
-        self.actors.append(self.cutcylOrigActor)
+        #self.actors.append(tvtk.to_tvtk(source_actor))
+        #self.actors.append(tvtk.to_tvtk(target_actor))
+        self.actors.append(tvtk.to_tvtk(cutActor))
+        #self.actors.append(tvtk.to_tvtk(sphereActor))
+        self.actors.append(tvtk.to_tvtk(extractedNeuronesActor))
         
         self.source_dataset = source_dataset
         self.target_dataset = target_dataset
