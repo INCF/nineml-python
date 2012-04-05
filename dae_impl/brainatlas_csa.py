@@ -3,6 +3,7 @@ import os, sys, traceback, math, httplib, urllib, zipfile, StringIO
 from time import localtime, strftime, time
 
 import numpy
+import numpy.random
 
 import vtk
 from vtk.hybrid import vtkVRMLImporter
@@ -58,128 +59,32 @@ class vtkPointsGeometry(geometry.Geometry):
     def targetPosition(self, index):
         return self.target_vtkpoints.GetPoint(index)
 
-def closeSurface(meshin):
-    meshout = vtk.vtkPolyData()
-    
-    poly = vtk.vtkCleanPolyData()
-    poly.PointMergingOn()
-    #poly.ConvertLinesToPointsOn() 
-    #poly.ConvertPolysToLinesOn() 
-    #poly.ConvertStripsToPolysOn()
-    poly.SetInput(meshin)
-    poly.Update()
-    
-    boundaryEdges = vtk.vtkFeatureEdges()
-    boundaryEdges.SetInput(meshin)
-    boundaryEdges.SetBoundaryEdges(1)
-    boundaryEdges.SetFeatureEdges(0)
-    boundaryEdges.SetNonManifoldEdges(0)
-    boundaryEdges.SetManifoldEdges(0)
-    boundaryEdges.Update()
-
-    nombre = boundaryEdges.GetOutput().GetNumberOfLines()
-    pointsNumber = nombre
-    print 'Number of open lines 1: ', nombre
-    
-    """
-    region  = vtk.vtkPolyDataConnectivityFilter()
-    region.SetInput(poly.GetOutput())
-    region.SetExtractionMode(1)
-    region.Update()
-
-    bouchon     = vtk.vtkStripper()
-    bouchon.SetInput(region.GetOutput())
-    """
-    
-    region      = vtk.vtkPolyDataConnectivityFilter()
-    meshAppend  = vtk.vtkAppendPolyData()
-    bouchon     = vtk.vtkStripper()
-    bouchonPoly = vtk.vtkPolyData()
-    bouchontri  = vtk.vtkTriangleFilter()
-
-    meshAppend.AddInput(poly.GetOutput())
-    meshAppend.AddInput(bouchontri.GetOutput())
-
-    region.SetInput(boundaryEdges.GetOutput())
-    region.SetExtractionModeToAllRegions() #SetExtractionMode(1)
-
-    bouchon.SetInput(region.GetOutput())
-
-    bouchontri.SetInput(bouchonPoly)
-
-    poly.SetInput(meshAppend.GetOutput())
-    poly.SetTolerance(0.0)
-    poly.SetConvertLinesToPoints(0)
-    poly.SetConvertPolysToLines(0)
-    poly.SetConvertStripsToPolys(0)
-
-    boundaryEdges.SetInput(poly.GetOutput())
-    while nombre != 0:
-        region.Update()
-                                        
-        # creating polygonal patches
-        bouchon.Update()
-        print 'ujaaaaaa'
-
-        bouchonPoly.Initialize()
-        bouchonPoly.SetPoints(bouchon.GetOutput().GetPoints())
-        bouchonPoly.SetPolys(bouchon.GetOutput().GetLines())
-        bouchonPoly.Update()
-        print 'ujaaaaaa'
-
-        # triangulate the polygonal patch 
-        bouchontri.Update()
-
-        # patch (add the patch to the mesh)
-        meshAppend.Update()
-
-        # remove duplicated edges and points
-        poly.Update()
-
-        # update the number of border edges
-        boundaryEdges.Update()
-
-        nombre = boundaryEdges.GetOutput().GetNumberOfLines()
-        print 'Left {0}'.format((pointsNumber - nombre) / pointsNumber)
-
-    meshout.DeepCopy(poly.GetOutput())
-    return meshout
-    
 class Projection(object):
-    def __init__(self, source_vrml_filename, target_vrml_filename):
+    def __init__(self, target_vrml_filename):
         self.figure = mlab.figure()
         self.figure.on_mouse_pick(self.picker_callback)
 
+        self.cube_d          = 0.10 # [mm]
+        self.neurone_radius  = 0.01 # [mm]
+        self.central_neurone = 0
+        
         self.neurones   = []
         self.actors     = []
         self.lineActors = []
         
-        self.source_vrml_filename = source_vrml_filename
         self.target_vrml_filename = target_vrml_filename
         
-        source_actor, source_dataset, source_vtkpoints = Projection.loadVRMLFile(source_vrml_filename)
         target_actor, target_dataset, target_vtkpoints = Projection.loadVRMLFile(target_vrml_filename)
         
-        print 'Np = ', target_vtkpoints.GetNumberOfPoints()
+        tomatoProp = vtk.vtkProperty()
+        tomatoProp.SetDiffuseColor(vtk.util.colors.tomato)
         
-        target_dataset.Update()
-        #print "target_dataset", target_dataset
-        
-        #print dir(target_dataset)
-        #print dir(target_actor)
-        targetNormals = vtk.vtkPolyDataNormals()
-        targetNormals.SetInput(target_dataset)
-        
-        dataset = vtk.vtkImplicitDataSet()
-        dataset.SetDataSet(target_dataset)
-        
-        backProp = vtk.vtkProperty()
-        backProp.SetDiffuseColor(vtk.util.colors.tomato)
-        
-        _radius = 0.8
+        _radius     = 0.70 # [mm]
+        _resolution = 30
         _x = 2
         _y = 0
-        _z = 3.2
+        _z = 3.25
+        
         sphere = vtk.vtkSphere()
         sphere.SetRadius(_radius)
         sphere.SetCenter(_x, _y, _z)
@@ -187,8 +92,8 @@ class Projection(object):
         sphereSource = vtk.vtkSphereSource()
         sphereSource.SetRadius(_radius)
         sphereSource.SetCenter(_x, _y, _z)
-        sphereSource.SetThetaResolution(30)
-        sphereSource.SetPhiResolution(30)
+        sphereSource.SetThetaResolution(_resolution)
+        sphereSource.SetPhiResolution(_resolution)
         
         sphereMapper = vtk.vtkPolyDataMapper()
         sphereMapper.SetInput(sphereSource.GetOutput())
@@ -197,7 +102,6 @@ class Projection(object):
         sphereActor = vtk.vtkActor()
         sphereActor.SetMapper(sphereMapper)
         sphereActor.GetProperty().SetColor(vtk.util.colors.yellow)
-        
         
         clipCortex = vtk.vtkClipPolyData()
         clipCortex.SetInput(target_dataset)
@@ -210,43 +114,57 @@ class Projection(object):
         clipPoly.Update()
 
         cutMapper = vtk.vtkPolyDataMapper()
-        cutMapper.SetInputConnection(clipCortex.GetClippedOutputPort()) #SetInput(strippedPoly)
+        cutMapper.SetInputConnection(clipCortex.GetClippedOutputPort())
         cutMapper.ScalarVisibilityOff()
         
         cutActor = vtk.vtkActor()
         cutActor.SetMapper(cutMapper)
         cutActor.GetProperty().SetColor(vtk.util.colors.peacock)
-        cutActor.SetBackfaceProperty(backProp)
+        cutActor.SetBackfaceProperty(tomatoProp)
        
         # ACHTUNG, ACHTUNG!!
-        # Bounds are in milimeters
-        # Get the cube enclosing the cut part and generate neurones uniformly, every 100um
-        xl, xh, yl, yh, zl, zh = clipPoly.GetBounds()
-        delta = 0.1 # mm
-        nx = int(abs(xh - xl) / delta) + 1
-        ny = int(abs(yh - yl) / delta) + 1
-        nz = int(abs(zh - zl) / delta) + 1
+        # All dimensions are in milimeters
+        polySphere = sphereSource.GetOutput()
+        polySphere.Update()
+        
+        xl, xh, yl, yh, zl, zh = polySphere.GetBounds()
+        
+        nx = int(abs(xh - xl) / self.cube_d) + 1
+        ny = int(abs(yh - yl) / self.cube_d) + 1
+        nz = int(abs(zh - zl) / self.cube_d) + 1
         
         print xl, xh, yl, yh, zl, zh
         print nx, ny, nz
-        #grid = numpy.mgrid[xl : xh : nx * 1j, yl : yh : ny * 1j, zl : zh : nz * 1j]
-        #print grid.shape, grid
         
         neuronesPoly = vtk.vtkPolyData()
-        points = vtk.vtkPoints()
-        vertices = vtk.vtkCellArray()
-        for x in range(0, nx):
-            for y in range(0, ny):
-                for z in range(0, nz):
-                    self.neurones.append( (xl + delta*x, yl + delta*y, zl + delta*z) )
-                    pid = points.InsertNextPoint(xl + delta*x, yl + delta*y, zl + delta*z)
+        points       = vtk.vtkPoints()
+        vertices     = vtk.vtkCellArray()
+        
+        rng = numpy.random.RandomState()
+        rng.seed(100)
+        
+        for ix in range(0, nx):
+            for iy in range(0, ny):
+                for iz in range(0, nz):
+                    x0 = xl + self.cube_d * (ix    ) + self.neurone_radius
+                    x1 = xl + self.cube_d * (ix + 1) - self.neurone_radius
+                    xc = rng.uniform(x0, x1)
+                    
+                    y0 = yl + self.cube_d * (iy    ) + self.neurone_radius
+                    y1 = yl + self.cube_d * (iy + 1) - self.neurone_radius
+                    yc = rng.uniform(y0, y1)
+                    
+                    z0 = zl + self.cube_d * (iz    ) + self.neurone_radius
+                    z1 = zl + self.cube_d * (iz + 1) - self.neurone_radius
+                    zc = rng.uniform(z0, z1)
+                    
+                    pid = points.InsertNextPoint(xc, yc, zc)
                     vertices.InsertNextCell(1)
                     vertices.InsertCellPoint(pid)
-        #print self.neurones
+        
         neuronesPoly.SetPoints(points)
         neuronesPoly.SetVerts(vertices)
         neuronesPoly.Update()
-        #print 'neuronesPoly = ', neuronesPoly
         
         neuronesMapper = vtk.vtkPolyDataMapper()
         neuronesMapper.SetInput(neuronesPoly)
@@ -260,68 +178,60 @@ class Projection(object):
         neuronesClipper.SetClipFunction(sphere)
         neuronesClipper.GenerateClipScalarsOn()
         neuronesClipper.GenerateClippedOutputOn()
-        #neuronesClipper.SetValue(0.5)
         
-        dataset = vtk.vtkImplicitDataSet()
-        dataset.SetDataSet(neuronesActor.GetMapper().GetInput())
+        clean = vtk.vtkCleanPolyData()
+        clean.PointMergingOff()
+        clean.ConvertLinesToPointsOff()
+        clean.SetInputConnection(neuronesClipper.GetClippedOutputPort())
+        clippedNeuronesPoly = clean.GetOutput()
+        clippedNeuronesPoly.Update()
         
-        #sphereSource.SetRadius(0.75)
-        neuronesClipper2 = vtk.vtkClipPolyData()
-        neuronesClipper2.SetInput(sphereSource.GetOutput())
-        neuronesClipper2.SetClipFunction(dataset)
-        neuronesClipper2.GenerateClipScalarsOn()
-        neuronesClipper2.GenerateClippedOutputOn()
-        #neuronesClipper2.SetValue(0.5)
+        neurone_points = clippedNeuronesPoly.GetPoints()
+        N = neurone_points.GetNumberOfPoints()
         
-        """
-        sf = vtk.vtkSurfaceReconstructionFilter()
-        sf.SetInput(poly)
-        
-        cf = vtk.vtkContourFilter()
-        cf.SetInputConnection(sf.GetOutputPort())
-        cf.SetValue(0, 0.0)
-        
-        reverse = vtk.vtkReverseSense()
-        reverse.SetInputConnection(cf.GetOutputPort())
-        reverse.ReverseCellsOn()
-        reverse.ReverseNormalsOn()
-        """
-        
-        #outline = vtk.vtkOutlineFilter() 
-        #outline.SetInputConnection(neuronesClipper.GetClippedOutputPort())
-
+        append = vtk.vtkAppendPolyData()
+        for i in  xrange(0, neurone_points.GetNumberOfPoints()):
+            x, y, z = neurone_points.GetPoint(i)
+            
+            self.neurones.append( (xc, yc, zc) )
+            
+            neuroneSource = vtk.vtkSphereSource()
+            neuroneSource.SetRadius(self.neurone_radius)
+            neuroneSource.SetCenter(x, y, z)
+            append.AddInput(neuroneSource.GetOutput())
+                
         extractedNeuronesMapper = vtk.vtkPolyDataMapper()
-        extractedNeuronesMapper.SetInputConnection(neuronesClipper.GetClippedOutputPort())
+        extractedNeuronesMapper.SetInputConnection(append.GetOutputPort())
         
         extractedNeuronesActor = vtk.vtkActor()
         extractedNeuronesActor.SetMapper(extractedNeuronesMapper)
-        extractedNeuronesActor.GetProperty().SetColor(vtk.util.colors.white)
+        extractedNeuronesActor.GetProperty().SetColor(vtk.util.colors.yellow)
+        extractedNeuronesActor.SetBackfaceProperty(tomatoProp)
         
-        neuronesActor.GetProperty().SetRepresentationToPoints()
-        extractedNeuronesActor.GetProperty().SetRepresentationToPoints()
-        cutActor.GetProperty().SetRepresentationToWireframe()
+        neuronesActor.GetProperty().SetRepresentationToSurface()
+        extractedNeuronesActor.GetProperty().SetRepresentationToSurface()
+        cutActor.GetProperty().SetRepresentationToSurface()
         sphereActor.GetProperty().SetRepresentationToWireframe()
-        target_actor.GetProperty().SetRepresentationToSurface()
+        target_actor.GetProperty().SetRepresentationToPoints()
         
         #self.actors.append(tvtk.to_tvtk(source_actor))
-        #self.actors.append(tvtk.to_tvtk(target_actor))
+        self.actors.append(tvtk.to_tvtk(target_actor))
+        #self.actors.append(tvtk.to_tvtk(neuronesActor))
         self.actors.append(tvtk.to_tvtk(cutActor))
         #self.actors.append(tvtk.to_tvtk(sphereActor))
         self.actors.append(tvtk.to_tvtk(extractedNeuronesActor))
         
-        self.source_dataset = source_dataset
-        self.target_dataset = target_dataset
-        
-        self.Ns = source_vtkpoints.GetNumberOfPoints()
-        self.Nt = target_vtkpoints.GetNumberOfPoints()
+        self.Ns = neurone_points.GetNumberOfPoints()
+        self.Nt = neurone_points.GetNumberOfPoints()
         print('Ns = {0}, Nt = {1}'.format(self.Ns, self.Nt))
         
-        self.geometry = vtkPointsGeometry(source_vtkpoints, target_vtkpoints)
+        self.geometry = vtkPointsGeometry(neurone_points, neurone_points)
         print('Metric({0},{1}) = {2}'.format(0, 5, self.geometry.metric(0, 5)))
         
         # This will generate connections for the source neurone with the index = 0
         # Can be anything within the range [0, self.Ns)
-        self.createCSAConnections(0)
+        self.central_neurone = 0
+        self.createCSAConnections(self.central_neurone)
         self.plot()
         
     def picker_callback(self, picker_obj):
@@ -333,9 +243,9 @@ class Projection(object):
         if source_index >= self.Ns:
             raise RuntimeError('Source index out of bounds')
         
-        p      = 0.002 # fraction
-        weight = 0.040 # nS
-        delay  = 0.200 # ms
+        p      = 0.02 # fraction
+        weight = 0.04 # nS
+        delay  = 0.20 # ms
         
         cset = csa.cset(csa.random(p), weight, delay)
         cgi  = csa.CSAConnectionGenerator(cset)
@@ -379,6 +289,7 @@ class Projection(object):
     def plot(self):
         # Add actors 
         self.figure.scene.add_actors(self.actors)
+        self.figure.scene.add_actors(self.lineActors)
         
         # Fit everything into a window
         self.figure.scene.reset_zoom()
@@ -441,16 +352,12 @@ class Projection(object):
         return actor, dataset, vtkpoints
     
 if __name__ == "__main__":
-    scene_Hyp = 'scene_Hyp.wrl'
-    scene_Cx  = 'scene_Cx.wrl' #'extract.wrl'
-    
-    if not os.path.isfile(scene_Hyp):
-        Projection.retreiveFrom_3dbar('whs_0.5', 'Hyp', 'high', 'vrml')
+    scene_Cx  = 'scene_Cx.wrl'
     
     if not os.path.isfile(scene_Cx):
         Projection.retreiveFrom_3dbar('whs_0.5', 'Cx',  'high', 'vrml')
     
-    p = Projection(scene_Hyp, scene_Cx)
+    p = Projection(scene_Cx)
     p.plot()
     mlab.show()
     
