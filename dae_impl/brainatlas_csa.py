@@ -18,16 +18,22 @@ try:
     from enthought.traits.api import HasTraits, Trait, Range, Instance, on_trait_change, Array, Tuple, Str
     from enthought.traits.ui.api import View, Item, HSplit, Group, HGroup
     from enthought.tvtk.pyface.picker import Picker, DefaultPickHandler, PickHandler
-except ImportError:
-    from mayavi import mlab
-    from tvtk.api import tvtk
-    from mayavi.sources.vrml_importer import VRMLImporter
-    from mayavi.api import Engine
-    from mayavi.sources.vtk_data_source import VTKDataSource
-    from mayavi.core.ui.api import MayaviScene, MlabSceneModel, SceneEditor
-    from traits.api import HasTraits, Trait, Range, Instance, on_trait_change, Array, Tuple, Str
-    from traitsui.api import View, Item, HSplit, Group, HGroup
-    from tvtk.pyface.picker import Picker, DefaultPickHandler, PickHandler
+except ImportError as e:
+    print "Error: Cannot load enthought module; trying to load mayavi module instead..."
+    try:
+        from mayavi import mlab
+        from tvtk.api import tvtk
+        from mayavi.sources.vrml_importer import VRMLImporter
+        from mayavi.api import Engine
+        from mayavi.sources.vtk_data_source import VTKDataSource
+        from mayavi.core.ui.api import MayaviScene, MlabSceneModel, SceneEditor
+        from traits.api import HasTraits, Trait, Range, Instance, on_trait_change, Array, Tuple, Str
+        from traitsui.api import View, Item, HSplit, Group, HGroup
+        from tvtk.pyface.picker import Picker, DefaultPickHandler, PickHandler
+    except ImportError as e:
+        print str(e)
+        print "Cannot load Mayavi module. Aborting..."
+        sys.exit()
 
 import nineml
 import nineml.connection_generator as connection_generator
@@ -214,7 +220,6 @@ class Projection(object):
         sphereActor.GetProperty().SetRepresentationToWireframe()
         target_actor.GetProperty().SetRepresentationToPoints()
         
-        #self.actors.append(tvtk.to_tvtk(source_actor))
         self.actors.append(tvtk.to_tvtk(target_actor))
         #self.actors.append(tvtk.to_tvtk(neuronesActor))
         self.actors.append(tvtk.to_tvtk(cutActor))
@@ -232,7 +237,6 @@ class Projection(object):
         # Can be anything within the range [0, self.Ns)
         self.central_neurone = 0
         self.createCSAConnections(self.central_neurone)
-        self.plot()
         
     def picker_callback(self, picker_obj):
         picked = picker_obj.actors
@@ -352,8 +356,26 @@ class Projection(object):
         return actor, dataset, vtkpoints
     
 if __name__ == "__main__":
-    scene_Cx  = 'scene_Cx.wrl'
+    try:
+        from incf.dai.utils import list_hub_names, get_hub_by_name
+        #print sorted(list_hub_names())
+
+        whs = get_hub_by_name('whs')
+        print sorted(whs.capabilities)
+
+        response = whs.GetStructureNamesByPOI(format=None, srsName="Mouse_paxinos_1.0", x='1', y='4.3', z='1.78')
+        #print response.content
+        structureTerm = response.data['wps_ProcessOutputs']['wps_Output']['wps_Data']['wps_ComplexData']['StructureTermsResponse']['StructureTerms']['StructureTerm']
+
+        #print structureTerm.Code
+        #print structureTerm.Description
+        #print structureTerm.Feature
+        print structureTerm.Feature.Url
     
+    except Exception as e:
+        print str(e)
+    
+    scene_Cx  = 'scene_Cx.wrl'
     if not os.path.isfile(scene_Cx):
         Projection.retreiveFrom_3dbar('whs_0.5', 'Cx',  'high', 'vrml')
     
