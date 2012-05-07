@@ -832,8 +832,8 @@ class daetoolsPointNeuroneNetworkSimulation(object):
                 if curve.logY:
                     y_log = True
                 
-                x_dg = curve.xDataRefference
-                y_dg = curve.yDataRefference
+                x_dg = curve.xDataReference
+                y_dg = curve.yDataReference
                 
                 if (len(x_dg.variables) != 1) or (not x_dg.variables[0].symbol) or (x_dg.variables[0].symbol != 'urn:sedml:symbol:time'):
                     raise RuntimeError('The number of variables in data referrence: {0} must be one with the symbol = urn:sedml:symbol:time'.format(x_dg.id))
@@ -1162,7 +1162,7 @@ def getULModelAndSimulationInputs():
 
     psr_excitatory_params = {
                              'vrev'  : (  0.000, 'V'),
-                             'weight': ( 4.0E-9, 'S'),
+                             'weight': (4*4.0E-9, 'S'),
                              'tau'   : (  0.005, 's'),
                              'g'     : (  0.000, 'S')
                             }
@@ -1274,12 +1274,18 @@ def getULModelAndSimulationInputs():
     name = 'Brette (2007)'
     ul_model = nineml.user_layer.Model(name)
     ul_model.add_group(group)
-    ul_model.write("%s.xml" % name)
+    ul_model.write(name + '.xml')
+
+    ul_model_copy = nineml.user_layer.parse(name + '.xml')
+    ul_model_copy.write(name + ' - copy.xml')
+    
+    # For some reasons The files are not equal (if compared by content)
+    assert(ul_model == ul_model_copy)
 
     ###############################################################################
     #                            SED-ML experiment
     ###############################################################################
-    timeHorizon       = 0.2000 # seconds
+    timeHorizon       = 0.1000 # seconds
     reportingInterval = 0.0001 # seconds
     noPoints          = 1 + int(timeHorizon / reportingInterval)
     
