@@ -1,8 +1,17 @@
+#!/usr/bin/env python
+"""
+.. module:: sedml_support.py
+   :platform: GNU/Linux, Windows, MacOS
+   :synopsis:
+
+.. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
+"""
+
 import nineml
-import nineml.user_layer
 import urllib
 from lxml import etree
-from lxml.builder import E
+
+sedml_namespace = '{http://sed-ml.org/}'
 
 class sedmlBase:
     def __init__(self, id, name):
@@ -16,8 +25,9 @@ class sedmlBase:
         root.set('id',   self.id)
         root.set('name', self.name)
         
-    def from_xml(self, root):
-        pass
+    def from_xml(self, root, experiment):
+        self.id   = root.get('id')
+        self.name = root.get('name')
 
 class sedmlUniformTimeCourseSimulation(sedmlBase):
     xmlTagName = 'uniformTimeCourse'
@@ -57,8 +67,21 @@ class sedmlUniformTimeCourseSimulation(sedmlBase):
         xml_algorithm = etree.SubElement(root, 'algorithm')
         xml_algorithm.set('kisaoID', str(self.algorithm))
         
-    def from_xml(self, root):
-        sedmlBase.from_xml(self, root)
+    @classmethod
+    def from_xml(self, root, **kwargs):
+        id              = root.get('id')
+        name            = root.get('name')
+        initialTime     = float(root.get('initialTime'))
+        outputStartTime = float(root.get('outputStartTime'))
+        outputEndTime   = float(root.get('outputEndTime'))
+        numberOfPoints  = int(root.get('numberOfPoints'))
+        
+        xml_algorithm = root.find('%salgorithm' % sedml_namespace)
+        if xml_algorithm == None:
+            raise RuntimeError('Cannot load sedmlUniformTimeCourseSimulation object: unable to find the [algorithm] tag')
+        algorithm  = str(xml_algorithm.get('kisaoID'))
+        
+        return sedmlUniformTimeCourseSimulation(id, name, initialTime, outputStartTime, outputEndTime, numberOfPoints, algorithm)
 
 class sedmlModel(sedmlBase):
     xmlTagName = 'model'
@@ -86,9 +109,9 @@ class sedmlModel(sedmlBase):
         if self.ul_model:
             return self.ul_model
         else:
-            # Here we should load the UserLayer model using the supplied URN
-            # However, loading user layer xml files is not supported at the moment
-            raise RuntimeError('')
+            print self.source
+            self.ul_model = nineml.user_layer.parse(self.source)
+            return self.ul_model
     
     def to_xml(self, root):
         sedmlBase.to_xml(self, root)
@@ -96,8 +119,13 @@ class sedmlModel(sedmlBase):
         root.set('language', str(self.language))
         root.set('source',   str(self.source))
                 
-    def from_xml(self, root):
-        sedmlBase.from_xml(self, root)
+    @classmethod
+    def from_xml(self, root, **kwargs):
+        id       = root.get('id')
+        name     = root.get('name')
+        language = root.get('language')
+        source   = root.get('source')
+        return sedmlModel(id, name, language, source)
 
 class sedmlTask(sedmlBase):
     xmlTagName = 'task'
@@ -119,8 +147,32 @@ class sedmlTask(sedmlBase):
         root.set('modelReference',      self.model.id)
         root.set('simulationReference', self.simulation.id)
         
-    def from_xml(self, root):
-        sedmlBase.from_xml(self, root)
+    @classmethod
+    def from_xml(self, root, **kwargs):
+        id                  = root.get('id')
+        name                = root.get('name')
+        modelReference      = root.get('modelReference')
+        simulationReference = root.get('simulationReference')
+        
+        model       = None
+        simulation  = None
+        models      = kwargs.get('models',      [])
+        simulations = kwargs.get('simulations', [])
+        for m in models:
+            if m.id == modelReference:
+                model = m
+                break
+        for s in simulations:
+            if s.id == simulationReference:
+                simulation = s
+                break
+                
+        if not model:
+            raise RuntimeError('Cannot load sedmlTask [{0}]: unable to find the model reference [{1}]'.format(id, modelReference))
+        if not simulation:
+            raise RuntimeError('Cannot load sedmlTask [{0}]: unable to find the simulation reference [{1}]'.format(id, simulationReference))
+            
+        return sedmlTask(id, name, model, simulation)
 
 class sedmlDataGenerator(sedmlBase):
     xmlTagName = 'dataGenerator'
@@ -152,8 +204,19 @@ class sedmlDataGenerator(sedmlBase):
         xml_ci = etree.SubElement(xml_math, 'ci')
         xml_ci.text = str(self.name)
         
-    def from_xml(self, root):
-        sedmlBase.from_xml(self, root)
+    @classmethod
+    def from_xml(self, root, **kwargs):
+        id    = root.get('id')
+        name  = root.get('name')
+        
+        tasks = kwargs.get('tasks', [])
+        variables = []
+        xml_variables = root.find('%slistOfVariables' % sedml_namespace)
+        for xml_variable in xml_variables.getiterator('{0}{1}'.format(sedml_namespace, sedmlVariable.xmlTagName)):
+            variable = sedmlVariable.from_xml(xml_variable, tasks = tasks)
+            variables.append(variable)
+        
+        return sedmlDataGenerator(id, name, variables)
 
 class sedmlVariable(sedmlBase):
     xmlTagName = 'variable'
@@ -190,22 +253,25 @@ class sedmlVariable(sedmlBase):
         elif self.target:
             root.set('target', self.target)
         
-    def from_xml(self, root):
-        sedmlBase.from_xml(self, root)
-
-"""
-class sedmlDataSet(sedmlBase):
-    def __init__(self, id, name, label, dataGenerator):
-        sedmlBase.__init__(self, id, name)
+    @classmethod
+    def from_xml(self, root, **kwargs):
+        id            = root.get('id')
+        name          = root.get('name')
+        taskReference = root.get('taskReference')
+        target        = root.get('target')
+        symbol        = root.get('symbol')
         
-        self.label         = str(label)
-        self.dataGenerator = dataGenerator
-    
-    def __repr__(self):
-        return 'sedmlDataSet({0}, {1}, {2})'.format(sedmlBase.__repr__(self), 
-                                                    self.label, 
-                                                    self.dataGenerator)
-"""
+        task  = None
+        tasks = kwargs.get('tasks', [])
+        for t in tasks:
+            if t.id == taskReference:
+                task = t
+                break
+                
+        if not task:
+            raise RuntimeError('Cannot load sedmlVariable [{0}]: unable to find the task reference [{1}]'.format(id, taskReference))
+        
+        return sedmlVariable(id, name, task, target, symbol)
 
 class sedmlPlot2D(sedmlBase):
     xmlTagName = 'plot2D'
@@ -221,13 +287,24 @@ class sedmlPlot2D(sedmlBase):
     def to_xml(self, root):
         sedmlBase.to_xml(self, root)
         
-        xml_curves = etree.SubElement(root, 'listOfModels')
+        xml_curves = etree.SubElement(root, 'listOfCurves')
         for curve in self.curves:
             xml_curve = etree.SubElement(xml_curves, curve.xmlTagName)
             curve.to_xml(xml_curve)
         
-    def from_xml(self, root):
-        sedmlBase.from_xml(self, root)
+    @classmethod
+    def from_xml(self, root, **kwargs):
+        id   = root.get('id')
+        name = root.get('name')
+        
+        curves = []
+        data_generators = kwargs.get('data_generators', [])
+        xml_curves = root.find('%slistOfCurves' % sedml_namespace)
+        for xml_curve in xml_curves.getiterator('{0}{1}'.format(sedml_namespace, sedmlCurve.xmlTagName)):
+            curve = sedmlCurve.from_xml(xml_curve, data_generators = data_generators)
+            curves.append(curve)
+
+        return sedmlPlot2D(id, name, curves)
 
 class sedmlCurve(sedmlBase):
     xmlTagName = 'curve'
@@ -261,8 +338,32 @@ class sedmlCurve(sedmlBase):
         root.set('xDataReference', str(self.xDataReference.id))
         root.set('yDataReference', str(self.yDataReference.id))
         
-    def from_xml(self, root):
-        sedmlBase.from_xml(self, root)
+    @classmethod
+    def from_xml(self, root, **kwargs):
+        id             = root.get('id')
+        name           = root.get('name')
+        logX           = True if root.get('logX') == 'true' else False
+        logY           = True if root.get('logY') == 'true' else False
+        xDataReference = root.get('xDataReference')
+        yDataReference = root.get('yDataReference')
+        
+        xDataGenerator  = None
+        yDataGenerator  = None
+        data_generators = kwargs.get('data_generators', [])
+        for dg in data_generators:
+            if dg.id == xDataReference:
+                xDataGenerator = dg
+                break
+        for dg in data_generators:
+            if dg.id == yDataReference:
+                yDataGenerator = dg
+                break
+        if not xDataGenerator:
+            raise RuntimeError('Cannot load sedmlCurve [{0}]: unable to find the data generator reference [{1}]'.format(id, xDataReference))
+        if not yDataGenerator:
+            raise RuntimeError('Cannot load sedmlCurve [{0}]: unable to find the data generator reference [{1}]'.format(id, yDataReference))
+        
+        return sedmlCurve(id, name, logX, logY, xDataGenerator, yDataGenerator)
 
 class sedmlExperiment:
     xmlTagName = 'sedML'
@@ -299,7 +400,7 @@ class sedmlExperiment:
             raise RuntimeError('SED-ML: the number of models has to be zero')
         return self.models[0].getUserLayerModel()
     
-    def to_xml(self):
+    def to_xml(self, filename):
         sedML = etree.Element(self.xmlTagName)
         sedML.set('level',   '1')
         sedML.set('version', '1')
@@ -330,10 +431,45 @@ class sedmlExperiment:
             xml_output = etree.SubElement(xml_outputs, output.xmlTagName)
             output.to_xml(xml_output)
         
-        return sedML
+        etree.ElementTree(sedML).write(filename, encoding="utf-8", pretty_print=True, xml_declaration=True)
         
-    def from_xml(self, root):
-        pass
+    @classmethod
+    def from_xml(cls, filename):
+        root = etree.parse(filename).getroot()
+        
+        simulations     = []
+        models          = []
+        tasks           = []
+        data_generators = []
+        outputs         = []
+        
+        xml_simulations = root.find('%slistOfSimulations' % sedml_namespace)
+        for xml_simulation in xml_simulations.getiterator('{0}{1}'.format(sedml_namespace, sedmlUniformTimeCourseSimulation.xmlTagName)):
+            simulation = sedmlUniformTimeCourseSimulation.from_xml(xml_simulation)
+            simulations.append(simulation)
+        
+        xml_models = root.find('%slistOfModels' % sedml_namespace)
+        for xml_model in xml_models.getiterator('{0}{1}'.format(sedml_namespace, sedmlModel.xmlTagName)):
+            model = sedmlModel.from_xml(xml_model)
+            models.append(model)
+        
+        xml_tasks = root.find('%slistOfTasks' % sedml_namespace)
+        for xml_task in xml_tasks.getiterator('{0}{1}'.format(sedml_namespace, sedmlTask.xmlTagName)):
+            task = sedmlTask.from_xml(xml_task, models = models, simulations = simulations)
+            tasks.append(task)
+        
+        xml_datagenerators = root.find('%slistOfDataGenerators' % sedml_namespace)
+        for xml_datagenerator in xml_datagenerators.getiterator('{0}{1}'.format(sedml_namespace, sedmlDataGenerator.xmlTagName)):
+            dg = sedmlDataGenerator.from_xml(xml_datagenerator, tasks = tasks)
+            data_generators.append(dg)
+        
+        xml_outputs = root.find('%slistOfOutputs' % sedml_namespace)
+        for xml_output in xml_outputs.getiterator('{0}{1}'.format(sedml_namespace, sedmlPlot2D.xmlTagName)):
+            plot2d = sedmlPlot2D.from_xml(xml_output, data_generators = data_generators)
+            outputs.append(plot2d)
+        
+        sedml_experiment = sedmlExperiment(simulations, models, tasks, data_generators, outputs)
+        return sedml_experiment
          
 if __name__ == "__main__":
     sedml_simulation = sedmlUniformTimeCourseSimulation('Brette_simulation', 'Brette_simulation', 0.0, 0.0, 0.06, 600, 'KISAO:0000283')
@@ -363,4 +499,8 @@ if __name__ == "__main__":
     #print sedml_experiment
 
     filename = 'sample_sedml.xml'
-    etree.ElementTree(sedml_experiment.to_xml()).write(filename, encoding="utf-8", pretty_print=True, xml_declaration=True)
+    sedml_experiment.to_xml(filename)
+
+    sedml_experiment_copy = sedmlExperiment.from_xml(filename)
+    filename2 = 'sample_sedml - copy.xml'
+    sedml_experiment_copy.to_xml(filename2)
