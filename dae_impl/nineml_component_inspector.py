@@ -1167,47 +1167,219 @@ class nineml_component_inspector:
         content += '</ul>'
         return content
 
-    def generateHTMLReport(self):
+    def generateHTMLReport(self, tests = []):
         """
         Generates HTML report for the AL component.
             
         :rtype: string
         :raises: RuntimeError
         """
-        if not self.ninemlComponent or not isinstance(self.ninemlComponent, nineml.abstraction_layer.ComponentClass):
-            raise RuntimeError('Invalid input NineML component')
+        content       = []
+        tests_content = []
+        parser        = ExpressionParser()
+        
+        # Collect all unique components from sub-nodes:
+        unique_components = {}
+        self._detectUniqueComponents(self.ninemlComponent, unique_components)
 
-        form_template = """
-        <h1>NineMl component: {0}</h1>
-        {1}
+        # Add all detected components to the report
+        for name, component in unique_components.items():
+            self._addComponentToHTMLReport(content, component, name, parser)
+
+        # Add all tests to the report
+        for test in tests:
+            self._addTestToHTMLReport(tests_content, test)
+
+        return (''.join(content), ''.join(tests_content))
+
+    def _addComponentToHTMLReport(self, content, component, name, parser):
         """
-        content = ''
-        if len(self.parameters) > 0:
-            content += '<h2>Parameters</h2>\n'
-            content += self._generateHTMLReportTree(self.treeParameters)
-            content += '\n'
+        Adds AL component to HTML report.
+            
+        :rtype: string
+        :raises: RuntimeError
+        """
+        content.append('<h2>NineML Component: {0}<h2>\n\n'.format(name))
+        
+        # 1) Create parameters
+        parameters = list(component.parameters)
+        if len(parameters) > 0:
+            content.append('<h3>Parameters<h3>\n\n')
+            content.append('<table border="1">\n')
+            content.append('<tr> <th>Name</th> <th>Units</th> <th>Notes</th> </tr>\n')
+            for param in parameters:
+                _name = self._correctName(param.name)
+                content.append('<tr> <td>{0}</td> <td>{1}</td> <td>{2}</td> </tr>\n'.format(_name, ' - ', ' '))
+            content.append('</table>\n')
 
-        if len(self.initial_conditions) > 0:
-            content += '<h2>Initial Conditions</h2>\n'
-            content += self._generateHTMLReportTree(self.treeInitialConditions) + '\n'
+        # 2) Create state-variables (diff. variables)
+        state_variables = list(component.state_variables)
+        if len(state_variables) > 0:
+            content.append('<h3>State-Variables<h3>\n\n')
+            content.append('<table border="1">\n')
+            content.append('<tr> <th>Name</th> <th>Units</th> <th>Notes</th> </tr>\n')
+            for var in state_variables:
+                _name = self._correctName(var.name)
+                content.append('<tr> <td>{0}</td> <td>{1}</td> <td>{2}</td> </tr>\n'.format(_name, ' - ', ' '))
+            content.append('</table>\n')
 
-        if len(self.active_regimes) > 0:
-            content += '<h2>Active Regimes</h2>\n'
-            content += self._generateHTMLReportTree(self.treeActiveStates)
+        # 3) Create alias variables (algebraic)
+        aliases = list(component.aliases)
+        if len(aliases) > 0:
+            content.append('<h3>Aliases<h3>\n\n')
+            content.append('<table border="1">\n')
+            content.append('<tr> <th>Name</th> <th>Expression</th> <th>Units</th> <th>Notes</th> </tr>\n')
+            for alias in aliases:
+                _name = alias.lhs
+                _rhs  = parser.parse_to_latex(alias.rhs)
+                content.append('<tr> <td>{0}</td> <td>{1}</td> <td>{2}</td> <td>{3}</td> </tr>\n'.format(_name, _rhs, ' - ', ' '))
+            content.append('</table>\n')
+        
+        return content 
+        
+        # 4) Create analog-ports and reduce-ports
+        analog_ports = list(component.analog_ports)
+        if len(analog_ports) > 0:
+            content.append('\\subsection*{Analog Ports}\n\n')
+            header_flags = ['l', 'l', 'c', 'l']
+            header_items = ['Name', 'Type', 'Units', 'Notes']
+            rows_items = []
+            for port in analog_ports:
+                _name = self._correctName(port.name)
+                _type = port.mode
+                rows_items.append([_name, _type, ' - ', ' '])
+            content.append(latex_table(header_flags, header_items, rows_items))
+            content.append('\n')
 
-        if len(self.analog_ports_expressions) > 0:
-            content += '<h2>Analog Ports Expressions</h2>\n'
-            content += self._generateHTMLReportTree(self.treeAnalogPorts) + '\n'
+        # 5) Create event-ports
+        event_ports = list(component.event_ports)
+        if len(event_ports) > 0:
+            content.append('\\subsection*{Event ports}\n\n')
+            header_flags = ['l', 'l', 'c', 'l']
+            header_items = ['Name', 'Type', 'Units', 'Notes']
+            rows_items = []
+            for port in event_ports:
+                _name = self._correctName(port.name)
+                _type = port.mode
+                rows_items.append([_name, _type, ' - ', ' '])
+            content.append(latex_table(header_flags, header_items, rows_items))
+            content.append('\n')
+        
+        # 6) Create sub-nodes
+        if len(component.subnodes.items()) > 0:
+            content.append('\\subsection*{Sub-nodes}\n\n')
+            content.append(nineml_component_inspector.begin_itemize)
+            for name, subcomponent in component.subnodes.items():
+                _name = self._correctName(name)
+                tex = nineml_component_inspector.item + _name + '\n'
+                content.append(tex)
+            content.append(nineml_component_inspector.end_itemize)
+            content.append('\n')
 
-        if len(self.event_ports_expressions) > 0:
-            content += '<h2>Event Ports Expressions</h2>\n'
-            content += self._generateHTMLReportTree(self.treeEventPorts) + '\n'
+        # 7) Create port connections
+        portconnections = list(component.portconnections)
+        if len(portconnections) > 0:
+            content.append('\\subsection*{Port Connections}\n\n')
+            header_flags = ['l', 'l']
+            header_items = ['From', 'To']
+            rows_items = []
+            for port_connection in portconnections:
+                portFrom = '.'.join(port_connection[0].loctuple)
+                portTo   = '.'.join(port_connection[1].loctuple)
+                _fromname = self._correctName(portFrom)
+                _toname   = self._correctName(portTo)
+                rows_items.append([_fromname, _toname])
+            content.append(latex_table(header_flags, header_items, rows_items))
+            content.append('\n')
 
-        if len(self.variables_to_report) > 0:
-            content += '<h2>Variables To Report</h2>\n'
-            content += self._generateHTMLReportTree(self.treeVariablesToReport) + '\n'
+        # 8) Create regimes
+        regimes = list(component.regimes)
+        if len(regimes) > 0:
+            regimes_list     = []
+            transitions_list = []
 
-        return form_template.format(self.ninemlComponent.name, content)
+            content.append('\\subsection*{Regimes}\n\n')
+            for ir, regime in enumerate(regimes):
+                regimes_list.append(self._correctName(regime.name))
+
+                tex = ''
+                # 8a) Create time derivatives
+                counter = 0
+                for time_deriv in regime.time_derivatives:
+                    if counter != 0:
+                        tex += ' \\\\ '
+                    tex += '\\frac{{d{0}}}{{dt}} = {1}'.format(time_deriv.dependent_variable, parser.parse_to_latex(time_deriv.rhs))
+                    counter += 1
+
+                # 8b) Create on_condition actions
+                for on_condition in regime.on_conditions:
+                    regimeFrom = self._correctName(regime.name)
+                    if on_condition.target_regime.name == '':
+                        regimeTo = regimeFrom
+                    else:
+                        regimeTo = self._correctName(on_condition.target_regime.name)
+                    condition  = parser.parse_to_latex(on_condition.trigger.rhs)
+
+                    tex += ' \\\\ \\mbox{If } ' + condition + '\mbox{:}'
+
+                    if regimeTo != regimeFrom:
+                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{switch to }} {0}'.format(regimeTo)
+
+                    for state_assignment in on_condition.state_assignments:
+                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{set }} {0} = {1}'.format(state_assignment.lhs, parser.parse_to_latex(state_assignment.rhs))
+
+                    for event_output in on_condition.event_outputs:
+                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{emit }} {0}'.format(event_output.port_name)
+
+                    transition = '{0} -> {1} [label="{2}"];'.format(regimeFrom, regimeTo, condition)
+                    transitions_list.append(transition)
+
+                # 8c) Create on_event actions
+                for on_event in regime.on_events:
+                    regimeFrom = regime.name
+                    if on_event.target_regime.name == '':
+                        regimeTo = regimeFrom
+                    else:
+                        regimeTo = on_event.target_regime.name
+                    source_port = on_event.src_port_name
+
+                    tex += ' \\\\ \\mbox{On } ' + source_port + '\mbox{:}'
+
+                    if regimeTo != regimeFrom:
+                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{switch to }} {0}'.format(regimeTo)
+
+                    for state_assignment in on_event.state_assignments:
+                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{set }} {0} = {1}'.format(state_assignment.lhs, parser.parse_to_latex(state_assignment.rhs))
+
+                    for event_output in on_event.event_outputs:
+                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{emit }} {0}'.format(event_output.port_name)
+
+                    transition = '{0} -> {1} [label="{2}"];'.format(regimeFrom, regimeTo, source_port)
+                    transitions_list.append(transition)
+
+                tex = '${0} = \\begin{{cases}} {1} \\end{{cases}}$\n'.format(regime.name, tex)
+                tex += '\\newline \n'
+                content.append(tex)
+
+            dot_graph_template = '''
+            digraph finite_state_machine {{
+                rankdir=LR;
+                node [shape=ellipse]; {0};
+                {1}
+            }}
+            '''
+            if len(regimes_list) > 1:
+                dot_graph = dot_graph_template.format(' '.join(regimes_list), '\n'.join(transitions_list))
+                graph     = dot2tex.dot2tex(dot_graph, autosize=True, texmode='math', format='tikz', crop=True, figonly=True)
+                tex_graph = '\\begin{center}\n' + graph + '\\end{center}\n'
+                content.append('\\newline \n')
+                content.append(tex_graph)
+                content.append('\n')
+            
+            content.append('\\newpage')
+            content.append('\n')
+            
+        return content
 
     def _generateHTMLReportTree(self, item):
         """
@@ -1306,11 +1478,11 @@ class nineml_component_inspector:
 
         # Add all detected components to the report
         for name, component in unique_components.items():
-            self._addComponentToReport(content, component, name, parser)
+            self._addComponentToPDFReport(content, component, name, parser)
 
         # Add all tests to the report
         for test in tests:
-            self._addTestToReport(tests_content, test)
+            self._addTestToPDFReport(tests_content, test)
 
         return (''.join(content), ''.join(tests_content))
 
@@ -1330,7 +1502,7 @@ class nineml_component_inspector:
         for name, subcomponent in component.subnodes.items():
             self._detectUniqueComponents(subcomponent, unique_components)
 
-    def _addTestToReport(self, content, test):
+    def _addTestToPDFReport(self, content, test):
         """
         Internal function used to add a test to the Latex/PDF report.
         
@@ -1382,6 +1554,58 @@ class nineml_component_inspector:
         
         return content
         
+    def _addTestToHTMLReport(self, content, test):
+        """
+        Internal function used to add a test to the Latex/PDF report.
+        
+        :param content: string (Latex report)
+        :param test: string with the test data
+            
+        :rtype: string
+        :raises:
+        """
+        testName, testDescription, dictInputs, plots, log_output, tmpFolder = test
+        
+        testInputs = '<pre>\n'
+        testInputs += 'Time horizon = {0}<br/>\n'.format(dictInputs['timeHorizon'])
+        testInputs += 'Reporting interval = {0}<br/>\n'.format(dictInputs['reportingInterval'])
+        
+        testInputs += 'Parameters:<br/>\n'
+        for name, value in dictInputs['parameters'].items():
+            testInputs += '    {0} = {1}\n'.format(name, value)
+        
+        testInputs += 'Initial conditions:<br/>\n'
+        for name, value in dictInputs['initial_conditions'].items():
+            testInputs += '    {0} = {1}\n'.format(name, value)
+        
+        testInputs += 'Analog ports expressions:<br/>\n'
+        for name, value in dictInputs['analog_ports_expressions'].items():
+            testInputs += '    {0} = {1}\n'.format(name, value)
+        
+        testInputs += 'Event ports expressions:<br/>\n'
+        for name, value in dictInputs['event_ports_expressions'].items():
+            testInputs += '    {0} = {1}\n'.format(name, value)
+        
+        testInputs += 'Initially active regimes:<br/>\n'
+        for name, value in dictInputs['active_regimes'].items():
+            testInputs += '    {0} = {1}\n'.format(name, value)
+        
+        testInputs += 'Variables to report:<br/>\n'
+        for name, value in dictInputs['variables_to_report'].items():
+            testInputs += '    {0} = {1}\n'.format(name, value)
+        
+        testInputs += '</pre>\n'
+
+        content.append('<h2>Test: {0}</h2>\n\n'.format(testName))
+        content.append('<p>Description: \n{0}</p>\n'.format(testDescription))
+        content.append('<p>Input data: \n{0}</p>\n'.format(testInputs))
+        for plot in plots:
+            varName, xPoints, yPoints, pngName, csvName, pngPath, csvPath = plot
+            tex_plot = '<img src="{0}" width="400" height="300">\n'.format(pngPath)
+            content.append(tex_plot)
+        
+        return content
+        
     def _correctName(self, name):
         """
         Internal function that replaces underscores with Latex mangles underscores in the given string.
@@ -1393,7 +1617,7 @@ class nineml_component_inspector:
         """
         return name.replace('_', '\\_')
     
-    def _addComponentToReport(self, content, component, name, parser):
+    def _addComponentToPDFReport(self, content, component, name, parser):
         """
         Internal function used to add a component to the Latex/PDF report.
         
@@ -1634,7 +1858,7 @@ class nineml_component_inspector:
             content.append('\\newpage')
             content.append('\n')
             
-            return content
+        return content
 
 if __name__ == "__main__":
     #nineml_component = '/home/ciroki/Data/daetools/trunk/python-files/examples/iaf.xml'
@@ -1682,4 +1906,9 @@ if __name__ == "__main__":
                                         variables_to_report      = variables_to_report)
     isOK = inspector.showQtGUI()
     inspector.printCollectedData()
-    inspector.generateUserLayerComponent('SynapseType', 'test.xml')
+    
+    f = open('report.html', 'w')
+    content, tests = inspector.generateHTMLReport()
+    f.write(content + tests)
+    f.close()
+    
