@@ -10,7 +10,9 @@ import os, sys, math
 from time import localtime, strftime, time
 from daetools.pyDAE import *
 from nineml_daetools_bridge import *
-from nineml_tex_report import *
+from nineml_component_inspector import nineml_component_inspector
+import nineml_tex_report
+import nineml_html_report
 import numpy.random
 
 import matplotlib as mpl
@@ -683,7 +685,7 @@ if __name__ == "__main__":
         "iaf_1coba.iaf.V": True
     } 
     spike_times = [str(t) for t in numpy.arange(0, 0.20, 0.005)]
-    print(spike_times)
+    #print(spike_times)
     event_ports_expressions = {
         "iaf_1coba.cobaExcit.spikeinput": '' #', '.join(spike_times)
     } 
@@ -702,9 +704,9 @@ if __name__ == "__main__":
     log          = daeBaseLog()
     daesolver    = daeIDAS()
     
-    from daetools.solvers import pySuperLU as superlu
-    lasolver = superlu.daeCreateSuperLUSolver()
-    daesolver.SetLASolver(lasolver)
+    #from daetools.solvers import pySuperLU as superlu
+    #lasolver = superlu.daeCreateSuperLUSolver()
+    #daesolver.SetLASolver(lasolver)
 
     model = nineml_daetools_bridge(nineml_comp.name, nineml_comp, None, '')
     simulation = nineml_daetools_simulation(model, timeHorizon                    = timeHorizon,
@@ -716,7 +718,7 @@ if __name__ == "__main__":
                                                    event_ports_expressions        = event_ports_expressions,
                                                    variables_to_report            = variables_to_report,
                                                    random_number_generators       = {} )
-    datareporter = daeTCPIPDataReporter() #ninemlTesterDataReporter()
+    datareporter = ninemlTesterDataReporter()
 
     # Set the time horizon and the reporting interval
     simulation.ReportingInterval = reportingInterval
@@ -737,8 +739,6 @@ if __name__ == "__main__":
     simulation.Run()
     simulation.Finalize()
 
-    exit(0)
-    
     inspector = nineml_component_inspector()
     inspector.inspect(nineml_comp)
 
@@ -762,10 +762,13 @@ if __name__ == "__main__":
     cwd = sys.path[0]
     shutil.copy2(os.path.join(cwd, 'logo.png'), os.path.join(tmpFolder, 'logo.png'))
 
-    tex = os.path.join(tmpFolder, 'coba_iaf.tex')
-    pdf = os.path.join(tmpFolder, 'coba_iaf.pdf')
+    tex  = os.path.join(tmpFolder, 'coba_iaf.tex')
+    pdf  = os.path.join(tmpFolder, 'coba_iaf.pdf')
+    html = os.path.join(tmpFolder, 'coba_iaf.html')
     
-    createLatexReport(inspector, tests_data, 'nineml-tex-template.tex', tex)
+    #nineml_tex_report.createLatexReport(inspector, tests_data, 'nineml-tex-template.tex', tex)
+    #res = nineml_tex_report.createPDF(tex, tmpFolder)
+    #nineml_tex_report.showFile(pdf)
 
-    res = createPDF(tex, tmpFolder)
-    showFile(pdf)
+    nineml_html_report.createHTMLReport(inspector, tests_data, html)
+    nineml_html_report.showFile(html)

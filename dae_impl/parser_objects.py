@@ -19,6 +19,9 @@ from copy import copy, deepcopy
 class Node(object):
     def evaluate(self, dictIdentifiers, dictFunctions):
         pass
+    
+    def toMathML(self):
+        pass
 
 class ConstantNode(Node):
     def __init__(self, value):
@@ -32,6 +35,9 @@ class ConstantNode(Node):
 
     def toLatex(self):
         return str(self.Value)
+
+    def toMathML(self):
+        return '<mn>{0}</mn>'.format(self.Value)
 
     def evaluate(self, dictIdentifiers, dictFunctions):
         if dictFunctions:
@@ -72,6 +78,9 @@ class IdentifierNode(Node):
     def toLatex(self):
         return self.Name
 
+    def toMathML(self):
+        return '<mo>{0}</mo>'.format(self.Name)
+
     def evaluate(self, dictIdentifiers, dictFunctions):
         if not self.Name in dictIdentifiers:
             raise RuntimeError('Identifier {0} not found in the identifiers dictionary'.format(self.Name))
@@ -109,6 +118,12 @@ class StandardFunctionNode(Node):
             return 'e ^ {{{0}}}'.format(self.Node.toLatex())
         else:
             return '{0} \\left( {1} \\right)'.format(self.Function, self.Node.toLatex())
+
+    def toMathML(self):
+        if self.Function == 'sqrt':
+            return '<mrow> <msqrt> {0} </msqrt> </mrow>'.format(self.Node.toMathML())
+        else:
+            return '<mrow> <mi>{0}</mi> <mrow> <mo>(</mo> {1} <mo>)</mo> </mrow> </mrow>'.format(self.Function, self.Node.toMathML())
             
     def evaluate(self, dictIdentifiers, dictFunctions):
         if not self.Function in dictFunctions:
@@ -203,12 +218,21 @@ class UnaryNode(Node):
     def toLatex(self):
         return '{0}{1}'.format(self.Operator, self.encloseNode())
 
+    def toMathML(self):
+        return '<mrow> <mi>{0}</mi> <mrow> {1} </mrow> </mrow>'.format(self.Operator, self.encloseMathMLNode())
+
     def enclose(self, doEnclose):
         if doEnclose:
             return '\\left( ' + self.Node.toLatex() + ' \\right)'
         else:
             return self.Node.toLatex()
-            
+
+    def encloseMathML(self, doEnclose):
+        if doEnclose:
+            return '<mrow> <mo>(</mo> ' + self.Node.toMathML() + ' <mo>)</mo> </mrow>'
+        else:
+            return self.Node.toMathML()
+
     def encloseNode(self):
         if isinstance(self.Node, ConstantNode):
             return self.enclose(False)
@@ -232,7 +256,31 @@ class UnaryNode(Node):
 
         else:
             return self.enclose(True)
-            
+
+    def encloseMathMLNode(self):
+        if isinstance(self.Node, ConstantNode):
+            return self.encloseMathML(False)
+
+        elif isinstance(self.Node, IdentifierNode):
+            return self.encloseMathML(False)
+
+        elif isinstance(self.Node, StandardFunctionNode):
+            return self.encloseMathML(False)
+
+        elif isinstance(self.Node, UnaryNode):
+            return self.encloseMathML(True)
+
+        elif isinstance(self.Node, BinaryNode):
+            if (self.Node.Operator == '+') or (self.Node.Operator == '-'):
+                return self.encloseMathML(True)
+            elif (self.Node.Operator == '*') or (self.Node.Operator == '/') or (self.Node.Operator == '^'):
+                return self.encloseMathML(False)
+            else:
+                return self.encloseMathML(True)
+
+        else:
+            return self.encloseMathML(True)
+
     def evaluate(self, dictIdentifiers, dictFunctions):
         if self.Operator == UnaryNode.opMinus:
             return (-self.Node.evaluate(dictIdentifiers, dictFunctions))
@@ -270,6 +318,18 @@ class BinaryNode(Node):
             return '\\left( ' + self.rNode.toLatex() + ' \\right)'
         else:
             return self.rNode.toLatex()
+
+    def encloseMathMLLeft(self, doEnclose):
+        if doEnclose:
+            return '<mo>(</mo> ' + self.lNode.toMathML() + ' <mo>)</mo>'
+        else:
+            return self.lNode.toMathML()
+
+    def encloseMathMLRight(self, doEnclose):
+        if doEnclose:
+            return '<mo>(</mo> ' + self.rNode.toMathML() + ' <mo>)</mo>'
+        else:
+            return self.rNode.toMathML()
 
     def toLatex(self):
         if (self.Operator == '+'):
@@ -358,6 +418,95 @@ class BinaryNode(Node):
             right = self.encloseRight(True)
 
             return '{0} {1} {2}'.format(left, self.Operator, right)
+
+    def toMathML(self):
+        if (self.Operator == '+'):
+            # Default behaviour is to not enclose any
+            left  = self.encloseMathMLLeft(False)
+            right = self.encloseMathMLRight(False)
+            
+            # Right exceptions:
+            if isinstance(self.rNode, UnaryNode):
+                right = '<mo>(</mo> {0} <mo>)</mo>'.format(right)
+
+            return '<mrow> {0} + {1} </mrow>'.format(left, right)
+
+        elif (self.Operator == '-'):
+            # Default behaviour is to enclose right
+            left  = self.encloseMathMLLeft(False)
+            right = self.encloseMathMLRight(True)
+
+
+            # Right exceptions:
+            if isinstance(self.rNode, ConstantNode):
+                right = self.encloseMathMLRight(False)
+            elif isinstance(self.rNode, IdentifierNode):
+                right = self.encloseMathMLRight(False)
+            elif isinstance(self.rNode, StandardFunctionNode):
+                right = self.encloseMathMLRight(False)
+            elif isinstance(self.rNode, BinaryNode):
+                if (self.rNode.Operator == '*') or (self.rNode.Operator == '/') or (self.rNode.Operator == '^'):
+                    right = self.encloseMathMLRight(False)
+
+            return '<mrow> {0} - {1} </mrow>'.format(left, right)
+
+        elif (self.Operator == '*'):
+            # Default behaviour is to enclose both
+            left  = self.encloseMathMLLeft(True)
+            right = self.encloseMathMLRight(True)
+
+            # Left exceptions:
+            if isinstance(self.lNode, ConstantNode):
+                left = self.encloseMathMLLeft(False)
+            elif isinstance(self.lNode, IdentifierNode):
+                left = self.encloseMathMLLeft(False)
+            elif isinstance(self.lNode, StandardFunctionNode):
+                left = self.encloseMathMLLeft(False)
+            elif isinstance(self.lNode, UnaryNode):
+                left = self.encloseMathMLLeft(False)
+            elif isinstance(self.lNode, BinaryNode):
+                if (self.lNode.Operator == '*') or (self.lNode.Operator == '/') or (self.lNode.Operator == '^'):
+                    left = self.encloseMathMLLeft(False)
+
+            # Right exceptions:
+            if isinstance(self.rNode, ConstantNode):
+                right = self.encloseMathMLRight(False)
+            elif isinstance(self.rNode, IdentifierNode):
+                right = self.encloseMathMLRight(False)
+            elif isinstance(self.rNode, StandardFunctionNode):
+                right = self.encloseMathMLRight(False)
+            elif isinstance(self.rNode, BinaryNode):
+                if (self.rNode.Operator == '*') or (self.rNode.Operator == '/') or (self.rNode.Operator == '^'):
+                    right = self.encloseMathMLRight(False)
+
+            return '<mrow> {0} &sdot; {1} </mrow>'.format(left, right)
+
+        elif (self.Operator == '/'):
+            # Default behaviour is to not enclose any
+            left  = self.encloseMathMLLeft(False)
+            right = self.encloseMathMLRight(False)
+
+            return '<mrow> <mfrac> {0} {1} </mfrac> </mrow>'.format(left, right)
+
+        elif (self.Operator == '^'):
+            # Default behaviour is to enclose left
+            left  = self.encloseMathMLLeft(True)
+            right = self.encloseMathMLRight(False)
+
+            # Left exceptions:
+            if isinstance(self.lNode, ConstantNode):
+                left = self.encloseMathMLLeft(False)
+            elif isinstance(self.lNode, IdentifierNode):
+                left = self.encloseMathMLLeft(False)
+
+            return '<mrow> <msup> {0} {1} </msup> </mrow>'.format(left, right)
+
+        else:
+            # Default behaviour is to enclose both
+            left  = self.encloseMathMLLeft(True)
+            right = self.encloseMathMLRight(True)
+
+            return '<mrow> {0} {1} {2} </mrow>'.format(left, self.Operator, right)
             
     def evaluate(self, dictIdentifiers, dictFunctions):
         if self.Operator == BinaryNode.opPlus:
@@ -380,6 +529,9 @@ class BinaryNode(Node):
 
 class ConditionNode(object):
     def evaluate(self, dictIdentifiers, dictFunctions):
+        pass
+    
+    def toMathML(self):
         pass
 
 """
@@ -498,6 +650,9 @@ class Condition(object):
 
     def toLatex(self):
         return self.CondNode.toLatex()
+    
+    def toMathML(self):
+        return self.CondNode.toMathML()
 
     #def not_(self):
     #    return Condition(ConditionUnaryNode(ConditionUnaryNode.opNot,
@@ -543,6 +698,9 @@ class Number(object):
 
     def toLatex(self):
         return self.Node.toLatex()
+
+    def toMathML(self):
+        return self.Node.toMathML()
 
     def __neg__(self):
         return Number(UnaryNode(UnaryNode.opMinus, self.Node))

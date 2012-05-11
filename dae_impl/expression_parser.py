@@ -360,6 +360,10 @@ class ExpressionParser:
         self.parse(expression)
         return self.toLatex()
 
+    def parse_to_mathml(self, expression):
+        self.parse(expression)
+        return self.toMathML()
+
     def parse(self, expression):
         self.parseResult = self.parser.parse(expression, lexer = self.lexer)
         return self.parseResult
@@ -368,6 +372,11 @@ class ExpressionParser:
         if self.parseResult is None:
             raise RuntimeError('expression not parsed yet')
         return self.parseResult.toLatex()
+
+    def toMathML(self):
+        if self.parseResult is None:
+            raise RuntimeError('expression not parsed yet')
+        return '<mrow> {0} </mrow>'.format(self.parseResult.toMathML())
 
     def evaluate(self):
         if self.parseResult is None:
@@ -391,12 +400,14 @@ class ExpressionParser:
         return result
 
 def testExpression(expression, expected_res, do_evaluation = True):
-    parse_res    = parser.parse(expression)
-    latex_res    = parser.toLatex()
+    parse_res  = parser.parse(expression)
+    latex_res  = parser.toLatex()
+    mathml_res = parser.toMathML()
     print('Expression: ' + expression)
     #print('NodeTree:\n', repr(parse_res))
     print('Parse result: ', str(parse_res))
     print('Latex: ', latex_res)
+    print('MathML: ', mathml_res)
     eval_res = 0
     if do_evaluation:
         eval_res = parser.evaluate()

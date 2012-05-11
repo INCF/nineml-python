@@ -1205,7 +1205,7 @@ class nineml_component_inspector:
         parameters = list(component.parameters)
         if len(parameters) > 0:
             content.append('<h3>Parameters<h3>\n\n')
-            content.append('<table border="1">\n')
+            content.append('<table>\n')
             content.append('<tr> <th>Name</th> <th>Units</th> <th>Notes</th> </tr>\n')
             for param in parameters:
                 _name = self._correctName(param.name)
@@ -1216,7 +1216,7 @@ class nineml_component_inspector:
         state_variables = list(component.state_variables)
         if len(state_variables) > 0:
             content.append('<h3>State-Variables<h3>\n\n')
-            content.append('<table border="1">\n')
+            content.append('<table>\n')
             content.append('<tr> <th>Name</th> <th>Units</th> <th>Notes</th> </tr>\n')
             for var in state_variables:
                 _name = self._correctName(var.name)
@@ -1227,12 +1227,12 @@ class nineml_component_inspector:
         aliases = list(component.aliases)
         if len(aliases) > 0:
             content.append('<h3>Aliases<h3>\n\n')
-            content.append('<table border="1">\n')
+            content.append('<table>\n')
             content.append('<tr> <th>Name</th> <th>Expression</th> <th>Units</th> <th>Notes</th> </tr>\n')
             for alias in aliases:
                 _name = alias.lhs
-                _rhs  = parser.parse_to_latex(alias.rhs)
-                content.append('<tr> <td>{0}</td> <td>{1}</td> <td>{2}</td> <td>{3}</td> </tr>\n'.format(_name, _rhs, ' - ', ' '))
+                _rhs  = parser.parse_to_mathml(alias.rhs)
+                content.append('<tr> <td>{0}</td> <td lang="latex">{1}</td> <td>{2}</td> <td>{3}</td> </tr>\n'.format(_name, _rhs, ' - ', ' '))
             content.append('</table>\n')
         
         return content 
@@ -1601,7 +1601,7 @@ class nineml_component_inspector:
         content.append('<p>Input data: \n{0}</p>\n'.format(testInputs))
         for plot in plots:
             varName, xPoints, yPoints, pngName, csvName, pngPath, csvPath = plot
-            tex_plot = '<img src="{0}" width="400" height="300">\n'.format(pngPath)
+            tex_plot = '<p> <img src="{0}" width="400" height="300"> </p>\n'.format(pngPath)
             content.append(tex_plot)
         
         return content
