@@ -15,7 +15,6 @@ from time import localtime, strftime, time
 import expression_parser
 import units_parser
 from daetools.pyDAE import daeLogs, daeVariableTypes, pyCore, pyActivity, pyDataReporting, pyIDAS, pyUnits
-from daetools.solvers import pySuperLU
 
 """
 ACHTUNG, ACHTUNG!!

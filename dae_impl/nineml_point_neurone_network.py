@@ -564,11 +564,11 @@ class daetoolsPointNeuroneSimulation(pyActivity.daeSimulation):
         # 1. No need to do anything (Sundials LU is the default solver)
         
         # 2. SuperLU LA Solver (uncomment the lines below)
-        #self.lasolver                 = pySuperLU.daeCreateSuperLUSolver()
-        #self.daesolver.SetLASolver(self.lasolver)
+        self.lasolver = pySuperLU.daeCreateSuperLUSolver()
+        self.daesolver.SetLASolver(self.lasolver)
         
         # 3. Lapack LA Solver (uncomment the lines below)
-        self.daesolver.SetLASolver(pyIDAS.eSundialsLapack)
+        #self.daesolver.SetLASolver(pyIDAS.eSundialsLapack)
 
     def init(self, log, datareporter, reportingInterval, timeHorizon):
         self.ReportingInterval = reportingInterval
