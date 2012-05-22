@@ -29,19 +29,12 @@ That can be done right after importing the module:
 
 tokens = [ 'BASE_UNIT',
            'NUMBER', 'FLOAT',
-           'TIMES', 'DIVIDE', 'EXP',
-           'LPAREN','RPAREN'
+           'EXP'
          ]
 
-t_TIMES   = r'\*'
-t_DIVIDE  = r'/'
-t_EXP     = r'\^'
-
-t_LPAREN  = r'\('
-t_RPAREN  = r'\)'
-
+t_EXP    = r'\^'
 t_NUMBER = r'(\+|-)?\d+'
-t_FLOAT  = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
+t_FLOAT  = r'(\+|-)?(\d+)(\.\d+)'
 
 t_ignore = " \t\n"
 
@@ -53,16 +46,16 @@ def t_error(t):
 
 # Parser rules:
 def p_expression_1(p):
-    """unit_expression : unit"""
+    """unit_expression : multi_unit"""
     p[0] = p[1]
 
-def p_expression_2(p):
-    """unit_expression : unit_expression DIVIDE unit"""
-    p[0] = p[1] / p[3]
+def p_multi_unit_1(p):
+    """multi_unit : multi_unit unit"""
+    p[0] = p[1] * p[2]
 
-def p_expression_3(p):
-    """unit_expression : unit_expression TIMES unit"""
-    p[0] = p[1] * p[3]
+def p_multi_unit_2(p):
+    """multi_unit : unit"""
+    p[0] = p[1]
 
 def p_unit_1(p):
     """unit :  base_unit"""
@@ -72,25 +65,13 @@ def p_unit_2(p):
     """unit :  base_unit EXP constant"""
     p[0] = p[1] ** p[3]
 
-def p_unit_3(p):
-    """unit :  LPAREN base_unit EXP constant RPAREN"""
-    p[0] = p[2] ** p[4]
-
 def p_constant_1(p):
     """constant : NUMBER"""
     p[0] = Number(ConstantNode(int(p[1])))
     
 def p_constant_2(p):
-    """constant : LPAREN NUMBER RPAREN"""
-    p[0] = Number(ConstantNode(int(p[2])))
-    
-def p_constant_3(p):
     """constant : FLOAT"""
     p[0] = Number(ConstantNode(float(p[1])))
-    
-def p_constant_4(p):
-    """constant : LPAREN FLOAT RPAREN"""
-    p[0] = Number(ConstantNode(float(p[2])))
     
 def p_base_unit_1(p):
     """base_unit : BASE_UNIT  """
@@ -257,9 +238,10 @@ def testUnitsParser():
     dictBaseUnits = unit.getAllSupportedUnits()
     parser        = UnitsParser(dictBaseUnits)
 
-    testExpression(parser, 'kg*V/mV^2')
-    testExpression(parser, 'kg*V/A^2')
+    testExpression(parser, 'kg')
+    testExpression(parser, 'kg V mV^-2')
+    testExpression(parser, 'kg^1.25 V^-0.25 A^-2')
 
 if __name__ == "__main__":
     testUnitsParser()
-    testUnitsConsistency()
+    #testUnitsConsistency()
