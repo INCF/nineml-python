@@ -60,6 +60,9 @@ class AssignmentNode(Node):
     def toLatex(self):
         return '{0} = {1}'.format(self.identifier.toLatex(), self.expression.toLatex())
 
+    def toMathML(self):
+        return '<mrow>{0} = {1}</mrow>'.format(self.identifier.toMathML(), self.expression.toMathML())
+
     def evaluate(self, dictIdentifiers, dictFunctions):
         value = self.expression.Node.evaluate(dictIdentifiers, dictFunctions)
         dictIdentifiers[self.identifier.Node.Name] = value
@@ -79,7 +82,7 @@ class IdentifierNode(Node):
         return self.Name
 
     def toMathML(self):
-        return '<mo>{0}</mo>'.format(self.Name)
+        return '<mi fontstyle="italic">{0}</mi>'.format(self.Name)
 
     def evaluate(self, dictIdentifiers, dictFunctions):
         if not self.Name in dictIdentifiers:
@@ -122,8 +125,10 @@ class StandardFunctionNode(Node):
     def toMathML(self):
         if self.Function == 'sqrt':
             return '<mrow> <msqrt> {0} </msqrt> </mrow>'.format(self.Node.toMathML())
+        elif self.Function == 'exp':
+            return '<mrow> <msup> <mi fontstyle="italic">e</mi> <mrow>{0}</mrow> </msup> </mrow>'.format(self.Node.toMathML())
         else:
-            return '<mrow> <mi>{0}</mi> <mrow> <mo>(</mo> {1} <mo>)</mo> </mrow> </mrow>'.format(self.Function, self.Node.toMathML())
+            return '<mrow> <mi fontstyle="italic">{0}</mi> <mrow> <mo>(</mo> {1} <mo>)</mo> </mrow> </mrow>'.format(self.Function, self.Node.toMathML())
             
     def evaluate(self, dictIdentifiers, dictFunctions):
         if not self.Function in dictFunctions:
@@ -171,6 +176,13 @@ class NonstandardFunctionNode(Node):
             else:
                 argument_list += ', ' + node.toLatex()
         return '{0} \\left( {1} \\right)'.format(self.Function, argument_list)
+    
+    def toMathML(self):
+        argument_list = '<mfenced>'
+        for node in self.ArgumentsNodeList:
+            argument_list += ' <mi>{0}</mi> '.format(node.toMathML())
+        argument_list += '</mfenced>'
+        return '<mrow> <mi fontstyle="italic">{0}</mi> <mrow>{1}</mrow> </mrow>'.format(self.Function, argument_list)
 
     def evaluate(self, dictIdentifiers, dictFunctions):
         if self.Function in dictFunctions:
@@ -219,7 +231,7 @@ class UnaryNode(Node):
         return '{0}{1}'.format(self.Operator, self.encloseNode())
 
     def toMathML(self):
-        return '<mrow> <mi>{0}</mi> <mrow> {1} </mrow> </mrow>'.format(self.Operator, self.encloseMathMLNode())
+        return '<mrow> <mo>{0}</mo> <mrow> {1} </mrow> </mrow>'.format(self.Operator, self.encloseMathMLNode())
 
     def enclose(self, doEnclose):
         if doEnclose:
@@ -590,6 +602,22 @@ class ConditionBinaryNode(ConditionNode):
         else:
             raise RuntimeError("Not supported logical binary operator: {0}".format(self.Operator))
 
+    def toMathML(self):
+        if self.Operator == ConditionBinaryNode.opEQ:
+            return '<mrow> {0} <mo>==</mo> {1} </mrow>'.format(self.lNode.toMathML(), self.rNode.toMathML())
+        elif self.Operator == ConditionBinaryNode.opNE:
+            return '<mrow> {0} <mo>!=</mo> {1} </mrow>'.format(self.lNode.toMathML(), self.rNode.toMathML())
+        elif self.Operator == ConditionBinaryNode.opLT:
+            return '<mrow> {0} <mo>&lt;</mo> {1} </mrow>'.format(self.lNode.toMathML(), self.rNode.toMathML())
+        elif self.Operator == ConditionBinaryNode.opLE:
+            return '<mrow> {0} <mo>&le;</mo> {1} </mrow>'.format(self.lNode.toMathML(), self.rNode.toMathML())
+        elif self.Operator == ConditionBinaryNode.opGT:
+            return '<mrow> {0} <mo>&gt;</mo> {1} </mrow>'.format(self.lNode.toMathML(), self.rNode.toMathML())
+        elif self.Operator == ConditionBinaryNode.opGE:
+            return '<mrow> {0} <mo>&ge;</mo> {1} </mrow>'.format(self.lNode.toMathML(), self.rNode.toMathML())
+        else:
+            raise RuntimeError("Not supported logical binary operator: {0}".format(self.Operator))
+
     def evaluate(self, dictIdentifiers, dictFunctions):
         if self.Operator == ConditionBinaryNode.opEQ:
             return self.lNode.evaluate(dictIdentifiers, dictFunctions) == self.rNode.evaluate(dictIdentifiers, dictFunctions)
@@ -626,6 +654,14 @@ class ConditionExpressionNode(ConditionNode):
             return '\\left( {0} \\right) \\land \\left( {1} \\right)'.format(self.lNode.toLatex(), self.rNode.toLatex())
         elif self.Operator == ConditionExpressionNode.opOr:
             return '\\left( {0} \\right) \\lor \\left( {1} \\right)'.format(self.lNode.toLatex(), self.rNode.toLatex())
+        else:
+            raise RuntimeError("Not supported logical binary operator: {0}".format(self.Operator))
+
+    def toMathML(self):
+        if self.Operator == ConditionExpressionNode.opAnd:
+            return '<mrow> <mo>(</mo> {0} <mo>)</mo> <mi>and</mi> <mo>(</mo> {1} <mo>)</mo> </mrow>'.format(self.lNode.toMathML(), self.rNode.toMathML())
+        elif self.Operator == ConditionExpressionNode.opOr:
+            return '<mrow> <mo>(</mo> {0} <mo>)</mo> <mi>or</mi> <mo>(</mo> {1} <mo>)</mo> </mrow>'.format(self.lNode.toMathML(), self.rNode.toMathML())
         else:
             raise RuntimeError("Not supported logical binary operator: {0}".format(self.Operator))
 

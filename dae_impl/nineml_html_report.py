@@ -79,7 +79,7 @@ html_template = """
 {0}
 <body>
 <div id="main">
-<p> <img src="logo.png"> </p>
+<p> <img src="data:image/png;base64,{4}" /> </p>
 <h1>
     NineML Model report: {1}
 </h1>
@@ -96,7 +96,10 @@ def createHTMLReport(inspector, tests, htmlOutputFile, find_files_dir = '.'):
     of = open(htmlOutputFile, 'w')
     components_content, tests_content = inspector.generateHTMLReport(tests)
     
-    html = html_template.format(css, inspector.ninemlComponent.name, components_content, tests_content)    
+    logo = open(os.path.join(find_files_dir, 'logo.png'), 'rb').read()
+    logo_data = logo.encode("base64")
+    
+    html = html_template.format(css, inspector.ninemlComponent.name, components_content, tests_content, logo_data)    
     of.write(html)
     of.close()
 

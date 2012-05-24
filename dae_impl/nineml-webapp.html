@@ -81,7 +81,7 @@
             $("#dialogDownloadReport").dialog({
                 autoOpen: false,
                 modal : true,
-                width : 450,
+                width : 550,
                 height : 200,
                 buttons: {
                     "Download PDF": function() { 
@@ -92,6 +92,17 @@
                         }
                         var appID      = $("#applicationID").html();
                         var parameters = {"__NINEML_ACTION__"    : "downloadPDF",
+                                          "__NINEML_WEBAPP_ID__" : appID};
+                        $.download(__nineml_webapp__, $.param(parameters));
+                    }, 
+                    "Download HTML": function() { 
+                        if($("#htmlAvailable").text() != "true")
+                        {
+                            showErrorMessage("HTML report is not available", 400, 200);
+                            return;
+                        }
+                        var appID      = $("#applicationID").html();
+                        var parameters = {"__NINEML_ACTION__"    : "downloadHTML",
                                           "__NINEML_WEBAPP_ID__" : appID};
                         $.download(__nineml_webapp__, $.param(parameters));
                     }, 
@@ -134,6 +145,10 @@
                                 if(status["pdfAvailable"] == true)
                                 {
                                     $("#pdfAvailable").text("true");
+                                }
+                                if(status["htmlAvailable"] == true)
+                                {
+                                    $("#htmlAvailable").text("true");
                                 }
                                 if(status["zipAvailable"] == true)
                                 {
@@ -606,6 +621,7 @@
 <div id="dialogDownloadReport" title="Report generation results">
     <p id="downloadReportMessage"></p>
     <div id="pdfAvailable" style="display:none;"></div>
+    <div id="htmlAvailable" style="display:none;"></div>
     <div id="zipAvailable" style="display:none;"></div>
 </div>
 

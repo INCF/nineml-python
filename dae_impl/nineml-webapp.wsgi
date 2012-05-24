@@ -30,6 +30,7 @@ try:
     from nineml_component_inspector import nineml_component_inspector
     from nineml_daetools_bridge import nineml_daetools_bridge
     from nineml_tex_report import createLatexReport, createPDF
+    from nineml_html_report import createHTMLReport
     from nineml_daetools_simulation import daeSimulationInputData, nineml_daetools_simulation, ninemlTesterDataReporter
     from nineml_webapp_common import createErrorPage, getSetupDataForm, createSetupDataPage, getInitialPage, createResultPage, createDownloadResults
 
@@ -372,12 +373,14 @@ class nineml_webapp:
     def generateReport(self, fieldStorage, environ, start_response):
         try:
             pdf = None
+            htm = None
             zip = None
             html = ''
             test_reports = ''
             tests_data = []
             texReport = ''
             pdfReport = ''
+            htmlReport = ''
             zipReport = ''
             tmpFolder = ''
             
@@ -396,8 +399,9 @@ class nineml_webapp:
             if len(tests) > 0:
                 test_reports, tests_data, zip = self.do_tests(nineml_component, tmpFolder, applicationID, tests)
                 
-            texReport = '{0}/{1}.tex'.format(tmpFolder, applicationID)
-            pdfReport = '{0}/{1}.pdf'.format(tmpFolder, applicationID)
+            texReport  = '{0}/{1}.tex'.format(tmpFolder, applicationID)
+            pdfReport  = '{0}/{1}.pdf'.format(tmpFolder, applicationID)
+            htmlReport = '{0}/{1}.html'.format(tmpFolder, applicationID)
 
             # Copy the logo image to tmp folder
             shutil.copy2(os.path.join(baseFolder, 'logo.png'), 
@@ -419,30 +423,44 @@ class nineml_webapp:
             if os.path.isfile(pdfReport):
                 pdf = open(pdfReport, "rb").read()
             
+            # Generate HTML report
+            createHTMLReport(inspector, tests_data, htmlReport, tmpFolder)
+            
+            # Read the contents of the html report into a variable (to be sent together with the .html part)
+            if os.path.isfile(htmlReport):
+                htm = open(htmlReport, "rb").read()
+
             dictZODB = self.readZODB(applicationID)
             dictZODB['pdfReport']   = pdf
+            dictZODB['htmlReport']  = htm
             dictZODB['zipReport']   = zip
             self.writeZODB(applicationID, dictZODB)
         
         finally:
             # Remove temporary directory
             if os.path.isdir(tmpFolder):
-                shutil.rmtree(tmpFolder)
+                pass
+                #shutil.rmtree(tmpFolder)
             
-        enablePDF = False
-        enableZIP = False
+        enablePDF  = False
+        enableHTML = False
+        enableZIP  = False
         if pdf:
             enablePDF = True
+        if htm:
+            enableHTML = True
         if zip:
             enableZIP = True
         
         results = {}
         results['success']      = True
         results['error']        = ''
-        results['content']      = {'pdfAvailable' : enablePDF,
-                                   'zipAvailable' : enableZIP}
-        results['pdfAvailable'] = enablePDF
-        results['zipAvailable'] = enableZIP
+        results['content']      = {'pdfAvailable'  : enablePDF,
+                                   'htmlAvailable' : enableHTML,
+                                   'zipAvailable'  : enableZIP}
+        results['pdfAvailable']  = enablePDF
+        results['htmlAvailable'] = enableHTML
+        results['zipAvailable']  = enableZIP
         html = json.dumps(results, indent = 2)
         
         output_len = len(html)
@@ -462,6 +480,17 @@ class nineml_webapp:
         start_response('200 OK', [('Content-type', 'application/pdf'),
                                   #('Content-Transfer-Encoding', 'base64'),
                                   ('Content-Disposition', 'attachment; filename={0}.pdf'.format(name)),
+                                  ('Content-Length', str(output_len))])
+        return [html]
+    
+    def downloadHTML(self, fieldStorage, environ, start_response):
+        applicationID = self.applicationIDFromDictionary(fieldStorage)
+        dictZODB = self.readZODB(applicationID)
+        if not dictZODB:
+            raise RuntimeError('Invalid application ID has been specified') 
+        html = dictZODB['htmlReport']
+        output_len = len(html)
+        start_response('200 OK', [('Content-type', 'text/html'),
                                   ('Content-Length', str(output_len))])
         return [html]
     
@@ -578,9 +607,6 @@ class nineml_webapp:
             daesolver    = pyIDAS.daeIDAS()
             datareporter = ninemlTesterDataReporter()
             model        = nineml_daetools_bridge(nineml_component.name, nineml_component, None, '')
-            
-            rng = numpy.random.RandomState()
-            
             simulation   = nineml_daetools_simulation(model, timeHorizon                    = simulation_data.timeHorizon,
                                                              reportingInterval              = simulation_data.reportingInterval,
                                                              parameters                     = simulation_data.parameters,
@@ -668,6 +694,9 @@ class nineml_webapp:
                 
                 elif action == 'downloadPDF':
                     return self.downloadPDF(fieldStorage, environ, start_response)
+                
+                elif action == 'downloadHTML':
+                    return self.downloadHTML(fieldStorage, environ, start_response)
                 
                 elif action == 'downloadZIP':
                     return self.downloadZIP(fieldStorage, environ, start_response)

@@ -36,7 +36,7 @@ If explicit lists of connections are used then the number of neurones can be 100
 since we have generated connections only for that numbers.
 Otherwise, CSA can handle any number.
 """
-N_neurons = 3000
+N_neurons = 100
 N_exc     = int(N_neurons * 0.8)
 N_inh     = int(N_neurons * 0.2)
 N_poisson = 20
@@ -85,10 +85,10 @@ psr_poisson_params = {
                         }
 
 psr_excitatory_params = {
-                            'vrev'  : (  0.000, 'V'),
-                            'weight': (  4.0E-9, 'S'),
-                            'tau'   : (  0.005, 's'),
-                            'g'     : (  0.000, 'S')
+                            'vrev'  : (  0.000,  'V'),
+                            'weight': (4*4.0E-9, 'S'),
+                            'tau'   : (  0.005,  's'),
+                            'g'     : (  0.000,  'S')
                         }
                 
 psr_inhibitory_params = {

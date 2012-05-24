@@ -1199,12 +1199,12 @@ class nineml_component_inspector:
         :rtype: string
         :raises: RuntimeError
         """
-        content.append('<h2>NineML Component: {0}<h2>\n\n'.format(name))
+        content.append('<h2>NineML Component: {0}</h2>\n\n'.format(name))
         
         # 1) Create parameters
         parameters = list(component.parameters)
         if len(parameters) > 0:
-            content.append('<h3>Parameters<h3>\n\n')
+            content.append('<h3>Parameters</h3>\n\n')
             content.append('<table>\n')
             content.append('<tr> <th>Name</th> <th>Units</th> <th>Notes</th> </tr>\n')
             for param in parameters:
@@ -1215,7 +1215,7 @@ class nineml_component_inspector:
         # 2) Create state-variables (diff. variables)
         state_variables = list(component.state_variables)
         if len(state_variables) > 0:
-            content.append('<h3>State-Variables<h3>\n\n')
+            content.append('<h3>State-Variables</h3>\n\n')
             content.append('<table>\n')
             content.append('<tr> <th>Name</th> <th>Units</th> <th>Notes</th> </tr>\n')
             for var in state_variables:
@@ -1226,46 +1226,45 @@ class nineml_component_inspector:
         # 3) Create alias variables (algebraic)
         aliases = list(component.aliases)
         if len(aliases) > 0:
-            content.append('<h3>Aliases<h3>\n\n')
+            content.append('<h3>Aliases</h3>\n\n')
             content.append('<table>\n')
             content.append('<tr> <th>Name</th> <th>Expression</th> <th>Units</th> <th>Notes</th> </tr>\n')
             for alias in aliases:
                 _name = alias.lhs
-                _rhs  = parser.parse_to_mathml(alias.rhs)
-                content.append('<tr> <td>{0}</td> <td lang="latex">{1}</td> <td>{2}</td> <td>{3}</td> </tr>\n'.format(_name, _rhs, ' - ', ' '))
+                _rhs  = '<math xmlns="http://www.w3.org/1998/Math/MathML">'
+                _rhs += parser.parse_to_mathml(alias.rhs)
+                _rhs += '</math>'
+                content.append('<tr> <td>{0}</td> <td>{1}</td> <td>{2}</td> <td>{3}</td> </tr>\n'.format(_name, _rhs, ' - ', ' '))
             content.append('</table>\n')
-        
-        return content 
         
         # 4) Create analog-ports and reduce-ports
         analog_ports = list(component.analog_ports)
         if len(analog_ports) > 0:
-            content.append('\\subsection*{Analog Ports}\n\n')
-            header_flags = ['l', 'l', 'c', 'l']
-            header_items = ['Name', 'Type', 'Units', 'Notes']
-            rows_items = []
+            content.append('<h3>Analog Ports</h3>\n\n')
+            content.append('<table>\n')
+            content.append('<tr> <th>Name</th> <th>Type</th> <th>Units</th> <th>Notes</th> </tr>\n')
             for port in analog_ports:
                 _name = self._correctName(port.name)
                 _type = port.mode
-                rows_items.append([_name, _type, ' - ', ' '])
-            content.append(latex_table(header_flags, header_items, rows_items))
-            content.append('\n')
+                content.append('<tr> <td>{0}</td> <td>{1}</td> <td>{2}</td> <td>{3}</td> </tr>\n'.format(_name, _type, ' - ', ' '))
+            content.append('</table>\n')
 
         # 5) Create event-ports
         event_ports = list(component.event_ports)
         if len(event_ports) > 0:
-            content.append('\\subsection*{Event ports}\n\n')
-            header_flags = ['l', 'l', 'c', 'l']
-            header_items = ['Name', 'Type', 'Units', 'Notes']
-            rows_items = []
+            content.append('<h3>Event Ports</h3>\n\n')
+            content.append('<table>\n')
+            content.append('<tr> <th>Name</th> <th>Type</th> <th>Units</th> <th>Notes</th> </tr>\n')
             for port in event_ports:
-                _name = self._correctName(port.name)
+                _name = port.name
                 _type = port.mode
-                rows_items.append([_name, _type, ' - ', ' '])
-            content.append(latex_table(header_flags, header_items, rows_items))
-            content.append('\n')
+                content.append('<tr> <td>{0}</td> <td>{1}</td> <td>{2}</td> <td>{3}</td> </tr>\n'.format(_name, _type, ' - ', ' '))
+            content.append('</table>\n')
         
         # 6) Create sub-nodes
+        """
+        Do we need this??
+        
         if len(component.subnodes.items()) > 0:
             content.append('\\subsection*{Sub-nodes}\n\n')
             content.append(nineml_component_inspector.begin_itemize)
@@ -1275,22 +1274,21 @@ class nineml_component_inspector:
                 content.append(tex)
             content.append(nineml_component_inspector.end_itemize)
             content.append('\n')
-
+        """
+        
         # 7) Create port connections
         portconnections = list(component.portconnections)
         if len(portconnections) > 0:
-            content.append('\\subsection*{Port Connections}\n\n')
-            header_flags = ['l', 'l']
-            header_items = ['From', 'To']
-            rows_items = []
+            content.append('<h3>Port Connections</h3>\n\n')
+            content.append('<table>\n')
+            content.append('<tr> <th>From</th> <th>To</th> </tr>\n')
             for port_connection in portconnections:
                 portFrom = '.'.join(port_connection[0].loctuple)
                 portTo   = '.'.join(port_connection[1].loctuple)
                 _fromname = self._correctName(portFrom)
                 _toname   = self._correctName(portTo)
-                rows_items.append([_fromname, _toname])
-            content.append(latex_table(header_flags, header_items, rows_items))
-            content.append('\n')
+                content.append('<tr> <td>{0}</td> <td>{1}</td> </tr>\n'.format(_fromname, _toname))
+            content.append('</table>\n')
 
         # 8) Create regimes
         regimes = list(component.regimes)
@@ -1298,38 +1296,34 @@ class nineml_component_inspector:
             regimes_list     = []
             transitions_list = []
 
-            content.append('\\subsection*{Regimes}\n\n')
+            content.append('<h3>Regimes</h3>\n\n')
             for ir, regime in enumerate(regimes):
-                regimes_list.append(self._correctName(regime.name))
-
-                tex = ''
+                regimes_list.append(regime.name)
+                
+                mathml = ''
                 # 8a) Create time derivatives
-                counter = 0
                 for time_deriv in regime.time_derivatives:
-                    if counter != 0:
-                        tex += ' \\\\ '
-                    tex += '\\frac{{d{0}}}{{dt}} = {1}'.format(time_deriv.dependent_variable, parser.parse_to_latex(time_deriv.rhs))
-                    counter += 1
-
+                    mathml += '<mtr> <mrow> <mfrac> <mi fontstyle="italic">d{0}</mi> <mi fontstyle="italic">dt</mi> </mfrac> = {1} </mrow> </mtr>\n'.format(time_deriv.dependent_variable, parser.parse_to_mathml(time_deriv.rhs))
+            
                 # 8b) Create on_condition actions
                 for on_condition in regime.on_conditions:
-                    regimeFrom = self._correctName(regime.name)
+                    regimeFrom = regime.name
                     if on_condition.target_regime.name == '':
                         regimeTo = regimeFrom
                     else:
-                        regimeTo = self._correctName(on_condition.target_regime.name)
-                    condition  = parser.parse_to_latex(on_condition.trigger.rhs)
-
-                    tex += ' \\\\ \\mbox{If } ' + condition + '\mbox{:}'
+                        regimeTo = on_condition.target_regime.name
+                    
+                    condition = parser.parse_to_mathml(on_condition.trigger.rhs)
+                    mathml += '<mtr> <mrow> <mtext>if </mtext> <mspace width="0.3em"/> {0} </mrow> </mtr>\n'.format(condition)
 
                     if regimeTo != regimeFrom:
-                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{switch to }} {0}'.format(regimeTo)
+                        mathml += '<mtr> <mrow> <mspace width="1em"/> <mtext>switch to</mtext> <mspace width="0.3em"/> <mi fontstyle="italic">{0}</mi> </mrow> </mtr>\n'.format(regimeTo)
 
                     for state_assignment in on_condition.state_assignments:
-                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{set }} {0} = {1}'.format(state_assignment.lhs, parser.parse_to_latex(state_assignment.rhs))
+                        mathml += '<mtr> <mrow> <mspace width="1em"/> <mtext>set</mtext> <mspace width="0.3em"/> <mi fontstyle="italic">{0}</mi> = {1} </mrow> </mtr>\n'.format(state_assignment.lhs, parser.parse_to_mathml(state_assignment.rhs))
 
                     for event_output in on_condition.event_outputs:
-                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{emit }} {0}'.format(event_output.port_name)
+                        mathml += '<mtr> <mrow> <mspace width="1em"/> <mtext>emit</mtext> <mspace width="0.3em"/> <mi fontstyle="italic">{0}</mi> </mrow> </mtr>\n'.format(event_output.port_name)
 
                     transition = '{0} -> {1} [label="{2}"];'.format(regimeFrom, regimeTo, condition)
                     transitions_list.append(transition)
@@ -1343,24 +1337,27 @@ class nineml_component_inspector:
                         regimeTo = on_event.target_regime.name
                     source_port = on_event.src_port_name
 
-                    tex += ' \\\\ \\mbox{On } ' + source_port + '\mbox{:}'
+                    mathml += '<mtr> <mrow> <mtext>on</mtext> <mspace width="0.3em"/> <mi fontstyle="italic">{0}</mi> </mrow> </mtr>\n'.format(source_port)
 
                     if regimeTo != regimeFrom:
-                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{switch to }} {0}'.format(regimeTo)
+                        mathml += '<mtr> <mrow> <mspace width="1em"/> <mtext>switch to</mtext> <mspace width="0.3em"/> <mi fontstyle="italic">{0}</mi> </mrow> </mtr>\n'.format(regimeTo)
 
                     for state_assignment in on_event.state_assignments:
-                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{set }} {0} = {1}'.format(state_assignment.lhs, parser.parse_to_latex(state_assignment.rhs))
+                        mathml += '<mtr> <mrow> <mspace width="1em"/> <mtext>set</mtext> <mspace width="0.3em"/> <mi fontstyle="italic">{0}</mi> = {1} </mrow> </mtr>\n'.format(state_assignment.lhs, parser.parse_to_mathml(state_assignment.rhs))
 
                     for event_output in on_event.event_outputs:
-                        tex += ' \\\\ \\hspace*{{0.2in}} \\mbox{{emit }} {0}'.format(event_output.port_name)
+                        mathml += '<mtr> <mrow> <mspace width="1em"/> <mtext>emit</mtext> <mspace width="0.3em"/> <mi fontstyle="italic">{0}</mi> </mrow> </mtr>\n'.format(event_output.port_name)
 
                     transition = '{0} -> {1} [label="{2}"];'.format(regimeFrom, regimeTo, source_port)
                     transitions_list.append(transition)
 
-                tex = '${0} = \\begin{{cases}} {1} \\end{{cases}}$\n'.format(regime.name, tex)
-                tex += '\\newline \n'
-                content.append(tex)
+                content.append('<p>\n')
+                content.append('<math xmlns="http://www.w3.org/1998/Math/MathML">\n')
+                content.append('<mrow> <mi fontstyle="italic">{0}</mi> = <mo>{{</mo> <mtable> {1} </mtable> </mrow>\n'.format(regime.name, mathml))
+                content.append('</math>\n')
+                content.append('</p>\n')
 
+            """
             dot_graph_template = '''
             digraph finite_state_machine {{
                 rankdir=LR;
@@ -1375,9 +1372,7 @@ class nineml_component_inspector:
                 content.append('\\newline \n')
                 content.append(tex_graph)
                 content.append('\n')
-            
-            content.append('\\newpage')
-            content.append('\n')
+            """
             
         return content
 
@@ -1601,8 +1596,10 @@ class nineml_component_inspector:
         content.append('<p>Input data: \n{0}</p>\n'.format(testInputs))
         for plot in plots:
             varName, xPoints, yPoints, pngName, csvName, pngPath, csvPath = plot
-            tex_plot = '<p> <img src="{0}" width="400" height="300"> </p>\n'.format(pngPath)
-            content.append(tex_plot)
+            image = open(pngPath, 'rb').read()
+            image_data = image.encode("base64")
+            html_plot = '<p> <img src="data:image/png;base64,{0}" width="400" height="300"> </p>\n'.format(image_data)
+            content.append(html_plot)
         
         return content
         
@@ -1701,6 +1698,9 @@ class nineml_component_inspector:
             content.append('\n')
         
         # 6) Create sub-nodes
+        """
+        Do we need this??
+        
         if len(component.subnodes.items()) > 0:
             content.append('\\subsection*{Sub-nodes}\n\n')
             content.append(nineml_component_inspector.begin_itemize)
@@ -1710,7 +1710,8 @@ class nineml_component_inspector:
                 content.append(tex)
             content.append(nineml_component_inspector.end_itemize)
             content.append('\n')
-
+        """
+        
         # 7) Create port connections
         portconnections = list(component.portconnections)
         if len(portconnections) > 0:
