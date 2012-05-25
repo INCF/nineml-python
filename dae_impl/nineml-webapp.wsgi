@@ -17,7 +17,7 @@ ___import_exception___ = None
 ___import_exception_traceback___ = None
 try:
     baseFolder = os.path.join(os.path.dirname(__file__))
-    print('baseFolder = %s' % baseFolder, file=sys.stderr)
+    #print('baseFolder = %s' % baseFolder, file=sys.stderr)
     sys.path.append(baseFolder)
     os.environ['HOME'] = tempfile.gettempdir()
     #print(os.environ, file=sys.stderr)
@@ -440,8 +440,7 @@ class nineml_webapp:
         finally:
             # Remove temporary directory
             if os.path.isdir(tmpFolder):
-                pass
-                #shutil.rmtree(tmpFolder)
+                shutil.rmtree(tmpFolder)
             
         enablePDF  = False
         enableHTML = False

@@ -55,8 +55,8 @@ account for the lower number of neurones.
 """
 
 rnd_uniform_params = {
-                        'lowerBound': (-0.060, "dimensionless"),
-                        'upperBound': (-0.040, "dimensionless")
+                        'lowerBound': (-0.060, ''),
+                        'upperBound': (-0.040, '')
                         }
 uni_distr = nineml.user_layer.RandomDistribution("uniform(-0.060, -0.040)", os.path.join(catalog, "uniform_distribution.xml"), rnd_uniform_params)
 
@@ -111,8 +111,8 @@ grid2d_params = {
                     'y0'            : (0.00, 'm'), 
                     'dx'            : (1E-5, 'm'),
                     'dy'            : (1E-5, 'm'),
-                    'fillOrder'     : (0.00, ' '),
-                    'aspectRatioXY' : (0.00, ' ')
+                    'fillOrder'     : (0.00, ''),
+                    'aspectRatioXY' : (0.00, '')
                 }
 grid2D = nineml.user_layer.Structure("2D Grid", os.path.join(catalog, "grid_2d.xml"), grid2d_params)
 
@@ -124,17 +124,17 @@ population_poisson    = nineml.user_layer.Population("Poisson population",    N_
 
 # Create connection rules (using CSA)
 exc_params = {
-                'p'      : (0.020, None),
+                'p'      : (0.020, ''),
                 'weight' : (0.004, 'nS'),
                 'delay'  : (0.200, 'ms')
                 }
 inh_params = {
-                'p'      : (0.020, None),
+                'p'      : (0.020, ''),
                 'weight' : (0.051, 'nS'),
                 'delay'  : (0.200, 'ms')
                 }
 poi_params = {
-                'p'      : (0.020,  None),
+                'p'      : (0.020, ''),
                 'weight' : (0.100, 'nS'),
                 'delay'  : (0.200, 'ms')
                 }

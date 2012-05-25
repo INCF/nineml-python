@@ -5,9 +5,9 @@
     <AnalogPort mode="send" name="I"/>
     <EventPort mode="recv" name="spikeinput"/>
 
-    <Parameter name="tau" dimension="s"/>
-    <Parameter name="weight" dimension="kg^-1 m^-2 s^3 A^2"/>
-    <Parameter name="vrev" dimension="kg m^2 s^-3 A^-1"/>
+    <Parameter name="tau" dimension="T"/>
+    <Parameter name="weight" dimension="M^-1 L^-2 T^3 I^2"/>
+    <Parameter name="vrev" dimension="M L^2 T^-3 I^-1"/>
 
     <Dynamics>
       <Regime name="cobadefaultregime">
@@ -23,7 +23,7 @@
       <Alias name="I">
         <MathInline>g*(vrev-V)</MathInline>
       </Alias>
-      <StateVariable name="g" dimension="kg^-1 m^-2 s^3 A^2"/>
+      <StateVariable name="g" dimension="M^-1 L^-2 T^3 I^2"/>
     </Dynamics>
   </ComponentClass>
 </NineML>

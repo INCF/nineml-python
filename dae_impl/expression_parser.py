@@ -347,10 +347,10 @@ class ExpressionParser:
 
     def __init__(self, dictIdentifiers = None, dictFunctions = None):
         self.lexer  = lex.lex(module=self) #, optimize=1)
-        self.parser = yacc.yacc(module=self) #, optimize=1, debug=False, write_tables = 0)
-        self.parseResult           = None
-        self.dictIdentifiers       = dictIdentifiers
-        self.dictFunctions         = dictFunctions
+        self.parser = yacc.yacc(module=self, debug=False, write_tables = 0) #, optimize=1, debug=False, write_tables = 0)
+        self.parseResult      = None
+        self.dictIdentifiers  = dictIdentifiers
+        self.dictFunctions    = dictFunctions
 
     def parse_and_evaluate(self, expression):
         self.parse(expression)
@@ -376,7 +376,7 @@ class ExpressionParser:
     def toMathML(self):
         if self.parseResult is None:
             raise RuntimeError('expression not parsed yet')
-        return '<mrow> {0} </mrow>'.format(self.parseResult.toMathML())
+        return self.parseResult.toMathML()
 
     def evaluate(self):
         if self.parseResult is None:

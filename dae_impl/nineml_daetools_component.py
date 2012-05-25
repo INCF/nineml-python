@@ -25,6 +25,12 @@ _global_seed_ = None
 _global_rng_  = numpy.random.RandomState()
 _global_rng_.seed(_global_seed_)
 
+def fixVariableTypeName(s): 
+    s = s.replace(' ', '')
+    s = s.replace('^', '')
+    s = s.replace('-', '_')
+    return s
+
 class daetoolsRNG(object):
     """
     """
@@ -260,8 +266,35 @@ class daetoolsVariableParameterDictionaryWrapper(object):
         else:
             raise RuntimeError('')
 
-_equation_parser_ = expression_parser.ExpressionParser()
-_units_parser_    = units_parser.UnitsParser()
+_dictDimensions = {
+                    'L' : pyUnits.m,
+                    'M' : pyUnits.kg,
+                    'T' : pyUnits.s,
+                    'I' : pyUnits.A,
+                    'O' : pyUnits.K,
+                    'J' : pyUnits.cd,
+                    'N' : pyUnits.mol,
+                    ''  : pyUnits.unit(), # No dimension case
+                    ' ' : pyUnits.unit() # No dimension case
+                  }
+_dictUnits = {
+               ''  : pyUnits.unit(), # No units case
+               ' ' : pyUnits.unit()  # No units case
+             }
+for attr in dir(pyUnits):
+    obj = getattr(pyUnits, attr)
+    if isinstance(obj, pyUnits.unit):
+        #print(attr, obj.baseUnit)
+        _dictUnits[attr] = obj
+#print _dictDimensions
+#print _dictUnits
+
+_equation_parser_   = expression_parser.ExpressionParser()
+_dimensions_parser_ = units_parser.UnitsParser(_dictDimensions)
+_units_parser_      = units_parser.UnitsParser(_dictUnits)
+
+def parseUnits(units):
+    return _units_parser_.parse_and_evaluate(units)
 
 def createPoissonSpikeTimes(rate, duration, t0, rng_poisson, lambda_, rng_uniform):
     n  = int(rng_poisson.poisson(lambda_, 1))
@@ -300,22 +333,25 @@ class daetoolsComponentInfo(object):
         
         # 1) Create parameters
         for param in self.al_component.parameters:
-            dimension = _units_parser_.parse(param.dimension)
-            print('{0}: {1} = {2}'.format(param.name, param.dimension, dimension))
+            units = _dimensions_parser_.parse_and_evaluate(param.dimension)
+            print('Parameter: {0}, dimensions: {1}'.format(param.name, param.dimension))
+            print('   Parse result:   {0}'.format(_dimensions_parser_.parseResult))
+            print('   daetools units: {0}'.format(units))
 
-            self.nineml_parameters.append( (param.name, pyUnits.unit()) )
+            self.nineml_parameters.append( (param.name, units) )
 
         # 2) Create state-variables (diff. variables)
         for var in self.al_component.state_variables:
-            if var.dimension in _used_variable_types_:
-                vtype = _used_variable_types_[var.dimension]
-            else:
-                dimension = _units_parser_.parse(var.dimension)
-                print('{0}: {1} = {2}'.format(var.name, var.dimension, dimension))
-                vtype = pyCore.daeVariableType("dae_nineml_t", pyUnits.unit(), -1.0e+20, 1.0e+20, 0.0, 1e-12)
-                _used_variable_types_[var.dimension] = vtype
+            units = _dimensions_parser_.parse_and_evaluate(var.dimension)
+            print('Variable: {0}, dimensions: {1}'.format(var.name, var.dimension))
+            print('   Parse result:   {0}'.format(_dimensions_parser_.parseResult))
+            print('   daetools units: {0}'.format(units))
             
-            self.nineml_state_variables.append( (var.name, dae_nineml_t) )
+            var_type_name = fixVariableTypeName(var.dimension)
+            print('   var_type_name:  {0}'.format(var_type_name))
+            var_type = pyCore.daeVariableType(var_type_name, units, -1.0e+20, 1.0e+20, 0.0, 1e-12)
+            
+            self.nineml_state_variables.append( (var.name, var_type) )
 
         # 3) Create alias variables (algebraic) and parse rhs
         for alias in self.al_component.aliases:
@@ -450,6 +486,7 @@ class daetoolsComponent(pyCore.daeModel):
         self.target_synapses                = []    
         self.incoming_synapses              = []    
         self.synapse_weights                = []
+        self.synapse_weight_units           = None
         self.events_heap                    = None 
         self.simulation                     = None
 
@@ -970,15 +1007,19 @@ class daetoolsComponentSetup(object):
             value = parameters[paramRelativeName]
             
             if isinstance(value, tuple) and isinstance(value[0], (long, int, float)):
-                v = daetoolsComponentSetup.getValue(value, paramRelativeName)
-                parameter.SetValues(v)
+                _value, _units = daetoolsComponentSetup.getValue(value, paramRelativeName)
+                q = pyUnits.quantity(_value, _units)
+                print('Set the parameter: {0} {1} value'.format(parameter.CanonicalName, parameter.Units))
+                print('    quantity: {0}'.format(q))
+                parameter.SetValues(q)
             
             elif isinstance(value, tuple) and isinstance(value[0], nineml.user_layer.RandomDistribution):
-                rng = daetoolsComponentSetup.getValue(value, paramRelativeName)
+                rng, _units = daetoolsComponentSetup.getValue(value, paramRelativeName)
                 n   = parameter.Domains[0].NumberOfPoints
                 for i in xrange(0, n):
-                    v = float(rng.next())
-                    parameter.SetValue(i, v)
+                    _value = float(rng.next())
+                    q = pyUnits.quantity(_value, _units)
+                    parameter.SetValue(i, q)
             
             else:
                 raise RuntimeError('Invalid parameter: {0} value type specified: {1}-{2}'.format(paramRelativeName, value, type(value)))
@@ -1001,15 +1042,19 @@ class daetoolsComponentSetup(object):
             value = parameters[varRelativeName]
             
             if isinstance(value, tuple) and isinstance(value[0], (long, int, float)):
-                v = daetoolsComponentSetup.getValue(value, varRelativeName)
-                variable.SetInitialConditions(v)
+                _value, _units = daetoolsComponentSetup.getValue(value, varRelativeName)
+                q = pyUnits.quantity(_value, _units)
+                print('Set the variable: {0} {1} value'.format(variable.CanonicalName, variable.VariableType.Units))
+                print('    quantity: {0}'.format(q))
+                variable.SetInitialConditions(q)
             
             elif isinstance(value, tuple) and isinstance(value[0], nineml.user_layer.RandomDistribution):
-                rng = daetoolsComponentSetup.getValue(value, varRelativeName)
+                rng, _units = daetoolsComponentSetup.getValue(value, varRelativeName)
                 n = variable.Domains[0].NumberOfPoints
                 for i in xrange(0, n):
-                    v = float(rng.next())
-                    variable.SetInitialCondition(i, v)
+                    _value = float(rng.next())
+                    q = pyUnits.quantity(_value, _units)
+                    variable.SetInitialCondition(i, q)
             
             else:
                 raise RuntimeError('Invalid state variable: {0} initial consition type specified: {1}-{2}'.format(varRelativeName, value, type(value)))
@@ -1024,6 +1069,13 @@ class daetoolsComponentSetup(object):
                 
     @staticmethod      
     def setWeights(model, weights):
+        """
+        :param: daetoolsComponent object
+        :param: list of pyUnits.quantity objects
+        
+        :rtype: None
+        :raises: RuntimeError
+        """
         if model.Nitems != len(weights):
             raise RuntimeError('The number of weights not equal to the number of synapses in the synapse {0}'.format(model.Name))
         
@@ -1036,9 +1088,10 @@ class daetoolsComponentSetup(object):
         else:
             raise RuntimeError('Could not find a parameter with the name [weight] in the synapse {0}'.format(model.Name))
         
-        #print('Set the weights for: {0}'.format(model.CanonicalName))
+        print('Set the weights for: {0}'.format(model.CanonicalName))
         for i, weight in enumerate(weights):
-            #print('Old weight = {0}; new weight = {1}'.format(paramWeight.GetValue(i), weight))
+            print('    Parameter weight: {0} {1}'.format(paramWeight.CanonicalName, paramWeight.Units))
+            print('    Weight value: {0}'.format(weight))
             paramWeight.SetValue(i, weight)
             
     @staticmethod
@@ -1058,14 +1111,14 @@ class daetoolsComponentSetup(object):
             _value, _units = value
             
             if isinstance(_value, (float, int, long)): # Simple number
-                return float(_value)
+                return (_value, _units)
             
             elif isinstance(_value, nineml.user_layer.RandomDistribution): # A RandomDistribution component
                 if not _value.name in daetoolsComponentSetup._random_number_generators:
                     raise RuntimeError('Cannot find RandomDistribution component {0}'.format(_value.name))
                 
                 rng = daetoolsComponentSetup._random_number_generators[_value.name]
-                return rng
+                return (rng, _units)
             
             else: # Something is wrong
                 raise RuntimeError('Invalid parameter: {0} value type specified: {1}-{2}'.format(name, value, type(value)))

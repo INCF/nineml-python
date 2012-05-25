@@ -3,25 +3,32 @@
 <head>
     <title>NineML WebApp</title>
     <!-- 
-         http://192.168.42.134 
-         http://localhost
-         http://nineml-app.incf.org
+      Replace or occurrences of "http://localhost" or "http://nineml-app.incf.org" with:
+        - http://localhost           - Local webserver (testing only)
+        - http://nineml-app.incf.org - Phobos
     -->
     <meta content="text/html; charset=UTF-8" http-equiv="content-type">
-    <link type="text/css" href="http://nineml-app.incf.org/script/css/redmond/jquery-ui-1.8.16.custom.css" rel="stylesheet" />  
+    <link type="text/css" href="http://nineml-app.incf.org/script/css/smoothness/jquery-ui-1.8.16.custom.css" rel="stylesheet" />  
+    <!--
+      Blueish theme
+      <link type="text/css" href="http://nineml-app.incf.org/script/css/redmond/jquery-ui-1.8.16.custom.css" rel="stylesheet" />  
+    -->
     
-<!--    <style type="text/css">@import url(http://www.incf.org/portal_css/INCF.org%20skin/base-cachekey2304.css);</style>
-    <style type="text/css" media="all">@import url(http://www.incf.org/portal_css/INCF.org%20skin/ploneCustom-cachekey9204.css);</style>-->
+    <!--
+      Some Valentine's voodoo-mojo with css styles that does not work anyway, therefore commented out:
+      <style type="text/css">@import url(http://www.incf.org/portal_css/INCF.org%20skin/base-cachekey2304.css);</style>
+      <style type="text/css" media="all">@import url(http://www.incf.org/portal_css/INCF.org%20skin/ploneCustom-cachekey9204.css);</style>
+    -->
     
-    <link type="text/css" href="http://nineml-app.incf.org/nineml-webapp.css" rel="stylesheet" media="all" />
-    <script type="text/javascript" src="http://nineml-app.incf.org/script/js/jquery-1.6.2.min.js"></script>
-    <script type="text/javascript" src="http://nineml-app.incf.org/script/js/jquery-ui-1.8.16.custom.min.js"></script>
-    <script type="text/javascript" src="http://nineml-app.incf.org/script/jquery.form.js"></script>
-    <script type="text/javascript" src="http://nineml-app.incf.org/script/jquery.validate.js"></script>
-    <script type="text/javascript" src="http://nineml-app.incf.org/script/download.jQuery.js"></script>
+    <link type="text/css" href="http://localhost/nineml-webapp.css" rel="stylesheet" media="all" />
+    <script type="text/javascript" src="http://localhost/script/js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="http://localhost/script/js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" src="http://localhost/script/jquery.form.js"></script>
+    <script type="text/javascript" src="http://localhost/script/jquery.validate.js"></script>
+    <script type="text/javascript" src="http://localhost/script/download.jQuery.js"></script>
 
-    <script src="http://nineml-app.incf.org/script/jquery.alerts.js" type="text/javascript"></script>
-    <link href="http://nineml-app.incf.org/script/jquery.alerts.css" rel="stylesheet" type="text/css" media="screen" />
+    <script src="http://localhost/script/jquery.alerts.js" type="text/javascript"></script>
+    <link href="http://localhost/script/jquery.alerts.css" rel="stylesheet" type="text/css" media="screen" />
     
     <noscript>          
         <style type="text/css">
@@ -30,7 +37,7 @@
         <p>You don't have javascript enabled.</p>
     </noscript>         
     <script type="text/javascript">
-        var __nineml_webapp__ = "http://nineml-app.incf.org/nineml-webapp";
+        var __nineml_webapp__ = "http://localhost/nineml-webapp";
         
         $(document).ready(function(){
             

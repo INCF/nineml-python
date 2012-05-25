@@ -24,7 +24,7 @@ from daetools.solvers import pySuperLU
 
 import nineml_daetools_component
 from nineml_daetools_component import daetoolsRNG, createPoissonSpikeTimes, daetoolsSpikeSource, daetoolsComponentInfo
-from nineml_daetools_component import daetoolsComponent, daetoolsComponentSetup, fixObjectName
+from nineml_daetools_component import daetoolsComponent, daetoolsComponentSetup, fixObjectName, parseUnits
 
 from sedml_support import *
 from path_parser import CanonicalNameParser, pathItem
@@ -39,9 +39,8 @@ except ImportError:
     from heapq import heappush, heappop, heapify, heapreplace
 
 # Select implementation for CSA connection-rule language
-import csa
-ConnectionGenerator.selectImplementation \
-  ('{http://software.incf.org/software/csa/1.0}CSA', csa)
+import csa 
+ConnectionGenerator.selectImplementation('{http://software.incf.org/software/csa/1.0}CSA', csa)
 
 def fixParametersDictionary(parameters):
     """
@@ -52,7 +51,10 @@ def fixParametersDictionary(parameters):
     """
     new_parameters = {}
     for name, parameter in parameters.iteritems():
-        new_parameters[name] = (parameter.value, parameter.unit) 
+        units = parseUnits(parameter.unit)        
+        print('Parameter: {0} units: {1}'.format(name, parameter.unit))
+        print('   daetools units: {0}'.format(units))
+        new_parameters[name] = (parameter.value, units) 
     return new_parameters
 
 class daetoolsOnSpikeOutAction(pyCore.daeAction):
@@ -450,6 +452,12 @@ class daetoolsProjection(object):
         for i, neurone in enumerate(target_population.neurones):
             neurone.incoming_synapses.append( (self._synapses[i], psr_parameters) ) 
         
+        if 'weight' in psr_parameters:
+            paramWeight  = psr_parameters['weight']
+            weight_units = paramWeight[1]
+        else:
+            raise RuntimeError('Could not find a parameter with the name [weight] in the synapse {0}'.format(model.Name))
+        
         # Create an object that supports the Geometry interface 
         geometry = geometryFromProjection(ul_projection)
         #print('Metric({0},{1}) = {2}'.format(0, 15, geometry.metric(0, 15)))
@@ -458,7 +466,7 @@ class daetoolsProjection(object):
         mask = connection_generator.Mask([(0, ul_projection.source.number - 1)], [(0, ul_projection.target.number - 1)])
         cgi = connectionGeneratorFromProjection(ul_projection, geometry)
         cgi.setMask(mask)
-        self.createConnections(cgi, source_population, target_population)
+        self.createConnections(cgi, source_population, target_population, weight_units)
         
         # Now we are done with connections. Initialize synapses
         for i, neurone in enumerate(target_population.neurones):
@@ -479,7 +487,7 @@ class daetoolsProjection(object):
         """
         return self._synapses[index]
 
-    def createConnections(self, cgi, source_population, target_population):
+    def createConnections(self, cgi, source_population, target_population, weight_units):
         """
         Iterates over ConnectionGeneratorInterface object and creates connections.
         It connects source->target neurones and (optionally) sets weights and delays
@@ -524,8 +532,9 @@ class daetoolsProjection(object):
             # Therefore, we add the synapse object and the index of the event port.
             source_neurone.target_synapses.append( (synapse, synapse.Nitems, delay, target_neurone) )
             synapse.Nitems += 1
+            
             # Weights cannot be set right now. Thus, we put them into an array.
-            synapse.synapse_weights.append(weight)
+            synapse.synapse_weights.append(weight * weight_units)
             count += 1
         
         print('{0}: created {1} connections'.format(self.name, count))
