@@ -532,7 +532,7 @@ class daetools_model_setup:
             stn.ActiveState = stateName
 
         # This should be False by default
-        self.model.SetReportingOn(True)
+        self.model.SetReportingOn(False)
         for varName, value in list(self._variables_to_report.items()):
             if not self.keysAsCanonicalNames:
                 varName = self.model.CanonicalName + '.' + varName

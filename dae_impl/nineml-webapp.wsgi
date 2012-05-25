@@ -478,7 +478,6 @@ class nineml_webapp:
         html = str(pdf)        
         output_len = len(html)
         start_response('200 OK', [('Content-type', 'application/pdf'),
-                                  #('Content-Transfer-Encoding', 'base64'),
                                   ('Content-Disposition', 'attachment; filename={0}.pdf'.format(name)),
                                   ('Content-Length', str(output_len))])
         return [html]
@@ -489,8 +488,10 @@ class nineml_webapp:
         if not dictZODB:
             raise RuntimeError('Invalid application ID has been specified') 
         html = dictZODB['htmlReport']
+        name = dictZODB['name']
         output_len = len(html)
         start_response('200 OK', [('Content-type', 'text/html'),
+                                  ('Content-Disposition', 'attachment; filename={0}.html'.format(name)),
                                   ('Content-Length', str(output_len))])
         return [html]
     
@@ -504,7 +505,6 @@ class nineml_webapp:
         html = str(zip)        
         output_len = len(html)
         start_response('200 OK', [('Content-type', 'application/zip'),
-                                  #('Content-Transfer-Encoding', 'base64'),
                                   ('Content-Disposition', 'attachment; filename={0}.zip'.format(name)),
                                   ('Content-Length', str(output_len))])
         return [html]
