@@ -166,7 +166,7 @@ def saveFileAndOpenInDefaultApp(filename, contents):
     elif os.name == 'posix':
         os.system('/usr/bin/xdg-open ' + filename)  
 
-def testTestableComponent():
+def testComponentFromTheCatalog():
     initialValues = """
     {
         "timeHorizon": 1.0, 
@@ -237,7 +237,7 @@ def testTestableComponent():
     filename, zip = ws.downloadZIP()
     saveFileAndOpenInDefaultApp(filename, zip)
 
-def testUploadedComponent():
+def testUploadedComponent(pathToXMLFile):
     initialValues = """
 {
     "timeHorizon": 1.0, 
@@ -276,10 +276,9 @@ def testUploadedComponent():
 
     testName        = 'Test uploaded component' 
     testDescription = 'Test Description' 
-    xmlFile         = 'hierachical_iaf_1coba.xml'
     #ws = nineml_web_service('localhost')
     ws = nineml_web_service()
-    ws.uploadALComponent(xmlFile)
+    ws.uploadALComponent(pathToXMLFile)
     ws.addTest(testName, testDescription, initialValues)
     ws.generateReport()
 
@@ -290,6 +289,9 @@ def testUploadedComponent():
     saveFileAndOpenInDefaultApp(filename, zip)
 
 if __name__ == "__main__":
-    #testTestableComponent()
-    #testUploadedComponent()
+    # 1. Use a component from the catalog
+    testComponentFromTheCatalog()
+    
+    # 2. Upload a component
+    #testUploadedComponent('path to the xml file')
     
