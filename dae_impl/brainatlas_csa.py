@@ -218,11 +218,11 @@ class Projection(object):
         extractedNeuronesActor.GetProperty().SetRepresentationToSurface()
         cutActor.GetProperty().SetRepresentationToSurface()
         sphereActor.GetProperty().SetRepresentationToWireframe()
-        target_actor.GetProperty().SetRepresentationToPoints()
+        #target_actor.GetProperty().SetRepresentationToPoints()
         
         self.actors.append(tvtk.to_tvtk(target_actor))
         #self.actors.append(tvtk.to_tvtk(neuronesActor))
-        self.actors.append(tvtk.to_tvtk(cutActor))
+        #self.actors.append(tvtk.to_tvtk(cutActor))
         #self.actors.append(tvtk.to_tvtk(sphereActor))
         self.actors.append(tvtk.to_tvtk(extractedNeuronesActor))
         
