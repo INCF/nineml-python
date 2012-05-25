@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.org/9ML/0.1">
   <ComponentClass name="RandomFixedProbability">
-    <Parameter name="p"/>
-    <Parameter name="weight"/>
-    <Parameter name="delay"/>
+    <Parameter name="p" dimension=""/>
+    <Parameter name="weight" dimension="kg^-1 m^-2 s^3 A^2"/>
+    <Parameter name="delay" dimension="s"/>
     <ConnectionRule>
       <English>
 	For each possible connection (i, j), where i and j belong to

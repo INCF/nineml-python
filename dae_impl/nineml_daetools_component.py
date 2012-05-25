@@ -159,6 +159,7 @@ def fixObjectName(name):
     return name.replace(' ', '_')
 
 dae_nineml_t = pyCore.daeVariableType("dae_nineml_t", pyUnits.unit(), -1.0e+20, 1.0e+20, 0.0, 1e-12)
+_used_variable_types_ = {}
 
 class daetoolsSpikeSource(pyCore.daeModel):
     """
@@ -260,6 +261,7 @@ class daetoolsVariableParameterDictionaryWrapper(object):
             raise RuntimeError('')
 
 _equation_parser_ = expression_parser.ExpressionParser()
+_units_parser_    = units_parser.UnitsParser()
 
 def createPoissonSpikeTimes(rate, duration, t0, rng_poisson, lambda_, rng_uniform):
     n  = int(rng_poisson.poisson(lambda_, 1))
@@ -298,10 +300,21 @@ class daetoolsComponentInfo(object):
         
         # 1) Create parameters
         for param in self.al_component.parameters:
+            dimension = _units_parser_.parse(param.dimension)
+            print('{0}: {1} = {2}'.format(param.name, param.dimension, dimension))
+
             self.nineml_parameters.append( (param.name, pyUnits.unit()) )
 
         # 2) Create state-variables (diff. variables)
         for var in self.al_component.state_variables:
+            if var.dimension in _used_variable_types_:
+                vtype = _used_variable_types_[var.dimension]
+            else:
+                dimension = _units_parser_.parse(var.dimension)
+                print('{0}: {1} = {2}'.format(var.name, var.dimension, dimension))
+                vtype = pyCore.daeVariableType("dae_nineml_t", pyUnits.unit(), -1.0e+20, 1.0e+20, 0.0, 1e-12)
+                _used_variable_types_[var.dimension] = vtype
+            
             self.nineml_state_variables.append( (var.name, dae_nineml_t) )
 
         # 3) Create alias variables (algebraic) and parse rhs

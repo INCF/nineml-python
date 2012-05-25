@@ -27,10 +27,7 @@ That can be done right after importing the module:
     unit.init_base_units()
 """
 
-tokens = [ 'BASE_UNIT',
-           'NUMBER', 'FLOAT',
-           'EXP'
-         ]
+tokens = [ 'BASE_UNIT', 'NUMBER', 'FLOAT', 'EXP' ]
 
 t_EXP    = r'\^'
 t_NUMBER = r'(\+|-)?\d+'
@@ -46,8 +43,14 @@ def t_error(t):
 
 # Parser rules:
 def p_expression_1(p):
-    """unit_expression : multi_unit"""
-    p[0] = p[1]
+    """
+    unit_expression :
+                    | multi_unit
+    """
+    if len(p) == 1: # Empty string
+        p[0] = Number(IdentifierNode(''))
+    else:
+        p[0] = p[1]
 
 def p_multi_unit_1(p):
     """multi_unit : multi_unit unit"""
@@ -73,7 +76,7 @@ def p_constant_2(p):
     """constant : FLOAT"""
     p[0] = Number(ConstantNode(float(p[1])))
     
-def p_base_unit_1(p):
+def p_base_unit(p):
     """base_unit : BASE_UNIT  """
     p[0] = Number(IdentifierNode(p[1]))
     
@@ -236,8 +239,12 @@ def testUnitsConsistency():
     
 def testUnitsParser():
     dictBaseUnits = unit.getAllSupportedUnits()
+    # Consider an empty or a single-blank character string as a nondimensional beast
+    dictBaseUnits['']  = unit()
+    dictBaseUnits[' '] = unit()
     parser        = UnitsParser(dictBaseUnits)
 
+    testExpression(parser, ' ')
     testExpression(parser, 'kg')
     testExpression(parser, 'kg V mV^-2')
     testExpression(parser, 'kg^1.25 V^-0.25 A^-2')

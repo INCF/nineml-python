@@ -4,9 +4,11 @@
     <AnalogPort mode="recv" name="V"/>
     <AnalogPort mode="send" name="I"/>
     <EventPort mode="recv" name="spikeinput"/>
-    <Parameter dimension="??" name="tau"/>
-    <Parameter dimension="??" name="weight"/>
-    <Parameter dimension="??" name="vrev"/>
+
+    <Parameter name="tau" dimension="s"/>
+    <Parameter name="weight" dimension="kg^-1 m^-2 s^3 A^2"/>
+    <Parameter name="vrev" dimension="kg m^2 s^-3 A^-1"/>
+
     <Dynamics>
       <Regime name="cobadefaultregime">
         <TimeDerivative variable="g">
@@ -21,7 +23,7 @@
       <Alias name="I">
         <MathInline>g*(vrev-V)</MathInline>
       </Alias>
-      <StateVariable dimension="??" name="g"/>
+      <StateVariable name="g" dimension="kg^-1 m^-2 s^3 A^2"/>
     </Dynamics>
   </ComponentClass>
 </NineML>

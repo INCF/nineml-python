@@ -4,12 +4,12 @@
     <AnalogPort mode="send" name="V"/>
     <AnalogPort mode="reduce" reduce_op="+" name="I"/>
     <EventPort mode="send" name="spikeoutput"/>
-    <Parameter dimension="??" name="cm"/>
-    <Parameter dimension="??" name="taurefrac"/>
-    <Parameter dimension="??" name="gl"/>
-    <Parameter dimension="??" name="vreset"/>
-    <Parameter dimension="??" name="vrest"/>
-    <Parameter dimension="??" name="vthresh"/>
+    <Parameter name="cm" dimension="kg^-1 m^-2 s^4 A^2"/>
+    <Parameter name="taurefrac" dimension="s"/>
+    <Parameter name="gl" dimension="kg^-1 m^-2 s^3 A^2"/>
+    <Parameter name="vreset" dimension="kg m^2 s^-3 A^-1"/>
+    <Parameter name="vrest" dimension="kg m^2 s^-3 A^-1"/>
+    <Parameter name="vthresh" dimension="kg m^2 s^-3 A^-1"/>
     <Dynamics>
       <Regime name="subthresholdregime">
         <TimeDerivative variable="V">
@@ -38,8 +38,8 @@
           </Trigger>
         </OnCondition>
       </Regime>
-      <StateVariable dimension="??" name="V"/>
-      <StateVariable dimension="??" name="tspike"/>
+      <StateVariable name="V" dimension="kg m^2 s^-3 A^-1"/>
+      <StateVariable name="tspike" dimension="s"/>
     </Dynamics>
   </ComponentClass>
 </NineML>

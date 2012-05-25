@@ -115,7 +115,8 @@ class XMLLoader(object):
 
        
     def load_parameter(self, element):
-        return nineml.al.Parameter(name=element.get('name')) 
+        # DNIKOLIC: Added dimension
+        return nineml.al.Parameter(name=element.get('name'), dimension=element.get('dimension')) 
 
     def load_analogport(self, element):
         return nineml.al.AnalogPort( name = element.get("name"),
@@ -150,7 +151,9 @@ class XMLLoader(object):
 
     def load_statevariable(self, element):
         name = element.get("name")
-        return nineml.al.StateVariable( name=name)
+        # DNIKOLIC: Added dimension
+        dimension=element.get('dimension')
+        return nineml.al.StateVariable( name=name, dimension=dimension)
 
 
     def load_timederivative(self, element):
