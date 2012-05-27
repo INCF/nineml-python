@@ -36,7 +36,7 @@ If explicit lists of connections are used then the number of neurones can be 100
 since we have generated connections only for that numbers.
 Otherwise, CSA can handle any number.
 """
-N_neurons = 100
+N_neurons = 500
 N_exc     = int(N_neurons * 0.8)
 N_inh     = int(N_neurons * 0.2)
 N_poisson = 20
@@ -124,17 +124,17 @@ population_poisson    = nineml.user_layer.Population("Poisson population",    N_
 
 # Create connection rules (using CSA)
 exc_params = {
-                'p'      : (0.020, ''),
+                'p'      : (0.020, '  '),
                 'weight' : (0.004, 'nS'),
                 'delay'  : (0.200, 'ms')
                 }
 inh_params = {
-                'p'      : (0.020, ''),
+                'p'      : (0.020, ' '),
                 'weight' : (0.051, 'nS'),
                 'delay'  : (0.200, 'ms')
                 }
 poi_params = {
-                'p'      : (0.020, ''),
+                'p'      : (0.020, '  '),
                 'weight' : (0.100, 'nS'),
                 'delay'  : (0.200, 'ms')
                 }

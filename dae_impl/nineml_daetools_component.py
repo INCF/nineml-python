@@ -266,6 +266,12 @@ class daetoolsVariableParameterDictionaryWrapper(object):
         else:
             raise RuntimeError('')
 
+"""
+daetools do not support a concept of separate dimensions and units in equations;
+equations are built of objects which represent quantities (numerical value + units).
+Therefore, here we emulate dimensions by using base SI units (m, kg, s, A, K, cd, mol).
+Also, we add empty string to support dimensionless quantities.
+"""
 _dictDimensions = {
                     'L' : pyUnits.m,
                     'M' : pyUnits.kg,
@@ -274,17 +280,22 @@ _dictDimensions = {
                     'O' : pyUnits.K,
                     'J' : pyUnits.cd,
                     'N' : pyUnits.mol,
-                    ''  : pyUnits.unit(), # No dimension case
-                    ' ' : pyUnits.unit() # No dimension case
+                    ''  : pyUnits.unit() # Non-dimensional 
                   }
+"""
+daetools define a large number of units:
+ - all base and derived SI units
+ - All of these with prefixes tera(T), giga(G), mega(M), kilo(k), hecto(h), deka(da),
+   deci(d), centi(c), mili(m), micro(u), nano(n), pico(p)
+All are imported into the pyUnits module. Here we filter those symbols and add them
+to the dictionary that will be used to evaluate the AST after the parsing phase.
+"""
 _dictUnits = {
-               ''  : pyUnits.unit(), # No units case
-               ' ' : pyUnits.unit()  # No units case
+               ''  : pyUnits.unit() # Non-dimensional
              }
 for attr in dir(pyUnits):
     obj = getattr(pyUnits, attr)
     if isinstance(obj, pyUnits.unit):
-        #print(attr, obj.baseUnit)
         _dictUnits[attr] = obj
 #print _dictDimensions
 #print _dictUnits

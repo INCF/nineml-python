@@ -90,6 +90,18 @@ class nineml_web_service:
         filename      = self._getAttachmentFilename(response)
         return filename, pdf
         
+    def downloadHTML(self, **kwargs):
+        def_filename     = kwargs.get('filename',         None)
+        openInDefaultApp = kwargs.get('openInDefaultApp', True)
+
+        parameters = {'__NINEML_ACTION__'    : 'downloadHTML',
+                      '__NINEML_WEBAPP_ID__' : self.applicationID
+                     }
+        self._sendRequest(parameters, self.headers)
+        html, response = self._getResponse()
+        filename      = self._getAttachmentFilename(response)
+        return filename, html
+
     def downloadZIP(self, **kwargs):
         parameters = {'__NINEML_ACTION__'    : 'downloadZIP',
                       '__NINEML_WEBAPP_ID__' : self.applicationID
@@ -233,7 +245,11 @@ def testComponentFromTheCatalog():
     filename, pdf = ws.downloadPDF()
     saveFileAndOpenInDefaultApp(filename, pdf)
     
-    # 7. Fetch the zip file with the tests data (optional, if any test specified)
+    # 7. Fetch the report in HTML format
+    filename, html = ws.downloadHTML()
+    saveFileAndOpenInDefaultApp(filename, html)
+
+    # 8. Fetch the zip file with the tests data (optional, if any test specified)
     filename, zip = ws.downloadZIP()
     saveFileAndOpenInDefaultApp(filename, zip)
 
