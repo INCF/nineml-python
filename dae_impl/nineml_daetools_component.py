@@ -189,15 +189,15 @@ class daetoolsSpikeSource(pyCore.daeModel):
         # Add one 'send' event port
         self.spikeoutput = pyCore.daeEventPort("spikeoutput", pyCore.eOutletPort, self, "Spike outlet event port")
         
-        # A list of spike event times
+        # A list of spike event times (pyUnits.quantity objects)
         self.spiketimes = list(spiketimes)
 
     def initialize(self):
         pass
     
-    @property
-    def initialEvents(self):
-        return self.spiketimes
+    #@property
+    #def initialEvents(self):
+    #    return self.spiketimes
     
     def CleanUpSetupData(self):
         pass
@@ -208,9 +208,9 @@ class daetoolsSpikeSource(pyCore.daeModel):
         for i, t in enumerate(self.spiketimes):
             self.STATE('State_{0}'.format(i))
             eq = self.CreateEquation("event")
-            eq.Residual = self.event() - t
-            self.ON_CONDITION(pyCore.Time() >= t, switchTo      = 'State_{0}'.format(i+1),
-                                                  triggerEvents = [(self.spikeoutput, pyCore.Time())])
+            eq.Residual = self.event() - pyCore.Constant(t)
+            self.ON_CONDITION(pyCore.Time() >= pyCore.Constant(t), switchTo      = 'State_{0}'.format(i+1),
+                                                                   triggerEvents = [(self.spikeoutput, pyCore.Time())])
 
         self.STATE('State_{0}'.format(len(self.spiketimes)))
 
@@ -307,10 +307,19 @@ _units_parser_      = units_parser.UnitsParser(_dictUnits)
 def parseUnits(units):
     return _units_parser_.parse_and_evaluate(units)
 
-def createPoissonSpikeTimes(rate, duration, t0, rng_poisson, lambda_, rng_uniform):
-    n  = int(rng_poisson.poisson(lambda_, 1))
-    spiketimes = sorted(rng_uniform.uniform(t0, t0+duration, n))
-    return spiketimes
+def createPoissonSpikeTimes(rate, duration, t0, rng_poisson, lambda_, rng):
+    """
+    :param rate: rate in Hz
+    :param duration: duration in s
+    :param t0: start time in s
+    :param lambda_: lambda (dimensionless)
+    :param rng: numpy RandomState object
+
+    :rtype: list of pyUnits.quantity objects
+    """
+    n  = int(rng.poisson(lambda_, 1))
+    spiketimes = rng.uniform(t0.value, t0.value + duration.value, n)
+    return [time * pyUnits.s for time in sorted(spiketimes)]
 
 class daetoolsComponentInfo(object):
     """
@@ -623,9 +632,9 @@ class daetoolsComponent(pyCore.daeModel):
             else:
                 raise RuntimeError('Cannot connect analogue ports {0} and {1}'.format(nameFrom, nameTo))
     
-    @property
-    def initialEvents(self):
-        return []
+    #@property
+    #def initialEvents(self):
+    #    return []
     
     def __str__(self):
         res = ''
@@ -1020,16 +1029,22 @@ class daetoolsComponentSetup(object):
             if isinstance(value, tuple) and isinstance(value[0], (long, int, float)):
                 _value, _units = daetoolsComponentSetup.getValue(value, paramRelativeName)
                 q = pyUnits.quantity(_value, _units)
-                print('Set the parameter: {0} {1} value'.format(parameter.CanonicalName, parameter.Units))
+                print('Set the parameter: {0} with units: {1} value'.format(parameter.CanonicalName, parameter.Units))
                 print('    quantity: {0}'.format(q))
                 parameter.SetValues(q)
+                try:
+                    print('    new value: {0}'.format(parameter.GetValue()))
+                except:
+                    print('    new value: {0}'.format(parameter.GetValue(0)))
             
             elif isinstance(value, tuple) and isinstance(value[0], nineml.user_layer.RandomDistribution):
                 rng, _units = daetoolsComponentSetup.getValue(value, paramRelativeName)
                 n   = parameter.Domains[0].NumberOfPoints
+                print('Set the parameter: {0} with units: {1} random value'.format(parameter.CanonicalName, parameter.Units))
                 for i in xrange(0, n):
                     _value = float(rng.next())
                     q = pyUnits.quantity(_value, _units)
+                    print('    quantity: {0}'.format(q))
                     parameter.SetValue(i, q)
             
             else:
@@ -1055,16 +1070,22 @@ class daetoolsComponentSetup(object):
             if isinstance(value, tuple) and isinstance(value[0], (long, int, float)):
                 _value, _units = daetoolsComponentSetup.getValue(value, varRelativeName)
                 q = pyUnits.quantity(_value, _units)
-                print('Set the variable: {0} {1} value'.format(variable.CanonicalName, variable.VariableType.Units))
+                print('Set the variable: {0} with units: {1} value'.format(variable.CanonicalName, variable.VariableType.Units))
                 print('    quantity: {0}'.format(q))
                 variable.SetInitialConditions(q)
+                try:
+                    print('    new ic: {0}'.format(variable.GetNumPyArray()))
+                except:
+                    pass
             
             elif isinstance(value, tuple) and isinstance(value[0], nineml.user_layer.RandomDistribution):
                 rng, _units = daetoolsComponentSetup.getValue(value, varRelativeName)
                 n = variable.Domains[0].NumberOfPoints
+                print('Set the variable: {0} with units: {1} random value'.format(variable.CanonicalName, variable.VariableType.Units))
                 for i in xrange(0, n):
                     _value = float(rng.next())
                     q = pyUnits.quantity(_value, _units)
+                    print('    quantity: {0}'.format(q))
                     variable.SetInitialCondition(i, q)
             
             else:
@@ -1099,11 +1120,11 @@ class daetoolsComponentSetup(object):
         else:
             raise RuntimeError('Could not find a parameter with the name [weight] in the synapse {0}'.format(model.Name))
         
-        print('Set the weights for: {0}'.format(model.CanonicalName))
+        print('Set the weights for: {0} with units: {1}'.format(paramWeight.CanonicalName, paramWeight.Units))
         for i, weight in enumerate(weights):
-            print('    Parameter weight: {0} {1}'.format(paramWeight.CanonicalName, paramWeight.Units))
             print('    Weight value: {0}'.format(weight))
             paramWeight.SetValue(i, weight)
+            print('    Set weight: {0}'.format(paramWeight.GetValue(i)))
             
     @staticmethod
     def getValue(value, name):

@@ -54,48 +54,59 @@ Their values are for the network with 4000 neurones; the weights here should be 
 account for the lower number of neurones.
 """
 
+"""
+ACHTUNG, ACHTUNG!!
+Whats the purpose of units here?? Units make sense when used as a value of a parameter.
+RNG itself have no idea how to use them. Therefore, the user has to be careful with
+the values, to ensure that the produced random number values match the desired units.
+
+Here, the units should be mV, but they are not used. They do get used below in 'poisson_params',
+parameter V. There we has to specify the correct units (mV).
+"""
 rnd_uniform_params = {
-                        'lowerBound': (-0.060, ''),
-                        'upperBound': (-0.040, '')
-                        }
+                        'lowerBound': (-60, ''),
+                        'upperBound': (-40, '')
+                     }
 uni_distr = nineml.user_layer.RandomDistribution("uniform(-0.060, -0.040)", os.path.join(catalog, "uniform_distribution.xml"), rnd_uniform_params)
 
 poisson_params = {
-                    'rate'     : (100.00, 'Hz'),
-                    'duration' : (  0.05, 's'),
-                    't0'       : (  0.00, 's')
-                }
+                    'rate'     : (100, 'Hz'),
+                    'duration' : ( 50, 'ms'),
+                    't0'       : (  0, 'ms')
+                 }
 
 neurone_params = {
                     'tspike' :    ( -1.000,   's'),
-                    'V' :         (uni_distr, 'V'),
-                    'gl' :        ( 1.0E-8,   'S'),
-                    'vreset' :    ( -0.060,   'V'),
-                    'taurefrac' : (  0.001,   's'),
-                    'vthresh' :   ( -0.040,   'V'),
-                    'vrest' :     ( -0.060,   'V'),
-                    'cm' :        ( 0.2E-9,   'F')
-                    }
+                    'V' :         (uni_distr, 'mV'), # ACHTUNG!! Here the units should match those 
+                                                     # produced by the uni_distr; it seems that it is
+                                                     # a responsibility of the user...
+                    'gl' :        ( 10, 'nS'),
+                    'vreset' :    (-60, 'mV'),
+                    'taurefrac' : (  1, 'ms'),
+                    'vthresh' :   (-40, 'mV'),
+                    'vrest' :     (-60, 'mV'),
+                    'cm' :        (0.2, 'nF')
+                 }
 
 psr_poisson_params = {
-                        'vrev'   : (   0.000, 'V'),
-                        'weight' : (100.0E-9, 'S'),
-                        'tau'    : (   0.005, 's'),
-                        'g'      : (   0.000, 'S')
-                        }
+                        'vrev'   : (0, 'mV'),
+                        'weight' : (0, 'nS'),
+                        'tau'    : (5, 'ms'),
+                        'g'      : (0, 'nS')
+                     }
 
 psr_excitatory_params = {
-                            'vrev'  : (  0.000,  'V'),
-                            'weight': (4*4.0E-9, 'S'),
-                            'tau'   : (  0.005,  's'),
-                            'g'     : (  0.000,  'S')
+                            'vrev'  : (0, 'mV'),
+                            'weight': (0, 'nS'),
+                            'tau'   : (5, 'ms'),
+                            'g'     : (0, 'mS')
                         }
                 
 psr_inhibitory_params = {
-                            'vrev'   : ( -0.080, 'V'),
-                            'weight' : (51.0E-9, 'S'),
-                            'tau'    : (  0.010, 's'),
-                            'g'      : (  0.000, 'S')
+                            'vrev'   : (-80, 'mV'),
+                            'weight' : (  0, 'nS'),
+                            'tau'    : ( 10, 'ms'),
+                            'g'      : (  0, 'mS')
                         }
 
 neurone_IAF     = nineml.user_layer.SpikingNodeType("IAF neurone", os.path.join(catalog, "iaf.xml"), neurone_params)
@@ -124,20 +135,20 @@ population_poisson    = nineml.user_layer.Population("Poisson population",    N_
 
 # Create connection rules (using CSA)
 exc_params = {
-                'p'      : (0.020, '  '),
-                'weight' : (0.004, 'nS'),
-                'delay'  : (0.200, 'ms')
-                }
+                'p'      : (0.02, ''),
+                'weight' : (4* 4, 'nS'),
+                'delay'  : ( 0.2, 'ms')
+             }
 inh_params = {
-                'p'      : (0.020, ' '),
-                'weight' : (0.051, 'nS'),
-                'delay'  : (0.200, 'ms')
-                }
+                'p'      : (0.02, ''),
+                'weight' : (  51, 'nS'),
+                'delay'  : ( 0.2, 'ms')
+             }
 poi_params = {
-                'p'      : (0.020, '  '),
-                'weight' : (0.100, 'nS'),
-                'delay'  : (0.200, 'ms')
-                }
+                'p'      : (0.02, ''),
+                'weight' : ( 100, 'nS'),
+                'delay'  : ( 0.2, 'ms')
+             }
 
 connection_rule_exc_exc     = nineml.user_layer.ConnectionRule("Connections exc_exc",     os.path.join(catalog, "random_fixed_probability_w_d.xml"), exc_params)
 connection_rule_exc_inh     = nineml.user_layer.ConnectionRule("Connections exc_inh",     os.path.join(catalog, "random_fixed_probability_w_d.xml"), exc_params)

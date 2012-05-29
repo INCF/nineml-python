@@ -106,21 +106,28 @@ def createNeurone(name, component_info, rng, parameters):
     """
     if component_info.name == 'spike_source_poisson':
         if 'rate' in parameters:
-            rate = float(parameters['rate'][0])
+            # Create daetools quantity and scale it to 'Hz'
+            rate = pyUnits.quantity(parameters['rate'][0], parameters['rate'][1]).scaleTo(pyUnits.Hz)
+            #print('spike_source_poisson.rate = %s' % rate)
         else:
             raise RuntimeError('The SpikeSourcePoisson component: must have [rate] parameter')
         
         if 'duration' in parameters:
-            duration = float(parameters['duration'][0])
+            # Create daetools quantity and scale it to 's'
+            duration = pyUnits.quantity(parameters['duration'][0], parameters['duration'][1]).scaleTo(pyUnits.s)
+            #print('spike_source_poisson.duration = %s' % duration)
         else:
             raise RuntimeError('The SpikeSourcePoisson component: must have [duration] parameter')
         
         if 't0' in parameters:
-            t0 = float(parameters['t0'][0])
+            # Create daetools quantity and scale it to 's'
+            t0 = pyUnits.quantity(parameters['t0'][0], parameters['t0'][1]).scaleTo(pyUnits.s)
+            #print('spike_source_poisson.t0 = %s' % t0)
         else:
             t0 = 0.0
 
-        lambda_ = rate * duration
+        # Should be rate [Hz] * duration [s]
+        lambda_ = rate.value * duration.value
 
         spiketimes = createPoissonSpikeTimes(rate, duration, t0, rng, lambda_, rng)
         neurone    = daetoolsSpikeSource(spiketimes, name, None, '')
@@ -430,15 +437,16 @@ class daetoolsProjection(object):
         if not isinstance(ul_projection.target.prototype, nineml.user_layer.SpikingNodeType):
             raise RuntimeError('Currently, only populations of spiking neurones (not groups) are supported')
         
-        source_population  = group.getPopulation(ul_projection.source.name)
-        target_population  = group.getPopulation(ul_projection.target.name)
-        psr_parameters     = network.getComponentParameters(ul_projection.synaptic_response.name)
-        connection_rule    = network.getALComponent(ul_projection.rule.name)
-        connection_type    = network.getALComponent(ul_projection.connection_type.name)
-        psr_component_info = network.getComponentInfo(ul_projection.synaptic_response.name)
-        source_name        = fixObjectName(ul_projection.source.name)
-        target_name        = fixObjectName(ul_projection.target.name)
-        synapse_name       = fixObjectName(ul_projection.synaptic_response.name)
+        source_population          = group.getPopulation(ul_projection.source.name)
+        target_population          = group.getPopulation(ul_projection.target.name)
+        psr_parameters             = network.getComponentParameters(ul_projection.synaptic_response.name)
+        connection_rule            = network.getALComponent(ul_projection.rule.name)
+        connection_rule_parameters = network.getComponentParameters(ul_projection.rule.name)
+        connection_type            = network.getALComponent(ul_projection.connection_type.name)
+        psr_component_info         = network.getComponentInfo(ul_projection.synaptic_response.name)
+        source_name                = fixObjectName(ul_projection.source.name)
+        target_name                = fixObjectName(ul_projection.target.name)
+        synapse_name               = fixObjectName(ul_projection.synaptic_response.name)
         
         self._synapses = [
                           daetoolsComponent(
@@ -453,10 +461,21 @@ class daetoolsProjection(object):
             neurone.incoming_synapses.append( (self._synapses[i], psr_parameters) ) 
         
         if 'weight' in psr_parameters:
-            paramWeight  = psr_parameters['weight']
-            weight_units = paramWeight[1]
+            paramWeight      = psr_parameters['weight']
+            psr_weight_units = paramWeight[1]
         else:
             raise RuntimeError('Could not find a parameter with the name [weight] in the synapse {0}'.format(model.Name))
+
+        #print('connection_rule_parameters: %s' % connection_rule_parameters)
+        if 'weight' in connection_rule_parameters:
+            connrule_weight_units  = connection_rule_parameters['weight'][1]
+        else:
+            raise RuntimeError('Could not find a parameter with the name [weight] in the connection rule {0}'.format(model.Name))
+
+        if 'delay' in connection_rule_parameters:
+            connrule_delay_units  = connection_rule_parameters['delay'][1]
+        else:
+            raise RuntimeError('Could not find a parameter with the name [delay] in the connection rule {0}'.format(model.Name))
         
         # Create an object that supports the Geometry interface 
         geometry = geometryFromProjection(ul_projection)
@@ -466,7 +485,7 @@ class daetoolsProjection(object):
         mask = connection_generator.Mask([(0, ul_projection.source.number - 1)], [(0, ul_projection.target.number - 1)])
         cgi = connectionGeneratorFromProjection(ul_projection, geometry)
         cgi.setMask(mask)
-        self.createConnections(cgi, source_population, target_population, weight_units)
+        self.createConnections(cgi, source_population, target_population, psr_weight_units, connrule_weight_units, connrule_delay_units)
         
         # Now we are done with connections. Initialize synapses
         for i, neurone in enumerate(target_population.neurones):
@@ -487,7 +506,8 @@ class daetoolsProjection(object):
         """
         return self._synapses[index]
 
-    def createConnections(self, cgi, source_population, target_population, weight_units):
+    def createConnections(self, cgi, source_population, target_population,
+                          psr_weight_units, connrule_weight_units, connrule_delay_units):
         """
         Iterates over ConnectionGeneratorInterface object and creates connections.
         It connects source->target neurones and (optionally) sets weights and delays
@@ -508,33 +528,36 @@ class daetoolsProjection(object):
             weight       = 0.0
             delay        = 0.0
             parameters   = []
-            
+
+            # Weight and delay values are in units specified by the user in the UL component
+            # Weight will be scaled to the units in the PSR component, while delay to seconds
             if cgi.arity == 1:
-                weight = float(connection[2]) * 1E-6 # nS -> S
-            elif cgi.arity == 2:
-                weight = float(connection[2]) * 1E-6 # nS -> S
-                delay  = float(connection[3]) * 1E-3 # ms -> s
-            elif cgi.arity >= 3:
-                weight = float(connection[2]) * 1E-6 # nS -> S
-                delay  = float(connection[3]) * 1E-3 # ms -> s
-                for i in range(4, size):
-                    parameters.append(float(connection[i]))           
+                weight = pyUnits.quantity(float(connection[2]), connrule_weight_units)
+
+            elif cgi.arity >= 2:
+                weight = pyUnits.quantity(float(connection[2]), connrule_weight_units)
+                delay  = pyUnits.quantity(float(connection[3]), connrule_delay_units)
             
             source_neurone = source_population.getNeurone(source_index)
             target_neurone = target_population.getNeurone(target_index)
             synapse        = self.getSynapse(target_index)
-            
-            if delay < self.minimal_delay:
-                self.minimal_delay = delay
+
+            # Scale the delay to seconds
+            delay_in_seconds = delay.scaleTo(pyUnits.s).value
+            #print('delay_in_seconds = %f' % delay_in_seconds)
+
+            if delay_in_seconds < self.minimal_delay:
+                self.minimal_delay = delay_in_seconds
             
             # Add the new item to the list of connected synapse event ports and connection delays.
             # Here we cannot add an event port directly since it does not exist yet.
             # Therefore, we add the synapse object and the index of the event port.
-            source_neurone.target_synapses.append( (synapse, synapse.Nitems, delay, target_neurone) )
+            source_neurone.target_synapses.append( (synapse, synapse.Nitems, delay_in_seconds, target_neurone) )
             synapse.Nitems += 1
             
             # Weights cannot be set right now. Thus, we put them into an array.
-            synapse.synapse_weights.append(weight * weight_units)
+            # Also, the units must be scaled to those specified in the PSR component
+            synapse.synapse_weights.append( weight.scaleTo(psr_weight_units) )
             count += 1
         
         print('{0}: created {1} connections'.format(self.name, count))
