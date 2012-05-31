@@ -25,18 +25,7 @@ from nineml_point_neurone_network import simulate_network
 ###############################################################################
 #                           NineML UserLayer Model
 ###############################################################################
-"""
-If True use CSA to handle connections; 
-otherwise use the lists of explicit connections
-"""
-useCSA = True
-
-"""
-If explicit lists of connections are used then the number of neurones can be 100, 1000 and 2000
-since we have generated connections only for that numbers.
-Otherwise, CSA can handle any number.
-"""
-N_neurons = 500
+N_neurons = 200
 N_exc     = int(N_neurons * 0.8)
 N_inh     = int(N_neurons * 0.2)
 N_poisson = 20
@@ -49,8 +38,8 @@ but for some reasons it can't be resolved in windows.
 catalog = 'catalog'
     
 """
-All parameters values are in base SI units. The values are adopted from the Brette et al (2007) paper.
-Their values are for the network with 4000 neurones; the weights here should be changed to
+The parameters values are adopted from the Brette et al (2007) paper.
+Their values are for the network of 4000 neurones; the weights here should be changed to
 account for the lower number of neurones.
 """
 
@@ -61,7 +50,7 @@ RNG itself have no idea how to use them. Therefore, the user has to be careful w
 the values, to ensure that the produced random number values match the desired units.
 
 Here, the units should be mV, but they are not used. They do get used below in 'poisson_params',
-parameter V. There we has to specify the correct units (mV).
+parameter V. There we have to specify the correct units (mV).
 """
 rnd_uniform_params = {
                         'lowerBound': (-60, ''),
@@ -78,7 +67,7 @@ poisson_params = {
 neurone_params = {
                     'tspike' :    ( -1.000,   's'),
                     'V' :         (uni_distr, 'mV'), # ACHTUNG!! Here the units should match those 
-                                                     # produced by the uni_distr; it seems that it is
+                                                     # produced by the uni_distr; it seems that this is
                                                      # a responsibility of the user...
                     'gl' :        ( 10, 'nS'),
                     'vreset' :    (-60, 'mV'),
@@ -134,10 +123,14 @@ population_inhibitory = nineml.user_layer.Population("Inhibitory population", N_
 population_poisson    = nineml.user_layer.Population("Poisson population",    N_poisson, neurone_poisson, nineml.user_layer.PositionList(structure=grid2D))
 
 # Create connection rules (using CSA)
+# The original parameters' values are for the network of 4000 neurones
+# We can scale weights to 
+sf = 2000.0/N_neurons
+
 exc_params = {
-                'p'      : (0.02, ''),
-                'weight' : (4* 4, 'nS'),
-                'delay'  : ( 0.2, 'ms')
+                'p'      : (  0.02, ''),
+                'weight' : (sf * 4, 'nS'),
+                'delay'  : (   0.2, 'ms')
              }
 inh_params = {
                 'p'      : (0.02, ''),

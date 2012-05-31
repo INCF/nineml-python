@@ -114,7 +114,11 @@ class ExpressionParser:
         return t
 
     t_NUMBER = r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
-    t_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
+
+    exponent_part = r"""([eE][-+]?[0-9]+)"""
+    fract_const   = r"""([0-9]*\.[0-9]+)|([0-9]+\.)"""
+    t_FLOAT = '(((('+fract_const+')'+exponent_part+'?)|([0-9]+'+exponent_part+'))[FfLl]?)'
+    #t_FLOAT = r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
 
     t_ignore = " \t"
 
@@ -346,8 +350,8 @@ class ExpressionParser:
         raise Exception("Syntax error at '%s'" % p.value)
 
     def __init__(self, dictIdentifiers = None, dictFunctions = None):
-        self.lexer  = lex.lex(module=self) #, optimize=1)
-        self.parser = yacc.yacc(module=self, debug=False, write_tables = 0) #, optimize=1, debug=False, write_tables = 0)
+        self.lexer            = lex.lex(module=self) # optimize=1)
+        self.parser           = yacc.yacc(module=self, debug=False, write_tables = 0) # optimize=1)
         self.parseResult      = None
         self.dictIdentifiers  = dictIdentifiers
         self.dictFunctions    = dictFunctions
@@ -540,7 +544,7 @@ if __name__ == "__main__":
     testExpression('x1 / x2', x1 / x2)
     testExpression('x1 ** x2', x1 ** x2)
 
-    testExpression('Sum(pi, -1.5, sqrt(4))', Sum(pi, -1.5, sqrt(4)))
+    testExpression('Sum(pi, -1.5E-07, sqrt(4))', Sum(pi, -1.5E-07, sqrt(4)))
     testExpression('-sqrt(m1.m2.y + 2) / exp(-m1.x)', -sqrt(m1_m2_y + 2) / exp(-m1_x))
     testExpression('(-exp(y + x2 / x4) + 4.0) - x1', (-exp(y + x2 / x4) + 4.0) - x1)
     parse_res, latex_res, eval_res = testExpression('R = sin(x1 + x3)/x4', sin(x1 + x3)/x4)

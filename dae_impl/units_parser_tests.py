@@ -4,118 +4,12 @@ import ply.lex as lex
 import ply.yacc as yacc
 import parser_objects
 from parser_objects import Number, BinaryNode, IdentifierNode, ConstantNode
+from units_parser import UnitsParser, QuantityParser
 from expression_parser import ExpressionParser
 try:
-    from daetools.pyDAE import pyUnits
+    from daetools.pyDAE import pyUnits, pyCore
 except ImportError as e:
     print(e)
-
-tokens = [ 'BASE_UNIT',
-           'NUMBER', 'FLOAT',
-           'EXP'
-         ]
-
-t_EXP    = r'\^'
-t_NUMBER = r'(\+|-)?\d+'
-t_FLOAT  = r'(\+|-)?(\d+)(\.\d+)'
-
-t_ignore = " \t\n"
-
-t_BASE_UNIT = r'[a-zA-Z_][a-zA-Z_0-9]*'
-
-def t_error(t):
-    print("Illegal character '{0}' found while parsing '{1}'".format(t.value[0], t.value))
-    #t.lexer.skip(1)
-
-# Parser rules:
-def p_expression_1(p):
-    """unit_expression : multi_unit"""
-    p[0] = p[1]
-
-def p_multi_unit_1(p):
-    """multi_unit : multi_unit unit"""
-    p[0] = p[1] * p[2]
-
-def p_multi_unit_2(p):
-    """multi_unit : unit"""
-    p[0] = p[1]
-
-def p_unit_1(p):
-    """unit :  base_unit"""
-    p[0] = p[1]
-
-def p_unit_2(p):
-    """unit :  base_unit EXP constant"""
-    p[0] = p[1] ** p[3]
-
-def p_constant_1(p):
-    """constant : NUMBER"""
-    p[0] = Number(ConstantNode(int(p[1])))
-    
-def p_constant_2(p):
-    """constant : FLOAT"""
-    p[0] = Number(ConstantNode(float(p[1])))
-    
-def p_base_unit_1(p):
-    """base_unit : BASE_UNIT  """
-    p[0] = Number(IdentifierNode(p[1]))
-    
-def p_error(p):
-    raise Exception("Syntax error at '%s'" % p.value)
-
-class UnitsParser:
-    """
-    The parser supports dimensions/units in the following format:
-       "id_1^exp_1 id_2^exp_2 ... id_n^exp_n"
-    where 'id' can be either a dimension or an unit (depending on what is in the dictionary)
-    To evaluate the AST tree objects that support the above operators should be provided in dictIdentifiers.
-    Dictionary 'dictIdentifiers' should contain pairs of the following type:
-        dimension-name:dimension-object (dimension-objects must define * and ** operators)
-        unit-name:unit-object (unit-objects must define * and ** operators)
-    Instances of the 'unit' class from daetools.pyUnits module could be used as unit/dimension-objects.
-    """
-    def __init__(self, dictUnits = None):
-        self.lexer  = lex.lex() #optimize=1)
-        self.parser = yacc.yacc() #optimize=1)
-        self.parseResult = None
-        self.dictIdentifiers = dictUnits
-        
-    def parse(self, expression):
-        self.parseResult = self.parser.parse(expression, lexer = self.lexer)
-        return self.parseResult
-
-    def parse_and_evaluate(self, expression):
-        self.parse(expression)
-        return self.evaluate()
-
-    def parse_to_latex(self, expression):
-        self.parse(expression)
-        return self.toLatex()
-
-    def toLatex(self):
-        if self.parseResult is None:
-            raise RuntimeError('expression not parsed yet')
-        return self.parseResult.toLatex()
-
-    def toMathML(self):
-        if self.parseResult is None:
-            raise RuntimeError('expression not parsed yet')
-        return self.parseResult.toMathML()
-
-    def evaluate(self):
-        if self.parseResult is None:
-            raise RuntimeError('expression not parsed yet')
-        if self.dictIdentifiers is None:
-            raise RuntimeError('dictIdentifiers not set')
-
-        node = None
-        if isinstance(self.parseResult, Number):
-            node = self.parseResult.Node
-        else:
-            raise RuntimeError('Invalid parse result type')
-
-        result = node.evaluate(self.dictIdentifiers, None)
-        return result
 
 def testConsistency(parser, expression, expected_units):
     parse_res    = parser.parse(expression)
@@ -138,10 +32,9 @@ def testExpression(parser, expression, do_evaluation = True):
     print('Parse result string: ', str(parse_res))
     print('Parse result latex: ', parser.toLatex())
     print('Parse result mathml: ', parser.toMathML())
-    #if do_evaluation:
-    #    eval_res = parser.evaluate()
-    #    print('Evaluate result String: {0}'.format(eval_res.toString()))
-    #    print('Evaluate result Latex: {0}'.format(eval_res.toLatex()))
+    if do_evaluation:
+        eval_res = parser.evaluate()
+        print('Evaluate result: {0}'.format(str(eval_res)))
     print(' ')
 
 def testUnitsConsistency():
@@ -188,26 +81,25 @@ def testUnitsConsistency():
 
     # Define math. functions for the parser
     dictFunctions['__create_constant__'] = float
-    dictFunctions['sin']   = parser_objects.sin
-    dictFunctions['cos']   = parser_objects.cos
-    dictFunctions['tan']   = parser_objects.tan
-    dictFunctions['asin']  = parser_objects.asin
-    dictFunctions['acos']  = parser_objects.acos
-    dictFunctions['atan']  = parser_objects.atan
-    dictFunctions['sinh']  = parser_objects.sinh
-    dictFunctions['cosh']  = parser_objects.cosh
-    dictFunctions['tanh']  = parser_objects.tanh
-    dictFunctions['asinh'] = parser_objects.asinh
-    dictFunctions['acosh'] = parser_objects.cosh
-    dictFunctions['atanh'] = parser_objects.atanh
-    dictFunctions['log10'] = parser_objects.log10
-    dictFunctions['log']   = parser_objects.log
-    dictFunctions['sqrt']  = parser_objects.sqrt
-    dictFunctions['exp']   = parser_objects.exp
-    dictFunctions['floor'] = parser_objects.floor
-    dictFunctions['ceil']  = parser_objects.ceil
-    dictFunctions['pow']   = parser_objects.pow_
-    dictFunctions['abs']   = parser_objects.abs_
+    dictFunctions['sin']   = pyCore.Sin
+    dictFunctions['cos']   = pyCore.Cos
+    dictFunctions['tan']   = pyCore.Tan
+    dictFunctions['asin']  = pyCore.ASin
+    dictFunctions['acos']  = pyCore.ACos
+    dictFunctions['atan']  = pyCore.ATan
+    dictFunctions['sinh']  = pyCore.Sinh
+    dictFunctions['cosh']  = pyCore.Cosh
+    dictFunctions['tanh']  = pyCore.Tanh
+    dictFunctions['asinh'] = pyCore.ASinh
+    dictFunctions['acosh'] = pyCore.Cosh
+    dictFunctions['atanh'] = pyCore.ATanh
+    dictFunctions['log10'] = pyCore.Log10
+    dictFunctions['log']   = pyCore.Log
+    dictFunctions['sqrt']  = pyCore.Sqrt
+    dictFunctions['exp']   = pyCore.Exp
+    dictFunctions['floor'] = pyCore.Floor
+    dictFunctions['ceil']  = pyCore.Ceil
+    dictFunctions['abs']   = pyCore.Abs
 
     #print('Identifiers:\n', dictIdentifiers, '\n')
     #print('Functions:\n', dictFunctions, '\n')
@@ -227,18 +119,74 @@ def testDimensionsParser():
                         'I' : pyUnits.A,
                         'O' : pyUnits.K,
                         'J' : pyUnits.cd,
-                        'N' : pyUnits.mol
+                        'N' : pyUnits.mol,
+                        ''  : pyUnits.unit
                       }
     parser = UnitsParser(dictIdentifiers)
 
+    print('######################################################')
+    print('          testDimensionsParser')
+    print('######################################################')
     testExpression(parser, 'M')
     testExpression(parser, 'M T^2 J^-2')
     testExpression(parser, 'M^5 L^-2 O')
 
 def testUnitsParser():
-    pass
+    """
+    daetools define a large number of units:
+    - all base and derived SI units
+    - All of these with prefixes tera(T), giga(G), mega(M), kilo(k), hecto(h), deka(da),
+    deci(d), centi(c), mili(m), micro(u), nano(n), pico(p)
+    All are imported into the pyUnits module. Here we filter those symbols and add them
+    to the dictionary that will be used to evaluate the AST after the parsing phase.
+    """
+    dictIdentifiers = {
+                        ''  : pyUnits.unit() # Non-dimensional
+                      }
+    for attr in dir(pyUnits):
+        obj = getattr(pyUnits, attr)
+        if isinstance(obj, pyUnits.unit):
+            dictIdentifiers[attr] = obj
+
+    print('Supported units: %s' % sorted(dictIdentifiers))
+    parser = UnitsParser(dictIdentifiers)
+
+    print('######################################################')
+    print('          testUnitsParser')
+    print('######################################################')
+    testExpression(parser, 'kg')
+    testExpression(parser, 'kg m')
+    testExpression(parser, 's kg^-1 m^-2')
+    testExpression(parser, 's kg^-1 mm^2')
+
+def testQuantityParser():
+    dictIdentifiers = {
+                        ''  : pyUnits.unit() # Non-dimensional
+                      }
+    for attr in dir(pyUnits):
+        obj = getattr(pyUnits, attr)
+        if isinstance(obj, pyUnits.unit):
+            dictIdentifiers[attr] = obj
+
+    #print('Supported units: %s' % sorted(dictIdentifiers))
+
+    dictFunctions = {
+                      '__create_quantity__' : pyUnits.quantity
+                    }
+
+    parser = QuantityParser(dictIdentifiers, dictFunctions)
+    
+    print('######################################################')
+    print('          testQuantityParser')
+    print('######################################################')
+
+    testExpression(parser, '.1 kg')
+    testExpression(parser, '-1.067e-09 s kg^-1 m^-2')
+    testExpression(parser, '-1.067')
+    testExpression(parser, '-1.067E-07 s kg^-1 m^-2')
 
 if __name__ == "__main__":
-    testDimensionsParser()
+    #testDimensionsParser()
     #testUnitsParser()
-    testUnitsConsistency()
+    #testUnitsConsistency()
+    testQuantityParser()
