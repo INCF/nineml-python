@@ -20,7 +20,7 @@ from nineml.user_layer_aux import ConnectionGenerator
 from nineml.user_layer_aux import connectionGeneratorFromProjection, geometryFromProjection
 
 from daetools.pyDAE import daeLogs, pyCore, pyActivity, pyDataReporting, pyIDAS, pyUnits
-from daetools.solvers import pySuperLU
+#from daetools.solvers import pySuperLU
 
 import nineml_daetools_component
 from nineml_daetools_component import daetoolsRNG, createPoissonSpikeTimes, daetoolsSpikeSource, daetoolsComponentInfo
@@ -596,8 +596,8 @@ class daetoolsPointNeuroneSimulation(pyActivity.daeSimulation):
         # 1. No need to do anything (Sundials LU is the default solver)
         
         # 2. SuperLU LA Solver (uncomment the lines below)
-        self.lasolver = pySuperLU.daeCreateSuperLUSolver()
-        self.daesolver.SetLASolver(self.lasolver)
+        #self.lasolver = pySuperLU.daeCreateSuperLUSolver()
+        #self.daesolver.SetLASolver(self.lasolver)
         
         # 3. Lapack LA Solver (uncomment the lines below)
         #self.daesolver.SetLASolver(pyIDAS.eSundialsLapack)
