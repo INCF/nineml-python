@@ -2,7 +2,6 @@
 
 import os
 import re
-from Cheetah.Template import Template
 
 import nineml
 
@@ -145,6 +144,8 @@ class DotWriter(object):
     @classmethod
     def write(self, component, filename, flatten=True):
         """ Writes a component out to the .dot format"""
+        
+        from Cheetah.Template import Template
         
 
         if not component.is_flat() and flatten:
