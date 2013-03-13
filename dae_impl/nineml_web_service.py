@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import os, sys, httplib, urllib, json, re
+import os, httplib, urllib, re
+import json
 
 class nineml_web_service:
     def __init__(self, server = 'nineml-app.incf.org', port = 80):
@@ -47,8 +48,8 @@ class nineml_web_service:
                       '__NINEML_WEBAPP_ID__' : self.applicationID
                      }
         self._sendRequest(parameters, self.headers)
-        json, response = self._getResponse()
-        return json
+        _json, response = self._getResponse()
+        return _json
         
     def displayGUI(self, initialValues = ''):
         parameters = {'__NINEML_ACTION__'    : 'displayGUI',

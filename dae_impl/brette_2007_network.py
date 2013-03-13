@@ -7,17 +7,10 @@
 .. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
 """
 
-import os, sys, urllib, re, traceback, csv, gc, subprocess
-from time import localtime, strftime, time
-import numpy, numpy.random
+import os
 
 import nineml
 import nineml.user_layer
-import nineml.connection_generator as connection_generator
-import nineml.geometry as geometry
-from nineml.user_layer_aux import explicit_list_of_connections
-from nineml.user_layer_aux import ConnectionGenerator
-from nineml.user_layer_aux import connectionGeneratorFromProjection, geometryFromProjection
 
 from sedml_support import *
 from nineml_point_neurone_network import simulate_network

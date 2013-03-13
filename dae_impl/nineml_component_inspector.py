@@ -4,14 +4,12 @@
 from __future__ import print_function
 import nineml
 from nineml.user_layer import Model, Definition, Parameter, ParameterSet, SpikingNodeType, SynapseType, CurrentSourceType
-from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer import ComponentClass
-import os, sys, math, collections, json
+from nineml.abstraction_layer.testing_utils import TestableComponent
+import sys, collections, json
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from nineml_tester_ui import Ui_ninemlTester
 from expression_parser import ExpressionParser
-from units_parser import UnitsParser
 from StringIO import StringIO
 import dot2tex
 

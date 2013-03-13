@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, json, numpy, tempfile, shutil
-import numpy, numpy.random
+import json, tempfile, shutil
 import nineml
-from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer import ComponentClass
-import os, sys, math
-from time import localtime, strftime, time
+from nineml.abstraction_layer.testing_utils import TestableComponent
+import sys, math
+from time import localtime, strftime
 from daetools.pyDAE import *
 from nineml_daetools_bridge import *
 from nineml_component_inspector import nineml_component_inspector
-import nineml_tex_report
+#import nineml_tex_report
 import nineml_html_report
-import numpy.random
 
 import matplotlib as mpl
 # There were some problems in webapp; 'Agg' is a workaround

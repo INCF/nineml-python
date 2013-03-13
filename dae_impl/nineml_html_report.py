@@ -2,12 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import nineml
-from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer import ComponentClass
-import os, sys, subprocess
-from time import localtime, strftime, time
-from nineml_component_inspector import nineml_component_inspector
+import os
 
 css = """
 <style type="text/css">

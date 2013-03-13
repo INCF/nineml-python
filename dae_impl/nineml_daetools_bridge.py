@@ -2,15 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import nineml
-from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer import ComponentClass
-from nineml.abstraction_layer.testing_utils import std_pynn_simulation
-import os, sys, math
+from nineml.abstraction_layer.testing_utils import TestableComponent
+import math
 import numpy.random
-from time import localtime, strftime, time
+from time import time
 import expression_parser
-import units_parser
 from daetools.pyDAE import *
 
 class identifierValue(object):

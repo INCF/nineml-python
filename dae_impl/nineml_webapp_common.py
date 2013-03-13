@@ -1,6 +1,5 @@
 from __future__ import print_function
-from pprint import pformat
-import os, sys, traceback
+import traceback
 
 _css = """
     <style type="text/css">

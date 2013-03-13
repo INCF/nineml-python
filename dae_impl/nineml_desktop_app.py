@@ -2,13 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import os, sys, math, tempfile, json, traceback, shutil
-from time import localtime, strftime, time
-import nineml
-from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer import ComponentClass
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
+import os, sys, tempfile, traceback, shutil
+from time import localtime, strftime
+from nineml.abstraction_layer.testing_utils import TestableComponent
+from PyQt4 import QtGui
 from nineml_component_inspector import nineml_component_inspector
 from nineml_tex_report import createLatexReport, createPDF, showFile
 

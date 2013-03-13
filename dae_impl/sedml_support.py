@@ -8,7 +8,6 @@
 """
 
 import nineml
-import urllib
 from lxml import etree
 
 sedml_namespace = '{http://sed-ml.org/}'

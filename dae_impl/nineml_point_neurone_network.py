@@ -7,15 +7,13 @@
 .. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
 """
 
-import os, sys, urllib, re, traceback, csv, gc, subprocess
-from time import localtime, strftime, time
+import os, sys, urllib, traceback, gc
+from time import localtime, strftime
 import numpy, numpy.random
 
 import nineml
 import nineml.user_layer
 import nineml.connection_generator as connection_generator
-import nineml.geometry as geometry
-from nineml.user_layer_aux import explicit_list_of_connections
 from nineml.user_layer_aux import ConnectionGenerator
 from nineml.user_layer_aux import connectionGeneratorFromProjection, geometryFromProjection
 
@@ -34,9 +32,9 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 try:
-    from _heapq import heappush, heappop, heapify, heapreplace
+    from _heapq import heappush, heappop, heapify
 except ImportError:
-    from heapq import heappush, heappop, heapify, heapreplace
+    from heapq import heappush, heappop, heapify
 
 # Select implementation for CSA connection-rule language
 import csa 
