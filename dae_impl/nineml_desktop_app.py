@@ -212,9 +212,9 @@ if __name__ == "__main__":
     
     if results:
         try:
-            from daetools.pyDAE import *
-            from nineml_daetools_bridge import *
-            from nineml_daetools_simulation import *
+            from daetools.pyDAE import daeSimulationInputData, daeIDAS, daePythonStdOutLog
+            from nineml_daetools_bridge import createExpressionParser, nineml_daetools_bridge
+            from nineml_daetools_simulation import ninemlTesterDataReporter, nineml_daetools_simulation
             
             testName, testDescription, inputs = results
             simulation_data = daeSimulationInputData()

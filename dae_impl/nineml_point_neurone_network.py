@@ -8,7 +8,7 @@
 """
 
 import os, sys, urllib, traceback, gc
-from time import localtime, strftime
+from time import localtime, strftime, time
 import numpy, numpy.random
 
 import nineml
@@ -24,7 +24,7 @@ import nineml_daetools_component
 from nineml_daetools_component import daetoolsRNG, createPoissonSpikeTimes, daetoolsSpikeSource, daetoolsComponentInfo
 from nineml_daetools_component import daetoolsComponent, daetoolsComponentSetup, fixObjectName, parseUnits
 
-from sedml_support import *
+import sedml_support as sedml
 from path_parser import CanonicalNameParser, pathItem
 
 import matplotlib
@@ -72,11 +72,11 @@ class daetoolsOnSpikeOutAction(pyCore.daeAction):
         #print('{0} FIRED AT {1}'.format(self.neurone.CanonicalName, time))
         
         # The floating point value of the data sent with the event is a current time 
-        time         = float(self.eventPort.EventData)
+        _time         = float(self.eventPort.EventData)
         delayed_time = 0.0
         for (synapse, event_port_index, delay, target_neurone) in self.neurone.target_synapses:
             inlet_event_port = synapse.getInletEventPort(event_port_index)
-            delayed_time = time + delay
+            delayed_time = _time + delay
             #print('    {0} should be triggered at {1}'.format(target_neurone.Name, delayed_time))
             heappush(self.neurone.events_heap, (delayed_time, inlet_event_port, target_neurone))
 
@@ -1094,7 +1094,7 @@ def simulate_network(sedml_filename):
         simulation_finalize_time_end = 0
 
         # 1. Get a SED-ML experiment object 
-        sedml_experiment = sedmlExperiment.from_xml(sedml_filename)
+        sedml_experiment = sedml.Experiment.from_xml(sedml_filename)
 
         # 3. Create daetools point neurone network simulation
         network_create_time_start = time()

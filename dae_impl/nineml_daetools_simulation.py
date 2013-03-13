@@ -4,10 +4,21 @@ from __future__ import print_function
 import json, tempfile, shutil
 import nineml
 from nineml.abstraction_layer.testing_utils import TestableComponent
-import sys, math
+import os, sys, math
+import numpy
 from time import localtime, strftime
-from daetools.pyDAE import *
-from nineml_daetools_bridge import *
+from daetools.pyDAE import (
+    daeDataReporterLocal, daeSimulation, eDoNotStopAtDiscontinuity,
+    daeBaseLog, daeIDAS)
+from nineml_daetools_bridge import (
+    getAnalogPortsExpressionParser,
+    getParametersValuesInitialConditionsExpressionParser,
+    getParametersValuesInitialConditionsExpressionParserIdentifiers,
+    getObjectFromCanonicalName,
+    ninemlReduceAnalogPort, ninemlAnalogPort,
+    ninemlSTNRegimesName,
+    nineml_daetools_bridge
+    )
 from nineml_component_inspector import nineml_component_inspector
 #import nineml_tex_report
 import nineml_html_report
@@ -518,10 +529,10 @@ class daetools_model_setup:
             if not self.keysAsCanonicalNames:
                 modelName = self.model.CanonicalName + '.' + modelName
             stateName = str(stateName)
-            stn = getObjectFromCanonicalName(self.model, modelName + '.' + nineml_daetools_bridge.ninemlSTNRegimesName, look_for_stns = True)
+            stn = getObjectFromCanonicalName(self.model, modelName + '.' + ninemlSTNRegimesName, look_for_stns = True)
             if stn == None:
                 if self.debug:
-                    print('Warning: Could not locate STN {0}'.format(nineml_daetools_bridge.ninemlSTNRegimesName))
+                    print('Warning: Could not locate STN {0}'.format(ninemlSTNRegimesName))
                 continue
 
             if self.debug:

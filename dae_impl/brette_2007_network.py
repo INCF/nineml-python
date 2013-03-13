@@ -12,7 +12,7 @@ import os
 import nineml
 import nineml.user_layer
 
-from sedml_support import *
+import sedml_support as sedml
 from nineml_point_neurone_network import simulate_network
 
 ###############################################################################
@@ -189,29 +189,29 @@ timeHorizon       = 0.1000 # seconds
 reportingInterval = 0.0001 # seconds
 noPoints          = 1 + int(timeHorizon / reportingInterval)
 
-sedml_simulation = sedmlUniformTimeCourseSimulation('simulation', 'Brette_2007_simulation', 0.0, 0.0, timeHorizon, noPoints, 'KISAO:0000071')
+sedml_simulation = sedml.UniformTimeCourseSimulation('simulation', 'Brette_2007_simulation', 0.0, 0.0, timeHorizon, noPoints, 'KISAO:0000071')
 
-sedml_model      = sedmlModel('model', 'Brette_2007_model', 'urn:sedml:language:nineml', nineml_filename) 
+sedml_model      = sedml.Model('model', 'Brette_2007_model', 'urn:sedml:language:nineml', nineml_filename) 
 
-sedml_task       = sedmlTask('task', 'Brette_2007_task', sedml_model, sedml_simulation)
+sedml_task       = sedml.Task('task', 'Brette_2007_task', sedml_model, sedml_simulation)
 
-sedml_variable_time  = sedmlVariable('time',  'Time',                              sedml_task, symbol='urn:sedml:symbol:time')
-sedml_variable_excV1 = sedmlVariable('excV1', 'Excitatory_neurone[0]_voltage, V',  sedml_task, target='Group 1.Excitatory population[0].V')
-sedml_variable_excV2 = sedmlVariable('excV2', 'Excitatory_neurone[3]_voltage, V',  sedml_task, target='Group 1.Excitatory population[3].V')
-sedml_variable_excV3 = sedmlVariable('excV3', 'Excitatory_neurone[12]_voltage, V', sedml_task, target='Group 1.Excitatory population[12].V')
-sedml_variable_inhV  = sedmlVariable('inhV',  'Inhibitory_neurone[5]_voltage, V',  sedml_task, target='Group 1.Inhibitory population[5].V')
+sedml_variable_time  = sedml.Variable('time',  'Time',                              sedml_task, symbol='urn:sedml:symbol:time')
+sedml_variable_excV1 = sedml.Variable('excV1', 'Excitatory_neurone[0]_voltage, V',  sedml_task, target='Group 1.Excitatory population[0].V')
+sedml_variable_excV2 = sedml.Variable('excV2', 'Excitatory_neurone[3]_voltage, V',  sedml_task, target='Group 1.Excitatory population[3].V')
+sedml_variable_excV3 = sedml.Variable('excV3', 'Excitatory_neurone[12]_voltage, V', sedml_task, target='Group 1.Excitatory population[12].V')
+sedml_variable_inhV  = sedml.Variable('inhV',  'Inhibitory_neurone[5]_voltage, V',  sedml_task, target='Group 1.Inhibitory population[5].V')
 
-sedml_data_generator_time = sedmlDataGenerator('DG_time', 'DG_time', [sedml_variable_time])
-sedml_data_generator_excV = sedmlDataGenerator('DG_excV', 'DG_excV', [sedml_variable_excV1, sedml_variable_excV2, sedml_variable_excV3])
-sedml_data_generator_inhV = sedmlDataGenerator('DG_inhV', 'DG_inhV', [sedml_variable_inhV])
+sedml_data_generator_time = sedml.DataGenerator('DG_time', 'DG_time', [sedml_variable_time])
+sedml_data_generator_excV = sedml.DataGenerator('DG_excV', 'DG_excV', [sedml_variable_excV1, sedml_variable_excV2, sedml_variable_excV3])
+sedml_data_generator_inhV = sedml.DataGenerator('DG_inhV', 'DG_inhV', [sedml_variable_inhV])
 
-curve_excV = sedmlCurve('ExcV', 'ExcV', False, False, sedml_data_generator_time, sedml_data_generator_excV)
-curve_inhV = sedmlCurve('InhV', 'InhV', False, False, sedml_data_generator_time, sedml_data_generator_inhV)
+curve_excV = sedml.Curve('ExcV', 'ExcV', False, False, sedml_data_generator_time, sedml_data_generator_excV)
+curve_inhV = sedml.Curve('InhV', 'InhV', False, False, sedml_data_generator_time, sedml_data_generator_inhV)
 
-plot_excV  = sedmlPlot2D('Plot_excV', 'Plot_excV', [curve_excV])
-plot_inhV  = sedmlPlot2D('Plot_inhV', 'Plot_inhV', [curve_inhV])
+plot_excV  = sedml.Plot2D('Plot_excV', 'Plot_excV', [curve_excV])
+plot_inhV  = sedml.Plot2D('Plot_inhV', 'Plot_inhV', [curve_inhV])
 
-sedml_experiment = sedmlExperiment([sedml_simulation], 
+sedml_experiment = sedml.Experiment([sedml_simulation], 
                                     [sedml_model], 
                                     [sedml_task], 
                                     [sedml_data_generator_time, sedml_data_generator_excV, sedml_data_generator_inhV],
