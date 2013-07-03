@@ -25,8 +25,17 @@ Classes
     Population
     PositionList
     Projection
+    Selection
+    Operator
+        Any
+        All
+        Not
+        Comparison
+        Eq
+        In
+    
 
-Copyright Andrew P. Davison, 2010 # if you edit this file, add your name here
+Copyright Andrew P. Davison, 2010, 2013 # if you edit this file, add your name here
 """
 
 from itertools import chain
@@ -36,9 +45,9 @@ from lxml.builder import E
 from operator import and_, or_
 from nineml.abstraction_layer import ComponentClass, csa, parse as al_parse
 
-nineml_namespace = 'http://nineml.org/9ML/0.1'
+nineml_namespace = 'http://nineml.org/9ML/0.2'
 NINEML = "{%s}" % nineml_namespace
-PARAMETER_NAME_AS_TAG_NAME = True
+PARAMETER_NAME_AS_TAG_NAME = False
 
 
 def parse(url):
@@ -238,7 +247,7 @@ class Definition(object):
         return self._component
 
     def to_xml(self): #
-        return E(self.element_name, (E.url(self.url)))
+        return E(self.element_name, (E.url(self.url)), language="NineML")
 
     @classmethod
     def from_xml(cls, element):
@@ -253,7 +262,7 @@ class BaseComponent(object):
     think "node" is a good name as it is easily confused with "node in a
     neuronal network" (something that emits spikes).
     """
-    element_name = "node"
+    element_name = "component"
 
     def __init__(self, name, definition=None, parameters={}, reference=None):
         """
@@ -288,7 +297,7 @@ class BaseComponent(object):
             raise Exception()
         self.reference = reference
         if not self.unresolved:
-            self.check_parameters()
+            pass #DEBUG# self.check_parameters()
 
     def __eq__(self, other):
         assert isinstance(other, self.__class__)
@@ -349,7 +358,7 @@ class BaseComponent(object):
     def to_xml(self):
         element = E(self.element_name,
                     self.definition.to_xml(),
-                    self.parameters.to_xml(),
+                    *self.parameters.to_xml(),
                     name=self.name)
         return element
     
@@ -359,7 +368,7 @@ class BaseComponent(object):
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
         name = element.attrib.get("name", None)
-        parameters = ParameterSet.from_xml(element.find(NINEML+ParameterSet.element_name), components)
+        parameters = ParameterSet.from_xml(element.findall(NINEML+Parameter.element_name), components)
         definition_element = element.find(NINEML+Definition.element_name)
         if definition_element is not None:
             definition = Definition.from_xml(definition_element)
@@ -457,7 +466,7 @@ class Parameter(object):
     Numerical values may either be numbers, or a component that generates
     numbers, e.g. a RandomDistribution instance.
     """
-    element_name = "value" # only used if PARAMETER_NAME_AS_TAG_NAME is False
+    element_name = "property"  # only used if PARAMETER_NAME_AS_TAG_NAME is False
     
     def __init__(self, name, value, unit=None):
         self.name = name
@@ -497,14 +506,14 @@ class Parameter(object):
     def _to_xml_generic_tag(self):
         if isinstance(self.value, RandomDistribution):
             value_element = E.reference(self.value.name)
-        else:
-            value_element = str(self.value)
-        attrs = {"parameter": self.name}
-        if self.unit:
-            attrs["unit"] = self.unit
+        else:  # need to handle Function
+            value_element = E.scalar(str(self.value))
         return E(Parameter.element_name,
-                 value_element,
-                 **attrs)
+                 E.quantity(
+                    E.value(   # this extra level of tags is pointless, no?
+                        value_element,
+                        E.unit(self.unit or "dimensionless"))),
+                 name=self.name)
     
     def to_xml(self):
         if PARAMETER_NAME_AS_TAG_NAME:
@@ -528,7 +537,7 @@ class Parameter(object):
     @classmethod
     def _from_xml_generic_tag(cls, element, components):
         assert element.tag == NINEML+cls.element_name, "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
-        return Parameter(name=element.attrib["parameter"],
+        return Parameter(name=element.attrib["name"],
                          value = Value.from_xml(element, components),
                          unit = element.get("unit"))
     
@@ -544,7 +553,6 @@ class ParameterSet(dict):
     """
     Container for the set of parameters for a component.
     """
-    element_name = "properties"
     
     def __init__(self, *parameters, **kwparameters):
         """
@@ -575,14 +583,12 @@ class ParameterSet(dict):
         return [p.value for p in self.values() if p.is_random()]
     
     def to_xml(self):
-        return E(self.element_name,
-                 *[p.to_xml() for p in self.values()])
+        return [p.to_xml() for p in self.values()]
     
     @classmethod
-    def from_xml(cls, element, components):
-        assert element.tag == NINEML+cls.element_name
+    def from_xml(cls, elements, components):
         parameters = []
-        for parameter_element in element.getchildren():
+        for parameter_element in elements:
             parameters.append(Parameter.from_xml(parameter_element, components))
         return cls(*parameters)
 
@@ -1067,10 +1073,10 @@ class Projection(object):
     def to_xml(self):
         return E(self.element_name,
                  E.source(self.source.name),
-                 E.target(self.target.name),
-                 E.rule(self.rule.name),
-                 E.response(self.synaptic_response.name),
-                 E.synapse(self.connection_type.name),
+                 E.destination(self.target.name),
+                 E.connectivity(self.rule.name),
+                 E.synapse(self.synaptic_response.name),
+                 E.plasticity(self.connection_type.name),
                  name=self.name)
 
     @classmethod
@@ -1078,10 +1084,10 @@ class Projection(object):
         assert element.tag == NINEML+cls.element_name
         return cls(name=element.attrib["name"],
                    source=element.find(NINEML+"source").text,
-                   target=element.find(NINEML+"target").text,
-                   rule=get_or_create_component(element.find(NINEML+"rule").text, ConnectionRule, components),
-                   synaptic_response=get_or_create_component(element.find(NINEML+"response").text, SynapseType, components),
-                   connection_type=get_or_create_component(element.find(NINEML+"synapse").text, ConnectionType, components))
+                   target=element.find(NINEML+"destination").text,
+                   rule=get_or_create_component(element.find(NINEML+"connectivity").text, ConnectionRule, components),
+                   synaptic_response=get_or_create_component(element.find(NINEML+"synapse").text, SynapseType, components),
+                   connection_type=get_or_create_component(element.find(NINEML+"plasticity").text, ConnectionType, components))
 
     def to_csa(self):
         if self.rule.is_csa:
