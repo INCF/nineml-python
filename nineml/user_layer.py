@@ -40,6 +40,8 @@ Copyright Andrew P. Davison, 2010, 2013 # if you edit this file, add your name h
 
 from itertools import chain
 import urllib
+import collections
+from numbers import Number
 from lxml import etree
 from lxml.builder import E
 from operator import and_, or_
@@ -506,6 +508,8 @@ class Parameter(object):
     def _to_xml_generic_tag(self):
         if isinstance(self.value, RandomDistribution):
             value_element = E.reference(self.value.name)
+        elif isinstance(self.value, collections.Iterable) and isinstance(self.value[0], Number):
+            value_element = E.array(" ".join(str(x) for x in self.value))
         else:  # need to handle Function
             value_element = E.scalar(str(self.value))
         return E(Parameter.element_name,
@@ -537,9 +541,11 @@ class Parameter(object):
     @classmethod
     def _from_xml_generic_tag(cls, element, components):
         assert element.tag == NINEML+cls.element_name, "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
+        quantity_element = element.find(NINEML+"quantity").find(NINEML+"value")
+        value, unit = Value.from_xml(quantity_element, components)
         return Parameter(name=element.attrib["name"],
-                         value = Value.from_xml(element, components),
-                         unit = element.get("unit"))
+                         value=value,
+                         unit=unit)
     
     @classmethod
     def from_xml(cls, element, components):
@@ -608,19 +614,26 @@ class Value(object):
         
         `element` - should be an ElementTree Element instance.
         """
-        #rd_element = element.find(NINEML+RandomDistribution.element_name)
-        ref_element = element.find(NINEML+"reference")
-        #if rd_element is not None:
-        #    value = RandomDistribution.from_xml(rd_element)
-        #elif ref_element is not None:
-        if ref_element is not None:
-            value = get_or_create_component(ref_element.text, RandomDistribution, components)
+        for name in ("reference", "scalar", "array", "function"):
+            value_element = element.find(NINEML+name)
+            if value_element is not None:
+                break
+        if value_element is None:
+            raise ValueError("No value found")
         else:
-            try:
-                value = float(element.text)
-            except ValueError:
-                value = element.text
-        return value
+            if name == "reference":
+                value = get_or_create_component(value_element.text, RandomDistribution, components)
+            elif name == "scalar":
+                try:
+                    value = float(value_element.text)
+                except ValueError:
+                    value = value_element.text
+            elif name == "array":
+                value = [float(x) for x in value_element.text.split(" ")]
+            elif name == "function":
+                raise NotImplementedError    
+        unit = element.find(NINEML+"unit").text
+        return value, unit
 
 
 class Group(object):
