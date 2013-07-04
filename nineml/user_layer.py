@@ -1,3 +1,4 @@
+# encoding: utf-8
 """
 Python module for reading/writing 9ML user layer files in XML format.
 
@@ -43,13 +44,15 @@ import urllib
 import collections
 from numbers import Number
 from lxml import etree
-from lxml.builder import E
+from lxml.builder import ElementMaker
 from operator import and_, or_
 from nineml.abstraction_layer import ComponentClass, csa, parse as al_parse
 
 nineml_namespace = 'http://nineml.org/9ML/0.2'
 NINEML = "{%s}" % nineml_namespace
 PARAMETER_NAME_AS_TAG_NAME = False
+
+E = ElementMaker(namespace=nineml_namespace, nsmap={"nineml": nineml_namespace})
 
 
 def parse(url):
@@ -72,6 +75,10 @@ def parse(url):
         imported_doc = etree.parse(url)
         root.extend(imported_doc.getroot().iterchildren())
     return Model.from_xml(root)
+
+
+def check_tag(element, cls):
+    assert element.tag in (cls.element_name, NINEML+cls.element_name), "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
 
 
 class Model(object):
@@ -322,6 +329,16 @@ class BaseComponent(object):
         else:
             return '%s(name="%s", UNRESOLVED)' % (self.__class__.__name__, self.name)
 
+    def diff(self, other):
+        d = []
+        if self.name != other.name:
+            d += ["name: %s != %s" % (self.name, other.name)]
+        if self.definition != other.definition:
+            d += ["definition: %s != %s" % (self.definition, other.definition)]
+        if self.parameters != other.parameters:
+            d += ["parameters: %s != %s" % (self.parameters, other.parameters)]
+        return "\n".join(d)
+
     @property
     def unresolved(self):
         return self.definition is None
@@ -472,6 +489,8 @@ class Parameter(object):
     
     def __init__(self, name, value, unit=None):
         self.name = name
+        if not isinstance(value, (Number, list)) or isinstance(value, bool):
+            raise TypeError("Parameter values may not be of type %s" % type(value))
         self.value = value
         self.unit = unit
     
@@ -536,11 +555,11 @@ class Parameter(object):
             unit = unit_element.text
         return Parameter(name=element.tag.replace(NINEML,""),
                          value=value,
-                         unit=unit)
-    
+                         unit=unit) 
+   
     @classmethod
     def _from_xml_generic_tag(cls, element, components):
-        assert element.tag == NINEML+cls.element_name, "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
+        check_tag(element, cls)
         quantity_element = element.find(NINEML+"quantity").find(NINEML+"value")
         value, unit = Value.from_xml(quantity_element, components)
         return Parameter(name=element.attrib["name"],
@@ -608,9 +627,9 @@ class Value(object):
     @classmethod
     def from_xml(cls, element, components):
         """
-        Parse an XML ElementTree structure and return either a numerical or
-        string value or something that generates a numerical value, e.g. a
-        RandomDistribution instance.
+        Parse an XML ElementTree structure and return a (value, units) tuple.
+        The value should be a number or something that generates a numerical
+        value, e.g. a RandomDistribution instance).
         
         `element` - should be an ElementTree Element instance.
         """
@@ -634,6 +653,22 @@ class Value(object):
                 raise NotImplementedError    
         unit = element.find(NINEML+"unit").text
         return value, unit
+
+
+class StringValue(object):
+    """
+    Not intended to be instantiated: just provides the from_xml() classmethod.
+    """
+    element_name = "value"
+    
+    @classmethod
+    def from_xml(cls, element):
+        """
+        Parse an XML ElementTree structure and return a string value.
+        
+        `element` - should be an ElementTree Element instance.
+        """
+        return element.text
 
 
 class Group(object):
@@ -704,7 +739,7 @@ class Group(object):
     
     @classmethod
     def from_xml(cls, element, components, groups):
-        assert element.tag == NINEML+cls.element_name
+        check_tag(element, cls)
         group = cls(name=element.attrib["name"])
         groups[group.name] = group
         for child in element.getchildren():
@@ -789,7 +824,7 @@ class Population(object):
 
     @classmethod
     def from_xml(cls, element, components, groups):
-        assert element.tag == NINEML+cls.element_name
+        check_tag(element, cls)
         prototype_ref = element.find(NINEML+'prototype').text
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML+'number').text),
@@ -873,7 +908,7 @@ class PositionList(object):
     
     @classmethod
     def from_xml(cls, element, components):
-        assert element.tag == NINEML+cls.element_name
+        check_tag(element, cls)
         structure_element = element.find(NINEML+'structure')
         if structure_element is not None:
             return cls(structure=get_or_create_component(structure_element.text, Structure, components))
@@ -898,17 +933,17 @@ class Operator(object):
         operand_elements = []
         for c in self.operands:
             if isinstance(c, (basestring, float, int)):
-                operand_elements.append(E(Value.element_name, str(c)))
+                operand_elements.append(E(StringValue.element_name, str(c)))
             else:
                 operand_elements.append(c.to_xml())
         return E(self.element_name,
                  *operand_elements)
     
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element):
         if hasattr(cls, "element_name") and element.tag == NINEML+cls.element_name:
             dispatch = {
-                NINEML+Value.element_name: Value.from_xml,
+                NINEML+StringValue.element_name: StringValue.from_xml,
                 NINEML+Eq.element_name: Eq.from_xml,
                 NINEML+Any.element_name: Any.from_xml,
                 NINEML+All.element_name: All.from_xml,
@@ -917,7 +952,7 @@ class Operator(object):
             }
             operands = []
             for child in element.iterchildren():
-                operands.append(dispatch[element.tag](child, components))
+                operands.append(dispatch[element.tag](child))
             return cls(*operands)
         else:
             return {
@@ -925,9 +960,9 @@ class Operator(object):
                 NINEML+Any.element_name: Any,
                 NINEML+All.element_name: All,
                 NINEML+Not.element_name: Not,
-                NINEML+Value.element_name: Value,
+                NINEML+StringValue.element_name: StringValue,
                 NINEML+In.element_name: In,
-            }[element.tag].from_xml(element, components)
+            }[element.tag].from_xml(element)
 
 def qstr(obj):
     if isinstance(obj, basestring):
@@ -1008,11 +1043,11 @@ class Selection(object):
 
     @classmethod
     def from_xml(cls, element, components):
-        assert element.tag == NINEML+cls.element_name
+        check_tag(element, cls)
         select_element = element.find(NINEML+'select')
         assert len(select_element) == 1
         return cls(element.attrib["name"],
-                   Operator.from_xml(select_element.getchildren()[0], components))
+                   Operator.from_xml(select_element.getchildren()[0]))
 
       
 class Projection(object):
@@ -1094,7 +1129,7 @@ class Projection(object):
 
     @classmethod
     def from_xml(cls, element, components):
-        assert element.tag == NINEML+cls.element_name
+        check_tag(element, cls)
         return cls(name=element.attrib["name"],
                    source=element.find(NINEML+"source").text,
                    target=element.find(NINEML+"destination").text,
