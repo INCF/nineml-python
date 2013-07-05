@@ -3,7 +3,6 @@
 # Automatically Generated Testing Skeleton Template:
 import warnings
 import unittest
-import nineml
 
 from nineml import *
 from nineml.abstraction_layer import *

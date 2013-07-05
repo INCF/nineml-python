@@ -45,7 +45,7 @@ import collections
 from numbers import Number
 from lxml import etree
 from lxml.builder import ElementMaker
-from operator import and_, or_
+from operator import and_
 from nineml.abstraction_layer import ComponentClass, csa, parse as al_parse
 
 nineml_namespace = 'http://nineml.org/9ML/0.2'
@@ -1027,8 +1027,6 @@ class In(Comparison):
         Operator.__init__(self, item, sequence)
 
     def __str__(self):
-        item = self.operands[0]
-        sequence = self.operands[1:]
         return "%s in %s" % tuple(qstr(op) for op in self.operands)
     
 

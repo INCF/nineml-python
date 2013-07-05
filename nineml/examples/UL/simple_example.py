@@ -1,6 +1,5 @@
 #encoding: utf-8
 import nineml.user_layer as nineml
-from copy import deepcopy
 
 catalog = "http://svn.incf.org/svn/nineml/trunk/catalog/"
 

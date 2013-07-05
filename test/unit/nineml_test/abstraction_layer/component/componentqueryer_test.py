@@ -1,9 +1,7 @@
 
 
 # Automatically Generated Testing Skeleton Template:
-import warnings
 import unittest
-import nineml
 
 
 
@@ -160,7 +158,7 @@ class ComponentQueryer_test(unittest.TestCase):
         #from nineml.abstraction_layer.component.componentqueryer import ComponentQueryer
 
         from nineml.abstraction_layer import ComponentClass, SendPort, RecvPort
-        from nineml.abstraction_layer import NamespaceAddress, Regime, On
+        from nineml.abstraction_layer import Regime, On
         from nineml.abstraction_layer import OutputEvent
 
         c = ComponentClass( 
@@ -201,8 +199,7 @@ class ComponentQueryer_test(unittest.TestCase):
 		# Find a regime in the component by name
         #from nineml.abstraction_layer.component.componentqueryer import ComponentQueryer
 
-        from nineml.abstraction_layer import ComponentClass, Regime, On, Dynamics
-        from nineml.exceptions import NineMLRuntimeError
+        from nineml.abstraction_layer import ComponentClass, Regime, On
 
 
         c = ComponentClass( name='cl', 
@@ -237,8 +234,6 @@ class ComponentQueryer_test(unittest.TestCase):
 		# Returns an iterator over this component and all subcomponents
 
         from nineml.abstraction_layer import ComponentClass
-        from nineml.abstraction_layer import NamespaceAddress
-        from nineml.exceptions import NineMLRuntimeError
 
         d = ComponentClass(name='D')
         e = ComponentClass(name='E')

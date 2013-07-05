@@ -5,7 +5,6 @@ Andrew Davison, 2010
 """
 
 import nineml.abstraction_layer as al
-import os
 
 def get_component():
     aliases = [

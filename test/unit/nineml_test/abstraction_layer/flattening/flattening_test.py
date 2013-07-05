@@ -1,12 +1,10 @@
 
 
 # Automatically Generated Testing Skeleton Template:
-import warnings
 import unittest
 import nineml
 
 
-import nineml
 from nineml.abstraction_layer import  * 
 
 

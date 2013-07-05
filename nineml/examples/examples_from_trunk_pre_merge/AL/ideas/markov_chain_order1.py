@@ -25,7 +25,7 @@ for i in xrange(N):
               "n+=1",
               # to=list, each element must be a tuple: (target,probability)
               # the implementation should check that the sum of probabilities is 1.0
-              to=[("S%d"%i,transition_matrix[i]) for i in xrange(N)]
+              to=[("S%d"%i,transition_matrix[i]) for i in xrange(N)],
               name="S%d" % i) 
     events+=[e]
 

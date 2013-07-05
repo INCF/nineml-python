@@ -2,16 +2,11 @@
 
 
 import os
-import glob
 import sys
 import shutil
-import hashlib
 
-import nineml.abstraction_layer as al
-from nineml.abstraction_layer import readers
+from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer import writers
-from nineml.abstraction_layer import validators
-from nineml.abstraction_layer import flattening
 from nineml.abstraction_layer import component_modifiers
 
 
@@ -19,10 +14,6 @@ from nineml.abstraction_layer.testing_utils import TestableComponent
 
 from nineml.abstraction_layer.testing_utils import TestXMLWriteReadWrite
 from nineml.abstraction_layer.testing_utils import TestWriteDot
-
-
-# This is so we can use nineml2nmodl files
-from nineml.utility import file_sha1_hexdigest
 
 
 from nineml.abstraction_layer.testing_utils import std_pynn_simulation
@@ -98,9 +89,6 @@ def main(src=None):
 
 def test_write_mod(testable_component):
     component = testable_component()
-
-    from nineml.utility import LocationMgr
-    #LocationMgr.StdAppendToPath()
     component_modifiers.ComponentModifier.close_all_reduce_ports(component=component) 
 
     print '  -- Writing Component to .mod'

@@ -1,14 +1,12 @@
 
 
 # Automatically Generated Testing Skeleton Template:
-import warnings
 import unittest
-import nineml
 
 
 
 
-from nineml.abstraction_layer import NamespaceAddress
+
 from nineml.abstraction_layer import NamespaceAddress as NSA
 from nineml.exceptions import NineMLRuntimeError
 

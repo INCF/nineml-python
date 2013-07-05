@@ -1,9 +1,7 @@
 
 
 # Automatically Generated Testing Skeleton Template:
-import warnings
 import unittest
-import nineml
 
 
 
@@ -42,7 +40,6 @@ class MathUtil_test(unittest.TestCase):
 		# 
 		# >>> is_single_symbol('hello * world')
 		# False
-        from nineml.abstraction_layer.component.util import MathUtil
         
         self.assertTrue(MathUtil.is_single_symbol('t') )
         self.assertTrue(MathUtil.is_single_symbol('var_1') )

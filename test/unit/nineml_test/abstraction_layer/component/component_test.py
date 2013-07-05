@@ -3,8 +3,6 @@
 # Automatically Generated Testing Skeleton Template:
 import warnings
 import unittest
-import nineml
-
 
 
 
@@ -274,7 +272,7 @@ class ComponentClass_test(unittest.TestCase):
 
     def duplicate_port_name_event_analog(self):
         from nineml.abstraction_layer import ComponentClass 
-        from nineml.abstraction_layer import SendPort, RecvPort, ReducePort
+        from nineml.abstraction_layer import SendPort, RecvEventPort
         from nineml.exceptions import NineMLRuntimeError
 
         #Check different names are OK:
@@ -304,8 +302,7 @@ class ComponentClass_test(unittest.TestCase):
 
     def test_backsub_all(self):
 
-        from nineml.abstraction_layer.component import ComponentClass, Dynamics
-        from nineml.exceptions import NineMLRuntimeError
+        from nineml.abstraction_layer.component import ComponentClass
 
 
         # Check the aliases:
@@ -875,7 +872,6 @@ class ComponentClass_test(unittest.TestCase):
 
     def test_transitions(self):
         from nineml.abstraction_layer import ComponentClass, Regime, On, Dynamics
-        from nineml.exceptions import NineMLRuntimeError
 
         c = ComponentClass( name='cl', 
                             dynamics = Dynamics(

@@ -2,7 +2,6 @@
 
 from nineml.abstraction_layer import * 
 
-import unittest
 
 #class FuncTest_Flat2(unittest.TestCase):
 class FuncTest_Flat2(object):

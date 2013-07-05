@@ -5,7 +5,6 @@ from nineml.abstraction_layer.testing_utils import std_pynn_simulation
 from nineml.abstraction_layer.testing_utils import RecordValue
 from nineml.abstraction_layer import * 
 
-import unittest
 
 class FuncTest_Flat2(object):
 #class FuncTest_Flat2(unittest.TestCase):

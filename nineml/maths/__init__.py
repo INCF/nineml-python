@@ -4,8 +4,7 @@ expressions"""
 
 
 import numpy
-
-
+from nineml.abstraction_layer.component.parse import NineMLMathParseError
 
 
 

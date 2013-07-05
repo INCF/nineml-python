@@ -2,6 +2,7 @@
 
 from base import ActionVisitor, ComponentVisitor
 from itertools import chain
+from nineml.exceptions import NineMLRuntimeError
 
 
 
@@ -257,11 +258,6 @@ class ClonerVisitor(ComponentVisitor):
 
 
     def visit_alias(self, alias, **kwargs):
-        from nineml.abstraction_layer.component import MathUtil
-        prefix = kwargs.get( 'prefix', '')
-        prefix_excludes = kwargs.get('prefix_excludes', [] )
-
-
         new_alias = nineml.abstraction_layer.Alias( lhs = alias.lhs, rhs = alias.rhs )
         name_map = dict( [ (a, self.prefix_variable(a, **kwargs) ) for a in new_alias.atoms ])
         new_alias.name_transform_inplace( name_map = name_map )

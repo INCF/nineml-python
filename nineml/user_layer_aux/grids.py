@@ -13,7 +13,7 @@ from nineml.geometry import Geometry
 
 import nineml
 import nineml.user_layer
-from nineml.abstraction_layer import readers
+
 
 class GeometryImplementation(Geometry):
     """
@@ -58,7 +58,7 @@ def createUnstructuredGrid(ul_population):
             al_structure = nineml.abstraction_layer.readers.XMLReader.read(ul_population.positions.structure.definition.url) 
         
         except Exception as e:
-            raise RuntimeError('Failed to load the Structure component: {0}; the reason: {1}'.format(url, str(e)))
+            raise RuntimeError('Failed to load the Structure component: {0}; the reason: {1}'.format(ul_population.positions.structure.definition.url, str(e)))
         
         if al_structure.name == 'grid_2d':
             fillOrder     = ul_population.positions.structure.parameters['fillOrder'].value

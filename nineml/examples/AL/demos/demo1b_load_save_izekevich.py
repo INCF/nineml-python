@@ -1,6 +1,5 @@
 import nineml
 from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer import ComponentClass
 from nineml.abstraction_layer.testing_utils import std_pynn_simulation
 
 # Load the Component:

@@ -10,11 +10,6 @@
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
-try:
-    from lxml import etree
-    from lxml.builder import E
-except ImportError:
-    pass
 
 class IntervalSet:
     def __init__ (self, intervals = [], skip = 1):

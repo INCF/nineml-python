@@ -6,9 +6,6 @@ from itertools import chain
 class ComponentVisitor(object):
     def visit( self,obj,**kwargs):
         return obj.accept_visitor(self,**kwargs)
-    
-    def visit( self,obj,**kwargs):
-        return obj.accept_visitor(self,**kwargs)
 
 
 

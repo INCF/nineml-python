@@ -14,7 +14,7 @@ import itertools
 import hashlib
 
 
-from nineml.exceptions import internal_error, raise_exception
+from nineml.exceptions import internal_error
 from nineml.exceptions import NineMLRuntimeError
 
 
@@ -434,7 +434,7 @@ def ensure_iterable( expected_list ):
         for obj in expected_list:
             pass
         return expected_list
-    except TypeError, e:
+    except TypeError:
         return [expected_list,]
 
     assert False, 'Unreachable Code'

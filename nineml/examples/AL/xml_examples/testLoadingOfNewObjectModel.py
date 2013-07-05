@@ -1,7 +1,7 @@
 
 
 
-from nineml.utility import LocationMgr, Join, expect_single, filter_expect_single
+from nineml.utility import LocationMgr, Join
 from nineml.abstraction_layer.xmlns import *
 
 import nineml.abstraction_layer as al
@@ -9,8 +9,6 @@ import nineml.abstraction_layer.readers as readers
 import nineml.abstraction_layer.writers as writers
 
 import pyNN.neuron.nineml as pyNNml
-
-from collections import defaultdict
 
 from nineml.abstraction_layer.flattening import ComponentFlattener
 

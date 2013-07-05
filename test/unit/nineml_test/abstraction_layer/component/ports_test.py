@@ -3,7 +3,6 @@
 # Automatically Generated Testing Skeleton Template:
 import warnings
 import unittest
-import nineml
 
 
 
@@ -23,7 +22,6 @@ class AnalogPort_test(unittest.TestCase):
 
 
     def test_accept_visitor(self):
-        from nineml.abstraction_layer import RecvPort, SendPort, ReducePort
         # Check the Component is forwarding arguments: 
         class TestVisitor(object):
             def visit(self, obj, **kwargs):
@@ -116,8 +114,6 @@ class EventPort_test(unittest.TestCase):
 
 
     def test_accept_visitor(self):
-
-        from nineml.abstraction_layer import RecvEventPort, SendEventPort
         class TestVisitor(object):
             def visit(self, obj, **kwargs):
                 return obj.accept_visitor(self, **kwargs)
