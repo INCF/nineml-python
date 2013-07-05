@@ -598,7 +598,7 @@ class StateVariable(object):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_statevariable(self, **kwargs)
-    def __init__(self, name, dimension):
+    def __init__(self, name, dimension=""):
         """StateVariable Constructor
 
         :param name:  The name of the state variable.

@@ -16,7 +16,7 @@ class Parameter(object):
     future, wrapping in into its own object may make the transition easier
     """
 
-    def __init__(self, name, dimension):
+    def __init__(self, name, dimension=""):
         """Parameter Constructor
 
         :param name:  The name of the parameter.
