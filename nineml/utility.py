@@ -1,5 +1,9 @@
-"""This module contains general purpose utility functions for simplifying list
+"""
+This module contains general purpose utility functions for simplifying list
 analysis.
+
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
 """
 
 from os.path import dirname, normpath, realpath, exists, join

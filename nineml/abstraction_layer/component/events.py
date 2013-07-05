@@ -1,4 +1,9 @@
-"""This file contains the definitions for the Events"""
+"""
+This file contains the definitions for the Events
+
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
+"""
 
 
 class OutputEvent(object):

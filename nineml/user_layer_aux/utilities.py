@@ -1,3 +1,10 @@
+"""
+docstring needed
+
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
+"""
+
 # from nineml.user_layer_aux.connection_generator import ConnectionGenerator, cgClosureFromURI
 from nineml.user_layer_aux.cg_closure import alConnectionRuleFromURI
 from nineml.user_layer_aux.explicit_list_of_connections import ExplicitListOfConnections

@@ -1,6 +1,10 @@
-"""Definitions for the ComponentClass. ComponentClass derives from 2 other mixin
+"""
+Definitions for the ComponentClass. ComponentClass derives from 2 other mixin
 classes, which provide functionality for hierachical components and for local
 components definitions of interface and dynamics
+
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
 """
 
 from nineml.exceptions import NineMLRuntimeError

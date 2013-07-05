@@ -1,7 +1,8 @@
-"""Python module for reading 9ML abstraction layer files in XML format.
+"""
+Python module for reading 9ML abstraction layer files in XML format.
 
-Copyright Andrew P. Davison, Eilif B. Muller, 2010, Michael Hull, 2011  # if you
-edit this file, add your name here
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
 """
 
 

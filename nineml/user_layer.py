@@ -36,7 +36,8 @@ Classes
         In
 
 
-Copyright Andrew P. Davison, 2010, 2013 # if you edit this file, add your name here
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
 """
 
 from itertools import chain

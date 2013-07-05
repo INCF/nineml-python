@@ -1,6 +1,10 @@
+"""
+This module defines the namespace of functions and symbols available to 9ML
+expressions.
 
-""" This module defines the namespace of functions and symbols available to 9ml
-expressions"""
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
+"""
 
 
 import numpy
