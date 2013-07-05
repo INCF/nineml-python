@@ -7,6 +7,7 @@ This file defines classes for reading NineML files.
 
 
 import os
+from lxml import etree
 import nineml
 
 
@@ -140,7 +141,7 @@ class XMLLoader(object):
 
     def load_single_internal_maths_block(self, element, checkOnlyBlock=True):
         if checkOnlyBlock:
-            elements = list(element.iterchildren(tag=nineml.al.etree.Element))
+            elements = list(element.iterchildren(tag=etree.Element))
             if len(elements) != 1:
                 print elements
                 assert False, 'Unexpected tags found'
@@ -158,7 +159,7 @@ class XMLLoader(object):
 
         res = dict((block, []) for block in blocks)
 
-        for t in element.iterchildren(tag=nineml.al.etree.Element):
+        for t in element.iterchildren(tag=etree.Element):
             if t.tag.startswith(nineml.al.NINEML):
                 tag = t.tag[len(nineml.al.NINEML):]
             else:
@@ -236,7 +237,7 @@ class XMLReader(object):
 
         """
 
-        doc = nineml.al.etree.parse(filename)
+        doc = etree.parse(filename)
         # Store the source filenames of all the nodes:
         for node in doc.getroot().getiterator():
             xml_node_filename_map[node] = filename
