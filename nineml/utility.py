@@ -313,12 +313,12 @@ class LocationMgr(object):
     @classmethod
     def getRootDir(cls):
         localDir = realpath(dirname(__file__))
-        rootDir = join_norm(localDir, "../../../../")
+        rootDir = join_norm(localDir, "../../../")
         return rootDir
 
     @classmethod
     def getPythonPackageRootDir(cls):
-        return join_norm(realpath(dirname(__file__)), '../')
+        return realpath(dirname(__file__))
 
     @classmethod
     def getComponentDir(cls):
