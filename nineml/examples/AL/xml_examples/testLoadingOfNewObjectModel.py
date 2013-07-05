@@ -1,6 +1,7 @@
 
 
-from nineml.utility import LocationMgr, Join
+from nineml.utility import LocationMgr
+from os.path import join as Join
 from nineml.abstraction_layer.xmlns import *
 
 import nineml.abstraction_layer as al

@@ -2,7 +2,6 @@
 
 from nineml.abstraction_layer.visitors import ExpandPortDefinition
 from nineml.utility import filter_expect_single
-from nineml.abstraction_layer.util import check_flat_component
 import nineml
 from nineml.exceptions import NineMLRuntimeError
 

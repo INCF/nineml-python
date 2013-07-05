@@ -2,17 +2,11 @@
 analysis.
 """
 
-
-# This is to make 'join' available in other modules:
-from os.path import join as Join
-from os.path import exists as Exists
-
-from os.path import dirname, normpath, realpath
+from os.path import dirname, normpath, realpath, exists, join
 import sys
 
 import itertools
 import hashlib
-
 
 from nineml.exceptions import internal_error
 from nineml.exceptions import NineMLRuntimeError
@@ -308,7 +302,7 @@ def safe_dictionary_merge(dictionaries):
 
 # TODO: DOCUMENT THESE:
 def join_norm(*args):
-    return normpath(Join(*args))
+    return normpath(join(*args))
 
 
 class LocationMgr(object):
@@ -333,7 +327,7 @@ class LocationMgr(object):
 
     @classmethod
     def getTmpDir(cls):
-        if not Exists(cls.temp_dir):
+        if not exists(cls.temp_dir):
             raise NineMLRuntimeError("tmp_dir does not exist:%s" % cls.tmp_dir)
         return cls.temp_dir + '/'
 
