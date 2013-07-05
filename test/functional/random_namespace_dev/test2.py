@@ -3,7 +3,7 @@
 import nineml
 from nineml.abstraction_layer.testing_utils import std_pynn_simulation
 from nineml.abstraction_layer.testing_utils import RecordValue
-from nineml.abstraction_layer import *
+from nineml.abstraction_layer import ComponentClass, Regime, On, SendPort, OutputEvent, ReducePort
 
 
 class FuncTest_Flat2(object):

@@ -5,10 +5,15 @@ Python module for reading and writing 9ML abstraction layer files in XML format.
 :license: BSD-3, see LICENSE for details.
 """
 
-from xmlns import *
+from xmlns import nineml_namespace, NINEML, MATHML
 from nineml import __version__
 
-from component import *
+from component import (ComponentClass, Regime, On, OutputEvent, StateAssignment,
+                       TimeDerivative, ReducePort, Parameter, AnalogPort, EventPort, Dynamics,
+                       OnCondition, Condition, StateVariable, NamespaceAddress, RecvPort,
+                       SendPort, Alias, OnEvent, SpikeOutputEvent, SendEventPort,
+                       RecvEventPort, Expression)
+from component.util import parse
 import component
 
 import visitors

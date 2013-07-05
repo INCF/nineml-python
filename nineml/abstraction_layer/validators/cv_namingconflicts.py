@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.utility import *
+from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
 from base import ComponentValidatorPerNamespace
 

@@ -5,10 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-# import nineml.abstraction_layer as al
-# from nineml.abstraction_layer.visitors import ActionVisitor
-from nineml.utility import *
-
+from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
 from nineml.abstraction_layer.validators.base import ComponentValidatorPerNamespace
 

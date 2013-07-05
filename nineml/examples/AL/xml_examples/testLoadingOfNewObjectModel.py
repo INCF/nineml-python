@@ -12,7 +12,7 @@ import pyNN.neuron.nineml as pyNNml
 
 from nineml.abstraction_layer.flattening import ComponentFlattener
 
-LocationMgr.StdAppendToPath()
+#LocationMgr.StdAppendToPath()
 
 
 sample_xml_dir = Join(LocationMgr.getCatalogDir(), "sample_xml_files")

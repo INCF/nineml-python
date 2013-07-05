@@ -5,7 +5,7 @@ import unittest
 import nineml
 
 
-from nineml.abstraction_layer import *
+from nineml.abstraction_layer import ComponentClass, Regime, On, OutputEvent, RecvPort, SendPort
 
 
 # Testing Skeleton for class: ComponentFlattener

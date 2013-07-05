@@ -1,6 +1,6 @@
 
 
-from nineml.abstraction_layer import *
+from nineml.abstraction_layer import ComponentClass, SendPort, Regime, On, ReducePort
 
 
 # class FuncTest_Flat2(unittest.TestCase):
