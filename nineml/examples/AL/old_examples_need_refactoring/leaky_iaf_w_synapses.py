@@ -7,33 +7,32 @@ def get_component():
     regimes = [
         al.Regime(
             "dV/dt = (-gL*(V-vL) + Isyn)/C",
-            transitions = al.On("V>Vth",do=["tspike = t","V = V_reset", al.OutputEvent('spikeoutput')],to="refractory-regime"),
-            name = "sub-threshold-regime"
+            transitions=al.On(
+                "V>Vth", do=["tspike = t", "V = V_reset", al.OutputEvent('spikeoutput')], to="refractory-regime"),
+            name="sub-threshold-regime"
         ),
         al.Regime(
-            transitions = al.On("t >= tspike + trefractory",to="sub-threshold-regime"),
-            name = "refractory-regime"
+            transitions=al.On("t >= tspike + trefractory", to="sub-threshold-regime"),
+            name="refractory-regime"
         )]
 
-
     analog_ports = [al.SendPort("V"),
-             al.ReducePort("Isyn",reduce_op="+")]
+                    al.ReducePort("Isyn", reduce_op="+")]
 
-    leaky_iaf = al.ComponentClass("LeakyIAF", regimes = regimes, analog_ports = analog_ports)
+    leaky_iaf = al.ComponentClass("LeakyIAF", regimes=regimes, analog_ports=analog_ports)
 
 # ampa
-
 
     regimes = [
         al.Regime(
             "dg/dt = -g/tau",
-            transitions = al.On(al.SpikeInputEvent,do="g+=q")
-            )]
-            
-    analog_ports = [al.RecvPort("V"),
-             al.SendPort("Isyn = g(E-V)")]
+            transitions=al.On(al.SpikeInputEvent, do="g+=q")
+        )]
 
-    coba_syn = al.ComponentClass("CoBaSynapse", regimes = regimes, analog_ports = analog_ports)
+    analog_ports = [al.RecvPort("V"),
+                    al.SendPort("Isyn = g(E-V)")]
+
+    coba_syn = al.ComponentClass("CoBaSynapse", regimes=regimes, analog_ports=analog_ports)
 
 # User layer connects
 # leaky_iaf.analog_ports['V'] -> coba_syn.analog_ports['V']
@@ -52,11 +51,9 @@ except NameError:
     import os
 
     base = "leaky_iaf_ampa_analog_ports_events"
-    c1.write(base+".xml")
-    c2 = al.parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = al.parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
-
-
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

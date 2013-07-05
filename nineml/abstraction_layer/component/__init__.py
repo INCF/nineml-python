@@ -16,7 +16,7 @@ from ports import Port, AnalogPort, EventPort
 from ports import ReducePort, RecvPort, SendPort, RecvEventPort, SendEventPort
 
 from events import OutputEvent
-from namespaceaddress import NamespaceAddress 
+from namespaceaddress import NamespaceAddress
 from component import ComponentClass
 from component import ComponentClassMixinFlatStructure
 from component import ComponentClassMixinNamespaceStructure
@@ -28,11 +28,3 @@ from parse import NineMLMathParseError
 
 from syntacticsugar import SpikeOutputEvent
 from nineml import __version__
-
-
-
-
-
-
-
-

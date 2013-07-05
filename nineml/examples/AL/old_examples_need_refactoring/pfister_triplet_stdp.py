@@ -23,20 +23,20 @@ regimes = [
         "dr2/dt = -r2/tau_x",
         "do1/dt = -o1/tau_minus",
         "do2/dt = -o2/tau_y",
-        transitions = [nineml.On(nineml.PreEvent,
-                            do=["W  -= o1*(A2_minus + A3_minus*r2)",
-                                "r1 += 1.0",
-                                "r2 += 1.0",
-                                nineml.EventPort("PreEventRelay",mode="send")]),
-                  nineml.On(nineml.PostEvent,
-                            do=["W  += r1*(A2_plus + A3_plus*o2)",
-                                "o1 += 1.0",
-                                "o2 += 1.0"])]
+        transitions=[nineml.On(nineml.PreEvent,
+                               do=["W  -= o1*(A2_minus + A3_minus*r2)",
+                                   "r1 += 1.0",
+                                   "r2 += 1.0",
+                                   nineml.EventPort("PreEventRelay", mode="send")]),
+                     nineml.On(nineml.PostEvent,
+                               do=["W  += r1*(A2_plus + A3_plus*o2)",
+                                   "o1 += 1.0",
+                                   "o2 += 1.0"])]
     )]
 
 ports = [nineml.SendPort("W")]
 
-c1 = nineml.Component("PfisterTripletSTDP", regimes=regimes, ports = ports)
+c1 = nineml.Component("PfisterTripletSTDP", regimes=regimes, ports=ports)
 
 # write to file object f if defined
 try:
@@ -46,11 +46,9 @@ except NameError:
     import os
 
     base = "pfister_triplet_stdp"
-    c1.write(base+".xml")
-    c2 = nineml.parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = nineml.parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
-
-
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

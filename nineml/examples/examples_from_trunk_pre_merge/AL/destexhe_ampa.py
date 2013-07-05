@@ -21,8 +21,8 @@ COMMENT
 
   - SHORT PULSES OF TRANSMITTER (0.3 ms, 0.5 mM)
 
-    The simplified model was obtained from a detailed synaptic model that 
-    included the release of transmitter in adjacent terminals, its lateral 
+    The simplified model was obtained from a detailed synaptic model that
+    included the release of transmitter in adjacent terminals, its lateral
     diffusion and uptake, and its binding on postsynaptic receptors (Destexhe
     and Sejnowski, 1995).  Short pulses of transmitter with first-order
     kinetics were found to be the best fast alternative to represent the more
@@ -40,11 +40,11 @@ References
 
    Destexhe, A., Mainen, Z.F. and Sejnowski, T.J.  An efficient method for
    computing synaptic conductances based on a kinetic model of receptor binding
-   Neural Computation 6: 10-14, 1994.  
+   Neural Computation 6: 10-14, 1994.
 
    Destexhe, A., Mainen, Z.F. and Sejnowski, T.J. Synthesis of models for
-   excitable membranes, synaptic transmission and neuromodulation using a 
-   common kinetic formalism, Journal of Computational Neuroscience 1: 
+   excitable membranes, synaptic transmission and neuromodulation using a
+   common kinetic formalism, Journal of Computational Neuroscience 1:
    195-230, 1994.
 
 -----------------------------------------------------------------------------
@@ -154,38 +154,39 @@ off_regime = Regime(
     "g(on,off) := (on + off)",
     name="off_regime",
     transitions=On(SpikeInputEvent,
-              do=["t_off = t+Cdur",
-                  "r0 = r0*exp(-Beta*(t - t0))",
-                  "t0 = t",
-                  "Ron += r0",
-                  "Roff -= r0"
-                  ],
-              to="on_regime"
-              )
-    )
+                   do=["t_off = t+Cdur",
+                       "r0 = r0*exp(-Beta*(t - t0))",
+                       "t0 = t",
+                       "Ron += r0",
+                       "Roff -= r0"
+                       ],
+                   to="on_regime"
+                   )
+)
 
 on_regime = Regime(
     "dRon/dt = (weight*Rinf - Ron)/Rtau",
     "dRoff/dt = -Beta*Roff",
     name="on_regime",
-    transitions=[On(SpikeInputEvent,do="t_off = t+Cdur"), # Extend duration if input spike arrives while on
-            On("t_off>t",                            # What to do when its time to turn off 
-               do=["r0 = weight*Rinf + (r0 - weight*Rinf)*exp(-(t - t0)/Rtau)",
-                   "t0 = t",
-                   "Ron -= r0",
-                   "Roff += r0"
-                   ],
-               to=off_regime
-               )
-            ]
-    )
+    transitions=[On(SpikeInputEvent, do="t_off = t+Cdur"),  # Extend duration if input spike arrives while on
+                 On("t_off>t",                            # What to do when its time to turn off
+                    do=["r0 = weight*Rinf + (r0 - weight*Rinf)*exp(-(t - t0)/Rtau)",
+                        "t0 = t",
+                        "Ron -= r0",
+                        "Roff += r0"
+                        ],
+                    to=off_regime
+                    )
+                 ]
+)
 
 ports = [RecvPort("weight"),
          RecvPort("V"),
-         SendPort("Isyn = g(Ron,Roff)*(E-V)"), # this notation takes the assignment of Isyn out of the Regime
+         SendPort("Isyn = g(Ron,Roff)*(E-V)"),
+         # this notation takes the assignment of Isyn out of the Regime
          SendPort("gsyn = g(Ron,Roff)")]
 
-c1 = Component("AMPA", regimes=[off_regime, on_regime], ports = ports)
+c1 = Component("AMPA", regimes=[off_regime, on_regime], ports=ports)
 
 # write to file object f if defined
 try:
@@ -195,9 +196,9 @@ except NameError:
     import os
 
     base = "destexhe_ampa"
-    c1.write(base+".xml")
-    c2 = parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

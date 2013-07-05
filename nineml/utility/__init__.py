@@ -18,10 +18,9 @@ from nineml.exceptions import internal_error
 from nineml.exceptions import NineMLRuntimeError
 
 
+def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
+    """Internal function for dispatching errors.
 
-def _dispatch_error_func(error_func, default_error=NineMLRuntimeError() ):
-    """Internal function for dispatching errors. 
-    
     This was seperated out because it happens in a lot of utility functions
     """
 
@@ -43,11 +42,9 @@ def _dispatch_error_func(error_func, default_error=NineMLRuntimeError() ):
             internal_error('default_error failed to raise Exception')
 
 
-
-
-
 def _is_iterable(obj):
-    return hasattr(obj,'__iter__')
+    return hasattr(obj, '__iter__')
+
 
 def _is_hashable(obj):
     try:
@@ -57,12 +54,12 @@ def _is_hashable(obj):
         return False
 
 
-def expect_single(lst, error_func = None):
+def expect_single(lst, error_func=None):
     """Retrieve a single element from an iterable.
 
     This function tests whether an iterable contains just a single element and
     if so returns that element. Otherwise it raises an Exception.
-        
+
     :param lst: An iterable
 
     :param error_func: An exception object or a callable. ``error_func`` will be
@@ -72,9 +69,9 @@ def expect_single(lst, error_func = None):
 
 
     :rtype: the element in the list, ``lst[0]``, provided ``len(lst)==1``
-   
 
-    
+
+
     >>> expect_single( ['hello'] )
     'hello'
 
@@ -100,7 +97,7 @@ def expect_single(lst, error_func = None):
         raise NineMLRuntimeError('Object not iterable')
     if issubclass(lst.__class__, (dict)):
         err = "Dictionary passed to expect_single. This could be ambiguous"
-        err +="\nIf this is what you intended, please explicity pass '.keys' "
+        err += "\nIf this is what you intended, please explicity pass '.keys' "
         raise NineMLRuntimeError(err)
 
     lst = list(lst)
@@ -110,18 +107,15 @@ def expect_single(lst, error_func = None):
         return lst[0]
 
     # Bad case: our list doesn't contain just one element
-    errmsg  = 'expect_single() recieved an iterable of length: %d' % len(lst)
+    errmsg = 'expect_single() recieved an iterable of length: %d' % len(lst)
     errmsg += '\n  - List Contents:' + str(lst) + '\n'
-    _dispatch_error_func(error_func, NineMLRuntimeError(errmsg) )
-
-
-
+    _dispatch_error_func(error_func, NineMLRuntimeError(errmsg))
 
 
 def _filter(lst, func=None):
     """Filter a list according to a predicate.
 
-    Takes a sequence [o1,o2,..] and returns a list contains those which 
+    Takes a sequence [o1,o2,..] and returns a list contains those which
     are not `None` and satisfy the predicate `func(o)`
 
     :param lst: Input iterable (not a dictionary)
@@ -134,95 +128,93 @@ def _filter(lst, func=None):
             return  [ l for l in lst if l is not None and func(l) ]
         else:
             return  [ l for l in lst if l is not None]
-        
+
     Examples:
 
-    >>> _filter( ['hello','world'] )         #doctest: +NORMALIZE_WHITESPACE 
+    >>> _filter( ['hello','world'] )         #doctest: +NORMALIZE_WHITESPACE
     ['hello', 'world']
 
 
-    >>> _filter( ['hello',None,'world'] )    #doctest: +NORMALIZE_WHITESPACE 
+    >>> _filter( ['hello',None,'world'] )    #doctest: +NORMALIZE_WHITESPACE
     ['hello', 'world']
 
-    >>> _filter( [None,] )                   #doctest: +NORMALIZE_WHITESPACE 
+    >>> _filter( [None,] )                   #doctest: +NORMALIZE_WHITESPACE
     []
 
     """
 
     if func:
-        return  [ l for l in lst if l is not None and func(l) ]
+        return [l for l in lst if l is not None and func(l)]
     else:
-        return  [ l for l in lst if l is not None]
-
+        return [l for l in lst if l is not None]
 
 
 def filter_expect_single(lst, func=None, error_func=None):
     """Find a single element matching a predicate in a list.
-    
+
        This is a syntactic-sugar function ``_filter`` and ``expect_single``
        in a single call.
-    
+
         Returns::
-    
+
             expect_single( _filter(lst, func), error_func )
 
 
-        This is useful when we want to find an item in a sequence with a certain 
+        This is useful when we want to find an item in a sequence with a certain
         property, and expect there to be only one.
-        
+
         Examples:
 
         >>> find_smith = lambda s: s.split()[-1] == 'Smith'
-        >>> filter_expect_single( ['John Smith','Tim Jones'], func=find_smith )  #doctest: +NORMALIZE_WHITESPACE 
+        >>> filter_expect_single( ['John Smith','Tim Jones'], func=find_smith )  #doctest: +NORMALIZE_WHITESPACE
         'John Smith'
 
     """
-    return expect_single( _filter(lst, func), error_func )
-
+    return expect_single(_filter(lst, func), error_func)
 
 
 def filter_by_type(lst, acceptedtype):
     """ Find all the objects of a certain type in a list
-    
+
         This is a syntactic sugar function, which returns a list of all the
-        objects in a iterable for which  ``isinstance(o,acceptedtype) == True`` 
+        objects in a iterable for which  ``isinstance(o,acceptedtype) == True``
         and for which the objects are not ``None``. i.e::
 
             filter_by_type([None], types.NoneType)
             []
 
     """
-    return _filter( lst, lambda x: isinstance(x, acceptedtype))
+    return _filter(lst, lambda x: isinstance(x, acceptedtype))
 
 
 def filter_discrete_types(lst, acceptedtypes):
     """Creates a dictionary mapping types to objects of that type.
-    
+
     Starting with a list of object, and a list of types, this returns a
     dictionary mapping each type to a list of objects of that type.
 
     For example::
 
         >>> import types
-        >>> filter_discrete_types( ['hello',1,2,'world'], ( basestring, types.IntType) ) #doctest: +NORMALIZE_WHITESPACE 
+        >>> filter_discrete_types( ['hello',1,2,'world'], ( basestring, types.IntType) ) #doctest: +NORMALIZE_WHITESPACE
         {<type 'basestring'>: ['hello', 'world'], <type 'int'>: [1, 2]}
 
 
     The function checks that each object is mapped to exactly one type
     """
 
-    res = dict( [ (a, []) for a in acceptedtypes ] )
+    res = dict([(a, []) for a in acceptedtypes])
     for obj in lst:
-        obj_type = filter_expect_single( acceptedtypes, 
-                                         lambda at: isinstance(obj, at), 
-                                         error_func= '%s could not be mapped to a single type'%obj ) 
+        obj_type = filter_expect_single(acceptedtypes,
+                                        lambda at: isinstance(obj, at),
+                                        error_func='%s could not be mapped to a single type' % obj)
         res[obj_type].append(obj)
     return res
 
 
 def assert_no_duplicates(lst, error_func=None):
     """Check for duplicates in a sequence.
-    
+
     This function checks that a list contains no duplicates, by casting the list
     to a set and comparing the lengths. (This means that we cannot compare
     sequences containing unhashable types, like dictionaries and lists).
@@ -230,10 +222,8 @@ def assert_no_duplicates(lst, error_func=None):
     It raises an `NineMLRuntimeError` if the lengths are not equal.
     """
 
-    
+    if len(lst) != len(set(lst)):
 
-    if len(lst) != len( set(lst) ):
-        
         # Find the duplication:
         seen_items = set()
         for i in lst:
@@ -242,22 +232,21 @@ def assert_no_duplicates(lst, error_func=None):
                 break
             else:
                 seen_items.add(i)
-        
-        _dispatch_error_func( error_func, 
-                              "Unxpected duplication found: %s \n in %s" %( str(i) ,  str(lst)) ) 
 
+        _dispatch_error_func(error_func,
+                             "Unxpected duplication found: %s \n in %s" % (str(i),  str(lst)))
 
 
 def invert_dictionary(dct):
-    """Takes a dictionary mapping (keys => values) and returns a 
+    """Takes a dictionary mapping (keys => values) and returns a
     new dictionary mapping (values => keys).
     i.e. given a dictionary::
 
-        {k1:v1, k2:v2, k3:v3, ...} 
+        {k1:v1, k2:v2, k3:v3, ...}
 
     it returns a dictionary::
-    
-        {v1:k1, v2:k2, v3:k3, ...} 
+
+        {v1:k1, v2:k2, v3:k3, ...}
 
     It checks to make sure that no values are duplicated before converting.
     """
@@ -267,25 +256,25 @@ def invert_dictionary(dct):
             err = "Can't invert a dictionary containing unhashable keys"
             raise NineMLRuntimeError(err)
 
-    assert_no_duplicates( dct.values() )
-    return dict( zip(dct.values(), dct.keys()) )
+    assert_no_duplicates(dct.values())
+    return dict(zip(dct.values(), dct.keys()))
 
 
-def flatten_first_level( nested_list ):
+def flatten_first_level(nested_list):
     """Flattens the first level of an iterable, i.e.
-        
-        >>> flatten_first_level( [ ['This','is'],['a','short'],['phrase'] ] ) #doctest: +NORMALIZE_WHITESPACE 
-        ['This', 'is', 'a', 'short', 'phrase'] 
 
-        >>> flatten_first_level( [ [1,2],[3,4,5],[6] ] ) #doctest: +NORMALIZE_WHITESPACE 
-        [1,2,3,4,5,6] 
+        >>> flatten_first_level( [ ['This','is'],['a','short'],['phrase'] ] ) #doctest: +NORMALIZE_WHITESPACE
+        ['This', 'is', 'a', 'short', 'phrase']
+
+        >>> flatten_first_level( [ [1,2],[3,4,5],[6] ] ) #doctest: +NORMALIZE_WHITESPACE
+        [1,2,3,4,5,6]
 
     """
     if isinstance(nested_list, basestring):
         err = "Shouldn't pass a string to flatten_first_level."
-        err +="Use list(str) instead"
+        err += "Use list(str) instead"
         raise NineMLRuntimeError(err)
-    
+
     if not _is_iterable(nested_list):
         err = 'flatten_first_level() expects an iterable'
         raise NineMLRuntimeError(err)
@@ -295,36 +284,31 @@ def flatten_first_level( nested_list ):
             err = 'flatten_first_level() expects all arguments to be iterable'
             raise NineMLRuntimeError(err)
 
-    
-    return list( itertools.chain(*nested_list) )
+    return list(itertools.chain(*nested_list))
 
-def safe_dictionary_merge( dictionaries ):
+
+def safe_dictionary_merge(dictionaries):
     """Safely merge multiple dictionaries into one
-    
+
     Merges an iterable of dictionaries into a new single dictionary,
     checking that there are no key collisions
-    
-    >>> safe_dictionary_merge( [ {1:'One',2:'Two'},{3:'Three'} ] ) #doctest: +NORMALIZE_WHITESPACE 
-    {1: 'One', 2: 'Two', 3: 'Three'} 
+
+    >>> safe_dictionary_merge( [ {1:'One',2:'Two'},{3:'Three'} ] ) #doctest: +NORMALIZE_WHITESPACE
+    {1: 'One', 2: 'Two', 3: 'Three'}
 
     >>> safe_dictionary_merge( [ {1:'One',2:'Two'},{3:'Three',1:'One'} ] ) #doctest: +NORMALIZE_WHITESPACE +IGNORE_EXCEPTION_DETAIL +SKIP
     NineMLRuntimeError: Key Collision while merging dictionarys
 
     """
-    kv_pairs = list( itertools.chain(*[d.iteritems() for d in dictionaries]))
-    keys, values  = zip( *kv_pairs )
-    assert_no_duplicates(keys, 'Key collision while merging dictionarys') 
+    kv_pairs = list(itertools.chain(*[d.iteritems() for d in dictionaries]))
+    keys, values = zip(*kv_pairs)
+    assert_no_duplicates(keys, 'Key collision while merging dictionarys')
     return dict(kv_pairs)
 
 
-
-
-
-
-#TODO: DOCUMENT THESE:
-
+# TODO: DOCUMENT THESE:
 def join_norm(*args):
-    return normpath( Join(*args))
+    return normpath(Join(*args))
 
 
 class LocationMgr(object):
@@ -334,30 +318,29 @@ class LocationMgr(object):
 
     @classmethod
     def getRootDir(cls):
-        localDir = realpath ( dirname( __file__ ) ) 
-        rootDir = join_norm( localDir, "../../../../") 
+        localDir = realpath(dirname(__file__))
+        rootDir = join_norm(localDir, "../../../../")
         return rootDir
 
     @classmethod
     def getPythonPackageRootDir(cls):
-        return  join_norm( realpath ( dirname( __file__ ) ), '../' )
-
+        return join_norm(realpath(dirname(__file__)), '../')
 
     @classmethod
     def getComponentDir(cls):
-        #localDir = realpath ( dirname( __file__ ) ) 
-        return join_norm( cls.getPythonPackageRootDir(),  "examples/AL/sample_components/" ) 
+        # localDir = realpath ( dirname( __file__ ) )
+        return join_norm(cls.getPythonPackageRootDir(),  "examples/AL/sample_components/")
 
     @classmethod
     def getTmpDir(cls):
         if not Exists(cls.temp_dir):
-            raise NineMLRuntimeError("tmp_dir does not exist:%s"%cls.tmp_dir)
+            raise NineMLRuntimeError("tmp_dir does not exist:%s" % cls.tmp_dir)
         return cls.temp_dir + '/'
 
     # For developers:
     @classmethod
     def getCatalogDir(cls):
-        return join_norm( cls.getRootDir(), "catalog/" )
+        return join_norm(cls.getRootDir(), "catalog/")
 
 
 class Settings(object):
@@ -368,7 +351,7 @@ class Settings(object):
 
 
 def check_list_contain_same_items(lst1, lst2, desc1="", desc2="", ignore=[],
-        desc=""):
+                                  desc=""):
     set1 = set(lst1)
     set2 = set(lst2)
 
@@ -376,33 +359,27 @@ def check_list_contain_same_items(lst1, lst2, desc1="", desc2="", ignore=[],
         set1.discard(i)
         set2.discard(i)
 
-
     # Are the lists subsets of each other.
-    if set1.issubset( set2 ) and set2.issubset( set1 ):
+    if set1.issubset(set2) and set2.issubset(set1):
         return
 
-    errmsg =  "Lists were suppose to contain the same elements, but don't!!" 
-    if desc: errmsg += '\n' + desc
-    errmsg += "\n1: [%s]: %s"%(desc1, sorted(set1) )
-    errmsg += "\n2: [%s]: %s"%(desc2, sorted(set2) )
-    errmsg += "\nElements in : 1 (not 2): %s"% (sorted( set1-set2 )  )
-    errmsg += "\nElements in : 2 (not 1): %s"% (sorted( set2-set1 )  )
+    errmsg = "Lists were suppose to contain the same elements, but don't!!"
+    if desc:
+        errmsg += '\n' + desc
+    errmsg += "\n1: [%s]: %s" % (desc1, sorted(set1))
+    errmsg += "\n2: [%s]: %s" % (desc2, sorted(set2))
+    errmsg += "\nElements in : 1 (not 2): %s" % (sorted(set1 - set2))
+    errmsg += "\nElements in : 2 (not 1): %s" % (sorted(set2 - set1))
     raise NineMLRuntimeError(errmsg)
 
 
-
-
-
-
-
-
-def safe_dict( vals ):
+def safe_dict(vals):
     """ Create a dict, like dict(), but ensure no duplicate keys are given!
-    [Python silently allows dict( [(1:True),(1:None)] ) !!""" 
+    [Python silently allows dict( [(1:True),(1:None)] ) !!"""
     d = {}
-    for k,v in vals:
+    for k, v in vals:
         if k in vals:
-            err = 'safe_dict() failed with duplicated keys: %s'%k
+            err = 'safe_dict() failed with duplicated keys: %s' % k
             raise NineMLRuntimeError(err)
         d[k] = v
     if len(vals) != len(d):
@@ -410,57 +387,45 @@ def safe_dict( vals ):
     return d
 
 
-
-
 def file_sha1_hexdigest(filename):
     """Returns the SHA1 hex-digest of a file"""
 
-    f = open(filename ,'rb')
+    f = open(filename, 'rb')
     hashhex = hashlib.sha1(f.read()).hexdigest()
     f.close()
     return hashhex
 
 
-
-
-
-
-
-
-def ensure_iterable( expected_list ):
+def ensure_iterable(expected_list):
     if isinstance(expected_list, basestring):
-        return [expected_list,]
+        return [expected_list, ]
     try:
         for obj in expected_list:
             pass
         return expected_list
     except TypeError:
-        return [expected_list,]
+        return [expected_list, ]
 
     assert False, 'Unreachable Code'
 
-def none_to_empty_list( obj ):
+
+def none_to_empty_list(obj):
     if obj is None:
         return []
     else:
         return obj
 
-def normalise_parameter_as_list( param ):
-    return ensure_iterable( none_to_empty_list( param) )
+
+def normalise_parameter_as_list(param):
+    return ensure_iterable(none_to_empty_list(param))
 
 
-
-
-
-
-
-
-def restore_sys_path( func ):
+def restore_sys_path(func):
     """Decorator used to restore the sys.path
     to the value it was before the function call.
     This is useful for loading modules.
     """
-    def newfunc(*args,**kwargs):
+    def newfunc(*args, **kwargs):
         oldpath = sys.path[:]
         try:
             return func(*args, **kwargs)
@@ -469,10 +434,10 @@ def restore_sys_path( func ):
     return newfunc
 
 
-
 class curry:
+
     """ http://code.activestate.com/recipes/52549-curry-associating-parameters-with-a-function/ """
-    
+
     def __init__(self, fun, *args, **kwargs):
         self.fun = fun
         self.pending = args[:]
@@ -488,13 +453,12 @@ class curry:
         return self.fun(*(self.pending + args), **kw)
 
 
-
-
 import re
 r = re.compile(r"""[a-zA-Z][a-zA-Z0-9_]*$""")
-def ensure_valid_c_variable_name( tok):
+
+
+def ensure_valid_c_variable_name(tok):
     if r.match(tok):
         return
     else:
         raise NineMLRuntimeError("Invalid Token name: %s " % tok)
-

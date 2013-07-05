@@ -27,27 +27,29 @@ call_cond_func = call_expr_func
 
 import nineml
 
+
 class Parser(object):
+
     """
     Base class for a lexer/parser that has the rules defined as methods
     """
     tokens = ()
     precedence = ()
 
-
     def __init__(self, **kw):
         self.debug = kw.get('debug', 0)
-        self.names = { }
+        self.names = {}
         try:
-            modname = os.path.split(os.path.splitext(__file__)[0])[1] + "_" + self.__class__.__name__
+            modname = os.path.split(os.path.splitext(__file__)[0])[
+                1] + "_" + self.__class__.__name__
         except:
-            modname = "parser"+"_"+self.__class__.__name__
-        #self.debugfile = modname + ".dbg"
-        #self.tabmodule = modname + "_" + "parsetab"
-        
+            modname = "parser" + "_" + self.__class__.__name__
+        # self.debugfile = modname + ".dbg"
+        # self.tabmodule = modname + "_" + "parsetab"
+
         self.debugfile = LocationMgr.getTmpDir() + modname + ".dbg"
         self.tabmodule = LocationMgr.getTmpDir() + modname + "_" + "parsetab"
-        #print self.debugfile, self.tabmodule
+        # print self.debugfile, self.tabmodule
 
         # Build the lexer and parser
         lex.lex(module=self, debug=self.debug)
@@ -56,56 +58,53 @@ class Parser(object):
                   debugfile=self.debugfile,
                   tabmodule=self.tabmodule)
 
-    def parse(self,expr):
+    def parse(self, expr):
         self.names = []
         self.funcs = []
         try:
             yacc.parse(expr)
         except NineMLMathParseError, e:
-            raise NineMLMathParseError, str(e)+" Expression was: '%s'" % expr
-        #return set(self.names), set(self.funcs)
-
+            raise NineMLMathParseError, str(e) + " Expression was: '%s'" % expr
+        # return set(self.names), set(self.funcs)
 
         self.names = set(self.names)
-        #self.names.difference_update(nineml.maths.namespace)
-        self.names.difference_update( nineml.maths.get_builtin_symbols() )
+        # self.names.difference_update(nineml.maths.namespace)
+        self.names.difference_update(nineml.maths.get_builtin_symbols())
 
         return self.names, set(self.funcs)
 
 
-    
 class CalcCond(Parser):
 
     tokens = (
-        'NAME','NUMBER','CONDITIONAL','NOT','LOGICAL',
-        'PLUS','MINUS','EXP', 'TIMES','DIVIDE',
-        'LPAREN','RPAREN','LFUNC', 'COMMA', 'BOOL'
-        )
+        'NAME', 'NUMBER', 'CONDITIONAL', 'NOT', 'LOGICAL',
+        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE',
+        'LPAREN', 'RPAREN', 'LFUNC', 'COMMA', 'BOOL'
+    )
 
     # Tokens
 
-    t_PLUS    = r'\+'
-    t_MINUS   = r'-'
-    t_EXP     = r'\*\*'
-    t_TIMES   = r'\*'
-    t_CONDITIONAL   = r'(<=)|(>=)|(==)|(!=)|(>)|(<)'
+    t_PLUS = r'\+'
+    t_MINUS = r'-'
+    t_EXP = r'\*\*'
+    t_TIMES = r'\*'
+    t_CONDITIONAL = r'(<=)|(>=)|(==)|(!=)|(>)|(<)'
     t_LOGICAL = r'(&)|(\|)'
     t_NOT = r'\!'
-    t_DIVIDE  = r'/'
-    t_LPAREN  = r'\('
-    t_RPAREN  = r'\)'
-    t_COMMA   = r','
+    t_DIVIDE = r'/'
+    t_LPAREN = r'\('
+    t_RPAREN = r'\)'
+    t_COMMA = r','
 
-    def t_LFUNC(self,t):
+    def t_LFUNC(self, t):
         r'[a-zA-Z_][a-zA-Z0-9_.]*[ ]*\('
         return t
-        
-    def t_NAME(self,t):
+
+    def t_NAME(self, t):
         r'[a-zA-Z_][a-zA-Z0-9_]*'
-        if t.value in ('True','true','False','false'):
+        if t.value in ('True', 'true', 'False', 'false'):
             t.type = 'BOOL'
         return t
-
 
     def t_NUMBER(self, t):
         r'(\d*\.\d+)|(\d+\.\d*)|(\d+)'
@@ -117,21 +116,20 @@ class CalcCond(Parser):
 
     t_ignore = " \t"
 
-    
     def t_error(self, t):
         raise NineMLMathParseError, \
-            "Illegal character '%s' in '%s'" % (t.value[0],t)
+            "Illegal character '%s' in '%s'" % (t.value[0], t)
 
     precedence = (
-        ('left','NAME'),
-        ('left','PLUS','MINUS'),
-        ('left','TIMES','DIVIDE'),
+        ('left', 'NAME'),
+        ('left', 'PLUS', 'MINUS'),
+        ('left', 'TIMES', 'DIVIDE'),
         ('left', 'EXP'),
-        ('right','UMINUS'),
-        ('right','UNOT'),
-        ('left','NOT'),
-        ('left','LFUNC')
-        )
+        ('right', 'UMINUS'),
+        ('right', 'UNOT'),
+        ('left', 'NOT'),
+        ('left', 'LFUNC')
+    )
 
     start = 'conditional'
 
@@ -143,11 +141,9 @@ class CalcCond(Parser):
         "boolean : BOOL"
         pass
 
-
     def p_boolean_not(self, p):
         'boolean : NOT boolean %prec UNOT'
         pass
-
 
     def p_boolean_logical(self, p):
         'boolean : boolean LOGICAL boolean'
@@ -187,8 +183,7 @@ class CalcCond(Parser):
         'expression : NAME'
         self.names.append(p[1])
 
-
-    def p_func(self,p):
+    def p_func(self, p):
         """expression : LFUNC expression RPAREN\n | LFUNC RPAREN
                         | LFUNC expression COMMA expression RPAREN
                         | LFUNC expression COMMA expression COMMA expression RPAREN
@@ -198,28 +193,27 @@ class CalcCond(Parser):
         func_name = p[1][:-1].strip()
         from nineml.maths import is_builtin_math_function
         if not is_builtin_math_function(func_name):
-        #if func_name not in nineml.maths.namespace:
+        # if func_name not in nineml.maths.namespace:
             raise NineMLMathParseError, "Undefined function '%s'" % func_name
         self.funcs.append(func_name)
-
 
     def p_error(self, p):
         if p:
             raise NineMLMathParseError, \
-                    "Syntax error at '%s'" % p.value
+                "Syntax error at '%s'" % p.value
         else:
             raise NineMLMathParseError, \
-                    "Syntax error at EOF, probably unmatched parenthesis."
+                "Syntax error at EOF, probably unmatched parenthesis."
 
 
 def cond_parse(conditional):
-    """ Parses a conditinal expression 
+    """ Parses a conditinal expression
     and returns var names and func names as sets """
 
     calc = CalcCond()
     return calc.parse(conditional)
-    
-#if __name__ == '__main__':
+
+# if __name__ == '__main__':
 #    calc = CalcCond()
 #    p = calc.parse("q > 1 / (( 1 + mg_conc * eta *  exp ( -1 * gamma*V))")
 #    print p

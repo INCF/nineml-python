@@ -10,14 +10,11 @@
 # -----------------------------------------------------------------------------
 
 
-
-
-
 import ply.lex as lex
 import ply.yacc as yacc
 import os
 
-#import nineml.maths.math_namespace
+# import nineml.maths.math_namespace
 import nineml
 
 
@@ -32,26 +29,27 @@ def call_expr_func(expr_func, ns):
 
 
 class Parser(object):
+
     """
     Base class for a lexer/parser that has the rules defined as methods
     """
     tokens = ()
     precedence = ()
 
-
     def __init__(self, **kw):
         self.debug = kw.get('debug', 0)
-        self.names = { }
+        self.names = {}
         try:
-            modname = os.path.split(os.path.splitext(__file__)[0])[1] + "_" + self.__class__.__name__
+            modname = os.path.split(os.path.splitext(__file__)[0])[
+                1] + "_" + self.__class__.__name__
         except:
-            modname = "parser"+"_"+self.__class__.__name__
+            modname = "parser" + "_" + self.__class__.__name__
 
         from nineml.utility import LocationMgr
         self.debugfile = LocationMgr.getTmpDir() + modname + ".dbg"
         self.tabmodule = LocationMgr.getTmpDir() + modname + "_" + "parsetab"
 
-        #print self.debugfile, self.tabmodule
+        # print self.debugfile, self.tabmodule
 
         # Build the lexer and parser
         lex.lex(module=self, debug=self.debug)
@@ -60,45 +58,42 @@ class Parser(object):
                   debugfile=self.debugfile,
                   tabmodule=self.tabmodule)
 
-    def parse(self,expr):
+    def parse(self, expr):
         from nineml.abstraction_layer.component.parse import NineMLMathParseError
         self.names = []
         self.funcs = []
         try:
             yacc.parse(expr)
         except NineMLMathParseError, e:
-            raise NineMLMathParseError, str(e)+" Expression was: '%s'" % expr
+            raise NineMLMathParseError, str(e) + " Expression was: '%s'" % expr
 
         # remove names from the math_namespace
         self.names = set(self.names)
-        self.names.difference_update( nineml.maths.get_builtin_symbols() )
+        self.names.difference_update(nineml.maths.get_builtin_symbols())
 
         return self.names, set(self.funcs)
 
 
-
-    
 class CalcExpr(Parser):
 
     tokens = (
-        'NAME','NUMBER',
-        'PLUS','MINUS','EXP', 'TIMES','DIVIDE',
-        'LPAREN','RPAREN','LFUNC', 'COMMA'
-        )
+        'NAME', 'NUMBER',
+        'PLUS', 'MINUS', 'EXP', 'TIMES', 'DIVIDE',
+        'LPAREN', 'RPAREN', 'LFUNC', 'COMMA'
+    )
 
     # Tokens
 
-    t_PLUS    = r'\+'
-    t_MINUS   = r'-'
-    t_EXP     = r'\*\*'
-    t_TIMES   = r'\*'
-    t_DIVIDE  = r'/'
-    t_LPAREN  = r'\('
-    t_RPAREN  = r'\)'
-    t_NAME    = r'[a-zA-Z_][a-zA-Z0-9_]*'
-    t_LFUNC    = r'[a-zA-Z_][a-zA-Z0-9_.]*[ ]*\('
-    t_COMMA   = r','
-
+    t_PLUS = r'\+'
+    t_MINUS = r'-'
+    t_EXP = r'\*\*'
+    t_TIMES = r'\*'
+    t_DIVIDE = r'/'
+    t_LPAREN = r'\('
+    t_RPAREN = r'\)'
+    t_NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
+    t_LFUNC = r'[a-zA-Z_][a-zA-Z0-9_.]*[ ]*\('
+    t_COMMA = r','
 
     def t_NUMBER(self, t):
         r'(\d*\.\d+)|(\d+\.\d*)|(\d+)'
@@ -111,18 +106,17 @@ class CalcExpr(Parser):
 
     t_ignore = " \t"
 
-    
     def t_error(self, t):
         from nineml.abstraction_layer.component.parse import NineMLMathParseError
-        raise NineMLMathParseError, "Illegal character '%s' in '%s'" % (t.value[0],t)
+        raise NineMLMathParseError, "Illegal character '%s' in '%s'" % (t.value[0], t)
 
     precedence = (
-        ('left','PLUS','MINUS'),
-        ('left','TIMES','DIVIDE'),
+        ('left', 'PLUS', 'MINUS'),
+        ('left', 'TIMES', 'DIVIDE'),
         ('left', 'EXP'),
-        ('right','UMINUS'),
-        ('left','LFUNC'),
-        )
+        ('right', 'UMINUS'),
+        ('left', 'LFUNC'),
+    )
 
     def p_statement_expr(self, p):
         'statement : expression'
@@ -142,16 +136,16 @@ class CalcExpr(Parser):
         'expression : MINUS expression %prec UMINUS'
         pass
 
-    def p_func(self,p):
+    def p_func(self, p):
         """expression : LFUNC expression RPAREN\n | LFUNC RPAREN
                         | LFUNC expression COMMA expression RPAREN
                         | LFUNC expression COMMA expression COMMA expression RPAREN
         """
         # EM: Supports up to 3 args.  Don't know how to support N.
-        
+
         # check that function name is known
         func_name = p[1][:-1].strip()
-        #if func_name not in math_namespace.namespace:
+        # if func_name not in math_namespace.namespace:
         #    raise NineMLMathParseError, "Undefined function '%s'" % func_name
         self.funcs.append(func_name)
 
@@ -181,7 +175,7 @@ def expr_parse(rhs):
 
     calc = CalcExpr()
     return calc.parse(rhs)
-    
+
 if __name__ == '__main__':
     calc = CalcExpr()
     p = calc.parse("1 / (( 1 + mg_conc * eta *  exp ( -1 * gamma*V))")

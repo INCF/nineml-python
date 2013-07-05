@@ -22,17 +22,18 @@ from nineml.abstraction_layer import *
 poisson_thin_process = On("t>t_next", do="t_next = t + exp_rand(nu_max)")
 
 gamma_hazard = On("( t>t_next ) & ( rand(0.0,1.0)<gamma_hazard(age,a,b)/nu_max) )",
-                  do = ["age = 0.0", SpikeOutputEvent])
+                  do=["age = 0.0", SpikeOutputEvent])
 
 regime = Regime(
     "dage/dt = 1.0",
-    transitions = [poisson_thin_process, gamma_hazard]
-    )
+    transitions=[poisson_thin_process, gamma_hazard]
+)
 
 # As a,b are time varying, they must come in through analog ports, rather than a user parameter.
 ports = [RecvPort("a"), RecvPort("b")]
 
-c1 = Component("Inhomogeneous Gamma Renewal Process (thinning method)", regimes=[regime], ports=ports)
+c1 = Component("Inhomogeneous Gamma Renewal Process (thinning method)",
+               regimes=[regime], ports=ports)
 
 
 try:
@@ -42,9 +43,9 @@ except NameError:
     import os
 
     base = "inh_gamma_generator"
-    c1.write(base+".xml")
-    c2 = parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

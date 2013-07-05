@@ -12,31 +12,24 @@ nineml.al.writers.DotWriter.write(iz, 'TestOut_Iz.dot')
 nineml.al.writers.DotWriter.build('TestOut_Iz.dot')
 
 
-
-
-
 # Simulate the Neuron:
 records = [
-    RecordValue(what='V', tag='V', label='V'), 
-    #RecordValue(what='U', tag='U', label='U'), 
-    #RecordValue( what='regime',     tag='Regime',  label='Regime' ),
-        ]
+    RecordValue(what='V', tag='V', label='V'),
+    # RecordValue(what='U', tag='U', label='U'),
+    # RecordValue( what='regime',     tag='Regime',  label='Regime' ),
+]
 
 parameters = nineml.al.flattening.ComponentFlattener.flatten_namespace_dict({
-              'a': 0.02, 
-              'b': 0.2, 
-              'c': -65, 
-              'd': 8, 
-              'iinj_constant': 50.0,
-              })
+                                                                            'a': 0.02,
+                                                                            'b': 0.2,
+                                                                            'c': -65,
+                                                                            'd': 8,
+                                                                            'iinj_constant': 50.0,
+                                                                            })
 
-res = std_pynn_simulation( test_component = iz,
-                    parameters = parameters, 
-                    initial_values = {},
-                    synapse_components = [],
-                    records = records,
-                   )
-
-
-
-
+res = std_pynn_simulation(test_component=iz,
+                          parameters=parameters,
+                          initial_values={},
+                          synapse_components=[],
+                          records=records,
+                          )

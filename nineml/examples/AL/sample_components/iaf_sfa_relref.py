@@ -29,13 +29,13 @@ refractory conductances by q_sfa and q_rr, respectively.  Otherwise
 these conductances decay exponentially with time constants tau_sfa
 and tau_rr, respectively.
 
-Parameters: 
+Parameters:
 The following parameters can be set in the status dictionary.
 
-V        double - Membrane potential in mV 
+V        double - Membrane potential in mV
 E_L        double - Leak reversal potential in mV.
 C_m        double - Capacity of the membrane in pF
-t_ref      double - Duration of refractory period in ms. 
+t_ref      double - Duration of refractory period in ms.
 V_th       double - Spike threshold in mV.
 V_reset    double - Reset potential of the membrane in mV.
 E_ex       double - Excitatory reversal potential in mV.
@@ -64,34 +64,33 @@ SeeAlso: iaf_cond_exp_sfa_rr, aeif_cond_alpha, iaf_psc_delta, iaf_psc_exp, iaf_c
 
 import nineml.abstraction_layer as al
 
+
 def get_component():
     subthreshold_regime = al.Regime(
         name="subthreshold_regime",
-        time_derivatives = [
+        time_derivatives=[
             "dV/dt = (g_L*(E_L-V) + g_sfa*(E_sfa-V) + g_rr*(E_rr-V) + Isyn)/C",
             "dg_sfa/dt = -g_sfa/tau_sfa",
             "dg_rr/dt = -g_rr/tau_rr",
         ],
-        transitions = al.On("V> theta",
-                                do=["g_sfa =g_sfa +  q_sfa", "g_rr =g_rr + q_rr", "t_spike = t",
-                                    al.OutputEvent('spikeoutput')],
-                                to="refractory_regime"),
-        )
+        transitions=al.On("V> theta",
+                          do=["g_sfa =g_sfa +  q_sfa", "g_rr =g_rr + q_rr", "t_spike = t",
+                              al.OutputEvent('spikeoutput')],
+                          to="refractory_regime"),
+    )
 
     refractory_regime = al.Regime(
         name="refractory_regime",
-        transitions = al.On("t >= t_spike + t_ref",
-                                to='subthreshold_regime'),
-        )
+        transitions=al.On("t >= t_spike + t_ref",
+                          to='subthreshold_regime'),
+    )
 
     analog_ports = [al.SendPort("V"),
-                    al.ReducePort("Isyn",reduce_op="+")]
+                    al.ReducePort("Isyn", reduce_op="+")]
 
-    c1 = al.ComponentClass("iaf_sfa_relref", 
-                            regimes = [subthreshold_regime, refractory_regime],
-                            analog_ports = analog_ports,
-                            )
+    c1 = al.ComponentClass("iaf_sfa_relref",
+                           regimes=[subthreshold_regime, refractory_regime],
+                           analog_ports=analog_ports,
+                           )
 
     return c1
-
-

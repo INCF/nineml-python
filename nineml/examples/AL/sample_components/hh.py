@@ -6,6 +6,7 @@ Andrew Davison, 2010
 
 import nineml.abstraction_layer as al
 
+
 def get_component():
     aliases = [
         "q10 := 3.0**((celsius - 6.3)/10.0)",  # temperature correction factor
@@ -17,11 +18,11 @@ def get_component():
         "beta_h := 1.0/(exp(-(V+35)/10.0) + 1.0)",
         "htau := 1.0/(q10*(alpha_h + beta_h))",
         "hinf := alpha_h/(alpha_h + beta_h)",
-        "alpha_n := -0.01*(V+55.0)/(exp(-(V+55.0)/10.0) - 1.0)", # n
+        "alpha_n := -0.01*(V+55.0)/(exp(-(V+55.0)/10.0) - 1.0)",  # n
         "beta_n := 0.125*exp(-(V+65.0)/80.0)",
         "ntau := 1.0/(q10*(alpha_n + beta_n))",
         "ninf := alpha_n/(alpha_n + beta_n)",
-        "gna := gnabar*m*m*m*h",                       # 
+        "gna := gnabar*m*m*m*h",                       #
         "gk := gkbar*n*n*n*n",
         "ina := gna*(ena - V)",                 # currents
         "ik := gk*(ek - V)",
@@ -32,17 +33,18 @@ def get_component():
         "dm/dt = (minf-m)/mtau",
         "dh/dt = (hinf-h)/htau",
         "dV/dt = (ina + ik + il + Isyn)/C",
-        transitions=al.On("V > theta",do=al.SpikeOutputEvent() )
+        transitions=al.On("V > theta", do=al.SpikeOutputEvent())
     )
 
-# the rest are not "parameters" but aliases, assigned vars, state vars, indep vars, analog_analog_ports, etc.
-    parameters = ['el', 'C', 'ek', 'ena', 'gkbar', 'gnabar', 'theta', 'gl','celsius', ]
+# the rest are not "parameters" but aliases, assigned vars, state vars,
+# indep vars, analog_analog_ports, etc.
+    parameters = ['el', 'C', 'ek', 'ena', 'gkbar', 'gnabar', 'theta', 'gl', 'celsius', ]
 
-    analog_ports = [al.SendPort("V"), al.ReducePort("Isyn",reduce_op="+")]
+    analog_ports = [al.SendPort("V"), al.ReducePort("Isyn", reduce_op="+")]
 
-    c1 = al.ComponentClass("HodgkinHuxley", 
-                          parameters=parameters,
-                          regimes=(hh_regime,),
-                          aliases=aliases, 
-                          analog_ports=analog_ports)
+    c1 = al.ComponentClass("HodgkinHuxley",
+                           parameters=parameters,
+                           regimes=(hh_regime,),
+                           aliases=aliases,
+                           analog_ports=analog_ports)
     return c1

@@ -5,17 +5,17 @@ import numpy
 # Here we use a pre-generated poisson process as an example.
 
 # define a poisson spike-train
-rate = 10 # events per time unit
-length = 1.0 # one time unit
-isi = numpy.random.exponential(1.0/rate,size=(rate*length*2,))
+rate = 10  # events per time unit
+length = 1.0  # one time unit
+isi = numpy.random.exponential(1.0 / rate, size=(rate * length * 2,))
 # spike times
 t = numpy.add.accumulate(isi)
-spike_times = t[t<length]
+spike_times = t[t < length]
 
 regimes = []
 events = []
-for i,t_spike in enumerate(spike_times):
-        events+=[nineml.On("t>%f" % t_spike,do=nineml.SpikeOutputEvent)]
+for i, t_spike in enumerate(spike_times):
+        events += [nineml.On("t>%f" % t_spike, do=nineml.SpikeOutputEvent)]
 
 spiker = nineml.Regime(transitions=events)
 
@@ -27,13 +27,11 @@ try:
     c1.write(f)
 except NameError:
     import os
-    
-    base = "spike_generator"
-    c1.write(base+".xml")
-    c2 = nineml.parse(base+".xml")
-    assert c1==c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
-              
-    
+    base = "spike_generator"
+    c1.write(base + ".xml")
+    c2 = nineml.parse(base + ".xml")
+    assert c1 == c2
+
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

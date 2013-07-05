@@ -4,14 +4,10 @@
 import nineml
 
 
-
-
-
-
-
 class Parameter(object):
+
     """A class representing a state-variable in a ``ComponentClass``.
-    
+
     This was originally a string, but if we intend to support units in the
     future, wrapping in into its own object may make the transition easier
     """
@@ -21,7 +17,7 @@ class Parameter(object):
 
         :param name:  The name of the parameter.
         """
-        name=name.strip()
+        name = name.strip()
         nineml.utility.ensure_valid_c_variable_name(name)
 
         self._name = name

@@ -29,13 +29,13 @@ refractory conductances by q_sfa and q_rr, respectively.  Otherwise
 these conductances decay exponentially with time constants tau_sfa
 and tau_rr, respectively.
 
-Parameters: 
+Parameters:
 The following parameters can be set in the status dictionary.
 
-V        double - Membrane potential in mV 
+V        double - Membrane potential in mV
 E_L        double - Leak reversal potential in mV.
 C_m        double - Capacity of the membrane in pF
-t_ref      double - Duration of refractory period in ms. 
+t_ref      double - Duration of refractory period in ms.
 V_th       double - Spike threshold in mV.
 V_reset    double - Reset potential of the membrane in mV.
 E_ex       double - Excitatory reversal potential in mV.
@@ -68,24 +68,23 @@ subthreshold_regime = nineml.Regime(
     "dV/dt = (g_L*(E_L-V) + g_sfa*(E_sfa-V) + g_rr*(E_rr-V) + Isyn)/C",
     "dg_sfa/dt = -g_sfa/tau_sfa",
     "dg_rr/dt = -g_rr/tau_rr",
-    transitions = nineml.On("V> theta",
-                            do=["g_sfa += q_sfa", "g_rr += q_rr", "t_spike = t",
-                                nineml.SpikeOutputEvent],
-                            to="refractory_regime"),
+    transitions=nineml.On("V> theta",
+                          do=["g_sfa += q_sfa", "g_rr += q_rr", "t_spike = t",
+                              nineml.SpikeOutputEvent],
+                          to="refractory_regime"),
     name="subthreshold_regime"
-    )
+)
 
 refractory_regime = nineml.Regime(
-    transitions = nineml.On("t >= t_spike + t_ref",
-                            to=subthreshold_regime),
+    transitions=nineml.On("t >= t_spike + t_ref",
+                          to=subthreshold_regime),
     name="refractory_regime"
-    )
+)
 
 ports = [nineml.SendPort("V"),
-         nineml.ReducePort("Isyn",op="+")]
+         nineml.ReducePort("Isyn", op="+")]
 
-c1 = nineml.Component("iaf_sfa_relref", regimes = [subthreshold_regime, refractory_regime])
-
+c1 = nineml.Component("iaf_sfa_relref", regimes=[subthreshold_regime, refractory_regime])
 
 
 # write to file object f if defined
@@ -96,9 +95,9 @@ except NameError:
     import os
 
     base = "iaf_sfa_relref"
-    c1.write(base+".xml")
-    c2 = nineml.parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = nineml.parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

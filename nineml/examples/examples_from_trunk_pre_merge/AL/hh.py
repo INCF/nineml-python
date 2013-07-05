@@ -17,11 +17,11 @@ bindings = [
     "beta_h(V) := 1.0/(exp(-(V+35)/10.0) + 1.0)",
     "htau(V) := 1.0/(q10*(alpha_h(V) + beta_h(V)))",
     "hinf(V) := alpha_h(V)/(alpha_h(V) + beta_h(V))",
-    "alpha_n(V) := -0.01*(V+55.0)/(exp(-(V+55.0)/10.0) - 1.0)", # n
+    "alpha_n(V) := -0.01*(V+55.0)/(exp(-(V+55.0)/10.0) - 1.0)",  # n
     "beta_n(V) := 0.125*exp(-(V+65.0)/80.0)",
     "ntau(V) := 1.0/(q10*(alpha_n(V) + beta_n(V)))",
     "ninf(V) := alpha_n(V)/(alpha_n(V) + beta_n(V))",
-    "gna(m,h) := gnabar*m*m*m*h",                       # 
+    "gna(m,h) := gnabar*m*m*m*h",                       #
     "gk(n) := gkbar*n*n*n*n",
     "ina(m,h,V) := gna(m,h)*(ena - V)",                 # currents
     "ik(n,V) := gk(n)*(ek - V)",
@@ -33,18 +33,18 @@ hh_regime = Regime(
     "dh/dt = (hinf(V)-h)/htau(V)",
     "dV/dt = (ina(m,h,V) + ik(n,V) + il(V) + Isyn)/C",
     name="hh_regime",
-    transitions=On("V > theta",do=[SpikeOutputEvent])
+    transitions=On("V > theta", do=[SpikeOutputEvent])
 )
 
 # the rest are not "parameters" but bindings, assigned vars, state vars, indep vars, ports, etc.
-parameters = ['el', 'C', 'ek', 'ena', 'gkbar', 'gnabar', 'theta', 'gl','celsius']
+parameters = ['el', 'C', 'ek', 'ena', 'gkbar', 'gnabar', 'theta', 'gl', 'celsius']
 
 ports = [SendPort("V"),
-         ReducePort("Isyn",op="+")]
+         ReducePort("Isyn", op="+")]
 
 c1 = Component("Hodgkin-Huxley", parameters=parameters,
-                      regimes=(hh_regime,),
-                      bindings=bindings, ports=ports)
+               regimes=(hh_regime,),
+               bindings=bindings, ports=ports)
 
 # write to file object f if defined
 try:
@@ -53,9 +53,9 @@ try:
 except NameError:
 
     base = "hh"
-    c1.write(base+".xml")
-    c2 = parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

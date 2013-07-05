@@ -21,8 +21,8 @@ COMMENT
 
   - SHORT PULSES OF TRANSMITTER (0.3 ms, 0.5 mM)
 
-    The simplified model was obtained from a detailed synaptic model that 
-    included the release of transmitter in adjacent terminals, its lateral 
+    The simplified model was obtained from a detailed synaptic model that
+    included the release of transmitter in adjacent terminals, its lateral
     diffusion and uptake, and its binding on postsynaptic receptors (Destexhe
     and Sejnowski, 1995).  Short pulses of transmitter with first-order
     kinetics were found to be the best fast alternative to represent the more
@@ -40,11 +40,11 @@ References
 
    Destexhe, A., Mainen, Z.F. and Sejnowski, T.J.  An efficient method for
    computing synaptic conductances based on a kinetic model of receptor binding
-   Neural Computation 6: 10-14, 1994.  
+   Neural Computation 6: 10-14, 1994.
 
    Destexhe, A., Mainen, Z.F. and Sejnowski, T.J. Synthesis of models for
-   excitable membranes, synaptic transmission and neuromodulation using a 
-   common kinetic formalism, Journal of Computational Neuroscience 1: 
+   excitable membranes, synaptic transmission and neuromodulation using a
+   common kinetic formalism, Journal of Computational Neuroscience 1:
    195-230, 1994.
 
 -----------------------------------------------------------------------------
@@ -147,54 +147,55 @@ NET_RECEIVE(weight, on, nspike, r0, t0 (ms)) {
 
 from nineml.abstraction_layer import *
 
+
 def get_component():
     off_regime = Regime(
         name="off_regime",
-        time_derivatives = [
-        "dRon/dt =  -Ron/Rtau",
-        "dRoff/dt = -Beta*Roff",
+        time_derivatives=[
+            "dRon/dt =  -Ron/Rtau",
+            "dRoff/dt = -Beta*Roff",
         ],
         transitions=On('spikeoutput',
-                        do=["t_off = t+Cdur",
-                            "r0 = r0*exp(-Beta*(t - t0))",
-                            "t0 = t",
-                            "Ron = Ron +r0",
-                            "Roff = Roff - r0"
-                            ],
-                        to="on_regime"
-                  )
-        )
+                       do=["t_off = t+Cdur",
+                           "r0 = r0*exp(-Beta*(t - t0))",
+                           "t0 = t",
+                           "Ron = Ron +r0",
+                           "Roff = Roff - r0"
+                           ],
+                       to="on_regime"
+                       )
+    )
 
     on_regime = Regime(
         name="on_regime",
-        time_derivatives = [
-        "dRon/dt = (weight*Rinf - Ron)/Rtau",
-        "dRoff/dt = -Beta*Roff",
+        time_derivatives=[
+            "dRon/dt = (weight*Rinf - Ron)/Rtau",
+            "dRoff/dt = -Beta*Roff",
         ],
-        transitions=[On('spikeoutput',do="t_off = t+Cdur"),     # Extend duration if input spike arrives while on
-                     On("t_off>t",                              # What to do when its time to turn off 
+        transitions=[On('spikeoutput', do="t_off = t+Cdur"),     # Extend duration if input spike arrives while on
+                     On("t_off>t",                              # What to do when its time to turn off
                         do=["r0 = weight*Rinf + (r0 - weight*Rinf)*exp(-(t - t0)/Rtau)",
-                       "t0 = t",
-                       "Ron = Ron - r0",
-                       "Roff = Roff - r0"
-                       ],
+                            "t0 = t",
+                            "Ron = Ron - r0",
+                            "Roff = Roff - r0"
+                            ],
                         to='off_regime'
-                   )
-                ]
-        )
+                        )
+                     ]
+    )
 
     analog_ports = [RecvPort("weight"),
-             RecvPort("V"),
-             SendPort("Isyn"), 
-             SendPort("gsyn")]
+                    RecvPort("V"),
+                    SendPort("Isyn"),
+                    SendPort("gsyn")]
 
-    c1 = ComponentClass("AMPA", 
-                             regimes=[off_regime, on_regime], 
-                             analog_ports = analog_ports,
-                             aliases = [
-                                 "g := (on + off)",
-                                 "Isyn := g*(E-V)", 
-                                 "gsyn := g"
-                                 ]
-                             )
+    c1 = ComponentClass("AMPA",
+                        regimes=[off_regime, on_regime],
+                        analog_ports=analog_ports,
+                        aliases=[
+                        "g := (on + off)",
+                        "Isyn := g*(E-V)",
+                        "gsyn := g"
+                        ]
+                        )
     return c1

@@ -20,17 +20,16 @@ regimes = [
         "lambda_W(V) := phi*cosh((V-V3)/(2.0*V4))",
         "I_ca(V) := g_ca*M_inf(V)*(V_ca-V)",
         "I_k(V,W) := g_k*W*(V_k-V)",
-        transitions = nineml.On("V > theta",do=[nineml.SpikeOutputEvent]),
+        transitions=nineml.On("V > theta", do=[nineml.SpikeOutputEvent]),
         name="subthreshold_regime"
     )]
 
 
 ports = [nineml.SendPort("V"),
-         nineml.ReducePort("Isyn",op="+")]
+         nineml.ReducePort("Isyn", op="+")]
 
 
-c1 = nineml.Component("Morris-Lecar", regimes = regimes )
-
+c1 = nineml.Component("Morris-Lecar", regimes=regimes)
 
 
 # write to file object f if defined
@@ -41,9 +40,9 @@ except NameError:
     import os
 
     base = "morris-lecar"
-    c1.write(base+".xml")
-    c2 = nineml.parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = nineml.parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

@@ -34,7 +34,7 @@ Classes
         Comparison
         Eq
         In
-    
+
 
 Copyright Andrew P. Davison, 2010, 2013 # if you edit this file, add your name here
 """
@@ -69,15 +69,16 @@ def parse(url):
         doc = etree.parse(url)
 
     root = doc.getroot()
-    for import_element in root.findall(NINEML+"import"):
-        url = import_element.find(NINEML+"url").text
+    for import_element in root.findall(NINEML + "import"):
+        url = import_element.find(NINEML + "url").text
         imported_doc = etree.parse(url)
         root.extend(imported_doc.getroot().iterchildren())
     return Model.from_xml(root)
 
 
 def check_tag(element, cls):
-    assert element.tag in (cls.element_name, NINEML+cls.element_name), "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
+    assert element.tag in (cls.element_name, NINEML + cls.element_name), "Found <%s>, expected <%s>" % (
+        element.tag, cls.element_name)
 
 
 def walk(obj, visitor=None, depth=0):
@@ -90,20 +91,20 @@ def walk(obj, visitor=None, depth=0):
     else:
         get_children = obj.itervalues
     for child in sorted(get_children()):
-        walk(child, visitor, depth+1)
+        walk(child, visitor, depth + 1)
 
 
 class ExampleVisitor(object):
-    
+
     def visit(self, obj):
-        print " "*self.depth + str(obj)
+        print " " * self.depth + str(obj)
 
 
 class Collector(object):
-    
+
     def __init__(self):
         self.objects = []
-    
+
     def visit(self, obj):
         self.objects.append(obj)
 
@@ -126,25 +127,28 @@ def find_difference(this, that):
                     if attr in this.children:
                         find_difference(a, b)
                     else:
-                        errmsg = "'%s' attribute of %s instance '%s' differs: '%r' != '%r'" % (attr, this.__class__.__name__, this.name, a, b)
+                        errmsg = "'%s' attribute of %s instance '%s' differs: '%r' != '%r'" % (
+                            attr, this.__class__.__name__, this.name, a, b)
                         if type(a) != type(b):
                             errmsg += "(%s, %s)" % (type(a), type(b))
                         raise Exception(errmsg)
         else:
-            assert sorted(this.keys()) == sorted(that.keys())  # need to handle case of different keys
+            assert sorted(this.keys()) == sorted(
+                that.keys())  # need to handle case of different keys
             for key in this:
                 find_difference(this[key], that[key])
 
 
 class ULobject(object):
+
     """
     Base class for user layer classes
     """
     children = []
-    
+
     def __eq__(self, other):
         return reduce(and_, [isinstance(other, self.__class__)] + [getattr(self, name) == getattr(other, name) for name in self.__class__.defining_attributes])
-    
+
     def __ne__(self, other):
         return not self == other
 
@@ -159,19 +163,19 @@ class ULobject(object):
             return chain(getattr(self, attr) for attr in self.children)
         else:
             return []
-    
+
     def accept_visitor(self, visitor):
         visitor.visit(self)
-    
-   
+
 
 class Model(ULobject):
+
     """
     Representation of an entire 9ML model.
     """
     defining_attributes = ("name", "components", "groups")
     children = ("components", "groups")
-    
+
     def __init__(self, name):
         """
         Create an empty model with a given name.
@@ -204,14 +208,15 @@ class Model(ULobject):
                 other_component = self._unresolved.pop(component.name)
                 other_component.resolve(component)
         if component.name in self.components and self.components[component.name] != component:
-            raise Exception("A different component with the name '%s' already exists" % component.name)
+            raise Exception(
+                "A different component with the name '%s' already exists" % component.name)
         self.components[component.name] = component
 
     def _resolve_components(self):
         for component in self.components.values():
             if component.unresolved:
                 component.resolve(self.components[component.reference])
-    
+
     def add_group(self, group):
         """
         Add a group to the model. Groups contain populations of nodes, where
@@ -224,29 +229,29 @@ class Model(ULobject):
             self.add_component(component)
         for subgroup in group.get_subgroups():
             self.add_group(subgroup)
-        self.groups[group.name] = group   
+        self.groups[group.name] = group
 
     @classmethod
     def from_xml(cls, element):
         """
         Parse an XML ElementTree structure and return a Model instance.
-        
+
         `element` - should be an ElementTree Element instance.
 
         See:
             http://docs.python.org/library/xml.etree.elementtree.html
             http://codespeak.net/lxml/
         """
-        assert element.tag == NINEML+'nineml'
-        model = cls(element.attrib["name"])        
+        assert element.tag == NINEML + 'nineml'
+        model = cls(element.attrib["name"])
         # Note that the components dict initially contains elementtree elements,
         # but is modified within Group.from_xml(), and at the end contains
         # Component instances.
         components = {}
         groups = {}
-        for child in element.findall(NINEML+BaseComponent.element_name):
+        for child in element.findall(NINEML + BaseComponent.element_name):
             components[child.attrib["name"]] = child
-        for child in element.findall(NINEML+Group.element_name):
+        for child in element.findall(NINEML + Group.element_name):
             group = Group.from_xml(child, components, groups)
             model.groups[group.name] = group
         for name, c in components.items():
@@ -272,7 +277,8 @@ class Model(ULobject):
         """
         Export this model to a file in 9ML XML format.
         """
-        assert isinstance(filename, basestring) or (hasattr(filename, "seek") and hasattr(filename, "read"))
+        assert isinstance(filename, basestring) or (
+            hasattr(filename, "seek") and hasattr(filename, "read"))
         etree.ElementTree(self.to_xml()).write(filename, encoding="UTF-8",
                                                pretty_print=True, xml_declaration=True)
 
@@ -292,9 +298,10 @@ class Model(ULobject):
 
 
 class Definition(ULobject):
+
     """
     Encapsulate a component definition.
-    
+
     For now, this holds only the URI of an abstraction layer file, but this
     could be expanded later to include definitions external to 9ML.
     """
@@ -326,18 +333,19 @@ class Definition(ULobject):
             try:
                 self._component = al_parse(f)
             finally:
-                f.close()    
+                f.close()
         return self._component
 
-    def to_xml(self): #
+    def to_xml(self):
         return E(self.element_name, (E.url(self.url)), language="NineML")
 
     @classmethod
     def from_xml(cls, element):
-        return cls(element.find(NINEML+"url").text)
+        return cls(element.find(NINEML + "url").text)
 
 
 class BaseComponent(ULobject):
+
     """
     Base class for model components that are defined in the abstraction layer.
 
@@ -353,7 +361,7 @@ class BaseComponent(ULobject):
         """
         Create a new component with the given name, definition and parameters,
         or create a reference to another component that will be resolved later.
-        
+
         `name` - a name for the component that can be used to reference it.
         `definition` - a Definition instance, the URL of a component definition,
                        or None if creating a reference.
@@ -365,7 +373,7 @@ class BaseComponent(ULobject):
         if isinstance(definition, Definition):
             self.definition = definition
             assert reference is None, "Cannot give both definition and reference."
-        elif isinstance(definition, basestring): # should also check is a valid uri
+        elif isinstance(definition, basestring):  # should also check is a valid uri
             self.definition = Definition(definition)
             assert reference is None, "Cannot give both definition and reference."
         elif definition is None:
@@ -382,15 +390,15 @@ class BaseComponent(ULobject):
             raise Exception()
         self.reference = reference
         if not self.unresolved:
-            pass #DEBUG# self.check_parameters()
+            pass  # DEBUG# self.check_parameters()
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
         assert not (self.unresolved or other.unresolved)
-        return reduce(and_, (self.name==other.name,
-                             self.definition==other.definition,
-                             self.parameters==other.parameters))
+        return reduce(and_, (self.name == other.name,
+                             self.definition == other.definition,
+                             self.parameters == other.parameters))
 
     def __hash__(self):
         assert not self.unresolved
@@ -416,7 +424,7 @@ class BaseComponent(ULobject):
     @property
     def unresolved(self):
         return self.definition is None
-    
+
     def resolve(self, other_component):
         """
         If the component is unresolved (contains a reference to another
@@ -426,14 +434,15 @@ class BaseComponent(ULobject):
         assert other_component.__class__ == self.__class__
         assert self.reference == other_component.name
         self.definition = other_component.definition
-        self.parameters.complete(other_component.parameters) # note that this behaves oppositely to dict.update
+        self.parameters.complete(other_component.parameters)
+                                 # note that this behaves oppositely to dict.update
         self.check_parameters()
-    
+
     def get_definition(self):
         if not self.definition.component:
             self.definition.retrieve()
         return self.definition.component
-    
+
     def check_parameters(self):
         # this checks the names, also need to check dimensions, ranges, once those are in the AL
         user_parameters = set(self.parameters.iterkeys())
@@ -442,32 +451,35 @@ class BaseComponent(ULobject):
         diff_a = user_parameters.difference(definition_parameters)
         diff_b = definition_parameters.difference(user_parameters)
         if diff_a:
-            msg.append("User parameters contains the following parameters that are not present in the definition: %s" % ",".join(diff_a))
+            msg.append("User parameters contains the following parameters that are not present in the definition: %s" %
+                       ",".join(diff_a))
         if diff_b:
-            msg.append("Definition contains the following parameters that are not present in the user parameters: %s" % ",".join(diff_b))
+            msg.append("Definition contains the following parameters that are not present in the user parameters: %s" %
+                       ",".join(diff_b))
         if msg:
-            raise Exception(". ".join(msg)) # need a more specific type of Exception
-    
+            raise Exception(". ".join(msg))  # need a more specific type of Exception
+
     def to_xml(self):
         element = E(self.element_name,
                     self.definition.to_xml(),
                     *self.parameters.to_xml(),
                     name=self.name)
         return element
-    
+
     @classmethod
     def from_xml(cls, element, components):
-        if element.tag != NINEML+cls.element_name:
+        if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
         name = element.attrib.get("name", None)
-        parameters = ParameterSet.from_xml(element.findall(NINEML+Parameter.element_name), components)
-        definition_element = element.find(NINEML+Definition.element_name)
+        parameters = ParameterSet.from_xml(
+            element.findall(NINEML + Parameter.element_name), components)
+        definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
             definition = Definition.from_xml(definition_element)
             return cls(name, definition, parameters)
         else:
-            reference_element = element.find(NINEML+"reference")
+            reference_element = element.find(NINEML + "reference")
             if reference_element is not None:
                 return cls(name, None, parameters, reference=reference_element.text)
             else:
@@ -475,26 +487,29 @@ class BaseComponent(ULobject):
 
 
 class SpikingNodeType(BaseComponent):
+
     """
     Component representing a model of a spiking node, i.e. something that can
     emit (and optionally receive) spikes.
-    
+
     Should perhaps be called SpikingNodePrototype, since this is type + parameters
     """
     pass
 
 
 class SynapseType(BaseComponent):
+
     """
     Component representing a model of a post-synaptic response, i.e. the current
     produced in response to a spike.
-    
+
     This class is probably mis-named. Should be PostSynapticResponseType.
     """
     pass
 
 
 class CurrentSourceType(BaseComponent):
+
     """
     Component representing a model of a current source that may be injected into
     a spiking node.
@@ -503,6 +518,7 @@ class CurrentSourceType(BaseComponent):
 
 
 class Structure(BaseComponent):
+
     """
     Component representing the structure of a network, e.g. 2D grid, random
     distribution within a sphere, etc.
@@ -511,22 +527,23 @@ class Structure(BaseComponent):
 
     def generate_positions(self, number):
         """
-        Generate a number of node positions according to the network structure. 
+        Generate a number of node positions according to the network structure.
         """
         raise NotImplementedError
 
     @property
     def is_csa(self):
-        return self.get_definition().__module__ == 'csa.geometry' # probably need a better test
+        return self.get_definition().__module__ == 'csa.geometry'  # probably need a better test
 
     def to_csa(self):
         if self.is_csa:
-            return self.get_definition() # e.g. lambda size: csa.random2d(size, *self.parameters)
+            return self.get_definition()  # e.g. lambda size: csa.random2d(size, *self.parameters)
         else:
             raise Exception("Structure cannot be transformed to CSA geometry function")
-            
+
 
 class ConnectionRule(BaseComponent):
+
     """
     Component representing an algorithm for connecting two populations of nodes.
     """
@@ -534,14 +551,16 @@ class ConnectionRule(BaseComponent):
 
 
 class ConnectionType(BaseComponent):
+
     """
     Component representing a model of a synaptic connection, including weight,
     delay, optionally a synaptic plasticity rule.
     """
     pass
 
-    
+
 class RandomDistribution(BaseComponent):
+
     """
     Component representing a random number distribution, e.g. normal, gamma,
     binomial.
@@ -550,25 +569,26 @@ class RandomDistribution(BaseComponent):
 
 
 class Parameter(ULobject):
+
     """
     Representation of a numerical- or string-valued parameter.
-    
+
     A numerical parameter is a (name, value, unit) triplet, a string parameter
     is a (name, value) pair.
-    
+
     Numerical values may either be numbers, or a component that generates
     numbers, e.g. a RandomDistribution instance.
     """
     element_name = "property"
     defining_attributes = ("name", "value", "unit")
-    
+
     def __init__(self, name, value, unit=None):
         self.name = name
         if not isinstance(value, (Number, list)) or isinstance(value, bool):
             raise TypeError("Parameter values may not be of type %s" % type(value))
         self.value = value
         self.unit = unit
-    
+
     def __repr__(self):
         units = self.unit
         if u"µ" in units:
@@ -577,16 +597,16 @@ class Parameter(ULobject):
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and \
-               reduce(and_, (self.name==other.name,
-                             self.value==other.value,
-                             self.unit==other.unit)) # obviously we should resolve the units, so 0.001 V == 1 mV
-    
+            reduce(and_, (self.name == other.name,
+                          self.value == other.value,
+                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV
+
     def __hash__(self):
         return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
 
     def is_random(self):
         return isinstance(self.value, RandomDistribution)
-    
+
     def to_xml(self):
         if isinstance(self.value, RandomDistribution):
             value_element = E.reference(self.value.name)
@@ -596,15 +616,15 @@ class Parameter(ULobject):
             value_element = E.scalar(repr(self.value))
         return E(Parameter.element_name,
                  E.quantity(
-                    E.value(   # this extra level of tags is pointless, no?
-                        value_element,
-                        E.unit(self.unit or "dimensionless"))),
-                 name=self.name)    
-    
+                 E.value(   # this extra level of tags is pointless, no?
+                 value_element,
+                 E.unit(self.unit or "dimensionless"))),
+                 name=self.name)
+
     @classmethod
     def from_xml(cls, element, components):
         check_tag(element, cls)
-        quantity_element = element.find(NINEML+"quantity").find(NINEML+"value")
+        quantity_element = element.find(NINEML + "quantity").find(NINEML + "value")
         value, unit = Value.from_xml(quantity_element, components)
         return Parameter(name=element.attrib["name"],
                          value=value,
@@ -612,10 +632,11 @@ class Parameter(ULobject):
 
 
 class ParameterSet(dict):
+
     """
     Container for the set of parameters for a component.
     """
-    
+
     def __init__(self, *parameters, **kwparameters):
         """
         `*parameters` - should be Parameter instances
@@ -623,31 +644,31 @@ class ParameterSet(dict):
         """
         dict.__init__(self)
         for parameter in parameters:
-            self[parameter.name] = parameter # should perhaps do a copy
+            self[parameter.name] = parameter  # should perhaps do a copy
         for name, (value, unit) in kwparameters.items():
             self[name] = Parameter(name, value, unit)
-    
+
     def __hash__(self):
         return hash(tuple(self.items()))
-    
+
     def __repr__(self):
         return "ParameterSet(%s)" % dict(self)
-    
+
     def complete(self, other_parameter_set):
         """
         Pull parameters from another parameter set into this one, if they do
         not already exist in this one.
         """
-        for name,parameter in other_parameter_set.items():
+        for name, parameter in other_parameter_set.items():
             if name not in self:
-                self[name] = parameter # again, should perhaps copy
-    
+                self[name] = parameter  # again, should perhaps copy
+
     def get_random_distributions(self):
         return [p.value for p in self.values() if p.is_random()]
-        
+
     def to_xml(self):
         return [p.to_xml() for p in self.values()]
-    
+
     @classmethod
     def from_xml(cls, elements, components):
         parameters = []
@@ -657,22 +678,23 @@ class ParameterSet(dict):
 
 
 class Value(object):
+
     """
     Not intended to be instantiated: just provides the from_xml() classmethod.
     """
     element_name = "value"
-    
+
     @classmethod
     def from_xml(cls, element, components):
         """
         Parse an XML ElementTree structure and return a (value, units) tuple.
         The value should be a number or something that generates a numerical
         value, e.g. a RandomDistribution instance).
-        
+
         `element` - should be an ElementTree Element instance.
         """
         for name in ("reference", "scalar", "array", "function"):
-            value_element = element.find(NINEML+name)
+            value_element = element.find(NINEML + name)
             if value_element is not None:
                 break
         if value_element is None:
@@ -688,28 +710,30 @@ class Value(object):
             elif name == "array":
                 value = [float(x) for x in value_element.text.split(" ")]
             elif name == "function":
-                raise NotImplementedError    
-        unit = element.find(NINEML+"unit").text
+                raise NotImplementedError
+        unit = element.find(NINEML + "unit").text
         return value, unit
 
 
 class StringValue(object):
+
     """
     Not intended to be instantiated: just provides the from_xml() classmethod.
     """
     element_name = "value"
-    
+
     @classmethod
     def from_xml(cls, element):
         """
         Parse an XML ElementTree structure and return a string value.
-        
+
         `element` - should be an ElementTree Element instance.
         """
         return element.text
 
 
 class Group(ULobject):
+
     """
     Container for populations and projections between those populations. May be
     used as the node prototype within a population, allowing hierarchical
@@ -718,13 +742,13 @@ class Group(ULobject):
     element_name = "group"
     defining_attributes = ("name", "populations", "projections", "selections")
     children = ("populations", "projections", "selections")
-    
+
     def __init__(self, name):
         self.name = name
         self.populations = {}
         self.projections = {}
         self.selections = {}
-        
+
     def add(self, *objs):
         """
         Add one or more Population, Projection or Selection instances to the group.
@@ -737,7 +761,8 @@ class Group(ULobject):
             elif isinstance(obj, Selection):
                 self.selections[obj.name] = obj
             else:
-                raise Exception("Groups may only contain Populations, Projections, Selections or Groups")
+                raise Exception(
+                    "Groups may only contain Populations, Projections, Selections or Groups")
 
     def _resolve_population_references(self):
         for prj in self.projections.values():
@@ -749,50 +774,51 @@ class Group(ULobject):
                 elif prj.references[name] == self.name:
                     obj = self
                 else:
-                    raise Exception("Unable to resolve population/selection reference ('%s') for %s of %s" % (prj.references[name], name, prj))
+                    raise Exception("Unable to resolve population/selection reference ('%s') for %s of %s" %
+                                    (prj.references[name], name, prj))
                 setattr(prj, name, obj)
-    
+
     def get_components(self):
         components = []
         for p in chain(self.populations.values(), self.projections.values()):
             components.extend(p.get_components())
         return components
-    
+
     def get_subgroups(self):
         return [p.prototype for p in self.populations.values() if isinstance(p.prototype, Group)]
-    
+
     def to_xml(self):
         return E(self.element_name,
                  name=self.name,
                  *[p.to_xml() for p in chain(self.populations.values(),
                                              self.selections.values(),
                                              self.projections.values())])
-    
+
     @classmethod
     def from_xml(cls, element, components, groups):
         check_tag(element, cls)
         group = cls(name=element.attrib["name"])
         groups[group.name] = group
         for child in element.getchildren():
-            if child.tag == NINEML+Population.element_name:
+            if child.tag == NINEML + Population.element_name:
                 obj = Population.from_xml(child, components, groups)
-            elif child.tag == NINEML+Projection.element_name:
+            elif child.tag == NINEML + Projection.element_name:
                 obj = Projection.from_xml(child, components)
-            elif child.tag == NINEML+Selection.element_name:
+            elif child.tag == NINEML + Selection.element_name:
                 obj = Selection.from_xml(child, components)
             else:
-                raise Exception("<%s> elements may not contain <%s> elements" % (cls.element_name, child.tag))
+                raise Exception("<%s> elements may not contain <%s> elements" %
+                                (cls.element_name, child.tag))
             group.add(obj)
         group._resolve_population_references()
         return group
-
 
 
 def get_or_create_component(ref, cls, components):
     """
     Each entry in `components` is either an instance of a BaseComponent subclass,
     or the XML (elementtree Element) defining such an instance.
-    
+
     If given component does not exist, we create it and replace the XML in
     `components` with the actual component. We then return the component.
     """
@@ -800,6 +826,7 @@ def get_or_create_component(ref, cls, components):
     if not isinstance(components[ref], BaseComponent):
         components[ref] = cls.from_xml(components[ref], components)
     return components[ref]
+
 
 def get_or_create_prototype(prototype_ref, components, groups):
     if prototype_ref in groups:
@@ -809,6 +836,7 @@ def get_or_create_prototype(prototype_ref, components, groups):
 
 
 class Population(ULobject):
+
     """
     A collection of network nodes all of the same type. Nodes may either be
     individual spiking nodes (neurons) or groups (motifs, microcircuits,
@@ -816,7 +844,7 @@ class Population(ULobject):
     """
     element_name = "population"
     defining_attributes = ("name", "number", "prototype", "positions")
-    
+
     def __init__(self, name, number, prototype, positions):
         self.name = name
         self.number = number
@@ -824,10 +852,10 @@ class Population(ULobject):
         self.prototype = prototype
         assert isinstance(positions, PositionList)
         self.positions = positions
-    
+
     def __str__(self):
         return 'Population "%s": %dx"%s" %s' % (self.name, self.number, self.prototype.name, self.positions)
-    
+
     def get_components(self):
         components = []
         if self.prototype:
@@ -837,7 +865,7 @@ class Population(ULobject):
             elif isinstance(self.prototype, Group):
                 components.extend(self.prototype.get_components())
         return components + self.positions.get_components()
-    
+
     def to_xml(self):
         return E(self.element_name,
                  E.number(str(self.number)),
@@ -848,14 +876,15 @@ class Population(ULobject):
     @classmethod
     def from_xml(cls, element, components, groups):
         check_tag(element, cls)
-        prototype_ref = element.find(NINEML+'prototype').text
+        prototype_ref = element.find(NINEML + 'prototype').text
         return cls(name=element.attrib['name'],
-                   number=int(element.find(NINEML+'number').text),
+                   number=int(element.find(NINEML + 'number').text),
                    prototype=get_or_create_prototype(prototype_ref, components, groups),
-                   positions=PositionList.from_xml(element.find(NINEML+PositionList.element_name), components))
+                   positions=PositionList.from_xml(element.find(NINEML + PositionList.element_name), components))
 
 
 class PositionList(ULobject):
+
     """
     Represents a list of network node positions. May contain either an
     explicit list of positions or a Structure instance that can be used to
@@ -863,14 +892,14 @@ class PositionList(ULobject):
     """
     element_name = "positions"
     defining_attributes = []
-    
+
     def __init__(self, positions=[], structure=None):
         """
         Create a new PositionList.
-        
+
         Either `positions` or `structure` should be provided. Providing both
         will raise an Exception.
-        
+
         `positions` should be a list of (x,y,z) tuples or a 3xN (Nx3?) numpy array.
         `structure` should be a Structure component.
         """
@@ -890,13 +919,13 @@ class PositionList(ULobject):
             return self._positions == other._positions
         else:
             return self.structure == other.structure
-    
+
     def __str__(self):
         if self.structure:
             return "positioned according to '%s'" % self.structure.name
         else:
             return "with explicit position list"
-    
+
     def get_positions(self, population):
         """
         Return a list or 1D numpy array of (x,y,z) positions.
@@ -908,44 +937,46 @@ class PositionList(ULobject):
             return self.structure.generate_positions(population.number)
         else:
             raise Exception("Neither positions nor structure is set.")
-    
+
     def get_components(self):
         if self.structure:
             return [self.structure]
         else:
             return []
-    
+
     def to_xml(self):
         element = E(self.element_name)
         if self._positions:
             for pos in self._positions:
-                x,y,z = pos
-                element.append(E.position(x=str(x),y=str(y),z=str(z),unit="um"))
+                x, y, z = pos
+                element.append(E.position(x=str(x), y=str(y), z=str(z), unit="um"))
         elif self.structure:
             element.append(E.structure(self.structure.name))
         else:
             raise Exception("Neither positions nor structure is set.")
         return element
-    
+
     @classmethod
     def from_xml(cls, element, components):
         check_tag(element, cls)
-        structure_element = element.find(NINEML+'structure')
+        structure_element = element.find(NINEML + 'structure')
         if structure_element is not None:
             return cls(structure=get_or_create_component(structure_element.text, Structure, components))
         else:
             positions = [(float(p.attrib['x']), float(p.attrib['y']), float(p.attrib['z']))
-                         for p in element.findall(NINEML+'position')]
+                         for p in element.findall(NINEML + 'position')]
             return cls(positions=positions)
 
 # this approach is crying out for a class factory
+
+
 class Operator(ULobject):
     defining_attributes = ("operands",)
     children = ("operands",)
-    
+
     def __init__(self, *operands):
         self.operands = operands
-        
+
     def to_xml(self):
         operand_elements = []
         for c in self.operands:
@@ -955,17 +986,17 @@ class Operator(ULobject):
                 operand_elements.append(c.to_xml())
         return E(self.element_name,
                  *operand_elements)
-    
+
     @classmethod
     def from_xml(cls, element):
-        if hasattr(cls, "element_name") and element.tag == NINEML+cls.element_name:
+        if hasattr(cls, "element_name") and element.tag == NINEML + cls.element_name:
             dispatch = {
-                NINEML+StringValue.element_name: StringValue.from_xml,
-                NINEML+Eq.element_name: Eq.from_xml,
-                NINEML+Any.element_name: Any.from_xml,
-                NINEML+All.element_name: All.from_xml,
-                NINEML+Not.element_name: Not.from_xml,
-                NINEML+In.element_name: In.from_xml,
+                NINEML + StringValue.element_name: StringValue.from_xml,
+                NINEML + Eq.element_name: Eq.from_xml,
+                NINEML + Any.element_name: Any.from_xml,
+                NINEML + All.element_name: All.from_xml,
+                NINEML + Not.element_name: Not.from_xml,
+                NINEML + In.element_name: In.from_xml,
             }
             operands = []
             for child in element.iterchildren():
@@ -973,13 +1004,14 @@ class Operator(ULobject):
             return cls(*operands)
         else:
             return {
-                NINEML+Eq.element_name: Eq,
-                NINEML+Any.element_name: Any,
-                NINEML+All.element_name: All,
-                NINEML+Not.element_name: Not,
-                NINEML+StringValue.element_name: StringValue,
-                NINEML+In.element_name: In,
+                NINEML + Eq.element_name: Eq,
+                NINEML + Any.element_name: Any,
+                NINEML + All.element_name: All,
+                NINEML + Not.element_name: Not,
+                NINEML + StringValue.element_name: StringValue,
+                NINEML + In.element_name: In,
             }[element.tag].from_xml(element)
+
 
 def qstr(obj):
     if isinstance(obj, basestring):
@@ -987,21 +1019,25 @@ def qstr(obj):
     else:
         return obj.__str__()
 
+
 class SelectionOperator(Operator):
     pass
 
+
 class Any(SelectionOperator):
     element_name = "any"
-    
+
     def __str__(self):
         return "(" + ") or (".join(qstr(op) for op in self.operands) + ")"
-    
+
+
 class All(SelectionOperator):
     element_name = "all"
-    
+
     def __str__(self):
         return "(" + ") and (".join(qstr(op) for op in self.operands) + ")"
-    
+
+
 class Not(SelectionOperator):
     element_name = "not"
 
@@ -1009,34 +1045,38 @@ class Not(SelectionOperator):
         assert len(operands) == 1
         SelectionOperator.__init__(self, *operands)
 
+
 class Comparison(Operator):
-    
+
     def __init__(self, value1, value2):
         Operator.__init__(self, value1, value2)
 
+
 class Eq(Comparison):
     element_name = "equal"
-    
-    def __str__(self):        
+
+    def __str__(self):
         return "(%s) == (%s)" % tuple(qstr(op) for op in self.operands)
+
 
 class In(Comparison):
     element_name = "in"
-    
+
     def __init__(self, item, sequence):
         Operator.__init__(self, item, sequence)
 
     def __str__(self):
         return "%s in %s" % tuple(qstr(op) for op in self.operands)
-    
+
 
 class Selection(ULobject):
+
     """
     A set of network nodes selected from existing populations within the Group.
     """
     element_name = "set"
     defining_attributes = ("name", "condition")
-    
+
     def __init__(self, name, condition):
         """
         condition - instance of an Operator subclass
@@ -1044,7 +1084,7 @@ class Selection(ULobject):
         assert isinstance(condition, Operator)
         self.name = name
         self.condition = condition
-    
+
     def to_xml(self):
         return E(self.element_name,
                  E.select(self.condition.to_xml()),
@@ -1053,28 +1093,30 @@ class Selection(ULobject):
     @classmethod
     def from_xml(cls, element, components):
         check_tag(element, cls)
-        select_element = element.find(NINEML+'select')
+        select_element = element.find(NINEML + 'select')
         assert len(select_element) == 1
         return cls(element.attrib["name"],
                    Operator.from_xml(select_element.getchildren()[0]))
 
-      
+
 class Projection(ULobject):
+
     """
     A collection of connections between two Populations.
-    
+
     If the populations contain spiking nodes, this is straightforward. If the
     populations contain groups, it is not so obvious. I guess the interpretation
     is that connections are made to all the populations within all the groups,
     recursively.
     """
     element_name = "projection"
-    defining_attributes = ("name", "source", "target", "rule", "synaptic_response", "connection_type")
-    
+    defining_attributes = (
+        "name", "source", "target", "rule", "synaptic_response", "connection_type")
+
     def __init__(self, name, source, target, rule, synaptic_response, connection_type):
         """
         Create a new projection.
-        
+
         name - a name for this Projection
         source - the presynaptic Population
         target - the postsynaptic Population
@@ -1107,16 +1149,18 @@ class Projection(ULobject):
                 raise TypeError("Invalid type for %s: %s" % (name, type(attr)))
 
     def __eq__(self, other):
-        test_attributes = ["name", "source", "target", "rule", "synaptic_response", "connection_type"]
-        # to avoid infinite recursion, we do not include source or target in the tests if they are Groups
+        test_attributes = ["name", "source", "target",
+                           "rule", "synaptic_response", "connection_type"]
+        # to avoid infinite recursion, we do not include source or target in the
+        # tests if they are Groups
         if isinstance(self.source, Group):
             test_attributes.remove("source")
         if isinstance(self.target, Group):
             test_attributes.remove("target")
         return reduce(and_,
-                      (getattr(self, attr)==getattr(other, attr) for attr in test_attributes)
-                     )
-    
+                      (getattr(self, attr) == getattr(other, attr) for attr in test_attributes)
+                      )
+
     def get_components(self):
         components = []
         for name in ('rule', 'synaptic_response', 'connection_type'):
@@ -1138,18 +1182,20 @@ class Projection(ULobject):
     def from_xml(cls, element, components):
         check_tag(element, cls)
         return cls(name=element.attrib["name"],
-                   source=element.find(NINEML+"source").text,
-                   target=element.find(NINEML+"destination").text,
-                   rule=get_or_create_component(element.find(NINEML+"connectivity").text, ConnectionRule, components),
-                   synaptic_response=get_or_create_component(element.find(NINEML+"synapse").text, SynapseType, components),
-                   connection_type=get_or_create_component(element.find(NINEML+"plasticity").text, ConnectionType, components))
+                   source=element.find(NINEML + "source").text,
+                   target=element.find(NINEML + "destination").text,
+                   rule=get_or_create_component(
+                       element.find(NINEML + "connectivity").text, ConnectionRule, components),
+                   synaptic_response=get_or_create_component(
+                       element.find(NINEML + "synapse").text, SynapseType, components),
+                   connection_type=get_or_create_component(element.find(NINEML + "plasticity").text, ConnectionType, components))
 
     def to_csa(self):
         if self.rule.is_csa:
-            distance_func = _csa.euclidMetric2d # should allow different distance functions, specified somewhere in the user layer
+            distance_func = _csa.euclidMetric2d  # should allow different distance functions, specified somewhere in the user layer
             src_geometry = self.source.positions.structure.to_csa()(self.source.number)
             tgt_geometry = self.target.positions.structure.to_csa()(self.target.number)
             distance_metric = distance_func(src_geometry, tgt_geometry)
-            _csa.cset(self.rule.to_csa() * distance_metric) 
+            _csa.cset(self.rule.to_csa() * distance_metric)
         else:
             raise Exception("Connection rule does not use Connection Set Algebra")

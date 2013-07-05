@@ -14,15 +14,16 @@ inter_event_regime = Regime(
     "dB/dt = -B/tau_d",
     name="inter_event_regime",
     transitions=On(SpikeInputEvent,
-              do=["A = A + weight*factor",
-                  "B = B + weight*factor"])
-    )
+                   do=["A = A + weight*factor",
+                       "B = B + weight*factor"])
+)
 
 ports = [RecvPort("V"),
-         SendPort("Isyn = g(V,A,B)*(E - V)"), # this notation takes the assignment of Isyn out of the Regime
+         SendPort("Isyn = g(V,A,B)*(E - V)"),
+         # this notation takes the assignment of Isyn out of the Regime
          SendPort("gsyn = g(V,A,B)")]
 
-c1 = Component("NMDA_PSR", regimes=[inter_event_regime], ports = ports, parameters = parameters)
+c1 = Component("NMDA_PSR", regimes=[inter_event_regime], ports=ports, parameters=parameters)
 
 # write to file object f if defined
 try:
@@ -32,9 +33,9 @@ except NameError:
     import os
 
     base = "nmda"
-    c1.write(base+".xml")
-    c2 = parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

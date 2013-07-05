@@ -7,7 +7,8 @@ class NineMLRuntimeError(Exception):
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 
-def raise_exception( exception = None ):
+
+def raise_exception(exception=None):
     if exception:
         if isinstance(exception, basestring):
             raise NineMLRuntimeError(exception)
@@ -15,6 +16,3 @@ def raise_exception( exception = None ):
             raise exception
     else:
         raise NineMLRuntimeError()
-
-
-

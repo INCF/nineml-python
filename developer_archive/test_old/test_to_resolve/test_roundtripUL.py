@@ -1,11 +1,13 @@
-#encoding: utf-8
+# encoding: utf-8
 
 import unittest
-import os, tempfile
+import os
+import tempfile
 from nineml.user_layer import parse
 
 import nineml.user_layer as nineml
 from copy import deepcopy
+
 
 def simple_example():
 
@@ -56,10 +58,10 @@ def simple_example():
     inh_cells = nineml.Population("Inhibitory cells", 25, inh_celltype,
                                   nineml.PositionList(structure=grid2D))
     all_cells = nineml.Selection("All cells",
-        nineml.Any(
-            nineml.Eq("population[@name]", exc_cells.name),
-            nineml.Eq("population[@name]", inh_cells.name))
-    )
+                                 nineml.Any(
+                                     nineml.Eq("population[@name]", exc_cells.name),
+                                     nineml.Eq("population[@name]", inh_cells.name))
+                                 )
 
     connection_rule = nineml.ConnectionRule(
         "random connections",
@@ -236,7 +238,7 @@ class RountripULTestCase(unittest.TestCase):
         global simple_example
 
         model = simple_example
-        
+
         f = tempfile.TemporaryFile()
         model.write(f)
         f.seek(0)
@@ -250,7 +252,7 @@ class RountripULTestCase(unittest.TestCase):
         global nested_example
 
         model = nested_example
-        
+
         f = tempfile.TemporaryFile()
         model.write(f)
         f.seek(0)
@@ -261,10 +263,9 @@ class RountripULTestCase(unittest.TestCase):
         assert model == model1
 
 
-
 def suite():
 
-    suite = unittest.makeSuite(RountripULTestCase,'test')
+    suite = unittest.makeSuite(RountripULTestCase, 'test')
     return suite
 
 if __name__ == "__main__":

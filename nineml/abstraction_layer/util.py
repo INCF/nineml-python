@@ -1,16 +1,17 @@
 
 import component
 
-def check_flat_component( func ):
-    def newfunc(*args,**kwargs):
+
+def check_flat_component(func):
+    def newfunc(*args, **kwargs):
         print args
         print kwargs
         if 'component' in kwargs:
             comp = kwargs['component']
-            assert isinstance( comp, component.ComponentClass)
+            assert isinstance(comp, component.ComponentClass)
             assert comp.is_flat()
         else:
             assert False
 
-        return func(*args,**kwargs)
-    return newfunc 
+        return func(*args, **kwargs)
+    return newfunc

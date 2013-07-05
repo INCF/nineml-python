@@ -1,10 +1,11 @@
 import nineml
 
+
 def dump_reduced(component, filename):
     pass
-    
+
 tmpl = """
-    MODEL: 
+    MODEL:
 
     PORTS:
     ==========
@@ -12,7 +13,7 @@ tmpl = """
     #for p in $component.analog_ports:
       AnalogPort: $p.name, $p.mode, $p.reduce_op
     #end for
-    
+
     #for p in $component.event_ports:
       EventPort: $p.name, $p.mode, $p.reduce_op
     #end for
@@ -41,10 +42,10 @@ tmpl = """
     REGIMES:
     ========
     #for regime in $component.regimes:
-    
+
     Regime: $regime
     ----------------
-    
+
     #for eqn in $regime.time_derivatives:
        TimeDeriv: $eqn
     #end for
@@ -79,8 +80,8 @@ tmpl = """
 
 
 class TextWriter(object):
-    """TextWriter DocString"""
 
+    """TextWriter DocString"""
 
     @classmethod
     def write(cls, component, filename):
@@ -88,11 +89,9 @@ class TextWriter(object):
         if not component.is_flat():
             component = nineml.al.flattening.flatten(component)
 
-
         from Cheetah.Template import Template
-        data = { 'component':component }
-        f = open(filename,"w")
+        data = {'component': component}
+        f = open(filename, "w")
         s = Template(tmpl, data).respond()
         f.write(s)
         f.close()
-

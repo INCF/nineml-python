@@ -5,19 +5,20 @@ import nineml.abstraction_layer as nineml
 regimes = [
     nineml.Regime(
         "dV/dt = (-gL*(V-vL) + Isyn)/C",
-        transitions = nineml.On("V>Vth",do=["tspike = t","V = V_reset", nineml.SpikeOutputEvent],to="refractory-regime"),
-        name = "sub-threshold-regime"
+        transitions=nineml.On(
+            "V>Vth", do=["tspike = t", "V = V_reset", nineml.SpikeOutputEvent], to="refractory-regime"),
+        name="sub-threshold-regime"
     ),
     nineml.Regime(
-        transitions = nineml.On("t >= tspike + trefractory",to="sub-threshold-regime"),
-        name = "refractory-regime"
+        transitions=nineml.On("t >= tspike + trefractory", to="sub-threshold-regime"),
+        name="refractory-regime"
     )]
 
 
 ports = [nineml.SendPort("V"),
-         nineml.ReducePort("Isyn",op="+")]
+         nineml.ReducePort("Isyn", op="+")]
 
-leaky_iaf = nineml.Component("LeakyIAF", regimes = regimes, ports = ports)
+leaky_iaf = nineml.Component("LeakyIAF", regimes=regimes, ports=ports)
 
 # ampa
 
@@ -25,13 +26,13 @@ leaky_iaf = nineml.Component("LeakyIAF", regimes = regimes, ports = ports)
 regimes = [
     nineml.Regime(
         "dg/dt = -g/tau",
-        transitions = nineml.On(nineml.SpikeInputEvent,do="g+=q")
-        )]
-        
+        transitions=nineml.On(nineml.SpikeInputEvent, do="g+=q")
+    )]
+
 ports = [nineml.RecvPort("V"),
          nineml.SendPort("Isyn = g(E-V)")]
 
-coba_syn = nineml.Component("CoBaSynapse", regimes = regimes, ports = ports)
+coba_syn = nineml.Component("CoBaSynapse", regimes=regimes, ports=ports)
 
 # User layer connects
 # leaky_iaf.ports['V'] -> coba_syn.ports['V']
@@ -50,11 +51,9 @@ except NameError:
     import os
 
     base = "leaky_iaf_ampa_ports_events"
-    c1.write(base+".xml")
-    c2 = nineml.parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = nineml.parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
-
-
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))

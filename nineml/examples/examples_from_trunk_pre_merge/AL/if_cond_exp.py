@@ -10,15 +10,15 @@ regimes = [
     nineml.Regime(
         "dV/dt = (v_rest - V)/tau_m + (gE*(e_rev_E - V) + gI*(e_rev_I - V) + i_offset)/cm",
         "dgE/dt = -gE/tau_syn_E",
-        "dgI/dt = -gI/tau_syn_I",        
-        transitions = (nineml.On("V > v_thresh",
-                                 do=["t_spike = t",
-                                     "V = v_reset",
-                                     nineml.SpikeOutputEvent],
-                                 to="refractory-regime"),
-                       nineml.On(nineml.EventPort('excitatory', mode="recv"), do="gE+=q"),
-                       nineml.On(nineml.EventPort('inhibitory', mode="recv"), do="gI+=q"),
-                      ),
+        "dgI/dt = -gI/tau_syn_I",
+        transitions=(nineml.On("V > v_thresh",
+                               do=["t_spike = t",
+                                   "V = v_reset",
+                                   nineml.SpikeOutputEvent],
+                               to="refractory-regime"),
+                     nineml.On(nineml.EventPort('excitatory', mode="recv"), do="gE+=q"),
+                     nineml.On(nineml.EventPort('inhibitory', mode="recv"), do="gI+=q"),
+                     ),
         name = "sub-threshold-regime"
     ),
     nineml.Regime(
@@ -45,11 +45,9 @@ except NameError:
     import os
 
     base = "if_cond_exp"
-    c1.write(base+".xml")
-    c2 = nineml.parse(base+".xml")
-    assert c1==c2
+    c1.write(base + ".xml")
+    c2 = nineml.parse(base + ".xml")
+    assert c1 == c2
 
-    c1.to_dot(base+".dot")
-    os.system("dot -Tpng %s -o %s" % (base+".dot",base+".png"))
-
-
+    c1.to_dot(base + ".dot")
+    os.system("dot -Tpng %s -o %s" % (base + ".dot", base + ".png"))
