@@ -333,17 +333,6 @@ class BaseComponent(object):
         return self.definition.component
     
     def check_parameters(self):
-        #
-        # dnikolic 27.01.2012
-        #
-
-        # Temporary disable these checks
-        return
-
-        # END OF CHANGES
-        # dnikolic 27.01.2012
-        #
-
         # this checks the names, also need to check dimensions, ranges, once those are in the AL
         user_parameters = set(self.parameters.iterkeys())
         definition_parameters = set(p.name for p in self.definition.component.parameters)

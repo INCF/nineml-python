@@ -6,7 +6,6 @@
 
 import os
 import nineml
-from nineml.connection_generator import ConnectionGenerator
 
 
 __all__ = ['XMLReader']
@@ -51,54 +50,10 @@ class XMLLoader(object):
     def load_componentclass(self, element):
     
         blocks = ('Parameter', 'AnalogPort', 'EventPort', 
-                  'Dynamics', 'Subnode', 'ConnectPorts',
-                  # MDJ 2012-02-28
-                  'ConnectionRule') 
+                  'Dynamics', 'Subnode', 'ConnectPorts') 
     
         subnodes = self.loadBlocks( element, blocks=blocks)
     
-        #
-        # DNikolic 27.01.2012
-        #
-        #dynamics = nineml.utility.expect_single(subnodes["Dynamics"])
-        _dynamics        = None
-        _parameters      = None
-        _analog_ports    = None
-        _event_ports     = None
-        _subnodes        = None
-        _portconnections = None
-        _connection_rule = None # MDJ 2012-02-28
-        if subnodes:
-            if "Dynamics" in subnodes and len(subnodes["Dynamics"]) > 0:
-                _dynamics = nineml.utility.expect_single(subnodes["Dynamics"])
-            if "Parameter" in subnodes:
-                _parameters = subnodes["Parameter" ]
-            if "AnalogPort" in subnodes:
-                _analog_ports = subnodes["AnalogPort"]
-            if "EventPort" in subnodes:
-                _event_ports = subnodes["EventPort"]
-            if "Subnode" in subnodes:
-                _subnodes = dict(subnodes['Subnode'] )
-            if "ConnectPorts" in subnodes:
-                _portconnections = subnodes["ConnectPorts"]
-            if "ConnectionRule" in subnodes and len(subnodes["ConnectionRule"]) > 0:
-                _connection_rule = nineml.utility.expect_single(subnodes["ConnectionRule"])
-        #print('dynamics = ', _dynamics)
-        #print('parameters = ', _parameters)
-        #print('subnodes = ', _subnodes)
-        #print('portconnections = ', _portconnections)
-        #print('analog_ports = ', _analog_ports)
-
-        return nineml.al.ComponentClass(name=element.get('name'),
-                              parameters = _parameters,
-                              analog_ports = _analog_ports,
-                              event_ports = _event_ports,
-                              dynamics = _dynamics,
-                              subnodes = _subnodes,
-                              portconnections = _portconnections,
-                              connection_rule = _connection_rule)
-
-        """ OLD CODE:
         dynamics = nineml.utility.expect_single(subnodes["Dynamics"])
         return nineml.al.ComponentClass(name=element.get('name'),
                               parameters = subnodes["Parameter" ] ,
@@ -107,15 +62,8 @@ class XMLLoader(object):
                               dynamics = dynamics,
                               subnodes = dict(subnodes['Subnode'] ),
                               portconnections = subnodes["ConnectPorts"])
-        """
 
-        # END OF CHANGES
-        # DNikolic 27.01.2011
-        #
-
-       
     def load_parameter(self, element):
-        # DNIKOLIC: Added dimension
         return nineml.al.Parameter(name=element.get('name'), dimension=element.get('dimension')) 
 
     def load_analogport(self, element):
@@ -151,7 +99,6 @@ class XMLLoader(object):
 
     def load_statevariable(self, element):
         name = element.get("name")
-        # DNIKOLIC: Added dimension
         dimension=element.get('dimension')
         return nineml.al.StateVariable( name=name, dimension=dimension)
 
@@ -218,17 +165,6 @@ class XMLLoader(object):
         
         return nineml.utility.expect_single( element.findall(nineml.al.NINEML+'MathInline') ).text
 
-    def load_connectionrule(self, element):
-        closure = None
-        for t in element.iterchildren(tag=nineml.al.etree.Element):
-            try:
-                closure = ConnectionGenerator.fromXML (t)
-                return closure
-            except NotImplementedError:
-                pass
-        err = "No known implementation for ConnectionRule"
-        raise nineml.exceptions.NineMLRuntimeError(err)
-
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True ):
@@ -277,7 +213,6 @@ class XMLLoader(object):
         #"EventIn": load_eventin,
         "Subnode": load_subnode,
         "ConnectPorts": load_connectports,
-        "ConnectionRule": load_connectionrule,
         }
 
 
