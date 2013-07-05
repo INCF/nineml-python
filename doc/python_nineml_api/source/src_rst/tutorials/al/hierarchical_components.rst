@@ -30,7 +30,7 @@ cartoon of an iaf neuron with a refractory period. Orange boxes denote regimes,
 yellow ovals denote transitions and the ports are shown on the right-hand-side.
 Parameters have been omitted.
 
-.. image:: /_static/images/build/iaf_component_im.png
+.. image:: /_static/images/iaf_component_im.png
 
 
 The corresponding code to generate this component is::
@@ -57,7 +57,7 @@ The corresponding code to generate this component is::
 
 Similarly, we can define a synapse component:
 
-.. image:: /_static/images/build/coba_component_im.png
+.. image:: /_static/images/coba_component_im.png
 
 
 with corresponding code::
@@ -101,7 +101,7 @@ the ``connect_port`` method calls in the code.
 
 In a diagram:
 
-.. image:: /_static/images/build/iaf_coba2_component_im.png
+.. image:: /_static/images/iaf_coba2_component_im.png
 
 
 In code::

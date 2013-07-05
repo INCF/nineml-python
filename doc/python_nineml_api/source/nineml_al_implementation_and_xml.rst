@@ -47,7 +47,7 @@ time.
 This diagram shows the dynamics block for an imaginary component. 
 
 .. image::
-        _static/images/build/SimpleRegimeGraph.png
+        _static/images/SimpleRegimeGraph.png
 
 
 This dynamics has 3 state variables, *X,Y & Z*, and a state graph with 3

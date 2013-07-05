@@ -50,7 +50,7 @@ User Layer
 The flow for a simulation using NineML would look like:
 
 .. image::
-    _static/images/build/AL_UL_Overview.png
+    _static/images/AL_UL_Overview.png
 
 
 
