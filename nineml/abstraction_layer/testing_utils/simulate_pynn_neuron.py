@@ -6,7 +6,8 @@ docstring needed
 """
 
 def std_pynn_simulation(test_component, parameters, initial_values,
-                        synapse_components, records, plot=True, sim_time=100., synapse_weights=1.0, syn_input_rate=100):
+                        synapse_components, records, plot=True, sim_time=100.,
+                        synapse_weights=1.0, syn_input_rate=100):
 
     import nineml
     # nineml.utility.LocationMgr.StdAppendToPath()
@@ -53,9 +54,9 @@ def std_pynn_simulation(test_component, parameters, initial_values,
 
     # Setup the Records:
     for record in records:
-        cells._record(record.what)
+        cells.record(record.what)
 
-    cells.record()
+    cells.record('spikes')
 
     # Run the simulation:
     sim.run(sim_time)
@@ -64,16 +65,11 @@ def std_pynn_simulation(test_component, parameters, initial_values,
         assert False
 
     # Write the Results to a file:
-    for record in records:
-        cells.recorders[record.what].write("Results/nineml_%s" % record.what, filter=[cells[0]])
+    cells.write_data("Results/nineml.pkl")
 
     # Plot the values:
 
-    t = cells.recorders[records[0].what].get()[:, 1]
-
-    result_traces = {}
-    for record in records:
-        result_traces[record.what] = cells.recorders[record.what].get()[:, 2]
+    results = cells.get_data().segments[0]
 
     # Create a list of the tags:
     tags = []
@@ -93,7 +89,8 @@ def std_pynn_simulation(test_component, parameters, initial_values,
             for r in records:
                 if r.tag != tag:
                     continue
-                pylab.plot(t, result_traces[r.what], label=r.label)
+                trace = results.filter(name=r.what)[0]
+                pylab.plot(trace.times, trace, label=r.label)
 
             pylab.ylabel(tag)
             pylab.legend()
@@ -114,4 +111,4 @@ def std_pynn_simulation(test_component, parameters, initial_values,
 
     sim.end()
 
-    return t, result_traces
+    return results

@@ -65,10 +65,7 @@ def expect_single(lst, error_func=None):
         ``error_func`` is ``None``, a ``NineMLRuntimeError`` exception will be
         raised.
 
-
     :rtype: the element in the list, ``lst[0]``, provided ``len(lst)==1``
-
-
 
     >>> expect_single( ['hello'] )
     'hello'

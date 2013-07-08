@@ -58,17 +58,16 @@ class FuncTest_Flat2(object):
             'nrn_gL': 2,
             'nrn_E': -70}
 
-        res = std_pynn_simulation(test_component=combined_comp,
-                                  parameters=parameters,
-                                  initial_values={},
-                                  synapse_components=[],
-                                  records=records,
-                                  plot=True
-                                  )
+        results = std_pynn_simulation(test_component=combined_comp,
+                                      parameters=parameters,
+                                      initial_values={},
+                                      synapse_components=[],
+                                      records=records,
+                                      plot=True
+                                      )
 
-        t, records = res
-
-        # self.assertAlmostEqual( records['cc1_I'][ t>10 ].mean(), 13.8)
+        #cc1_I = results.filter(name='cc1_I')[0]
+        #self.assertAlmostEqual(cc1_I.time_slice(10.0, cc1_I.t_stop).mean(), 13.8)
         # self.assertAlmostEqual( records['cc1_I'][ t>10 ].std(),  0.0)
         #
         # self.assertAlmostEqual( records['nrn_V'][ t>10 ].mean(), -63.1)
