@@ -67,6 +67,9 @@ class ComponentClassMixinFlatStructure(object):
         return self._dynamics
     # -------------------------- #
 
+    def __repr__(self):
+        return "<ComponentClass %s>" % self.name
+
     # Forwarding functions to the dynamics #
     @property
     def aliases_map(self):
