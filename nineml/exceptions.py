@@ -9,6 +9,10 @@ class NineMLRuntimeError(Exception):
     pass
 
 
+class NineMLMathParseError(ValueError):
+    pass
+
+
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 

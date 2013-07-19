@@ -27,7 +27,8 @@ import ply.yacc as yacc
 import os
 from expr_parse import call_expr_func
 from nineml.utility import LocationMgr
-from . import NineMLMathParseError
+from nineml.exceptions import NineMLMathParseError
+from nineml.maths import is_builtin_math_function
 
 # for now avoid duplication, but maintain distinctness
 call_cond_func = call_expr_func
@@ -198,7 +199,6 @@ class CalcCond(Parser):
         # EM: Supports up to 3 args.  Don't know how to support N.
 
         func_name = p[1][:-1].strip()
-        from nineml.maths import is_builtin_math_function
         if not is_builtin_math_function(func_name):
         # if func_name not in nineml.maths.namespace:
             raise NineMLMathParseError, "Undefined function '%s'" % func_name

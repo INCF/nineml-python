@@ -24,7 +24,7 @@ from component import ComponentClassMixinNamespaceStructure
 from componentqueryer import ComponentQueryer
 from util import parse, StrToExpr, MathUtil
 
-from parse import NineMLMathParseError
+from nineml.exceptions import NineMLMathParseError
 
 
 from syntacticsugar import SpikeOutputEvent

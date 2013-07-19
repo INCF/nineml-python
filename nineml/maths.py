@@ -8,7 +8,7 @@ expressions.
 
 
 import numpy
-from nineml.abstraction_layer.component.parse import NineMLMathParseError
+from .exceptions import NineMLMathParseError
 
 
 _constants = set(['pi', 'e'])

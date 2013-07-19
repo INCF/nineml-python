@@ -142,7 +142,7 @@ class OnCondition_test(unittest.TestCase):
 
     def test_trigger(self):
         from nineml.abstraction_layer.component import OnCondition
-        from nineml.abstraction_layer.component.parse import NineMLMathParseError
+        from nineml.exceptions import NineMLMathParseError
 
         invalid_triggers = ['true(',
                             'V < (V+10',
