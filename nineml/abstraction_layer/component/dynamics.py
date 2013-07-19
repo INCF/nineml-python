@@ -7,10 +7,10 @@ This file contains the main classes for defining dynamics
 
 from itertools import chain
 
-from expressions import StateAssignment, TimeDerivative, Alias
+from expressions import StateAssignment, TimeDerivative, Alias, StrToExpr
 from conditions import Condition
 from events import OutputEvent
-from util import StrToExpr, MathUtil
+from util import MathUtil
 
 import nineml.utility
 from nineml.exceptions import NineMLRuntimeError

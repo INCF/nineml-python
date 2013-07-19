@@ -8,7 +8,7 @@ Utility functions for component core classes
 
 import re
 from nineml.exceptions import NineMLRuntimeError
-import nineml
+from nineml.maths import is_builtin_symbol
 
 # Wrapper for writing XML:
 
@@ -20,50 +20,6 @@ def parse(filename):
     return XMLReader.read_component(filename)
 
 
-class StrToExpr(object):
-
-    """Class containing static methods for building Mathematical objects"""
-
-    @classmethod
-    def is_alias(cls, alias_string):
-        """ Returns True if the string could be an alias"""
-        return ':=' in alias_string
-
-    @classmethod
-    def alias(cls, alias_string):
-        """Creates an Alias object from a string"""
-        import nineml.abstraction_layer as al
-        if not cls.is_alias(alias_string):
-            errmsg = "Invalid Alias: %s" % alias_string
-            raise NineMLRuntimeError(errmsg)
-
-        lhs, rhs = alias_string.split(':=')
-        return al.Alias(lhs=lhs.strip(), rhs=rhs.strip())
-
-    @classmethod
-    def time_derivative(cls, time_derivative_string):
-        """Creates an TimeDerivative object from a string"""
-        import nineml.abstraction_layer as al
-        # Note: \w = [a-zA-Z0-9_]
-        tdre = re.compile(r"""\s* d(?P<dependent_var>[a-zA-Z][a-zA-Z0-9_]*)/dt
-                           \s* = \s*
-                           (?P<rhs> .*) """, re.VERBOSE)
-
-        match = tdre.match(time_derivative_string)
-        if not match:
-            err = "Unable to load time derivative: %s" % time_derivative_string
-            raise NineMLRuntimeError(err)
-        dependent_variable = match.groupdict()['dependent_var']
-        rhs = match.groupdict()['rhs']
-        return al.TimeDerivative(dependent_variable=dependent_variable,
-                                 rhs=rhs)
-
-    @classmethod
-    def state_assignment(cls, state_assignment_string):
-        import nineml.abstraction_layer as al
-        """Creates an StateAssignment object from a string"""
-        lhs, rhs = state_assignment_string.split('=')
-        return al.StateAssignment(lhs=lhs, rhs=rhs)
 
 
 class MathUtil(object):
@@ -138,7 +94,7 @@ class MathUtil(object):
                 continue
             expr = MathUtil.str_expr_replacement(name, prefix + name, expr)
         for func in expr_obj.rhs_funcs:
-            if not nineml.maths.is_builtin_symbol(func):
+            if not is_builtin_symbol(func):
                 expr = MathUtil.str_expr_replacement(func,
                                                      prefix + func,
                                                      expr,

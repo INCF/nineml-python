@@ -11,7 +11,7 @@ from dynamics import Dynamics, StateVariable
 from interface import Parameter
 from expressions import RegimeElement,  Expression, Equation
 from expressions import ExpressionWithLHS, ExpressionWithSimpleLHS, Alias
-from expressions import StateAssignment, TimeDerivative
+from expressions import StateAssignment, TimeDerivative, StrToExpr
 from conditions import Condition
 from ports import Port, AnalogPort, EventPort
 from ports import ReducePort, RecvPort, SendPort, RecvEventPort, SendEventPort
@@ -22,7 +22,7 @@ from component import ComponentClass
 from component import ComponentClassMixinFlatStructure
 from component import ComponentClassMixinNamespaceStructure
 from componentqueryer import ComponentQueryer
-from util import parse, StrToExpr, MathUtil
+from util import parse, MathUtil
 
 from nineml.exceptions import NineMLMathParseError
 

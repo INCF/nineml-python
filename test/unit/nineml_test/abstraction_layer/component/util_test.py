@@ -4,7 +4,7 @@
 import unittest
 
 
-from nineml.abstraction_layer.component.util import StrToExpr
+from nineml.abstraction_layer.component.expressions import StrToExpr
 from nineml.abstraction_layer.component.util import MathUtil
 
 # Testing Skeleton for function:
@@ -135,7 +135,6 @@ class StrToExpr_test(unittest.TestCase):
     def test_state_assignment(self):
         # Signature: name(cls, state_assignment_string)
                 # No Docstring
-        # from nineml.abstraction_layer.component.util import StrToExpr
         for expr_str, (exp_lhs, exp_rhs) in Assignments:
             ass = StrToExpr.state_assignment(expr_str)
 
@@ -145,7 +144,6 @@ class StrToExpr_test(unittest.TestCase):
     def test_time_derivative(self):
         # Signature: name(cls, time_derivative_string)
                 # Creates an TimeDerivative object from a string
-        # from nineml.abstraction_layer.component.util import StrToExpr
         for expr_str, (exp_dep, exp_indep, exp_rhs) in TimeDerivatives:
             td = StrToExpr.time_derivative(expr_str)
 
