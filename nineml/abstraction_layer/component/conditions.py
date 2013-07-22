@@ -8,6 +8,7 @@ docstring
 import nineml
 import expressions
 from expressions import Expression
+from nineml.maths import MathUtil
 
 
 class Condition(expressions.Expression):
@@ -56,7 +57,7 @@ class Condition(expressions.Expression):
         }
 
         for frm, to in name_map.iteritems():
-            rhs = util.MathUtil.str_expr_replacement(frm, to, rhs)
+            rhs = MathUtil.str_expr_replacement(frm, to, rhs)
 
         lmda_str = "lambda %s: %s" % (','.join(self.rhs_names), rhs)
         return eval(lmda_str, nineml.maths.str_to_npfunc_map, namespace)

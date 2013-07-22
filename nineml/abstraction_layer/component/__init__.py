@@ -22,7 +22,7 @@ from component import ComponentClass
 from component import ComponentClassMixinFlatStructure
 from component import ComponentClassMixinNamespaceStructure
 from componentqueryer import ComponentQueryer
-from util import parse, MathUtil
+from util import parse
 
 from nineml.exceptions import NineMLMathParseError
 

@@ -10,7 +10,7 @@ from itertools import chain
 from expressions import StateAssignment, TimeDerivative, Alias, StrToExpr
 from conditions import Condition
 from events import OutputEvent
-from util import MathUtil
+from nineml.maths import MathUtil
 
 import nineml.utility
 from nineml.exceptions import NineMLRuntimeError

@@ -10,7 +10,7 @@ import itertools
 
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-import util
+from nineml.maths import MathUtil
 
 import parse
 # from expr_parse import expr_parse
@@ -89,7 +89,7 @@ class Expression(object):
 
         for name in name_map:
             replacment = name_map[name]
-            self.rhs = util.MathUtil.str_expr_replacement(name, replacment, self.rhs)
+            self.rhs = MathUtil.str_expr_replacement(name, replacment, self.rhs)
 
     def rhs_atoms_in_namespace(self, namespace):
         atoms = set()
@@ -163,7 +163,7 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS):
     def __init__(self, lhs, rhs):
         ExpressionWithLHS.__init__(self, rhs)
 
-        if not util.MathUtil.is_single_symbol(lhs):
+        if not MathUtil.is_single_symbol(lhs):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
             raise NineMLRuntimeError(err)
         if not nineml.maths.is_valid_lhs_target(lhs):

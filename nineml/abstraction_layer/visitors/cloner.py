@@ -7,10 +7,9 @@ docstring needed
 
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
-from nineml.maths import is_builtin_symbol
+from nineml.maths import is_builtin_symbol, MathUtil
 from ..component.namespaceaddress import NamespaceAddress
 from .base import ActionVisitor, ComponentVisitor
-from nineml.abstraction_layer.component.util import MathUtil
 
 NSA = NamespaceAddress
 
