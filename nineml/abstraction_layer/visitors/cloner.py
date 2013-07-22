@@ -5,13 +5,12 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from base import ActionVisitor, ComponentVisitor
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
-
-
-import nineml.abstraction_layer
-from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
+from nineml.maths import is_builtin_symbol
+from ..component.namespaceaddress import NamespaceAddress
+from .base import ActionVisitor, ComponentVisitor
+from nineml.abstraction_layer.component.util import MathUtil
 
 NSA = NamespaceAddress
 
@@ -175,14 +174,14 @@ class ClonerVisitor(ComponentVisitor):
         if variable in prefix_excludes:
             return variable
 
-        if nineml.maths.is_builtin_symbol(variable):
+        if is_builtin_symbol(variable):
             return variable
 
         else:
             return prefix + variable
 
     def visit_componentclass(self, component, **kwargs):
-        ccn = nineml.abstraction_layer.ComponentClass(name=component.name,
+        ccn = component.__class__(name=component.name,
                                                       parameters=[p.accept_visitor(self, **kwargs)
                                                                   for p in component.parameters],
                                                       analog_ports=[p.accept_visitor(self, **kwargs)
@@ -199,7 +198,7 @@ class ClonerVisitor(ComponentVisitor):
         return ccn
 
     def visit_dynamics(self, dynamics, **kwargs):
-        return nineml.abstraction_layer.Dynamics(
+        return dynamics.__class__(
             regimes=[r.accept_visitor(self, **kwargs)
                      for r in dynamics.regimes],
             aliases=[
@@ -207,38 +206,37 @@ class ClonerVisitor(ComponentVisitor):
             state_variables=[s.accept_visitor(self, **kwargs) for s in dynamics.state_variables])
 
     def visit_regime(self, regime, **kwargs):
-        return nineml.abstraction_layer.Regime(
+        return regime.__class__(
             name=regime.name,
             time_derivatives=[t.accept_visitor(self, **kwargs)
                               for t in regime.time_derivatives],
             transitions=[t.accept_visitor(self, **kwargs) for t in regime.transitions])
 
     def visit_statevariable(self, state_variable, **kwargs):
-        return nineml.abstraction_layer.StateVariable(name=
+        return state_variable.__class__(name=
                 self.prefix_variable(state_variable.name, **kwargs))
 
     def visit_parameter(self, parameter, **kwargs):
-        return nineml.abstraction_layer.Parameter(
+        return parameter.__class__(
             name=self.prefix_variable(parameter.name, **kwargs))
 
     def visit_analogport(self, port, **kwargs):
-        return nineml.abstraction_layer.AnalogPort(
+        return port.__class__(
             name=self.prefix_variable(port.name, **kwargs),
             mode=port.mode,
             reduce_op=port.reduce_op)
 
     def visit_eventport(self, port, **kwargs):
-        return nineml.abstraction_layer.EventPort(
+        return port.__class__(
             name=self.prefix_variable(port.name, **kwargs),
             mode=port.mode,
             reduce_op=port.reduce_op)
 
     def visit_outputevent(self, output_event, **kwargs):
-        return nineml.abstraction_layer.OutputEvent(
+        return output_event.__class__(
             port_name=self.prefix_variable(output_event.port_name, **kwargs))
 
     def visit_assignment(self, assignment, **kwargs):
-        from nineml.abstraction_layer.component import MathUtil
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
@@ -246,16 +244,15 @@ class ClonerVisitor(ComponentVisitor):
         rhs = MathUtil.get_prefixed_rhs_string(
             expr_obj=assignment, prefix=prefix, exclude=prefix_excludes)
 
-        return nineml.abstraction_layer.StateAssignment(lhs=lhs, rhs=rhs)
+        return assignment.__class__(lhs=lhs, rhs=rhs)
 
     def visit_alias(self, alias, **kwargs):
-        new_alias = nineml.abstraction_layer.Alias(lhs=alias.lhs, rhs=alias.rhs)
+        new_alias = alias.__class__(lhs=alias.lhs, rhs=alias.rhs)
         name_map = dict([(a, self.prefix_variable(a, **kwargs)) for a in new_alias.atoms])
         new_alias.name_transform_inplace(name_map=name_map)
         return new_alias
 
     def visit_timederivative(self, time_derivative, **kwargs):
-        from nineml.abstraction_layer.component import MathUtil
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
@@ -263,18 +260,17 @@ class ClonerVisitor(ComponentVisitor):
 
         rhs = MathUtil.get_prefixed_rhs_string(
             expr_obj=time_derivative, prefix=prefix, exclude=prefix_excludes)
-        return nineml.abstraction_layer.TimeDerivative(dependent_variable=dep, rhs=rhs)
+        return time_derivative.__class__(dependent_variable=dep, rhs=rhs)
 
     def visit_condition(self, condition, **kwargs):
-        from nineml.abstraction_layer.component import MathUtil
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
         rhs = MathUtil.get_prefixed_rhs_string(
             expr_obj=condition, prefix=prefix, exclude=prefix_excludes)
-        return nineml.abstraction_layer.Condition(rhs=rhs)
+        return condition.__class__(rhs=rhs)
 
     def visit_oncondition(self, on_condition, **kwargs):
-        return nineml.abstraction_layer.OnCondition(
+        return on_condition.__class__(
             trigger=on_condition.trigger.accept_visitor(self, **kwargs),
             event_outputs=[e.accept_visitor(self, **kwargs)
                            for e in on_condition.event_outputs],
@@ -284,7 +280,7 @@ class ClonerVisitor(ComponentVisitor):
         )
 
     def visit_onevent(self, on_event, **kwargs):
-        return nineml.abstraction_layer.OnEvent(
+        return on_event.__class__(
             src_port_name=self.prefix_variable(on_event.src_port_name, **kwargs),
             event_outputs=[e.accept_visitor(self, **kwargs)
                            for e in on_event.event_outputs],
@@ -325,7 +321,7 @@ class ClonerVisitorPrefixNamespace(ClonerVisitor):
             # sink_new = NamespaceAddress.concat( sink.get_parent_addr(), sink.getstr() )
             port_connections.append((src_new, sink_new))
 
-        return nineml.abstraction_layer.ComponentClass(name=component.name,
+        return component.__class__(name=component.name,
                                parameters=[p.accept_visitor(self, **kwargs)
                                            for p in component.parameters],
             analog_ports=[p.accept_visitor(self, **kwargs)
