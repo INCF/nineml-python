@@ -1,15 +1,12 @@
 
-
-# Automatically Generated Testing Skeleton Template:
 import unittest
+from nineml.abstraction_layer import (Expression,
+                                      Alias, StateAssignment, TimeDerivative)
+from nineml.abstraction_layer.component import ExpressionWithSimpleLHS
 
-
-# Testing Skeleton for class: Alias
-# Testing Skeleton for class: Expression
 class Expression_test(unittest.TestCase):
 
     def test_Valid(self):
-        from nineml.abstraction_layer import Expression
         # rhs, expt_vars, expt_funcs, result, values
         valid_rhses = [
             (('a'),                ('a'),                (), 5,            {'a': 5}, ),
@@ -82,7 +79,6 @@ class Expression_test(unittest.TestCase):
     def test_rhs_name_transform_inplace(self):
         # Signature: name(self, name_map)
                 # Replace atoms on the RHS with values in the name_map
-        from nineml.abstraction_layer import Expression
 
         e = Expression("V/(1 + mg_conc*eta*exp(-1*gamma*V*V)) * sin(V)")
         e.rhs_name_transform_inplace({'V': 'VNEW'})
@@ -100,7 +96,6 @@ class Expression_test(unittest.TestCase):
         self.assertEquals(set(e.rhs_funcs), set(['exp', 'sin']))
 
     def test_rhs_atoms_in_namespace(self):
-        from nineml.abstraction_layer import Expression
         e = Expression("random.randn() + random.randn() + random.randint() / sin(t)")
         self.assertEquals(
             set(e.rhs_atoms),
@@ -146,7 +141,6 @@ class Expression_test(unittest.TestCase):
 class ExpressionWithSimpleLHS_test(unittest.TestCase):
 
     def test_lhs(self):
-        from nineml.abstraction_layer.component import ExpressionWithSimpleLHS
 
         e = ExpressionWithSimpleLHS('a', 't+t+3 + e + sin(t*pi) +q')
 
@@ -180,7 +174,6 @@ class Alias_test(unittest.TestCase):
     def test_accept_visitor(self):
         # Signature: name(self, visitor, **kwargs)
                 # |VISITATION|
-        from nineml.abstraction_layer.component import Alias
 
         class TestVisitor(object):
 
@@ -204,7 +197,6 @@ class StateAssignment_test(unittest.TestCase):
     def test_accept_visitor(self):
         # Signature: name(self, visitor, **kwargs)
                 # |VISITATION|
-        from nineml.abstraction_layer.component.expressions import StateAssignment
 
         class TestVisitor(object):
 
@@ -230,7 +222,6 @@ class TimeDerivative_test(unittest.TestCase):
         # Signature: name(self, visitor, **kwargs)
                 # |VISITATION|
 
-        from nineml.abstraction_layer.component.expressions import TimeDerivative
 
         class TestVisitor(object):
 
@@ -249,8 +240,6 @@ class TimeDerivative_test(unittest.TestCase):
         )
 
     def test_atoms(self):
-
-        from nineml.abstraction_layer.component.expressions import TimeDerivative
         td = TimeDerivative(dependent_variable='X', rhs=' y*f - sin(q*q) + 4*a*exp(Y)')
         self.assertEquals(sorted(td.atoms), sorted(
             ['X', 'y', 'f', 'sin', 'exp', 'q', 'a', 'Y', 't']))
@@ -259,7 +248,6 @@ class TimeDerivative_test(unittest.TestCase):
 
 #   def test_dependent_variable(self):
     def test_independent_variable(self):
-        from nineml.abstraction_layer.component.expressions import TimeDerivative
         td = TimeDerivative(dependent_variable='X', rhs=' y*f - sin(q*q) + 4*a*exp(Y)')
         self.assertEquals(td.independent_variable, 't')
         self.assertEquals(td.dependent_variable, 'X')

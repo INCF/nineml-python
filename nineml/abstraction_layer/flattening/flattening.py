@@ -6,6 +6,7 @@ docstring needed
 """
 
 import itertools
+from collections import defaultdict
 from nineml.utility import flatten_first_level, expect_single
 from nineml.abstraction_layer.visitors import (ClonerVisitor,
                                                ClonerVisitorPrefixNamespace,
@@ -314,7 +315,6 @@ class ComponentFlattener(object):
 
         # B. Handle Reduce Ports:
         # 1/ Make a map { reduce_port -> [send_port1, send_port2, send_port3], ...}
-        from collections import defaultdict
         reduce_connections = defaultdict(list)
         for src, dst in portconnections:
             dstport = new_analog_ports[dst.get_local_name()]

@@ -1,19 +1,25 @@
 
 
-# Automatically Generated Testing Skeleton Template:
 import warnings
 import unittest
+import types
+import numbers
+import sys
+
+from nineml.utility import (check_list_contain_same_items, expect_single,
+                            flatten_first_level, invert_dictionary,
+                            assert_no_duplicates, restore_sys_path, safe_dict,
+                            safe_dictionary_merge, filter_expect_single,
+                            filter_by_type, filter_discrete_types)
+from nineml.exceptions import NineMLRuntimeError
 
 
-# Testing Skeleton for function:
 class Testcheck_list_contain_same_items(unittest.TestCase):
 
     def test_check_list_contain_same_items(self):
         # Signature: name(lst1, lst2, desc1='', desc2='', ignore=[], desc='')
                 # No Docstring
 
-        from nineml.utility import check_list_contain_same_items
-        from nineml.exceptions import NineMLRuntimeError
 
         self.assertRaises(
             NineMLRuntimeError,
@@ -75,10 +81,6 @@ class Testfilter_expect_single(unittest.TestCase):
                 #  >>> find_smith = lambda s: s.split()[-1] == 'Smith'
                 # >>> filter_expect_single( ['John Smith','Tim Jones'], func=find_smith )  #doctest: +NORMALIZE_WHITESPACE
                 #  'John Smith'
-        # from nineml.utility import filter_expect_single
-
-        from nineml.utility import filter_expect_single
-        from nineml.exceptions import NineMLRuntimeError
 
         find_smith = lambda s: s.split()[-1] == 'Smith'
         self.assertEqual(
@@ -190,8 +192,6 @@ class Testexpect_single(unittest.TestCase):
                 # >>> expect_single( [], RuntimeError('Aggh') ) #doctest: +SKIP
                 # RuntimeError: Aggh
 
-        from nineml.utility import expect_single
-        from nineml.exceptions import NineMLRuntimeError
 
         # Empty Objects should raise:
         self.assertRaises(NineMLRuntimeError, expect_single, [])
@@ -233,8 +233,6 @@ class Testflatten_first_level(unittest.TestCase):
                 #
                 # >>> flatten_first_level( [ ['This','is'],['a','short'],['phrase'] ] ) #doctest: +NORMALIZE_WHITESPACE
                 # ['This', 'is', 'a', 'short', 'phrase']
-        from nineml.utility import flatten_first_level
-        from nineml.exceptions import NineMLRuntimeError
 
         self.assertEqual(
             flatten_first_level([[1, 2], [3, 4, 5], [6]]),
@@ -274,8 +272,6 @@ class Testinvert_dictionary(unittest.TestCase):
                 #     {v1:k1, v2:k2, v3:k3, ...}
                 #
                 # It checks to make sure that no values are duplicated before converting.
-        from nineml.utility import invert_dictionary
-        from nineml.exceptions import NineMLRuntimeError
 
         # Good cases:
         self.assertEqual(
@@ -327,8 +323,6 @@ class Testassert_no_duplicates(unittest.TestCase):
                 #
                 # It raises an `NineMLRuntimeError` if the lengths are not equal.
 
-        from nineml.utility import assert_no_duplicates
-        from nineml.exceptions import NineMLRuntimeError
 
         # Duplication
         self.assertRaises(
@@ -368,9 +362,6 @@ class Testfilter_by_type(unittest.TestCase):
                 #
                 # This is a syntactic sugar function, which returns a list of all the
                 # objects in a iterable for which  ``isinstance(o,acceptedtype) == True``
-        from nineml.utility import filter_by_type
-        import types
-        import numbers
 
         # Good Case
         data = ['hello', 'world', 1, 2, 3, None]
@@ -413,15 +404,11 @@ class Testfilter_discrete_types(unittest.TestCase):
                 #
                 #
                 # The function checks that each object is mapped to exactly one type
-        from nineml.utility import filter_discrete_types
-        import numbers
-        import types
-        from nineml.exceptions import NineMLRuntimeError
 
         # Good Case:
         data = ['hello', 'world', 1, 2, 3]
-        types = [basestring, numbers.Number, types.BooleanType]
-        filtered = filter_discrete_types(data, types)
+        types_ = [basestring, numbers.Number, types.BooleanType]
+        filtered = filter_discrete_types(data, types_)
 
         self.assertEqual(filtered[basestring], ['hello', 'world'])
         self.assertEqual(filtered[numbers.Number], [1, 2, 3])
@@ -441,8 +428,6 @@ class Testrestore_sys_path(unittest.TestCase):
                 # Decorator used to restore the sys.path
                 # to the value it was before the function call.
                 # This is useful for loading modules.
-        from nineml.utility import restore_sys_path
-        import sys
 
         original_path = sys.path[:]
 
@@ -474,8 +459,6 @@ class Testsafe_dict(unittest.TestCase):
                 # Create a dict, like dict(), but ensure no duplicate keys are given!
                 # [Python silently allows dict( [(1:True),(1:None)] ) !!
 
-        from nineml.utility import safe_dict
-        from nineml.exceptions import NineMLRuntimeError
 
         self.assertEqual(
             safe_dict([[1, 'One'], [2, 'Two']]),
@@ -509,8 +492,6 @@ class Testsafe_dictionary_merge(unittest.TestCase):
                 # >>> safe_dictionary_merge( [ {1:'One',2:'Two'},{3:'Three',1:'One'} ] ) #doctest: +NORMALIZE_WHITESPACE +IGNORE_EXCEPTION_DETAIL +SKIP
                 # NineMLRuntimeError: Key Collision while merging dictionarys
 
-        from nineml.utility import safe_dictionary_merge
-        from nineml.exceptions import NineMLRuntimeError
         self.assertEqual(
             safe_dictionary_merge([{1: 'One'}, {2: 'Two'}]),
             {1: 'One', 2: 'Two'}

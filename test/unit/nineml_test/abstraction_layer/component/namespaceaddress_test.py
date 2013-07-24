@@ -1,14 +1,13 @@
 
 
-# Automatically Generated Testing Skeleton Template:
 import unittest
 
 
 from nineml.abstraction_layer import NamespaceAddress as NSA
 from nineml.exceptions import NineMLRuntimeError
+from nineml.abstraction_layer import ComponentClass
 
 
-# Testing Skeleton for class: NamespaceAddress
 class NamespaceAddress_test(unittest.TestCase):
 
     def test_Constructor(self):
@@ -99,9 +98,6 @@ class NamespaceAddress_test(unittest.TestCase):
                 # >>> a = NamespaceAddress('level1.level2.level3')
                 # >>> a.get_subns_addr('subcomponent')
                 # NameSpaceAddress: '/level1/level2/level3/subcomponent/'
-        # from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
-        from nineml.abstraction_layer import ComponentClass
-        from nineml.abstraction_layer import NamespaceAddress
 
         d = ComponentClass(name='D',)
         e = ComponentClass(name='E')
@@ -123,17 +119,17 @@ class NamespaceAddress_test(unittest.TestCase):
 
         self.assertEquals(
             gNew.get_node_addr().get_subns_addr('MyObject1'),
-            NamespaceAddress('atC.atG.MyObject1')
+            NSA('atC.atG.MyObject1')
         )
 
         self.assertEquals(
             eNew.get_node_addr().get_subns_addr('MyObject2'),
-            NamespaceAddress('atB.atE.MyObject2')
+            NSA('atB.atE.MyObject2')
         )
 
         self.assertEquals(
             bNew.get_node_addr().get_subns_addr('MyObject3'),
-            NamespaceAddress('atB.MyObject3')
+            NSA('atB.MyObject3')
         )
 
     def test_getstr(self):

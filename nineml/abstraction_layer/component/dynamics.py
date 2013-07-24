@@ -16,6 +16,7 @@ from nineml.utility import (filter_discrete_types, ensure_valid_c_variable_name,
                             normalise_parameter_as_list, assert_no_duplicates)
                             
 from nineml.exceptions import NineMLRuntimeError
+from ..visitors import ClonerVisitor
 
 
 
@@ -215,7 +216,6 @@ class OnCondition(Transition):
             See ``Transition.__init__`` for the definitions of the remaining
             parameters.
         """
-        from nineml.abstraction_layer.visitors import ClonerVisitor
         if isinstance(trigger, Condition):
             self._trigger = ClonerVisitor().visit(trigger)
         elif isinstance(trigger, basestring):

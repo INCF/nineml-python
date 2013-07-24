@@ -1,11 +1,14 @@
 
 
-# Automatically Generated Testing Skeleton Template:
 import warnings
 import unittest
+from nineml.exceptions import NineMLRuntimeError
+from nineml.abstraction_layer.testing_utils import TestableComponent
+from nineml.abstraction_layer import (ComponentClass, Alias, Dynamics,
+                                      SendPort, RecvPort, ReducePort, Regime,
+                                      On, NamespaceAddress, OutputEvent)
 
 
-# Testing Skeleton for class: ComponentClass
 class ComponentClass_test(unittest.TestCase):
 
     def test_Constructor(self):
@@ -14,7 +17,6 @@ class ComponentClass_test(unittest.TestCase):
     def test_accept_visitor(self):
         # Signature: name(self, visitor, **kwargs)
                 # |VISITATION|
-        from nineml.abstraction_layer.component.component import ComponentClass
         # Check the Component is forwarding arguments:
 
         class TestVisitor(object):
@@ -36,9 +38,6 @@ class ComponentClass_test(unittest.TestCase):
     def test_aliases(self):
         # Signature: name
                 # Forwarding function to self.dynamics.aliases
-        from nineml.abstraction_layer.component import ComponentClass
-        from nineml.abstraction_layer.component import Alias, Dynamics
-        from nineml.exceptions import NineMLRuntimeError
 
         # No Aliases:
         self.assertEqual(
@@ -164,7 +163,6 @@ class ComponentClass_test(unittest.TestCase):
     def test_aliases_map(self):
         # Signature: name
                 # Forwarding function to self.dynamics.alias_map
-        from nineml.abstraction_layer.component import ComponentClass, Dynamics
 
         self.assertEqual(
             ComponentClass(name='C1').aliases_map, {}
@@ -188,9 +186,6 @@ class ComponentClass_test(unittest.TestCase):
     def test_analog_ports(self):
         # Signature: name
                 # No Docstring
-        from nineml.abstraction_layer import ComponentClass
-        from nineml.abstraction_layer import SendPort, RecvPort, ReducePort
-        from nineml.exceptions import NineMLRuntimeError
 
         c = ComponentClass(name='C1')
         self.assertEqual(len(c.analog_ports), 0)
@@ -256,9 +251,6 @@ class ComponentClass_test(unittest.TestCase):
         )
 
     def duplicate_port_name_event_analog(self):
-        from nineml.abstraction_layer import ComponentClass
-        from nineml.abstraction_layer import SendPort, RecvEventPort
-        from nineml.exceptions import NineMLRuntimeError
 
         # Check different names are OK:
         ComponentClass(
@@ -283,8 +275,6 @@ class ComponentClass_test(unittest.TestCase):
         pass
 
     def test_backsub_all(self):
-
-        from nineml.abstraction_layer.component import ComponentClass
 
         # Check the aliases:
         # ====================== #
@@ -317,9 +307,6 @@ class ComponentClass_test(unittest.TestCase):
                 #     event port or analog port, but it *must* be either a 'recv' or a
                 #     'reduce' port.
 
-        from nineml.abstraction_layer import ComponentClass
-        from nineml.abstraction_layer.testing_utils import TestableComponent
-        from nineml.exceptions import NineMLRuntimeError
 
         tIaf = TestableComponent('iaf')
         tCoba = TestableComponent('coba_synapse')
@@ -392,17 +379,15 @@ class ComponentClass_test(unittest.TestCase):
     def test_event_ports(self):
         # Signature: name
                 # No Docstring
-        from nineml.abstraction_layer import ComponentClass, Regime, On
-        import nineml.abstraction_layer as al
 
         # Check inference of output event ports:
         c = ComponentClass(
             name='Comp1',
             regimes=Regime(
                 transitions=[
-                    On('V > a', do=al.OutputEvent('ev_port1')),
-                    On('V > b', do=al.OutputEvent('ev_port1')),
-                    On('V < c', do=al.OutputEvent('ev_port2')),
+                    On('V > a', do=OutputEvent('ev_port1')),
+                    On('V > b', do=OutputEvent('ev_port1')),
+                    On('V < c', do=OutputEvent('ev_port2')),
                 ]
             ),
         )
@@ -414,15 +399,15 @@ class ComponentClass_test(unittest.TestCase):
             regimes=[
                 Regime(name='r1',
                        transitions=[
-                       On('V > a', do=al.OutputEvent('ev_port1'), to='r2'),
-                       On('V < b', do=al.OutputEvent('ev_port2')),
+                       On('V > a', do=OutputEvent('ev_port1'), to='r2'),
+                       On('V < b', do=OutputEvent('ev_port2')),
                        ]
                        ),
 
                 Regime(name='r2',
                        transitions=[
-                       On('V > a', do=al.OutputEvent('ev_port2'), to='r1'),
-                       On('V < b', do=al.OutputEvent('ev_port3')),
+                       On('V > a', do=OutputEvent('ev_port2'), to='r1'),
+                       On('V < b', do=OutputEvent('ev_port3')),
                        ]
                        )
             ]
@@ -436,14 +421,14 @@ class ComponentClass_test(unittest.TestCase):
                 Regime(name='r1',
                        transitions=[
                        On('spikeinput1', do=[]),
-                       On('spikeinput2', do=al.OutputEvent('ev_port2'), to='r2'),
+                       On('spikeinput2', do=OutputEvent('ev_port2'), to='r2'),
                        ]
                        ),
 
                 Regime(name='r2',
                        transitions=[
-                       On('V > a', do=al.OutputEvent('ev_port2')),
-                       On('spikeinput3', do=al.OutputEvent('ev_port3'), to='r1'),
+                       On('V > a', do=OutputEvent('ev_port2')),
+                       On('spikeinput3', do=OutputEvent('ev_port3'), to='r1'),
                        ]
                        )
             ]
@@ -460,8 +445,6 @@ class ComponentClass_test(unittest.TestCase):
     def test_get_node_addr(self):
         # Signature: name(self)
                 # Get the namespace address of this component
-        from nineml.abstraction_layer import ComponentClass
-        from nineml.abstraction_layer import NamespaceAddress
 
         d = ComponentClass(name='D',)
         e = ComponentClass(name='E')
@@ -519,9 +502,6 @@ class ComponentClass_test(unittest.TestCase):
                 # .. note::
                 #
                 #     This method will clone the subnode.
-        from nineml.abstraction_layer import ComponentClass
-        from nineml.abstraction_layer import NamespaceAddress
-        from nineml.exceptions import NineMLRuntimeError
 
         d = ComponentClass(name='D')
         e = ComponentClass(name='E')
@@ -597,8 +577,6 @@ class ComponentClass_test(unittest.TestCase):
     def test_parameters(self):
         # Signature: name
                 # No Docstring
-        from nineml.abstraction_layer import ComponentClass, Regime, On
-        from nineml.exceptions import NineMLRuntimeError
 
         # No parameters; nothing to infer
         c = ComponentClass(name='cl')
@@ -656,8 +634,6 @@ class ComponentClass_test(unittest.TestCase):
             parameters=['Vt', 'a', 'b', 'c', 'd', 'e', 'f'])
 
     def test_regimes(self):
-        from nineml.abstraction_layer import ComponentClass, Regime, On, Dynamics
-        from nineml.exceptions import NineMLRuntimeError
 
         c = ComponentClass(name='cl', )
         self.assertEqual(len(list(c.regimes)), 0)
@@ -735,8 +711,6 @@ class ComponentClass_test(unittest.TestCase):
         )
 
     def test_state_variables(self):
-        from nineml.abstraction_layer import ComponentClass, Regime, On, Dynamics
-        from nineml.exceptions import NineMLRuntimeError
         # No parameters; nothing to infer
         c = ComponentClass(name='cl')
         self.assertEqual(len(list(c.state_variables)), 0)
@@ -806,7 +780,6 @@ class ComponentClass_test(unittest.TestCase):
                          set(['X1', 'X2', 'X']))
 
     def test_transitions(self):
-        from nineml.abstraction_layer import ComponentClass, Regime, On, Dynamics
 
         c = ComponentClass(name='cl',
                            dynamics=Dynamics(

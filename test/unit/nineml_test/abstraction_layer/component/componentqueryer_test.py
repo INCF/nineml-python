@@ -1,27 +1,25 @@
 
 
-# Automatically Generated Testing Skeleton Template:
 import unittest
+from nineml.abstraction_layer import (ComponentClass, Regime, On, SendPort,
+                                      RecvPort, NamespaceAddress, OutputEvent)
+        
 
-
-# Testing Skeleton for class: ComponentQueryer
 class ComponentQueryer_test(unittest.TestCase):
 
     def test_event_send_recv_ports(self):
         # Signature: name(self)
                 # Get the ``recv`` EventPorts
         # from nineml.abstraction_layer.component.componentqueryer import ComponentQueryer
-        from nineml.abstraction_layer import ComponentClass, Regime, On
-        import nineml.abstraction_layer as al
 
         # Check inference of output event ports:
         c = ComponentClass(
             name='Comp1',
             regimes=Regime(
                 transitions=[
-                    On('in_ev1', do=al.OutputEvent('ev_port1')),
-                    On('V < b', do=al.OutputEvent('ev_port1')),
-                    On('V < c', do=al.OutputEvent('ev_port2')),
+                    On('in_ev1', do=OutputEvent('ev_port1')),
+                    On('V < b', do=OutputEvent('ev_port1')),
+                    On('V < c', do=OutputEvent('ev_port2')),
                 ]
             ),
         )
@@ -38,15 +36,15 @@ class ComponentQueryer_test(unittest.TestCase):
             regimes=[
                 Regime(name='r1',
                        transitions=[
-                       On('V > a', do=al.OutputEvent('ev_port1'), to='r2'),
-                       On('in_ev1', do=al.OutputEvent('ev_port2')),
+                       On('V > a', do=OutputEvent('ev_port1'), to='r2'),
+                       On('in_ev1', do=OutputEvent('ev_port2')),
                        ]
                        ),
 
                 Regime(name='r2',
                        transitions=[
-                       On('V > a', do=al.OutputEvent('ev_port2'), to='r1'),
-                       On('in_ev2', do=al.OutputEvent('ev_port3')),
+                       On('V > a', do=OutputEvent('ev_port2'), to='r1'),
+                       On('in_ev2', do=OutputEvent('ev_port3')),
                        ]
                        )
             ]
@@ -67,15 +65,15 @@ class ComponentQueryer_test(unittest.TestCase):
                 Regime(name='r1',
                        transitions=[
                        On('spikeinput1', do=[]),
-                       On('spikeinput2', do=[al.OutputEvent('ev_port1'),
-                          al.OutputEvent('ev_port2')], to='r2'),
+                       On('spikeinput2', do=[OutputEvent('ev_port1'),
+                          OutputEvent('ev_port2')], to='r2'),
                        ]
                        ),
 
                 Regime(name='r2',
                        transitions=[
-                       On('V > a', do=al.OutputEvent('ev_port2')),
-                       On('spikeinput3', do=al.OutputEvent('ev_port3'), to='r1'),
+                       On('V > a', do=OutputEvent('ev_port2')),
+                       On('spikeinput3', do=OutputEvent('ev_port3'), to='r1'),
                        ]
                        )
             ]
@@ -100,8 +98,6 @@ class ComponentQueryer_test(unittest.TestCase):
 
         # Signature: name(self)
                 # Get the namespace address of this component
-        from nineml.abstraction_layer import ComponentClass, SendPort, RecvPort
-        from nineml.abstraction_layer import NamespaceAddress
         d = ComponentClass(
             name='D', aliases=['A:=1', 'B:=2'], analog_ports=[SendPort('A'), SendPort('B')])
         e = ComponentClass(name='E', analog_ports=[RecvPort('C')])
@@ -143,9 +139,6 @@ class ComponentQueryer_test(unittest.TestCase):
                 # component
         # from nineml.abstraction_layer.component.componentqueryer import ComponentQueryer
 
-        from nineml.abstraction_layer import ComponentClass, SendPort, RecvPort
-        from nineml.abstraction_layer import Regime, On
-        from nineml.abstraction_layer import OutputEvent
 
         c = ComponentClass(
             name='Comp1',
@@ -182,7 +175,6 @@ class ComponentQueryer_test(unittest.TestCase):
                 # Find a regime in the component by name
         # from nineml.abstraction_layer.component.componentqueryer import ComponentQueryer
 
-        from nineml.abstraction_layer import ComponentClass, Regime, On
 
         c = ComponentClass(name='cl',
                            regimes=[
@@ -212,7 +204,6 @@ class ComponentQueryer_test(unittest.TestCase):
         # Signature: name
                 # Returns an iterator over this component and all subcomponents
 
-        from nineml.abstraction_layer import ComponentClass
 
         d = ComponentClass(name='D')
         e = ComponentClass(name='E')

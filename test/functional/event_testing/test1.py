@@ -1,8 +1,7 @@
 
-
-from nineml.abstraction_layer import ComponentClass, SendPort, Regime, ReducePort
-
 import unittest
+from nineml.abstraction_layer import ComponentClass, SendPort, Regime, ReducePort
+from nineml.abstraction_layer.testing_utils import std_pynn_simulation, RecordValue
 
 
 class FuncTest_Flat1(unittest.TestCase):
@@ -31,9 +30,6 @@ class FuncTest_Flat1(unittest.TestCase):
         combined_comp = ComponentClass(name='Comp1',
                                        subnodes={'nrn': nrn, 'cc1': cc},
                                        portconnections=[('cc1.I', 'nrn.iInj')])
-
-        from nineml.abstraction_layer.testing_utils import std_pynn_simulation
-        from nineml.abstraction_layer.testing_utils import RecordValue
 
         records = [
             RecordValue(what='cc1_I', tag='Current', label='Current Clamp 1'),

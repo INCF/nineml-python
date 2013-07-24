@@ -21,6 +21,7 @@ from nineml.utility import (check_list_contain_same_items,
                             filter_discrete_types, assert_no_duplicates)
 
 from nineml.maths import get_reserved_and_builtin_symbols
+from ..visitors import ExpandAliasDefinition, ClonerVisitor
 
 
 class ComponentClassMixinFlatStructure(object):
@@ -120,7 +121,6 @@ class ComponentClassMixinFlatStructure(object):
 
         """
 
-        from nineml.abstraction_layer.visitors import ExpandAliasDefinition
         for alias in self.aliases:
             alias_expander = ExpandAliasDefinition(originalname=alias.lhs,
                                                    targetname="(%s)" % alias.rhs)
@@ -235,7 +235,6 @@ class ComponentClassMixinNamespaceStructure(object):
         if namespace in self.subnodes:
             err = 'Key already exists in namespace: %s' % namespace
             raise NineMLRuntimeError(err)
-        from nineml.abstraction_layer.visitors.cloner import ClonerVisitor
         self.subnodes[namespace] = ClonerVisitor().visit(subnode)
         self.subnodes[namespace].set_parent_model(self)
 
