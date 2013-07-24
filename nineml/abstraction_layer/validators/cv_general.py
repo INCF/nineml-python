@@ -9,12 +9,11 @@ from collections import defaultdict
 
 
 from base import ComponentValidatorPerNamespace
-import nineml
 
 from nineml.exceptions import NineMLRuntimeError
-# from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
-# from nineml.abstraction_layer import math_namespace
-# from nineml.utility import assert_no_duplicates
+from nineml.maths import get_reserved_and_builtin_symbols, is_valid_lhs_target
+from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
+from nineml.utility import assert_no_duplicates
 
 
 class ComponentValidatorTimeDerivativesAreDeclared(ComponentValidatorPerNamespace):
@@ -34,7 +33,7 @@ class ComponentValidatorTimeDerivativesAreDeclared(ComponentValidatorPerNamespac
             for td in time_derivatives:
                 if not td in self.sv_declared[namespace]:
                     err = 'StateVariable not declared: %s' % td
-                    raise nineml.exceptions.NineMLRuntimeError(err)
+                    raise NineMLRuntimeError(err)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):
         self.sv_declared[namespace].append(state_variable.name)
@@ -59,7 +58,7 @@ class ComponentValidatorStateAssignmentsAreOnStateVariables(ComponentValidatorPe
             for td in state_assignments_lhs:
                 if not td in self.sv_declared[namespace]:
                     err = 'Not Assigning to state-variable: %s' % state_assignment
-                    raise nineml.exceptions.NineMLRuntimeError(err)
+                    raise NineMLRuntimeError(err)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):
         self.sv_declared[namespace].append(state_variable.name)
@@ -99,7 +98,7 @@ class ComponentValidatorAliasesAreNotRecursive(ComponentValidatorPerNamespace):
                 errmsg = "Unable to resolve all aliases in %s. " % namespace
                 errmsg += "You may have a recursion issue."
                 errmsg += "Remaining Aliases: %s" % ','.join(unresolved_aliases.keys())
-                raise nineml.exceptions.NineMLRuntimeError(errmsg)
+                raise NineMLRuntimeError(errmsg)
 
 
 class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbols(ComponentValidatorPerNamespace):
@@ -116,7 +115,7 @@ class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbo
 
         self.visit(component)
 
-        excludes = nineml.maths.get_reserved_and_builtin_symbols()
+        excludes = get_reserved_and_builtin_symbols()
 
         # Check Aliases:
         for ns, aliases in self.aliases.iteritems():
@@ -126,7 +125,7 @@ class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbo
                         continue
                     if not rhs_atom in self.available_symbols[ns]:
                         err = 'Unresolved Symbol in Alias: %s [%s]' % (rhs_atom, alias)
-                        raise nineml.exceptions.NineMLRuntimeError(err)
+                        raise NineMLRuntimeError(err)
 
         # Check TimeDerivatives:
         for ns, timederivatives in self.time_derivatives.iteritems():
@@ -135,7 +134,7 @@ class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbo
                     if not rhs_atom in self.available_symbols[ns] and not rhs_atom in excludes:
                         err = 'Unresolved Symbol in Time Derivative: %s [%s]' % (
                             rhs_atom, timederivative)
-                        raise nineml.exceptions.NineMLRuntimeError(err)
+                        raise NineMLRuntimeError(err)
 
         # Check StateAssignments
         for ns, state_assignments in self.state_assignments.iteritems():
@@ -144,7 +143,7 @@ class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbo
                     if not rhs_atom in self.available_symbols[ns] and not rhs_atom in excludes:
                         err = 'Unresolved Symbol in Assignment: %s [%s]' % (
                             rhs_atom, state_assignment)
-                        raise nineml.exceptions.NineMLRuntimeError(err)
+                        raise NineMLRuntimeError(err)
 
     def add_symbol(self, namespace, symbol):
         if symbol in self.available_symbols[namespace]:
@@ -203,44 +202,44 @@ class ComponentValidatorPortConnections(ComponentValidatorPerNamespace):
         # and that each recv port is connected at max once.
         for src, sink in self.portconnections:
             if not src in self.ports:
-                raise nineml.exceptions.NineMLRuntimeError(
+                raise NineMLRuntimeError(
                     'Unable to find port specified in connection: %s' % (src))
             if self.ports[src].is_incoming():
-                raise nineml.exceptions.NineMLRuntimeError(
+                raise NineMLRuntimeError(
                     'Port was specified as a source, but is incoming: %s' % (src))
 
             if not sink in self.ports:
-                raise nineml.exceptions.NineMLRuntimeError(
+                raise NineMLRuntimeError(
                     'Unable to find port specified in connection: %s' % (sink))
 
             if not self.ports[sink].is_incoming():
-                raise nineml.exceptions.NineMLRuntimeError(
+                raise NineMLRuntimeError(
                     'Port was specified as a sink, but is not incoming: %s' % (sink))
 
             if self.ports[sink].mode == 'recv':
                 if self.ports[sink] in connected_recv_ports:
-                    raise nineml.exceptions.NineMLRuntimeError(
+                    raise NineMLRuntimeError(
                         "Port was 'recv' and specified twice: %s" % (sink))
                 connected_recv_ports.add(self.ports[sink])
 
     def action_analogport(self, analogport, namespace):
-        port_address = nineml.al.NamespaceAddress.concat(namespace, analogport.name)
+        port_address = NamespaceAddress.concat(namespace, analogport.name)
         if port_address in self.ports:
-            raise nineml.exceptions.NineMLRuntimeError(
+            raise NineMLRuntimeError(
                 'Duplicated Name for port found: %s' % port_address)
         self.ports[port_address] = analogport
 
     def action_eventport(self, analogport, namespace):
-        port_address = nineml.al.NamespaceAddress.concat(namespace, analogport.name)
+        port_address = NamespaceAddress.concat(namespace, analogport.name)
         if port_address in self.ports:
-            raise nineml.exceptions.NineMLRuntimeError(
+            raise NineMLRuntimeError(
                 'Duplicated Name for port found: %s' % port_address)
         self.ports[port_address] = analogport
 
     def action_componentclass(self, component, namespace):
         for src, sink in component.portconnections:
-            full_src = nineml.al.NamespaceAddress.concat(namespace, src)
-            full_sink = nineml.al.NamespaceAddress.concat(namespace, sink)
+            full_src = NamespaceAddress.concat(namespace, src)
+            full_sink = NamespaceAddress.concat(namespace, sink)
 
             # print 'Adding Port:',full_src
             # print 'Adding Port:',full_sink
@@ -272,7 +271,7 @@ class ComponentValidatorRegimeGraph(ComponentValidatorPerNamespace):
             connected = set()
             add_connected_regimes_recursive(regimes[0], connected)
             if len(connected) != len(self.regimes_in_namespace[namespace]):
-                raise nineml.exceptions.NineMLRuntimeError('Transition graph is contains islands')
+                raise NineMLRuntimeError('Transition graph is contains islands')
 
     def action_componentclass(self, component, namespace):
         self.regimes_in_namespace[namespace] = list(component.regimes)
@@ -287,12 +286,9 @@ class ComponentValidatorNoDuplicatedObjects(ComponentValidatorPerNamespace):
 
     def __init__(self, component):
         ComponentValidatorPerNamespace.__init__(self, explicitly_require_action_overrides=True)
-
         self.all_objects = list()
-
         self.visit(component)
-
-        nineml.utility.assert_no_duplicates(self.all_objects)
+        assert_no_duplicates(self.all_objects)
 
     def action_componentclass(self, component,  **kwargs):
         self.all_objects.append(component)
@@ -341,15 +337,12 @@ class ComponentValidatorRegimeOnlyHasOneHandlerPerEvent(ComponentValidatorPerNam
 
     def __init__(self, component):
         ComponentValidatorPerNamespace.__init__(self, explicitly_require_action_overrides=False)
-
         self.visit(component)
 
     def action_regime(self, regime, namespace, **kwargs):
         event_triggers = [on_event.src_port_name for on_event in regime.on_events]
-        nineml.utility.assert_no_duplicates(event_triggers)
+        assert_no_duplicates(event_triggers)
 
-
-# from nineml.abstraction_layer import math_namespace
 
 class ComponentValidatorCheckNoLHSAssignmentsToMathsNamespace(ComponentValidatorPerNamespace):
 
@@ -366,9 +359,9 @@ class ComponentValidatorCheckNoLHSAssignmentsToMathsNamespace(ComponentValidator
     def check_lhssymbol_is_valid(self, symbol):
         assert isinstance(symbol, basestring)
 
-        if not nineml.maths.is_valid_lhs_target(symbol):
+        if not is_valid_lhs_target(symbol):
             err = 'Symbol: %s found on left-hand-side of an equation'
-            raise nineml.exceptions.NineMLRuntimeError(err)
+            raise NineMLRuntimeError(err)
 
     def action_statevariable(self, state_variable, **kwargs):
         self.check_lhssymbol_is_valid(state_variable.name)

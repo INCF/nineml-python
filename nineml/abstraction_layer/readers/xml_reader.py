@@ -8,8 +8,10 @@ This file defines classes for reading NineML files.
 
 import os
 from lxml import etree
-import nineml
 
+from nineml.utility import expect_single, filter_expect_single
+from nineml.abstraction_layer.xmlns import NINEML, nineml_namespace
+from nineml.abstraction_layer import component as al
 
 __all__ = ['XMLReader']
 
@@ -28,7 +30,7 @@ class XMLLoader(object):
 
         self.components = []
         self.component_srcs = {}
-        for comp_block in xmlroot.findall(nineml.al.NINEML + "ComponentClass"):
+        for comp_block in xmlroot.findall(NINEML + "ComponentClass"):
             component = self.load_componentclass(comp_block)
 
             self.components.append(component)
@@ -50,8 +52,8 @@ class XMLLoader(object):
 
         subnodes = self.loadBlocks(element, blocks=blocks)
 
-        dynamics = nineml.utility.expect_single(subnodes["Dynamics"])
-        return nineml.al.ComponentClass(name=element.get('name'),
+        dynamics = expect_single(subnodes["Dynamics"])
+        return al.ComponentClass(name=element.get('name'),
                                         parameters=subnodes["Parameter"],
                                         analog_ports=subnodes["AnalogPort"],
                                         event_ports=subnodes["EventPort"],
@@ -60,23 +62,23 @@ class XMLLoader(object):
                                         portconnections=subnodes["ConnectPorts"])
 
     def load_parameter(self, element):
-        return nineml.al.Parameter(name=element.get('name'), dimension=element.get('dimension'))
+        return al.Parameter(name=element.get('name'), dimension=element.get('dimension'))
 
     def load_analogport(self, element):
-        return nineml.al.AnalogPort(name=element.get("name"),
+        return al.AnalogPort(name=element.get("name"),
                                     mode=element.get('mode'),
                                     reduce_op=element.get("reduce_op", None)
                                     )
 
     def load_eventport(self, element):
-        return nineml.al.EventPort(name=element.get('name'),
+        return al.EventPort(name=element.get('name'),
                                    mode=element.get('mode'))
 
     def load_dynamics(self, element):
         subblocks = ('Regime', 'Alias', 'StateVariable')
         subnodes = self.loadBlocks(element, blocks=subblocks)
 
-        return nineml.al.Dynamics(regimes=subnodes["Regime"],
+        return al.Dynamics(regimes=subnodes["Regime"],
                                   aliases=subnodes["Alias"],
                                   state_variables=subnodes["StateVariable"])
 
@@ -84,34 +86,34 @@ class XMLLoader(object):
         subblocks = ('TimeDerivative', 'OnCondition', 'OnEvent')
         subnodes = self.loadBlocks(element, blocks=subblocks)
         transitions = subnodes["OnEvent"] + subnodes['OnCondition']
-        return nineml.al.Regime(name=element.get('name'),
+        return al.Regime(name=element.get('name'),
                                 time_derivatives=subnodes["TimeDerivative"],
                                 transitions=transitions)
 
     def load_statevariable(self, element):
         name = element.get("name")
         dimension = element.get('dimension')
-        return nineml.al.StateVariable(name=name, dimension=dimension)
+        return al.StateVariable(name=name, dimension=dimension)
 
     def load_timederivative(self, element):
         variable = element.get("variable")
         expr = self.load_single_internal_maths_block(element)
-        return nineml.al.TimeDerivative(dependent_variable=variable,
+        return al.TimeDerivative(dependent_variable=variable,
                                         rhs=expr)
 
     def load_alias(self, element):
         name = element.get("name")
         rhs = self.load_single_internal_maths_block(element)
-        return nineml.al.Alias(lhs=name,
+        return al.Alias(lhs=name,
                                rhs=rhs)
 
     def load_oncondition(self, element):
         subblocks = ('Trigger', 'StateAssignment', 'EventOut')
         subnodes = self.loadBlocks(element, blocks=subblocks)
         target_regime = element.get('target_regime', None)
-        trigger = nineml.utility.expect_single(subnodes["Trigger"])
+        trigger = expect_single(subnodes["Trigger"])
 
-        return nineml.al.OnCondition(trigger=trigger,
+        return al.OnCondition(trigger=trigger,
                                      state_assignments=subnodes["StateAssignment"],
                                      event_outputs=subnodes["EventOut"],
                                      target_regime_name=target_regime)
@@ -121,7 +123,7 @@ class XMLLoader(object):
         subnodes = self.loadBlocks(element, blocks=subblocks)
         target_regime_name = element.get('target_regime', None)
 
-        return nineml.al.OnEvent(src_port_name=element.get('src_port'),
+        return al.OnEvent(src_port_name=element.get('src_port'),
                                  state_assignments=subnodes["StateAssignment"],
                                  event_outputs=subnodes["EventOut"],
                                  target_regime_name=target_regime_name
@@ -133,11 +135,11 @@ class XMLLoader(object):
     def load_stateassignment(self, element):
         lhs = element.get('variable')
         rhs = self.load_single_internal_maths_block(element)
-        return nineml.al.StateAssignment(lhs=lhs, rhs=rhs)
+        return al.StateAssignment(lhs=lhs, rhs=rhs)
 
     def load_eventout(self, element):
         port_name = element.get('port')
-        return nineml.al.OutputEvent(port_name=port_name)
+        return al.OutputEvent(port_name=port_name)
 
     def load_single_internal_maths_block(self, element, checkOnlyBlock=True):
         if checkOnlyBlock:
@@ -146,10 +148,10 @@ class XMLLoader(object):
                 print elements
                 assert False, 'Unexpected tags found'
 
-        assert len(element.findall(nineml.al.NINEML + "MathML")) == 0
-        assert len(element.findall(nineml.al.NINEML + "MathInline")) == 1
+        assert len(element.findall(NINEML + "MathML")) == 0
+        assert len(element.findall(NINEML + "MathInline")) == 1
 
-        return nineml.utility.expect_single(element.findall(nineml.al.NINEML + 'MathInline')).text
+        return expect_single(element.findall(NINEML + 'MathInline')).text
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
@@ -160,8 +162,8 @@ class XMLLoader(object):
         res = dict((block, []) for block in blocks)
 
         for t in element.iterchildren(tag=etree.Element):
-            if t.tag.startswith(nineml.al.NINEML):
-                tag = t.tag[len(nineml.al.NINEML):]
+            if t.tag.startswith(NINEML):
+                tag = t.tag[len(NINEML):]
             else:
                 tag = t.tag
 
@@ -243,10 +245,10 @@ class XMLReader(object):
             xml_node_filename_map[node] = filename
 
         root = doc.getroot()
-        assert root.nsmap[None] == nineml.al.nineml_namespace
+        assert root.nsmap[None] == nineml_namespace
 
         # Recursively Load Include Nodes:
-        for include_element in root.getiterator(tag=nineml.al.NINEML + 'Include'):
+        for include_element in root.getiterator(tag=NINEML + 'Include'):
             cls._load_include(include_element=include_element,
                               basedir=os.path.dirname(filename),
                               xml_node_filename_map=xml_node_filename_map)
@@ -286,11 +288,11 @@ class XMLReader(object):
 
         if component_name == None:
             key_func = lambda c: loader.component_srcs[c] == filename
-            return nineml.utility.filter_expect_single(loader.components, key_func)
+            return filter_expect_single(loader.components, key_func)
 
         else:
             key_func = lambda c: c.name == component_name
-            return nineml.utility.filter_expect_single(loader.components, key_func)
+            return filter_expect_single(loader.components, key_func)
 
     @classmethod
     def read_components(cls, filename):

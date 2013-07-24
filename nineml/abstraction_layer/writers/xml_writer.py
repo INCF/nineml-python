@@ -8,8 +8,9 @@ docstring needed
 from itertools import chain
 from lxml import etree
 from lxml.builder import E
-import nineml
-
+from nineml.abstraction_layer import flattening
+from nineml.abstraction_layer.xmlns import nineml_namespace
+from nineml.abstraction_layer.component import ComponentClass
 from ..visitors import ComponentVisitor
 
 
@@ -17,16 +18,15 @@ class XMLWriter(ComponentVisitor):
 
     @classmethod
     def write(cls, component, file, flatten=True):
-        assert isinstance(component, nineml.al.ComponentClass)
+        assert isinstance(component, ComponentClass)
         if not component.is_flat():
             if not flatten:
                 assert False, 'Trying to save nested models not yet supported'
             else:
-                import nineml.abstraction_layer.flattening as flattening
                 component = flattening.ComponentFlattener(component).reducedcomponent
 
         xml = XMLWriter().visit(component)
-        doc = E.NineML(xml, xmlns=nineml.al.nineml_namespace)
+        doc = E.NineML(xml, xmlns=nineml_namespace)
         etree.ElementTree(doc).write(
             file, encoding="UTF-8", pretty_print=True, xml_declaration=True)
 

@@ -5,13 +5,11 @@ docstring
 :license: BSD-3, see LICENSE for details.
 """
 
-import nineml
-import expressions
-from expressions import Expression
-from nineml.maths import MathUtil
+from .expressions import Expression
+from nineml.maths import MathUtil, str_to_npfunc_map
 
 
-class Condition(expressions.Expression):
+class Condition(Expression):
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -60,7 +58,7 @@ class Condition(expressions.Expression):
             rhs = MathUtil.str_expr_replacement(frm, to, rhs)
 
         lmda_str = "lambda %s: %s" % (','.join(self.rhs_names), rhs)
-        return eval(lmda_str, nineml.maths.str_to_npfunc_map, namespace)
+        return eval(lmda_str, str_to_npfunc_map, namespace)
 
     def __repr__(self):
         return "Condition('%s')" % (self.rhs)

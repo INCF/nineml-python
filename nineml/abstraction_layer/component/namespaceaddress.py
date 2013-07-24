@@ -5,9 +5,8 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-import nineml.utility
-import nineml
-
+from nineml.utility import flatten_first_level
+from nineml.exceptions import NineMLRuntimeError
 
 class NamespaceAddress(object):
 
@@ -44,7 +43,7 @@ class NamespaceAddress(object):
 
         # Combine all the location tuples in each argument
         # into one long list.
-        loc = nineml.utility.flatten_first_level([list(a.loctuple) for a in args])
+        loc = flatten_first_level([list(a.loctuple) for a in args])
 
         # Create a namespace out of this long new tuple:
         return NamespaceAddress(loc=tuple(loc))
@@ -107,7 +106,7 @@ class NamespaceAddress(object):
 
         if self.is_root_namespace():
             err = "Can't call get_parent_addr() on root namespace"
-            raise nineml.exceptions.NineMLRuntimeError(err)
+            raise NineMLRuntimeError(err)
 
         return NamespaceAddress(loc=tuple(self.loctuple[:-1]))
 
@@ -118,7 +117,7 @@ class NamespaceAddress(object):
 
         if self.is_root_namespace():
             err = "Can't call get_local_name() on root namespace"
-            raise nineml.exceptions.NineMLRuntimeError(err)
+            raise NineMLRuntimeError(err)
         return self.loctuple[-1]
 
     def getstr(self, join_char='_'):

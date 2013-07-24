@@ -5,9 +5,9 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
+from nineml.abstraction_layer.component import Parameter
 from nineml.abstraction_layer.visitors import ExpandPortDefinition
 from nineml.utility import filter_expect_single
-import nineml
 from nineml.exceptions import NineMLRuntimeError
 
 
@@ -67,4 +67,4 @@ class ComponentModifier(object):
         component._analog_ports.remove(port)
 
         # Add a new parameter:
-        component._parameters.append(nineml.abstraction_layer.Parameter(port_name))
+        component._parameters.append(Parameter(port_name))

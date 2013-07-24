@@ -5,15 +5,15 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.utility import flatten_first_level, expect_single
-
-# System Imports:
 import itertools
-
-
-from nineml.abstraction_layer.visitors import ClonerVisitor
-from nineml.abstraction_layer.visitors import ClonerVisitorPrefixNamespace
-import nineml
+from nineml.utility import flatten_first_level, expect_single
+from nineml.abstraction_layer.visitors import (ClonerVisitor,
+                                               ClonerVisitorPrefixNamespace,
+                                               ExpandPortDefinition)
+from nineml.exceptions import NineMLRuntimeError
+from nineml.abstraction_layer.component import (NamespaceAddress,
+                                                ComponentClass, Regime,
+                                                OnCondition, OnEvent)
 
 
 class TransitionResolver(object):
@@ -63,7 +63,7 @@ class TransitionResolver(object):
             transition, regime_index = self.unresolved_transitions.pop()
 
             if regime_index in self.changed_regime_indices:
-                raise nineml.exceptions.NineMLRuntimeError(
+                raise NineMLRuntimeError(
                     'Something has gone wrong with event resolution. Changing Regime Twice!')
             self.changed_regime_indices.add(regime_index)
 
@@ -146,7 +146,7 @@ class ComponentFlattener(object):
         # old_regime_string = 'iaf:subthresholdregime cobaInhib:cobadefaultregime
         # cobaExcit:cobadefaultregime'
         nsstr_regimename = [l.split(':') for l in old_regime_string.split()]
-        ns_regimename = dict([(nineml.al.NamespaceAddress(ns), regime_name)
+        ns_regimename = dict([(NamespaceAddress(ns), regime_name)
                              for (ns, regime_name) in nsstr_regimename])
 
         # OK, now lets go through our old componentswithregimes,
@@ -158,14 +158,14 @@ class ComponentFlattener(object):
                 err = 'Looking for a regime in namespace: %s, but not found.' % str(comp_ns)
                 err += '\nNamespaces: %s' % ','.join([str(ns) for ns in ns_regimename.keys()])
                 err += '\nSpecified String: %s' % old_regime_string
-                raise nineml.exceptions.NineMLRuntimeError(err)
+                raise NineMLRuntimeError(err)
             target_regime_name = ns_regimename[comp_ns]
 
             regime_map = dict([(r.name, r) for r in c.regimes])
             if not target_regime_name in regime_map:
                 err = 'Namespace has no regime named: %s'
                 err += '\nRegimes: %s' % (str(regime_map.keys()))
-                raise nineml.exceptions.NineMLRuntimeError(err)
+                raise NineMLRuntimeError(err)
 
             target_regime_tuple.append(regime_map[target_regime_name])
 
@@ -177,7 +177,7 @@ class ComponentFlattener(object):
     # Flattening Functions:
     # --------------------- #
     def __init__(self, component, componentname=None):
-        assert isinstance(component, nineml.al.ComponentClass)
+        assert isinstance(component, ComponentClass)
 
         # Is our component already flat??
         if component.is_flat():
@@ -209,7 +209,7 @@ class ComponentFlattener(object):
         self.build_new_regime_space()
 
         # Build Our New Component
-        self.reducedcomponent = nineml.al.ComponentClass(
+        self.reducedcomponent = ComponentClass(
             name=self.componentname,
             aliases=flatten_first_level([m.aliases for m in self.all_components]),
             state_variables=flatten_first_level(
@@ -236,7 +236,7 @@ class ComponentFlattener(object):
         time_derivs = flatten_first_level([r.time_derivatives for r in regimetuple])
         time_derivs = [ClonerVisitor().visit(td) for td in time_derivs]
 
-        return nineml.al.Regime(name=None, time_derivatives=time_derivs)
+        return Regime(name=None, time_derivatives=time_derivs)
 
     def build_new_regime_space(self):
 
@@ -262,7 +262,7 @@ class ComponentFlattener(object):
                         transition_regime_tuple_index=regime_index,
                         flattener=self,
                     )
-                    new_oncondition = nineml.al.OnCondition(oldtransition.trigger,
+                    new_oncondition = OnCondition(oldtransition.trigger,
                                                             state_assignments=tr.state_assignments,
                                                             event_outputs=tr.event_outputs,
                                                             target_regime_name=tr.target_regime.name)
@@ -276,15 +276,13 @@ class ComponentFlattener(object):
                         transition_regime_tuple_index=regime_index,
                         flattener=self,
                     )
-                    new_onevent = nineml.al.OnEvent(oldtransition.src_port_name,
+                    new_onevent = OnEvent(oldtransition.src_port_name,
                                                     state_assignments=tr.state_assignments,
                                                     event_outputs=tr.event_outputs,
                                                     target_regime_name=tr.target_regime.name)
                     regime_new.add_on_event(new_onevent)
 
     def remap_analog_ports(self):
-        from nineml.abstraction_layer.visitors import ExpandPortDefinition
-
         new_analog_ports = flatten_first_level(
             [comp.analog_ports for comp in self.all_components])
         new_analog_ports = dict([(p.name, p) for p in new_analog_ports])

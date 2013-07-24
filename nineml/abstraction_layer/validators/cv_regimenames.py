@@ -6,7 +6,7 @@ docstring needed
 """
 
 from base import ComponentValidatorPerNamespace
-import nineml.utility
+from nineml.utility import assert_no_duplicates
 
 
 class ComponentValidatorDuplicateRegimeNames(ComponentValidatorPerNamespace):
@@ -17,4 +17,4 @@ class ComponentValidatorDuplicateRegimeNames(ComponentValidatorPerNamespace):
 
     def action_componentclass(self, componentclass, namespace):
         regime_names = [r.name for r in componentclass.regimes]
-        nineml.utility.assert_no_duplicates(regime_names)
+        assert_no_duplicates(regime_names)

@@ -12,11 +12,12 @@ from conditions import Condition
 from events import OutputEvent
 from nineml.maths import MathUtil
 
-import nineml.utility
+from nineml.utility import (filter_discrete_types, ensure_valid_c_variable_name,
+                            normalise_parameter_as_list, assert_no_duplicates)
+                            
 from nineml.exceptions import NineMLRuntimeError
 
 
-# from nineml.utility import filter_discrete_types
 
 
 class Transition(object):
@@ -52,7 +53,6 @@ class Transition(object):
             assert isinstance(target_regime_name, basestring)
 
         # Load state-assignment objects as strings or StateAssignment objects
-        from nineml.utility import filter_discrete_types
         state_assignments = state_assignments or []
 
         sa_types = (basestring, StateAssignment)
@@ -188,7 +188,7 @@ class OnEvent(Transition):
                             event_outputs=event_outputs,
                             target_regime_name=target_regime_name)
         self._src_port_name = src_port_name.strip()
-        nineml.utility.ensure_valid_c_variable_name(self._src_port_name)
+        ensure_valid_c_variable_name(self._src_port_name)
 
     @property
     def src_port_name(self):
@@ -281,31 +281,31 @@ class Regime(object):
 
         transitions = kwargs.get('transitions', None)
         name = kwargs.get('name', None)
-        kw_tds = nineml.utility.normalise_parameter_as_list(kwargs.get('time_derivatives', None))
+        kw_tds = normalise_parameter_as_list(kwargs.get('time_derivatives', None))
         time_derivatives = list(args) + kw_tds
 
         # Generate a name for unnamed regions:
         self._name = name.strip() if name else Regime.get_next_name()
-        nineml.utility.ensure_valid_c_variable_name(self._name)
+        ensure_valid_c_variable_name(self._name)
 
         # Un-named arguments are time_derivatives:
-        time_derivatives = nineml.utility.normalise_parameter_as_list(time_derivatives)
+        time_derivatives = normalise_parameter_as_list(time_derivatives)
         # time_derivatives.extend( args )
 
         td_types = (basestring, TimeDerivative)
-        td_type_dict = nineml.utility.filter_discrete_types(time_derivatives, td_types)
+        td_type_dict = filter_discrete_types(time_derivatives, td_types)
         td_from_str = [StrToExpr.time_derivative(o) for o in td_type_dict[basestring]]
         self._time_derivatives = td_type_dict[TimeDerivative] + td_from_str
 
         # Check for double definitions:
         td_dep_vars = [td.dependent_variable for td in self._time_derivatives]
-        nineml.utility.assert_no_duplicates(td_dep_vars)
+        assert_no_duplicates(td_dep_vars)
 
         # We support passing in 'transitions', which is a list of both OnEvents
         # and OnConditions. So, lets filter this by type and add them
         # appropriately:
-        transitions = nineml.utility.normalise_parameter_as_list(transitions)
-        f_dict = nineml.utility.filter_discrete_types(transitions, (OnEvent, OnCondition))
+        transitions = normalise_parameter_as_list(transitions)
+        f_dict = filter_discrete_types(transitions, (OnEvent, OnCondition))
         self._on_events = []
         self._on_conditions = []
 
@@ -429,7 +429,7 @@ def do_to_assignments_and_events(doList):
         return [], []
     # 'doList' is a list of strings, OutputEvents, and StateAssignments.
     do_type_list = (OutputEvent, basestring, StateAssignment)
-    do_types = nineml.utility.filter_discrete_types(doList, do_type_list)
+    do_types = filter_discrete_types(doList, do_type_list)
 
     # Convert strings to StateAssignments:
     sa_from_strs = [StrToExpr.state_assignment(s) for s in do_types[basestring]]
@@ -473,12 +473,11 @@ class Dynamics(object):
                 automatically.
         """
 
-        aliases = nineml.utility.normalise_parameter_as_list(aliases)
-        regimes = nineml.utility.normalise_parameter_as_list(regimes)
-        state_variables = nineml.utility.normalise_parameter_as_list(state_variables)
+        aliases = normalise_parameter_as_list(aliases)
+        regimes = normalise_parameter_as_list(regimes)
+        state_variables = normalise_parameter_as_list(state_variables)
 
         # Load the aliases as objects or strings:
-        from nineml.utility import filter_discrete_types
         alias_td = filter_discrete_types(aliases, (basestring, Alias))
         aliases_from_strs = [StrToExpr.alias(o) for o in alias_td[basestring]]
         aliases = alias_td[Alias] + aliases_from_strs
@@ -545,7 +544,7 @@ class StateVariable(object):
         """
         self._name = name.strip()
         self._dimension = dimension
-        nineml.utility.ensure_valid_c_variable_name(self._name)
+        ensure_valid_c_variable_name(self._name)
 
     @property
     def name(self):

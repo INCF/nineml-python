@@ -10,14 +10,17 @@ components definitions of interface and dynamics
 from nineml.exceptions import NineMLRuntimeError
 from namespaceaddress import NamespaceAddress
 import componentqueryer
-import nineml.utility
 import dynamics as dyn
 
 import itertools
 from interface import Parameter
 from dynamics import StateVariable
 from ports import EventPort
-from nineml.utility import check_list_contain_same_items
+from nineml.utility import (check_list_contain_same_items,
+                            ensure_valid_c_variable_name, invert_dictionary,
+                            filter_discrete_types, assert_no_duplicates)
+
+from nineml.maths import get_reserved_and_builtin_symbols
 
 
 class ComponentClassMixinFlatStructure(object):
@@ -38,7 +41,7 @@ class ComponentClassMixinFlatStructure(object):
         self._event_ports = event_ports or []
         self._dynamics = dynamics
 
-        nineml.utility.ensure_valid_c_variable_name(name)
+        ensure_valid_c_variable_name(name)
 
     # Basic properties:
     @property
@@ -179,8 +182,6 @@ class ComponentClassMixinNamespaceStructure(object):
 
     def get_node_addr(self):
         """Get the namespace address of this component"""
-        from nineml.utility import invert_dictionary
-
         parent = self.get_parent_model()
         if not parent:
             return NamespaceAddress.create_root()
@@ -296,7 +297,7 @@ class InterfaceInferer(ActionVisitor):
             self.state_variable_names,
             alias_symbols,
             analog_ports_in,
-            nineml.maths.get_reserved_and_builtin_symbols()
+            get_reserved_and_builtin_symbols()
         ))
 
         # Parameters:
@@ -421,7 +422,6 @@ class ComponentClass(ComponentClassMixinFlatStructure,
                                     state_variables=state_variables)
 
         # Turn any strings in the parameter list into Parameters:
-        from nineml.utility import filter_discrete_types
         if parameters is not None:
             param_types = (basestring, Parameter)
             param_td = filter_discrete_types(parameters, param_types)
@@ -540,7 +540,7 @@ class ComponentClass(ComponentClassMixinFlatStructure,
     def _resolve_transition_regime_names(self):
         # Check that the names of the regimes are unique:
         names = [r.name for r in self.regimes]
-        nineml.utility.assert_no_duplicates(names)
+        assert_no_duplicates(names)
 
         # Create a map of regime names to regimes:
         regime_map = dict([(r.name, r) for r in self.regimes])

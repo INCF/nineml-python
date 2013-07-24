@@ -28,12 +28,10 @@ import os
 from expr_parse import call_expr_func
 from nineml.utility import LocationMgr
 from nineml.exceptions import NineMLMathParseError
-from nineml.maths import is_builtin_math_function
+from nineml.maths import is_builtin_math_function, get_builtin_symbols
 
 # for now avoid duplication, but maintain distinctness
 call_cond_func = call_expr_func
-
-import nineml
 
 
 class Parser(object):
@@ -76,8 +74,7 @@ class Parser(object):
         # return set(self.names), set(self.funcs)
 
         self.names = set(self.names)
-        # self.names.difference_update(nineml.maths.namespace)
-        self.names.difference_update(nineml.maths.get_builtin_symbols())
+        self.names.difference_update(get_builtin_symbols())
 
         return self.names, set(self.funcs)
 
@@ -200,7 +197,6 @@ class CalcCond(Parser):
 
         func_name = p[1][:-1].strip()
         if not is_builtin_math_function(func_name):
-        # if func_name not in nineml.maths.namespace:
             raise NineMLMathParseError, "Undefined function '%s'" % func_name
         self.funcs.append(func_name)
 

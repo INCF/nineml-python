@@ -5,6 +5,8 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
+from nineml.utility import ensure_valid_c_variable_name
+
 
 class OutputEvent(object):
 
@@ -28,10 +30,8 @@ class OutputEvent(object):
             ``NineMLRuntimeException`` will be raised.
 
         """
-        import nineml
-
         self._port_name = port_name.strip()
-        nineml.utility.ensure_valid_c_variable_name(self._port_name)
+        ensure_valid_c_variable_name(self._port_name)
 
     @property
     def port_name(self):

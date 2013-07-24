@@ -10,11 +10,9 @@ import itertools
 
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-from nineml.maths import MathUtil
-
-import parse
-# from expr_parse import expr_parse
-import nineml
+from nineml.maths import (MathUtil, str_to_npfunc_map, func_namespace_split,
+                          is_valid_lhs_target)
+from . import parse
 
 
 class RegimeElement(object):
@@ -81,7 +79,7 @@ class Expression(object):
         namespace = namespace or {}
 
         return eval("lambda %s: %s" % (','.join(self.rhs_names), self.rhs),
-                    nineml.maths.str_to_npfunc_map, namespace)
+                    str_to_npfunc_map, namespace)
                 # math_namespace.namespace, namespace)
 
     def rhs_name_transform_inplace(self, name_map):
@@ -94,7 +92,7 @@ class Expression(object):
     def rhs_atoms_in_namespace(self, namespace):
         atoms = set()
         for a in self.rhs_atoms:
-            ns, func = nineml.maths.func_namespace_split(a)
+            ns, func = func_namespace_split(a)
             if ns == namespace:
                 atoms.add(func)
         return atoms
@@ -166,7 +164,7 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS):
         if not MathUtil.is_single_symbol(lhs):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
             raise NineMLRuntimeError(err)
-        if not nineml.maths.is_valid_lhs_target(lhs):
+        if not is_valid_lhs_target(lhs):
             err = 'Invalid LHS target: %s' % lhs
             raise NineMLRuntimeError(err)
 
@@ -392,18 +390,16 @@ class StrToExpr(object):
     @classmethod
     def alias(cls, alias_string):
         """Creates an Alias object from a string"""
-        import nineml.abstraction_layer as al
         if not cls.is_alias(alias_string):
             errmsg = "Invalid Alias: %s" % alias_string
             raise NineMLRuntimeError(errmsg)
 
         lhs, rhs = alias_string.split(':=')
-        return al.Alias(lhs=lhs.strip(), rhs=rhs.strip())
+        return Alias(lhs=lhs.strip(), rhs=rhs.strip())
 
     @classmethod
     def time_derivative(cls, time_derivative_string):
         """Creates an TimeDerivative object from a string"""
-        import nineml.abstraction_layer as al
         # Note: \w = [a-zA-Z0-9_]
         tdre = re.compile(r"""\s* d(?P<dependent_var>[a-zA-Z][a-zA-Z0-9_]*)/dt
                            \s* = \s*
@@ -415,15 +411,14 @@ class StrToExpr(object):
             raise NineMLRuntimeError(err)
         dependent_variable = match.groupdict()['dependent_var']
         rhs = match.groupdict()['rhs']
-        return al.TimeDerivative(dependent_variable=dependent_variable,
+        return TimeDerivative(dependent_variable=dependent_variable,
                                  rhs=rhs)
 
     @classmethod
     def state_assignment(cls, state_assignment_string):
-        import nineml.abstraction_layer as al
         """Creates an StateAssignment object from a string"""
         lhs, rhs = state_assignment_string.split('=')
-        return al.StateAssignment(lhs=lhs, rhs=rhs)
+        return StateAssignment(lhs=lhs, rhs=rhs)
 
 
 def expr_to_obj(s, name=None):

@@ -17,14 +17,13 @@ docstring needed
 # -----------------------------------------------------------------------------
 
 
+import os
 import ply.lex as lex
 import ply.yacc as yacc
-import os
 
-# import nineml.maths.math_namespace
-import nineml
 from nineml.utility import LocationMgr
 from nineml.exceptions import NineMLMathParseError
+from nineml.maths import get_builtin_symbols
 
 
 def call_expr_func(expr_func, ns):
@@ -76,7 +75,7 @@ class Parser(object):
 
         # remove names from the math_namespace
         self.names = set(self.names)
-        self.names.difference_update(nineml.maths.get_builtin_symbols())
+        self.names.difference_update(get_builtin_symbols())
 
         return self.names, set(self.funcs)
 

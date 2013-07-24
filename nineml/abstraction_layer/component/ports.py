@@ -5,10 +5,8 @@ This file defines the Port classes used in NineML
 :license: BSD-3, see LICENSE for details.
 """
 
-import nineml
-# from nineml.helpers import curry
-# from nineml.helpers import curry
-# from nineml.exceptions import NineMLRuntimeError
+from nineml.utility import curry, ensure_valid_c_variable_name
+from nineml.exceptions import NineMLRuntimeError
 
 
 class Port(object):
@@ -57,7 +55,7 @@ class Port(object):
         """
 
         name = name.strip()
-        nineml.utility.ensure_valid_c_variable_name(name)
+        ensure_valid_c_variable_name(name)
 
         self.dimension = "??"
         self._name = name
@@ -67,17 +65,17 @@ class Port(object):
         if self._mode not in Port._modes:
             err = ("%s('%s')" + "specified undefined mode: '%s'") %\
                   (self.__class__.__name__, self.name, mode)
-            raise nineml.exceptions.NineMLRuntimeError(err)
+            raise NineMLRuntimeError(err)
 
         if mode == 'reduce':
             if reduce_op not in Port._reduce_op_map.keys():
                 err = ("%s('%s')" + "specified undefined reduce_op: '%s'") %\
                       (self.__class__.__name__, name, str(reduce_op))
-                raise nineml.exceptions.NineMLRuntimeError(err)
+                raise NineMLRuntimeError(err)
 
         if reduce_op and mode != "reduce":
             err = "Port of mode!=reduce may not specify 'op'."
-            raise nineml.exceptions.NineMLRuntimeError(err)
+            raise NineMLRuntimeError(err)
 
     @property
     def name(self):
@@ -144,9 +142,9 @@ class EventPort(Port):
 
 
 # Syntactic sugar
-ReducePort = nineml.utility.curry(AnalogPort, mode="reduce")
-RecvPort = nineml.utility.curry(AnalogPort, mode="recv")
-SendPort = nineml.utility.curry(AnalogPort, mode="send")
+ReducePort = curry(AnalogPort, mode="reduce")
+RecvPort = curry(AnalogPort, mode="recv")
+SendPort = curry(AnalogPort, mode="send")
 
-RecvEventPort = nineml.utility.curry(EventPort, mode="recv")
-SendEventPort = nineml.utility.curry(EventPort, mode="send")
+RecvEventPort = curry(EventPort, mode="recv")
+SendEventPort = curry(EventPort, mode="send")

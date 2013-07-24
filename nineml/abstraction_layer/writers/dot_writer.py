@@ -8,7 +8,7 @@ docstring needed
 import os
 import re
 
-import nineml
+from nineml.abstraction_layer import flattening
 
 
 def _dot_escape(s):
@@ -151,8 +151,7 @@ class DotWriter(object):
         from Cheetah.Template import Template
 
         if not component.is_flat() and flatten:
-
-            component = nineml.al.flattening.flatten(component)
+            component = flattening.flatten(component)
 
         regime_node_names = dict((regime, 'regime%d' % i)
                                  for i, regime in enumerate(component.regimes))

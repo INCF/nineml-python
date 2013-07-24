@@ -6,7 +6,7 @@ Contains the classes for defining the interface for a componentclass
 """
 
 
-import nineml
+from nineml.utility import ensure_valid_c_variable_name
 
 
 class Parameter(object):
@@ -23,7 +23,7 @@ class Parameter(object):
         :param name:  The name of the parameter.
         """
         name = name.strip()
-        nineml.utility.ensure_valid_c_variable_name(name)
+        ensure_valid_c_variable_name(name)
 
         self._name = name
         self._dimension = dimension

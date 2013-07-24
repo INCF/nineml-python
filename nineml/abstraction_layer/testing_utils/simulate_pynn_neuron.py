@@ -9,9 +9,6 @@ def std_pynn_simulation(test_component, parameters, initial_values,
                         synapse_components, records, plot=True, sim_time=100.,
                         synapse_weights=1.0, syn_input_rate=100):
 
-    import nineml
-    # nineml.utility.LocationMgr.StdAppendToPath()
-
     from nineml.abstraction_layer.flattening import ComponentFlattener
 
     import pyNN.neuron as sim

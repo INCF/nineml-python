@@ -5,8 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-import nineml
-
+from .events import OutputEvent
 
 def SpikeOutputEvent():
-    return nineml.al.OutputEvent('spikeoutput')
+    return OutputEvent('spikeoutput')

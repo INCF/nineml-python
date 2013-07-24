@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-import nineml
+from nineml.abstraction_layer import flattening
 
 
 def dump_reduced(component, filename):
@@ -94,7 +94,7 @@ class TextWriter(object):
     def write(cls, component, filename):
 
         if not component.is_flat():
-            component = nineml.al.flattening.flatten(component)
+            component = flattening.flatten(component)
 
         from Cheetah.Template import Template
         data = {'component': component}

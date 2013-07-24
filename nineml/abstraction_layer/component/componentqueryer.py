@@ -6,9 +6,6 @@ Definitions for the ComponentQuery Class
 """
 
 from itertools import chain
-
-# from namespaceaddress import NamespaceAddress
-# import nineml.utility
 from nineml.utility import filter_expect_single
 
 
