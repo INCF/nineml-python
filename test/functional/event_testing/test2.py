@@ -1,9 +1,9 @@
 
 
-import nineml
-from nineml.abstraction_layer.testing_utils import std_pynn_simulation
-from nineml.abstraction_layer.testing_utils import RecordValue
-from nineml.abstraction_layer import ComponentClass, Regime, On, OutputEvent, SendPort, ReducePort
+from nineml.abstraction_layer.testing_utils import (std_pynn_simulation,
+                                                    RecordValue)
+from nineml.abstraction_layer import (ComponentClass, Regime, On, OutputEvent,
+                                      SendPort, ReducePort, flattening)
 
 
 class FuncTest_Flat2(object):
@@ -59,7 +59,7 @@ class FuncTest_Flat2(object):
                                                         ('cc2.cc.I', 'nrn.iInj')]
                                        )
 
-        combined_comp = nineml.al.flattening.flatten(combined_comp)
+        combined_comp = flattening.flatten(combined_comp)
 
         records = [
             RecordValue(what='cc1_cc_I', tag='Current', label='Current Clamp 1'),
@@ -71,7 +71,7 @@ class FuncTest_Flat2(object):
             RecordValue(what='regime',     tag='Regime',  label='Regime'),
         ]
 
-        parameters = nineml.al.flattening.ComponentFlattener.flatten_namespace_dict({
+        parameters = flattening.ComponentFlattener.flatten_namespace_dict({
                                                                                     'cc1.cc.i': 13.8,
                                                                                     'cc1.cc.dur': 10,
                                                                                     'cc1.evs.cyclelength': 30,

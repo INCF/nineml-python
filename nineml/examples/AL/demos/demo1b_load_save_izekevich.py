@@ -1,15 +1,20 @@
-import nineml
-from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer.testing_utils import std_pynn_simulation
+"""
+
+"""
+
+from nineml.abstraction_layer import parse, writers, flattening
+from nineml.abstraction_layer.testing_utils import (RecordValue,
+                                                    TestableComponent,
+                                                    std_pynn_simulation)
 
 # Load the Component:
 iz_file = '../../../../../../catalog/sample_xml_files/PostTF_izhikevich.xml'
-iz = nineml.al.parse(iz_file)
+iz = parse(iz_file)
 
 # Write the component back out to XML
-nineml.al.writers.XMLWriter.write(iz, 'TestOut_Iz.xml')
-nineml.al.writers.DotWriter.write(iz, 'TestOut_Iz.dot')
-nineml.al.writers.DotWriter.build('TestOut_Iz.dot')
+writers.XMLWriter.write(iz, 'TestOut_Iz.xml')
+writers.DotWriter.write(iz, 'TestOut_Iz.dot')
+writers.DotWriter.build('TestOut_Iz.dot')
 
 
 # Simulate the Neuron:
@@ -19,7 +24,7 @@ records = [
     # RecordValue( what='regime',     tag='Regime',  label='Regime' ),
 ]
 
-parameters = nineml.al.flattening.ComponentFlattener.flatten_namespace_dict({
+parameters = flattening.ComponentFlattener.flatten_namespace_dict({
                                                                             'a': 0.02,
                                                                             'b': 0.2,
                                                                             'c': -65,

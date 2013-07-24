@@ -1,14 +1,10 @@
 
 
-# Automatically Generated Testing Skeleton Template:
 import unittest
-import nineml
+from nineml.abstraction_layer import (ComponentClass, Regime, On, OutputEvent,
+                                      RecvPort, SendPort, flattening)
 
 
-from nineml.abstraction_layer import ComponentClass, Regime, On, OutputEvent, RecvPort, SendPort
-
-
-# Testing Skeleton for class: ComponentFlattener
 class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening1(self):
@@ -47,7 +43,7 @@ class ComponentFlattener_test(unittest.TestCase):
 
         # Flatten a flat component
         # Everything should be as before:
-        c_flat = nineml.al.flattening.flatten(c)
+        c_flat = flattening.flatten(c)
 
         assert c_flat is not c
 
@@ -113,7 +109,7 @@ class ComponentFlattener_test(unittest.TestCase):
                            # portconnections= [('c1.C1','c2.cIn1'),('c2.emit','c1.spikein'), ]
                            )
 
-        b_flat = nineml.al.flattening.flatten(b)
+        b_flat = flattening.flatten(b)
 
         # Name
         self.assertEqual(b_flat.name, 'B')
@@ -248,7 +244,7 @@ class ComponentFlattener_test(unittest.TestCase):
                            subnodes={'b': b, 'c': c},
                            )
 
-        a_flat = nineml.al.flattening.flatten(a)
+        a_flat = flattening.flatten(a)
 
         # Name
         self.assertEqual(a_flat.name, 'A')
@@ -447,7 +443,7 @@ class ComponentFlattener_test(unittest.TestCase):
                                             'b.c1.C1', 'b.c2.cIn1'), ('b.c1.C2', 'b.d.dIn1')]
                            )
 
-        a_flat = nineml.al.flattening.flatten(a)
+        a_flat = flattening.flatten(a)
 
         # Name
         self.assertEqual(a_flat.name, 'A')

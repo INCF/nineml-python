@@ -1,6 +1,10 @@
-import nineml
+"""
+
+"""
+
+
 from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer import ComponentClass
+from nineml.abstraction_layer import ComponentClass, flattening, writers
 from nineml.abstraction_layer.testing_utils import std_pynn_simulation
 
 # Load the Component:
@@ -8,9 +12,9 @@ coba1_base = TestableComponent('hierachical_iaf_1coba')
 coba1 = coba1_base()
 
 # Write the component back out to XML
-nineml.al.writers.XMLWriter.write(coba1, 'TestOut_Coba1.xml')
-nineml.al.writers.DotWriter.write(coba1, 'TestOut_Coba1.dot')
-nineml.al.writers.DotWriter.build('TestOut_Coba1.dot')
+writers.XMLWriter.write(coba1, 'TestOut_Coba1.xml')
+writers.DotWriter.write(coba1, 'TestOut_Coba1.dot')
+writers.DotWriter.build('TestOut_Coba1.dot')
 
 
 # Simulate the Neuron:
@@ -19,7 +23,7 @@ records = [
     RecordValue(what='regime', tag='Regime', label='Regime'),
 ]
 
-parameters = nineml.al.flattening.ComponentFlattener.flatten_namespace_dict({
+parameters = flattening.ComponentFlattener.flatten_namespace_dict({
                                                                             'cobaExcit_tau': 5.0,
                                                                             'cobaExcit_vrev': 0,
                                                                             'iaf_cm': 1,

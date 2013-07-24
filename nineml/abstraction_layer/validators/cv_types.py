@@ -5,7 +5,6 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-# import nineml.abstraction_layer as al
 from nineml.abstraction_layer.visitors import ActionVisitor
 from nineml.abstraction_layer import component as al
 
