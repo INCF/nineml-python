@@ -6,6 +6,7 @@ docstring needed
 """
 
 from nineml.abstraction_layer.dynamics.visitors import ActionVisitor
+from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics import component as al
 
 
@@ -27,7 +28,7 @@ class ComponentValidatorTypes(ActionVisitor):
         assert isinstance(state_variable, al.StateVariable)
 
     def action_parameter(self, parameter):
-        assert isinstance(parameter, al.Parameter)
+        assert isinstance(parameter, Parameter), "%s != %s" % (type(parameter), Parameter)
 
     def action_analogport(self, port, **kwargs):
         assert isinstance(port, al.AnalogPort)

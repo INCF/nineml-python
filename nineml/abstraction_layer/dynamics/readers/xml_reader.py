@@ -11,6 +11,7 @@ from lxml import etree
 
 from nineml.utility import expect_single, filter_expect_single
 from nineml.abstraction_layer.xmlns import NINEML, nineml_namespace
+from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics import component as al
 
 __all__ = ['XMLReader']
@@ -62,7 +63,7 @@ class XMLLoader(object):
                                         portconnections=subnodes["ConnectPorts"])
 
     def load_parameter(self, element):
-        return al.Parameter(name=element.get('name'), dimension=element.get('dimension'))
+        return Parameter(name=element.get('name'), dimension=element.get('dimension'))
 
     def load_analogport(self, element):
         return al.AnalogPort(name=element.get("name"),

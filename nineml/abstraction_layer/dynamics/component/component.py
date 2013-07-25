@@ -13,12 +13,12 @@ import componentqueryer
 import dynamics as dyn
 
 import itertools
-from interface import Parameter
+from nineml.abstraction_layer.components import BaseComponentClass, Parameter
 from dynamics import StateVariable
 from ports import EventPort
 from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_c_variable_name, invert_dictionary,
-                            filter_discrete_types, assert_no_duplicates)
+                            assert_no_duplicates)
 
 from nineml.maths import get_reserved_and_builtin_symbols
 from ..visitors import ExpandAliasDefinition, ClonerVisitor, ActionVisitor
@@ -27,33 +27,18 @@ from ..visitors import ExpandAliasDefinition, ClonerVisitor, ActionVisitor
 class ComponentClassMixinFlatStructure(object):
 
     """Mixin Class that provides the infrastructure for *local* component
-    definitions - i.e. the interface and the dynamics
+    definitions - i.e. the dynamics
     """
 
-    def __init__(self, name, parameters=None, analog_ports=None,
+    def __init__(self, analog_ports=None,
                  event_ports=None, dynamics=None):
         """Constructor - For parameter descriptions, see the
         ComponentClass.__init__() method
         """
-
-        self._name = name
-        self._parameters = parameters or []
         self._analog_ports = analog_ports or []
         self._event_ports = event_ports or []
         self._dynamics = dynamics
-
-        ensure_valid_c_variable_name(name)
-
-    # Basic properties:
-    @property
-    def name(self):
-        """Returns the name of the component"""
-        return self._name
-
-    @property
-    def parameters(self):
-        """Returns an iterator over the local |Parameter| objects"""
-        return iter(self._parameters)
+        ensure_valid_c_variable_name(self.name)
 
     @property
     def analog_ports(self):
@@ -72,7 +57,7 @@ class ComponentClassMixinFlatStructure(object):
     # -------------------------- #
 
     def __repr__(self):
-        return "<ComponentClass %s>" % self.name
+        return "<dynamics.ComponentClass %s>" % self.name
 
     # Forwarding functions to the dynamics #
     @property
@@ -351,7 +336,8 @@ class InterfaceInferer(ActionVisitor):
         pass
 
 
-class ComponentClass(ComponentClassMixinFlatStructure,
+class ComponentClass(BaseComponentClass,
+                     ComponentClassMixinFlatStructure,
                      ComponentClassMixinNamespaceStructure):
 
     """A ComponentClass object represents a *component* in NineML.
@@ -402,7 +388,7 @@ class ComponentClass(ComponentClassMixinFlatStructure,
             For examples
 
         """
-
+        BaseComponentClass.__init__(self, name, parameters)
         # We can specify in the componentclass, and they will get forwarded to
         # the dynamics class. We check that we do not specify half-and-half:
         if dynamics is not None:
@@ -416,14 +402,6 @@ class ComponentClass(ComponentClassMixinFlatStructure,
             dynamics = dyn.Dynamics(regimes=regimes,
                                     aliases=aliases,
                                     state_variables=state_variables)
-
-        # Turn any strings in the parameter list into Parameters:
-        if parameters is not None:
-            param_types = (basestring, Parameter)
-            param_td = filter_discrete_types(parameters, param_types)
-            params_from_strings = [Parameter(s) for s in param_td[basestring]]
-            parameters = param_td[Parameter] + params_from_strings
-
         self._query = componentqueryer.ComponentQueryer(self)
 
         # EventPort, StateVariable and Parameter Inference:
@@ -433,12 +411,12 @@ class ComponentClass(ComponentClassMixinFlatStructure,
 
         # Check any supplied parameters match:
         if parameters is not None:
-            parameter_names = [p.name for p in parameters]
+            parameter_names = [p.name for p in self._parameters]
             inf_check(parameter_names,
                       inferred_struct.parameter_names,
                       'Parameters')
         else:
-            parameters = [Parameter(n) for n in inferred_struct.parameter_names]
+            self._parameters = [Parameter(n) for n in inferred_struct.parameter_names]
 
         # Check any supplied state_variables match:
         if dynamics._state_variables:
@@ -472,8 +450,6 @@ class ComponentClass(ComponentClassMixinFlatStructure,
 
         # Construct super-classes:
         ComponentClassMixinFlatStructure.__init__(self,
-                                                  name=name,
-                                                  parameters=parameters,
                                                   analog_ports=analog_ports,
                                                   event_ports=event_ports,
                                                   dynamics=dynamics)
