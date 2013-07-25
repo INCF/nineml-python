@@ -7,7 +7,7 @@ docstring needed
 
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from nineml.abstraction_layer.validators.base import ComponentValidatorPerNamespace
+from nineml.abstraction_layer.dynamics.validators.base import ComponentValidatorPerNamespace
 
 
 class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):

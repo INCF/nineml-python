@@ -8,11 +8,11 @@ docstring needed
 import itertools
 from collections import defaultdict
 from nineml.utility import flatten_first_level, expect_single
-from nineml.abstraction_layer.visitors import (ClonerVisitor,
+from nineml.abstraction_layer.dynamics.visitors import (ClonerVisitor,
                                                ClonerVisitorPrefixNamespace,
                                                ExpandPortDefinition)
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.component import (NamespaceAddress,
+from nineml.abstraction_layer.dynamics.component import (NamespaceAddress,
                                                 ComponentClass, Regime,
                                                 OnCondition, OnEvent)
 

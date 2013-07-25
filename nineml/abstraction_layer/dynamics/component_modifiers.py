@@ -5,8 +5,8 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.abstraction_layer.component import Parameter
-from nineml.abstraction_layer.visitors import ExpandPortDefinition
+from nineml.abstraction_layer.dynamics.component import Parameter
+from nineml.abstraction_layer.dynamics.visitors import ExpandPortDefinition
 from nineml.utility import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
 

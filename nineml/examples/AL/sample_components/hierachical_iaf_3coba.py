@@ -1,9 +1,7 @@
 
 
-# import random, os
-import nineml.abstraction_layer as al
-
-from nineml.abstraction_layer.testing_utils import RecordValue
+from nineml.abstraction_layer.dynamics import ComponentClass
+from nineml.abstraction_layer.dynamics.testing_utils import RecordValue
 
 import coba_synapse
 import iaf
@@ -54,7 +52,7 @@ class ComponentMetaData(object):
 def get_component():
 
     # Create a model, composed of an iaf neuron, and
-    iaf_3coba_model = al.ComponentClass(name="iaf_3coba",
+    iaf_3coba_model = ComponentClass(name="iaf_3coba",
                                         subnodes={"iaf": iaf.get_component(),
                                                   "AMPA":  coba_synapse.get_component(),
                                                   "GABAa": coba_synapse.get_component(),

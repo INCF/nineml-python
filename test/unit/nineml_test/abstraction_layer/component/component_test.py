@@ -3,10 +3,10 @@
 import warnings
 import unittest
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.testing_utils import TestableComponent
-from nineml.abstraction_layer import (ComponentClass, Alias, Dynamics,
-                                      SendPort, RecvPort, ReducePort, Regime,
-                                      On, NamespaceAddress, OutputEvent)
+from nineml.abstraction_layer.dynamics.testing_utils import TestableComponent
+from nineml.abstraction_layer.dynamics import (ComponentClass, Alias, Dynamics,
+                                               SendPort, RecvPort, ReducePort, Regime,
+                                               On, NamespaceAddress, OutputEvent)
 
 
 class ComponentClass_test(unittest.TestCase):

@@ -2,7 +2,7 @@
 import unittest
 from nineml.abstraction_layer import (Expression,
                                       Alias, StateAssignment, TimeDerivative)
-from nineml.abstraction_layer.component import ExpressionWithSimpleLHS
+from nineml.abstraction_layer.dynamics.component import ExpressionWithSimpleLHS
 
 class Expression_test(unittest.TestCase):
 

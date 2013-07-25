@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.abstraction_layer import flattening
+from nineml.abstraction_layer.dynamics import flattening
 
 
 def dump_reduced(component, filename):

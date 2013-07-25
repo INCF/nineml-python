@@ -6,17 +6,12 @@ import sys
 import shutil
 
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer import writers
-from nineml.abstraction_layer import component_modifiers
+from nineml.abstraction_layer.dynamics import (writers, component_modifiers)
 
-
-from nineml.abstraction_layer.testing_utils import TestableComponent
-
-from nineml.abstraction_layer.testing_utils import TestXMLWriteReadWrite
-from nineml.abstraction_layer.testing_utils import TestWriteDot
-
-
-from nineml.abstraction_layer.testing_utils import std_pynn_simulation
+from nineml.abstraction_layer.dynamics.testing_utils import (TestableComponent,
+                                                             TestXMLWriteReadWrite,
+                                                             TestWriteDot,
+                                                             std_pynn_simulation)
 
 
 def clear_and_recreate_dir(dir_name):

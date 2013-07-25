@@ -12,7 +12,7 @@ from base import ComponentValidatorPerNamespace
 
 from nineml.exceptions import NineMLRuntimeError
 from nineml.maths import get_reserved_and_builtin_symbols, is_valid_lhs_target
-from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
+from nineml.abstraction_layer.dynamics.component.namespaceaddress import NamespaceAddress
 from nineml.utility import assert_no_duplicates
 
 

@@ -5,8 +5,8 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.abstraction_layer.visitors import ActionVisitor
-from nineml.abstraction_layer import component as al
+from nineml.abstraction_layer.dynamics.visitors import ActionVisitor
+from nineml.abstraction_layer.dynamics import component as al
 
 
 class ComponentValidatorTypes(ActionVisitor):

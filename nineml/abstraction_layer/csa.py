@@ -5,10 +5,11 @@ docstring goes here
 :license: BSD-3, see LICENSE for details.
 """
 
-from component.interface import Parameter
+pass
+#from component.interface import Parameter
 
 
-class ConnectionSetTemplate(object):
-
-    def __init__(self, expr):
-        self.parameters = [Parameter('p')]  # This is a temporary hack
+#class ConnectionSetTemplate(object):
+#
+#    def __init__(self, expr):
+#        self.parameters = [Parameter('p')]  # This is a temporary hack

@@ -21,7 +21,7 @@ from nineml.utility import (check_list_contain_same_items,
                             filter_discrete_types, assert_no_duplicates)
 
 from nineml.maths import get_reserved_and_builtin_symbols
-from ..visitors import ExpandAliasDefinition, ClonerVisitor
+from ..visitors import ExpandAliasDefinition, ClonerVisitor, ActionVisitor
 
 
 class ComponentClassMixinFlatStructure(object):
@@ -135,7 +135,7 @@ class ComponentClassMixinFlatStructure(object):
 
         """
 
-        from nineml.abstraction_layer.writers import XMLWriter
+        from nineml.abstraction_layer.dynamics.writers import XMLWriter
         return XMLWriter.write(component=self, file=file, flatten=flatten)
 
 
@@ -263,9 +263,6 @@ class ComponentClassMixinNamespaceStructure(object):
     @property
     def portconnections(self):
         return self._portconnections
-
-
-from nineml.abstraction_layer.visitors import ActionVisitor
 
 
 class InterfaceInferer(ActionVisitor):
@@ -515,7 +512,7 @@ class ComponentClass(ComponentClassMixinFlatStructure,
         return self.flattener != None
 
     def _validate_self(self):
-        from nineml.abstraction_layer.validators import ComponentValidator
+        from nineml.abstraction_layer.dynamics.validators import ComponentValidator
         ComponentValidator.validate_component(self)
 
     @property

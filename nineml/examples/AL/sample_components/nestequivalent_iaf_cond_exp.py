@@ -1,13 +1,10 @@
 
-# import random, os
-import nineml.abstraction_layer as al
 
-from nineml.abstraction_layer.testing_utils import RecordValue
-from nineml.abstraction_layer import flattening
+from nineml.abstraction_layer.dynamics import flattening
 
 import hierachical_iaf_2coba
 
-from nineml.abstraction_layer.visitors import RenameSymbol
+from nineml.abstraction_layer.dynamics.visitors import RenameSymbol
 
 
 class ComponentMetaData(object):

@@ -5,10 +5,8 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.abstraction_layer import readers
-from nineml.abstraction_layer import writers
-from nineml.abstraction_layer import flattening
-from nineml.abstraction_layer import validators
+from nineml.abstraction_layer.dynamics import (readers, writers, flattening,
+                                               validators)
 from nineml.utility import file_sha1_hexdigest
 
 

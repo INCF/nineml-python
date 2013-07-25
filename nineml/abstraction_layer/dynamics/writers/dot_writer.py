@@ -8,7 +8,7 @@ docstring needed
 import os
 import re
 
-from nineml.abstraction_layer import flattening
+from nineml.abstraction_layer.dynamics import flattening
 
 
 def _dot_escape(s):

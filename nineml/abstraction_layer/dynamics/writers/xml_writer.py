@@ -8,9 +8,9 @@ docstring needed
 from itertools import chain
 from lxml import etree
 from lxml.builder import E
-from nineml.abstraction_layer import flattening
+from nineml.abstraction_layer.dynamics import flattening
 from nineml.abstraction_layer.xmlns import nineml_namespace
-from nineml.abstraction_layer.component import ComponentClass
+from nineml.abstraction_layer.dynamics.component import ComponentClass
 from ..visitors import ComponentVisitor
 
 

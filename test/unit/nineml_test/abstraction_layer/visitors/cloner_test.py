@@ -4,8 +4,8 @@
 import warnings
 import unittest
 
-from nineml.abstraction_layer import ComponentClass, Regime, On, OutputEvent, SendPort, RecvPort, NamespaceAddress
-from nineml.abstraction_layer.visitors import ClonerVisitorPrefixNamespace
+from nineml.abstraction_layer.dynamics import ComponentClass, Regime, On, OutputEvent, SendPort, RecvPort, NamespaceAddress
+from nineml.abstraction_layer.dynamics.visitors import ClonerVisitorPrefixNamespace
 
 NSA = NamespaceAddress
 

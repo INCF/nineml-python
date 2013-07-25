@@ -11,7 +11,7 @@ from lxml import etree
 
 from nineml.utility import expect_single, filter_expect_single
 from nineml.abstraction_layer.xmlns import NINEML, nineml_namespace
-from nineml.abstraction_layer import component as al
+from nineml.abstraction_layer.dynamics import component as al
 
 __all__ = ['XMLReader']
 

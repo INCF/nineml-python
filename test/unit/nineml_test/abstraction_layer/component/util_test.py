@@ -4,7 +4,7 @@
 import unittest
 
 
-from nineml.abstraction_layer.component.expressions import StrToExpr
+from nineml.abstraction_layer.dynamics.component.expressions import StrToExpr
 from nineml.maths import MathUtil
 
 # Testing Skeleton for function:
