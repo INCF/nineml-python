@@ -47,7 +47,8 @@ from numbers import Number
 from lxml import etree
 from lxml.builder import ElementMaker
 from operator import and_
-from nineml.abstraction_layer import ComponentClass, csa, parse as al_parse
+from . import abstraction_layer
+
 
 nineml_namespace = 'http://nineml.org/9ML/0.2'
 NINEML = "{%s}" % nineml_namespace
@@ -309,14 +310,18 @@ class Definition(ULobject):
     element_name = "definition"
     defining_attributes = ("url",)
 
-    def __init__(self, component):
+    def __init__(self, component, abstraction_layer_module=None):
         self._component = None
         if isinstance(component, basestring):
             self.url = component
-        elif isinstance(component, (ComponentClass, csa.ConnectionSetTemplate)):
+        elif isinstance(component, abstraction_layer.BaseComponentClass): #, csa.ConnectionSetTemplate)):
             self._component = component
         else:
             raise TypeError()
+        # it would be better long term to infer the abstraction layer module from
+        # the xml file contents, but it is simpler for now to specify it
+        # explicitly.
+        self.abstraction_layer_module = abstraction_layer_module
 
     def __hash__(self):
         if self._component:
@@ -331,28 +336,36 @@ class Definition(ULobject):
     def retrieve(self):
         if not self._component:
             f = urllib.urlopen(self.url)
+            reader = getattr(abstraction_layer, self.abstraction_layer_module).readers.XMLReader
             try:
-                self._component = al_parse(f)
+                self._component = reader.read_component(self.url)
             finally:
                 f.close()
         return self._component
 
     def to_xml(self):
-        return E(self.element_name, (E.url(self.url)), language="NineML")
+        if hasattr(self, "url") and self.url:
+            return E(self.element_name, (E.url(self.url)), language="NineML")
+        else:  # inline
+            al_writer = getattr(abstraction_layer, self.abstraction_layer_module).writers.XMLWriter()
+            return E(self.element_name, al_writer.visit(self._component), language="NineML")
 
     @classmethod
-    def from_xml(cls, element):
-        return cls(element.find(NINEML + "url").text)
+    def from_xml(cls, element, abstraction_layer_module=None):
+        url_element = element.find(NINEML + "url")
+        if url_element is not None:
+            return cls(url_element.text, abstraction_layer_module)
+        else:         # handle inline abstraction layer definitions
+            # this doesn't work yet because XMLReader assumes we are reading from a file, doesn't allow for reading from a string, or reading a sub-tree.
+            reader = getattr(abstraction_layer, abstraction_layer_module).readers.XMLLoader(element, {})
+            assert len(reader.components) == 0
+            return reader.components[0]
 
 
 class BaseComponent(ULobject):
 
     """
     Base class for model components that are defined in the abstraction layer.
-
-    This is called a node in Anatoli's document AG-YLF-20091218.01, but I don't
-    think "node" is a good name as it is easily confused with "node in a
-    neuronal network" (something that emits spikes).
     """
     element_name = "component"
     defining_attributes = ("name", "definition", "parameters")
@@ -375,7 +388,7 @@ class BaseComponent(ULobject):
             self.definition = definition
             assert reference is None, "Cannot give both definition and reference."
         elif isinstance(definition, basestring):  # should also check is a valid uri
-            self.definition = Definition(definition)
+            self.definition = Definition(definition, self.abstraction_layer_module)
             assert reference is None, "Cannot give both definition and reference."
         elif definition is None:
             assert reference is not None, "Either definition or reference must be given."
@@ -391,7 +404,7 @@ class BaseComponent(ULobject):
             raise Exception()
         self.reference = reference
         if not self.unresolved:
-            pass  # DEBUG# self.check_parameters()
+            self.check_parameters()
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -477,7 +490,7 @@ class BaseComponent(ULobject):
             element.findall(NINEML + Parameter.element_name), components)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
-            definition = Definition.from_xml(definition_element)
+            definition = Definition.from_xml(definition_element, cls.abstraction_layer_module)
             return cls(name, definition, parameters)
         else:
             reference_element = element.find(NINEML + "reference")
@@ -495,7 +508,7 @@ class SpikingNodeType(BaseComponent):
 
     Should perhaps be called SpikingNodePrototype, since this is type + parameters
     """
-    pass
+    abstraction_layer_module = 'dynamics'
 
 
 class SynapseType(BaseComponent):
@@ -506,7 +519,7 @@ class SynapseType(BaseComponent):
 
     This class is probably mis-named. Should be PostSynapticResponseType.
     """
-    pass
+    abstraction_layer_module = 'dynamics'
 
 
 class CurrentSourceType(BaseComponent):
@@ -515,7 +528,7 @@ class CurrentSourceType(BaseComponent):
     Component representing a model of a current source that may be injected into
     a spiking node.
     """
-    pass
+    abstraction_layer_module = 'dynamics'
 
 
 class Structure(BaseComponent):
@@ -524,7 +537,7 @@ class Structure(BaseComponent):
     Component representing the structure of a network, e.g. 2D grid, random
     distribution within a sphere, etc.
     """
-    pass
+    abstraction_layer_module = 'structure'
 
     def generate_positions(self, number):
         """
