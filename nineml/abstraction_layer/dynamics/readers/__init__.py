@@ -1,2 +1,2 @@
 
-from xml_reader import XMLReader
+from xml_reader import XMLReader, XMLLoader

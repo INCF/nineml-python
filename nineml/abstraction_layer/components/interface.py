@@ -38,8 +38,8 @@ class Parameter(object):
         """Returns the dimensions of the parameter"""
         return self._dimension
 
-    def __str__(self):
-        return "<Parameter: %s (%s)>" % (self.name, self.dimension)
+    def __repr__(self):
+        return "<Parameter: %r (%r)>" % (self.name, self.dimension)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

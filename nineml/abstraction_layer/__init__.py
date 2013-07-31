@@ -8,7 +8,7 @@ Python module for reading and writing 9ML abstraction layer files in XML format.
 from xmlns import nineml_namespace, NINEML, MATHML
 from nineml import __version__
 
-from components import Parameter
+from components import Parameter, BaseComponentClass
 from dynamics.component import (ComponentClass, Regime, On, OutputEvent, StateAssignment,
                        TimeDerivative, ReducePort, AnalogPort, EventPort, Dynamics,
                        OnCondition, Condition, StateVariable, NamespaceAddress, RecvPort,
@@ -17,3 +17,5 @@ from dynamics.component import (ComponentClass, Regime, On, OutputEvent, StateAs
 from dynamics.component.util import parse
 import dynamics
 from dynamics import (component, visitors, readers, writers, validators, component_modifiers, flattening, testing_utils)
+
+import structure

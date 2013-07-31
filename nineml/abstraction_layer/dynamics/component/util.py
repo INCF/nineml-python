@@ -9,5 +9,5 @@ Utility functions for component core classes
 def parse(filename):
     """Left over from orignal Version. This will be deprecated"""
 
-    from nineml.abstraction_layer.readers import XMLReader
+    from nineml.abstraction_layer.dynamics.readers import XMLReader
     return XMLReader.read_component(filename)

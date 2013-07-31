@@ -201,6 +201,7 @@ class XMLReader(object):
 
     """A class that can read |COMPONENTCLASS| objects from a NineML XML file.
     """
+    loader = XMLLoader
 
     @classmethod
     def _load_include(cls, include_element, basedir, xml_node_filename_map):
@@ -284,8 +285,8 @@ class XMLReader(object):
         root = cls._load_nested_xml(filename=filename,
                                     xml_node_filename_map=xml_node_filename_map)
 
-        loader = XMLLoader(xmlroot=root,
-                           xml_node_filename_map=xml_node_filename_map)
+        loader = cls.loader(xmlroot=root,
+                            xml_node_filename_map=xml_node_filename_map)
 
         if component_name == None:
             key_func = lambda c: loader.component_srcs[c] == filename
@@ -306,6 +307,6 @@ class XMLReader(object):
         """
         xml_node_filename_map = {}
         root = cls._load_nested_xml(filename, xml_node_filename_map)
-        loader = XMLLoader(xmlroot=root,
-                           xml_node_filename_map=xml_node_filename_map)
+        loader = cls.loader(xmlroot=root,
+                            xml_node_filename_map=xml_node_filename_map)
         return loader.components
