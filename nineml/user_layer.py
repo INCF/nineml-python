@@ -561,7 +561,7 @@ class ConnectionRule(BaseComponent):
     """
     Component representing an algorithm for connecting two populations of nodes.
     """
-    pass
+    abstraction_layer_module = 'connection_generator'
 
 
 class ConnectionType(BaseComponent):
@@ -570,7 +570,7 @@ class ConnectionType(BaseComponent):
     Component representing a model of a synaptic connection, including weight,
     delay, optionally a synaptic plasticity rule.
     """
-    pass
+    abstraction_layer_module = 'dynamics'
 
 
 class RandomDistribution(BaseComponent):
@@ -579,7 +579,8 @@ class RandomDistribution(BaseComponent):
     Component representing a random number distribution, e.g. normal, gamma,
     binomial.
     """
-    pass
+    abstraction_layer_module = 'random'
+
 
 
 class Parameter(ULobject):

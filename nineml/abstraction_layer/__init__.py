@@ -19,3 +19,4 @@ import dynamics
 from dynamics import (component, visitors, readers, writers, validators, component_modifiers, flattening, testing_utils)
 
 import structure
+import connection_generator
