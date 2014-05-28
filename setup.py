@@ -1,29 +1,25 @@
 #!/usr/bin/env python
 
-# from distutils.core import setup
-from distribute_setup import use_setuptools
-use_setuptools()
-from setuptools import setup, find_packages
+from setuptools import setup  #, find_packages
 # from nineml.__init__ import __version__
 
 setup(
     name="9ML",
     # version = __version__,
-    version="0.1.0",
+    version="0.3dev",
     packages=['nineml',
               'nineml.abstraction_layer',
-              'nineml.abstraction_layer.component',
-              'nineml.abstraction_layer.component.parse',
-              'nineml.abstraction_layer.component_modifiers',
-              'nineml.abstraction_layer.flattening',
-              'nineml.abstraction_layer.readers',
-              'nineml.abstraction_layer.testing_utils',
-              'nineml.abstraction_layer.validators',
-              'nineml.abstraction_layer.visitors',
-              'nineml.abstraction_layer.writers',
-              'nineml.exceptions',
-              'nineml.maths',
-              'nineml.utility'
+              'nineml.abstraction_layer.components',
+              'nineml.abstraction_layer.connection_generator',
+              'nineml.abstraction_layer.dynamics',
+              'nineml.abstraction_layer.dynamics.component',
+              'nineml.abstraction_layer.dynamics.flattening',
+              'nineml.abstraction_layer.dynamics.readers',
+              'nineml.abstraction_layer.dynamics.testing_utils',
+              'nineml.abstraction_layer.dynamics.validators',
+              'nineml.abstraction_layer.dynamics.visitors',
+              'nineml.abstraction_layer.dynamics.writers',
+              'nineml.abstraction_layer.structure'
               ],
     package_data={'nineml': ['examples/AL/demos/*.py', "examples/AL/sample_components/*.py"]},
     # packages = find_packages(),
@@ -43,6 +39,6 @@ setup(
                  'Operating System :: OS Independent',
                  'Programming Language :: Python :: 2',
                  'Topic :: Scientific/Engineering'],
-    install_requires=['lxml', 'ply'],
+    install_requires=['lxml', 'ply', 'csa'],
     tests_require=['nose']
 )
