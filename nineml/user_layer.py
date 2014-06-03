@@ -345,14 +345,14 @@ class Definition(ULobject):
 
     def to_xml(self):
         if hasattr(self, "url") and self.url:
-            return E(self.element_name, (E.url(self.url)), language="NineML")
+            return E(self.element_name, (E.link(self.url)), language="NineML")
         else:  # inline
             al_writer = getattr(abstraction_layer, self.abstraction_layer_module).writers.XMLWriter()
             return E(self.element_name, al_writer.visit(self._component), language="NineML")
 
     @classmethod
     def from_xml(cls, element, abstraction_layer_module=None):
-        url_element = element.find(NINEML + "url")
+        url_element = element.find(NINEML + "link")
         if url_element is not None:
             return cls(url_element.text, abstraction_layer_module)
         else:         # handle inline abstraction layer definitions
@@ -599,7 +599,7 @@ class Parameter(ULobject):
 
     def __init__(self, name, value, unit=None):
         self.name = name
-        if not isinstance(value, (Number, list)) or isinstance(value, bool):
+        if not isinstance(value, (Number, list, RandomDistribution, str)) or isinstance(value, bool):
             raise TypeError("Parameter values may not be of type %s" % type(value))
         self.value = value
         self.unit = unit
@@ -682,7 +682,8 @@ class ParameterSet(dict):
         return [p.value for p in self.values() if p.is_random()]
 
     def to_xml(self):
-        return [p.to_xml() for p in self.values()]
+        # serialization is in alphabetical order
+        return [self[name].to_xml() for name in sorted(self.keys())]
 
     @classmethod
     def from_xml(cls, elements, components):
@@ -860,12 +861,13 @@ class Population(ULobject):
     element_name = "population"
     defining_attributes = ("name", "number", "prototype", "positions")
 
-    def __init__(self, name, number, prototype, positions):
+    def __init__(self, name, number, prototype, positions=None):
         self.name = name
         self.number = number
         assert isinstance(prototype, (SpikingNodeType, Group))
         self.prototype = prototype
-        assert isinstance(positions, PositionList)
+        if positions is not None:
+            assert isinstance(positions, PositionList)
         self.positions = positions
 
     def __str__(self):
@@ -879,14 +881,22 @@ class Population(ULobject):
                 components.extend(self.prototype.parameters.get_random_distributions())
             elif isinstance(self.prototype, Group):
                 components.extend(self.prototype.get_components())
-        return components + self.positions.get_components()
+        if self.positions is not None:
+            components.extend(self.positions.get_components())
+        return components
 
     def to_xml(self):
-        return E(self.element_name,
-                 E.number(str(self.number)),
-                 E.prototype(self.prototype.name),
-                 self.positions.to_xml(),
-                 name=self.name)
+        if self.positions is None:
+            return E(self.element_name,
+                     E.number(str(self.number)),
+                     E.prototype(self.prototype.name),
+                     name=self.name)
+        else:
+            return E(self.element_name,
+                     E.number(str(self.number)),
+                     E.prototype(self.prototype.name),
+                     self.positions.to_xml(),
+                     name=self.name)
 
     @classmethod
     def from_xml(cls, element, components, groups):
@@ -973,14 +983,17 @@ class PositionList(ULobject):
 
     @classmethod
     def from_xml(cls, element, components):
-        check_tag(element, cls)
-        structure_element = element.find(NINEML + 'structure')
-        if structure_element is not None:
-            return cls(structure=get_or_create_component(structure_element.text, Structure, components))
+        if element is None:
+            return None
         else:
-            positions = [(float(p.attrib['x']), float(p.attrib['y']), float(p.attrib['z']))
-                         for p in element.findall(NINEML + 'position')]
-            return cls(positions=positions)
+            check_tag(element, cls)
+            structure_element = element.find(NINEML + 'structure')
+            if structure_element is not None:
+                return cls(structure=get_or_create_component(structure_element.text, Structure, components))
+            else:
+                positions = [(float(p.attrib['x']), float(p.attrib['y']), float(p.attrib['z']))
+                             for p in element.findall(NINEML + 'position')]
+                return cls(positions=positions)
 
 # this approach is crying out for a class factory
 
