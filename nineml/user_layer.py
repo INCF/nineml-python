@@ -50,7 +50,7 @@ from operator import and_
 from . import abstraction_layer
 
 
-nineml_namespace = 'http://nineml.org/9ML/0.2'
+nineml_namespace = 'http://nineml.org/9ML/0.3'
 NINEML = "{%s}" % nineml_namespace
 
 E = ElementMaker(namespace=nineml_namespace, nsmap={"nineml": nineml_namespace})
