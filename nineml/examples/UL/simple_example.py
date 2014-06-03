@@ -1,13 +1,15 @@
 # encoding: utf-8
 import nineml.user_layer as nineml
 
-catalog = "http://svn.incf.org/svn/nineml/trunk/catalog/"
+#catalog = "https://raw.githubusercontent.com/INCF/nineml/master/catalog/"
+catalog = "https://raw.githubusercontent.com/apdavison/nineml/modular/catalog/"
+
 
 tau_distr = nineml.RandomDistribution(
     "normal(20.0,3.0)",
     catalog + "randomdistributions/normal_distribution.xml",
-    {'standardDeviation': (3.0, "dimensionless"),
-     'mean': (20.0, "dimensionless")})
+    {'standardDeviation': (10.0, "dimensionless"),
+     'mean': (50.0, "dimensionless")})
 
 reset_distr = nineml.RandomDistribution(
     "uniform(-70.0,-60.0)",
@@ -16,23 +18,23 @@ reset_distr = nineml.RandomDistribution(
      'upperBound': (-60.0, "dimensionless")})
 
 exc_cell_parameters = nineml.ParameterSet(
-    membraneCapacitance=(1.0, "nF"),
-    membraneTimeConstant=(tau_distr, "ms"),
-    refractoryTime=(5.0, "ms"),
-    threshold=(-50.0, "mV"),
-    restingPotential=(-65.0, "mV"),
-    resetPotential=(reset_distr, "mV"))
+    C=(1.0, "nF"),
+    gL=(tau_distr, "nS"),
+    t_ref=(5.0, "ms"),
+    theta=(-50.0, "mV"),
+    vL=(-65.0, "mV"),
+    V_reset=(reset_distr, "mV"))
 
 inh_cell_parameters = nineml.ParameterSet(
-    membraneTimeConstant=(20.0, "ms"),
-    resetPotential=(-60.0, "mV"))
+    gL=(20.0, "nS"),
+    V_reset=(-60.0, "mV"))
 inh_cell_parameters.complete(exc_cell_parameters)
 
 exc_celltype = nineml.SpikingNodeType("Excitatory neuron type",
-                                      catalog + "neurons/IaF_tau.xml",
+                                      catalog + "neurons/leaky_iaf.xml",
                                       exc_cell_parameters)
 inh_celltype = nineml.SpikingNodeType("Inhibitory neuron type",
-                                      catalog + "neurons/IaF_tau.xml",
+                                      catalog + "neurons/leaky_iaf.xml",
                                       inh_cell_parameters)
 
 grid2D = nineml.Structure("2D grid",
@@ -53,22 +55,23 @@ all_cells = nineml.Selection("All cells",
                              )
 
 connection_rule = nineml.ConnectionRule("random connections",
-                                        catalog + "connectionrules/fixed_probability.xml",
+                                        catalog + "connectionrules/random_fixed_probability.xml",
                                         {'p_connect': (0.1, "dimensionless")})
 
 exc_psr = nineml.SynapseType("Excitatory post-synaptic response",
                              catalog + "postsynapticresponses/exp_g.xml",
-                             dict(decayTimeConstant=(5.0, "ms"), reversalPotential=(0.0, "mV")))
+                             dict(tau=(5.0, "ms"), vrev=(0.0, "mV"), q=(1.0, "dimensionless")))
+                            # don't really want to be setting 'q' here
 inh_psr = nineml.SynapseType("Inhibitory post-synaptic response",
                              catalog + "postsynapticresponses/exp_g.xml",
-                             dict(decayTimeConstant=(5.0, "ms"), reversalPotential=(-70.0, "mV")))
+                             dict(tau=(5.0, "ms"), vrev=(-70.0, "mV"), q=(1.0, "dimensionless")))
 
 exc_connection_type = nineml.ConnectionType("Static excitatory connections",
-                                            catalog + "connectiontypes/static_connection.xml",
-                                            {'weight': (0.1, "nS"), 'delay': (0.3, "ms")})
+                                            catalog + "connectiontypes/static_connection.xml")  ##,
+                                            ##{'weight': (0.1, "nS"), 'delay': (0.3, "ms")})
 inh_connection_type = nineml.ConnectionType("Static inhibitory connections",
-                                            catalog + "connectiontypes/static_connection.xml",
-                                            {'weight': (0.2, "nS"), 'delay': (0.3, "ms")})
+                                            catalog + "connectiontypes/static_connection.xml") ##,
+                                            ##{'weight': (0.2, "nS"), 'delay': (0.3, "ms")})
 
 exc2exc = nineml.Projection("Excitatory cells-Excitatory cells",
                             exc_cells, exc_cells, connection_rule,
