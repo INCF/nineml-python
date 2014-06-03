@@ -64,3 +64,20 @@ class XMLLoader(object):
 
 class XMLReader(XMLReader):
     loader = XMLLoader
+
+
+class XMLReader(object):  # temporary hack
+
+    @classmethod
+    def read_component(cls, url):
+        # this is a temporary hack. The url is not resolved, but is a label.
+        if "2Dgrid" in url:
+            parameters = [Parameter(name="aspectRatioXY", dimension=None),
+                          Parameter(name="fillOrder", dimension=None),
+                          Parameter(name="dx", dimension="um"),
+                          Parameter(name="dy", dimension="um"),
+                          Parameter(name="x0", dimension="um"),
+                          Parameter(name="y0", dimension="um")]
+        else:
+            raise NotImplementedError()
+        return ComponentClass(url, parameters)

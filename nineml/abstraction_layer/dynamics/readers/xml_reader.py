@@ -7,6 +7,7 @@ This file defines classes for reading NineML files.
 
 
 import os
+from urllib2 import urlopen
 from lxml import etree
 
 from nineml.utility import expect_single, filter_expect_single
@@ -241,13 +242,18 @@ class XMLReader(object):
 
         """
 
-        doc = etree.parse(filename)
+        if filename[:5] == "https":  # lxml only supports http and ftp
+            doc = etree.parse(urlopen(filename))
+        else:
+            doc = etree.parse(filename)
         # Store the source filenames of all the nodes:
         for node in doc.getroot().getiterator():
             xml_node_filename_map[node] = filename
 
         root = doc.getroot()
-        assert root.nsmap[None] == nineml_namespace
+        if root.nsmap[None] != nineml_namespace:
+            errmsg = "The XML namespace is not compatible with this version of the NineML library. Expected {}, file contains {}"
+            raise Exception(errmsg.format(nineml_namespace, root.nsmap[None]))
 
         # Recursively Load Include Nodes:
         for include_element in root.getiterator(tag=NINEML + 'Include'):
