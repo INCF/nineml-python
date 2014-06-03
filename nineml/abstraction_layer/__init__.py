@@ -20,3 +20,5 @@ from dynamics import (component, visitors, readers, writers, validators, compone
 
 import structure
 import connection_generator
+import random
+
