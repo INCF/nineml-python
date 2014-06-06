@@ -47,6 +47,7 @@ from numbers import Number
 from lxml import etree
 from lxml.builder import ElementMaker
 from operator import and_
+import re
 from . import abstraction_layer
 
 
@@ -1112,6 +1113,8 @@ class Selection(ULobject):
         assert isinstance(condition, Operator)
         self.name = name
         self.condition = condition
+        self.populations = []
+        self.evaluated = False
 
     def to_xml(self):
         return E(self.element_name,
@@ -1125,6 +1128,29 @@ class Selection(ULobject):
         assert len(select_element) == 1
         return cls(element.attrib["name"],
                    Operator.from_xml(select_element.getchildren()[0]))
+
+    def evaluate(self, group):
+        if not self.evaluated:
+            selection = str(self.condition)
+            # look away now, this isn't pretty
+            subnet_pattern = re.compile(r'\(\("population\[@name\]"\) == \("(?P<name>[\w ]+)"\)\) and \("population\[@id\]" in "(?P<slice>\d*:\d*:\d*)"\)')
+            assembly_pattern = re.compile(r'\(\("population\[@name\]"\) == \("(?P<name1>[\w ]+)"\)\) or \(\("population\[@name\]"\) == \("(?P<name2>[\w ]+)"\)\)')
+            # this should be replaced by the use of ply, or similar
+            match = subnet_pattern.match(selection)
+            if match:
+                name = match.groupdict()["name"]
+                slice = match.groupdict()["slice"]
+                self.populations.append((group.populations[name], slice))
+            else:
+                match = assembly_pattern.match(selection)
+                if match:
+                    name1 = match.groupdict()["name1"]
+                    name2 = match.groupdict()["name2"]
+                    self.populations.append((group.populations[name1], None))
+                    self.populations.append((group.populations[name2], None))
+                else:
+                    raise Exception("Can't evaluate selection")
+            self.evaluated = True
 
 
 class Projection(ULobject):
