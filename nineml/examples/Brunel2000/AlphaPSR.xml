@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<NineML xmlns="http://nineml.org/9ML/0.3">
+  <ComponentClass name="AlphaPSR">
+    <AnalogPort mode="send" name="Isyn"/>
+    <AnalogPort mode="send" name="A"/>
+    <AnalogPort mode="send" name="B"/>
+    <EventPort mode="recv" name="spike"/>
+    <Parameter dimension="" name="tau_syn"/>
+    <Parameter dimension="" name="q"/>
+    <Dynamics>
+      <Regime name="default">
+        <TimeDerivative variable="A">
+          <MathInline>(B - A)/tau_syn</MathInline>
+        </TimeDerivative>
+        <TimeDerivative variable="B">
+          <MathInline>(-B)/tau_syn</MathInline>
+        </TimeDerivative>
+        <OnEvent target_regime="default" src_port="spike">
+          <StateAssignment variable="B">
+            <MathInline>B + q</MathInline>
+          </StateAssignment>
+        </OnEvent>
+      </Regime>
+      <Alias name="Isyn">
+        <MathInline>A</MathInline>
+      </Alias>
+      <StateVariable dimension="current" name="A"/>
+      <StateVariable dimension="current" name="B"/>
+    </Dynamics>
+  </ComponentClass>
+</NineML>

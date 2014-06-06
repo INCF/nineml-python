@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<NineML xmlns="http://nineml.org/9ML/0.3">
+  <ComponentClass name="SynapticConnectionWithFixedWeight">
+    <AnalogPort name="weight" mode="send" />
+    <Dynamics>
+      <StateVariable name="weight" dimension="dimensionless" />
+      <Regime name="default">
+        <TimeDerivative variable="weight">
+          <MathInline>0.0</MathInline>
+        </TimeDerivative>
+      </Regime>
+    </Dynamics>
+  </ComponentClass>
+</NineML>
