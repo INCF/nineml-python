@@ -14,7 +14,7 @@ from __future__ import division
 from math import exp
 import nineml.user_layer as nineml
 
-order = 2500       # scales the size of the network
+order = 25       # scales the size of the network
 Ne = 4 * order     # number of excitatory neurons
 Ni = 1 * order     # number of inhibitory neurons
 epsilon = 0.1      # connectivity probability
@@ -42,9 +42,11 @@ neuron_parameters = nineml.ParameterSet(tau=(tau, "ms"),
                                         R=(1.5, "dimensionless"))  # units??
 psr_parameters = nineml.ParameterSet(tau_syn=(tau_syn, "ms"),
                                      q=(1.0, "dimensionless"))  # tmp
+neuron_initial_values = {"V": (0.0, "mV"),  # todo: use random distr.
+                         "t_rpend": (0.0, "ms")}
 
-exc_celltype = nineml.SpikingNodeType("E", "BrunelIAF.xml", neuron_parameters)
-inh_celltype = nineml.SpikingNodeType("I", "BrunelIAF.xml", neuron_parameters)
+exc_celltype = nineml.SpikingNodeType("E", "BrunelIAF.xml", neuron_parameters, initial_values=neuron_initial_values)
+inh_celltype = nineml.SpikingNodeType("I", "BrunelIAF.xml", neuron_parameters, initial_values=neuron_initial_values)
 ext_stim = nineml.SpikingNodeType("Ext", "Poisson.xml",
                                   nineml.ParameterSet(rate=(input_rate, "Hz")))
 psr = nineml.SynapseType("Syn", "AlphaPSR.xml", psr_parameters)

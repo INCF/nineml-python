@@ -372,7 +372,8 @@ class BaseComponent(ULobject):
     defining_attributes = ("name", "definition", "parameters")
     children = ("parameters",)
 
-    def __init__(self, name, definition=None, parameters={}, reference=None):
+    def __init__(self, name, definition=None, parameters={}, reference=None,
+                 initial_values={}):  # initial_values is temporary, the idea longer-term is to use a separate library such as SEDML
         """
         Create a new component with the given name, definition and parameters,
         or create a reference to another component that will be resolved later.
@@ -402,8 +403,14 @@ class BaseComponent(ULobject):
         elif isinstance(parameters, dict):
             self.parameters = ParameterSet(**parameters)
         else:
-            raise Exception()
+            raise TypeError("parameters must be a ParameterSet or a dict")
         self.reference = reference
+        if isinstance(initial_values, InitialValueSet):
+            self.initial_values = initial_values
+        elif isinstance(initial_values, dict):
+            self.initial_values = InitialValueSet(**initial_values)
+        else:
+            raise TypeError("initial_values must be an InitialValueSet or a dict, not a %s" % type(initial_values))
         if not self.unresolved:
             self.check_parameters()
 
@@ -459,7 +466,7 @@ class BaseComponent(ULobject):
         return self.definition.component
 
     def check_parameters(self):
-        # this checks the names, also need to check dimensions, ranges, once those are in the AL
+        # this checks the names, also need to check dimensions and ranges
         user_parameters = set(self.parameters.iterkeys())
         definition_parameters = set(p.name for p in self.definition.component.parameters)
         msg = []
@@ -475,9 +482,10 @@ class BaseComponent(ULobject):
             raise Exception(". ".join(msg))  # need a more specific type of Exception
 
     def to_xml(self):
+        parameters_and_initial_values = self.parameters.to_xml() + [iv.to_xml() for iv in self.initial_values.values()]
         element = E(self.element_name,
                     self.definition.to_xml(),
-                    *self.parameters.to_xml(),
+                    *parameters_and_initial_values,
                     name=self.name)
         return element
 
@@ -489,14 +497,16 @@ class BaseComponent(ULobject):
         name = element.attrib.get("name", None)
         parameters = ParameterSet.from_xml(
             element.findall(NINEML + Parameter.element_name), components)
+        initial_values = InitialValueSet.from_xml(
+            element.findall(NINEML + InitialValue.element_name), components)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
             definition = Definition.from_xml(definition_element, cls.abstraction_layer_module)
-            return cls(name, definition, parameters)
+            return cls(name, definition, parameters, initial_values=initial_values)
         else:
             reference_element = element.find(NINEML + "reference")
             if reference_element is not None:
-                return cls(name, None, parameters, reference=reference_element.text)
+                return cls(name, None, parameters, reference=reference_element.text, initial_values=initial_values)
             else:
                 raise Exception("A component must contain either a defintion or a reference")
 
@@ -647,6 +657,63 @@ class Parameter(ULobject):
                          unit=unit)
 
 
+class InitialValue(ULobject):
+
+    """
+    temporary, longer-term plan is to use SEDML or something similar
+    """
+    element_name = "initial"
+    defining_attributes = ("name", "value", "unit")
+
+    def __init__(self, name, value, unit=None):
+        self.name = name
+        if not isinstance(value, (Number, list, RandomDistribution)) or isinstance(value, bool):
+            raise TypeError("Initial values may not be of type %s" % type(value))
+        self.value = value
+        self.unit = unit
+
+    def __repr__(self):
+        units = self.unit
+        if u"µ" in units:
+            units = units.replace(u"µ", "u")
+        return "InitialValue(name=%s, value=%s, unit=%s)" % (self.name, self.value, units)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and \
+            reduce(and_, (self.name == other.name,
+                          self.value == other.value,
+                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV
+
+    def __hash__(self):
+        return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
+
+    def is_random(self):
+        return isinstance(self.value, RandomDistribution)
+
+    def to_xml(self):
+        if isinstance(self.value, RandomDistribution):
+            value_element = E.reference(self.value.name)
+        elif isinstance(self.value, collections.Iterable) and isinstance(self.value[0], Number):
+            value_element = E.array(" ".join(repr(x) for x in self.value))
+        else:  # need to handle Function
+            value_element = E.scalar(repr(self.value))
+        return E(InitialValue.element_name,
+                 E.quantity(
+                 E.value(   # this extra level of tags is pointless, no?
+                 value_element,
+                 E.unit(self.unit or "dimensionless"))),
+                 name=self.name)
+
+    @classmethod
+    def from_xml(cls, element, components):
+        check_tag(element, cls)
+        quantity_element = element.find(NINEML + "quantity").find(NINEML + "value")
+        value, unit = Value.from_xml(quantity_element, components)
+        return InitialValue(name=element.attrib["name"],
+                            value=value,
+                            unit=unit)
+
+
 class ParameterSet(dict):
 
     """
@@ -692,6 +759,30 @@ class ParameterSet(dict):
         for parameter_element in elements:
             parameters.append(Parameter.from_xml(parameter_element, components))
         return cls(*parameters)
+
+
+class InitialValueSet(ParameterSet):
+
+    def __init__(self, *ivs, **kwivs):
+        """
+        `*ivs` - should be InitialValue instances
+        `**kwivs` - should be name=(value,unit)
+        """
+        dict.__init__(self)
+        for iv in ivs:
+            self[iv.name] = iv  # should perhaps do a copy
+        for name, (value, unit) in kwivs.items():
+            self[name] = InitialValue(name, value, unit)
+
+    def __repr__(self):
+        return "InitialValueSet(%s)" % dict(self)
+
+    @classmethod
+    def from_xml(cls, elements, components):
+        initial_values = []
+        for iv_element in elements:
+            initial_values.append(InitialValue.from_xml(iv_element, components))
+        return cls(*initial_values)
 
 
 class Value(object):
