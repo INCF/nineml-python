@@ -65,11 +65,43 @@
     <nineml:definition language="NineML">
       <nineml:link>StaticConnection.xml</nineml:link>
     </nineml:definition>
+    <nineml:property name="delay">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1.5</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="weight">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.1</nineml:scalar>
+          <nineml:unit>nA</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
   </nineml:component>
   <nineml:component name="ExternalPlasticity">
     <nineml:definition language="NineML">
       <nineml:link>StaticConnection.xml</nineml:link>
     </nineml:definition>
+    <nineml:property name="delay">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1.5</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="weight">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.1</nineml:scalar>
+          <nineml:unit>nA</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
   </nineml:component>
   <nineml:component name="I">
     <nineml:definition language="NineML">
@@ -180,6 +212,22 @@
     <nineml:definition language="NineML">
       <nineml:link>StaticConnection.xml</nineml:link>
     </nineml:definition>
+    <nineml:property name="delay">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1.5</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="weight">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>-0.5</nineml:scalar>
+          <nineml:unit>nA</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
   </nineml:component>
   <nineml:group name="BrunelCaseC">
     <nineml:population name="Ext">

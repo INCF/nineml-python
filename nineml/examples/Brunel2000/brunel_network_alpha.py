@@ -66,23 +66,27 @@ all_cells = nineml.Selection("All neurons",
 all_to_all = nineml.ConnectionRule("AllToAll", "AllToAllConnection.xml")
 random_uniform = nineml.ConnectionRule("RandomUniform", "RandomUniformConnection.xml", {"epsilon": (epsilon, "dimensionless")})
 
+static_ext = nineml.ConnectionType("ExternalPlasticity", "StaticConnection.xml", {"delay": (delay, "ms")}, initial_values={"weight": (Jext, "nA")})
+static_exc = nineml.ConnectionType("ExcitatoryPlasticity", "StaticConnection.xml", {"delay": (delay, "ms")}, initial_values={"weight": (Je, "nA")})
+static_inh = nineml.ConnectionType("InhibitoryPlasticity", "StaticConnection.xml", {"delay": (delay, "ms")}, initial_values={"weight": (Ji, "nA")})
+
 input_prj = nineml.Projection("External", external, all_cells,
                               rule=all_to_all,
                               synaptic_response=psr,
                               synaptic_response_ports=[("Isyn", "Isyn")],
-                              connection_type=nineml.ConnectionType("ExternalPlasticity", "StaticConnection.xml"), ##, {"weight": (Jext, "mV")}))
+                              connection_type=static_ext,
                               connection_ports=[("weight", "q")])
 exc_prj = nineml.Projection("Excitation", exc_cells, all_cells,
                             rule=random_uniform,
                             synaptic_response=psr,
                             synaptic_response_ports=[("Isyn", "Isyn")],
-                            connection_type=nineml.ConnectionType("ExcitatoryPlasticity", "StaticConnection.xml"), ##, {"weight": (Je, "mV")}))
+                            connection_type=static_exc,
                             connection_ports=[("weight", "q")])
 inh_prj = nineml.Projection("Inhibition", inh_cells, all_cells,
                             rule=random_uniform,
                             synaptic_response=psr,
                             synaptic_response_ports=[("Isyn", "Isyn")],
-                            connection_type=nineml.ConnectionType("InhibitoryPlasticity", "StaticConnection.xml"), ##, {"weight": (Ji, "mV")}))
+                            connection_type=static_inh,
                             connection_ports=[("weight", "q")])
 
 network = nineml.Group("BrunelCaseC")
