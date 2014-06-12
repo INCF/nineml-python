@@ -1256,9 +1256,11 @@ class Projection(ULobject):
     """
     element_name = "projection"
     defining_attributes = (
-        "name", "source", "target", "rule", "synaptic_response", "connection_type")
+        "name", "source", "target", "rule", "synaptic_response", "connection_type",
+        "synaptic_response_ports", "connection_ports")
 
-    def __init__(self, name, source, target, rule, synaptic_response, connection_type):
+    def __init__(self, name, source, target, rule, synaptic_response, connection_type,
+                 synaptic_response_ports, connection_ports):
         """
         Create a new projection.
 
@@ -1271,6 +1273,12 @@ class Projection(ULobject):
                             all connections.
         connection_type - a ConnectionType instance that will be used by all
                           connections.
+        synaptic_response_ports - a list of tuples (synapse_port, neuron_port) giving the ports
+                                  that should be connected between post-synaptic response component
+                                  and neuron component.
+        connection_ports - a list of tuples (plasticity_port, synapse_port) giving the ports
+                           that should be connected between plasticity/connection component
+                           and post-synaptic response component.
         """
         self.name = name
         self.references = {}
@@ -1279,6 +1287,8 @@ class Projection(ULobject):
         self.rule = rule
         self.synaptic_response = synaptic_response
         self.connection_type = connection_type
+        self.synaptic_response_ports = synaptic_response_ports
+        self.connection_ports = connection_ports
         for name, cls_list in (('source', (Population, Selection, Group)),
                                ('target', (Population, Selection, Group)),
                                ('rule', (ConnectionRule,)),
@@ -1295,7 +1305,8 @@ class Projection(ULobject):
 
     def __eq__(self, other):
         test_attributes = ["name", "source", "target",
-                           "rule", "synaptic_response", "connection_type"]
+                           "rule", "synaptic_response", "connection_type",
+                           "synaptic_response_ports", "connection_ports"]
         # to avoid infinite recursion, we do not include source or target in the
         # tests if they are Groups
         if isinstance(self.source, Group):
@@ -1317,10 +1328,12 @@ class Projection(ULobject):
     def to_xml(self):
         return E(self.element_name,
                  E.source(self.source.name),
-                 E.destination(self.target.name),
-                 E.connectivity(self.rule.name),
-                 E.synapse(self.synaptic_response.name),
+                 E.target(self.target.name),
+                 E.rule(self.rule.name),
+                 E.response(self.synaptic_response.name),
                  E.plasticity(self.connection_type.name),
+                 E.response_ports(*[E.port_connection(port1=a, port2=b) for a, b in self.synaptic_response_ports]),
+                 E.connection_ports(*[E.port_connection(port1=a, port2=b) for a, b in self.connection_ports]),
                  name=self.name)
 
     @classmethod
@@ -1328,12 +1341,14 @@ class Projection(ULobject):
         check_tag(element, cls)
         return cls(name=element.attrib["name"],
                    source=element.find(NINEML + "source").text,
-                   target=element.find(NINEML + "destination").text,
+                   target=element.find(NINEML + "target").text,
                    rule=get_or_create_component(
-                       element.find(NINEML + "connectivity").text, ConnectionRule, components),
+                       element.find(NINEML + "rule").text, ConnectionRule, components),
                    synaptic_response=get_or_create_component(
-                       element.find(NINEML + "synapse").text, SynapseType, components),
-                   connection_type=get_or_create_component(element.find(NINEML + "plasticity").text, ConnectionType, components))
+                       element.find(NINEML + "response").text, SynapseType, components),
+                   connection_type=get_or_create_component(element.find(NINEML + "plasticity").text, ConnectionType, components),
+                   synaptic_response_ports=tuple((pc.attrib["port1"], pc.attrib["port2"]) for pc in element.find(NINEML + "response_ports")),
+                   connection_ports=tuple((pc.attrib["port1"], pc.attrib["port2"]) for pc in element.find(NINEML + "connection_ports")))
 
     def to_csa(self):
         if self.rule.is_csa:

@@ -20,8 +20,9 @@ model = al.ComponentClass(
     ],
     analog_ports=[al.SendPort("Isyn"),
                   al.SendPort("A"),
-                  al.SendPort("B")],
-    parameters=['tau_syn', 'q']
+                  al.SendPort("B"),
+                  al.RecvPort("q")],
+    parameters=['tau_syn']
 )
 
 

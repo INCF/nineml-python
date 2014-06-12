@@ -40,8 +40,7 @@ neuron_parameters = nineml.ParameterSet(tau=(tau, "ms"),
                                         tau_rp=(2.0, "ms"),
                                         Vreset=(10.0, "mV"),
                                         R=(1.5, "dimensionless"))  # units??
-psr_parameters = nineml.ParameterSet(tau_syn=(tau_syn, "ms"),
-                                     q=(1.0, "dimensionless"))  # tmp
+psr_parameters = nineml.ParameterSet(tau_syn=(tau_syn, "ms"))
 neuron_initial_values = {"V": (0.0, "mV"),  # todo: use random distr.
                          "t_rpend": (0.0, "ms")}
 
@@ -70,16 +69,21 @@ random_uniform = nineml.ConnectionRule("RandomUniform", "RandomUniformConnection
 input_prj = nineml.Projection("External", external, all_cells,
                               rule=all_to_all,
                               synaptic_response=psr,
-                              connection_type=nineml.ConnectionType("ExternalPlasticity", "StaticConnection.xml")) ##, {"weight": (Jext, "mV")}))
+                              synaptic_response_ports=[("Isyn", "Isyn")],
+                              connection_type=nineml.ConnectionType("ExternalPlasticity", "StaticConnection.xml"), ##, {"weight": (Jext, "mV")}))
+                              connection_ports=[("weight", "q")])
 exc_prj = nineml.Projection("Excitation", exc_cells, all_cells,
                             rule=random_uniform,
                             synaptic_response=psr,
-                            connection_type=nineml.ConnectionType("ExcitatoryPlasticity", "StaticConnection.xml")) ##, {"weight": (Je, "mV")}))
+                            synaptic_response_ports=[("Isyn", "Isyn")],
+                            connection_type=nineml.ConnectionType("ExcitatoryPlasticity", "StaticConnection.xml"), ##, {"weight": (Je, "mV")}))
+                            connection_ports=[("weight", "q")])
 inh_prj = nineml.Projection("Inhibition", inh_cells, all_cells,
                             rule=random_uniform,
                             synaptic_response=psr,
-                            connection_type=nineml.ConnectionType("InhibitoryPlasticity", "StaticConnection.xml")) ##, {"weight": (Ji, "mV")}))
-
+                            synaptic_response_ports=[("Isyn", "Isyn")],
+                            connection_type=nineml.ConnectionType("InhibitoryPlasticity", "StaticConnection.xml"), ##, {"weight": (Ji, "mV")}))
+                            connection_ports=[("weight", "q")])
 
 network = nineml.Group("BrunelCaseC")
 network.add(exc_cells, inh_cells, external, all_cells)

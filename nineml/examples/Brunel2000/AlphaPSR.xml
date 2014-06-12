@@ -4,9 +4,9 @@
     <AnalogPort mode="send" name="Isyn"/>
     <AnalogPort mode="send" name="A"/>
     <AnalogPort mode="send" name="B"/>
+    <AnalogPort mode="recv" name="q"/>
     <EventPort mode="recv" name="spike"/>
     <Parameter dimension="" name="tau_syn"/>
-    <Parameter dimension="" name="q"/>
     <Dynamics>
       <Regime name="default">
         <TimeDerivative variable="A">

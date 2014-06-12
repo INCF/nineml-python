@@ -4,22 +4,6 @@
     <nineml:definition language="NineML">
       <nineml:link>BrunelIAF.xml</nineml:link>
     </nineml:definition>
-    <nineml:property name="Vreset">
-      <nineml:quantity>
-        <nineml:value>
-          <nineml:scalar>10.0</nineml:scalar>
-          <nineml:unit>mV</nineml:unit>
-        </nineml:value>
-      </nineml:quantity>
-    </nineml:property>
-    <nineml:property name="theta">
-      <nineml:quantity>
-        <nineml:value>
-          <nineml:scalar>20.0</nineml:scalar>
-          <nineml:unit>ms</nineml:unit>
-        </nineml:value>
-      </nineml:quantity>
-    </nineml:property>
     <nineml:property name="R">
       <nineml:quantity>
         <nineml:value>
@@ -28,11 +12,11 @@
         </nineml:value>
       </nineml:quantity>
     </nineml:property>
-    <nineml:property name="tau_rp">
+    <nineml:property name="Vreset">
       <nineml:quantity>
         <nineml:value>
-          <nineml:scalar>2.0</nineml:scalar>
-          <nineml:unit>ms</nineml:unit>
+          <nineml:scalar>10.0</nineml:scalar>
+          <nineml:unit>mV</nineml:unit>
         </nineml:value>
       </nineml:quantity>
     </nineml:property>
@@ -44,6 +28,38 @@
         </nineml:value>
       </nineml:quantity>
     </nineml:property>
+    <nineml:property name="tau_rp">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>2.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="theta">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>20.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="t_rpend">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+    <nineml:initial name="V">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.0</nineml:scalar>
+          <nineml:unit>mV</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
   </nineml:component>
   <nineml:component name="ExcitatoryPlasticity">
     <nineml:definition language="NineML">
@@ -59,22 +75,6 @@
     <nineml:definition language="NineML">
       <nineml:link>BrunelIAF.xml</nineml:link>
     </nineml:definition>
-    <nineml:property name="Vreset">
-      <nineml:quantity>
-        <nineml:value>
-          <nineml:scalar>10.0</nineml:scalar>
-          <nineml:unit>mV</nineml:unit>
-        </nineml:value>
-      </nineml:quantity>
-    </nineml:property>
-    <nineml:property name="theta">
-      <nineml:quantity>
-        <nineml:value>
-          <nineml:scalar>20.0</nineml:scalar>
-          <nineml:unit>ms</nineml:unit>
-        </nineml:value>
-      </nineml:quantity>
-    </nineml:property>
     <nineml:property name="R">
       <nineml:quantity>
         <nineml:value>
@@ -83,11 +83,11 @@
         </nineml:value>
       </nineml:quantity>
     </nineml:property>
-    <nineml:property name="tau_rp">
+    <nineml:property name="Vreset">
       <nineml:quantity>
         <nineml:value>
-          <nineml:scalar>2.0</nineml:scalar>
-          <nineml:unit>ms</nineml:unit>
+          <nineml:scalar>10.0</nineml:scalar>
+          <nineml:unit>mV</nineml:unit>
         </nineml:value>
       </nineml:quantity>
     </nineml:property>
@@ -99,19 +99,43 @@
         </nineml:value>
       </nineml:quantity>
     </nineml:property>
+    <nineml:property name="tau_rp">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>2.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="theta">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>20.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="t_rpend">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+    <nineml:initial name="V">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.0</nineml:scalar>
+          <nineml:unit>mV</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
   </nineml:component>
   <nineml:component name="Syn">
     <nineml:definition language="NineML">
       <nineml:link>AlphaPSR.xml</nineml:link>
     </nineml:definition>
-    <nineml:property name="q">
-      <nineml:quantity>
-        <nineml:value>
-          <nineml:scalar>1.0</nineml:scalar>
-          <nineml:unit>dimensionless</nineml:unit>
-        </nineml:value>
-      </nineml:quantity>
-    </nineml:property>
     <nineml:property name="tau_syn">
       <nineml:quantity>
         <nineml:value>
@@ -128,7 +152,7 @@
     <nineml:property name="rate">
       <nineml:quantity>
         <nineml:value>
-          <nineml:scalar>14.715177646857692</nineml:scalar>
+          <nineml:scalar>1471.5177646857694</nineml:scalar>
           <nineml:unit>Hz</nineml:unit>
         </nineml:value>
       </nineml:quantity>
@@ -159,15 +183,15 @@
   </nineml:component>
   <nineml:group name="BrunelCaseC">
     <nineml:population name="Ext">
-      <nineml:number>1000</nineml:number>
+      <nineml:number>10</nineml:number>
       <nineml:prototype>Ext</nineml:prototype>
     </nineml:population>
     <nineml:population name="Inh">
-      <nineml:number>2500</nineml:number>
+      <nineml:number>25</nineml:number>
       <nineml:prototype>I</nineml:prototype>
     </nineml:population>
     <nineml:population name="Exc">
-      <nineml:number>10000</nineml:number>
+      <nineml:number>100</nineml:number>
       <nineml:prototype>E</nineml:prototype>
     </nineml:population>
     <nineml:set name="All neurons">
@@ -186,24 +210,42 @@
     </nineml:set>
     <nineml:projection name="Inhibition">
       <nineml:source>Inh</nineml:source>
-      <nineml:destination>All neurons</nineml:destination>
-      <nineml:connectivity>RandomUniform</nineml:connectivity>
-      <nineml:synapse>Syn</nineml:synapse>
+      <nineml:target>All neurons</nineml:target>
+      <nineml:rule>RandomUniform</nineml:rule>
+      <nineml:response>Syn</nineml:response>
       <nineml:plasticity>InhibitoryPlasticity</nineml:plasticity>
+      <nineml:response_ports>
+        <nineml:port_connection port2="Isyn" port1="Isyn"/>
+      </nineml:response_ports>
+      <nineml:connection_ports>
+        <nineml:port_connection port2="q" port1="weight"/>
+      </nineml:connection_ports>
     </nineml:projection>
     <nineml:projection name="External">
-      <nineml:source>Exc</nineml:source>
-      <nineml:destination>Inh</nineml:destination>
-      <nineml:connectivity>AllToAll</nineml:connectivity>
-      <nineml:synapse>Syn</nineml:synapse>
+      <nineml:source>Ext</nineml:source>
+      <nineml:target>All neurons</nineml:target>
+      <nineml:rule>AllToAll</nineml:rule>
+      <nineml:response>Syn</nineml:response>
       <nineml:plasticity>ExternalPlasticity</nineml:plasticity>
+      <nineml:response_ports>
+        <nineml:port_connection port2="Isyn" port1="Isyn"/>
+      </nineml:response_ports>
+      <nineml:connection_ports>
+        <nineml:port_connection port2="q" port1="weight"/>
+      </nineml:connection_ports>
     </nineml:projection>
     <nineml:projection name="Excitation">
       <nineml:source>Exc</nineml:source>
-      <nineml:destination>All neurons</nineml:destination>
-      <nineml:connectivity>RandomUniform</nineml:connectivity>
-      <nineml:synapse>Syn</nineml:synapse>
+      <nineml:target>All neurons</nineml:target>
+      <nineml:rule>RandomUniform</nineml:rule>
+      <nineml:response>Syn</nineml:response>
       <nineml:plasticity>ExcitatoryPlasticity</nineml:plasticity>
+      <nineml:response_ports>
+        <nineml:port_connection port2="Isyn" port1="Isyn"/>
+      </nineml:response_ports>
+      <nineml:connection_ports>
+        <nineml:port_connection port2="q" port1="weight"/>
+      </nineml:connection_ports>
     </nineml:projection>
   </nineml:group>
 </nineml:nineml>
