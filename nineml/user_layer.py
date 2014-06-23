@@ -363,6 +363,29 @@ class Definition(ULobject):
             return reader.components[0]
 
 
+def check_units(units, dimension):
+    # primitive unit checking, should really use Pint, Quantities or Mike Hull's tools
+    if not dimension:
+        raise ValueError("dimension not specified")
+    base_units = {
+        "voltage": "V",
+        "current": "A",
+        "conductance": "S",
+        "capacitance": "F",
+        "time": "s",
+        "frequency": "Hz",
+        "dimensionless": "",
+    }
+    if len(units) == 1:
+        prefix = ""
+        base = units
+    else:
+        prefix = units[0]
+        base = units[1:]
+    if base != base_units[dimension]:
+        raise ValueError("Units %s are invalid for dimension %s" % (units, dimension))
+
+
 class BaseComponent(ULobject):
 
     """
@@ -413,6 +436,8 @@ class BaseComponent(ULobject):
             raise TypeError("initial_values must be an InitialValueSet or a dict, not a %s" % type(initial_values))
         if not self.unresolved:
             self.check_parameters()
+            if self.abstraction_layer_module == "dynamics":
+                self.check_initial_values()
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -466,7 +491,7 @@ class BaseComponent(ULobject):
         return self.definition.component
 
     def check_parameters(self):
-        # this checks the names, also need to check dimensions and ranges
+        # First check the names
         user_parameters = set(self.parameters.iterkeys())
         definition_parameters = set(p.name for p in self.definition.component.parameters)
         msg = []
@@ -480,6 +505,8 @@ class BaseComponent(ULobject):
                        ",".join(diff_b))
         if msg:
             raise Exception(". ".join(msg))  # need a more specific type of Exception
+        # Now check dimensions
+        # TODO
 
     def to_xml(self):
         parameters_and_initial_values = self.parameters.to_xml() + [iv.to_xml() for iv in self.initial_values.values()]
@@ -511,7 +538,18 @@ class BaseComponent(ULobject):
                 raise Exception("A component must contain either a defintion or a reference")
 
 
-class SpikingNodeType(BaseComponent):
+class BaseDynamicsComponent(BaseComponent):
+
+    def check_initial_values(self):
+        for var in self.definition.component.state_variables:
+            try:
+                initial_value = self.initial_values[var.name]
+            except KeyError:
+                raise Exception("Initial value not specified for %s" % var.name)
+            check_units(initial_value.unit, var.dimension)
+
+
+class SpikingNodeType(BaseDynamicsComponent):
 
     """
     Component representing a model of a spiking node, i.e. something that can
@@ -522,7 +560,7 @@ class SpikingNodeType(BaseComponent):
     abstraction_layer_module = 'dynamics'
 
 
-class SynapseType(BaseComponent):
+class SynapseType(BaseDynamicsComponent):
 
     """
     Component representing a model of a post-synaptic response, i.e. the current
@@ -533,7 +571,7 @@ class SynapseType(BaseComponent):
     abstraction_layer_module = 'dynamics'
 
 
-class CurrentSourceType(BaseComponent):
+class CurrentSourceType(BaseDynamicsComponent):
 
     """
     Component representing a model of a current source that may be injected into
@@ -575,7 +613,7 @@ class ConnectionRule(BaseComponent):
     abstraction_layer_module = 'connection_generator'
 
 
-class ConnectionType(BaseComponent):
+class ConnectionType(BaseDynamicsComponent):
 
     """
     Component representing a model of a synaptic connection, including weight,

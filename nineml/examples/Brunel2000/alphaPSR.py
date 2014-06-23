@@ -11,7 +11,7 @@ model = al.ComponentClass(
                 "dA/dt = (B - A)/tau_syn",
                 "dB/dt = (-B)/tau_syn"],
             transitions=al.On('spike',
-                              do=["B = B + q"]),
+                              do=["B = B + q"]),  # would be nice to allow constant quantities, so we could make q dimensionless
         )
     ],
     state_variables=[

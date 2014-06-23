@@ -14,6 +14,7 @@ model = al.ComponentClass(
                                   al.OutputEvent('spikeOutput')]))
     ],
     event_ports=[al.SendEventPort('spikeOutput')],
+    state_variables=[al.StateVariable('t_next', dimension="time")],
     parameters=["rate"]
 )
 

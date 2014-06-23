@@ -15,7 +15,7 @@ model = al.ComponentClass(
         )
     ],
     state_variables=[
-        al.StateVariable('weight', dimension="dimensionless"),
+        al.StateVariable('weight', dimension="current"),  # would be nice to make this dimensionless
         al.StateVariable('t_next', dimension="time")
     ],
     analog_ports=[al.SendPort("weight")],

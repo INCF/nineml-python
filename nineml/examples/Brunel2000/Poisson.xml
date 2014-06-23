@@ -15,7 +15,7 @@
           </Trigger>
         </OnCondition>
       </Regime>
-      <StateVariable dimension="" name="t_next"/>
+      <StateVariable dimension="time" name="t_next"/>
     </Dynamics>
   </ComponentClass>
 </NineML>

@@ -22,7 +22,7 @@
           </Trigger>
         </OnCondition>
       </Regime>
-      <StateVariable dimension="dimensionless" name="weight"/>
+      <StateVariable dimension="current" name="weight"/>
       <StateVariable dimension="time" name="t_next"/>
     </Dynamics>
   </ComponentClass>

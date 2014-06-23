@@ -14,7 +14,7 @@ from __future__ import division
 from math import exp
 import nineml.user_layer as nineml
 
-order = 25       # scales the size of the network
+order = 25         # scales the size of the network
 Ne = 4 * order     # number of excitatory neurons
 Ni = 1 * order     # number of inhibitory neurons
 epsilon = 0.1      # connectivity probability

@@ -212,12 +212,14 @@ class ClonerVisitor(ComponentVisitor):
             transitions=[t.accept_visitor(self, **kwargs) for t in regime.transitions])
 
     def visit_statevariable(self, state_variable, **kwargs):
-        return state_variable.__class__(name=
-                self.prefix_variable(state_variable.name, **kwargs))
+        return state_variable.__class__(
+            name=self.prefix_variable(state_variable.name, **kwargs),
+            dimension=state_variable.dimension)
 
     def visit_parameter(self, parameter, **kwargs):
         return parameter.__class__(
-            name=self.prefix_variable(parameter.name, **kwargs))
+            name=self.prefix_variable(parameter.name, **kwargs),
+            dimension=parameter.dimension)
 
     def visit_analogport(self, port, **kwargs):
         return port.__class__(
