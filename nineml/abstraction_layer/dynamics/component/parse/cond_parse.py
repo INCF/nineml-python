@@ -191,8 +191,7 @@ class CalcCond(Parser):
     def p_func(self, p):
         """expression : LFUNC expression RPAREN\n | LFUNC RPAREN
                         | LFUNC expression COMMA expression RPAREN
-                        | LFUNC expression COMMA expression COMMA expression
-                          RPAREN
+                        | LFUNC expression COMMA expression COMMA expression RPAREN
         """
         # EM: Supports up to 3 args.  Don't know how to support N.
 
