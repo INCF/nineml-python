@@ -41,8 +41,6 @@ class Condition(Expression):
     def rhs_as_python_func(self, namespace={}):
         """ Returns a python callable which evaluates the expression in
         namespace and returns the result """
-
-        import util
         rhs = self.rhs
 
         rhs = rhs.replace('!', ' not ')
@@ -75,4 +73,4 @@ def cond_to_obj(cond_str):
     elif isinstance(cond_str, str):
         return Condition(cond_str.strip())
 
-    raise ValueError, "Condition: expected None, str, or Condition object"
+    raise ValueError("Condition: expected None, str, or Condition object")

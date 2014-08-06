@@ -78,7 +78,8 @@ class ComponentEqualityChecker(object):
         assert_equal_list(ap1Dict.keys(), ap2Dict.keys())
         for portname in ap1Dict.keys():
             assert_equal(ap1Dict[portname].mode, ap2Dict[portname].mode)
-            assert_equal(ap1Dict[portname].reduce_op, ap2Dict[portname].reduce_op)
+            assert_equal(ap1Dict[portname].reduce_op,
+                         ap2Dict[portname].reduce_op)
 
         # Event Ports: Check Modes & reduce ops:
         ev1Dict = safe_dict([(ev.name, ev) for ev in comp1.event_ports])
@@ -86,7 +87,8 @@ class ComponentEqualityChecker(object):
         assert_equal_list(ev1Dict.keys(), ev2Dict.keys())
         for portname in ev1Dict.keys():
             assert_equal(ev1Dict[portname].mode, ev2Dict[portname].mode)
-            assert_equal(ev1Dict[portname].reduce_op, ev2Dict[portname].reduce_op)
+            assert_equal(ev1Dict[portname].reduce_op,
+                         ev2Dict[portname].reduce_op)
 
         # CHECK THE SUBNAMESPACES AND PORT CONNECTIONS
         # ------------------------------------------- #
@@ -100,8 +102,10 @@ class ComponentEqualityChecker(object):
         # Port Connections:
         # Tuples are comparable, so lets make 2 lists of tuples and compare
         # them:
-        pc1 = [(src.loctuple, sink.loctuple) for (src, sink) in comp1.portconnections]
-        pc2 = [(src.loctuple, sink.loctuple) for (src, sink) in comp2.portconnections]
+        pc1 = [(src.loctuple, sink.loctuple)
+               for (src, sink) in comp1.portconnections]
+        pc2 = [(src.loctuple, sink.loctuple)
+               for (src, sink) in comp2.portconnections]
         assert_equal_list(pc1, pc2)
 
         # CHECK THE DYNAMICS
@@ -136,8 +140,10 @@ class ComponentEqualityChecker(object):
         assert_equal(rgm1.name, rgm2.name)
 
         # Check the OnEvents:
-        on_event1dict = safe_dict([(ev.src_port_name, ev) for ev in rgm1.on_events])
-        on_event2dict = safe_dict([(ev.src_port_name, ev) for ev in rgm2.on_events])
+        on_event1dict = safe_dict([(ev.src_port_name, ev)
+                                   for ev in rgm1.on_events])
+        on_event2dict = safe_dict([(ev.src_port_name, ev)
+                                   for ev in rgm2.on_events])
         assert_equal_list(on_event1dict.keys(), on_event2dict.keys())
         for eventport in on_event1dict.keys():
             ev1 = on_event1dict[eventport]
@@ -147,8 +153,10 @@ class ComponentEqualityChecker(object):
         # Check the OnEvents:
         # [We use safe_dict, to ensure that we don't have any duplicate
         # condition.rhs ]
-        on_condition1dict = safe_dict([(cond.trigger.rhs, cond) for cond in rgm1.on_conditions])
-        on_condition2dict = safe_dict([(cond.trigger.rhs, cond) for cond in rgm2.on_conditions])
+        on_condition1dict = safe_dict([(cond.trigger.rhs, cond)
+                                       for cond in rgm1.on_conditions])
+        on_condition2dict = safe_dict([(cond.trigger.rhs, cond)
+                                       for cond in rgm2.on_conditions])
         assert_equal_list(on_condition1dict.keys(), on_condition2dict.keys())
         for condition_trigger_rhs in on_condition1dict.keys():
             on_cond1 = on_condition1dict[condition_trigger_rhs]
@@ -156,8 +164,10 @@ class ComponentEqualityChecker(object):
             cls.check_equal_transitions(on_cond1, on_cond2)
 
         # Check the TimeDerivatives:
-        time_deriv1s = [(td.dependent_variable, td.rhs) for td in rgm1.time_derivatives]
-        time_deriv2s = [(td.dependent_variable, td.rhs) for td in rgm2.time_derivatives]
+        time_deriv1s = [(td.dependent_variable, td.rhs)
+                        for td in rgm1.time_derivatives]
+        time_deriv2s = [(td.dependent_variable, td.rhs)
+                        for td in rgm2.time_derivatives]
         assert_equal_list(time_deriv1s, time_deriv2s)
 
     @classmethod

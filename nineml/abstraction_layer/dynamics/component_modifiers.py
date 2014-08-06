@@ -20,7 +20,8 @@ class ComponentModifier(object):
         """Closes an incoming analog port by assigning its value to 0"""
 
         if not component.is_flat():
-            raise NineMLRuntimeError('close_analog_port() on non-flat component')
+            raise NineMLRuntimeError('close_analog_port() on non-flat '
+                                     'component')
 
         # Subsitute the value in:
         component.accept_visitor(ExpandPortDefinition(port_name, value))
@@ -35,7 +36,8 @@ class ComponentModifier(object):
         """Closes all the ``reduce`` ports on a component by assigning them a
         value of 0"""
         if not component.is_flat():
-            raise NineMLRuntimeError('close_all_reduce_ports() on non-flat component')
+            raise NineMLRuntimeError('close_all_reduce_ports() on non-flat '
+                                     'component')
 
         for arp in component.query.analog_reduce_ports:
             if exclude and arp.name in exclude:
@@ -59,7 +61,8 @@ class ComponentModifier(object):
     def remap_port_to_parameter(cls, component, port_name):
         """ Renames a port in a component """
         if not component.is_flat():
-            raise NineMLRuntimeError('rename_port_to_parameter() on non-flat component')
+            raise NineMLRuntimeError('rename_port_to_parameter() on non-flat '
+                                     'component')
 
         # Find the old port:
         port = filter_expect_single(component.analog_ports,

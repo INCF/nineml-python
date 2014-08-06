@@ -12,13 +12,12 @@ from conditions import Condition
 from events import OutputEvent
 from nineml.maths import MathUtil
 
-from nineml.utility import (filter_discrete_types, ensure_valid_c_variable_name,
+from nineml.utility import (filter_discrete_types,
+                            ensure_valid_c_variable_name,
                             normalise_parameter_as_list, assert_no_duplicates)
-                            
+
 from nineml.exceptions import NineMLRuntimeError
 from ..visitors import ClonerVisitor
-
-
 
 
 class Transition(object):
@@ -58,7 +57,8 @@ class Transition(object):
 
         sa_types = (basestring, StateAssignment)
         sa_type_dict = filter_discrete_types(state_assignments, sa_types)
-        sa_from_str = [StrToExpr.state_assignment(o) for o in sa_type_dict[basestring]]
+        sa_from_str = [StrToExpr.state_assignment(o)
+                       for o in sa_type_dict[basestring]]
         self._state_assignments = sa_type_dict[StateAssignment] + sa_from_str
 
         self._event_outputs = event_outputs or []
@@ -73,12 +73,12 @@ class Transition(object):
     def set_source_regime(self, source_regime):
         """ Internal method, used during component construction.
 
-        Used internally by the ComponentClass objects after all objects
-        have be constructed, in the ``_ResolveTransitionRegimeNames()`` method.
-        This is because when we build Transitions, the Regimes that they refer
-        to generally are not build yet, so are referred to by strings. This
-        method is used to set the source ``Regime`` object. We check that the name
-        of the object set is the same as that previously expected.
+        Used internally by the ComponentClass objects after all objects have be
+        constructed, in the ``_ResolveTransitionRegimeNames()`` method. This is
+        because when we build Transitions, the Regimes that they refer to
+        generally are not build yet, so are referred to by strings. This method
+        is used to set the source ``Regime`` object. We check that the name of
+        the object set is the same as that previously expected.
         """
 
         assert isinstance(source_regime, Regime)
@@ -128,7 +128,8 @@ class Transition(object):
         """DO NOT USE: Internal function. Use `source_regime.name` instead.
         """
         if self._source_regime:
-            err = "Should not be called by users.Use source_regime.name instead"
+            err = ("Should not be called by users.Use source_regime.name "
+                   "instead")
             raise NineMLRuntimeError(err)
         assert self._source_regime_name
         return self._source_regime_name
@@ -140,7 +141,8 @@ class Transition(object):
         .. note::
 
             This method will only be available after the ComponentClass
-            containing this transition has been built. See ``set_source_regime``
+            containing this transition has been built. See
+            ``set_source_regime``
         """
 
         assert self._target_regime
@@ -153,7 +155,8 @@ class Transition(object):
         .. note::
 
             This method will only be available after the |ComponentClass|
-            containing this transition has been built. See ``set_source_regime``
+            containing this transition has been built. See
+            ``set_source_regime``
         """
         assert self._source_regime
         return self._source_regime
@@ -180,7 +183,8 @@ class OnEvent(Transition):
                  event_outputs=None, target_regime_name=None):
         """Constructor for ``OnEvent``
 
-            :param src_port_name: The name of the |EventPort| that triggers this transition
+            :param src_port_name: The name of the |EventPort| that triggers
+            this transition
 
             See ``Transition.__init__`` for the definitions of the remaining
             parameters.
@@ -239,7 +243,8 @@ class Regime(object):
 
     """
     A Regime is something that contains |TimeDerivatives|, has temporal extent,
-    defines a set of |Transitions| which occur based on |Conditions|, and can be join the Regimes to other Regimes.
+    defines a set of |Transitions| which occur based on |Conditions|, and can
+    be join the Regimes to other Regimes.
     """
 
     _n = 0
@@ -263,8 +268,8 @@ class Regime(object):
             :param name: The name of the constructor. If none, then a name will
                 be automatically generated.
             :param time_derivatives: A list of time derivatives, as
-                either ``string``s (e.g 'dg/dt = g/gtau') or as |TimeDerivative|
-                objects.
+                either ``string``s (e.g 'dg/dt = g/gtau') or as
+                |TimeDerivative| objects.
             :param transitions: A list containing either |OnEvent| or
                 |OnCondition| objects, which will automatically be sorted into
                 the appropriate classes automatically.
@@ -281,7 +286,8 @@ class Regime(object):
 
         transitions = kwargs.get('transitions', None)
         name = kwargs.get('name', None)
-        kw_tds = normalise_parameter_as_list(kwargs.get('time_derivatives', None))
+        kw_tds = normalise_parameter_as_list(kwargs.get('time_derivatives',
+                                                        None))
         time_derivatives = list(args) + kw_tds
 
         # Generate a name for unnamed regions:
@@ -294,7 +300,8 @@ class Regime(object):
 
         td_types = (basestring, TimeDerivative)
         td_type_dict = filter_discrete_types(time_derivatives, td_types)
-        td_from_str = [StrToExpr.time_derivative(o) for o in td_type_dict[basestring]]
+        td_from_str = [StrToExpr.time_derivative(o)
+                       for o in td_type_dict[basestring]]
         self._time_derivatives = td_type_dict[TimeDerivative] + td_from_str
 
         # Check for double definitions:
@@ -353,7 +360,8 @@ class Regime(object):
 
         """
         if not isinstance(on_condition, OnCondition):
-            err = "Expected 'OnCondition' Obj, but got %s" % (type(on_condition))
+            err = ("Expected 'OnCondition' Obj, but got %s" %
+                   (type(on_condition)))
             raise NineMLRuntimeError(err)
         self._resolve_references_on_transition(on_condition)
         self._on_conditions.append(on_condition)
@@ -370,8 +378,8 @@ class Regime(object):
         .. note::
 
             This is not guaranteed to contain the time derivatives for all the
-            state-variables specified in the component. If they are not defined,
-            they are assumed to be zero in this regime.
+            state-variables specified in the component. If they are not
+            defined, they are assumed to be zero in this regime.
 
         """
         return iter(self._time_derivatives)
@@ -432,7 +440,8 @@ def do_to_assignments_and_events(doList):
     do_types = filter_discrete_types(doList, do_type_list)
 
     # Convert strings to StateAssignments:
-    sa_from_strs = [StrToExpr.state_assignment(s) for s in do_types[basestring]]
+    sa_from_strs = [StrToExpr.state_assignment(s)
+                    for s in do_types[basestring]]
 
     return do_types[StateAssignment] + sa_from_strs, do_types[OutputEvent]
 
@@ -457,8 +466,10 @@ def DoOnCondition(condition, do=None, to=None):
 
 class Dynamics(object):
 
-    """A container class, which encapsulates a component's regimes, transitions,
-    and state variables"""
+    """
+    A container class, which encapsulates a component's regimes, transitions,
+    and state variables
+    """
 
     def __init__(self, regimes=None, aliases=None, state_variables=None):
         """Dynamics object constructor

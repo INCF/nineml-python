@@ -54,7 +54,8 @@ from . import abstraction_layer
 nineml_namespace = 'http://nineml.org/9ML/0.3'
 NINEML = "{%s}" % nineml_namespace
 
-E = ElementMaker(namespace=nineml_namespace, nsmap={"nineml": nineml_namespace})
+E = ElementMaker(namespace=nineml_namespace,
+                 nsmap={"nineml": nineml_namespace})
 
 
 def parse(url):
@@ -80,8 +81,8 @@ def parse(url):
 
 
 def check_tag(element, cls):
-    assert element.tag in (cls.element_name, NINEML + cls.element_name), "Found <%s>, expected <%s>" % (
-        element.tag, cls.element_name)
+    assert element.tag in (cls.element_name, NINEML + cls.element_name), \
+                  "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
 
 
 def walk(obj, visitor=None, depth=0):
@@ -130,8 +131,10 @@ def find_difference(this, that):
                     if attr in this.children:
                         find_difference(a, b)
                     else:
-                        errmsg = "'%s' attribute of %s instance '%s' differs: '%r' != '%r'" % (
-                            attr, this.__class__.__name__, this.name, a, b)
+                        errmsg = ("'%s' attribute of %s instance '%s' differs:"
+                                  " '%r' != '%r'" % (attr,
+                                                     this.__class__.__name__,
+                                                     this.name, a, b))
                         if type(a) != type(b):
                             errmsg += "(%s, %s)" % (type(a), type(b))
                         raise Exception(errmsg)
@@ -150,7 +153,9 @@ class ULobject(object):
     children = []
 
     def __eq__(self, other):
-        return reduce(and_, [isinstance(other, self.__class__)] + [getattr(self, name) == getattr(other, name) for name in self.__class__.defining_attributes])
+        return reduce(and_, [isinstance(other, self.__class__)] +
+                            [getattr(self, name) == getattr(other, name)
+                             for name in self.__class__.defining_attributes])
 
     def __ne__(self, other):
         return not self == other
@@ -210,9 +215,10 @@ class Model(ULobject):
             if component.name in self._unresolved:
                 other_component = self._unresolved.pop(component.name)
                 other_component.resolve(component)
-        if component.name in self.components and self.components[component.name] != component:
-            raise Exception(
-                "A different component with the name '%s' already exists" % component.name)
+        if (component.name in self.components and
+            self.components[component.name] != component):
+            raise Exception("A different component with the name '%s' already "
+                            "exists" % component.name)
         self.components[component.name] = component
 
     def _resolve_components(self):
@@ -247,9 +253,9 @@ class Model(ULobject):
         """
         assert element.tag == NINEML + 'nineml'
         model = cls(element.attrib["name"])
-        # Note that the components dict initially contains elementtree elements,
-        # but is modified within Group.from_xml(), and at the end contains
-        # Component instances.
+        # Note that the components dict initially contains elementtree
+        # elements, but is modified within Group.from_xml(), and at the end
+        # contains Component instances.
         components = {}
         groups = {}
         for child in element.findall(NINEML + BaseComponent.element_name):
@@ -267,7 +273,8 @@ class Model(ULobject):
         """
         Return an ElementTree representation of this model.
         """
-        # this should determine where references can be used to avoid duplication
+        # this should determine where references can be used to avoid
+        # duplication
         assert len(self._unresolved) == 0, str(self._unresolved)
         root = E("nineml", xmlns=nineml_namespace, name=self.name)
         for component in self.components.values():
@@ -283,7 +290,8 @@ class Model(ULobject):
         assert isinstance(filename, basestring) or (
             hasattr(filename, "seek") and hasattr(filename, "read"))
         etree.ElementTree(self.to_xml()).write(filename, encoding="UTF-8",
-                                               pretty_print=True, xml_declaration=True)
+                                               pretty_print=True,
+                                               xml_declaration=True)
 
     def check(self):
         """
@@ -337,7 +345,8 @@ class Definition(ULobject):
     def retrieve(self):
         if not self._component:
             f = urllib.urlopen(self.url)
-            reader = getattr(abstraction_layer, self.abstraction_layer_module).readers.XMLReader
+            reader = getattr(abstraction_layer,
+                             self.abstraction_layer_module).readers.XMLReader
             try:
                 self._component = reader.read_component(self.url)
             finally:
@@ -348,8 +357,12 @@ class Definition(ULobject):
         if hasattr(self, "url") and self.url:
             return E(self.element_name, (E.link(self.url)), language="NineML")
         else:  # inline
-            al_writer = getattr(abstraction_layer, self.abstraction_layer_module).writers.XMLWriter()
-            return E(self.element_name, al_writer.visit(self._component), language="NineML")
+            al_writer = getattr(
+                            abstraction_layer,
+                            self.abstraction_layer_module).writers.XMLWriter()
+            return E(self.element_name, 
+                     al_writer.visit(self._component),
+                     language="NineML")
 
     @classmethod
     def from_xml(cls, element, abstraction_layer_module=None):
@@ -357,14 +370,19 @@ class Definition(ULobject):
         if url_element is not None:
             return cls(url_element.text, abstraction_layer_module)
         else:         # handle inline abstraction layer definitions
-            # this doesn't work yet because XMLReader assumes we are reading from a file, doesn't allow for reading from a string, or reading a sub-tree.
-            reader = getattr(abstraction_layer, abstraction_layer_module).readers.XMLLoader(element, {})
+            # this doesn't work yet because XMLReader assumes we are reading
+            # from a file, doesn't allow for reading from a string, or reading
+            # a sub-tree.
+            reader = getattr(
+                       abstraction_layer,
+                       abstraction_layer_module).readers.XMLLoader(element, {})
             assert len(reader.components) == 0
             return reader.components[0]
 
 
 def check_units(units, dimension):
-    # primitive unit checking, should really use Pint, Quantities or Mike Hull's tools
+    # primitive unit checking, should really use Pint, Quantities or Mike
+    # Hull's tools
     if not dimension:
         raise ValueError("dimension not specified")
     base_units = {
@@ -383,7 +401,8 @@ def check_units(units, dimension):
         prefix = units[0]
         base = units[1:]
     if base != base_units[dimension]:
-        raise ValueError("Units %s are invalid for dimension %s" % (units, dimension))
+        raise ValueError("Units %s are invalid for dimension %s" %
+                         (units, dimension))
 
 
 class BaseComponent(ULobject):
@@ -402,8 +421,8 @@ class BaseComponent(ULobject):
         or create a reference to another component that will be resolved later.
 
         `name` - a name for the component that can be used to reference it.
-        `definition` - a Definition instance, the URL of a component definition,
-                       or None if creating a reference.
+        `definition` - a Definition instance, the URL of a component
+                       definition, or None if creating a reference.
         `parameters` - a ParameterSet instance or a dictionary containing
                        (value,unit) pairs.
         `reference` - the name of another component in the model, or None.
@@ -411,16 +430,22 @@ class BaseComponent(ULobject):
         self.name = name
         if isinstance(definition, Definition):
             self.definition = definition
-            assert reference is None, "Cannot give both definition and reference."
+            assert reference is None, \
+                                   "Cannot give both definition and reference."
         elif isinstance(definition, basestring):  # should also check is a valid uri
-            self.definition = Definition(definition, self.abstraction_layer_module)
-            assert reference is None, "Cannot give both definition and reference."
+            self.definition = Definition(definition,
+                                         self.abstraction_layer_module)
+            assert reference is None, \
+                                  "Cannot give both definition and reference."
         elif definition is None:
-            assert reference is not None, "Either definition or reference must be given."
-            assert isinstance(reference, basestring), "reference should be the name of a component"
+            assert reference is not None, \
+                                "Either definition or reference must be given."
+            assert isinstance(reference, basestring), \
+                                  "reference should be the name of a component"
             self.definition = None
         else:
-            raise TypeError("definition must be a Definition, a Component or a url")
+            raise TypeError("definition must be a Definition, a Component or "
+                            "a url")
         if isinstance(parameters, ParameterSet):
             self.parameters = parameters
         elif isinstance(parameters, dict):
@@ -433,7 +458,8 @@ class BaseComponent(ULobject):
         elif isinstance(initial_values, dict):
             self.initial_values = InitialValueSet(**initial_values)
         else:
-            raise TypeError("initial_values must be an InitialValueSet or a dict, not a %s" % type(initial_values))
+            raise TypeError("initial_values must be an InitialValueSet or a "
+                            "dict, not a %s" % type(initial_values))
         if not self.unresolved:
             self.check_parameters()
             if self.abstraction_layer_module == "dynamics":
@@ -449,14 +475,16 @@ class BaseComponent(ULobject):
 
     def __hash__(self):
         assert not self.unresolved
-        return hash(self.__class__) ^ hash(self.name) ^ hash(self.definition) ^ hash(self.parameters)
+        return (hash(self.__class__) ^ hash(self.name) ^
+                hash(self.definition) ^ hash(self.parameters))
 
     def __repr__(self):
         if self.definition:
-            return '%s(name="%s", definition="%s")' % (self.__class__.__name__,
-                                                       self.name, self.definition)
+            return ('%s(name="%s", definition="%s")' % 
+                    (self.__class__.__name__, self.name, self.definition))
         else:
-            return '%s(name="%s", UNRESOLVED)' % (self.__class__.__name__, self.name)
+            return ('%s(name="%s", UNRESOLVED)' %
+                    (self.__class__.__name__, self.name))
 
     def diff(self, other):
         d = []
@@ -475,14 +503,15 @@ class BaseComponent(ULobject):
     def resolve(self, other_component):
         """
         If the component is unresolved (contains a reference to another
-        component), copy the definition and parameters from the other component,
-        and update those parameters with the parameters from this component.
+        component), copy the definition and parameters from the other
+        component, and update those parameters with the parameters from this
+        component.
         """
         assert other_component.__class__ == self.__class__
         assert self.reference == other_component.name
         self.definition = other_component.definition
+        # note that this behaves oppositely to dict.update
         self.parameters.complete(other_component.parameters)
-                                 # note that this behaves oppositely to dict.update
         self.check_parameters()
 
     def get_definition(self):
@@ -493,23 +522,31 @@ class BaseComponent(ULobject):
     def check_parameters(self):
         # First check the names
         user_parameters = set(self.parameters.iterkeys())
-        definition_parameters = set(p.name for p in self.definition.component.parameters)
+        definition_parameters = set(
+                                 p.name
+                                 for p in self.definition.component.parameters)
         msg = []
         diff_a = user_parameters.difference(definition_parameters)
         diff_b = definition_parameters.difference(user_parameters)
         if diff_a:
-            msg.append("User parameters contains the following parameters that are not present in the definition: %s" %
+            msg.append("User parameters contains the following parameters "
+                       "that are not present in the definition: %s" %
                        ",".join(diff_a))
         if diff_b:
-            msg.append("Definition contains the following parameters that are not present in the user parameters: %s" %
+            msg.append("Definition contains the following parameters that are "
+                       "not present in the user parameters: %s" %
                        ",".join(diff_b))
         if msg:
-            raise Exception(". ".join(msg))  # need a more specific type of Exception
+            # need a more specific type of Exception
+            raise Exception(". ".join(msg))
         # Now check dimensions
         # TODO
 
     def to_xml(self):
-        parameters_and_initial_values = self.parameters.to_xml() + [iv.to_xml() for iv in self.initial_values.values()]
+        parameters_and_initial_values = (self.parameters.to_xml() +
+                                         [iv.to_xml()
+                                          for iv in
+                                                 self.initial_values.values()])
         element = E(self.element_name,
                     self.definition.to_xml(),
                     *parameters_and_initial_values,
@@ -528,14 +565,19 @@ class BaseComponent(ULobject):
             element.findall(NINEML + InitialValue.element_name), components)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
-            definition = Definition.from_xml(definition_element, cls.abstraction_layer_module)
-            return cls(name, definition, parameters, initial_values=initial_values)
+            definition = Definition.from_xml(definition_element,
+                                             cls.abstraction_layer_module)
+            return cls(name, definition, parameters,
+                       initial_values=initial_values)
         else:
             reference_element = element.find(NINEML + "reference")
             if reference_element is not None:
-                return cls(name, None, parameters, reference=reference_element.text, initial_values=initial_values)
+                return cls(name, None, parameters,
+                           reference=reference_element.text,
+                           initial_values=initial_values)
             else:
-                raise Exception("A component must contain either a defintion or a reference")
+                raise Exception("A component must contain either a defintion "
+                                "or a reference")
 
 
 class BaseDynamicsComponent(BaseComponent):
@@ -545,7 +587,8 @@ class BaseDynamicsComponent(BaseComponent):
             try:
                 initial_value = self.initial_values[var.name]
             except KeyError:
-                raise Exception("Initial value not specified for %s" % var.name)
+                raise Exception("Initial value not specified for %s" %
+                                var.name)
             check_units(initial_value.unit, var.dimension)
 
 
@@ -555,7 +598,8 @@ class SpikingNodeType(BaseDynamicsComponent):
     Component representing a model of a spiking node, i.e. something that can
     emit (and optionally receive) spikes.
 
-    Should perhaps be called SpikingNodePrototype, since this is type + parameters
+    Should perhaps be called SpikingNodePrototype, since this is type +
+    parameters
     """
     abstraction_layer_module = 'dynamics'
 
@@ -563,8 +607,8 @@ class SpikingNodeType(BaseDynamicsComponent):
 class SynapseType(BaseDynamicsComponent):
 
     """
-    Component representing a model of a post-synaptic response, i.e. the current
-    produced in response to a spike.
+    Component representing a model of a post-synaptic response, i.e. the
+    current produced in response to a spike.
 
     This class is probably mis-named. Should be PostSynapticResponseType.
     """
@@ -574,8 +618,8 @@ class SynapseType(BaseDynamicsComponent):
 class CurrentSourceType(BaseDynamicsComponent):
 
     """
-    Component representing a model of a current source that may be injected into
-    a spiking node.
+    Component representing a model of a current source that may be injected
+    into a spiking node.
     """
     abstraction_layer_module = 'dynamics'
 
@@ -602,13 +646,15 @@ class Structure(BaseComponent):
         if self.is_csa:
             return self.get_definition()  # e.g. lambda size: csa.random2d(size, *self.parameters)
         else:
-            raise Exception("Structure cannot be transformed to CSA geometry function")
+            raise Exception("Structure cannot be transformed to CSA geometry "
+                            "function")
 
 
 class ConnectionRule(BaseComponent):
 
     """
-    Component representing an algorithm for connecting two populations of nodes.
+    Component representing an algorithm for connecting two populations of
+    nodes.
     """
     abstraction_layer_module = 'connection_generator'
 
@@ -648,8 +694,10 @@ class Parameter(ULobject):
 
     def __init__(self, name, value, unit=None):
         self.name = name
-        if not isinstance(value, (Number, list, RandomDistribution, str)) or isinstance(value, bool):
-            raise TypeError("Parameter values may not be of type %s" % type(value))
+        if (not isinstance(value, (Number, list, RandomDistribution, str)) or
+            isinstance(value, bool)):
+            raise TypeError("Parameter values may not be of type %s" %
+                            type(value))
         self.value = value
         self.unit = unit
 
@@ -657,7 +705,8 @@ class Parameter(ULobject):
         units = self.unit
         if u"µ" in units:
             units = units.replace(u"µ", "u")
-        return "Parameter(name=%s, value=%s, unit=%s)" % (self.name, self.value, units)
+        return "Parameter(name=%s, value=%s, unit=%s)" % (self.name,
+                                                          self.value, units)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and \
@@ -674,7 +723,8 @@ class Parameter(ULobject):
     def to_xml(self):
         if isinstance(self.value, RandomDistribution):
             value_element = E.reference(self.value.name)
-        elif isinstance(self.value, collections.Iterable) and isinstance(self.value[0], Number):
+        elif (isinstance(self.value, collections.Iterable) and
+              isinstance(self.value[0], Number)):
             value_element = E.array(" ".join(repr(x) for x in self.value))
         else:  # need to handle Function
             value_element = E.scalar(repr(self.value))
@@ -688,7 +738,8 @@ class Parameter(ULobject):
     @classmethod
     def from_xml(cls, element, components):
         check_tag(element, cls)
-        quantity_element = element.find(NINEML + "quantity").find(NINEML + "value")
+        quantity_element = element.find(NINEML + 
+                                        "quantity").find(NINEML + "value")
         value, unit = Value.from_xml(quantity_element, components)
         return Parameter(name=element.attrib["name"],
                          value=value,
@@ -705,8 +756,10 @@ class InitialValue(ULobject):
 
     def __init__(self, name, value, unit=None):
         self.name = name
-        if not isinstance(value, (Number, list, RandomDistribution)) or isinstance(value, bool):
-            raise TypeError("Initial values may not be of type %s" % type(value))
+        if (not isinstance(value, (Number, list, RandomDistribution)) or
+            isinstance(value, bool)):
+            raise TypeError("Initial values may not be of type %s" %
+                            type(value))
         self.value = value
         self.unit = unit
 
@@ -714,7 +767,8 @@ class InitialValue(ULobject):
         units = self.unit
         if u"µ" in units:
             units = units.replace(u"µ", "u")
-        return "InitialValue(name=%s, value=%s, unit=%s)" % (self.name, self.value, units)
+        return ("InitialValue(name=%s, value=%s, unit=%s)" %
+                (self.name, self.value, units))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and \
@@ -731,7 +785,8 @@ class InitialValue(ULobject):
     def to_xml(self):
         if isinstance(self.value, RandomDistribution):
             value_element = E.reference(self.value.name)
-        elif isinstance(self.value, collections.Iterable) and isinstance(self.value[0], Number):
+        elif (isinstance(self.value, collections.Iterable) and
+              isinstance(self.value[0], Number)):
             value_element = E.array(" ".join(repr(x) for x in self.value))
         else:  # need to handle Function
             value_element = E.scalar(repr(self.value))
@@ -745,7 +800,8 @@ class InitialValue(ULobject):
     @classmethod
     def from_xml(cls, element, components):
         check_tag(element, cls)
-        quantity_element = element.find(NINEML + "quantity").find(NINEML + "value")
+        quantity_element = element.find(NINEML +
+                                        "quantity").find(NINEML + "value")
         value, unit = Value.from_xml(quantity_element, components)
         return InitialValue(name=element.attrib["name"],
                             value=value,
@@ -795,7 +851,8 @@ class ParameterSet(dict):
     def from_xml(cls, elements, components):
         parameters = []
         for parameter_element in elements:
-            parameters.append(Parameter.from_xml(parameter_element, components))
+            parameters.append(Parameter.from_xml(parameter_element,
+                                                 components))
         return cls(*parameters)
 
 
@@ -819,7 +876,8 @@ class InitialValueSet(ParameterSet):
     def from_xml(cls, elements, components):
         initial_values = []
         for iv_element in elements:
-            initial_values.append(InitialValue.from_xml(iv_element, components))
+            initial_values.append(InitialValue.from_xml(iv_element,
+                                                        components))
         return cls(*initial_values)
 
 
@@ -847,7 +905,8 @@ class Value(object):
             raise ValueError("No value found")
         else:
             if name == "reference":
-                value = get_or_create_component(value_element.text, RandomDistribution, components)
+                value = get_or_create_component(value_element.text,
+                                                RandomDistribution, components)
             elif name == "scalar":
                 try:
                     value = float(value_element.text)
@@ -897,7 +956,8 @@ class Group(ULobject):
 
     def add(self, *objs):
         """
-        Add one or more Population, Projection or Selection instances to the group.
+        Add one or more Population, Projection or Selection instances to the
+        group.
         """
         for obj in objs:
             if isinstance(obj, Population):
@@ -907,8 +967,8 @@ class Group(ULobject):
             elif isinstance(obj, Selection):
                 self.selections[obj.name] = obj
             else:
-                raise Exception(
-                    "Groups may only contain Populations, Projections, Selections or Groups")
+                raise Exception("Groups may only contain Populations, "
+                                "Projections, Selections or Groups")
 
     def _resolve_population_references(self):
         for prj in self.projections.values():
@@ -920,7 +980,8 @@ class Group(ULobject):
                 elif prj.references[name] == self.name:
                     obj = self
                 else:
-                    raise Exception("Unable to resolve population/selection reference ('%s') for %s of %s" %
+                    raise Exception("Unable to resolve population/selection "
+                                    "reference ('%s') for %s of %s" %
                                     (prj.references[name], name, prj))
                 setattr(prj, name, obj)
 
@@ -931,7 +992,8 @@ class Group(ULobject):
         return components
 
     def get_subgroups(self):
-        return [p.prototype for p in self.populations.values() if isinstance(p.prototype, Group)]
+        return [p.prototype for p in self.populations.values()
+                if isinstance(p.prototype, Group)]
 
     def to_xml(self):
         return E(self.element_name,
@@ -962,8 +1024,8 @@ class Group(ULobject):
 
 def get_or_create_component(ref, cls, components):
     """
-    Each entry in `components` is either an instance of a BaseComponent subclass,
-    or the XML (elementtree Element) defining such an instance.
+    Each entry in `components` is either an instance of a BaseComponent
+    subclass, or the XML (elementtree Element) defining such an instance.
 
     If given component does not exist, we create it and replace the XML in
     `components` with the actual component. We then return the component.
@@ -978,7 +1040,8 @@ def get_or_create_prototype(prototype_ref, components, groups):
     if prototype_ref in groups:
         return groups[prototype_ref]
     else:
-        return get_or_create_component(prototype_ref, SpikingNodeType, components)
+        return get_or_create_component(prototype_ref, SpikingNodeType,
+                                       components)
 
 
 class Population(ULobject):
@@ -1001,14 +1064,16 @@ class Population(ULobject):
         self.positions = positions
 
     def __str__(self):
-        return 'Population "%s": %dx"%s" %s' % (self.name, self.number, self.prototype.name, self.positions)
+        return ('Population "%s": %dx"%s" %s' %
+                (self.name, self.number, self.prototype.name, self.positions))
 
     def get_components(self):
         components = []
         if self.prototype:
             if isinstance(self.prototype, SpikingNodeType):
                 components.append(self.prototype)
-                components.extend(self.prototype.parameters.get_random_distributions())
+                components.extend(self.prototype.parameters.\
+                                                    get_random_distributions())
             elif isinstance(self.prototype, Group):
                 components.extend(self.prototype.get_components())
         if self.positions is not None:
@@ -1034,8 +1099,12 @@ class Population(ULobject):
         prototype_ref = element.find(NINEML + 'prototype').text
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML + 'number').text),
-                   prototype=get_or_create_prototype(prototype_ref, components, groups),
-                   positions=PositionList.from_xml(element.find(NINEML + PositionList.element_name), components))
+                   prototype=get_or_create_prototype(prototype_ref, components,
+                                                     groups),
+                   positions=PositionList.from_xml(element.find(NINEML +
+                                                                PositionList.\
+                                                                 element_name),
+                                                   components))
 
 
 class PositionList(ULobject):
@@ -1055,11 +1124,13 @@ class PositionList(ULobject):
         Either `positions` or `structure` should be provided. Providing both
         will raise an Exception.
 
-        `positions` should be a list of (x,y,z) tuples or a 3xN (Nx3?) numpy array.
+        `positions` should be a list of (x,y,z) tuples or a 3xN (Nx3?) numpy
+                    array.
         `structure` should be a Structure component.
         """
         if positions and structure:
-            raise Exception("Please provide either positions or structure, not both.")
+            raise Exception("Please provide either positions or structure, "
+                            "not both.")
         assert not isinstance(positions, Structure)
         self._positions = positions
         if isinstance(structure, Structure):
@@ -1104,7 +1175,8 @@ class PositionList(ULobject):
         if self._positions:
             for pos in self._positions:
                 x, y, z = pos
-                element.append(E.position(x=str(x), y=str(y), z=str(z), unit="um"))
+                element.append(E.position(x=str(x), y=str(y), z=str(z),
+                                          unit="um"))
         elif self.structure:
             element.append(E.structure(self.structure.name))
         else:
@@ -1119,9 +1191,12 @@ class PositionList(ULobject):
             check_tag(element, cls)
             structure_element = element.find(NINEML + 'structure')
             if structure_element is not None:
-                return cls(structure=get_or_create_component(structure_element.text, Structure, components))
+                return cls(structure=get_or_create_component(
+                                                        structure_element.text,
+                                                        Structure, components))
             else:
-                positions = [(float(p.attrib['x']), float(p.attrib['y']), float(p.attrib['z']))
+                positions = [(float(p.attrib['x']), float(p.attrib['y']),
+                              float(p.attrib['z']))
                              for p in element.findall(NINEML + 'position')]
                 return cls(positions=positions)
 
@@ -1147,7 +1222,8 @@ class Operator(ULobject):
 
     @classmethod
     def from_xml(cls, element):
-        if hasattr(cls, "element_name") and element.tag == NINEML + cls.element_name:
+        if hasattr(cls, "element_name") and element.tag == (NINEML +
+                                                            cls.element_name):
             dispatch = {
                 NINEML + StringValue.element_name: StringValue.from_xml,
                 NINEML + Eq.element_name: Eq.from_xml,
@@ -1262,8 +1338,14 @@ class Selection(ULobject):
         if not self.evaluated:
             selection = str(self.condition)
             # look away now, this isn't pretty
-            subnet_pattern = re.compile(r'\(\("population\[@name\]"\) == \("(?P<name>[\w ]+)"\)\) and \("population\[@id\]" in "(?P<slice>\d*:\d*:\d*)"\)')
-            assembly_pattern = re.compile(r'\(\("population\[@name\]"\) == \("(?P<name1>[\w ]+)"\)\) or \(\("population\[@name\]"\) == \("(?P<name2>[\w ]+)"\)\)')
+            subnet_pattern = re.compile(r'\(\("population\[@name\]"\) == '
+                                        r'\("(?P<name>[\w ]+)"\)\) and '
+                                        r'\("population\[@id\]" in '
+                                        r'"(?P<slice>\d*:\d*:\d*)"\)')
+            assembly_pattern = re.compile(r'\(\("population\[@name\]"\) == '
+                                          r'\("(?P<name1>[\w ]+)"\)\) or '
+                                          r'\(\("population\[@name\]"\) == '
+                                          r'\("(?P<name2>[\w ]+)"\)\)')
             # this should be replaced by the use of ply, or similar
             match = subnet_pattern.match(selection)
             if match:
@@ -1288,17 +1370,17 @@ class Projection(ULobject):
     A collection of connections between two Populations.
 
     If the populations contain spiking nodes, this is straightforward. If the
-    populations contain groups, it is not so obvious. I guess the interpretation
-    is that connections are made to all the populations within all the groups,
-    recursively.
+    populations contain groups, it is not so obvious. I guess the
+    interpretation is that connections are made to all the populations within
+    all the groups, recursively.
     """
     element_name = "projection"
-    defining_attributes = (
-        "name", "source", "target", "rule", "synaptic_response", "connection_type",
-        "synaptic_response_ports", "connection_ports")
+    defining_attributes = ("name", "source", "target", "rule",
+                           "synaptic_response", "connection_type",
+                           "synaptic_response_ports", "connection_ports")
 
-    def __init__(self, name, source, target, rule, synaptic_response, connection_type,
-                 synaptic_response_ports, connection_ports):
+    def __init__(self, name, source, target, rule, synaptic_response,
+                 connection_type, synaptic_response_ports, connection_ports):
         """
         Create a new projection.
 
@@ -1307,16 +1389,18 @@ class Projection(ULobject):
         target - the postsynaptic Population
         rule - a ConnectionRule instance, encapsulating an algorithm for wiring
                up the connections.
-        synaptic_response - a PostSynapticResponse instance that will be used by
-                            all connections.
+        synaptic_response - a PostSynapticResponse instance that will be used
+                            by all connections.
         connection_type - a ConnectionType instance that will be used by all
                           connections.
-        synaptic_response_ports - a list of tuples (synapse_port, neuron_port) giving the ports
-                                  that should be connected between post-synaptic response component
-                                  and neuron component.
-        connection_ports - a list of tuples (plasticity_port, synapse_port) giving the ports
-                           that should be connected between plasticity/connection component
-                           and post-synaptic response component.
+        synaptic_response_ports - a list of tuples (synapse_port, neuron_port)
+                                  giving the ports that should be connected
+                                  between post-synaptic response component and
+                                  neuron component.
+        connection_ports - a list of tuples (plasticity_port, synapse_port)
+                           giving the ports that should be connected between
+                           plasticity/connection component and post-synaptic
+                           response component.
         """
         self.name = name
         self.references = {}
@@ -1345,15 +1429,14 @@ class Projection(ULobject):
         test_attributes = ["name", "source", "target",
                            "rule", "synaptic_response", "connection_type",
                            "synaptic_response_ports", "connection_ports"]
-        # to avoid infinite recursion, we do not include source or target in the
-        # tests if they are Groups
+        # to avoid infinite recursion, we do not include source or target in
+        # the tests if they are Groups
         if isinstance(self.source, Group):
             test_attributes.remove("source")
         if isinstance(self.target, Group):
             test_attributes.remove("target")
-        return reduce(and_,
-                      (getattr(self, attr) == getattr(other, attr) for attr in test_attributes)
-                      )
+        return reduce(and_, (getattr(self, attr) == getattr(other, attr)
+                             for attr in test_attributes))
 
     def get_components(self):
         components = []
@@ -1370,8 +1453,10 @@ class Projection(ULobject):
                  E.rule(self.rule.name),
                  E.response(self.synaptic_response.name),
                  E.plasticity(self.connection_type.name),
-                 E.response_ports(*[E.port_connection(port1=a, port2=b) for a, b in self.synaptic_response_ports]),
-                 E.connection_ports(*[E.port_connection(port1=a, port2=b) for a, b in self.connection_ports]),
+                 E.response_ports(*[E.port_connection(port1=a, port2=b)
+                                    for a, b in self.synaptic_response_ports]),
+                 E.connection_ports(*[E.port_connection(port1=a, port2=b)
+                                      for a, b in self.connection_ports]),
                  name=self.name)
 
     @classmethod
@@ -1381,19 +1466,34 @@ class Projection(ULobject):
                    source=element.find(NINEML + "source").text,
                    target=element.find(NINEML + "target").text,
                    rule=get_or_create_component(
-                       element.find(NINEML + "rule").text, ConnectionRule, components),
+                                            element.find(NINEML + "rule").text,
+                                            ConnectionRule, components),
                    synaptic_response=get_or_create_component(
-                       element.find(NINEML + "response").text, SynapseType, components),
-                   connection_type=get_or_create_component(element.find(NINEML + "plasticity").text, ConnectionType, components),
-                   synaptic_response_ports=tuple((pc.attrib["port1"], pc.attrib["port2"]) for pc in element.find(NINEML + "response_ports")),
-                   connection_ports=tuple((pc.attrib["port1"], pc.attrib["port2"]) for pc in element.find(NINEML + "connection_ports")))
+                                        element.find(NINEML + "response").text,
+                                        SynapseType, components),
+                   connection_type=get_or_create_component(
+                                      element.find(NINEML + "plasticity").text,
+                                      ConnectionType, components),
+                   synaptic_response_ports=tuple((pc.attrib["port1"],
+                                                  pc.attrib["port2"])
+                                                 for pc in element.find(
+                                                   NINEML + "response_ports")),
+                   connection_ports=tuple((pc.attrib["port1"],
+                                           pc.attrib["port2"])
+                                          for pc in element.find(
+                                                 NINEML + "connection_ports")))
 
     def to_csa(self):
         if self.rule.is_csa:
-            distance_func = _csa.euclidMetric2d  # should allow different distance functions, specified somewhere in the user layer
-            src_geometry = self.source.positions.structure.to_csa()(self.source.number)
-            tgt_geometry = self.target.positions.structure.to_csa()(self.target.number)
+            # should allow different distance functions, specified somewhere in
+            # the user layer
+            distance_func = _csa.euclidMetric2d
+            src_geometry = self.source.positions.structure.\
+                                                   to_csa()(self.source.number)
+            tgt_geometry = self.target.positions.structure.\
+                                                   to_csa()(self.target.number)
             distance_metric = distance_func(src_geometry, tgt_geometry)
             _csa.cset(self.rule.to_csa() * distance_metric)
         else:
-            raise Exception("Connection rule does not use Connection Set Algebra")
+            raise Exception("Connection rule does not use Connection Set "
+                            "Algebra")

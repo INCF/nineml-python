@@ -5,6 +5,7 @@ Exceptions specific to the 9ML library
 :license: BSD-3, see LICENSE for details.
 """
 
+
 class NineMLRuntimeError(Exception):
     pass
 

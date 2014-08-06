@@ -7,8 +7,8 @@ docstring needed
 
 # from nineml.user_layer_aux.connection_generator import ConnectionGenerator, cgClosureFromURI
 from nineml.user_layer_aux.cg_closure import alConnectionRuleFromURI
-from nineml.user_layer_aux.explicit_list_of_connections import ExplicitListOfConnections
-from nineml.user_layer_aux.grids import createUnstructuredGrid, GeometryImplementation
+from nineml.user_layer_aux.explicit_list_of_connections import ExplicitListOfConnections  # @IgnorePep8
+from nineml.user_layer_aux.grids import createUnstructuredGrid, GeometryImplementation  # @IgnorePep8
 
 # memoizedConnectionGenerators = {}
 

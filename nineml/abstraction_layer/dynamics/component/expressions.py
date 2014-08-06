@@ -87,7 +87,8 @@ class Expression(object):
 
         for name in name_map:
             replacment = name_map[name]
-            self.rhs = MathUtil.str_expr_replacement(name, replacment, self.rhs)
+            self.rhs = MathUtil.str_expr_replacement(name, replacment,
+                                                     self.rhs)
 
     def rhs_atoms_in_namespace(self, namespace):
         atoms = set()
@@ -141,7 +142,7 @@ class ExpressionWithLHS(Equation):
 
     @property
     def atoms(self):
-        """ Returns a list of the atoms in the LHS and RHS of this expression"""
+        """Returns a list of the atoms in the LHS and RHS of this expression"""
         return itertools.chain(self.rhs_atoms, self.lhs_atoms)
 
     def lhs_name_transform_inplace(self, name_map):
@@ -192,20 +193,21 @@ class Alias(ExpressionWithSimpleLHS, RegimeElement):
 
    When specified from a ``string``, an alias uses the notation ``:=``
 
-    ``Alias``es can be defined in terms of other ``Alias``es, so for example, if
-    we had ComponentClass representing a Hodgkin-Huxley style gating channel,
-    which has a ``Property``, `reversal_potential`, and an input ``AnalogPort``,
-    `membrane_voltage`, then we could define an ``Alias``::
+    ``Alias``es can be defined in terms of other ``Alias``es, so for example,
+    if we had ComponentClass representing a Hodgkin-Huxley style gating
+    channel, which has a ``Property``, `reversal_potential`, and an input
+    ``AnalogPort``, `membrane_voltage`, then we could define an ``Alias``::
 
         ``driving_force := reversal_potential - membrane_voltage``
 
     If the relevant ``StateVariables``, ``m`` and ``h``, for example were also
-    defined, and a ``Parameter``, ``g_bar``, we could also define the current flowing
-    through this channel as::
+    defined, and a ``Parameter``, ``g_bar``, we could also define the current
+    flowing through this channel as::
 
         current := driving_force * g * m * m * m * h
 
-    This current could then be attached to an output ``AnalogPort`` for example.
+    This current could then be attached to an output ``AnalogPort`` for
+    example.
 
     It is important to ensure that Alias definitions are not circular, for
     example, it is not valid to define two alias in terms of each other::
@@ -215,8 +217,8 @@ class Alias(ExpressionWithSimpleLHS, RegimeElement):
 
     During code generation, we typically call ``ComponentClass.backsub_all()``.
     This method first expands each alias in terms of other aliases, such that
-    each alias depends only on Parameters, StateVariables and *incoming* AnalogPort.
-    Next, it expands any alias definitions within TimeDerivatives,
+    each alias depends only on Parameters, StateVariables and *incoming*
+    AnalogPort. Next, it expands any alias definitions within TimeDerivatives,
     StateAssignments, Conditions and output AnalogPorts.
 
 
@@ -439,21 +441,23 @@ def expr_to_obj(s, name=None):
 
     # re for an expression -> groups into lhs, op, rhs
     p_eqn = re.compile(
-        r"(?P<lhs>[a-zA-Z_]+[a-zA-Z_0-9]*(/?[a-zA-Z_]+[a-zA-Z_0-9]*)?)\s*(?P<op>[+\-*/:]?=)\s*(?P<rhs>.*)")
+        r"(?P<lhs>[a-zA-Z_]+[a-zA-Z_0-9]*(/?[a-zA-Z_]+[a-zA-Z_0-9]*)?)"
+        r"\s*(?P<op>[+\-*/:]?=)\s*(?P<rhs>.*)")
     m = p_eqn.match(s)
     if not m:
-        raise ValueError, "Not a valid nineml expression: %s" % s
+        raise ValueError("Not a valid nineml expression: %s" % s)
 
     # get lhs, op, rhs
     lhs, op, rhs = [m.group(x) for x in ['lhs', 'op', 'rhs']]
 
     # do we have an TimeDerivative?
     # re for lhs for TimeDerivative
-    p_ode_lhs = re.compile(r"(?:d)([a-zA-Z_]+[a-zA-Z_0-9]*)/(?:d)([a-zA-Z_]+[a-zA-Z_0-9]*)")
+    p_ode_lhs = re.compile(r"(?:d)([a-zA-Z_]+[a-zA-Z_0-9]*)/(?:d)([a-zA-Z_]+"
+                           r"[a-zA-Z_0-9]*)")
     m = p_ode_lhs.match(lhs)
     if m:
         if op != "=":
-            raise ValueError, "TimeDerivative lhs, but op not '=' in %s" % s
+            raise ValueError("TimeDerivative lhs, but op not '=' in %s" % s)
 
         dep_var = m.group(1)
         indep_var = m.group(2)
@@ -468,4 +472,4 @@ def expr_to_obj(s, name=None):
         return StateAssignment(lhs, rhs, name=name)
 
     # If we get here, what do we have?
-    raise ValueError, "Cannot map expr '%s' to a nineml Expression" % s
+    raise ValueError("Cannot map expr '%s' to a nineml Expression" % s)

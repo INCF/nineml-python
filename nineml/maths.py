@@ -33,26 +33,26 @@ _random_namespace = {
 
     'binomial': numpy.random.binomial,  # binomial(n, p)
     'chisquare': numpy.random.chisquare,  # chisquare(df)
-    'mtrand.dirichlet': numpy.random.mtrand.dirichlet,  # mtrand.dirichlet(alpha)
+    'mtrand.dirichlet': numpy.random.mtrand.dirichlet,  # mtrand.dirichlet(alpha) @IgnorePep8
     'exponential': numpy.random.exponential,  # exponential(dfnum, dfden)
     'f': numpy.random.f,  # f(dfnum, dfden)
     'gamma': numpy.random.gamma,  # gamma(shape)
     'geometric': numpy.random.geometric,  # geometric(p)
-    'hypergeometric': numpy.random.hypergeometric,  # hypergeometric(ngood, nbad, nsample)
+    'hypergeometric': numpy.random.hypergeometric,  # hypergeometric(ngood, nbad, nsample) @IgnorePep8
     'laplace': numpy.random.laplace,  # laplace()
     'logistic': numpy.random.logistic,  # logistic()
     'lognormal': numpy.random.lognormal,  # lognormal()
     'logseries': numpy.random.logseries,  # logseries(p)
-    'negative_binomial': numpy.random.negative_binomial,  # negative_binomial(n, p)
-    'noncentral_chisquare': numpy.random.noncentral_chisquare,  # noncentral_chisquare(df, nonc)
-    'noncentral_f': numpy.random.noncentral_f,  # noncentral_f(dfnum, dfden, nonc)
+    'negative_binomial': numpy.random.negative_binomial,  # negative_binomial(n, p) @IgnorePep8
+    'noncentral_chisquare': numpy.random.noncentral_chisquare,  # noncentral_chisquare(df, nonc) @IgnorePep8
+    'noncentral_f': numpy.random.noncentral_f,  # noncentral_f(dfnum, dfden, nonc) @IgnorePep8
     'normal': numpy.random.normal,  # normal()
     'pareto': numpy.random.pareto,  # pareto(a)
     'poisson': numpy.random.poisson,  # poisson()
     'power': numpy.random.power,  # power(a)
     'rayleigh': numpy.random.rayleigh,  # rayleigh()
     'standard_cauchy': numpy.random.standard_cauchy,  # standard_cauchy()
-    'standard_exponential': numpy.random.standard_exponential,  # standard_exponential()
+    'standard_exponential': numpy.random.standard_exponential,  # standard_exponential() @IgnorePep8
     'standard_gamma': numpy.random.standard_gamma,  # standard_gamma(shape)
     'standard_normal': numpy.random.standard_normal,  # standard_normal()
     'standard_t': numpy.random.standard_t,  # standard_t(df)
@@ -89,7 +89,8 @@ def is_builtin_math_function(funcname):
             err = 'Unrecognised math namespace: %s' % namespace
             raise NineMLMathParseError(err)
         if not func in _math_namespaces[namespace]:
-            err = 'Unrecognised function in namespace: %s %s' % (namespace, func)
+            err = ('Unrecognised function in namespace: %s %s' %
+                   (namespace, func))
             raise NineMLMathParseError(err)
         return True
 
@@ -173,16 +174,17 @@ class MathUtil(object):
         # characters.
         frm = re.escape(frm)
 
-        # do replace using regex
-        # this matches names, using lookahead and lookbehind to be sure we don't
-        # match for example 'xp' in name 'exp' ...
+        # do replace using regex this matches names, using lookahead and
+        # lookbehind to be sure we don't match for example 'xp' in name 'exp'
+        # ...
         if func_ok:
             # func_ok indicates we may replace a function name
             p_func = re.compile(r"(?<![a-zA-Z_0-9])(%s)(?![a-zA-Z_0-9])" % frm)
         else:
             # this will not replace a function name even if its name matches
             # from due to the lookahead disallowing '('
-            p_func = re.compile(r"(?<![a-zA-Z_0-9])(%s)(?![(a-zA-Z_0-9])" % frm)
+            p_func = re.compile(r"(?<![a-zA-Z_0-9])(%s)(?![(a-zA-Z_0-9])" %
+                                frm)
         return p_func.sub(to, expr_string)
 
     @classmethod
@@ -198,9 +200,10 @@ class MathUtil(object):
         new_func_expr = 'norm_rand(\\1,\\2)'
 
         """
-        #\w = [a-zA-Z0-9_]
+        # \w = [a-zA-Z0-9_]
 
-        regex = r"""%s\( ([^,) ]*) \s* (?: , \s* ([^, )]*) )* \s* \)""" % orig_func_name
+        regex = (r"""%s\( ([^,) ]*) \s* (?: , \s* ([^, )]*) )* \s* \)""" %
+                 orig_func_name)
         r = re.compile(regex, re.VERBOSE)
         new_expr = r.sub(new_func_expr, expr)
 
@@ -215,9 +218,11 @@ class MathUtil(object):
 
     @classmethod
     def get_prefixed_rhs_string(cls, expr_obj, prefix="", exclude=None):
-        """Prefixes variable names in a string. This will not toouch
-        math-builtins such as ``pi`` and ``sin``, (i.e. neither standard constants
-        not variables)"""
+        """
+        Prefixes variable names in a string. This will not toouch math-builtins
+        such as ``pi`` and ``sin``, (i.e. neither standard constants not
+        variables)
+        """
 
         expr = expr_obj.rhs
         for name in expr_obj.rhs_names:

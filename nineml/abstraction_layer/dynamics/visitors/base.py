@@ -18,12 +18,13 @@ class ComponentVisitor(object):
 class ActionVisitor(ComponentVisitor):
 
     def __init__(self, explicitly_require_action_overrides=True):
-        self.explicitly_require_action_overrides = explicitly_require_action_overrides
+        self.explicitly_require_action_overrides = explicitly_require_action_overrides  # @IgnorePep8
 
     def visit_componentclass(self, component, **kwargs):
         self.action_componentclass(component, **kwargs)
 
-        nodes = chain(component.parameters, component.analog_ports, component.event_ports)
+        nodes = chain(component.parameters, component.analog_ports,
+                      component.event_ports)
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
@@ -35,13 +36,15 @@ class ActionVisitor(ComponentVisitor):
 
     def visit_dynamics(self, dynamics, **kwargs):
         self.action_dynamics(dynamics, **kwargs)
-        nodes = chain(dynamics.regimes, dynamics.aliases, dynamics.state_variables)
+        nodes = chain(dynamics.regimes, dynamics.aliases,
+                      dynamics.state_variables)
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
     def visit_regime(self, regime, **kwargs):
         self.action_regime(regime, **kwargs)
-        nodes = chain(regime.time_derivatives, regime.on_events, regime.on_conditions)
+        nodes = chain(regime.time_derivatives, regime.on_events,
+                      regime.on_conditions)
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
@@ -79,7 +82,8 @@ class ActionVisitor(ComponentVisitor):
     def visit_oncondition(self, on_condition, **kwargs):
         self.action_oncondition(on_condition, **kwargs)
         nodes = chain([on_condition.trigger],
-                      on_condition.event_outputs, on_condition.state_assignments)
+                      on_condition.event_outputs,
+                      on_condition.state_assignments)
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
@@ -98,44 +102,44 @@ class ActionVisitor(ComponentVisitor):
             pass
 
     # To be overridden:
-    def action_componentclass(self, component,  **kwargs):
+    def action_componentclass(self, component, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_dynamics(self, dynamics, **kwargs):
+    def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_regime(self, regime,  **kwargs):
+    def action_regime(self, regime, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_statevariable(self, state_variable, **kwargs):
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_pass()
 
-    def action_parameter(self, parameter, **kwargs):
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_analogport(self, port, **kwargs):
+    def action_analogport(self, port, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_eventport(self, port, **kwargs):
+    def action_eventport(self, port, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_outputevent(self, output_event, **kwargs):
+    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_assignment(self, assignment, **kwargs):
+    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_alias(self, alias, **kwargs):
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_timederivative(self, time_derivative, **kwargs):
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_pass()
 
-    def action_condition(self, condition, **kwargs):
+    def action_condition(self, condition, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_oncondition(self, on_condition, **kwargs):
+    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_onevent(self, on_event, **kwargs):
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.check_pass()

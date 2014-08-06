@@ -32,8 +32,9 @@ grid2D = ComponentClass(
 
 from nineml.abstraction_layer.components import BaseComponentClass
 
+
 def Function(object):
-    
+
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -44,7 +45,7 @@ class StructureGenerator(object):
     A representation of an algorithm for generating a list of positions in
     space given a list (or interval?) of indices.
     """
-    
+
     def __init__(self, coordinates, aliases):
         self.coordinates = coordinates
         self.aliases = aliases
@@ -53,7 +54,7 @@ class StructureGenerator(object):
 def CoordinateGenerator(object):
     """
     """
-    
+
     def __init__(self, name, expression):
         self.name = name
         if isinstance(expression, Function):
@@ -63,8 +64,7 @@ def CoordinateGenerator(object):
 
 
 class ComponentClass(BaseComponentClass):
-    
+
     def __init__(self, name, parameters=None, structure=None):
         super(ComponentClass, self).__init__(name, parameters)
         self._structure = structure
-    

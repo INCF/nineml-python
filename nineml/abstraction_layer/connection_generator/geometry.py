@@ -21,8 +21,10 @@ class Geometry(object):
     """
     Geometry interface has got three methods:
      * metric: returns a distance between two neurones
-     * sourcePosition: returns x,y,z coordinates of a neurone from the source Population/Selection/Group
-     * targetPosition: returns x,y,z coordinates of a neurone from the target Population/Selection/Group
+     * sourcePosition: returns x,y,z coordinates of a neurone from the source
+                       Population/Selection/Group
+     * targetPosition: returns x,y,z coordinates of a neurone from the target
+                       Population/Selection/Group
     """
 
     __metaclass__ = ABCMeta
@@ -30,8 +32,8 @@ class Geometry(object):
     @abstractmethod
     def metric(self, source_index, target_index):
         """
-        Returns a distance between two points (units: ???) specified by the *source_index*
-        and the *target_index* arguments.
+        Returns a distance between two points (units: ???) specified by the
+        *source_index* and the *target_index* arguments.
 
         :param source_index: Integer
         :param target_index: Integer
@@ -44,7 +46,8 @@ class Geometry(object):
     @abstractmethod
     def sourcePosition(self, index):
         """
-        Returns a coordinate (tuple: (x, y, z); units: ???) of a point specified by the *index* argument.
+        Returns a coordinate (tuple: (x, y, z); units: ???) of a point
+        specified by the *index* argument.
 
         :param index: Integer
 
@@ -56,7 +59,8 @@ class Geometry(object):
     @abstractmethod
     def targetPosition(self, index):
         """
-        Returns a coordinate (tuple: (x, y, z); units: ???) of a point specified by the *index* argument.
+        Returns a coordinate (tuple: (x, y, z); units: ???) of a point
+        specified by the *index* argument.
 
         :param index: Integer
 

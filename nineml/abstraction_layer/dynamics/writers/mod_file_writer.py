@@ -14,7 +14,8 @@ class ModFileWriter(object):
     def write(cls, component, filename):
 
         from nineml2nmodl import write_nmodl, write_nmodldirect
-        write_nmodldirect(component=component, mod_filename=filename, weight_variables={})
+        write_nmodldirect(component=component, mod_filename=filename,
+                          weight_variables={})
 
     @classmethod
     def compile_modfiles(cls, directory):

@@ -32,7 +32,8 @@ def call_expr_func(expr_func, ns):
         try:
             args.append(ns[var])
         except KeyError:
-            raise KeyError, "call_expr_func: namespace missing variable '%s'" % var
+            raise KeyError("call_expr_func: namespace missing variable '%s'" %
+                           var)
     return expr_func(*args)
 
 
@@ -71,7 +72,7 @@ class Parser(object):
         try:
             yacc.parse(expr)
         except NineMLMathParseError, e:
-            raise NineMLMathParseError, str(e) + " Expression was: '%s'" % expr
+            raise NineMLMathParseError(str(e) + " Expression was: '%s'" % expr)
 
         # remove names from the math_namespace
         self.names = set(self.names)
@@ -106,13 +107,14 @@ class CalcExpr(Parser):
         try:
             t.value = float(t.value)
         except ValueError:
-            raise NineMLMathParseError, "Invalid number %s" % t.value
+            raise NineMLMathParseError("Invalid number %s" % t.value)
         return t
 
     t_ignore = " \t"
 
     def t_error(self, t):
-        raise NineMLMathParseError, "Illegal character '%s' in '%s'" % (t.value[0], t)
+        raise NineMLMathParseError("Illegal character '%s' in '%s'" %
+                                   (t.value[0], t))
 
     precedence = (
         ('left', 'PLUS', 'MINUS'),
@@ -143,7 +145,8 @@ class CalcExpr(Parser):
     def p_func(self, p):
         """expression : LFUNC expression RPAREN\n | LFUNC RPAREN
                         | LFUNC expression COMMA expression RPAREN
-                        | LFUNC expression COMMA expression COMMA expression RPAREN
+                        | LFUNC expression COMMA expression COMMA expression
+                          RPAREN
         """
         # EM: Supports up to 3 args.  Don't know how to support N.
 
@@ -167,9 +170,10 @@ class CalcExpr(Parser):
 
     def p_error(self, p):
         if p:
-            raise NineMLMathParseError, "Syntax error at '%s'" % p.value
+            raise NineMLMathParseError("Syntax error at '%s'" % p.value)
         else:
-            raise NineMLMathParseError, "Syntax error at EOF, probably unmatched parenthesis."
+            raise NineMLMathParseError("Syntax error at EOF, probably "
+                                       "unmatched parenthesis.")
 
 
 def expr_parse(rhs):

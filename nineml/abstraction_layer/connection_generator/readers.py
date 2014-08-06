@@ -11,7 +11,7 @@ class XMLLoader(object):
     # for now we copy and modify the XMLLoader from the "dynamics" module
     # it would be better either to have a common base class, or to have
     # a single XMLLoader that worked for all AL modules.
-    
+
     def __init__(self, xmlroot, xml_node_filename_map):
         self.components = []
         self.component_srcs = {}
@@ -25,14 +25,15 @@ class XMLLoader(object):
 
         blocks = ('Parameter', 'ConnectionRule')
         subnodes = self.loadBlocks(element, blocks=blocks)
-        #connection_rule = expect_single(subnodes["ConnectionRule"])
+        # connection_rule = expect_single(subnodes["ConnectionRule"])
         connection_rule = subnodes.get("ConnectionRule", None)
         return ComponentClass(name=element.get('name'),
                               parameters=subnodes["Parameter"],
                               connection_rule=connection_rule)
 
     def load_parameter(self, element):
-        return Parameter(name=element.get('name'), dimension=element.get('dimension'))
+        return Parameter(name=element.get('name'),
+                         dimension=element.get('dimension'))
 
     def load_connectionrule(self, element):
         closure = None
@@ -44,7 +45,7 @@ class XMLLoader(object):
                 pass
         err = "No known implementation for ConnectionRule"
         raise NineMLRuntimeError(err)
-    
+
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
         """
@@ -66,7 +67,7 @@ class XMLLoader(object):
 
             res[tag].append(XMLLoader.tag_to_loader[tag](self, t))
         return res
-   
+
     tag_to_loader = {
         "ComponentClass": load_componentclass,
         "Parameter": load_parameter,

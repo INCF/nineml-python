@@ -43,4 +43,5 @@ class TestXMLWriteReadWrite(object):
 
         if hash1 != hash2:
             raise ValueError(
-                'XML files are different. This may not be an error but please report it to the developers')
+                'XML files are different. This may not be an error but please'
+                ' report it to the developers')

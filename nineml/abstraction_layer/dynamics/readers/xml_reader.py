@@ -43,8 +43,8 @@ class XMLLoader(object):
 
     def load_subnode(self, subnode):
         namespace = subnode.get('namespace')
-        component = nineml.utility.filter_expect_single(self.components,
-                                                        lambda c: c.name == subnode.get('node'))
+        component = filter_expect_single(self.components,
+                                       lambda c: c.name == subnode.get('node'))
         return namespace, component
 
     def load_componentclass(self, element):
@@ -56,15 +56,16 @@ class XMLLoader(object):
 
         dynamics = expect_single(subnodes["Dynamics"])
         return al.ComponentClass(name=element.get('name'),
-                                        parameters=subnodes["Parameter"],
-                                        analog_ports=subnodes["AnalogPort"],
-                                        event_ports=subnodes["EventPort"],
-                                        dynamics=dynamics,
-                                        subnodes=dict(subnodes['Subnode']),
-                                        portconnections=subnodes["ConnectPorts"])
+                                 parameters=subnodes["Parameter"],
+                                 analog_ports=subnodes["AnalogPort"],
+                                 event_ports=subnodes["EventPort"],
+                                 dynamics=dynamics,
+                                 subnodes=dict(subnodes['Subnode']),
+                                 portconnections=subnodes["ConnectPorts"])
 
     def load_parameter(self, element):
-        return Parameter(name=element.get('name'), dimension=element.get('dimension'))
+        return Parameter(name=element.get('name'),
+                         dimension=element.get('dimension'))
 
     def load_analogport(self, element):
         return al.AnalogPort(name=element.get("name"),
@@ -116,9 +117,9 @@ class XMLLoader(object):
         trigger = expect_single(subnodes["Trigger"])
 
         return al.OnCondition(trigger=trigger,
-                                     state_assignments=subnodes["StateAssignment"],
-                                     event_outputs=subnodes["EventOut"],
-                                     target_regime_name=target_regime)
+                              state_assignments=subnodes["StateAssignment"],
+                              event_outputs=subnodes["EventOut"],
+                              target_regime_name=target_regime)
 
     def load_onevent(self, element):
         subblocks = ('StateAssignment', 'EventOut')
@@ -234,11 +235,11 @@ class XMLReader(object):
     def _load_nested_xml(cls, filename, xml_node_filename_map):
         """ Load the XML, including  all referenced Include files .
 
-        We also populate a dictionary, ``xml_node_filename_map`` which maps each
-        node to the name of the filename that it was originally in, so that when
-        we load in single components from a file, which are hierachical and
-        contain references to other components, we can find the components that
-        were in the file specified.
+        We also populate a dictionary, ``xml_node_filename_map`` which maps
+        each node to the name of the filename that it was originally in, so
+        that when we load in single components from a file, which are
+        hierachical and contain references to other components, we can find the
+        components that were in the file specified.
 
         """
 
@@ -252,7 +253,8 @@ class XMLReader(object):
 
         root = doc.getroot()
         if root.nsmap[None] != nineml_namespace:
-            errmsg = "The XML namespace is not compatible with this version of the NineML library. Expected {}, file contains {}"
+            errmsg = ("The XML namespace is not compatible with this version "
+                      "of the NineML library. Expected {}, file contains {}")
             raise Exception(errmsg.format(nineml_namespace, root.nsmap[None]))
 
         # Recursively Load Include Nodes:
@@ -267,9 +269,9 @@ class XMLReader(object):
         """Reads a single |COMPONENTCLASS| object from a filename.
 
         :param filename: The name of the file.
-        :param component_name: If the file contains more than one ComponentClass
-            definition, this parameter must be provided as a ``string``
-            specifying which component to return, otherwise a
+        :param component_name: If the file contains more than one
+            ComponentClass definition, this parameter must be provided as a
+            ``string`` specifying which component to return, otherwise a
             NineMLRuntimeException will be raised.
         :rtype: Returns a |COMPONENTCLASS| object.
         """
@@ -280,16 +282,16 @@ class XMLReader(object):
         """Reads a single |COMPONENTCLASS| object from a filename.
 
         :param filename: The name of the file.
-        :param component_name: If the file contains more than one ComponentClass
-            definition, this parameter must be provided as a ``string``
-            specifying which component to return, otherwise a
+        :param component_name: If the file contains more than one
+            ComponentClass definition, this parameter must be provided as a
+            ``string`` specifying which component to return, otherwise a
             NineMLRuntimeException will be raised.
         :rtype: Returns a |COMPONENTCLASS| object.
         """
 
         xml_node_filename_map = {}
         root = cls._load_nested_xml(filename=filename,
-                                    xml_node_filename_map=xml_node_filename_map)
+                                   xml_node_filename_map=xml_node_filename_map)
 
         loader = cls.loader(xmlroot=root,
                             xml_node_filename_map=xml_node_filename_map)

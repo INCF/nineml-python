@@ -12,9 +12,10 @@ from nineml.utility import assert_no_duplicates
 class ComponentValidatorDuplicateRegimeNames(ComponentValidatorPerNamespace):
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self, explicitly_require_action_overrides=False)
+        ComponentValidatorPerNamespace.__init__(self,
+                                     explicitly_require_action_overrides=False)
         self.visit(component)
 
-    def action_componentclass(self, componentclass, namespace):
+    def action_componentclass(self, componentclass, namespace):  # @UnusedVariable @IgnorePep8
         regime_names = [r.name for r in componentclass.regimes]
         assert_no_duplicates(regime_names)

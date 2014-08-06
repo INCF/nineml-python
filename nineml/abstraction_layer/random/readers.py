@@ -15,4 +15,3 @@ class XMLReader(object):
             parameters = [Parameter(name="lowerBound", dimension=None),
                           Parameter(name="upperBound", dimension=None)]
         return ComponentClass(url, parameters)
-

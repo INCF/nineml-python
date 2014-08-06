@@ -7,5 +7,6 @@ docstring needed
 
 from .events import OutputEvent
 
+
 def SpikeOutputEvent():
     return OutputEvent('spikeoutput')

@@ -19,14 +19,14 @@ class Port(object):
     Generally, a send port can be connected to receive port to allow different
     components to communicate.
 
-    In the case of an |AnalogPort|, we have three
-    modes, ``send``, ``recv`` and ``reduce``. ``send`` ports can be connected to
-    any number of ``recv`` ports, but each ``recv`` port can only be connected
-    to a single ``send`` port. In order to collect analog inputs from several
-    ``send`` ports into a single port, we use a ``reduce`` port. A ``reduce``
-    port also requires an additional parameter, ``op``, which specifies how to
-    combine the information from the ports, for example, by adding their values
-    together, `+`.
+    In the case of an |AnalogPort|, we have three modes, ``send``, ``recv`` and
+    ``reduce``. ``send`` ports can be connected to any number of ``recv``
+    ports, but each ``recv`` port can only be connected to a single ``send``
+    port. In order to collect analog inputs from several ``send`` ports into a
+    single port, we use a ``reduce`` port. A ``reduce`` port also requires an
+    additional parameter, ``op``, which specifies how to combine the
+    information from the ports, for example, by adding their values together,
+    `+`.
 
     For example, if we had several Hodgkin-Huxley channels on a neuron, we
     would want each one to have a ``send`` port, ``i`` containing the current
@@ -44,9 +44,9 @@ class Port(object):
         :param name: The name of the port, as a `string`
         :param mode: The mode of the port, which should be a string as either,
             ``send``,``recv`` or ``reduce``.
-        :param reduce_op: This should be ``None`` unless the mode is ``reduce``.
-            If the mode is ``reduce``, then this must be a supported
-            ``reduce_op``
+        :param reduce_op: This should be ``None`` unless the mode is
+            ``reduce``. If the mode is ``reduce``, then this must be a
+            supported ``reduce_op``
 
         .. note::
 
@@ -111,9 +111,9 @@ class AnalogPort(Port):
 
     """AnalogPort
 
-    An |AnalogPort| represents a continuous input or output to/from a Component.
-    For example, this could be the membrane-voltage into a synapse component, or
-    the current provided by a ion-channel.
+    An |AnalogPort| represents a continuous input or output to/from a
+    Component. For example, this could be the membrane-voltage into a synapse
+    component, or the current provided by a ion-channel.
 
     """
 
@@ -126,11 +126,10 @@ class EventPort(Port):
 
     """EventPort
 
-    An |EventPort| is a port that can transmit and receive discrete events at points
-    in time. For example, an integrate-and-fire could 'send' events to notify
-    other components that it had fired; or synapses could receive events to
-    notify them to provide current to a post-synaptic neuron.
-
+    An |EventPort| is a port that can transmit and receive discrete events at
+    points in time. For example, an integrate-and-fire could 'send' events to
+    notify other components that it had fired; or synapses could receive events
+    to notify them to provide current to a post-synaptic neuron.
     """
 
     def accept_visitor(self, visitor, **kwargs):

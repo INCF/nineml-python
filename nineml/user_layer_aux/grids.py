@@ -14,8 +14,6 @@
 
 import math
 from nineml.geometry import Geometry
-
-import nineml
 import nineml.user_layer
 
 
@@ -27,9 +25,11 @@ class GeometryImplementation(Geometry):
     """
 
     def __init__(self, source_unstructured_grid, target_unstructured_grid):
-        if (not source_unstructured_grid) or (not isinstance(source_unstructured_grid, UnstructuredGrid)):
+        if (not source_unstructured_grid or
+            not isinstance(source_unstructured_grid, UnstructuredGrid)):
             raise RuntimeError('')
-        if (not target_unstructured_grid) or (not isinstance(target_unstructured_grid, UnstructuredGrid)):
+        if (not target_unstructured_grid or
+            not isinstance(target_unstructured_grid, UnstructuredGrid)):
             raise RuntimeError('')
 
         self.source_unstructured_grid = source_unstructured_grid
@@ -50,9 +50,11 @@ class GeometryImplementation(Geometry):
 def createUnstructuredGrid(ul_population):
     """
     """
-    if not isinstance(ul_population.prototype, nineml.user_layer.SpikingNodeType):
+    if not isinstance(ul_population.prototype,
+                      nineml.user_layer.SpikingNodeType):
         raise RuntimeError(
-            'Currently, only populations of spiking neurones (not groups) are supported; population {0}'.format(ul_population.name))
+            'Currently, only populations of spiking neurones (not groups) are '
+            'supported; population {0}'.format(ul_population.name))
 
     if ul_population.positions._positions:
         if len(ul_population.positions._positions) != ul_population.number:
@@ -67,12 +69,16 @@ def createUnstructuredGrid(ul_population):
                 ul_population.positions.structure.definition.url)
 
         except Exception as e:
-            raise RuntimeError('Failed to load the Structure component: {0}; the reason: {1}'.format(
-                ul_population.positions.structure.definition.url, str(e)))
+            raise RuntimeError('Failed to load the Structure component: {0}; '
+                               'the reason: {1}'
+                               .format(ul_population.positions.structure.\
+                                                       definition.url, str(e)))
 
         if al_structure.name == 'grid_2d':
-            fillOrder = ul_population.positions.structure.parameters['fillOrder'].value
-            aspectRatioXY = ul_population.positions.structure.parameters['aspectRatioXY'].value
+            fillOrder = ul_population.positions.structure.\
+                                                  parameters['fillOrder'].value
+            aspectRatioXY = ul_population.positions.structure.\
+                                              parameters['aspectRatioXY'].value
             x0 = ul_population.positions.structure.parameters['x0'].value
             y0 = ul_population.positions.structure.parameters['y0'].value
             dx = ul_population.positions.structure.parameters['dx'].value
@@ -81,7 +87,8 @@ def createUnstructuredGrid(ul_population):
             return Grid2D(x0, y0, dx, dy, ul_population.number)
 
         else:
-            raise RuntimeError('Unsupported Structure component: {0}'.format(al_structure.name))
+            raise RuntimeError('Unsupported Structure component: {0}'
+                               .format(al_structure.name))
 
     else:
         raise RuntimeError('')
@@ -125,7 +132,8 @@ class Grid2D(UnstructuredGrid):
             Nx = int(n) + 1
             Ny = int(n) + 1
 
-        positions = [(x0 + i * dx, y0 + j * dy, 0.0) for i in xrange(0, Nx) for j in xrange(0, Ny)]
+        positions = [(x0 + i * dx, y0 + j * dy, 0.0)
+                     for i in xrange(0, Nx) for j in xrange(0, Ny)]
 
         # Keep only N positions!
         UnstructuredGrid.__init__(self, positions[0: self.N - 1])
@@ -134,7 +142,8 @@ class Grid2D(UnstructuredGrid):
         return str(self.positions)
 
     def __repr__(self):
-        return 'Grid2D({0}, {1}, {2}, {3}, {4})'.format(self.x0, self.y0, self.dx, self.dy, self.N)
+        return ('Grid2D({0}, {1}, {2}, {3}, {4})'
+                .format(self.x0, self.y0, self.dx, self.dy, self.N))
 
 if __name__ == "__main__":
     grid2d = Grid2D(0.0, 0.0, 0.1, 0.1, 100)

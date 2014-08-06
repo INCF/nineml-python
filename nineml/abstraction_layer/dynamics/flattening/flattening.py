@@ -9,19 +9,20 @@ import itertools
 from collections import defaultdict
 from nineml.utility import flatten_first_level, expect_single
 from nineml.abstraction_layer.dynamics.visitors import (ClonerVisitor,
-                                               ClonerVisitorPrefixNamespace,
-                                               ExpandPortDefinition)
+                                                        ClonerVisitorPrefixNamespace,
+                                                        ExpandPortDefinition)
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.dynamics.component import (NamespaceAddress,
-                                                ComponentClass, Regime,
-                                                OnCondition, OnEvent)
+                                                         ComponentClass, Regime,
+                                                         OnCondition, OnEvent)
 
 
 class TransitionResolver(object):
 
     RecurseEventTransitions = True
 
-    def __init__(self, oldtransition, regime_tuple, transition_regime_tuple_index, flattener):
+    def __init__(self, oldtransition, regime_tuple,
+                 transition_regime_tuple_index, flattener):
 
         # Store where we are starting and going to:
         self.src_regime_tuple = tuple(regime_tuple)
@@ -40,16 +41,19 @@ class TransitionResolver(object):
 
         # Construct a map of { send ports -> [recv ports] }.
         # This makes it easy to iterate over send events:
-        portconnections = [model.portconnections for model in flattener.all_components]
+        portconnections = [
+            model.portconnections for model in flattener.all_components]
         portconnections = list(itertools.chain(* portconnections))
         self.send_rev_map = {}
         for src, dst in portconnections:
             if not src.get_local_name() in self.send_rev_map:
                 self.send_rev_map[src.get_local_name()] = []
-            self.send_rev_map[src.get_local_name()].append(dst.get_local_name())
+            self.send_rev_map[src.get_local_name()].append(
+                dst.get_local_name())
 
         # Variables used in recursion:
-        self.unresolved_transitions = [(oldtransition, transition_regime_tuple_index)]
+        self.unresolved_transitions = [
+            (oldtransition, transition_regime_tuple_index)]
         self.changed_regime_indices = set()
 
         # Recursively solve the transitions:
@@ -65,7 +69,8 @@ class TransitionResolver(object):
 
             if regime_index in self.changed_regime_indices:
                 raise NineMLRuntimeError(
-                    'Something has gone wrong with event resolution. Changing Regime Twice!')
+                    'Something has gone wrong with event resolution. '
+                    'Changing Regime Twice!')
             self.changed_regime_indices.add(regime_index)
 
             self.resolve_transition(transition, regime_index)
@@ -97,22 +102,24 @@ class TransitionResolver(object):
             for recv_port in self.send_rev_map[ev_out.port_name]:
                 # print '    -> Connection to ', recv_port
 
-                # So this port is connected, but are we in a regime that triggers from
-                # this port??
-
+                # So this port is connected, but are we in a regime that
+                # triggers from this port??
                 for cascade_regime_index, regime in enumerate(self.dst_regime_tuple):
                     for cascade_ev in regime.on_events:
                         if cascade_ev.src_port_name == recv_port:
                             # print '     (**Cascade found**)'
-                            self.unresolved_transitions.append((cascade_ev, cascade_regime_index))
+                            self.unresolved_transitions.append(
+                                (cascade_ev, cascade_regime_index))
 
-    def get_new_regime_tuple_from_transition(self, current_regime_tuple, regime_index, oldtransition):
+    def get_new_regime_tuple_from_transition(self, current_regime_tuple,
+                                             regime_index, oldtransition):
 
         # Make a list from the old tuple, so its mutable:
         dst_regime_tuple = list(current_regime_tuple)
 
         name = oldtransition.target_regime_name
-        dst_regime_old = self.flattener.componentswithregimes[regime_index].query.regime(name=name)
+        dst_regime_old = self.flattener.componentswithregimes[
+            regime_index].query.regime(name=name)
         dst_regime_tuple[regime_index] = dst_regime_old
 
         # Return the tuple:
@@ -123,6 +130,7 @@ class ComponentFlattener(object):
 
     # Utility Functions:
     # ------------------ #
+
     @classmethod
     def flatten_namespace(cls, ns_str):
         return ns_str.replace('.', '_')
@@ -139,16 +147,19 @@ class ComponentFlattener(object):
     def get_new_regime(self, old_regime_string):
         """
         for example:
-        old_regime_string = iaf:subthresholdregime cobaInhib:cobadefaultregime cobaExcit:cobadefaultregime'
+        old_regime_string = ('iaf:subthresholdregime '
+                             'cobaInhib:cobadefaultregime '
+                             'cobaExcit:cobadefaultregime')
         """
 
         # Lets create a dictionary that maps 'NamespaceAddress' to regime name
         # from the input string:
-        # old_regime_string = 'iaf:subthresholdregime cobaInhib:cobadefaultregime
-        # cobaExcit:cobadefaultregime'
+        # old_regime_string = 'iaf:subthresholdregime'
+        #                     'cobaInhib:cobadefaultregime'
+        #                     'cobaExcit:cobadefaultregime'
         nsstr_regimename = [l.split(':') for l in old_regime_string.split()]
         ns_regimename = dict([(NamespaceAddress(ns), regime_name)
-                             for (ns, regime_name) in nsstr_regimename])
+                              for (ns, regime_name) in nsstr_regimename])
 
         # OK, now lets go through our old componentswithregimes,
         # and find the regime that was specified.
@@ -156,9 +167,12 @@ class ComponentFlattener(object):
         for c in self.componentswithregimes:
             comp_ns = c.get_node_addr()
             if not comp_ns in ns_regimename:
-                err = 'Looking for a regime in namespace: %s, but not found.' % str(comp_ns)
-                err += '\nNamespaces: %s' % ','.join([str(ns) for ns in ns_regimename.keys()])
-                err += '\nSpecified String: %s' % old_regime_string
+                err = ('Looking for a regime in namespace: {}, but not found.'
+                       .format(comp_ns))
+                err += ('\nNamespaces: {}'
+                        .format(','.join([str(ns)
+                                          for ns in ns_regimename.keys()])))
+                err += '\nSpecified String: {}'.format(old_regime_string)
                 raise NineMLRuntimeError(err)
             target_regime_name = ns_regimename[comp_ns]
 
@@ -172,7 +186,8 @@ class ComponentFlattener(object):
 
         target_regime_tuple = tuple(target_regime_tuple)
 
-        new_regime = self.old_regime_tuple_to_new_regime_map[target_regime_tuple]
+        new_regime = self.old_regime_tuple_to_new_regime_map[
+            target_regime_tuple]
         return new_regime
 
     # Flattening Functions:
@@ -196,7 +211,8 @@ class ComponentFlattener(object):
 
         # Make a list of all components, and those components with regimes:
         self.all_components = list(cloned_comp.query.recurse_all_components)
-        self.componentswithregimes = [m for m in self.all_components if list(m.regimes)]
+        self.componentswithregimes = [
+            m for m in self.all_components if list(m.regimes)]
 
         # This will get filled in build_new_regime_space():
         # (It maps { (Regime,Regime,...,Regime) : Regime, (Regime,Regime,...,Regime) : Regime,}
@@ -212,7 +228,8 @@ class ComponentFlattener(object):
         # Build Our New Component
         self.reducedcomponent = ComponentClass(
             name=self.componentname,
-            aliases=flatten_first_level([m.aliases for m in self.all_components]),
+            aliases=flatten_first_level(
+                [m.aliases for m in self.all_components]),
             state_variables=flatten_first_level(
                 [m.state_variables for m in self.all_components]),
             regimes=self.old_regime_tuple_to_new_regime_map.values(),
@@ -220,7 +237,8 @@ class ComponentFlattener(object):
                 [comp.analog_ports for comp in self.all_components]),
             event_ports=flatten_first_level(
                 [comp.event_ports for comp in self.all_components]),
-            parameters=flatten_first_level([m.parameters for m in self.all_components]))
+            parameters=flatten_first_level([m.parameters
+                                            for m in self.all_components]))
 
         self.remap_analog_ports()
 
@@ -234,7 +252,8 @@ class ComponentFlattener(object):
         # We don't worry about transitions yet, we deal with them later.
 
         # We need to clone the time_derivatives:
-        time_derivs = flatten_first_level([r.time_derivatives for r in regimetuple])
+        time_derivs = flatten_first_level(
+            [r.time_derivatives for r in regimetuple])
         time_derivs = [ClonerVisitor().visit(td) for td in time_derivs]
 
         return Regime(name=None, time_derivatives=time_derivs)
@@ -264,9 +283,9 @@ class ComponentFlattener(object):
                         flattener=self,
                     )
                     new_oncondition = OnCondition(oldtransition.trigger,
-                                                            state_assignments=tr.state_assignments,
-                                                            event_outputs=tr.event_outputs,
-                                                            target_regime_name=tr.target_regime.name)
+                                                  state_assignments=tr.state_assignments,
+                                                  event_outputs=tr.event_outputs,
+                                                  target_regime_name=tr.target_regime.name)
 
                     regime_new.add_on_condition(new_oncondition)
 
@@ -278,9 +297,9 @@ class ComponentFlattener(object):
                         flattener=self,
                     )
                     new_onevent = OnEvent(oldtransition.src_port_name,
-                                                    state_assignments=tr.state_assignments,
-                                                    event_outputs=tr.event_outputs,
-                                                    target_regime_name=tr.target_regime.name)
+                                          state_assignments=tr.state_assignments,
+                                          event_outputs=tr.event_outputs,
+                                          target_regime_name=tr.target_regime.name)
                     regime_new.add_on_event(new_onevent)
 
     def remap_analog_ports(self):
@@ -290,7 +309,8 @@ class ComponentFlattener(object):
 
         # Handle port mappings:
         # portconnections = [ (NS -> NS), (NS -> NS ), (NS -> NS) ]
-        portconnections = [model.portconnections for model in self.all_components]
+        portconnections = [
+            model.portconnections for model in self.all_components]
         portconnections = list(itertools.chain(* portconnections))
 
         # ONLY ANALOG PORTS
@@ -304,17 +324,21 @@ class ComponentFlattener(object):
             dstport = new_analog_ports[dst_addr.get_local_name()]
             if dstport.mode == 'recv':
 
-                ExpandPortDefinition(originalname=dstport.name, targetname=srcport.name).visit(
-                    self.reducedcomponent)
+                ExpandPortDefinition(originalname=dstport.name,
+                                     targetname=srcport.name).visit(
+                                                         self.reducedcomponent)
 
                 del new_analog_ports[dst_addr.get_local_name()]
                 self.reducedcomponent._analog_ports.remove(
-                    expect_single([p for p in self.reducedcomponent.analog_ports if p.name == dst_addr.get_local_name()]))
+                    expect_single([p 
+                                   for p in self.reducedcomponent.analog_ports
+                                   if p.name == dst_addr.get_local_name()]))
 
                 portconnections.remove((src_addr, dst_addr))
 
         # B. Handle Reduce Ports:
-        # 1/ Make a map { reduce_port -> [send_port1, send_port2, send_port3], ...}
+        # 1/ Make a map { reduce_port -> [send_port1, send_port2, send_port3],
+        # ...}
         reduce_connections = defaultdict(list)
         for src, dst in portconnections:
             dstport = new_analog_ports[dst.get_local_name()]
@@ -329,8 +353,9 @@ class ComponentFlattener(object):
             reduce_expr = dstport.reduce_op.join(terms)
 
             # globalRemapPort( dstport.name, reduce_expr )
-            ExpandPortDefinition(originalname=dstport.name, targetname=reduce_expr).visit(
-                self.reducedcomponent)
+            ExpandPortDefinition(originalname=dstport.name,
+                                 targetname=reduce_expr).visit(
+                                                         self.reducedcomponent)
 
 
 def flatten(model, componentname=None):

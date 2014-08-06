@@ -1,5 +1,6 @@
 from lxml import etree
 
+from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.xmlns import NINEML
 from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics.readers import XMLReader
@@ -10,7 +11,7 @@ class XMLLoader(object):
     # for now we copy and modify the XMLLoader from the "dynamics" module
     # it would be better either to have a common base class, or to have
     # a single XMLLoader that worked for all AL modules.
-    
+
     def __init__(self, xmlroot, xml_node_filename_map):
         self.components = []
         self.component_srcs = {}
@@ -24,15 +25,15 @@ class XMLLoader(object):
 
         blocks = ('Parameter', 'Structure')
         subnodes = self.loadBlocks(element, blocks=blocks)
-        #structure = expect_single(subnodes["Structure"])
+        # structure = expect_single(subnodes["Structure"])
         structure = subnodes.get("structure", None)
         return ComponentClass(name=element.get('name'),
                               parameters=subnodes["Parameter"],
                               structure=structure)
 
     def load_parameter(self, element):
-        return Parameter(name=element.get('name'), dimension=element.get('dimension'))
-    
+        return Parameter(name=element.get('name'),
+                         dimension=element.get('dimension'))
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
@@ -51,16 +52,17 @@ class XMLLoader(object):
             if check_for_spurious_blocks and not tag in blocks:
                     err = "Unexpected Block tag: %s " % tag
                     err += '\n Expected: %s' % ','.join(blocks)
-                    raise nineml.exceptions.NineMLRuntimeError(err)
+                    raise NineMLRuntimeError(err)
 
             res[tag].append(XMLLoader.tag_to_loader[tag](self, t))
         return res
-   
+
     tag_to_loader = {
         "ComponentClass": load_componentclass,
         "Parameter": load_parameter,
-        #"Structure": load_structure,
+        # "Structure": load_structure,
     }
+
 
 class XMLReader(XMLReader):
     loader = XMLLoader

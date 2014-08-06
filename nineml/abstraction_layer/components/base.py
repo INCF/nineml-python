@@ -13,10 +13,10 @@ from .interface import Parameter
 
 class BaseComponentClass(object):
     """Base class for ComponentClasses in different 9ML modules."""
-    
+
     def __init__(self, name, parameters=None):
         self._name = name
-        
+
         # Turn any strings in the parameter list into Parameters:
         if parameters is None:
             self._parameters = []
@@ -35,4 +35,3 @@ class BaseComponentClass(object):
     def parameters(self):
         """Returns an iterator over the local |Parameter| objects"""
         return iter(self._parameters)
-

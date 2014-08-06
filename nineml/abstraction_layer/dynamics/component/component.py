@@ -108,10 +108,11 @@ class ComponentClassMixinFlatStructure(object):
 
         for alias in self.aliases:
             alias_expander = ExpandAliasDefinition(originalname=alias.lhs,
-                                                   targetname="(%s)" % alias.rhs)
+                                                   targetname=("(%s)" %
+                                                               alias.rhs))
             alias_expander.visit(self)
 
-    def write(self, file, flatten=True):
+    def write(self, file, flatten=True):  # @ReservedAssignment
         """Export this model to an XML file.
 
         :params file: A filename or fileobject
@@ -119,7 +120,6 @@ class ComponentClassMixinFlatStructure(object):
             flattened before saving
 
         """
-
         from nineml.abstraction_layer.dynamics.writers import XMLWriter
         return XMLWriter.write(component=self, file=file, flatten=flatten)
 
@@ -195,13 +195,12 @@ class ComponentClassMixinNamespaceStructure(object):
     def insert_subnode(self,  namespace, subnode):
         """Insert a subnode into this component
 
-
         :param subnode: An object of type ``ComponentClass``.
         :param namespace: A `string` specifying the name of the component in
             this components namespace.
 
-        :raises: ``NineMLRuntimeException`` if there is already a subcomponent at
-            the same namespace location
+        :raises: ``NineMLRuntimeException`` if there is already a subcomponent
+                  at the same namespace location
 
         .. note::
 
@@ -270,7 +269,8 @@ class InterfaceInferer(ActionVisitor):
         alias_symbols = set(dynamics.aliases_map.keys())
 
         if analog_ports is not None:
-            analog_ports_in = [ap.name for ap in analog_ports if ap.is_incoming()]
+            analog_ports_in = [ap.name
+                               for ap in analog_ports if ap.is_incoming()]
         else:
             analog_ports_in = []
 
@@ -309,26 +309,26 @@ class InterfaceInferer(ActionVisitor):
             self.free_atoms.add(atom)
 
     # Events:
-    def action_outputevent(self, output_event, **kwargs):
+    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
         self.output_event_port_names.add(output_event.port_name)
 
-    def action_onevent(self, on_event, **kwargs):
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.input_event_port_names.add(on_event.src_port_name)
 
     # Atoms (possible parameters):
-    def action_assignment(self, assignment, **kwargs):
+    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         for atom in assignment.rhs_atoms:
             self._notify_atom(atom)
 
-    def action_alias(self, alias, **kwargs):
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         for atom in alias.rhs_atoms:
             self._notify_atom(atom)
 
-    def action_timederivative(self, time_derivative, **kwargs):
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         for atom in time_derivative.rhs_atoms:
             self._notify_atom(atom)
 
-    def action_condition(self, condition, **kwargs):
+    def action_condition(self, condition, **kwargs):  # @UnusedVariable
         for atom in condition.rhs_atoms:
             self._notify_atom(atom)
 
@@ -363,15 +363,16 @@ class ComponentClass(BaseComponentClass,
         :param event_ports: A list of |EventPorts| objects, which will be the
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
-        :param dynamics: A |Dynamics| object, defining the local dynamics of the
-            component.
+        :param dynamics: A |Dynamics| object, defining the local dynamics of
+                         the component.
         :param subnodes: A dictionary mapping namespace-names to sub-component.
             [Type: ``{string:|ComponentClass|, string:|ComponentClass|,
-            string:|ComponentClass|}`` ] describing the namespace of subcomponents
-            for this component.
+            string:|ComponentClass|}`` ] describing the namespace of
+            subcomponents for this component.
         :param portconnections: A list of pairs, specifying the connections
             between the ports of the subcomponents in this component. These can
-            be `(|NamespaceAddress|, |NamespaceAddress|)' or ``(string, string)``.
+            be `(|NamespaceAddress|, |NamespaceAddress|)' or ``(string,
+            string)``.
         :param interface: A shorthand way of specifying the **interface** for
             this component; |Parameters|, |AnalogPorts| and |EventPorts|.
             ``interface`` takes a list of these objects, and automatically
@@ -406,8 +407,10 @@ class ComponentClass(BaseComponentClass,
 
         # EventPort, StateVariable and Parameter Inference:
         inferred_struct = InterfaceInferer(dynamics, analog_ports=analog_ports)
-        inf_check = lambda l1, l2, desc: check_list_contain_same_items(l1, l2,
-                                                                       desc1='Declared', desc2='Inferred', ignore=['t'], desc=desc)
+        inf_check = lambda l1, l2, desc: check_list_contain_same_items(
+                                            l1, l2, desc1='Declared',
+                                            desc2='Inferred', ignore=['t'],
+                                            desc=desc)
 
         # Check any supplied parameters match:
         if parameters is not None:
@@ -416,7 +419,8 @@ class ComponentClass(BaseComponentClass,
                       inferred_struct.parameter_names,
                       'Parameters')
         else:
-            self._parameters = [Parameter(n) for n in inferred_struct.parameter_names]
+            self._parameters = [Parameter(n)
+                                for n in inferred_struct.parameter_names]
 
         # Check any supplied state_variables match:
         if dynamics._state_variables:
@@ -454,9 +458,9 @@ class ComponentClass(BaseComponentClass,
                                                   event_ports=event_ports,
                                                   dynamics=dynamics)
 
-        ComponentClassMixinNamespaceStructure.__init__(self,
-                                                       subnodes=subnodes,
-                                                       portconnections=portconnections)
+        ComponentClassMixinNamespaceStructure.__init__(
+                                               self, subnodes=subnodes,
+                                               portconnections=portconnections)
 
         # Finalise initiation:
         self._resolve_transition_regime_names()
@@ -469,8 +473,10 @@ class ComponentClass(BaseComponentClass,
 
     @property
     def flattener(self):
-        """If this component was made by flattening other components, return the
-        |ComponentFlattener| object. This is useful for finding initial-regimes"""
+        """
+        If this component was made by flattening other components, return the
+        |ComponentFlattener| object. This is useful for finding initial-regimes
+        """
         return self._flattener
 
     def set_flattener(self, flattener):
@@ -488,7 +494,7 @@ class ComponentClass(BaseComponentClass,
         return self.flattener != None
 
     def _validate_self(self):
-        from nineml.abstraction_layer.dynamics.validators import ComponentValidator
+        from nineml.abstraction_layer.dynamics.validators import ComponentValidator  # @IgnorePep8
         ComponentValidator.validate_component(self)
 
     @property

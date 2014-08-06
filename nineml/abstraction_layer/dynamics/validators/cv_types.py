@@ -28,24 +28,25 @@ class ComponentValidatorTypes(ActionVisitor):
         assert isinstance(state_variable, al.StateVariable)
 
     def action_parameter(self, parameter):
-        assert isinstance(parameter, Parameter), "%s != %s" % (type(parameter), Parameter)
+        assert isinstance(parameter, Parameter), \
+                                      "%s != %s" % (type(parameter), Parameter)
 
-    def action_analogport(self, port, **kwargs):
+    def action_analogport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, al.AnalogPort)
 
-    def action_eventport(self, port, **kwargs):
+    def action_eventport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, al.EventPort)
 
-    def action_outputevent(self, output_event, **kwargs):
+    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
         assert isinstance(output_event, al.OutputEvent)
 
-    def action_assignment(self, assignment, **kwargs):
+    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assert isinstance(assignment, al.StateAssignment)
 
-    def action_alias(self, alias, **kwargs):
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         assert isinstance(alias, al.Alias)
 
-    def action_timederivative(self, time_derivative, **kwargs):
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         assert isinstance(time_derivative, al.TimeDerivative)
 
     def action_condition(self, condition):
@@ -54,5 +55,5 @@ class ComponentValidatorTypes(ActionVisitor):
     def action_oncondition(self, on_condition):
         assert isinstance(on_condition, al.OnCondition)
 
-    def action_onevent(self, on_event, **kwargs):
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         assert isinstance(on_event, al.OnEvent)

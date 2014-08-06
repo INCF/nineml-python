@@ -8,6 +8,7 @@ docstring needed
 from nineml.utility import flatten_first_level
 from nineml.exceptions import NineMLRuntimeError
 
+
 class NamespaceAddress(object):
 
     @classmethod

@@ -54,7 +54,8 @@ class TestableComponent(object):
     metadata_name = 'ComponentMetaData'
 
     def __str__(self):
-        s = 'Testable Component from %s [MetaData=%s]' % (self.filename, self.has_metadata)
+        s = ('Testable Component from %s [MetaData=%s]' %
+             (self.filename, self.has_metadata))
         return s
 
     def has_metadata(self):
@@ -90,7 +91,7 @@ class TestableComponent(object):
         except Exception, e:
             print e
             raise
-            # raise NineMLRuntimeError('component_functor() threw an exception')
+            # raise NineMLRuntimeError('component_functor() threw an exception') @IgnorePep8
 
         if not isinstance(c, ComponentClass):
             raise NineMLRuntimeError('Functor does not return Component Class')

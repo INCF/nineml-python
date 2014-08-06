@@ -24,16 +24,16 @@ class ExpandPortDefinition(ActionVisitor):
         self.targetname = targetname
         self.namemap = {originalname: targetname}
 
-    def action_assignment(self, assignment, **kwargs):
+    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
 
-    def action_alias(self, alias, **kwargs):
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         alias.name_transform_inplace(self.namemap)
 
-    def action_timederivative(self, time_derivative, **kwargs):
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         time_derivative.name_transform_inplace(self.namemap)
 
-    def action_condition(self, condition, **kwargs):
+    def action_condition(self, condition, **kwargs):  # @UnusedVariable
         condition.rhs_name_transform_inplace(self.namemap)
 
 
@@ -51,16 +51,16 @@ class ExpandAliasDefinition(ActionVisitor):
         self.targetname = targetname
         self.namemap = {originalname: targetname}
 
-    def action_assignment(self, assignment, **kwargs):
+    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
 
-    def action_alias(self, alias, **kwargs):
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         alias.rhs_name_transform_inplace(self.namemap)
 
-    def action_timederivative(self, time_derivative, **kwargs):
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         time_derivative.name_transform_inplace(self.namemap)
 
-    def action_condition(self, condition, **kwargs):
+    def action_condition(self, condition, **kwargs):  # @UnusedVariable
         condition.rhs_name_transform_inplace(self.namemap)
 
 
@@ -95,46 +95,46 @@ class RenameSymbol(ActionVisitor):
     def note_port_changed(self, what):
         self.port_changes.append(what)
 
-    def action_componentclass(self, component,  **kwargs):
+    def action_componentclass(self, component, **kwargs):
         pass
 
     def action_dynamics(self, dynamics, **kwargs):
         pass
 
-    def action_regime(self, regime,  **kwargs):
+    def action_regime(self, regime, **kwargs):
         pass
 
-    def action_statevariable(self, state_variable, **kwargs):
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         if state_variable.name == self.old_symbol_name:
             state_variable._name = self.new_symbol_name
             self.note_lhs_changed(state_variable)
 
-    def action_parameter(self, parameter, **kwargs):
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         if parameter.name == self.old_symbol_name:
             parameter._name = self.new_symbol_name
             self.note_lhs_changed(parameter)
 
-    def action_analogport(self, port, **kwargs):
+    def action_analogport(self, port, **kwargs):  # @UnusedVariable
         if port.name == self.old_symbol_name:
             port._name = self.new_symbol_name
             self.note_port_changed(port)
 
-    def action_eventport(self, port, **kwargs):
+    def action_eventport(self, port, **kwargs):  # @UnusedVariable
         if port.name == self.old_symbol_name:
             port._name = self.new_symbol_name
             self.note_port_changed(port)
 
-    def action_outputevent(self, output_event, **kwargs):
+    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
         if output_event.port_name == self.old_symbol_name:
             output_event._port_name = self.new_symbol_name
             self.note_rhs_changed(output_event)
 
-    def action_assignment(self, assignment, **kwargs):
+    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         if self.old_symbol_name in assignment.atoms:
             self.note_rhs_changed(assignment)
             assignment.name_transform_inplace(self.namemap)
 
-    def action_alias(self, alias, **kwargs):
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if alias.lhs == self.old_symbol_name:
             self.note_lhs_changed(alias)
             alias.name_transform_inplace(self.namemap)
@@ -142,7 +142,7 @@ class RenameSymbol(ActionVisitor):
             self.note_rhs_changed(alias)
             alias.name_transform_inplace(self.namemap)
 
-    def action_timederivative(self, timederivative, **kwargs):
+    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable
         if timederivative.dependent_variable == self.old_symbol_name:
             self.note_lhs_changed(timederivative)
             timederivative.name_transform_inplace(self.namemap)
@@ -150,7 +150,7 @@ class RenameSymbol(ActionVisitor):
             self.note_rhs_changed(timederivative)
             timederivative.name_transform_inplace(self.namemap)
 
-    def action_condition(self, condition, **kwargs):
+    def action_condition(self, condition, **kwargs):  # @UnusedVariable
         if self.old_symbol_name in condition.rhs_atoms:
             self.note_rhs_changed(condition)
             condition.rhs_name_transform_inplace(self.namemap)
@@ -159,7 +159,7 @@ class RenameSymbol(ActionVisitor):
         """ Handled in action_condition """
         pass
 
-    def action_onevent(self, on_event, **kwargs):
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         if on_event.src_port_name == self.old_symbol_name:
             on_event._src_port_name = self.new_symbol_name
             self.note_rhs_changed(on_event)
@@ -180,20 +180,19 @@ class ClonerVisitor(ComponentVisitor):
             return prefix + variable
 
     def visit_componentclass(self, component, **kwargs):
-        ccn = component.__class__(name=component.name,
-                                                      parameters=[p.accept_visitor(self, **kwargs)
-                                                                  for p in component.parameters],
-                                                      analog_ports=[p.accept_visitor(self, **kwargs)
-                                                                    for p in component.analog_ports],
-                                                      event_ports=[p.accept_visitor(self, **kwargs)
-                                                                   for p in component.event_ports],
-                                                      dynamics=component.dynamics.accept_visitor(
-                                                      self, **kwargs) if component.dynamics else None,
-                                                      subnodes=dict([(k, v.accept_visitor(self, **kwargs))
-                                                                     for (
-                                                                         k, v) in component.subnodes.iteritems(
-                                                                         )]),
-            portconnections=component.portconnections[:])
+        ccn = component.__class__(
+                 name=component.name,
+                 parameters=[p.accept_visitor(self, **kwargs)
+                             for p in component.parameters],
+                 analog_ports=[p.accept_visitor(self, **kwargs)
+                               for p in component.analog_ports],
+                 event_ports=[p.accept_visitor(self, **kwargs)
+                              for p in component.event_ports],
+                 dynamics=(component.dynamics.accept_visitor(self, **kwargs)
+                           if component.dynamics else None),
+                 subnodes=dict([(k, v.accept_visitor(self, **kwargs))
+                                for (k, v) in component.subnodes.iteritems()]),
+                 portconnections=component.portconnections[:])
         return ccn
 
     def visit_dynamics(self, dynamics, **kwargs):
@@ -202,14 +201,16 @@ class ClonerVisitor(ComponentVisitor):
                      for r in dynamics.regimes],
             aliases=[
                 a.accept_visitor(self, **kwargs) for a in dynamics.aliases],
-            state_variables=[s.accept_visitor(self, **kwargs) for s in dynamics.state_variables])
+            state_variables=[s.accept_visitor(self, **kwargs)
+                             for s in dynamics.state_variables])
 
     def visit_regime(self, regime, **kwargs):
         return regime.__class__(
             name=regime.name,
             time_derivatives=[t.accept_visitor(self, **kwargs)
                               for t in regime.time_derivatives],
-            transitions=[t.accept_visitor(self, **kwargs) for t in regime.transitions])
+            transitions=[t.accept_visitor(self, **kwargs)
+                         for t in regime.transitions])
 
     def visit_statevariable(self, state_variable, **kwargs):
         return state_variable.__class__(
@@ -249,7 +250,8 @@ class ClonerVisitor(ComponentVisitor):
 
     def visit_alias(self, alias, **kwargs):
         new_alias = alias.__class__(lhs=alias.lhs, rhs=alias.rhs)
-        name_map = dict([(a, self.prefix_variable(a, **kwargs)) for a in new_alias.atoms])
+        name_map = dict([(a, self.prefix_variable(a, **kwargs))
+                         for a in new_alias.atoms])
         new_alias.name_transform_inplace(name_map=name_map)
         return new_alias
 
@@ -257,7 +259,8 @@ class ClonerVisitor(ComponentVisitor):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
-        dep = self.prefix_variable(time_derivative.dependent_variable, **kwargs)
+        dep = self.prefix_variable(time_derivative.dependent_variable,
+                                   **kwargs)
 
         rhs = MathUtil.get_prefixed_rhs_string(
             expr_obj=time_derivative, prefix=prefix, exclude=prefix_excludes)
@@ -282,7 +285,8 @@ class ClonerVisitor(ComponentVisitor):
 
     def visit_onevent(self, on_event, **kwargs):
         return on_event.__class__(
-            src_port_name=self.prefix_variable(on_event.src_port_name, **kwargs),
+            src_port_name=self.prefix_variable(on_event.src_port_name,
+                                               **kwargs),
             event_outputs=[e.accept_visitor(self, **kwargs)
                            for e in on_event.event_outputs],
             state_assignments=[s.accept_visitor(self, **kwargs)
@@ -298,7 +302,7 @@ class ClonerVisitorPrefixNamespace(ClonerVisitor):
     for flattening
     """
 
-    def visit_componentclass(self, component, **kwargs):
+    def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
         prefix = component.get_node_addr().get_str_prefix()
         if prefix == '_':
             prefix = ''
@@ -307,12 +311,19 @@ class ClonerVisitorPrefixNamespace(ClonerVisitor):
 
         port_connections = []
         for src, sink in component.portconnections:
-            # To calculate the new address of the ports, we take of the 'local' port
-            # address, i.e. the parent address, then add the prefixed string:
-            src_new = NamespaceAddress.concat(src.get_parent_addr(),
-                                             NSA.concat(component.get_node_addr(), src.get_parent_addr()).get_str_prefix() + self.prefix_variable(src.get_local_name()))
-            sink_new = NamespaceAddress.concat(sink.get_parent_addr(),
-                                              NSA.concat(component.get_node_addr(), sink.get_parent_addr()).get_str_prefix() + self.prefix_variable(sink.get_local_name()))
+            # To calculate the new address of the ports, we take of the 'local'
+            # port address, i.e. the parent address, then add the prefixed
+            # string:
+            src_new = NamespaceAddress.concat(
+                        src.get_parent_addr(),
+                        NSA.concat(component.get_node_addr(),
+                                   src.get_parent_addr()).get_str_prefix() +
+                        self.prefix_variable(src.get_local_name()))
+            sink_new = NamespaceAddress.concat(
+                        sink.get_parent_addr(),
+                        NSA.concat(component.get_node_addr(),
+                                   sink.get_parent_addr()).get_str_prefix() +
+                        self.prefix_variable(sink.get_local_name()))
 
             # self.prefix_variable(sink.get_local_name(), **kwargs) )
 
@@ -322,16 +333,16 @@ class ClonerVisitorPrefixNamespace(ClonerVisitor):
             # sink_new = NamespaceAddress.concat( sink.get_parent_addr(), sink.getstr() )
             port_connections.append((src_new, sink_new))
 
-        return component.__class__(name=component.name,
-                               parameters=[p.accept_visitor(self, **kwargs)
-                                           for p in component.parameters],
-            analog_ports=[p.accept_visitor(self, **kwargs)
-                          for p in component.analog_ports],
-            event_ports=[p.accept_visitor(self, **kwargs)
-                         for p in component.event_ports],
-            dynamics=component.dynamics.accept_visitor(
-                self, **kwargs) if component.dynamics else None,
-            subnodes=dict([(k, v.accept_visitor(self, **kwargs))
-                           for (k, v) in component.subnodes.iteritems()]),
-            portconnections=port_connections
-        )
+        return component.__class__(
+                 name=component.name,
+                 parameters=[p.accept_visitor(self, **kwargs)
+                             for p in component.parameters],
+                 analog_ports=[p.accept_visitor(self, **kwargs)
+                               for p in component.analog_ports],
+                 event_ports=[p.accept_visitor(self, **kwargs)
+                              for p in component.event_ports],
+                 dynamics=(component.dynamics.accept_visitor(self, **kwargs)
+                           if component.dynamics else None),
+                 subnodes=dict([(k, v.accept_visitor(self, **kwargs))
+                                for (k, v) in component.subnodes.iteritems()]),
+                 portconnections=port_connections)

@@ -14,7 +14,7 @@ from cv_namingconflicts import ComponentValidatorLocalNameConflicts
 from cv_general import ComponentValidatorTimeDerivativesAreDeclared
 from cv_general import ComponentValidatorNoDuplicatedObjects
 # from cv_general import ComponentValidatorAliasesAndStateVariablesHaveNoUnResolvedSymbols
-from cv_general import ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbols
+from cv_general import ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbols  # @IgnorePep8
 from cv_general import ComponentValidatorPortConnections
 from cv_general import ComponentValidatorStateAssignmentsAreOnStateVariables
 from cv_general import ComponentValidatorAliasesAreNotRecursive
@@ -36,9 +36,9 @@ class ComponentValidator(object):
 
         if not Settings.enable_component_validation:
             import os
-            assert os.getlogin(
-            ) == 'hull', """Checking only mike turns off component-validation :) """
-            print "  **** WARNING WARNIGN COMPONENT VALIDATION TURNRED OFF ****"
+            assert os.getlogin() == 'hull', \
+                   """Checking only mike turns off component-validation :) """
+            print "**** WARNING WARNIGN COMPONENT VALIDATION TURNRED OFF ****"
             return
 
         # Check class structure:
@@ -53,7 +53,7 @@ class ComponentValidator(object):
         ComponentValidatorTimeDerivativesAreDeclared(component)
         ComponentValidatorStateAssignmentsAreOnStateVariables(component)
         ComponentValidatorAliasesAreNotRecursive(component)
-        ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbols(component)
+        ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbols(component)  # @IgnorePep8
         ComponentValidatorPortConnections(component)
         ComponentValidatorRegimeGraph(component)
         ComponentValidatorRegimeOnlyHasOneHandlerPerEvent(component)

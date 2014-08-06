@@ -60,10 +60,10 @@ def expect_single(lst, error_func=None):
 
     :param lst: An iterable
 
-    :param error_func: An exception object or a callable. ``error_func`` will be
-        raised or called in case there is not exactly one element in ``lst``. If
-        ``error_func`` is ``None``, a ``NineMLRuntimeError`` exception will be
-        raised.
+    :param error_func: An exception object or a callable. ``error_func`` will
+        be raised or called in case there is not exactly one element in
+        ``lst``. If ``error_func`` is ``None``, a ``NineMLRuntimeError``
+        exception will be raised.
 
     :rtype: the element in the list, ``lst[0]``, provided ``len(lst)==1``
 
@@ -114,7 +114,8 @@ def _filter(lst, func=None):
     are not `None` and satisfy the predicate `func(o)`
 
     :param lst: Input iterable (not a dictionary)
-    :param func: Predicate function. If ``none``, this function always returns ``True``
+    :param func: Predicate function. If ``none``, this function always returns
+                 ``True``
 
 
     Implementation::
@@ -155,8 +156,8 @@ def filter_expect_single(lst, func=None, error_func=None):
             expect_single( _filter(lst, func), error_func )
 
 
-        This is useful when we want to find an item in a sequence with a certain
-        property, and expect there to be only one.
+        This is useful when we want to find an item in a sequence with a
+        certain property, and expect there to be only one.
 
         Examples:
 
@@ -200,9 +201,10 @@ def filter_discrete_types(lst, acceptedtypes):
 
     res = dict([(a, []) for a in acceptedtypes])
     for obj in lst:
-        obj_type = filter_expect_single(acceptedtypes,
-                                        lambda at: isinstance(obj, at),
-                                        error_func='%s could not be mapped to a single type' % obj)
+        obj_type = filter_expect_single(
+                    acceptedtypes,
+                    lambda at: isinstance(obj, at),
+                    error_func='%s could not be mapped to a single type' % obj)
         res[obj_type].append(obj)
     return res
 
@@ -210,8 +212,8 @@ def filter_discrete_types(lst, acceptedtypes):
 def assert_no_duplicates(lst, error_func=None):
     """Check for duplicates in a sequence.
 
-    This function checks that a list contains no duplicates, by casting the list
-    to a set and comparing the lengths. (This means that we cannot compare
+    This function checks that a list contains no duplicates, by casting the
+    list to a set and comparing the lengths. (This means that we cannot compare
     sequences containing unhashable types, like dictionaries and lists).
 
     It raises an `NineMLRuntimeError` if the lengths are not equal.
@@ -229,7 +231,8 @@ def assert_no_duplicates(lst, error_func=None):
                 seen_items.add(i)
 
         _dispatch_error_func(error_func,
-                             "Unxpected duplication found: %s \n in %s" % (str(i),  str(lst)))
+                             "Unxpected duplication found: %s \n in %s" %
+                             (str(i),  str(lst)))
 
 
 def invert_dictionary(dct):

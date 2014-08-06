@@ -70,7 +70,7 @@ class Parser(object):
         try:
             yacc.parse(expr)
         except NineMLMathParseError, e:
-            raise NineMLMathParseError, str(e) + " Expression was: '%s'" % expr
+            raise NineMLMathParseError(str(e) + " Expression was: '%s'" % expr)
         # return set(self.names), set(self.funcs)
 
         self.names = set(self.names)
@@ -191,22 +191,22 @@ class CalcCond(Parser):
     def p_func(self, p):
         """expression : LFUNC expression RPAREN\n | LFUNC RPAREN
                         | LFUNC expression COMMA expression RPAREN
-                        | LFUNC expression COMMA expression COMMA expression RPAREN
+                        | LFUNC expression COMMA expression COMMA expression
+                          RPAREN
         """
         # EM: Supports up to 3 args.  Don't know how to support N.
 
         func_name = p[1][:-1].strip()
         if not is_builtin_math_function(func_name):
-            raise NineMLMathParseError, "Undefined function '%s'" % func_name
+            raise NineMLMathParseError("Undefined function '%s'" % func_name)
         self.funcs.append(func_name)
 
     def p_error(self, p):
         if p:
-            raise NineMLMathParseError, \
-                "Syntax error at '%s'" % p.value
+            raise NineMLMathParseError("Syntax error at '%s'" % p.value)
         else:
-            raise NineMLMathParseError, \
-                "Syntax error at EOF, probably unmatched parenthesis."
+            raise NineMLMathParseError("Syntax error at EOF, probably "
+                                       "unmatched parenthesis.")
 
 
 def cond_parse(conditional):
