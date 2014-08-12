@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<NineML xmlns="http://nineml.org/9ML/0.3">
+<NineML xmlns="http://nineml.incf.org/9ML/0.3">
   <ComponentClass name="CobaSyn">
     <AnalogPort mode="recv" name="V"/>
     <AnalogPort mode="send" name="I"/>

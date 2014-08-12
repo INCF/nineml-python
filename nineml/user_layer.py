@@ -51,7 +51,7 @@ import re
 from . import abstraction_layer
 
 
-nineml_namespace = 'http://nineml.org/9ML/0.3'
+nineml_namespace = 'http://nineml.incf.org/9ML/0.3'
 NINEML = "{%s}" % nineml_namespace
 
 E = ElementMaker(namespace=nineml_namespace,

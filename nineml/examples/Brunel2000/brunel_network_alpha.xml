@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<nineml:nineml xmlns:nineml="http://nineml.org/9ML/0.3" xmlns="http://nineml.org/9ML/0.3" name="Brunel (2000) network with alpha synapses">
+<nineml:nineml xmlns:nineml="http://nineml.incf.org/9ML/0.3" xmlns="http://nineml.incf.org/9ML/0.3" name="Brunel (2000) network with alpha synapses">
   <nineml:component name="E">
     <nineml:definition language="NineML">
       <nineml:link>BrunelIAF.xml</nineml:link>
