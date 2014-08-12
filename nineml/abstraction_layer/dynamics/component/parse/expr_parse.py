@@ -180,6 +180,9 @@ def expr_parse(rhs):
     and returns var names and func names as sets """
 
     calc = CalcExpr()
+    # Remove endlines
+    rhs = rhs.replace('\n', ' ')
+    rhs = rhs.replace('\r', ' ')
     return calc.parse(rhs)
 
 if __name__ == '__main__':
