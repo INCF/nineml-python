@@ -1,7 +1,8 @@
 import re
-from . import check_tag, ULobject, Group, NINEML, E, StringValue
+from . import check_tag, ULobject, NINEML, E
 from .dynamics import SpikingNodeType, get_or_create_prototype
-from .components import BaseComponent, get_or_create_component
+from .components import BaseComponent, get_or_create_component, StringValue
+from .containers import Group
 
 
 class Population(ULobject):
@@ -338,15 +339,14 @@ class Structure(BaseComponent):
 
     @property
     def is_csa(self):
-        return self.get_definition().__module__ == 'csa.geometry'  # probably need a better test
+        return self.get_definition().__module__ == 'csa.geometry'  # probably need a better test @IgnorePep8
 
     def to_csa(self):
         if self.is_csa:
-            return self.get_definition()  # e.g. lambda size: csa.random2d(size, *self.parameters)
+            return self.get_definition()  # e.g. lambda size: csa.random2d(size, *self.parameters) @IgnorePep8
         else:
             raise Exception("Structure cannot be transformed to CSA geometry "
                             "function")
 
 
 # this approach is crying out for a class factory
-

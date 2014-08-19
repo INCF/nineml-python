@@ -1,8 +1,9 @@
 from operator import and_
-from .. import ULobject, check_tag, Group, E, NINEML
+from .. import ULobject, check_tag, E, NINEML
 from ..population import Population, Selection
 from ..components import BaseComponent, get_or_create_component
 from ..dynamics import SynapseType, ConnectionType
+from ..containers import Group
 
 from nineml.connection_generator import *
 from .cg_closure import alConnectionRuleFromURI

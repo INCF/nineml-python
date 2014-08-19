@@ -1,9 +1,9 @@
-from itertools import chain
 import collections
 import urllib
 from operator import and_
 from .. import abstraction_layer
-from . import ULobject, E, NINEML, Number, RandomDistribution, check_tag, Value
+from . import ULobject, E, NINEML, Number, check_tag
+from .random import  RandomDistribution
 
 
 class Definition(ULobject):
@@ -21,7 +21,7 @@ class Definition(ULobject):
         self._component = None
         if isinstance(component, basestring):
             self.url = component
-        elif isinstance(component, abstraction_layer.BaseComponentClass): #, csa.ConnectionSetTemplate)):
+        elif isinstance(component, abstraction_layer.BaseComponentClass): #, csa.ConnectionSetTemplate)): @IgnorePep8
             self._component = component
         else:
             raise TypeError("Component must be of type string or "
@@ -134,7 +134,7 @@ class BaseComponent(ULobject):
             self.definition = definition
             assert reference is None, \
                                    "Cannot give both definition and reference."
-        elif isinstance(definition, basestring):  # should also check is a valid uri
+        elif isinstance(definition, basestring):  # should also check is a valid uri @IgnorePep8
             self.definition = Definition(definition,
                                          self.abstraction_layer_module)
             assert reference is None, \
@@ -316,7 +316,7 @@ class Parameter(ULobject):
         return isinstance(other, self.__class__) and \
             reduce(and_, (self.name == other.name,
                           self.value == other.value,
-                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV
+                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV @IgnorePep8
 
     def __hash__(self):
         return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
@@ -342,12 +342,68 @@ class Parameter(ULobject):
     @classmethod
     def from_xml(cls, element, components):
         check_tag(element, cls)
-        quantity_element = element.find(NINEML + 
+        quantity_element = element.find(NINEML +
                                         "quantity").find(NINEML + "value")
         value, unit = Value.from_xml(quantity_element, components)
         return Parameter(name=element.attrib["name"],
                          value=value,
                          unit=unit)
+
+
+class Value(object):
+
+    """
+    Not intended to be instantiated: just provides the from_xml() classmethod.
+    """
+    element_name = "value"
+
+    @classmethod
+    def from_xml(cls, element, components):
+        """
+        Parse an XML ElementTree structure and return a (value, units) tuple.
+        The value should be a number or something that generates a numerical
+        value, e.g. a RandomDistribution instance).
+
+        `element` - should be an ElementTree Element instance.
+        """
+        for name in ("reference", "scalar", "array", "function"):
+            value_element = element.find(NINEML + name)
+            if value_element is not None:
+                break
+        if value_element is None:
+            raise ValueError("No value found")
+        else:
+            if name == "reference":
+                value = get_or_create_component(value_element.text,
+                                                RandomDistribution, components)
+            elif name == "scalar":
+                try:
+                    value = float(value_element.text)
+                except ValueError:
+                    value = value_element.text
+            elif name == "array":
+                value = [float(x) for x in value_element.text.split(" ")]
+            elif name == "function":
+                raise NotImplementedError
+        unit = element.find(NINEML + "unit").text
+        return value, unit
+
+
+class StringValue(object):
+
+    """
+    Not intended to be instantiated: just provides the from_xml() classmethod.
+    """
+    element_name = "value"
+
+    @classmethod
+    def from_xml(cls, element):
+        """
+        Parse an XML ElementTree structure and return a string value.
+
+        `element` - should be an ElementTree Element instance.
+        """
+        return element.text
 
 
 class InitialValue(ULobject):
@@ -378,7 +434,7 @@ class InitialValue(ULobject):
         return isinstance(other, self.__class__) and \
             reduce(and_, (self.name == other.name,
                           self.value == other.value,
-                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV
+                          self.unit == other.unit))  # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV @IgnorePep8
 
     def __hash__(self):
         return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
