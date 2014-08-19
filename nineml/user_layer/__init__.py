@@ -48,7 +48,7 @@ from lxml import etree
 from lxml.builder import ElementMaker
 from operator import and_
 import re
-from . import abstraction_layer
+from .. import abstraction_layer
 
 
 nineml_namespace = 'http://nineml.incf.org/9ML/0.3'
@@ -323,12 +323,14 @@ class Definition(ULobject):
         self._component = None
         if isinstance(component, basestring):
             self.url = component
-        elif isinstance(component, abstraction_layer.BaseComponentClass): #, csa.ConnectionSetTemplate)):
+        elif isinstance(component, abstraction_layer.BaseComponentClass): #, csa.ConnectionSetTemplate)): @IgnorePep8
             self._component = component
         else:
-            raise TypeError()
-        # it would be better long term to infer the abstraction layer module from
-        # the xml file contents, but it is simpler for now to specify it
+            raise TypeError("Component must be of type string or "
+                            "BaseComponentClass (found {})"
+                            .format(type(component)))
+        # it would be better long term to infer the abstraction layer module
+        # from the xml file contents, but it is simpler for now to specify it
         # explicitly.
         self.abstraction_layer_module = abstraction_layer_module
 
@@ -360,7 +362,7 @@ class Definition(ULobject):
             al_writer = getattr(
                             abstraction_layer,
                             self.abstraction_layer_module).writers.XMLWriter()
-            return E(self.element_name, 
+            return E(self.element_name,
                      al_writer.visit(self._component),
                      language="NineML")
 
@@ -415,7 +417,7 @@ class BaseComponent(ULobject):
     children = ("parameters",)
 
     def __init__(self, name, definition=None, parameters={}, reference=None,
-                 initial_values={}):  # initial_values is temporary, the idea longer-term is to use a separate library such as SEDML
+                 initial_values={}):  # initial_values is temporary, the idea longer-term is to use a separate library such as SEDML @IgnorePep8
         """
         Create a new component with the given name, definition and parameters,
         or create a reference to another component that will be resolved later.
@@ -480,7 +482,7 @@ class BaseComponent(ULobject):
 
     def __repr__(self):
         if self.definition:
-            return ('%s(name="%s", definition="%s")' % 
+            return ('%s(name="%s", definition="%s")' %
                     (self.__class__.__name__, self.name, self.definition))
         else:
             return ('%s(name="%s", UNRESOLVED)' %
@@ -640,11 +642,11 @@ class Structure(BaseComponent):
 
     @property
     def is_csa(self):
-        return self.get_definition().__module__ == 'csa.geometry'  # probably need a better test
+        return self.get_definition().__module__ == 'csa.geometry'  # probably need a better test @IgnorePep8
 
     def to_csa(self):
         if self.is_csa:
-            return self.get_definition()  # e.g. lambda size: csa.random2d(size, *self.parameters)
+            return self.get_definition()  # e.g. lambda size: csa.random2d(size, *self.parameters) @IgnorePep8
         else:
             raise Exception("Structure cannot be transformed to CSA geometry "
                             "function")
@@ -675,7 +677,6 @@ class RandomDistribution(BaseComponent):
     binomial.
     """
     abstraction_layer_module = 'random'
-
 
 
 class Parameter(ULobject):
@@ -712,7 +713,7 @@ class Parameter(ULobject):
         return isinstance(other, self.__class__) and \
             reduce(and_, (self.name == other.name,
                           self.value == other.value,
-                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV
+                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV @IgnorePep8
 
     def __hash__(self):
         return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
@@ -738,7 +739,7 @@ class Parameter(ULobject):
     @classmethod
     def from_xml(cls, element, components):
         check_tag(element, cls)
-        quantity_element = element.find(NINEML + 
+        quantity_element = element.find(NINEML +
                                         "quantity").find(NINEML + "value")
         value, unit = Value.from_xml(quantity_element, components)
         return Parameter(name=element.attrib["name"],
@@ -774,7 +775,7 @@ class InitialValue(ULobject):
         return isinstance(other, self.__class__) and \
             reduce(and_, (self.name == other.name,
                           self.value == other.value,
-                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV
+                          self.unit == other.unit))  # obviously we should resolve the units, so 0.001 V == 1 mV @IgnorePep8
 
     def __hash__(self):
         return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
