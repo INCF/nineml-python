@@ -52,7 +52,7 @@ class XMLLoader(object):
     def load_componentclass(self, element):
 
         blocks = ('Parameter', 'AnalogPort', 'EventPort',
-                  'Dynamics', 'Subnode', 'ConnectPorts')
+                  'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
 
         subnodes = self.loadBlocks(element, blocks=blocks)
 
@@ -64,6 +64,9 @@ class XMLLoader(object):
                                  dynamics=dynamics,
                                  subnodes=dict(subnodes['Subnode']),
                                  portconnections=subnodes["ConnectPorts"])
+
+    def load_subcomponent(self, element):
+        return al.SubComponent(name=element.get('name'))
 
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
@@ -199,6 +202,7 @@ class XMLLoader(object):
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
+        "Component": load_subcomponent,
         "Regime": load_regime,
         "StateVariable": load_statevariable,
         "Parameter": load_parameter,
