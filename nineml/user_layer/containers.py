@@ -1,12 +1,13 @@
 from itertools import chain
 from lxml import etree
-from . import ULobject, check_tag, NINEML, nineml_namespace, E
-from .components import BaseComponent
+from .base import BaseULObject, NINEML, nineml_namespace, E
+from utility import check_tag
+from .components.base import BaseComponent
 from .population import Population, Selection
 from .projection import Projection
 
 
-class Model(ULobject):
+class Model(BaseULObject):
 
     """
     Representation of an entire 9ML model.
@@ -141,7 +142,7 @@ class Model(ULobject):
 def find_difference(this, that):
     assert isinstance(that, this.__class__)
     if this != that:
-        if isinstance(this, ULobject):
+        if isinstance(this, BaseULObject):
             for attr in this.defining_attributes:
                 a = getattr(this, attr)
                 b = getattr(that, attr)
@@ -164,7 +165,7 @@ def find_difference(this, that):
                 find_difference(this[key], that[key])
 
 
-class Group(ULobject):
+class Group(BaseULObject):
 
     """
     Container for populations and projections between those populations. May be

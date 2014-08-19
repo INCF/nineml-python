@@ -40,22 +40,16 @@ Classes
 :license: BSD-3, see LICENSE for details.
 """
 
-from itertools import chain
 import urllib
-import collections
-from numbers import Number
 from lxml import etree
-from lxml.builder import ElementMaker
-from operator import and_
-import re
-from .. import abstraction_layer
-from .containers import Model
+from .base import NINEML
 
-nineml_namespace = 'http://nineml.incf.org/9ML/0.3'
-NINEML = "{%s}" % nineml_namespace
-
-E = ElementMaker(namespace=nineml_namespace,
-                 nsmap={"nineml": nineml_namespace})
+from .containers import Model, Group
+from .dynamics import SpikingNodeType, SynapseType, CurrentSourceType
+from .population import (Population, PositionList, Structure, Selection,
+                         Operator, Any, All, Not, Comparison, Eq, In)
+from .projection import ConnectionRule, ConnectionType
+from .random import RandomDistribution
 
 
 def parse(url):
@@ -78,73 +72,3 @@ def parse(url):
         imported_doc = etree.parse(url)
         root.extend(imported_doc.getroot().iterchildren())
     return Model.from_xml(root)
-
-
-def check_tag(element, cls):
-    assert element.tag in (cls.element_name, NINEML + cls.element_name), \
-                  "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
-
-
-def walk(obj, visitor=None, depth=0):
-    if visitor:
-        visitor.depth = depth
-    if isinstance(obj, ULobject):
-        obj.accept_visitor(visitor)
-    if hasattr(obj, "get_children"):
-        get_children = obj.get_children
-    else:
-        get_children = obj.itervalues
-    for child in sorted(get_children()):
-        walk(child, visitor, depth + 1)
-
-
-class ExampleVisitor(object):
-
-    def visit(self, obj):
-        print " " * self.depth + str(obj)
-
-
-class Collector(object):
-
-    def __init__(self):
-        self.objects = []
-
-    def visit(self, obj):
-        self.objects.append(obj)
-
-
-def flatten(obj):
-    collector = Collector()
-    walk(obj, collector)
-    return collector.objects
-
-
-class ULobject(object):
-
-    """
-    Base class for user layer classes
-    """
-    children = []
-
-    def __eq__(self, other):
-        return reduce(and_, [isinstance(other, self.__class__)] +
-                            [getattr(self, name) == getattr(other, name)
-                             for name in self.__class__.defining_attributes])
-
-    def __ne__(self, other):
-        return not self == other
-
-    def __lt__(self, other):
-        if self.__class__.__name__ < other.__class__.__name__:
-            return True
-        else:
-            return self.name < other.name
-
-    def get_children(self):
-        if hasattr(self, "children"):
-            return chain(getattr(self, attr) for attr in self.children)
-        else:
-            return []
-
-    def accept_visitor(self, visitor):
-        visitor.visit(self)

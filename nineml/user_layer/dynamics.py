@@ -1,7 +1,10 @@
-from .components import BaseComponent, get_or_create_component, check_units
+from .components import BaseComponent, get_or_create_component
+from .utility import check_units
 
 
 class BaseDynamicsComponent(BaseComponent):
+
+    abstraction_layer_module = 'dynamics'
 
     def check_initial_values(self):
         for var in self.definition.component.state_variables:
@@ -22,7 +25,7 @@ class SpikingNodeType(BaseDynamicsComponent):
     Should perhaps be called SpikingNodePrototype, since this is type +
     parameters
     """
-    abstraction_layer_module = 'dynamics'
+    pass
 
 
 class SynapseType(BaseDynamicsComponent):
@@ -33,7 +36,7 @@ class SynapseType(BaseDynamicsComponent):
 
     This class is probably mis-named. Should be PostSynapticResponseType.
     """
-    abstraction_layer_module = 'dynamics'
+    pass
 
 
 class CurrentSourceType(BaseDynamicsComponent):
@@ -42,7 +45,7 @@ class CurrentSourceType(BaseDynamicsComponent):
     Component representing a model of a current source that may be injected
     into a spiking node.
     """
-    abstraction_layer_module = 'dynamics'
+    pass
 
 
 class ConnectionType(BaseDynamicsComponent):
@@ -51,7 +54,7 @@ class ConnectionType(BaseDynamicsComponent):
     Component representing a model of a synaptic connection, including weight,
     delay, optionally a synaptic plasticity rule.
     """
-    abstraction_layer_module = 'dynamics'
+    pass
 
 
 def get_or_create_prototype(prototype_ref, components, groups):

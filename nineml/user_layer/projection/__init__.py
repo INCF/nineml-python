@@ -1,17 +1,19 @@
 from operator import and_
-from .. import ULobject, check_tag, E, NINEML
+from ..base import BaseULObject, E, NINEML
+from ..utility import check_tag
 from ..population import Population, Selection
 from ..components import BaseComponent, get_or_create_component
 from ..dynamics import SynapseType, ConnectionType
 from ..containers import Group
-
+from ...abstraction_layer import (connection_generator as
+                                  al_connection_generator)
 from nineml.connection_generator import *
 from .cg_closure import alConnectionRuleFromURI
 from .utilities import *
 from .grids import *
 
 
-class Projection(ULobject):
+class Projection(BaseULObject):
 
     """
     A collection of connections between two Populations.
@@ -153,5 +155,3 @@ class ConnectionRule(BaseComponent):
     nodes.
     """
     abstraction_layer_module = 'connection_generator'
-
-

@@ -18,7 +18,6 @@ from nineml.utility import (filter_discrete_types,
 
 from nineml.exceptions import NineMLRuntimeError
 from ..visitors import ClonerVisitor
-from nineml.user_layer import BaseDynamicsComponent
 
 
 class Transition(object):
@@ -573,6 +572,10 @@ class StateVariable(object):
     def __repr__(self):
         return "<StateVariable: %s (%s)>" % (self.name, self.dimension)
 
+from nineml.user_layer.dynamics import BaseDynamicsComponent
+
 
 class SubComponent(BaseDynamicsComponent):
     pass
+
+

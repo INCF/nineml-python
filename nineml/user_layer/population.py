@@ -1,11 +1,12 @@
 import re
-from . import check_tag, ULobject, NINEML, E
+from .base import BaseULObject, NINEML, E
+from .utility import check_tag
 from .dynamics import SpikingNodeType, get_or_create_prototype
 from .components import BaseComponent, get_or_create_component, StringValue
 from .containers import Group
 
 
-class Population(ULobject):
+class Population(BaseULObject):
 
     """
     A collection of network nodes all of the same type. Nodes may either be
@@ -68,7 +69,7 @@ class Population(ULobject):
                                                    components))
 
 
-class PositionList(ULobject):
+class PositionList(BaseULObject):
 
     """
     Represents a list of network node positions. May contain either an
@@ -162,7 +163,7 @@ class PositionList(ULobject):
                 return cls(positions=positions)
 
 
-class Operator(ULobject):
+class Operator(BaseULObject):
     defining_attributes = ("operands",)
     children = ("operands",)
 
@@ -262,7 +263,7 @@ class In(Comparison):
         return "%s in %s" % tuple(qstr(op) for op in self.operands)
 
 
-class Selection(ULobject):
+class Selection(BaseULObject):
 
     """
     A set of network nodes selected from existing populations within the Group.

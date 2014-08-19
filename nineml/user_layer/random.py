@@ -1,4 +1,4 @@
-from .components import BaseComponent
+from .components.base import BaseComponent
 
 
 class RandomDistribution(BaseComponent):
