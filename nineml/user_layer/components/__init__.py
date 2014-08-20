@@ -1,4 +1,5 @@
-
+from .base import BaseComponent
+from .interface import Value, StringValue, Parameter, InitialValue
 
 def get_or_create_component(ref, cls, components):
     """
@@ -13,5 +14,3 @@ def get_or_create_component(ref, cls, components):
         components[ref] = cls.from_xml(components[ref], components)
     return components[ref]
 
-from .base import BaseComponent
-from .interface import Value, StringValue, Parameter, InitialValue

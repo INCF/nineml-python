@@ -572,10 +572,7 @@ class StateVariable(object):
     def __repr__(self):
         return "<StateVariable: %s (%s)>" % (self.name, self.dimension)
 
-from nineml.user_layer.dynamics import BaseDynamicsComponent
-
-
-class SubComponent(BaseDynamicsComponent):
-    pass
+# class SubComponent(BaseDynamicsComponent):
+#     pass
 
 

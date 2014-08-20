@@ -3,6 +3,8 @@ import urllib
 from operator import and_
 from ...abstraction_layer import BaseComponentClass
 from ..base import BaseULObject, E, NINEML
+from .interface import Parameter, InitialValue, InitialValueSet, ParameterSet
+from ... import abstraction_layer
 
 
 class Definition(BaseULObject):
@@ -253,6 +255,3 @@ class BaseComponent(BaseULObject):
             else:
                 raise Exception("A component must contain either a defintion "
                                 "or a reference")
-
-from .interface import Parameter, InitialValue, InitialValueSet, ParameterSet
-from ... import abstraction_layer

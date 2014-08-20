@@ -4,6 +4,8 @@ from numbers import Number
 from operator import and_
 from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
+from ..random import RandomDistribution
+from . import get_or_create_component
 
 
 class Parameter(BaseULObject):
@@ -263,6 +265,3 @@ class InitialValueSet(ParameterSet):
             initial_values.append(InitialValue.from_xml(iv_element,
                                                         components))
         return cls(*initial_values)
-
-from ..random import RandomDistribution
-from . import get_or_create_component
