@@ -49,8 +49,7 @@ class Expression(object):
     # If we assign to rhs, then we need to update the
     # cached names and funcs:
     def _set_rhs(self, rhs):
-#       This is now performed upstream in the load_single_internal_maths_block
-#       rhs = rhs.strip()
+        rhs = rhs.strip()
         self._rhs = rhs
         if isinstance(rhs, str):
             self._rhs_names, self._rhs_funcs = self._parse_rhs(rhs)

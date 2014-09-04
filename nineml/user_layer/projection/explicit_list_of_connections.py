@@ -12,7 +12,7 @@
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.connection_generator import ConnectionGenerator
+from ...abstraction_layer.connection_generator import ConnectionGenerator
 
 
 class ExplicitListOfConnections(ConnectionGenerator):

@@ -6,9 +6,9 @@ docstring needed
 """
 
 # from nineml.user_layer.connection_generator import ConnectionGenerator, cgClosureFromURI
-from nineml.user_layer.cg_closure import alConnectionRuleFromURI
-from nineml.user_layer.explicit_list_of_connections import ExplicitListOfConnections  # @IgnorePep8
-from nineml.user_layer.grids import createUnstructuredGrid, GeometryImplementation  # @IgnorePep8
+from .cg_closure import alConnectionRuleFromURI
+from .explicit_list_of_connections import ExplicitListOfConnections  # @IgnorePep8
+from .grids import createUnstructuredGrid, GeometryImplementation  # @IgnorePep8
 
 # memoizedConnectionGenerators = {}
 

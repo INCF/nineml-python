@@ -5,9 +5,7 @@ import nineml.user_layer.population
 from ..components import BaseComponent, get_or_create_component
 from ..dynamics import SynapseType, ConnectionType
 import nineml.user_layer.containers
-from ...abstraction_layer import (connection_generator as
-                                  al_connection_generator)
-from nineml.connection_generator import *
+from ...abstraction_layer.connection_generator import *
 from .cg_closure import alConnectionRuleFromURI
 from .utilities import *
 from .grids import *
