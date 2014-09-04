@@ -1,10 +1,10 @@
 from operator import and_
 from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
-from ..population import Population, Selection
+import nineml.user_layer.population
 from ..components import BaseComponent, get_or_create_component
 from ..dynamics import SynapseType, ConnectionType
-from ..containers import Group
+import nineml.user_layer.containers
 from ...abstraction_layer import (connection_generator as
                                   al_connection_generator)
 from nineml.connection_generator import *
@@ -60,8 +60,14 @@ class Projection(BaseULObject):
         self.connection_type = connection_type
         self.synaptic_response_ports = synaptic_response_ports
         self.connection_ports = connection_ports
-        for name, cls_list in (('source', (Population, Selection, Group)),
-                               ('target', (Population, Selection, Group)),
+        for name, cls_list in (('source',
+                                (nineml.user_layer.population.Population,
+                                 nineml.user_layer.population.Selection,
+                                 nineml.user_layer.containers.Group)),
+                               ('target',
+                                (nineml.user_layer.population.Population,
+                                 nineml.user_layer.population.Selection,
+                                 nineml.user_layer.containers.Group)),
                                ('rule', (ConnectionRule,)),
                                ('synaptic_response', (SynapseType,)),
                                ('connection_type', (ConnectionType,))):

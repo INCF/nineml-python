@@ -3,7 +3,7 @@ from lxml import etree
 from .base import BaseULObject, NINEML, nineml_namespace, E
 from utility import check_tag
 from .components.base import BaseComponent
-from .population import Population, Selection
+import nineml.user_layer.population
 from .projection import Projection
 
 
@@ -188,11 +188,11 @@ class Group(BaseULObject):
         group.
         """
         for obj in objs:
-            if isinstance(obj, Population):
+            if isinstance(obj, nineml.user_layer.population.Population):
                 self.populations[obj.name] = obj
             elif isinstance(obj, Projection):
                 self.projections[obj.name] = obj
-            elif isinstance(obj, Selection):
+            elif isinstance(obj, nineml.user_layer.population.Selection):
                 self.selections[obj.name] = obj
             else:
                 raise Exception("Groups may only contain Populations, "
@@ -236,12 +236,12 @@ class Group(BaseULObject):
         group = cls(name=element.attrib["name"])
         groups[group.name] = group
         for child in element.getchildren():
-            if child.tag == NINEML + Population.element_name:
-                obj = Population.from_xml(child, components, groups)
+            if child.tag == NINEML + nineml.user_layer.population.Population.element_name:
+                obj = nineml.user_layer.population.Population.from_xml(child, components, groups)
             elif child.tag == NINEML + Projection.element_name:
                 obj = Projection.from_xml(child, components)
-            elif child.tag == NINEML + Selection.element_name:
-                obj = Selection.from_xml(child, components)
+            elif child.tag == NINEML + nineml.user_layer.population.Selection.element_name:
+                obj = nineml.user_layer.population.Selection.from_xml(child, components)
             else:
                 raise Exception("<%s> elements may not contain <%s> elements" %
                                 (cls.element_name, child.tag))

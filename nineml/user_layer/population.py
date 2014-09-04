@@ -3,7 +3,7 @@ from .base import BaseULObject, NINEML, E
 from .utility import check_tag
 from .dynamics import SpikingNodeType, get_or_create_prototype
 from .components import BaseComponent, get_or_create_component, StringValue
-from .containers import Group
+import nineml.user_layer.containers
 
 
 class Population(BaseULObject):
@@ -19,7 +19,8 @@ class Population(BaseULObject):
     def __init__(self, name, number, prototype, positions=None):
         self.name = name
         self.number = number
-        assert isinstance(prototype, (SpikingNodeType, Group))
+        assert isinstance(prototype, (SpikingNodeType,
+                                      nineml.user_layer.containers.Group))
         self.prototype = prototype
         if positions is not None:
             assert isinstance(positions, PositionList)
@@ -36,7 +37,8 @@ class Population(BaseULObject):
                 components.append(self.prototype)
                 components.extend(self.prototype.parameters.\
                                                     get_random_distributions())
-            elif isinstance(self.prototype, Group):
+            elif isinstance(self.prototype,
+                            nineml.user_layer.containers.Group):
                 components.extend(self.prototype.get_components())
         if self.positions is not None:
             components.extend(self.positions.get_components())

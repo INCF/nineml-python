@@ -3,8 +3,9 @@ import urllib
 from operator import and_
 from ...abstraction_layer import BaseComponentClass
 from ..base import BaseULObject, E, NINEML
-from .interface import Parameter, InitialValue, InitialValueSet, ParameterSet
 from ... import abstraction_layer
+# This line is imported at the end of the file to avoid recursive imports
+# from .interface import Parameter, InitialValue, InitialValueSet, ParameterSet
 
 
 class Definition(BaseULObject):
@@ -255,3 +256,20 @@ class BaseComponent(BaseULObject):
             else:
                 raise Exception("A component must contain either a defintion "
                                 "or a reference")
+
+
+def get_or_create_component(ref, cls, components):
+    """
+    Each entry in `components` is either an instance of a BaseComponent
+    subclass, or the XML (elementtree Element) defining such an instance.
+
+    If given component does not exist, we create it and replace the XML in
+    `components` with the actual component. We then return the component.
+    """
+    assert ref in components, "%s not in %s" % (ref, components.keys())
+    if not isinstance(components[ref], BaseComponent):
+        components[ref] = cls.from_xml(components[ref], components)
+    return components[ref]
+
+# This is imported at the end to avoid recursive imports
+from .interface import Parameter, InitialValue, InitialValueSet, ParameterSet

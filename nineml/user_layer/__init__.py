@@ -44,10 +44,11 @@ import urllib
 from lxml import etree
 from .base import NINEML
 
-from .containers import Model, Group
+
 from .dynamics import SpikingNodeType, SynapseType, CurrentSourceType
 from .population import (Population, PositionList, Structure, Selection,
                          Operator, Any, All, Not, Comparison, Eq, In)
+from .containers import Model, Group
 from .projection import ConnectionRule, ConnectionType
 from .random import RandomDistribution
 
