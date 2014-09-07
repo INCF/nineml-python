@@ -18,6 +18,7 @@ docstring needed
 
 
 import os
+import re
 import ply.lex as lex
 import ply.yacc as yacc
 
@@ -183,6 +184,10 @@ def expr_parse(rhs):
     # Remove endlines
     rhs = rhs.replace('\n', ' ')
     rhs = rhs.replace('\r', ' ')
+    # Expand scientific notation, 1e-10 to 1 * pow(10, -10)
+    rhs = re.sub(r'([0-9])e(\-?[0-9\.]+)', r'\1 * pow(10, \2)', rhs)
+    # Convert '^' to pow()
+    rhs = re.sub(r'([0-9]) *\^ *(\-?[0-9\.]+)', r'\1 * pow(10, \2)', rhs)
     return calc.parse(rhs)
 
 if __name__ == '__main__':

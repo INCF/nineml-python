@@ -38,7 +38,8 @@ class Port(object):
     _modes = ('send', 'recv', 'reduce')
     _reduce_op_map = {'add': '+', '+': '+', }
 
-    def __init__(self, name, mode='send', reduce_op=None):
+    def __init__(self, name, mode='send', reduce_op=None,
+                 dimension='dimensionless'):
         """ Port Constructor.
 
         :param name: The name of the port, as a `string`
@@ -57,7 +58,7 @@ class Port(object):
         name = name.strip()
         ensure_valid_c_variable_name(name)
 
-        self.dimension = "??"
+        self.dimension = dimension
         self._name = name
         self._mode = mode
         self._reduce_op = reduce_op
