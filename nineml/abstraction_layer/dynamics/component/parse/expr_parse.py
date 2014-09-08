@@ -187,7 +187,7 @@ def expr_parse(rhs):
     # Expand scientific notation, 1e-10 to 1 * pow(10, -10)
     rhs = re.sub(r'([0-9])e(\-?[0-9\.]+)', r'\1 * pow(10, \2)', rhs)
     # Convert '^' to pow()
-    rhs = re.sub(r'([0-9]) *\^ *(\-?[0-9\.]+)', r'\1 * pow(10, \2)', rhs)
+    rhs = re.sub(r'([\w\d]) *\^ *(\-?[0-9\.]+)', r'pow(\1, \2)', rhs)
     return calc.parse(rhs)
 
 if __name__ == '__main__':
