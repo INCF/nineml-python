@@ -204,8 +204,8 @@ def escape_carets(string):
                                          close_bracket='(',
                                          direction='backwards')
                 else:
-                    base = re.match(r'.*\b((?:-)?(?:\w+|[\d\.]+) *)$',
-                                    before).group(1)
+                    base = re.search(r'((?:-)?(?:\w+|[\d\.]+) *)$',
+                                     before).group(1)
                 if after.lstrip().startswith('('):
                     exponent = match_bracket(after, open_bracket='(',
                                              close_bracket=')')
