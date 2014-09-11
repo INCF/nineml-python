@@ -187,10 +187,60 @@ def expr_parse(rhs):
     # Expand scientific notation, 1e-10 to 1 * pow(10, -10)
     rhs = re.sub(r'([0-9])e(\-?[0-9\.]+)', r'\1 * pow(10, \2)', rhs)
     # Convert '^' to pow()
-    rhs = re.sub(r'([\w\d]) *\^ *(\-?[0-9\.]+)', r'pow(\1, \2)', rhs)
+    rhs = escape_carets(rhs)
+#    rhs = re.sub(r'([\w\d]) *\^ *(\-?[0-9\.]+)', r'pow(\1, \2)', rhs)
     return calc.parse(rhs)
 
+
+def escape_carets(string):
+    if '^' in string:
+        i = 0
+        while i < len(string):
+            if string[i] == '^':
+                before = string[:i]
+                after = string[i + 1:]
+                if before.rstrip().endswith(')'):
+                    base = match_bracket(before, open_bracket=')',
+                                         close_bracket='(',
+                                         direction='backwards')
+                else:
+                    base = re.match(r'.*\b((?:-)?(?:\w+|[\d\.]+) *)$',
+                                    before).group(1)
+                if after.lstrip().startswith('('):
+                    exponent = match_bracket(after, open_bracket='(',
+                                             close_bracket=')')
+                    exponent = escape_carets(exponent)
+                else:
+                    exponent = re.match(r' *(?:-)?[\w\d\.]+', after).group(0)
+                insert_string = 'pow({}, {})'.format(base, exponent)
+                string = (string[:i - len(base)] + insert_string +
+                          string[i + len(exponent) + 1:])
+                i += len(insert_string) - len(base)
+            i += 1
+    return string
+
+
+def match_bracket(string, open_bracket, close_bracket, direction='forwards'):
+    depth = 0
+    if direction == 'backwards':
+        string = string[::-1]
+    for i, c in enumerate(string):
+        if c == open_bracket:
+            depth += 1
+        elif c == close_bracket:
+            depth -= 1
+            if depth == 0:
+                output = string[:i + 1]
+                if direction == 'backwards':
+                    output = output[::-1]
+                return output
+    raise Exception("No matching '{}' found for opening '{}' in string '{}'"
+                    .format(close_bracket, open_bracket, string))
+
+
 if __name__ == '__main__':
-    calc = CalcExpr()
-    p = calc.parse("1 / (( 1 + mg_conc * eta *  exp ( -1 * gamma*V))")
-    print p
+    expr = '12 + (test * this) - (q10 + 1^3)^(((celsius-22)^(3-10) - (degC))/10 (degC))'
+    print escape_carets(expr)
+#     calc = CalcExpr()
+#     p = calc.parse("1 / (( 1 + mg_conc * eta *  exp ( -1 * gamma*V))")
+#     print p
