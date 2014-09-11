@@ -7,6 +7,7 @@ This file defines mathematical classes and derived classes
 
 import re
 import itertools
+import quantities as pq
 
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
@@ -39,18 +40,28 @@ class Expression(object):
         # A temporary measure, this is until the parser is
         # generalised to handle conditionals
         # return parse.expr_parse(rhs)
-        return parse.expr(rhs)
+        if isinstance(rhs, str):
+            parsed = parse.expr(rhs)
+        elif not isinstance(rhs, pq.quantity):
+            raise NotImplementedError
+        return parsed
 
     # If we assign to rhs, then we need to update the
     # cached names and funcs:
     def _set_rhs(self, rhs):
         rhs = rhs.strip()
         self._rhs = rhs
-        self._rhs_names, self._rhs_funcs = self._parse_rhs(rhs)
-        for name in self._rhs_names:
-            assert not name in self._rhs_funcs
-        for func in self._rhs_funcs:
-            assert not func in self._rhs_names
+        if isinstance(rhs, str):
+            self._rhs_names, self._rhs_funcs = self._parse_rhs(rhs)
+            for name in self._rhs_names:
+                assert not name in self._rhs_funcs
+            for func in self._rhs_funcs:
+                assert not func in self._rhs_names
+        elif isinstance(rhs, pq.Quantity):
+            self._rhs_names = []
+            self._rhs_funcs = []
+        else:
+            raise NotImplementedError
 
     def _get_rhs(self):
         return self._rhs

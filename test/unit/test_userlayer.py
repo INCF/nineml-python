@@ -5,7 +5,7 @@ Tests for the user_layer module
 
 import unittest
 from lxml import etree
-from nineml.user_layer import Parameter
+from nineml.user_layer.components.interface import Parameter
 
 
 class ModelTest(unittest.TestCase):

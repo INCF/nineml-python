@@ -13,7 +13,7 @@
 """
 
 import math
-from nineml.geometry import Geometry
+from ...abstraction_layer.connection_generator.geometry import Geometry
 import nineml.user_layer
 
 

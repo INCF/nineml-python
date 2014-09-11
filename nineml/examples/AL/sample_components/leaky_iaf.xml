@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<NineML xmlns="http://nineml.org/9ML/0.3">
+<NineML xmlns="http://nineml.incf.org/9ML/0.3">
   <ComponentClass name="LeakyIAF">
     <AnalogPort mode="send" name="V"/>
     <AnalogPort mode="reduce" reduce_op="+" name="Isyn"/>

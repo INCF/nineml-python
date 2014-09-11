@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.abstraction_layer.readers import XMLReader
+from nineml.abstraction_layer.dynamics.readers import XMLReader
 
 
 class CgClosure:

@@ -409,6 +409,10 @@ class Regime(object):
         return self._name
 
 
+class ComponentDynamics(object):
+    pass
+
+
 # Forwarding Function:
 def On(trigger, do=None, to=None):
     if isinstance(do, (OutputEvent, basestring)):
@@ -567,3 +571,8 @@ class StateVariable(object):
 
     def __repr__(self):
         return "<StateVariable: %s (%s)>" % (self.name, self.dimension)
+
+# class SubComponent(BaseDynamicsComponent):
+#     pass
+
+

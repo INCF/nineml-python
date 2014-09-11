@@ -9,9 +9,11 @@ This file defines classes for reading NineML files.
 import os
 from urllib2 import urlopen
 from lxml import etree
+import quantities as pq
 
+import nineml
 from nineml.utility import expect_single, filter_expect_single
-from nineml.abstraction_layer.xmlns import NINEML, nineml_namespace
+from nineml.abstraction_layer.xmlns import NINEML, MATHML, nineml_namespace
 from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics import component as al
 
@@ -50,7 +52,7 @@ class XMLLoader(object):
     def load_componentclass(self, element):
 
         blocks = ('Parameter', 'AnalogPort', 'EventPort',
-                  'Dynamics', 'Subnode', 'ConnectPorts')
+                  'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
 
         subnodes = self.loadBlocks(element, blocks=blocks)
 
@@ -62,6 +64,9 @@ class XMLLoader(object):
                                  dynamics=dynamics,
                                  subnodes=dict(subnodes['Subnode']),
                                  portconnections=subnodes["ConnectPorts"])
+
+    def load_subcomponent(self, element):
+        return al.SubComponent(name=element.get('name'))
 
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
@@ -151,10 +156,27 @@ class XMLLoader(object):
                 print elements
                 assert False, 'Unexpected tags found'
 
-        assert len(element.findall(NINEML + "MathML")) == 0
-        assert len(element.findall(NINEML + "MathInline")) == 1
+        assert (len(element.findall(MATHML + "MathML")) +
+                len(element.findall(NINEML + "MathInline")) +
+                len(element.findall(NINEML + "Value"))) == 1
 
-        return expect_single(element.findall(NINEML + 'MathInline')).text
+        if element.findall(NINEML + "MathInline"):
+            mblock = expect_single(element.findall(NINEML +
+                                                   'MathInline')).text.strip()
+        elif element.findall(MATHML + "MathML"):
+            mblock = self.load_mathml(expect_single(element.findall(MATHML +
+                                                                    "MathML")))
+        elif element.findall(NINEML + "Value"):
+            mblock = self.load_value(expect_single(element.findall(NINEML +
+                                                                   "Value")))
+        return mblock
+
+    def load_mathml(self, mathml):
+        raise NotImplementedError
+
+    def load_value(self, value):
+        return pq.Quantity(float(value.text),
+                           value.attrib.get('units', 'dimensionless'))
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
@@ -180,6 +202,7 @@ class XMLLoader(object):
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
+        "Component": load_subcomponent,
         "Regime": load_regime,
         "StateVariable": load_statevariable,
         "Parameter": load_parameter,
