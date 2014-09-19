@@ -3,6 +3,8 @@ import unittest
 from nineml.abstraction_layer import (Expression,
                                       Alias, StateAssignment, TimeDerivative)
 from nineml.abstraction_layer.dynamics.component import ExpressionWithSimpleLHS
+from nineml.exceptions import NineMLMathParseError
+
 
 class Expression_test(unittest.TestCase):
 
@@ -107,6 +109,16 @@ class Expression_test(unittest.TestCase):
             set(['randn', 'randint'])
         )
 
+    def test_escape_of_carets(self):
+        try:
+            expr = Expression("a^2")  # @UnusedVariable
+            expr = Expression("(a - 2)^2")  # @UnusedVariable
+            expr = Expression("(a - (a^2 - 2))^2")  # @UnusedVariable
+            expr = Expression("a^(a - 2)")  # @UnusedVariable
+        except NineMLMathParseError as e:
+            self.fail("Carets (signifying exponents) were not escaped properly"
+                      " in expression: {}".format(e))
+        self.assertTrue(True)
 
 # Testing Skeleton for class: ExpressionWithLHS
 #
@@ -137,6 +149,7 @@ class Expression_test(unittest.TestCase):
 #
 #    def test_lhs_atoms(self):
 #        warnings.warn('Tests not implemented')
+
 # Testing Skeleton for class: ExpressionWithSimpleLHS
 class ExpressionWithSimpleLHS_test(unittest.TestCase):
 
