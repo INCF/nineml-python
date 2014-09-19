@@ -188,7 +188,6 @@ def expr_parse(rhs):
     rhs = re.sub(r'([0-9])e(\-?[0-9\.]+)', r'\1 * pow(10, \2)', rhs)
     # Convert '^' to pow()
     rhs = escape_carets(rhs)
-#    rhs = re.sub(r'([\w\d]) *\^ *(\-?[0-9\.]+)', r'pow(\1, \2)', rhs)
     return calc.parse(rhs)
 
 
@@ -239,8 +238,6 @@ def match_bracket(string, open_bracket, close_bracket, direction='forwards'):
 
 
 if __name__ == '__main__':
-    expr = '12 + (test * this) - (q10 + 1^3)^(((celsius-22)^(3-10) - (degC))/10 (degC))'
-    print escape_carets(expr)
-#     calc = CalcExpr()
-#     p = calc.parse("1 / (( 1 + mg_conc * eta *  exp ( -1 * gamma*V))")
-#     print p
+    calc = CalcExpr()
+    p = calc.parse("1 / (( 1 + mg_conc * eta *  exp ( -1 * gamma*V))")
+    print p
