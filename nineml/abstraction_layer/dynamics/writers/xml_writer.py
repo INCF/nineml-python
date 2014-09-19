@@ -54,7 +54,8 @@ class XMLWriter(ComponentVisitor):
     def visit_statevariable(self, state_variable):
         return E('StateVariable',
                  name=state_variable.name,
-                 dimension=state_variable.dimension)
+                 dimension=(state_variable.dimension
+                            if state_variable.dimension else 'dimensionless'))
 
     def visit_outputevent(self, output_event, **kwargs):  # @UnusedVariable
         return E('EventOut',
@@ -63,12 +64,16 @@ class XMLWriter(ComponentVisitor):
     def visit_parameter(self, parameter):
         return E('Parameter',
                  name=parameter.name,
-                 dimension=parameter.dimension)
+                 dimension=(parameter.dimension
+                            if parameter.dimension else 'dimensionless'))
 
     def visit_analogport(self, port, **kwargs):
         if port.reduce_op:
             kwargs['reduce_op'] = port.reduce_op
-        return E('AnalogPort', name=port.name, mode=port.mode, **kwargs)
+        return E('AnalogPort', name=port.name, mode=port.mode,
+                 dimension=(port.dimension
+                            if port.dimension else 'dimensionless'),
+                 **kwargs)
 
     def visit_eventport(self, port, **kwargs):
         return E('EventPort', name=port.name, mode=port.mode, **kwargs)
