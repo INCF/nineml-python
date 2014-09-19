@@ -49,8 +49,9 @@ from .dynamics import SpikingNodeType, SynapseType, CurrentSourceType
 from .population import (Population, PositionList, Structure, Selection,
                          Operator, Any, All, Not, Comparison, Eq, In)
 from .containers import Model, Group
-from .projection import ConnectionRule, ConnectionType
+from .projection import Projection, ConnectionRule, ConnectionType
 from .random import RandomDistribution
+from .components import ParameterSet
 
 
 def parse(url):

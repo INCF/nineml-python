@@ -1,2 +1,2 @@
 from .base import BaseComponent, get_or_create_component
-from .interface import Value, StringValue, Parameter, InitialValue
+from .interface import Value, StringValue, Parameter, InitialValue, ParameterSet
