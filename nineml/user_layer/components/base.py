@@ -46,13 +46,16 @@ class Definition(BaseULObject):
 
     def retrieve(self):
         if not self._component:
-            f = urllib.urlopen(self.url)
             reader = getattr(abstraction_layer,
                              self.abstraction_layer_module).readers.XMLReader
-            try:
+            if self.abstraction_layer_module == "random":  # hack
                 self._component = reader.read_component(self.url)
-            finally:
-                f.close()
+            else:
+                f = urllib.urlopen(self.url)
+                try:
+                    self._component = reader.read_component(self.url)
+                finally:
+                    f.close()
         return self._component
 
     def to_xml(self):

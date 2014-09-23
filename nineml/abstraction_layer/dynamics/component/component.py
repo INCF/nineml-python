@@ -441,6 +441,10 @@ class ComponentClass(BaseComponentClass,
             inf_check(ip_evt_names,
                       inferred_struct.input_event_port_names,
                       'Event Ports In')
+            # Note that not all OutputEvents are necessarily exposed as Ports,
+            # so really we should just check that all declared output event ports
+            # are in the list of inferred ports, not that the declared list
+            # is identical to the inferred one.
             inf_check(op_evt_names,
                       inferred_struct.output_event_port_names,
                       'Event Ports Out')

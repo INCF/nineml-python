@@ -35,8 +35,8 @@ class Population(BaseULObject):
         if self.prototype:
             if isinstance(self.prototype, SpikingNodeType):
                 components.append(self.prototype)
-                components.extend(self.prototype.parameters.\
-                                                    get_random_distributions())
+                components.extend(self.prototype.parameters.get_random_distributions())
+                components.extend(self.prototype.initial_values.get_random_distributions())
             elif isinstance(self.prototype,
                             nineml.user_layer.containers.Group):
                 components.extend(self.prototype.get_components())

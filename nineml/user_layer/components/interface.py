@@ -5,6 +5,7 @@ from operator import and_
 from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
+from .base import get_or_create_component
 
 
 class Parameter(BaseULObject):

@@ -14,4 +14,8 @@ class XMLReader(object):
         elif "uniform_distribution" in url:
             parameters = [Parameter(name="lowerBound", dimension=None),
                           Parameter(name="upperBound", dimension=None)]
+        elif "exponential_distribution" in url:
+            parameters = [Parameter(name="beta", dimension=None)]
+        else:
+            raise Exception("Random distribution %s not supported" % url)
         return ComponentClass(url, parameters)
