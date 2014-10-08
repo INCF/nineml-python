@@ -60,9 +60,9 @@ class Parameter(BaseULObject):
             value_element = E.scalar(repr(self.value))
         return E(Parameter.element_name,
                  E.quantity(
-                 E.value(   # this extra level of tags is pointless, no?
+#                  E.value(   # this extra level of tags is pointless, no?
                  value_element,
-                 E.unit(self.unit or "dimensionless"))),
+                 units=(self.unit or "dimensionless")),#),
                  name=self.name)
 
     @classmethod
