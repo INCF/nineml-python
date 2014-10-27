@@ -29,27 +29,28 @@ class ComponentValidatorLocalNameConflicts(ComponentValidatorPerNamespace):
 
         self.visit(component)
 
-    def check_comflicting_symbol(self, namespace, symbol):
+    def check_conflicting_symbol(self, namespace, symbol):
         if symbol in self.symbols[namespace]:
             err = 'Duplication of symbol found: %s in %s' % (symbol, namespace)
             raise NineMLRuntimeError(err)
         self.symbols[namespace].append(symbol)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_comflicting_symbol(namespace=namespace,
+        self.check_conflicting_symbol(namespace=namespace,
                                       symbol=state_variable.name)
 
     def action_parameter(self, parameter, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_comflicting_symbol(namespace=namespace,
+        self.check_conflicting_symbol(namespace=namespace,
                                       symbol=parameter.name)
 
-    def action_analogport(self, port, namespace, **kwargs):  # @UnusedVariable
-        if port.is_incoming():
-            self.check_comflicting_symbol(namespace=namespace,
-                                          symbol=port.name)
+    def action_analogreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
 
-    def action_eventport(self, port, namespace, **kwargs):  # @UnusedVariable
-        self.check_comflicting_symbol(namespace=namespace, symbol=port.name)
+    def action_analogreduceport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
+
+    def action_eventreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable
+        self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
 
     def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
-        self.check_comflicting_symbol(namespace=namespace, symbol=alias.lhs)
+        self.check_conflicting_symbol(namespace=namespace, symbol=alias.lhs)

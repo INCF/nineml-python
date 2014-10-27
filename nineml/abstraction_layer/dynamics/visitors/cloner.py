@@ -114,15 +114,25 @@ class RenameSymbol(ActionVisitor):
             parameter._name = self.new_symbol_name
             self.note_lhs_changed(parameter)
 
-    def action_analogport(self, port, **kwargs):  # @UnusedVariable
+    def _action_port(self, port, **kwargs):  # @UnusedVariable
         if port.name == self.old_symbol_name:
             port._name = self.new_symbol_name
             self.note_port_changed(port)
 
-    def action_eventport(self, port, **kwargs):  # @UnusedVariable
-        if port.name == self.old_symbol_name:
-            port._name = self.new_symbol_name
-            self.note_port_changed(port)
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
+        self._action_port(port, **kwargs)
+
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
+        self._action_port(port, **kwargs)
+
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
+        self._action_port(port, **kwargs)
+
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
+        self._action_port(port, **kwargs)
+
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
+        self._action_port(port, **kwargs)
 
     def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
         if output_event.port_name == self.old_symbol_name:

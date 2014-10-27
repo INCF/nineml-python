@@ -18,7 +18,21 @@ class ActionVisitor_test(unittest.TestCase):
         warnings.warn('Tests not implemented')
         # raise NotImplementedError()
 
-    def test_action_analogport(self):
+    def test_action_analogsendport(self):
+        # Signature: name(self, port, **kwargs)
+                # No Docstring
+        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        warnings.warn('Tests not implemented')
+        # raise NotImplementedError()
+
+    def test_action_analogreceiveport(self):
+        # Signature: name(self, port, **kwargs)
+                # No Docstring
+        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        warnings.warn('Tests not implemented')
+        # raise NotImplementedError()
+
+    def test_action_analogreduceport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.base import ActionVisitor
@@ -53,7 +67,14 @@ class ActionVisitor_test(unittest.TestCase):
         warnings.warn('Tests not implemented')
         # raise NotImplementedError()
 
-    def test_action_eventport(self):
+    def test_action_eventsendport(self):
+        # Signature: name(self, port, **kwargs)
+                # No Docstring
+        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        warnings.warn('Tests not implemented')
+        # raise NotImplementedError()
+
+    def test_action_eventreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.base import ActionVisitor

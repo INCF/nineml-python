@@ -31,11 +31,20 @@ class ComponentValidatorTypes(ActionVisitor):
         assert isinstance(parameter, Parameter), \
                                       "%s != %s" % (type(parameter), Parameter)
 
-    def action_analogport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, al.AnalogPort)
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
+        assert isinstance(port, al.AnalogSendPort)
 
-    def action_eventport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, al.EventPort)
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
+        assert isinstance(port, al.AnalogReceivePort)
+
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
+        assert isinstance(port, al.AnalogReducePort)
+
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
+        assert isinstance(port, al.EventSendPort)
+
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
+        assert isinstance(port, al.EventReceivePort)
 
     def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
         assert isinstance(output_event, al.OutputEvent)

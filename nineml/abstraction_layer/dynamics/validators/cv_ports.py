@@ -59,7 +59,11 @@ class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):
                     print ('Unable to find events generated for: ', ns,
                            evt_port_name)
 
-    def action_eventport(self, port, namespace, **kwargs):  # @UnusedVariable
+    def action_eventsendport(self, port, namespace, **kwargs):  # @UnusedVariable
+        assert not port.name in self.events_ports[namespace]
+        self.events_ports[namespace][port.name] = port
+
+    def action_eventreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable
         assert not port.name in self.events_ports[namespace]
         self.events_ports[namespace][port.name] = port
 
@@ -99,9 +103,8 @@ class ComponentValidatorOutputAnalogPorts(ComponentValidatorPerNamespace):
         assert not symbol in self.available_symbols[namespace]
         self.available_symbols[namespace].append(symbol)
 
-    def action_analogport(self, port, namespace, **kwargs):  # @UnusedVariable
-        if not port.is_incoming():
-            self.output_analogports[namespace].append(port.name)
+    def action_analogsendport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.output_analogports[namespace].append(port.name)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace=namespace, symbol=state_variable.name)

@@ -170,9 +170,8 @@ class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbo
             raise NineMLRuntimeError(err)
         self.available_symbols[namespace].append(symbol)
 
-    def action_analogport(self, port, namespace, **kwargs):  # @UnusedVariable
-        if port.is_incoming():
-            self.available_symbols[namespace].append(port.name)
+    def action_analogreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.available_symbols[namespace].append(port.name)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace=namespace, symbol=state_variable.name)
@@ -246,19 +245,27 @@ class ComponentValidatorPortConnections(ComponentValidatorPerNamespace):
                         "Port was 'recv' and specified twice: %s" % (sink))
                 connected_recv_ports.add(self.ports[sink])
 
-    def action_analogport(self, analogport, namespace):
-        port_address = NamespaceAddress.concat(namespace, analogport.name)
+    def _action_port(self, port, namespace):
+        port_address = NamespaceAddress.concat(namespace, port.name)
         if port_address in self.ports:
             raise NineMLRuntimeError(
                 'Duplicated Name for port found: %s' % port_address)
-        self.ports[port_address] = analogport
+        self.ports[port_address] = port
 
-    def action_eventport(self, analogport, namespace):
-        port_address = NamespaceAddress.concat(namespace, analogport.name)
-        if port_address in self.ports:
-            raise NineMLRuntimeError(
-                'Duplicated Name for port found: %s' % port_address)
-        self.ports[port_address] = analogport
+    def action_analogsendport(self, analogsendport, namespace):
+        self._action_port(analogsendport, namespace)
+
+    def action_analogreceiveport(self, analogreceiveport, namespace):
+        self._action_port(analogreceiveport, namespace)
+
+    def action_analogreduceport(self, analogreduceport, namespace):
+        self._action_port(analogreduceport, namespace)
+
+    def action_eventsendport(self, eventsendport, namespace):
+        self._action_port(eventsendport, namespace)
+
+    def action_eventreceiveport(self, eventreceiveport, namespace):
+        self._action_port(eventreceiveport, namespace)
 
     def action_componentclass(self, component, namespace):
         for src, sink in component.portconnections:
@@ -334,10 +341,19 @@ class ComponentValidatorNoDuplicatedObjects(ComponentValidatorPerNamespace):
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self.all_objects.append(parameter)
 
-    def action_analogport(self, port, **kwargs):  # @UnusedVariable
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         self.all_objects.append(port)
 
-    def action_eventport(self, port, **kwargs):  # @UnusedVariable
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
+        self.all_objects.append(port)
+
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
+        self.all_objects.append(port)
+
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
+        self.all_objects.append(port)
+
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self.all_objects.append(port)
 
     def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable

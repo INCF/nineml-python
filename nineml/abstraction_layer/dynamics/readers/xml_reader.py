@@ -51,36 +51,50 @@ class XMLLoader(object):
 
     def load_componentclass(self, element):
 
-        blocks = ('Parameter', 'AnalogPort', 'EventPort',
+        blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
+                  'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
                   'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
 
         subnodes = self.loadBlocks(element, blocks=blocks)
 
         dynamics = expect_single(subnodes["Dynamics"])
-        return al.ComponentClass(name=element.get('name'),
-                                 parameters=subnodes["Parameter"],
-                                 analog_ports=subnodes["AnalogPort"],
-                                 event_ports=subnodes["EventPort"],
-                                 dynamics=dynamics,
-                                 subnodes=dict(subnodes['Subnode']),
-                                 portconnections=subnodes["ConnectPorts"])
+        return al.ComponentClass(
+                         name=element.get('name'),
+                         parameters=subnodes["Parameter"],
+                         analog_send_ports=subnodes["AnalogSendPort"],
+                         analog_receive_ports=subnodes["AnalogReceivePort"],
+                         analog_reduce_ports=subnodes["AnalogReducePort"],
+                         event_send_ports=subnodes["EventSendPort"],
+                         event_receive_ports=subnodes["EventReceivePort"],
+                         dynamics=dynamics,
+                         subnodes=dict(subnodes['Subnode']),
+                         portconnections=subnodes["ConnectPorts"])
 
-    def load_subcomponent(self, element):
-        return al.SubComponent(name=element.get('name'))
+#     def load_subcomponent(self, element):
+#         return al.SubComponent(name=element.get('name'))
 
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
                          dimension=element.get('dimension'))
 
-    def load_analogport(self, element):
-        return al.AnalogPort(name=element.get("name"),
-                                    mode=element.get('mode'),
-                                    reduce_op=element.get("reduce_op", None)
-                                    )
+    def load_eventsendport(self, element):
+        return al.EventSendPort(name=element.get('name'))
 
-    def load_eventport(self, element):
-        return al.EventPort(name=element.get('name'),
-                                   mode=element.get('mode'))
+    def load_eventreceiveport(self, element):
+        return al.EventReceivePort(name=element.get('name'))
+
+    def load_analogsendport(self, element):
+        return al.AnalogSendPort(name=element.get("name"),
+                                 dimension=element.get('dimension'))
+
+    def load_analogreceiveport(self, element):
+        return al.AnalogReceivePort(name=element.get("name"),
+                                    dimension=element.get('dimension'))
+
+    def load_analogreduceport(self, element):
+        return al.EventReducePort(name=element.get('name'),
+                                  dimension=element.get('dimension'),
+                                  reduce_op=element.get("reduce_op"))
 
     def load_dynamics(self, element):
         subblocks = ('Regime', 'Alias', 'StateVariable')
@@ -202,12 +216,15 @@ class XMLLoader(object):
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
-        "Component": load_subcomponent,
+#         "Component": load_subcomponent,
         "Regime": load_regime,
         "StateVariable": load_statevariable,
         "Parameter": load_parameter,
-        "EventPort": load_eventport,
-        "AnalogPort": load_analogport,
+        "EventSendPort": load_eventsendport,
+        "AnalogSendPort": load_analogsendport,
+        "EventReceivePort": load_eventreceiveport,
+        "AnalogReceivePort": load_analogreceiveport,
+        "AnalogReducePort": load_analogreduceport,
         "Dynamics": load_dynamics,
         "OnCondition": load_oncondition,
         "OnEvent": load_onevent,

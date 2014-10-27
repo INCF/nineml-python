@@ -223,8 +223,8 @@ class ComponentTestCase(unittest.TestCase):
 
         # check that Transition catches condition in mode="send"
         self.assertRaises(ValueError, nineml.On, nineml.SpikeOutputEvent, do="V+=10")
-        # check that it won't accept a simple Port
-        self.assertRaises(ValueError, nineml.On, nineml.Port("hello", mode="recv"), do="V+=10")
+        # check that it won't accept a simple port_factory
+        self.assertRaises(ValueError, nineml.On, nineml.port_factory("hello", mode="recv"), do="V+=10")
         # check that it won't accept an AnalogPort
         self.assertRaises(
             ValueError, nineml.On, nineml.AnalogPort("hello", mode="recv"), do="V+=10")
@@ -250,7 +250,7 @@ class ComponentTestCase(unittest.TestCase):
 
         # Should be AnalogPort
         self.assertRaises(ValueError, nineml.Component, "Izhikevich",
-                          regimes=[r], ports=[nineml.Port("_q10", "send")])
+                          regimes=[r], ports=[nineml.port_factory("_q10", "send")])
 
         # Should be AnalogPort
         self.assertRaises(ValueError, nineml.Component, "Izhikevich",

@@ -23,8 +23,7 @@ class ActionVisitor(ComponentVisitor):
     def visit_componentclass(self, component, **kwargs):
         self.action_componentclass(component, **kwargs)
 
-        nodes = chain(component.parameters, component.analog_ports,
-                      component.event_ports)
+        nodes = chain(component.parameters, component.ports)
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
@@ -54,11 +53,20 @@ class ActionVisitor(ComponentVisitor):
     def visit_parameter(self, parameter, **kwargs):
         self.action_parameter(parameter, **kwargs)
 
-    def visit_analogport(self, port, **kwargs):
-        self.action_analogport(port, **kwargs)
+    def visit_analogsendport(self, port, **kwargs):
+        self.action_analogsendport(port, **kwargs)
 
-    def visit_eventport(self, port, **kwargs):
-        self.action_eventport(port, **kwargs)
+    def visit_analogreceiveport(self, port, **kwargs):
+        self.action_analogreceiveport(port, **kwargs)
+
+    def visit_analogreduceport(self, port, **kwargs):
+        self.action_analogreduceport(port, **kwargs)
+
+    def visit_eventsendport(self, port, **kwargs):
+        self.action_eventsendport(port, **kwargs)
+
+    def visit_eventreceiveport(self, port, **kwargs):
+        self.action_eventreceiveport(port, **kwargs)
 
     def visit_outputevent(self, output_event, **kwargs):
         self.action_outputevent(output_event, **kwargs)
@@ -117,10 +125,19 @@ class ActionVisitor(ComponentVisitor):
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_analogport(self, port, **kwargs):  # @UnusedVariable
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_eventport(self, port, **kwargs):  # @UnusedVariable
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
+        self.check_pass()
+
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
+        self.check_pass()
+
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
+        self.check_pass()
+
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self.check_pass()
 
     def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable

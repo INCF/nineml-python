@@ -7,7 +7,8 @@ Python module for reading 9ML abstraction layer files in XML format.
 
 from .component import (ComponentClass, Regime, On, OutputEvent,
                         StateAssignment, TimeDerivative, ReducePort,
-                        AnalogPort, EventPort, Dynamics, OnCondition,
+                        AnalogSendPort, AnalogReceivePort, AnalogReducePort,
+                        EventSendPort, EventReceivePort, Dynamics, OnCondition,
                         Condition, StateVariable, NamespaceAddress, RecvPort,
                         SendPort, Alias, OnEvent, SpikeOutputEvent,
                         SendEventPort, RecvEventPort, Expression)

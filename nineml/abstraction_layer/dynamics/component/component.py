@@ -11,6 +11,7 @@ from nineml.exceptions import NineMLRuntimeError
 from namespaceaddress import NamespaceAddress
 import componentqueryer
 import dynamics as dyn
+from itertools import chain
 
 import itertools
 from nineml.abstraction_layer.components import BaseComponentClass, Parameter
@@ -30,25 +31,50 @@ class ComponentClassMixinFlatStructure(object):
     definitions - i.e. the dynamics
     """
 
-    def __init__(self, analog_ports=None,
-                 event_ports=None, dynamics=None):
+    def __init__(self, analog_send_ports=[], analog_receive_ports=[],
+                 analog_reduce_ports=[], event_send_ports=[],
+                 event_receive_ports=[], dynamics=None):
         """Constructor - For parameter descriptions, see the
         ComponentClass.__init__() method
         """
-        self._analog_ports = analog_ports or []
-        self._event_ports = event_ports or []
+        self._analog_send_ports = analog_send_ports
+        self._analog_receive_ports = analog_receive_ports
+        self._analog_reduce_ports = analog_reduce_ports
+        self._event_send_ports = event_send_ports
+        self._event_receive_ports = event_receive_ports
         self._dynamics = dynamics
         ensure_valid_c_variable_name(self.name)
 
     @property
-    def analog_ports(self):
-        """Returns an iterator over the local |AnalogPort| objects"""
-        return self._analog_ports
+    def ports(self):
+        return chain(self._analog_send_ports, self._analog_receive_ports,
+                     self._analog_reduce_ports, self._event_send_ports,
+                     self._event_receive_ports)
 
     @property
-    def event_ports(self):
-        """Returns an iterator over the local |EventPort| objects"""
-        return self._event_ports
+    def analog_send_ports(self):
+        """Returns an iterator over the local |AnalogSendPort| objects"""
+        return self._analog_send_ports
+
+    @property
+    def analog_receive_ports(self):
+        """Returns an iterator over the local |AnalogReceivePort| objects"""
+        return self._analog_receive_ports
+
+    @property
+    def analog_reduce_ports(self):
+        """Returns an iterator over the local |AnalogReducePort| objects"""
+        return self._analog_reduce_ports
+
+    @property
+    def event_send_ports(self):
+        """Returns an iterator over the local |EventSendPort| objects"""
+        return self._event_send_ports
+
+    @property
+    def event_receive_ports(self):
+        """Returns an iterator over the local |EventReceivePort| objects"""
+        return self._event_receive_ports
 
     @property
     def dynamics(self):
@@ -192,7 +218,7 @@ class ComponentClassMixinNamespaceStructure(object):
         addr_in_subnode = NamespaceAddress(namespace_addr.loctuple[1:])
         return subnode.get_subnode(addr=addr_in_subnode)
 
-    def insert_subnode(self,  namespace, subnode):
+    def insert_subnode(self, namespace, subnode):
         """Insert a subnode into this component
 
         :param subnode: An object of type ``ComponentClass``.
@@ -253,7 +279,7 @@ class InterfaceInferer(ActionVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
-    def __init__(self, dynamics, analog_ports):
+    def __init__(self, dynamics, analog_receive_ports):
         ActionVisitor.__init__(self, explicitly_require_action_overrides=True)
 
         # State Variables:
@@ -268,16 +294,10 @@ class InterfaceInferer(ActionVisitor):
         # Which symbols can we account for:
         alias_symbols = set(dynamics.aliases_map.keys())
 
-        if analog_ports is not None:
-            analog_ports_in = [ap.name
-                               for ap in analog_ports if ap.is_incoming()]
-        else:
-            analog_ports_in = []
-
         self.accounted_for_symbols = set(itertools.chain(
             self.state_variable_names,
             alias_symbols,
-            analog_ports_in,
+            analog_receive_ports,
             get_reserved_and_builtin_symbols()
         ))
 
@@ -348,8 +368,10 @@ class ComponentClass(BaseComponentClass,
 
     """
 
-    def __init__(self, name, parameters=None, analog_ports=None,
-                 event_ports=None, dynamics=None, subnodes=None,
+    def __init__(self, name, parameters=None, analog_send_ports=None,
+                 analog_receive_ports=None, analog_reduce_ports=None,
+                 event_send_ports=None, event_receive_ports=None,
+                 dynamics=None, subnodes=None,
                  portconnections=None, regimes=None,
                  aliases=None, state_variables=None):
         """Constructs a ComponentClass
@@ -406,7 +428,7 @@ class ComponentClass(BaseComponentClass,
         self._query = componentqueryer.ComponentQueryer(self)
 
         # EventPort, StateVariable and Parameter Inference:
-        inferred_struct = InterfaceInferer(dynamics, analog_ports=analog_ports)
+        inferred_struct = InterfaceInferer(dynamics, analog_receive_ports)
         inf_check = lambda l1, l2, desc: check_list_contain_same_items(
                                             l1, l2, desc1='Declared',
                                             desc2='Inferred', ignore=['t'],
@@ -433,19 +455,19 @@ class ComponentClass(BaseComponentClass,
                           inferred_struct.state_variable_names]
             dynamics._state_variables = state_vars
 
-        # Check Event Ports Match:
-        if event_ports is not None:
-            ip_evt_names = [ep.name for ep in event_ports if ep.is_incoming()]
-            op_evt_names = [ep.name for ep in event_ports if ep.is_outgoing()]
-            # Check things Match:
-            inf_check(ip_evt_names,
+        # Check Event Receive Ports Match:
+        if event_receive_ports:
+            # FIXME: not all OutputEvents are necessarily exposed as Ports,
+            # so really we should just check that all declared output event
+            # ports are in the list of inferred ports, not that the declared
+            # list is identical to the inferred one.
+            inf_check(event_receive_ports,
                       inferred_struct.input_event_port_names,
                       'Event Ports In')
-            # Note that not all OutputEvents are necessarily exposed as Ports,
-            # so really we should just check that all declared output event ports
-            # are in the list of inferred ports, not that the declared list
-            # is identical to the inferred one.
-            inf_check(op_evt_names,
+
+        # Check Event Send Ports Match:
+        if event_send_ports:
+            inf_check(event_send_ports,
                       inferred_struct.output_event_port_names,
                       'Event Ports Out')
         else:
@@ -457,10 +479,14 @@ class ComponentClass(BaseComponentClass,
                 event_ports.append(EventPort(name=evt_port_name, mode='send'))
 
         # Construct super-classes:
-        ComponentClassMixinFlatStructure.__init__(self,
-                                                  analog_ports=analog_ports,
-                                                  event_ports=event_ports,
-                                                  dynamics=dynamics)
+        ComponentClassMixinFlatStructure.__init__(
+                                  self,
+                                  analog_send_ports=analog_send_ports,
+                                  analog_receive_ports=analog_receive_ports,
+                                  analog_reduce_ports=analog_reduce_ports,
+                                  event_send_ports=event_send_ports,
+                                  event_receive_ports=event_receive_ports,
+                                  dynamics=dynamics)
 
         ComponentClassMixinNamespaceStructure.__init__(
                                                self, subnodes=subnodes,

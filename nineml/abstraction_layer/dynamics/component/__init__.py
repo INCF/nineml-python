@@ -12,7 +12,8 @@ from expressions import RegimeElement,  Expression, Equation
 from expressions import ExpressionWithLHS, ExpressionWithSimpleLHS, Alias
 from expressions import StateAssignment, TimeDerivative, StrToExpr
 from conditions import Condition
-from ports import Port, AnalogPort, EventPort
+from ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
+                   EventSendPort, EventReceivePort)
 from ports import ReducePort, RecvPort, SendPort, RecvEventPort, SendEventPort
 
 from events import OutputEvent

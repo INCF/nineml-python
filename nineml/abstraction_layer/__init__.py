@@ -12,7 +12,9 @@ from nineml import __version__
 from components import Parameter, BaseComponentClass
 from dynamics.component import (ComponentClass, Regime, On, OutputEvent,
                                 StateAssignment, TimeDerivative, ReducePort,
-                                AnalogPort, EventPort, Dynamics, OnCondition,
+                                AnalogSendPort, AnalogReceivePort,
+                                AnalogReducePort, EventSendPort,
+                                EventReceivePort, Dynamics, OnCondition,
                                 Condition, StateVariable, NamespaceAddress,
                                 RecvPort, SendPort, Alias, OnEvent,
                                 SpikeOutputEvent, SendEventPort, RecvEventPort,

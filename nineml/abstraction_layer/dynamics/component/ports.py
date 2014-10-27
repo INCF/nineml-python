@@ -1,17 +1,19 @@
 """
-This file defines the Port classes used in NineML
+This file defines the port_factory classes used in NineML
 
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.utility import curry, ensure_valid_c_variable_name
+from nineml.utility import ensure_valid_c_variable_name  # , curry
 from nineml.exceptions import NineMLRuntimeError
+from abc import ABCMeta
 
 
 class Port(object):
 
-    """ Base class for |EventPort| and |AnalogPort|.
+    """ Base class for |AnalogSendPort|, |AnalogReceivePort|, |EventSendPort|,
+    |EventReceivePort| and |AnalogReducePort|.
 
     In general, a port has a ``name``, which can be used to reference it,
     and a ``mode``, which specifies whether it sends or receives information.
@@ -19,97 +21,40 @@ class Port(object):
     Generally, a send port can be connected to receive port to allow different
     components to communicate.
 
-    In the case of an |AnalogPort|, we have three modes, ``send``, ``recv`` and
-    ``reduce``. ``send`` ports can be connected to any number of ``recv``
-    ports, but each ``recv`` port can only be connected to a single ``send``
-    port. In order to collect analog inputs from several ``send`` ports into a
-    single port, we use a ``reduce`` port. A ``reduce`` port also requires an
-    additional parameter, ``op``, which specifies how to combine the
-    information from the ports, for example, by adding their values together,
-    `+`.
+    |AnalogSendPort| and |EventSendPort|s can be connected to any number of
+    |AnalogReceivePort| and |EventReceivePort|s respectively, but each
+    |AnalogReceivePort| and |EventReceivePort| can only be connected to a
+    single |AnalogSendPort| and |EventSendPort| respectively. port. In order to
+    collect analog inputs from several |AnalogSendPort|s into a single port, we
+    use a |AnalogReducePort|. An |AnalogReducePort| port requires an additional
+    parameter, ``reduce_op``, which specifies how to combine the information
+    from the ports, for example, by adding their values together, `+`.
 
     For example, if we had several Hodgkin-Huxley channels on a neuron, we
-    would want each one to have a ``send`` port, ``i`` containing the current
-    passing through that type of channel. Then, we would have a single
-    ``reduce`` port, ``I_in`` for example, with ``op='+'``, which would combine
-    them together to calculate the voltage change in the neuron.
+    would want each one to have a |AnalogSendPort|, ``i`` containing the
+    current passing through that type of channel. Then, we would have a single
+    |AnalogReducePort|, ``I_in`` for example, with ``op='+'``, which would
+    combine them together to calculate the voltage change in the neuron.
 
     """
-    _modes = ('send', 'recv', 'reduce')
-    _reduce_op_map = {'add': '+', '+': '+', }
+    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
-    def __init__(self, name, mode='send', reduce_op=None,
-                 dimension='dimensionless'):
-        """ Port Constructor.
+    def __init__(self, name):
+        """ port_factory Constructor.
 
         :param name: The name of the port, as a `string`
-        :param mode: The mode of the port, which should be a string as either,
-            ``send``,``recv`` or ``reduce``.
-        :param reduce_op: This should be ``None`` unless the mode is
-            ``reduce``. If the mode is ``reduce``, then this must be a
-            supported ``reduce_op``
-
-        .. note::
-
-            Currently support ``reduce_op`` s are: ``+``.
-
         """
-
         name = name.strip()
         ensure_valid_c_variable_name(name)
-
-        self.dimension = dimension
         self._name = name
-        self._mode = mode
-        self._reduce_op = reduce_op
-
-        if self._mode not in Port._modes:
-            err = ("%s('%s')" + "specified undefined mode: '%s'") %\
-                  (self.__class__.__name__, self.name, mode)
-            raise NineMLRuntimeError(err)
-
-        if mode == 'reduce':
-            if reduce_op not in Port._reduce_op_map.keys():
-                err = ("%s('%s')" + "specified undefined reduce_op: '%s'") %\
-                      (self.__class__.__name__, name, str(reduce_op))
-                raise NineMLRuntimeError(err)
-
-        if reduce_op and mode != "reduce":
-            err = "Port of mode!=reduce may not specify 'op'."
-            raise NineMLRuntimeError(err)
 
     @property
     def name(self):
         """The name of the port, local to the current component"""
         return self._name
 
-    @property
-    def mode(self):
-        """The mode of the port. ['send','recv' or 'reduce'] """
-        return self._mode
-
-    @property
-    def reduce_op(self):
-        """The reduce operation of the port, if it is a 'reduce' port"""
-        return self._reduce_op
-
-    def __repr__(self):
-        classstring = self.__class__.__name__
-        opstr = ', op=%s' % (self.reduce_op or '')
-        return "%s('%s', mode='%s' %s)" % \
-            (classstring, self.name, self.mode, opstr)
-
-    def is_incoming(self):
-        """Returns ``True`` if the port's mode is 'recv' or 'reduce' """
-        return self.mode in ('recv', 'reduce')
-
-    def is_outgoing(self):
-        """Returns ``True`` if the port's mode is 'send' """
-        return not self.is_incoming()
-
 
 class AnalogPort(Port):
-
     """AnalogPort
 
     An |AnalogPort| represents a continuous input or output to/from a
@@ -117,14 +62,24 @@ class AnalogPort(Port):
     component, or the current provided by a ion-channel.
 
     """
+    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogport(self, **kwargs)
+    def __init__(self, name, dimension):
+        super(AnalogPort, self).__init__(name)
+        self._dimension = dimension  # TODO: This needs checking
+
+    @property
+    def dimension(self):
+        """The dimension of the port"""
+        return self._dimension
+
+    def __repr__(self):
+        classstring = self.__class__.__name__
+        return "{}('{}', dimension='{}')".format(classstring, self.name,
+                                                 self.dimension)
 
 
 class EventPort(Port):
-
     """EventPort
 
     An |EventPort| is a port that can transmit and receive discrete events at
@@ -132,19 +87,133 @@ class EventPort(Port):
     notify other components that it had fired; or synapses could receive events
     to notify them to provide current to a post-synaptic neuron.
     """
+    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
+
+    def __repr__(self):
+        classstring = self.__class__.__name__
+        return "{}('{}')".format(classstring, self.name)
+
+
+class AnalogSendPort(AnalogPort):
+    """AnalogSendPort
+
+    An |AnalogSendPort| represents a continuous output from a
+    Component. For example, this could be the membrane-voltage into a synapse
+    component, or the current provided by a ion-channel.
+
+    """
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
-        return visitor.visit_eventport(self, **kwargs)
+        return visitor.visit_analogsendport(self, **kwargs)
 
-    def __init__(self, name, mode='send', reduce_op=None):
-        Port.__init__(self, name=name, mode=mode, reduce_op=reduce_op)
+
+class AnalogReceivePort(AnalogPort):
+    """AnalogReceivePort
+
+    An |AnalogReceivePort| represents a continuous input to a
+    Component. For example, this could be the membrane-voltage into a synapse
+    component, or the current provided by a ion-channel.
+
+    """
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_analogreceiveport(self, **kwargs)
+
+
+class EventSendPort(EventPort):
+    """EventSendPort
+
+    An |EventSendPort| is a port that can transmit discrete events at
+    points in time. For example, an integrate-and-fire could 'send' events to
+    notify other components that it had fired.
+    """
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_eventsendport(self, **kwargs)
+
+
+class EventReceivePort(EventPort):
+    """EventReceivePort
+
+    An |EventReceivePort| is a port that can receive discrete events at
+    points in time. For example, synapses could receive events
+    to notify them to provide current to a post-synaptic neuron.
+    """
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_eventreceiveport(self, **kwargs)
+
+
+class AnalogReducePort(AnalogPort):
+    """AnalogReducePort
+
+    An |AnalogReducePort| represents a collection of continuous inputs to a
+    Component from a common type of input that can be reduced into a single
+    input. For example, or the currents provided by a collection of
+    ion-channels.
+
+    .. note::
+
+        Currently support ``reduce_op`` s are: ``+``.
+
+    """
+    _reduce_op_map = {'add': '+', '+': '+', }
+
+    def __init__(self, name, dimension, reduce_op='+'):
+        if reduce_op not in Port._reduce_op_map.keys():
+            err = ("%s('%s')" + "specified undefined reduce_op: '%s'") %\
+                  (self.__class__.__name__, name, str(reduce_op))
+            raise NineMLRuntimeError(err)
+        super(AnalogReducePort, self).__init__(name, dimension)
+        self._reduce_op = reduce_op
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_analogreduceport(self, **kwargs)
+
+    def __repr__(self):
+        classstring = self.__class__.__name__
+        return ("{}('{}', dimension='{}', op='{}')"
+               .format(classstring, self.name, self.dimension, self.reduce_op))
+
+
+def port_factory(name, mode='send', reduce_op=None,
+                 dimension='dimensionless'):
+    """ port_factory Constructor.
+
+    :param name: The name of the port, as a `string`
+    :param mode: The mode of the port, which should be a string as either,
+        ``send``,``recv`` or ``reduce``.
+    :param reduce_op: This should be ``None`` unless the mode is
+        ``reduce``. If the mode is ``reduce``, then this must be a
+        supported ``reduce_op``
+
+    .. note::
+
+        Currently support ``reduce_op`` s are: ``+``.
+
+    """
+    if mode == 'reduce':
+        return AnalogReducePort(name=name, dimension=dimension,
+                                reduce_op=reduce_op)
+    elif mode == 'send':
+        return AnalogSendPort(name, dimension)
+    elif mode in ('receive', 'recv'):
+        return AnalogReceivePort(name, dimension)
+    else:
+        err = ("%s('%s')" + "specified undefined mode: '%s'") %\
+              ('port_factory', 'none', mode)
+        raise NineMLRuntimeError(err)
 
 
 # Syntactic sugar
-ReducePort = curry(AnalogPort, mode="reduce")
-RecvPort = curry(AnalogPort, mode="recv")
-SendPort = curry(AnalogPort, mode="send")
+ReducePort = AnalogReducePort  # curry(AnalogPort, mode="reduce")
+RecvPort = AnalogReceivePort  # curry(AnalogPort, mode="recv")
+SendPort = AnalogSendPort  # curry(AnalogPort, mode="send")
 
-RecvEventPort = curry(EventPort, mode="recv")
-SendEventPort = curry(EventPort, mode="send")
+RecvEventPort = EventReceivePort  # curry(EventPort, mode="recv")
+SendEventPort = EventSendPort  # curry(EventPort, mode="send")
