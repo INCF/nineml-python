@@ -1,5 +1,5 @@
 """
-This file defines the port_factory classes used in NineML
+This file defines the Port classes used in NineML
 
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
@@ -40,7 +40,7 @@ class Port(object):
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
     def __init__(self, name):
-        """ port_factory Constructor.
+        """ Port Constructor.
 
         :param name: The name of the port, as a `string`
         """
@@ -64,7 +64,7 @@ class AnalogPort(Port):
     """
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
-    def __init__(self, name, dimension):
+    def __init__(self, name, dimension=None):
         super(AnalogPort, self).__init__(name)
         self._dimension = dimension  # TODO: This needs checking
 
@@ -179,35 +179,6 @@ class AnalogReducePort(AnalogPort):
         classstring = self.__class__.__name__
         return ("{}('{}', dimension='{}', op='{}')"
                .format(classstring, self.name, self.dimension, self.reduce_op))
-
-
-def port_factory(name, mode='send', reduce_op=None,
-                 dimension='dimensionless'):
-    """ port_factory Constructor.
-
-    :param name: The name of the port, as a `string`
-    :param mode: The mode of the port, which should be a string as either,
-        ``send``,``recv`` or ``reduce``.
-    :param reduce_op: This should be ``None`` unless the mode is
-        ``reduce``. If the mode is ``reduce``, then this must be a
-        supported ``reduce_op``
-
-    .. note::
-
-        Currently support ``reduce_op`` s are: ``+``.
-
-    """
-    if mode == 'reduce':
-        return AnalogReducePort(name=name, dimension=dimension,
-                                reduce_op=reduce_op)
-    elif mode == 'send':
-        return AnalogSendPort(name, dimension)
-    elif mode in ('receive', 'recv'):
-        return AnalogReceivePort(name, dimension)
-    else:
-        err = ("%s('%s')" + "specified undefined mode: '%s'") %\
-              ('port_factory', 'none', mode)
-        raise NineMLRuntimeError(err)
 
 
 # Syntactic sugar

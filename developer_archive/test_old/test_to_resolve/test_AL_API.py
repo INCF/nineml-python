@@ -223,14 +223,14 @@ class ComponentTestCase(unittest.TestCase):
 
         # check that Transition catches condition in mode="send"
         self.assertRaises(ValueError, nineml.On, nineml.SpikeOutputEvent, do="V+=10")
-        # check that it won't accept a simple port_factory
-        self.assertRaises(ValueError, nineml.On, nineml.port_factory("hello", mode="recv"), do="V+=10")
+        # check that it won't accept an analogport
+        self.assertRaises(ValueError, nineml.On, nineml.AnalogReceivePort("hello", dimension="voltage"), do="V+=10")
         # check that it won't accept an AnalogPort
         self.assertRaises(
-            ValueError, nineml.On, nineml.AnalogPort("hello", mode="recv"), do="V+=10")
+            ValueError, nineml.On, nineml.AnalogReceivePort("hello", dimension="voltage"), do="V+=10")
 
         # user defined EventPort should be ok.
-        e = nineml.On(nineml.EventPort("hello", mode="recv"), do="V+=10")
+        e = nineml.On(nineml.EventReceivePort("hello"), do="V+=10")
 
         r = nineml.Regime(
             "_q10(V):=exp(V)",
@@ -242,19 +242,19 @@ class ComponentTestCase(unittest.TestCase):
         # c1 = nineml.Component("Izhikevich", regimes = [r], ports=[nineml.AnalogPort("_q10","send")] )
         # may not write to a alias
         self.assertRaises(ValueError, nineml.Component, "Izhikevich",
-                          regimes=[r], ports=[nineml.AnalogPort("_q10", "recv")])
+                          regimes=[r], ports=[nineml.AnalogReceivePort("_q10")])
 
         # may not read from an undefined symbol
         self.assertRaises(ValueError, nineml.Component, "Izhikevich",
-                          regimes=[r], ports=[nineml.AnalogPort("_q11", "send")])
+                          regimes=[r], ports=[nineml.AnalogSendPort("_q11")])
 
         # Should be AnalogPort
         self.assertRaises(ValueError, nineml.Component, "Izhikevich",
-                          regimes=[r], ports=[nineml.port_factory("_q10", "send")])
+                          regimes=[r], ports=[nineml.AnalogSendPort("_q10")])
 
         # Should be AnalogPort
         self.assertRaises(ValueError, nineml.Component, "Izhikevich",
-                          regimes=[r], ports=[nineml.EventPort("_q10", "send")])
+                          regimes=[r], ports=[nineml.EventSendPort("_q10")])
 
         # EventPorts as nodes in Transitions
         # multiple EventPorts
@@ -274,7 +274,7 @@ class ComponentTestCase(unittest.TestCase):
         e = nineml.On("V>Vth", do=nineml.EventPort("hello", mode="send"))
         # not ok: do=EventPort cannot recv
         self.assertRaises(
-            ValueError, nineml.On, "V>Vth", do=nineml.EventPort("hello", mode="recv"))
+            ValueError, nineml.On, "V>Vth", do=nineml.EventReceivePort("hello", mode="recv"))
 
     def test_regime_basic(self):
 
