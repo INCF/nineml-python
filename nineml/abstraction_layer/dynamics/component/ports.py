@@ -164,7 +164,7 @@ class AnalogReducePort(AnalogPort):
     _reduce_op_map = {'add': '+', '+': '+', }
 
     def __init__(self, name, dimension, reduce_op='+'):
-        if reduce_op not in Port._reduce_op_map.keys():
+        if reduce_op not in self._reduce_op_map.keys():
             err = ("%s('%s')" + "specified undefined reduce_op: '%s'") %\
                   (self.__class__.__name__, name, str(reduce_op))
             raise NineMLRuntimeError(err)
@@ -174,6 +174,10 @@ class AnalogReducePort(AnalogPort):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_analogreduceport(self, **kwargs)
+
+    @property
+    def reduce_op(self):
+        return self._reduce_op
 
     def __repr__(self):
         classstring = self.__class__.__name__

@@ -279,7 +279,7 @@ class InterfaceInferer(ActionVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
-    def __init__(self, dynamics, analog_receive_ports):
+    def __init__(self, dynamics, incoming_port_names):
         ActionVisitor.__init__(self, explicitly_require_action_overrides=True)
 
         # State Variables:
@@ -297,7 +297,7 @@ class InterfaceInferer(ActionVisitor):
         self.accounted_for_symbols = set(itertools.chain(
             self.state_variable_names,
             alias_symbols,
-            analog_receive_ports,
+            incoming_port_names,
             get_reserved_and_builtin_symbols()
         ))
 
@@ -427,8 +427,10 @@ class ComponentClass(BaseComponentClass,
                                     state_variables=state_variables)
         self._query = componentqueryer.ComponentQueryer(self)
 
+        incoming_port_names = [p.name for p in chain(analog_receive_ports,
+                                                     analog_reduce_ports)]
         # EventPort, StateVariable and Parameter Inference:
-        inferred_struct = InterfaceInferer(dynamics, analog_receive_ports)
+        inferred_struct = InterfaceInferer(dynamics, incoming_port_names)
         inf_check = lambda l1, l2, desc: check_list_contain_same_items(
                                             l1, l2, desc1='Declared',
                                             desc2='Inferred', ignore=['t'],
@@ -461,13 +463,13 @@ class ComponentClass(BaseComponentClass,
             # so really we should just check that all declared output event
             # ports are in the list of inferred ports, not that the declared
             # list is identical to the inferred one.
-            inf_check(event_receive_ports,
+            inf_check([p.name for p in event_receive_ports],
                       inferred_struct.input_event_port_names,
                       'Event Ports In')
 
         # Check Event Send Ports Match:
         if event_send_ports:
-            inf_check(event_send_ports,
+            inf_check([p.name for p in event_send_ports],
                       inferred_struct.output_event_port_names,
                       'Event Ports Out')
         else:

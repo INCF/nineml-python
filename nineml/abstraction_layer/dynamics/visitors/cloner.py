@@ -171,7 +171,7 @@ class RenameSymbol(ActionVisitor):
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         if on_event.src_port_name == self.old_symbol_name:
-            on_event._src_port_name = self.new_symbol_name
+            on_event._port_name = self.new_symbol_name
             self.note_rhs_changed(on_event)
 
 

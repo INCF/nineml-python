@@ -173,6 +173,9 @@ class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbo
     def action_analogreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.available_symbols[namespace].append(port.name)
 
+    def action_analogreduceport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.available_symbols[namespace].append(port.name)
+
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace=namespace, symbol=state_variable.name)
 

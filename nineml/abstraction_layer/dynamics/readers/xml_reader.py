@@ -92,7 +92,7 @@ class XMLLoader(object):
                                     dimension=element.get('dimension'))
 
     def load_analogreduceport(self, element):
-        return al.EventReducePort(name=element.get('name'),
+        return al.AnalogReducePort(name=element.get('name'),
                                   dimension=element.get('dimension'),
                                   reduce_op=element.get("reduce_op"))
 
@@ -145,11 +145,10 @@ class XMLLoader(object):
         subnodes = self.loadBlocks(element, blocks=subblocks)
         target_regime_name = element.get('target_regime', None)
 
-        return al.OnEvent(src_port_name=element.get('src_port'),
-                                 state_assignments=subnodes["StateAssignment"],
-                                 event_outputs=subnodes["EventOut"],
-                                 target_regime_name=target_regime_name
-                                 )
+        return al.OnEvent(src_port_name=element.get('port'),
+                          state_assignments=subnodes["StateAssignment"],
+                          event_outputs=subnodes["EventOut"],
+                          target_regime_name=target_regime_name)
 
     def load_trigger(self, element):
         return self.load_single_internal_maths_block(element)
