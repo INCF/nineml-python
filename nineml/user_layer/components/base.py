@@ -4,6 +4,7 @@ from operator import and_
 from ...abstraction_layer import BaseComponentClass
 from ..base import BaseULObject, E, NINEML
 from ... import abstraction_layer
+from ...utility import valid_uri_re
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet
 
@@ -257,6 +258,70 @@ class BaseComponent(BaseULObject):
             else:
                 raise Exception("A component must contain either a defintion "
                                 "or a reference")
+
+
+class Reference(BaseULObject):
+
+    """
+    Base class for model components that are defined in the abstraction layer.
+    """
+    element_name = "Reference"
+    defining_attributes = ("url")
+
+    # initial_values is temporary, the idea longer-term is to use a separate
+    # library such as SEDML
+    def __init__(self, component_name, url=None):
+        """
+        Create a new component with the given name, definition and properties,
+        or create a reference to another component that will be resolved later.
+
+        `component_name` - a name of an existing component to refer to
+        `url`            - a url of the file containing the exiting component
+        """
+        if not isinstance(component_name, basestring):
+            raise Exception("Component name '{}' was not a valid string")
+        if url is not None:
+            try:
+                valid_uri = valid_uri_re.match(url)
+            except:
+                valid_uri = False
+            if not valid_uri:
+                raise Exception("Provided url ('{}') is not a valid URI"
+                                    .format(url))
+        self.component_name = component_name
+        self.url = url
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return reduce(and_, (self.component_name == other.component_name,
+                             self.url == other.url))
+
+    def __hash__(self):
+        assert not self.unresolved
+        return (hash(self.__class__) ^ hash(self.component_name) ^
+                hash(self.url))
+
+    def __repr__(self):
+            return ('{}(refers_to="{}"{})'
+                    .format(self.__class__.__name__, self.component_name,
+                            ' in "{}"'.format(self.url) if self.url else ''))
+
+    def to_xml(self):
+        kwargs = {'url': self.url} if self.url else {}
+        element = E(self.element_name,
+                    self.component_name,
+                    **kwargs)
+        return element
+
+    @classmethod
+    def from_xml(cls, element):
+        if element.tag != NINEML + cls.element_name:
+            raise Exception("Expecting tag name %s%s, actual tag name %s" % (
+                NINEML, cls.element_name, element.tag))
+        component_name = element.text
+        url = element.attrib.get("url", None)
+        return cls(component_name, url)
 
 
 def get_or_create_component(ref, cls, components):

@@ -8,6 +8,7 @@ analysis.
 
 from os.path import dirname, normpath, realpath, exists, join
 import sys
+import re
 
 import itertools
 import hashlib
@@ -451,7 +452,6 @@ class curry:
         return self.fun(*(self.pending + args), **kw)
 
 
-import re
 r = re.compile(r"""[a-zA-Z][a-zA-Z0-9_]*$""")
 
 
@@ -460,3 +460,11 @@ def ensure_valid_c_variable_name(tok):
         return
     else:
         raise NineMLRuntimeError("Invalid Token name: %s " % tok)
+
+valid_uri_re = re.compile(r'^(?:https?|file)://'  # http:// or https://
+                          r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
+                          r'(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain
+                          r'localhost|'  # localhost
+                          r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+                          r'(?::\d+)?'  # optional port
+                          r'(?:/?|[/?]\S+)$', re.IGNORECASE)
