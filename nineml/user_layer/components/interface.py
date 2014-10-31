@@ -58,7 +58,7 @@ class Property(BaseULObject):
             value_element = E.array(" ".join(repr(x) for x in self.value))
         else:  # need to handle Function
             value_element = E.scalar(repr(self.value))
-        return E(Parameter.element_name,
+        return E(Property.element_name,
                  E.quantity(
 #                  E.value(   # this extra level of tags is pointless, no?
                  value_element,

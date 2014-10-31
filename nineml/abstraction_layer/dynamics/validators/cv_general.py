@@ -64,8 +64,7 @@ class ComponentValidatorStateAssignmentsAreOnStateVariables(
                                                                    iteritems():
             for td in state_assignments_lhs:
                 if not td in self.sv_declared[namespace]:
-                    err = ('Not Assigning to state-variable: %s' %
-                           state_assignment)
+                    err = 'Not Assigning to state-variable: {}'.format(td)
                     raise NineMLRuntimeError(err)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
