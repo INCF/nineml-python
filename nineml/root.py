@@ -9,7 +9,8 @@ root tag.
 
 from urllib import urlopen
 from lxml import etree
-from . import E
+from . import E, NINEML
+from collections import defaultdict
 
 from .abstraction_layer import ComponentClass
 from .user_layer import  Group, Population, Projection  # Unit, UnitDimension, Component @IgnorePep8
@@ -17,10 +18,11 @@ from .user_layer import  Group, Population, Projection  # Unit, UnitDimension, C
 
 class NineMLRoot(object):
 
-    element_tag = 'NineML'
+    element_name = 'NineML'
 
     valid_top_level_elements = [ComponentClass, Group, Population, Projection]
-    _elem_lookup = dict((e.element_tag, e) for e in valid_top_level_elements)
+    _elem_lookup = dict((NINEML + e.element_name, e)
+                        for e in valid_top_level_elements)
 
     def __init__(self, componentclasses=[], components=[], groups=[],
                  populations=[], projections=[]):
@@ -36,15 +38,15 @@ class NineMLRoot(object):
 
     @classmethod
     def from_xml(cls, element):
-        if element.tag != cls.element_tag:
+        if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ({})".format(element.tag))
-        children = {}
+        children = defaultdict(list)
         for child_elem in element.getchildren():
             try:
                 child_cls = cls._elem_lookup[child_elem.tag]
                 key = child_elem.tag.lower()
-                key += 's' if key[-1] != 's' else 'es'
-                children[key] = child_cls.from_xml(child_elem)
+                key = key[len(NINEML):] + ('s' if key[-1] != 's' else 'es')
+                children[key].append(child_cls.from_xml(child_elem))
             except KeyError:
                 raise Exception("NineML root element contains invalid element "
                                 "'{}'".format(child_elem.tag))
@@ -75,5 +77,6 @@ class NineMLRoot(object):
         try:
             return NineMLRoot.from_xml(root)
         except Exception as e:
+            raise
             raise Exception("Could not parse NineML file '{}', with error: \n "
                             "{}".format(url, e))

@@ -6,7 +6,8 @@ from ...abstraction_layer import BaseComponentClass
 from ..base import BaseULObject, E, NINEML
 from ... import abstraction_layer
 from ...utility import valid_uri_re
-from .. import parse as parse_ul
+import nineml.root
+
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet
 
@@ -196,27 +197,20 @@ class Definition(BaseULObject):
     element_name = "Definition"
     defining_attributes = ("url",)
 
-    def __init__(self, component_class_name, component_classes=[], url=None):
+    def __init__(self, component_class_name, component_classes={}, url=None):
         if url:
             try:
-                component_classes = parse_al(urllib.urlopen(url)).components
+                url_root = nineml.root.NineMLRoot.from_file(url)
+                component_classes = url_root.component_classes
             except:  # FIXME: Need to work out what exceptions urllib throws
                 raise
-        self.
-        self._component = None
-        if isinstance(component, basestring):
-            self.url = component
-        elif isinstance(component, BaseComponentClass): #, csa.ConnectionSetTemplate)): @IgnorePep8
-            self._component = component
-        else:
-            raise TypeError("Component must be of type string or "
-                            "BaseComponentClass (found {})"
-                            .format(type(component)))
-        reader = getattr(abstraction_layer, abstraction_layer_module).\
-                                             readers.XMLLoader(element, {})
-        assert len(reader.components) == 0
-        return reader.components[0]
-            
+        try:
+            self.component_class = component_classes[component_class_name]
+        except KeyError:
+            raise Exception("Did not find ComponentClass matching '{}'{}"
+                            .format(component_class_name,
+                                   " in file '{}'".format(url) if url else ''))
+        self.url = url
 
     def __hash__(self):
         if self._component:
@@ -258,6 +252,7 @@ class Definition(BaseULObject):
         component_class_name = element.text
         return cls(component_class_name, url=url)
 
+
 class Reference(BaseULObject):
 
     """
@@ -278,9 +273,16 @@ class Reference(BaseULObject):
         """
         if url:
             try:
-                components = parse_ul(urllib.urlopen(url)).components
+                url_root = nineml.root.NineMLRoot.from_file(url)
+                components = url_root.components
             except:  # FIXME: Need to work out what exceptions urllib throws
                 raise
+        try:
+            self.component_class = components[component_name]
+        except KeyError:
+            raise Exception("Did not find Component matching '{}'{}"
+                            .format(component_name,
+                                   " in file '{}'".format(url) if url else ''))
         self.component = components[component_name]
         self.url = url
 

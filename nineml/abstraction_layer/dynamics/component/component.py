@@ -368,12 +368,18 @@ class ComponentClass(BaseComponentClass,
 
     """
 
-    def __init__(self, name, parameters=None, analog_send_ports=None,
-                 analog_receive_ports=None, analog_reduce_ports=None,
-                 event_send_ports=None, event_receive_ports=None,
-                 dynamics=None, subnodes=None,
-                 portconnections=None, regimes=None,
-                 aliases=None, state_variables=None):
+    element_name = 'ComponentClass'
+
+    @classmethod
+    def from_xml(cls, element):
+        return cls('TESTING')
+
+    def __init__(self, name, parameters=None, analog_send_ports=[],
+                 analog_receive_ports=[], analog_reduce_ports=[],
+                 event_send_ports=[], event_receive_ports=[],
+                 dynamics=None, subnodes=[],
+                 portconnections=[], regimes=[],
+                 aliases=[], state_variables=[]):
         """Constructs a ComponentClass
 
         :param name: The name of the component.
