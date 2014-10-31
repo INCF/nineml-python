@@ -5,7 +5,7 @@ Tests for the user_layer module
 
 import unittest
 from lxml import etree
-from nineml.user_layer.components.interface import Parameter
+from nineml.user_layer.components.interface import Property
 
 
 class ModelTest(unittest.TestCase):
@@ -51,10 +51,10 @@ class RandomDistributionTest(unittest.TestCase):
 class ParameterTest(unittest.TestCase):
 
     def test_xml_roundtrip(self):
-        p1 = Parameter("tau_m", 20.0, "mV")
+        p1 = Property("tau_m", 20.0, "mV")
         element = p1.to_xml()
         xml = etree.tostring(element, pretty_print=True)
-        p2 = Parameter.from_xml(element, [])
+        p2 = Property.from_xml(element, [])
         self.assertEqual(p1, p2)
 
 

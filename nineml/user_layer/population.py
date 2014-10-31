@@ -35,7 +35,7 @@ class Population(BaseULObject):
         if self.prototype:
             if isinstance(self.prototype, SpikingNodeType):
                 components.append(self.prototype)
-                components.extend(self.prototype.parameters.get_random_distributions())
+                components.extend(self.prototype.properties.get_random_distributions())
                 components.extend(self.prototype.initial_values.get_random_distributions())
             elif isinstance(self.prototype,
                             nineml.user_layer.containers.Group):
@@ -346,7 +346,7 @@ class Structure(BaseComponent):
 
     def to_csa(self):
         if self.is_csa:
-            return self.get_definition()  # e.g. lambda size: csa.random2d(size, *self.parameters) @IgnorePep8
+            return self.get_definition()  # e.g. lambda size: csa.random2d(size, *self.properties) @IgnorePep8
         else:
             raise Exception("Structure cannot be transformed to CSA geometry "
                             "function")

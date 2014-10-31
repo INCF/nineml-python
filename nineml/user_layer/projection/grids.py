@@ -76,13 +76,13 @@ def createUnstructuredGrid(ul_population):
 
         if al_structure.name == 'grid_2d':
             fillOrder = ul_population.positions.structure.\
-                                                  parameters['fillOrder'].value
+                                                  properties['fillOrder'].value
             aspectRatioXY = ul_population.positions.structure.\
-                                              parameters['aspectRatioXY'].value
-            x0 = ul_population.positions.structure.parameters['x0'].value
-            y0 = ul_population.positions.structure.parameters['y0'].value
-            dx = ul_population.positions.structure.parameters['dx'].value
-            dy = ul_population.positions.structure.parameters['dy'].value
+                                              properties['aspectRatioXY'].value
+            x0 = ul_population.positions.structure.properties['x0'].value
+            y0 = ul_population.positions.structure.properties['y0'].value
+            dx = ul_population.positions.structure.properties['dx'].value
+            dy = ul_population.positions.structure.properties['dy'].value
 
             return Grid2D(x0, y0, dx, dy, ul_population.number)
 

@@ -23,7 +23,7 @@ class SpikingNodeType(BaseDynamicsComponent):
     emit (and optionally receive) spikes.
 
     Should perhaps be called SpikingNodePrototype, since this is type +
-    parameters
+    properties
     """
     pass
 

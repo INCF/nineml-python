@@ -84,9 +84,9 @@ class Projection(BaseULObject):
                            "synaptic_response_ports", "connection_ports"]
         # to avoid infinite recursion, we do not include source or target in
         # the tests if they are Groups
-        if isinstance(self.source, Group):
+        if isinstance(self.source, nineml.user_layer.containers.Group):
             test_attributes.remove("source")
-        if isinstance(self.target, Group):
+        if isinstance(self.target, nineml.user_layer.containers.Group):
             test_attributes.remove("target")
         return reduce(and_, (getattr(self, attr) == getattr(other, attr)
                              for attr in test_attributes))
@@ -116,16 +116,16 @@ class Projection(BaseULObject):
     def from_xml(cls, element, components):
         check_tag(element, cls)
         return cls(name=element.attrib["name"],
-                   source=element.find(NINEML + "source").text,
-                   target=element.find(NINEML + "target").text,
+                   source=element.find(NINEML + "Source").text,
+                   target=element.find(NINEML + "Target").text,
                    rule=get_or_create_component(
-                                            element.find(NINEML + "rule").text,
+                                            element.find(NINEML + "Rule").text,
                                             ConnectionRule, components),
                    synaptic_response=get_or_create_component(
-                                        element.find(NINEML + "response").text,
+                                        element.find(NINEML + "Response").text,
                                         SynapseType, components),
                    connection_type=get_or_create_component(
-                                      element.find(NINEML + "plasticity").text,
+                                      element.find(NINEML + "Plasticity").text,
                                       ConnectionType, components),
                    synaptic_response_ports=tuple((pc.attrib["port1"],
                                                   pc.attrib["port2"])

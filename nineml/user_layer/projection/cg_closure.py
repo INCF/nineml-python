@@ -21,4 +21,4 @@ class CgClosure:
 
 def alConnectionRuleFromURI(uri):
     component = XMLReader.read(uri)
-    return CgClosure(component.parameters, component.connection_rule)
+    return CgClosure(component.properties, component.connection_rule)

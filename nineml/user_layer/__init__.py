@@ -20,7 +20,7 @@ Classes
         ConnectionType
         RandomDistribution
     Parameter
-    ParameterSet
+    PropertySet
     Value
     Group
     Population
@@ -51,7 +51,7 @@ from .population import (Population, PositionList, Structure, Selection,
 from .containers import Model, Group
 from .projection import Projection, ConnectionRule, ConnectionType
 from .random import RandomDistribution
-from .components import ParameterSet
+from .components import PropertySet
 
 
 def parse(url):

@@ -25,7 +25,7 @@ def simple_example():
         {'lowerBound': (-70.0, "dimensionless"),
          'upperBound': (-60.0, "dimensionless")})
 
-    exc_cell_parameters = nineml.ParameterSet(
+    exc_cell_properties = nineml.PropertySet(
         membraneCapacitance=(1.0, "nF"),
         membraneTimeConstant=(tau_distr, "ms"),
         refractoryTime=(5.0, "ms"),
@@ -33,18 +33,18 @@ def simple_example():
         restingPotential=(-65.0, "mV"),
         resetPotential=(reset_distr, "mV"))
 
-    inh_cell_parameters = nineml.ParameterSet(
+    inh_cell_properties = nineml.PropertySet(
         membraneTimeConstant=(20.0, "ms"),
         resetPotential=(-60.0, "mV"))
 
-    inh_cell_parameters.complete(exc_cell_parameters)
+    inh_cell_properties.complete(exc_cell_properties)
 
     exc_celltype = nineml.SpikingNodeType("Excitatory neuron type",
                                           catalog + "neurons/IaF_tau.xml",
-                                          exc_cell_parameters)
+                                          exc_cell_properties)
     inh_celltype = nineml.SpikingNodeType("Inhibitory neuron type",
                                           catalog + "neurons/IaF_tau.xml",
-                                          inh_cell_parameters)
+                                          inh_cell_properties)
 
     grid2D = nineml.Structure("2D grid",
                               catalog + "networkstructures/2Dgrid.xml",
@@ -112,7 +112,7 @@ simple_example = simple_example()
 def nested_example():
     catalog = "http://svn.incf.org/svn/nineml/catalog/"
 
-    cell_parameters = {
+    cell_properties = {
         "membraneCapacitance": (1.0, "nF"),
         "membraneTimeConstant": (20.0, "ms"),
         "refractoryTime": (5.0, "ms"),
@@ -124,17 +124,17 @@ def nested_example():
     exc_celltype = nineml.SpikingNodeType(
         name="Excitatory neuron type",
         definition=catalog + "neurons/IaF_tau.xml",
-        parameters=cell_parameters)
+        properties=cell_properties)
 
     inh_celltype = nineml.SpikingNodeType(
         name="Inhibitory neuron type",
         definition=catalog + "neurons/IaF_tau.xml",
-        parameters=cell_parameters)
+        properties=cell_properties)
 
     inner_grid = nineml.Structure(
         name="neuronal grid with 1 micron spacing",
         definition=catalog + "networkstructures/2Dgrid.xml",
-        parameters={'fillOrder': ("sequential", None),
+        properties={'fillOrder': ("sequential", None),
                     'aspectRatioXY': (1.0, "dimensionless"),
                     'dx': (1.0, u"µm"), 'dy': (1.0, u"µm"),
                     'x0': (0.0, u"µm"), 'y0': (0.0, u"µm")})
@@ -142,7 +142,7 @@ def nested_example():
     outer_grid = nineml.Structure(
         name="column grid with 100 micron spacing",
         reference=inner_grid.name,
-        parameters={'dx': (100.0, u"µm"), 'dy': (100.0, u"µm")})
+        properties={'dx': (100.0, u"µm"), 'dy': (100.0, u"µm")})
 
     exc_cells = nineml.Population(
         name="Excitatory cells",
@@ -162,27 +162,27 @@ def nested_example():
     exc_psr = nineml.SynapseType(
         name="Excitatory post-synaptic response",
         definition=catalog + "postsynapticresponses/exp_g.xml",
-        parameters={'decayTimeConstant': (5.0, "ms"),
+        properties={'decayTimeConstant': (5.0, "ms"),
                     'reversalPotential': (0.0, "mV")})
     inh_psr = nineml.SynapseType(
         name="Inhibitory post-synaptic response",
         reference=exc_psr.name,
-        parameters={'reversalPotential': (-70.0, "mV")})
+        properties={'reversalPotential': (-70.0, "mV")})
 
     exc_connection_type = nineml.ConnectionType(
         name="Static excitatory connections",
         definition=catalog + "connectiontypes/static_connection.xml",
-        parameters={'weight': (0.1, "nS"), 'delay': (0.3, "ms")})
+        properties={'weight': (0.1, "nS"), 'delay': (0.3, "ms")})
 
     inh_connection_type = nineml.ConnectionType(
         name="Static inhibitory connections",
         reference=exc_connection_type.name,
-        parameters={'weight': (0.2, "nS")})
+        properties={'weight': (0.2, "nS")})
 
     intra_column_connector = nineml.ConnectionRule(
         name="local random connections",
         definition=catalog + "connectionrules/fixed_probability.xml",
-        parameters={'p_connect': (0.1, "dimensionless")})
+        properties={'p_connect': (0.1, "dimensionless")})
 
     inner_exc2all = nineml.Projection(
         name="Intra-column excitatory connections",
@@ -205,7 +205,7 @@ def nested_example():
     inter_column_connector = nineml.ConnectionRule(
         name="lateral random connections",
         reference=intra_column_connector.name,
-        parameters={'p_connect': (0.05, "dimensionless")})
+        properties={'p_connect': (0.05, "dimensionless")})
 
     network = nineml.Group("Network")
 

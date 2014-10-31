@@ -37,7 +37,7 @@ def connectionGeneratorFromProjection(projection, geometry):
 
     # Assembling a CG instantiation
     cgClosure = alConnectionRuleFromURI(rule.definition.url)
-    cg = cgClosure(rule.parameters)
+    cg = cgClosure(rule.properties)
     return cg
 
 

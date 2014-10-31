@@ -8,7 +8,7 @@ from ..random import RandomDistribution
 from .base import get_or_create_component
 
 
-class Parameter(BaseULObject):
+class Property(BaseULObject):
 
     """
     Representation of a numerical- or string-valued parameter.
@@ -26,7 +26,7 @@ class Parameter(BaseULObject):
         self.name = name
         if (not isinstance(value, (Number, list, RandomDistribution, str)) or
             isinstance(value, bool)):
-            raise TypeError("Parameter values may not be of type %s" %
+            raise TypeError("Property values may not be of type %s" %
                             type(value))
         self.value = value
         self.unit = unit
@@ -35,7 +35,7 @@ class Parameter(BaseULObject):
         units = self.unit
         if u"µ" in units:
             units = units.replace(u"µ", "u")
-        return "Parameter(name=%s, value=%s, unit=%s)" % (self.name,
+        return "Property(name=%s, value=%s, unit=%s)" % (self.name,
                                                           self.value, units)
 
     def __eq__(self, other):
@@ -71,7 +71,7 @@ class Parameter(BaseULObject):
         quantity_element = element.find(NINEML +
                                         "quantity").find(NINEML + "value")
         value, unit = Value.from_xml(quantity_element, components)
-        return Parameter(name=element.attrib["name"],
+        return Property(name=element.attrib["name"],
                          value=value,
                          unit=unit)
 
@@ -111,7 +111,7 @@ class Value(object):
                 value = [float(x) for x in value_element.text.split(" ")]
             elif name == "function":
                 raise NotImplementedError
-        unit = element.find(NINEML + "unit").text
+        unit = element.find(NINEML + "Unit").text
         return value, unit
 
 
@@ -187,42 +187,42 @@ class InitialValue(BaseULObject):
     def from_xml(cls, element, components):
         check_tag(element, cls)
         quantity_element = element.find(NINEML +
-                                        "quantity").find(NINEML + "value")
+                                        "Quantity").find(NINEML + "Value")
         value, unit = Value.from_xml(quantity_element, components)
         return InitialValue(name=element.attrib["name"],
                             value=value,
                             unit=unit)
 
 
-class ParameterSet(dict):
+class PropertySet(dict):
 
     """
-    Container for the set of parameters for a component.
+    Container for the set of properties for a component.
     """
 
-    def __init__(self, *parameters, **kwparameters):
+    def __init__(self, *properties, **kwproperties):
         """
-        `*parameters` - should be Parameter instances
-        `**kwparameters` - should be name=(value,unit)
+        `*properties` - should be Property instances
+        `**kwproperties` - should be name=(value,unit)
         """
         dict.__init__(self)
-        for parameter in parameters:
-            self[parameter.name] = parameter  # should perhaps do a copy
-        for name, (value, unit) in kwparameters.items():
-            self[name] = Parameter(name, value, unit)
+        for prop in properties:
+            self[prop.name] = prop  # should perhaps do a copy
+        for name, (value, unit) in kwproperties.items():
+            self[name] = Property(name, value, unit)
 
     def __hash__(self):
         return hash(tuple(self.items()))
 
     def __repr__(self):
-        return "ParameterSet(%s)" % dict(self)
+        return "PropertySet(%s)" % dict(self)
 
-    def complete(self, other_parameter_set):
+    def complete(self, other_property_set):
         """
-        Pull parameters from another parameter set into this one, if they do
+        Pull properties from another property set into this one, if they do
         not already exist in this one.
         """
-        for name, parameter in other_parameter_set.items():
+        for name, parameter in other_property_set.items():
             if name not in self:
                 self[name] = parameter  # again, should perhaps copy
 
@@ -235,14 +235,14 @@ class ParameterSet(dict):
 
     @classmethod
     def from_xml(cls, elements, components):
-        parameters = []
+        properties = []
         for parameter_element in elements:
-            parameters.append(Parameter.from_xml(parameter_element,
+            properties.append(Property.from_xml(parameter_element,
                                                  components))
-        return cls(*parameters)
+        return cls(*properties)
 
 
-class InitialValueSet(ParameterSet):
+class InitialValueSet(PropertySet):
 
     def __init__(self, *ivs, **kwivs):
         """
