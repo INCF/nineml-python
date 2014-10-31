@@ -69,7 +69,7 @@ class Property(BaseULObject):
     def from_xml(cls, element, components):
         check_tag(element, cls)
         quantity_element = element.find(NINEML +
-                                        "quantity").find(NINEML + "value")
+                                        "Quantity").find(NINEML + "Value")
         value, unit = Value.from_xml(quantity_element, components)
         return Property(name=element.attrib["name"],
                          value=value,
