@@ -1,12 +1,6 @@
 from itertools import chain
 from operator import and_
-from lxml.builder import ElementMaker
-
-nineml_namespace = 'http://nineml.net/9ML/1.0'
-NINEML = "{%s}" % nineml_namespace
-
-E = ElementMaker(namespace=nineml_namespace,
-                 nsmap={"nineml": nineml_namespace})
+from .. import NINEML, nineml_namespace, E  # @UnusedImport
 
 
 class BaseULObject(object):

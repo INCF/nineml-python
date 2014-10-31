@@ -23,7 +23,7 @@ class Property(BaseULObject):
     defining_attributes = ("name", "quantity")
 
     def __init__(self, name, quantity):
-        if not isinstance(Quantity, quantity):
+        if not isinstance(quantity, Quantity):
             raise Exception("Value must be provided as a Quantity object")
         self.name = name
         self.quantity = quantity
@@ -66,8 +66,7 @@ class Property(BaseULObject):
         quantity = Quantity.from_xml(element.find(NINEML + "Quantity"),
                                      components)
         return Property(name=element.attrib["name"],
-                         value=quantity.value,
-                         unit=quantity.unit)
+                        quantity=quantity)
 
 
 class Quantity(object):
@@ -109,24 +108,29 @@ class Quantity(object):
 
         `element` - should be an ElementTree Element instance.
         """
-        value_element = element.getchildren()[0]
-        if value_element.tag == 'Value':
+        try:
+            value_element = element.getchildren()[0]
+        except IndexError:
+            raise Exception("No child elements found in Quantity element only "
+                            "'{}'".format(element.text))
+        if value_element.tag == NINEML + 'Value':
             try:
                 value = float(value_element.text)
             except ValueError:
                 raise Exception("Provided value '{}' is not numeric"
                                 .format(value_element.text))
-        elif value_element.tag == 'Reference':
+        elif value_element.tag == NINEML + 'Reference':
             # FIXME: Need to add option to read Function component type
             value = Reference.from_xml(value_element, components)
-        elif value_element.tag == 'Component':
+        elif value_element.tag == NINEML + 'Component':
             value = BaseComponent.from_xml(value_element, components)
-        elif value_element.tag in ('ValueList', 'ExternalValueList'):
+        elif value_element.tag in (NINEML + 'ValueList',
+                                   NINEML + 'ExternalValueList'):
             raise NotImplementedError()
         else:
             raise Exception("Unrecognised element '{}' was expecting one of "
                             "'Value', 'Reference', 'Component', 'ValueList', "
-                            "'ExternalValueList'".format(element.tag))
+                            "'ExternalValueList'".format(value_element.tag))
         units = element.attrib.get('units')
         return Quantity(value, units)
 

@@ -27,3 +27,25 @@ from dynamics import (component, visitors, readers, writers, validators,
 import structure
 import connection_generator
 import random
+
+
+def parse(url):
+    """
+    Read a NineML abstraction layer file and return all component classes
+
+    If the URL does not have a scheme identifier, it is taken to refer to a
+    local file.
+    """
+    if not isinstance(url, file):
+        f = urllib.urlopen(url)
+        doc = etree.parse(f)
+        f.close()
+    else:
+        doc = etree.parse(url)
+
+    root = doc.getroot()
+    for import_element in root.findall(NINEML + "import"):
+        url = import_element.find(NINEML + "url").text
+        imported_doc = etree.parse(url)
+        root.extend(imported_doc.getroot().iterchildren())
+    return Model.from_xml(root)

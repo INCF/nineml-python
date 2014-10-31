@@ -1,88 +1,14 @@
 # encoding: utf-8
 import urllib
+from lxml import etree
 from operator import and_
 from ...abstraction_layer import BaseComponentClass
 from ..base import BaseULObject, E, NINEML
 from ... import abstraction_layer
 from ...utility import valid_uri_re
+from .. import parse as parse_ul
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet
-
-
-class Definition(BaseULObject):
-
-    """
-    Encapsulate a component definition.
-
-    For now, this holds only the URI of an abstraction layer file, but this
-    could be expanded later to include definitions external to 9ML.
-    """
-    element_name = "Definition"
-    defining_attributes = ("url",)
-
-    def __init__(self, component, abstraction_layer_module=None):
-        self._component = None
-        if isinstance(component, basestring):
-            self.url = component
-        elif isinstance(component, BaseComponentClass): #, csa.ConnectionSetTemplate)): @IgnorePep8
-            self._component = component
-        else:
-            raise TypeError("Component must be of type string or "
-                            "BaseComponentClass (found {})"
-                            .format(type(component)))
-        # it would be better long term to infer the abstraction layer module
-        # from the xml file contents, but it is simpler for now to specify it
-        # explicitly.
-        self.abstraction_layer_module = abstraction_layer_module
-
-    def __hash__(self):
-        if self._component:
-            return hash(self._component)
-        else:
-            return hash(self.url)
-
-    @property
-    def component(self):
-        return self.retrieve()
-
-    def retrieve(self):
-        if not self._component:
-            reader = getattr(abstraction_layer,
-                             self.abstraction_layer_module).readers.XMLReader
-            if self.abstraction_layer_module == "random":  # hack
-                self._component = reader.read_component(self.url)
-            else:
-                f = urllib.urlopen(self.url)
-                try:
-                    self._component = reader.read_component(self.url)
-                finally:
-                    f.close()
-        return self._component
-
-    def to_xml(self):
-        if hasattr(self, "url") and self.url:
-            return E(self.element_name, (E.link(self.url)), language="NineML")
-        else:  # inline
-            al_writer = getattr(abstraction_layer,
-                                self.abstraction_layer_module).\
-                                                            writers.XMLWriter()
-            return E(self.element_name,
-                     al_writer.visit(self._component),
-                     language="NineML")
-
-    @classmethod
-    def from_xml(cls, element, abstraction_layer_module=None):
-        url_element = element.find(NINEML + "link")
-        if url_element is not None:
-            return cls(url_element.text, abstraction_layer_module)
-        else:         # handle inline abstraction layer definitions
-            # this doesn't work yet because XMLReader assumes we are reading
-            # from a file, doesn't allow for reading from a string, or reading
-            # a sub-tree.
-            reader = getattr(abstraction_layer, abstraction_layer_module).\
-                                                 readers.XMLLoader(element, {})
-            assert len(reader.components) == 0
-            return reader.components[0]
 
 
 class BaseComponent(BaseULObject):
@@ -245,8 +171,7 @@ class BaseComponent(BaseULObject):
             element.findall(NINEML + InitialValue.element_name), components)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
-            definition = Definition.from_xml(definition_element,
-                                             cls.abstraction_layer_module)
+            definition = Definition.from_xml(definition_element)
             return cls(name, definition, properties,
                        initial_values=initial_values)
         else:
@@ -260,6 +185,79 @@ class BaseComponent(BaseULObject):
                                 "or a reference")
 
 
+class Definition(BaseULObject):
+
+    """
+    Encapsulate a component definition.
+
+    For now, this holds only the URI of an abstraction layer file, but this
+    could be expanded later to include definitions external to 9ML.
+    """
+    element_name = "Definition"
+    defining_attributes = ("url",)
+
+    def __init__(self, component_class_name, component_classes=[], url=None):
+        if url:
+            try:
+                component_classes = parse_al(urllib.urlopen(url)).components
+            except:  # FIXME: Need to work out what exceptions urllib throws
+                raise
+        self.
+        self._component = None
+        if isinstance(component, basestring):
+            self.url = component
+        elif isinstance(component, BaseComponentClass): #, csa.ConnectionSetTemplate)): @IgnorePep8
+            self._component = component
+        else:
+            raise TypeError("Component must be of type string or "
+                            "BaseComponentClass (found {})"
+                            .format(type(component)))
+        reader = getattr(abstraction_layer, abstraction_layer_module).\
+                                             readers.XMLLoader(element, {})
+        assert len(reader.components) == 0
+        return reader.components[0]
+            
+
+    def __hash__(self):
+        if self._component:
+            return hash(self._component)
+        else:
+            return hash(self.url)
+
+    @property
+    def component(self):
+        return self.retrieve()
+
+    def retrieve(self):
+        reader = getattr(abstraction_layer,
+                         self.abstraction_layer_module).readers.XMLReader
+        if self.abstraction_layer_module == "random":  # hack
+            self._component = reader.read_component(self.url)
+        else:
+            f = urllib.urlopen(self.url)
+            try:
+                component_class = reader.read_component(self.url)
+            finally:
+                f.close()
+        return component_class
+
+    def to_xml(self):
+        if hasattr(self, "url") and self.url:
+            return E(self.element_name, (E.link(self.url)), language="NineML")
+        else:  # inline
+            al_writer = getattr(abstraction_layer,
+                                self.abstraction_layer_module).\
+                                                            writers.XMLWriter()
+            return E(self.element_name,
+                     al_writer.visit(self._component),
+                     language="NineML")
+
+    @classmethod
+    def from_xml(cls, element, component_classes=[]):
+        url = element.attrib.get('url', None)
+        component_class_name = element.text
+        return cls(component_class_name, url=url)
+
 class Reference(BaseULObject):
 
     """
@@ -270,7 +268,7 @@ class Reference(BaseULObject):
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
-    def __init__(self, component_name, url=None):
+    def __init__(self, component_name, components, url=None):
         """
         Create a new component with the given name, definition and properties,
         or create a reference to another component that will be resolved later.
@@ -278,17 +276,12 @@ class Reference(BaseULObject):
         `component_name` - a name of an existing component to refer to
         `url`            - a url of the file containing the exiting component
         """
-        if not isinstance(component_name, basestring):
-            raise Exception("Component name '{}' was not a valid string")
-        if url is not None:
+        if url:
             try:
-                valid_uri = valid_uri_re.match(url)
-            except:
-                valid_uri = False
-            if not valid_uri:
-                raise Exception("Provided url ('{}') is not a valid URI"
-                                    .format(url))
-        self.component_name = component_name
+                components = parse_ul(urllib.urlopen(url)).components
+            except:  # FIXME: Need to work out what exceptions urllib throws
+                raise
+        self.component = components[component_name]
         self.url = url
 
     def __eq__(self, other):
@@ -315,13 +308,13 @@ class Reference(BaseULObject):
         return element
 
     @classmethod
-    def from_xml(cls, element):
+    def from_xml(cls, element, components):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
         component_name = element.text
         url = element.attrib.get("url", None)
-        return cls(component_name, url)
+        return cls(component_name, components, url)
 
 
 def get_or_create_component(ref, cls, components):

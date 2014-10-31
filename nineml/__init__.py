@@ -10,4 +10,11 @@ __version__ = "0.2dev"
 import maths
 import exceptions
 import utility
-import abstraction_layer
+from lxml.builder import ElementMaker
+#import abstraction_layer, we don't have to explicitly import this do we?
+
+nineml_namespace = 'http://nineml.net/9ML/1.0'
+NINEML = "{%s}" % nineml_namespace
+
+E = ElementMaker(namespace=nineml_namespace,
+                 nsmap={"nineml": nineml_namespace})
