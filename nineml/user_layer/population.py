@@ -13,7 +13,7 @@ class Population(BaseULObject):
     individual spiking nodes (neurons) or groups (motifs, microcircuits,
     columns, etc.)
     """
-    element_name = "population"
+    element_name = "Population"
     defining_attributes = ("name", "number", "prototype", "positions")
 
     def __init__(self, name, number, prototype, positions=None):
@@ -78,7 +78,7 @@ class PositionList(BaseULObject):
     explicit list of positions or a Structure instance that can be used to
     generate positions.
     """
-    element_name = "positions"
+    element_name = "Positions"
     defining_attributes = []
 
     def __init__(self, positions=[], structure=None):
@@ -221,21 +221,21 @@ class SelectionOperator(Operator):
 
 
 class Any(SelectionOperator):
-    element_name = "any"
+    element_name = "Any"
 
     def __str__(self):
         return "(" + ") or (".join(qstr(op) for op in self.operands) + ")"
 
 
 class All(SelectionOperator):
-    element_name = "all"
+    element_name = "All"
 
     def __str__(self):
         return "(" + ") and (".join(qstr(op) for op in self.operands) + ")"
 
 
 class Not(SelectionOperator):
-    element_name = "not"
+    element_name = "Not"
 
     def __init__(self, *operands):
         assert len(operands) == 1
@@ -249,14 +249,14 @@ class Comparison(Operator):
 
 
 class Eq(Comparison):
-    element_name = "equal"
+    element_name = "Equal"
 
     def __str__(self):
         return "(%s) == (%s)" % tuple(qstr(op) for op in self.operands)
 
 
 class In(Comparison):
-    element_name = "in"
+    element_name = "In"
 
     def __init__(self, item, sequence):
         Operator.__init__(self, item, sequence)
@@ -270,7 +270,7 @@ class Selection(BaseULObject):
     """
     A set of network nodes selected from existing populations within the Group.
     """
-    element_name = "set"
+    element_name = "Set"
     defining_attributes = ("name", "condition")
 
     def __init__(self, name, condition):
@@ -332,7 +332,7 @@ class Structure(BaseComponent):
     Component representing the structure of a network, e.g. 2D grid, random
     distribution within a sphere, etc.
     """
-    abstraction_layer_module = 'structure'
+    abstraction_layer_module = 'Structure'
 
     def generate_positions(self, number):
         """

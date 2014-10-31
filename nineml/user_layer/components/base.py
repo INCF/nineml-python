@@ -16,7 +16,7 @@ class Definition(BaseULObject):
     For now, this holds only the URI of an abstraction layer file, but this
     could be expanded later to include definitions external to 9ML.
     """
-    element_name = "definition"
+    element_name = "Definition"
     defining_attributes = ("url",)
 
     def __init__(self, component, abstraction_layer_module=None):
@@ -89,7 +89,7 @@ class BaseComponent(BaseULObject):
     """
     Base class for model components that are defined in the abstraction layer.
     """
-    element_name = "component"
+    element_name = "Component"
     defining_attributes = ("name", "definition", "parameters")
     children = ("parameters",)
 

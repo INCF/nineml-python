@@ -19,7 +19,7 @@ class Parameter(BaseULObject):
     Numerical values may either be numbers, or a component that generates
     numbers, e.g. a RandomDistribution instance.
     """
-    element_name = "property"
+    element_name = "Property"
     defining_attributes = ("name", "value", "unit")
 
     def __init__(self, name, value, unit=None):
@@ -81,7 +81,7 @@ class Value(object):
     """
     Not intended to be instantiated: just provides the from_xml() classmethod.
     """
-    element_name = "value"
+    element_name = "Value"
 
     @classmethod
     def from_xml(cls, element, components):
@@ -120,7 +120,7 @@ class StringValue(object):
     """
     Not intended to be instantiated: just provides the from_xml() classmethod.
     """
-    element_name = "value"
+    element_name = "Value"
 
     @classmethod
     def from_xml(cls, element):
@@ -137,7 +137,7 @@ class InitialValue(BaseULObject):
     """
     temporary, longer-term plan is to use SEDML or something similar
     """
-    element_name = "initial"
+    element_name = "Initial"
     defining_attributes = ("name", "value", "unit")
 
     def __init__(self, name, value, unit=None):

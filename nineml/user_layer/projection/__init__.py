@@ -21,7 +21,7 @@ class Projection(BaseULObject):
     interpretation is that connections are made to all the populations within
     all the groups, recursively.
     """
-    element_name = "projection"
+    element_name = "Projection"
     defining_attributes = ("name", "source", "target", "rule",
                            "synaptic_response", "connection_type",
                            "synaptic_response_ports", "connection_ports")
