@@ -368,12 +368,6 @@ class ComponentClass(BaseComponentClass,
 
     """
 
-    element_name = 'ComponentClass'
-
-    @classmethod
-    def from_xml(cls, element):
-        return cls('TESTING')
-
     def __init__(self, name, parameters=None, analog_send_ports=[],
                  analog_receive_ports=[], analog_reduce_ports=[],
                  event_send_ports=[], event_receive_ports=[],

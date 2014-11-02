@@ -12,7 +12,7 @@ from lxml import etree
 from . import E, NINEML
 from collections import defaultdict
 
-from .abstraction_layer import ComponentClass
+from .abstraction_layer import BaseComponentClass as ComponentClass
 from .user_layer import  Group, Population, Projection  # Unit, UnitDimension, Component @IgnorePep8
 
 
@@ -40,17 +40,21 @@ class NineMLRoot(object):
     def from_xml(cls, element):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ({})".format(element.tag))
-        children = defaultdict(list)
+        kwargs = defaultdict(list)
         for child_elem in element.getchildren():
             try:
                 child_cls = cls._elem_lookup[child_elem.tag]
-                key = child_elem.tag.lower()
-                key = key[len(NINEML):] + ('s' if key[-1] != 's' else 'es')
-                children[key].append(child_cls.from_xml(child_elem))
             except KeyError:
                 raise Exception("NineML root element contains invalid element "
                                 "'{}'".format(child_elem.tag))
-        return cls(**children)
+            # Get the name of the element type and convert to lower case
+            key = child_elem.tag.lower()
+            # Strip namespace and add plural to get the kwarg for the
+            # __init__ method of NineMLRoot
+            key = key[len(NINEML):] + ('s' if key[-1] != 's' else 'es')
+            # Add chile to kwargs
+            kwargs[key].append(child_cls.from_xml(child_elem))
+        return cls(**kwargs)
 
     @classmethod
     def from_file(cls, url):

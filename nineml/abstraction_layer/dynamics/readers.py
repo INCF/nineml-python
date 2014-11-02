@@ -30,7 +30,12 @@ class XMLLoader(object):
 
     """
 
-    def __init__(self, xmlroot, xml_node_filename_map):
+    # FIXME: TGC 1/11/14 - I am implementing a general NineML root class
+    #                      that will be able to read both User Layer and
+    #                      Abstraction layer elements that will make this
+    #                      obsolete I think (will create a GitHub issue about
+    #                      this when I get back to the internet)
+    def load_all_componentclasses(self, xmlroot, xml_node_filename_map):
 
         self.components = []
         self.component_srcs = {}
@@ -332,8 +337,10 @@ class XMLReader(object):
         root = cls._load_nested_xml(filename=filename,
                                    xml_node_filename_map=xml_node_filename_map)
 
-        loader = cls.loader(xmlroot=root,
-                            xml_node_filename_map=xml_node_filename_map)
+        loader = cls.loader()
+        loader.load_all_componentclasses(
+                                   xmlroot=root,
+                                   xml_node_filename_map=xml_node_filename_map)
 
         if component_name == None:
             key_func = lambda c: loader.component_srcs[c] == filename
@@ -354,6 +361,8 @@ class XMLReader(object):
         """
         xml_node_filename_map = {}
         root = cls._load_nested_xml(filename, xml_node_filename_map)
-        loader = cls.loader(xmlroot=root,
+        loader = cls.loader()
+        loader.load_all_componentclasses(
+                            xmlroot=root,
                             xml_node_filename_map=xml_node_filename_map)
         return loader.components

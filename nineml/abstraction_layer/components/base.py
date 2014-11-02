@@ -9,10 +9,30 @@ This module provides the base class for these.
 
 from nineml.utility import filter_discrete_types
 from .interface import Parameter
+from nineml import NINEML
+import nineml.abstraction_layer.dynamics.readers
+import nineml.abstraction_layer.connection_generator.readers
+import nineml.abstraction_layer.random.readers
 
 
 class BaseComponentClass(object):
     """Base class for ComponentClasses in different 9ML modules."""
+
+    element_name = 'ComponentClass'
+
+    def to_xml(self):
+        raise NotImplementedError
+
+    @classmethod
+    def from_xml(cls, element):
+        if element.find(NINEML + 'Dynamics'):
+            loader = nineml.abstraction_layer.dynamics.readers.XMLLoader()
+        elif element.find(NINEML + 'ConnectionRule'):
+            loader = nineml.abstraction_layer.connection_generator.readers.\
+                                                                    XMLLoader()
+        elif element.find(NINEML + 'RandomDistribution'):
+            loader = nineml.abstraction_layer.random.readers.XMLLoader()
+        return loader.load_componentclass(element)
 
     def __init__(self, name, parameters=None):
         self._name = name
