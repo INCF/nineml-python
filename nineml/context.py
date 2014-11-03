@@ -16,7 +16,7 @@ from .abstraction_layer import BaseComponentClass as ComponentClass
 from .user_layer import  Group, Population, Projection  # Unit, UnitDimension, Component @IgnorePep8
 
 
-class NineMLRoot(object):
+class Context(object):
 
     element_name = 'NineML'
 
@@ -50,7 +50,7 @@ class NineMLRoot(object):
             # Get the name of the element type and convert to lower case
             key = child_elem.tag.lower()
             # Strip namespace and add plural to get the kwarg for the
-            # __init__ method of NineMLRoot
+            # __init__ method of Context
             key = key[len(NINEML):] + ('s' if key[-1] != 's' else 'es')
             # Add chile to kwargs
             kwargs[key].append(child_cls.from_xml(child_elem))

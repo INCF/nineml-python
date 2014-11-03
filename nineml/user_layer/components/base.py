@@ -200,7 +200,7 @@ class Definition(BaseULObject):
     def __init__(self, component_class_name, component_classes={}, url=None):
         if url:
             try:
-                url_root = nineml.root.NineMLRoot.from_file(url)
+                url_root = nineml.root.Context.from_file(url)
                 component_classes = url_root.component_classes
             except:  # FIXME: Need to work out what exceptions urllib throws
                 raise
@@ -273,7 +273,7 @@ class Reference(BaseULObject):
         """
         if url:
             try:
-                url_root = nineml.root.NineMLRoot.from_file(url)
+                url_root = nineml.root.Context.from_file(url)
                 components = url_root.components
             except:  # FIXME: Need to work out what exceptions urllib throws
                 raise

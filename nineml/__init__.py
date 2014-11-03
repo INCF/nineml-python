@@ -18,8 +18,8 @@ import maths
 import exceptions
 import utility
 #import abstraction_layer, we don't have to explicitly import this do we?
-from root import NineMLRoot
+from root import Context
 
 
 def parse(path):
-    return NineMLRoot.from_file(path)
+    return Context.from_file(path)
