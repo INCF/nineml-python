@@ -501,7 +501,7 @@ class Dynamics(object):
         sv_types = (basestring, StateVariable)
         sv_td = filter_discrete_types(state_variables, sv_types)
         sv_from_strings = [StateVariable(o,
-                                        dimension=state_variables[o].dimension)
+                                         dimension=None)
                            for o in sv_td[basestring]]
         state_variables = sv_td[StateVariable] + sv_from_strings
 

@@ -329,9 +329,9 @@ class ComponentFlattener(object):
                                                          self.reducedcomponent)
 
                 del new_analog_ports[dst_addr.get_local_name()]
-                self.reducedcomponent._analog_ports.remove(
+                self.reducedcomponent._analog_receive_ports.remove(
                     expect_single([p 
-                                   for p in self.reducedcomponent.analog_ports
+                                   for p in self.reducedcomponent.analog_receive_ports
                                    if p.name == dst_addr.get_local_name()]))
 
                 portconnections.remove((src_addr, dst_addr))

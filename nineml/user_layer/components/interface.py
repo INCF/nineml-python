@@ -23,8 +23,8 @@ class Property(BaseULObject):
     defining_attributes = ("name", "quantity")
 
     def __init__(self, name, quantity):
-        if not isinstance(Quantity, quantity):
-            raise Exception("Value must be provided as a Quantity object")
+        if not isinstance(quantity, Quantity):
+            raise TypeError("Value must be provided as a Quantity object")
         self.name = name
         self.quantity = quantity
 
@@ -66,8 +66,7 @@ class Property(BaseULObject):
         quantity = Quantity.from_xml(element.find(NINEML + "Quantity"),
                                      components)
         return Property(name=element.attrib["name"],
-                         value=quantity.value,
-                         unit=quantity.unit)
+                        quantity=quantity)
 
 
 class Quantity(object):
@@ -92,7 +91,7 @@ class Quantity(object):
 
     def to_xml(self):
         if isinstance(self.value, float):
-            value_element = E('Value', self.value)
+            value_element = E.ScalarValue(repr(self.value))
         else:
             value_element = self.value.to_xml()
         kwargs = {'units': self.units} if self.units else {}
@@ -110,7 +109,7 @@ class Quantity(object):
         `element` - should be an ElementTree Element instance.
         """
         value_element = element.getchildren()[0]
-        if value_element.tag == 'Value':
+        if value_element.tag == NINEML + 'ScalarValue':
             try:
                 value = float(value_element.text)
             except ValueError:

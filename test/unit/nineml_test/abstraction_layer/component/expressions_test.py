@@ -155,7 +155,7 @@ class ExpressionWithSimpleLHS_test(unittest.TestCase):
 
     def test_lhs(self):
 
-        e = ExpressionWithSimpleLHS('a', 't+t+3 + e + sin(t*pi) +q')
+        e = ExpressionWithSimpleLHS('a', 't+t+3 + sin(t*pi) +q')
 
         self.assertEqual(list(e.lhs), ['a'])
         self.assertEqual(list(e.lhs_atoms), ['a'])

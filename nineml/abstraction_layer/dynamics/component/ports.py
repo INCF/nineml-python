@@ -102,10 +102,14 @@ class AnalogSendPort(AnalogPort):
     component, or the current provided by a ion-channel.
 
     """
+    mode = "send"
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_analogsendport(self, **kwargs)
+
+    def is_incoming(self):
+        return False
 
 
 class AnalogReceivePort(AnalogPort):
@@ -116,10 +120,14 @@ class AnalogReceivePort(AnalogPort):
     component, or the current provided by a ion-channel.
 
     """
+    mode = "recv"
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_analogreceiveport(self, **kwargs)
+
+    def is_incoming(self):
+        return True
 
 
 class EventSendPort(EventPort):
@@ -129,10 +137,14 @@ class EventSendPort(EventPort):
     points in time. For example, an integrate-and-fire could 'send' events to
     notify other components that it had fired.
     """
+    mode = "send"
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_eventsendport(self, **kwargs)
+
+    def is_incoming(self):
+        return False
 
 
 class EventReceivePort(EventPort):
@@ -142,10 +154,14 @@ class EventReceivePort(EventPort):
     points in time. For example, synapses could receive events
     to notify them to provide current to a post-synaptic neuron.
     """
+    mode = "recv"
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_eventreceiveport(self, **kwargs)
+
+    def is_incoming(self):
+        return True
 
 
 class AnalogReducePort(AnalogPort):
@@ -161,9 +177,10 @@ class AnalogReducePort(AnalogPort):
         Currently support ``reduce_op`` s are: ``+``.
 
     """
+    mode = "reduce"
     _reduce_op_map = {'add': '+', '+': '+', }
 
-    def __init__(self, name, dimension, reduce_op='+'):
+    def __init__(self, name, dimension=None, reduce_op='+'):
         if reduce_op not in self._reduce_op_map.keys():
             err = ("%s('%s')" + "specified undefined reduce_op: '%s'") %\
                   (self.__class__.__name__, name, str(reduce_op))
@@ -183,6 +200,9 @@ class AnalogReducePort(AnalogPort):
         classstring = self.__class__.__name__
         return ("{}('{}', dimension='{}', op='{}')"
                .format(classstring, self.name, self.dimension, self.reduce_op))
+
+    def is_incoming(self):
+        return True
 
 
 # Syntactic sugar
