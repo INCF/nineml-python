@@ -13,14 +13,16 @@ from . import E, NINEML
 from collections import defaultdict
 
 from .abstraction_layer import BaseComponentClass as ComponentClass
-from .user_layer import  Group, Population, Projection  # Unit, UnitDimension, Component @IgnorePep8
+from .user_layer import Group, Population, Projection  # Unit, UnitDimension, @IgnorePep8
+from .user_layer.components.base import BaseComponent as Component
 
 
 class Context(object):
 
     element_name = 'NineML'
 
-    valid_top_level_elements = [ComponentClass, Group, Population, Projection]
+    valid_top_level_elements = [ComponentClass, Component, Group, Population,
+                                Projection]
     _elem_lookup = dict((NINEML + e.element_name, e)
                         for e in valid_top_level_elements)
 
@@ -53,7 +55,11 @@ class Context(object):
             # __init__ method of Context
             key = key[len(NINEML):] + ('s' if key[-1] != 's' else 'es')
             # Add chile to kwargs
-            kwargs[key].append(child_cls.from_xml(child_elem))
+            if key == 'components':
+                child_args = (child_elem, kwargs['components'])
+            else:
+                child_args = (child_elem,)
+            kwargs[key].append(child_cls.from_xml(*child_args))
         return cls(**kwargs)
 
     @classmethod
@@ -79,7 +85,7 @@ class Context(object):
             raise Exception("Could not parse XML file '{}'".format(url))
         root = xml.getroot()
         try:
-            return NineMLRoot.from_xml(root)
+            return cls.from_xml(root)
         except Exception as e:
             raise
             raise Exception("Could not parse NineML file '{}', with error: \n "

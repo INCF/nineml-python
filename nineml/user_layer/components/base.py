@@ -5,8 +5,7 @@ from operator import and_
 from ...abstraction_layer import BaseComponentClass
 from ..base import BaseULObject, E, NINEML
 from ... import abstraction_layer
-from ...utility import valid_uri_re
-import nineml.root
+import nineml.context
 
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet
@@ -131,7 +130,7 @@ class BaseComponent(BaseULObject):
     def check_properties(self):
         # First check the names
         properties = set(self.properties.iterkeys())
-        parameters = set(p.name for p in self.definition.component.parameters)
+        parameters = set(p.name for p in self.definition.component_class.parameters)
         msg = []
         diff_a = properties.difference(parameters)
         diff_b = parameters.difference(properties)
@@ -200,7 +199,7 @@ class Definition(BaseULObject):
     def __init__(self, component_class_name, component_classes={}, url=None):
         if url:
             try:
-                url_root = nineml.root.Context.from_file(url)
+                url_root = nineml.context.Context.from_file(url)
                 component_classes = url_root.component_classes
             except:  # FIXME: Need to work out what exceptions urllib throws
                 raise
@@ -273,7 +272,7 @@ class Reference(BaseULObject):
         """
         if url:
             try:
-                url_root = nineml.root.Context.from_file(url)
+                url_root = nineml.context.Context.from_file(url)
                 components = url_root.components
             except:  # FIXME: Need to work out what exceptions urllib throws
                 raise

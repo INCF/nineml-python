@@ -10,9 +10,6 @@ import inspect
 from nineml.utility import filter_discrete_types
 from .interface import Parameter
 from nineml import NINEML
-import nineml.abstraction_layer.dynamics.readers
-import nineml.abstraction_layer.connection_generator.readers
-import nineml.abstraction_layer.random.readers
 
 
 class BaseComponentClass(object):
@@ -23,18 +20,20 @@ class BaseComponentClass(object):
     #FIXME: Not sure if this works for dynamics class but definitely won't
     #       for other classes.
     def to_xml(self):
-        return inspect.getmodule(self).writers.XMLWriter().visit(self)
+        return inspect.getmodule(self.__class__).writers.XMLWriter().\
+                                                                    visit(self)
 
     @classmethod
     def from_xml(cls, element):
         if element.find(NINEML + 'Dynamics'):
-            loader = nineml.abstraction_layer.dynamics.readers.XMLLoader()
+            module_name = 'dynamics'
         elif element.find(NINEML + 'ConnectionRule'):
-            loader = nineml.abstraction_layer.connection_generator.readers.\
-                                                                    XMLLoader()
+            module_name = 'connection_generator'
         elif element.find(NINEML + 'RandomDistribution'):
-            loader = nineml.abstraction_layer.random.readers.XMLLoader()
-        return loader.load_componentclass(element)
+            module_name = 'random'
+        exec('from nineml.abstraction_layer.{}.readers import XMLLoader'
+             .format(module_name))
+        return XMLLoader().load_componentclass(element)  # @UndefinedVariable
 
     def __init__(self, name, parameters=None):
         self._name = name
