@@ -70,7 +70,8 @@ class BaseComponent(BaseULObject):
                             "dict, not a %s" % type(initial_values))
         if not self.unresolved:
             self.check_properties()
-            if self.abstraction_layer_module == "dynamics":
+            module_path = definition.component_class.__module__.split('.')
+            if 'dynamics' in module_path:
                 self.check_initial_values()
 
     def __eq__(self, other):
