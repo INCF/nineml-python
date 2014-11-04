@@ -39,6 +39,6 @@ setup(
                  'Operating System :: OS Independent',
                  'Programming Language :: Python :: 2',
                  'Topic :: Scientific/Engineering'],
-    install_requires=['lxml', 'ply', 'csa', 'quantities'],
+    install_requires=['lxml', 'ply', 'numpy', 'quantities'],
     tests_require=['nose']
 )
