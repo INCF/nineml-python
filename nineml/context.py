@@ -10,7 +10,6 @@ root tag.
 from . import E, NINEML
 import itertools
 import collections
-import nineml
 
 
 class Context(dict):
@@ -21,13 +20,8 @@ class Context(dict):
     top_level = ['UnitDimension', 'Unit', 'ComponentClass', 'Component',
                  'Population', 'PopulationGroup', 'Projection']
 
-    # These modules are imported here to avoid circular imports between
-    # layers
-    _user_layer = getattr(nineml, 'user_layer')
-    _abstraction_layer = getattr(nineml, 'abstraction_layer')
-
     # A tuple to hold the unresolved elements
-    _Unresolved = collections.namedtuple('_Unresolved', 'name elem cls')
+    _Unresolved = collections.namedtuple('_Unresolved', 'name xml cls')
 
     def __init__(self):
         # Create an empty dictionary for each valid top-level dictionary
@@ -35,6 +29,23 @@ class Context(dict):
         # Stores the list of elements that are being resolved to check for
         # circular references
         self._resolving = []
+
+    def __getitem__(self, nineml_type):
+        """
+        Returns a dictionary containing resolved 9ml objects for all elements
+        matching the `nineml_type`
+        """
+        try:
+            elem_dict = super(Context, self).__getitem__[nineml_type]
+        except KeyError:
+            raise KeyError("'{}' not a valid top-level NineML element. Valid "
+                           "elements are '{}'"
+                           .format(nineml_type, "', '".join(self.top_level)))
+        # Make sure all elements are resolved before returning
+        for elem in elem_dict.itervalues():
+            if isinstance(elem, self._Unresolved):
+                self._resolve(elem, elem_dict)
+        return elem_dict
 
     def get(self, nineml_type, name):
         """
@@ -49,42 +60,34 @@ class Context(dict):
                            "elements are '{}'"
                            .format(nineml_type, "', '".join(self.top_level)))
         try:
-            stored = elem_dict[name]
+            elem = elem_dict[name]
         except KeyError:
             raise KeyError("No '{}' elements were found in current context "
                            "with name '{}' (available '{}')."
                            .format(nineml_type, name,
                                    "', '".join(elem_dict.iterkeys())))
-        if isinstance(stored, self._Unresolved):
-            if stored in self._resolving:
-                raise Exception("Circular reference detected in '{}(name={})' "
-                                "element. Resolution stack was:\n"
-                                .format(stored.name,
-                                        "\n".join('{}(name={})'.format(e.tag,
-                                                                       e.name)
-                                                  for e in self._resolving)))
-            self._resolving.append(stored)
-            elem_dict[name] = stored.cls.from_xml(stored.elem, self)
-            assert self._resolving[-1] is stored
-            self._resolving.pop()
-            stored = elem_dict[name]
-        return stored
+        if isinstance(elem, self._Unresolved):
+            elem = self._resolve(elem, elem_dict)
+        return elem
 
-    def __getitem__(self, nineml_type):
+    def _resolve(self, unresolved, elem_dict):
         """
-        Returns a dictionary containing resolved 9ml objects for all elements
-        matching the `nineml_type`
+        Resolve an element from its XML description and store back in the
+        element dictionary
         """
-        try:
-            elem_dict = super(Context, self).__getitem__[nineml_type]
-        except KeyError:
-            raise KeyError("'{}' not a valid top-level NineML element. Valid "
-                           "elements are '{}'"
-                           .format(nineml_type, "', '".join(self.top_level)))
-        # Make sure all elements are resolved before returning
-        for name in elem_dict.iterkeys():
-            self.get(nineml_type, name)
-        return elem_dict
+        if unresolved in self._resolving:
+            raise Exception("Circular reference detected in '{}(name={})' "
+                            "element. Resolution stack was:\n"
+                            .format(unresolved.name,
+                                    "\n".join('{}(name={})'.format(u.tag,
+                                                                   u.name)
+                                              for u in self._resolving)))
+        self._resolving.append(unresolved)
+        elem_dict[unresolved.name] = unresolved.cls.from_xml(unresolved.xml,
+                                                             self)
+        assert self._resolving[-1] is unresolved
+        self._resolving.pop()
+        return elem_dict[unresolved.name]
 
     def to_xml(self):
         return E(self.element_name,
@@ -96,6 +99,11 @@ class Context(dict):
     def from_xml(cls, element):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
+        # These modules are imported here to avoid circular imports between
+        # layers. Can you think of a better way to do this Andrew?
+        from nineml import user_layer
+        from nineml import abstraction_layer
+        # Initialise the context
         context = cls()
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
@@ -110,8 +118,8 @@ class Context(dict):
             # Try to get child attribute from user_layer, failing that try
             # abstraction layer
             try:
-                child_cls = getattr(cls._user_layer, child.tag)
+                child_cls = getattr(user_layer, child.tag)
             except ImportError:
-                child_cls = getattr(cls._abstraction_layer, child.tag)
+                child_cls = getattr(abstraction_layer, child.tag)
             context[child.tag][name] = cls._Unresolved(name, child, child_cls)
         return context
