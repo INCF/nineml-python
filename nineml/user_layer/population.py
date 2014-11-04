@@ -1,8 +1,8 @@
 import re
 from .base import BaseULObject, NINEML, E
 from .utility import check_tag
-from .dynamics import SpikingNodeType, get_or_create_prototype
-from .components import BaseComponent, get_or_create_component, StringValue
+from .dynamics import SpikingNodeType
+from .components import BaseComponent, component_ref, StringValue
 import nineml.user_layer.containers
 
 
@@ -58,17 +58,14 @@ class Population(BaseULObject):
                      name=self.name)
 
     @classmethod
-    def from_xml(cls, element, components, groups):
+    def from_xml(cls, element, context):
         check_tag(element, cls)
-        prototype_ref = element.find(NINEML + 'prototype').text
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML + 'number').text),
-                   prototype=get_or_create_prototype(prototype_ref, components,
-                                                     groups),
-                   positions=PositionList.from_xml(element.find(NINEML +
-                                                                PositionList.\
-                                                                 element_name),
-                                                   components))
+                   cell=component_ref(element.find(NINEML + 'Cell'), context),
+                   positions=PositionList.from_xml(
+                              element.find(NINEML + PositionList.element_name),
+                              context))
 
 
 class PositionList(BaseULObject):
@@ -155,9 +152,8 @@ class PositionList(BaseULObject):
             check_tag(element, cls)
             structure_element = element.find(NINEML + 'structure')
             if structure_element is not None:
-                return cls(structure=get_or_create_component(
-                                                        structure_element.text,
-                                                        Structure, components))
+                return cls(structure=resolve_ref(structure_element.text,
+                                                 Structure, components))
             else:
                 positions = [(float(p.attrib['x']), float(p.attrib['y']),
                               float(p.attrib['z']))

@@ -23,12 +23,13 @@ class Context(dict):
     # A tuple to hold the unresolved elements
     _Unresolved = collections.namedtuple('_Unresolved', 'name xml cls')
 
-    def __init__(self):
+    def __init__(self, url=None):
         # Create an empty dictionary for each valid top-level dictionary
         super(Context, self).__init__((n, {}) for n in self.top_level)
         # Stores the list of elements that are being resolved to check for
         # circular references
         self._resolving = []
+        self.url = url
 
     def __getitem__(self, nineml_type):
         """
@@ -96,7 +97,7 @@ class Context(dict):
                                   for type_name in self.top_level))
 
     @classmethod
-    def from_xml(cls, element):
+    def from_xml(cls, element, url=None):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
         # These modules are imported here to avoid circular imports between
@@ -104,7 +105,7 @@ class Context(dict):
         from nineml import user_layer
         from nineml import abstraction_layer
         # Initialise the context
-        context = cls()
+        context = cls(url)
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
         for child in element.getchildren():

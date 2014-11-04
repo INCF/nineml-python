@@ -263,7 +263,7 @@ class Reference(BaseULObject):
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
-    def __init__(self, component_name, components, url=None):
+    def __init__(self, component_name, context, url=None):
         """
         Create a new component with the given name, definition and properties,
         or create a reference to another component that will be resolved later.
@@ -271,20 +271,11 @@ class Reference(BaseULObject):
         `component_name` - a name of an existing component to refer to
         `url`            - a url of the file containing the exiting component
         """
-        if url:
-            try:
-                url_root = nineml.context.Context.from_file(url)
-                components = url_root.components
-            except:  # FIXME: Need to work out what exceptions urllib throws
-                raise
-        try:
-            self.component_class = components[component_name]
-        except KeyError:
-            raise Exception("Did not find Component matching '{}'{}"
-                            .format(component_name,
-                                   " in file '{}'".format(url) if url else ''))
-        self.component = components[component_name]
         self.url = url
+        ref_context = context
+        if url:
+            ref_context = nineml.read(url)
+        self.component = ref_context.get('Component', component_name)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -310,13 +301,21 @@ class Reference(BaseULObject):
         return element
 
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element, context):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
         component_name = element.text
         url = element.attrib.get("url", None)
-        return cls(component_name, components, url)
+        return cls(component_name, context, url)
+
+
+def component_ref(xml, context):
+    ref_xml = xml.find(NINEML + 'Reference')
+    if ref_xml:
+        return Reference.from_xml(ref_xml, context)
+    else:
+        return BaseComponent.from_xml(xml, context)
 
 
 def get_or_create_component(ref, cls, components):

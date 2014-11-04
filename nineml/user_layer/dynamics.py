@@ -56,10 +56,10 @@ class ConnectionType(BaseDynamicsComponent):
     """
     pass
 
-
-def get_or_create_prototype(prototype_ref, components, groups):
-    if prototype_ref in groups:
-        return groups[prototype_ref]
-    else:
-        return get_or_create_component(prototype_ref, SpikingNodeType,
-                                       components)
+# 
+# def get_or_create_prototype(prototype_ref, components, groups):
+#     if prototype_ref in groups:
+#         return groups[prototype_ref]
+#     else:
+#         return get_or_create_component(prototype_ref, SpikingNodeType,
+#                                        components)
