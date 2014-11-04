@@ -232,17 +232,25 @@ class ClonerVisitor(ComponentVisitor):
             name=self.prefix_variable(parameter.name, **kwargs),
             dimension=parameter.dimension)
 
-    def visit_analogport(self, port, **kwargs):
+    def visit_analogreceiveport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs),
-            mode=port.mode,
-            reduce_op=port.reduce_op)
+            name=self.prefix_variable(port.name, **kwargs))
 
-    def visit_eventport(self, port, **kwargs):
+    def visit_analogreduceport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs),
-            mode=port.mode,
-            reduce_op=port.reduce_op)
+            name=self.prefix_variable(port.name, **kwargs))
+
+    def visit_analogsendport(self, port, **kwargs):
+        return port.__class__(
+            name=self.prefix_variable(port.name, **kwargs))
+
+    def visit_eventsendport(self, port, **kwargs):
+        return port.__class__(
+            name=self.prefix_variable(port.name, **kwargs))
+
+    def visit_eventreceiveport(self, port, **kwargs):
+        return port.__class__(
+            name=self.prefix_variable(port.name, **kwargs))
 
     def visit_outputevent(self, output_event, **kwargs):
         return output_event.__class__(

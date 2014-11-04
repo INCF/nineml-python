@@ -24,7 +24,7 @@ class Property(BaseULObject):
 
     def __init__(self, name, quantity):
         if not isinstance(quantity, Quantity):
-            raise Exception("Value must be provided as a Quantity object")
+            raise TypeError("Value must be provided as a Quantity object")
         self.name = name
         self.quantity = quantity
 
@@ -113,7 +113,7 @@ class Quantity(object):
         except IndexError:
             raise Exception("No child elements found in Quantity element only "
                             "'{}'".format(element.text))
-        if value_element.tag == NINEML + 'Value':
+        if value_element.tag == NINEML + 'ScalarValue':
             try:
                 value = float(value_element.text)
             except ValueError:
@@ -124,13 +124,13 @@ class Quantity(object):
             value = Reference.from_xml(value_element, components)
         elif value_element.tag == NINEML + 'Component':
             value = BaseComponent.from_xml(value_element, components)
-        elif value_element.tag in (NINEML + 'ValueList',
-                                   NINEML + 'ExternalValueList'):
+        elif value_element.tag in (NINEML + 'ArrayValue',
+                                   NINEML + 'ExternalArrayValue'):
             raise NotImplementedError()
         else:
             raise Exception("Unrecognised element '{}' was expecting one of "
-                            "'Value', 'Reference', 'Component', 'ValueList', "
-                            "'ExternalValueList'".format(value_element.tag))
+                            "'Value', 'Reference', 'Component', 'ArrayValue', "
+                            "'ExternalArrayValue'".format(value_element.tag))
         units = element.attrib.get('units')
         return Quantity(value, units)
 

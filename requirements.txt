@@ -1,0 +1,4 @@
+lxml
+ply
+numpy
+quantities

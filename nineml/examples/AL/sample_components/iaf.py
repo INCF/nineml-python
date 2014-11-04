@@ -26,10 +26,10 @@ def get_component():
             al.StateVariable('V'),
             al.StateVariable('tspike'),
         ],
-        analog_ports=[al.SendPort("V"),
-                      al.ReducePort("ISyn", reduce_op="+"), ],
+        analog_ports=[al.AnalogSendPort("V"),
+                      al.AnalogReducePort("ISyn", reduce_op="+"), ],
 
-        event_ports=[al.SendEventPort('spikeoutput'), ],
+        event_ports=[al.EventSendPort('spikeoutput'), ],
         parameters=['cm', 'taurefrac', 'gl', 'vreset', 'vrest', 'vthresh']
     )
     return iaf

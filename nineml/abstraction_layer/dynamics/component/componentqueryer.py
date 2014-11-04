@@ -41,37 +41,32 @@ class ComponentQueryer(object):
     @property
     def event_send_ports(self):
         """Get the ``send`` EventPorts"""
-        return sorted(
-            [p for p in self.component.event_ports if p.mode == 'send'],
-            key=lambda p: p.name)
+        return sorted(self.component.event_send_ports,
+                      key=lambda p: p.name)
 
     @property
     def event_recv_ports(self):
         """Get the ``recv`` EventPorts"""
-        return sorted(
-            [p for p in self.component.event_ports if p.mode == 'recv'],
-            key=lambda p: p.name)
+        return sorted(self.component.event_receive_ports,
+                      key=lambda p: p.name)
 
     @property
     def analog_reduce_ports(self):
         """Get the ``reduce`` AnalogPorts"""
-        return sorted(
-            [p for p in self.component.analog_ports if p.mode == 'reduce'],
-            key=lambda p: p.name)
+        return sorted(self.component.analog_reduce_ports,
+                      key=lambda p: p.name)
 
     @property
     def analog_send_ports(self):
         """Get the ``send`` AnalogPorts"""
-        return sorted(
-            [p for p in self.component.analog_ports if p.mode == 'send'],
-            key=lambda p: p.name)
+        return sorted(self.component.analog_send_ports,
+                      key=lambda p: p.name)
 
     @property
     def analog_recv_ports(self):
         """Get the ``recv`` AnalogPorts"""
-        return sorted(
-            [p for p in self.component.analog_ports if p.mode == 'recv'],
-            key=lambda p: p.name)
+        return sorted(self.component.analog_receive_ports,
+                      key=lambda p: p.name)
 
     @property
     def analog_ports_map(self):

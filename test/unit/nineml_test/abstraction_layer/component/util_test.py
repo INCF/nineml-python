@@ -79,12 +79,12 @@ class MathUtil_test(unittest.TestCase):
                 # No Docstring
         # from nineml.abstraction_layer.component.util import MathUtil
 
-        e = StrToExpr.alias('a := b*c + d/(e*sin(f+g/e)) + b1 + e_ / exp(12*g)')
+        e = StrToExpr.alias('a := b*c + d/(e_*sin(f+g/e_)) + b1 + e_ / exp(12*g)')
 
         rhs_sub = MathUtil.get_prefixed_rhs_string(e, prefix='U_', exclude=['c', 'e_'])
         self.assertEqual(
             rhs_sub,
-            'U_b*c + U_d/(e*sin(U_f+U_g/e)) + U_b1 + e_ / exp(12*U_g)'
+            'U_b*c + U_d/(e_*sin(U_f+U_g/e_)) + U_b1 + e_ / exp(12*U_g)'
         )
 
 

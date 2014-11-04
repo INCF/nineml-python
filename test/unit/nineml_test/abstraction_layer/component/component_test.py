@@ -5,8 +5,8 @@ import unittest
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.dynamics.testing_utils import TestableComponent
 from nineml.abstraction_layer.dynamics import (ComponentClass, Alias, Dynamics,
-                                               SendPort, RecvPort, ReducePort, Regime,
-                                               On, NamespaceAddress, OutputEvent)
+                                               AnalogSendPort, AnalogReceivePort, AnalogReducePort, Regime,
+                                               On, NamespaceAddress, OutputEvent, EventReceivePort)
 
 
 class ComponentClass_test(unittest.TestCase):
@@ -193,21 +193,21 @@ class ComponentClass_test(unittest.TestCase):
         c = ComponentClass(name='C1')
         self.assertEqual(len(c.analog_ports), 0)
 
-        c = ComponentClass(name='C1', aliases=['A:=2'], analog_ports=[SendPort('A')])
+        c = ComponentClass(name='C1', aliases=['A:=2'], analog_ports=[AnalogSendPort('A')])
         self.assertEqual(len(c.analog_ports), 1)
         self.assertEqual(c.analog_ports[0].mode, 'send')
         self.assertEqual(len(c.query.analog_send_ports), 1)
         self.assertEqual(len(c.query.analog_recv_ports), 0)
         self.assertEqual(len(c.query.analog_reduce_ports), 0)
 
-        c = ComponentClass(name='C1', analog_ports=[RecvPort('B')])
+        c = ComponentClass(name='C1', analog_ports=[AnalogReceivePort('B')])
         self.assertEqual(len(c.analog_ports), 1)
         self.assertEqual(c.analog_ports[0].mode, 'recv')
         self.assertEqual(len(c.query.analog_send_ports), 0)
         self.assertEqual(len(c.query.analog_recv_ports), 1)
         self.assertEqual(len(c.query.analog_reduce_ports), 0)
 
-        c = ComponentClass(name='C1', analog_ports=[ReducePort('B', reduce_op='+')])
+        c = ComponentClass(name='C1', analog_ports=[AnalogReducePort('B', reduce_op='+')])
         self.assertEqual(len(c.analog_ports), 1)
         self.assertEqual(c.analog_ports[0].mode, 'reduce')
         self.assertEqual(c.analog_ports[0].reduce_op, '+')
@@ -221,7 +221,7 @@ class ComponentClass_test(unittest.TestCase):
             ComponentClass,
             name='C1',
             aliases=['A:=1'],
-            analog_ports=[ReducePort('B', reduce_op='+'), SendPort('B')]
+            analog_ports=[AnalogReducePort('B', reduce_op='+'), AnalogSendPort('B')]
         )
 
         self.assertRaises(
@@ -229,7 +229,7 @@ class ComponentClass_test(unittest.TestCase):
             ComponentClass,
             name='C1',
             aliases=['A:=1'],
-            analog_ports=[SendPort('A'), SendPort('A')]
+            analog_ports=[AnalogSendPort('A'), AnalogSendPort('A')]
         )
 
         self.assertRaises(
@@ -237,17 +237,17 @@ class ComponentClass_test(unittest.TestCase):
             ComponentClass,
             name='C1',
             aliases=['A:=1'],
-            analog_ports=[RecvPort('A'), RecvPort('A')]
+            analog_ports=[AnalogReceivePort('A'), AnalogReceivePort('A')]
         )
 
         self.assertRaises(
             NineMLRuntimeError,
-            lambda: ComponentClass(name='C1', analog_ports=[RecvPort('1')])
+            lambda: ComponentClass(name='C1', analog_ports=[AnalogReceivePort('1')])
         )
 
         self.assertRaises(
             NineMLRuntimeError,
-            lambda: ComponentClass(name='C1', analog_ports=[RecvPort('?')])
+            lambda: ComponentClass(name='C1', analog_ports=[AnalogReceivePort('?')])
         )
 
     def duplicate_port_name_event_analog(self):
@@ -255,16 +255,16 @@ class ComponentClass_test(unittest.TestCase):
         # Check different names are OK:
         ComponentClass(
             name='C1', aliases=['A:=1'],
-            event_ports=[RecvEventPort('A')],
-            analog_ports=[SendPort('A')])
+            event_ports=[EventReceivePort('A')],
+            analog_ports=[AnalogSendPort('A')])
 
         self.assertRaises(
             NineMLRuntimeError,
             ComponentClass,
             name='C1',
             aliases=['A:=1'],
-            event_ports=[RecvEventPort('A')],
-            analog_ports=[SendPort('A')]
+            event_ports=[EventReceivePort('A')],
+            analog_ports=[AnalogSendPort('A')]
         )
 
     # Testing done in test_backsub_all()
@@ -391,7 +391,7 @@ class ComponentClass_test(unittest.TestCase):
                 ]
             ),
         )
-        self.assertEquals(len(c.event_ports), 2)
+        self.assertEquals(len(list(c.event_ports)), 2)
 
         # Check inference of output event ports:
         c = ComponentClass(
@@ -412,7 +412,7 @@ class ComponentClass_test(unittest.TestCase):
                        )
             ]
         )
-        self.assertEquals(len(c.event_ports), 3)
+        self.assertEquals(len(list(c.event_ports)), 3)
 
         # Check inference of output event ports:
         c = ComponentClass(
@@ -433,7 +433,7 @@ class ComponentClass_test(unittest.TestCase):
                        )
             ]
         )
-        self.assertEquals(len(c.event_ports), 5)
+        self.assertEquals(len(list(c.event_ports)), 5)
 
     # These are done in the Testflatten and ComponentFlattener_test
     # Classes instead.
@@ -594,8 +594,8 @@ class ComponentClass_test(unittest.TestCase):
 
         # More complex inference:
         c = ComponentClass(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'])
-        self.assertEqual(len(list(c.parameters)), 2)
-        self.assertEqual(sorted([p.name for p in c.parameters]), ['a', 'b'])
+        self.assertEqual(len(list(c.parameters)), 3)
+        self.assertEqual(sorted([p.name for p in c.parameters]), ['a', 'b', 'e'])
 
         # From State Assignments and Differential Equations, and Conditionals
         c = ComponentClass(name='cl',
@@ -605,10 +605,10 @@ class ComponentClass_test(unittest.TestCase):
                                           transitions=On('V>Vt', do=['X = X + f', 'V=0'])
                                           )
                            )
-        self.assertEqual(len(list(c.parameters)), 6)
+        self.assertEqual(len(list(c.parameters)), 7)
         self.assertEqual(
             sorted([p.name for p in c.parameters]),
-            ['Vt', 'a', 'b', 'c', 'd', 'f'])
+            ['Vt', 'a', 'b', 'c', 'd', 'e', 'f'])
 
         self.assertRaises(
             NineMLRuntimeError,
@@ -620,18 +620,6 @@ class ComponentClass_test(unittest.TestCase):
                            transitions=On('V>Vt', do=['X = X + f', 'V=0'])
                            ),
             parameters=['a', 'b', 'c'])
-
-        # Shouldn't pick up 'e' as a parameter:
-        self.assertRaises(
-            NineMLRuntimeError,
-            ComponentClass,
-            name='cl',
-            aliases=['A:=a+e', 'B:=a+pi+b'],
-            regimes=Regime('dX/dt = 6 + c + sin(d)',
-                           'dV/dt = 1.0',
-                           transitions=On('V>Vt', do=['X = X + f', 'V=0'])
-                           ),
-            parameters=['Vt', 'a', 'b', 'c', 'd', 'e', 'f'])
 
     def test_regimes(self):
 
