@@ -5,7 +5,7 @@ from operator import and_
 from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
-from .base import BaseComponent, Reference
+from .base import BaseComponent, Reference, resolve_ref
 
 
 class Property(BaseULObject):
@@ -61,12 +61,11 @@ class Property(BaseULObject):
                  name=self.name)
 
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element, context):
         check_tag(element, cls)
         quantity = Quantity.from_xml(element.find(NINEML + "Quantity"),
-                                     components)
-        return Property(name=element.attrib["name"],
-                        quantity=quantity)
+                                     context)
+        return cls(name=element.attrib["name"], quantity=quantity)
 
 
 class Quantity(object):
@@ -91,7 +90,7 @@ class Quantity(object):
 
     def to_xml(self):
         if isinstance(self.value, float):
-            value_element = E('Value', self.value)
+            value_element = E('SingleValue', self.value)
         else:
             value_element = self.value.to_xml()
         kwargs = {'units': self.units} if self.units else {}
@@ -100,7 +99,7 @@ class Quantity(object):
                  **kwargs)
 
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element, context):
         """
         Parse an XML ElementTree structure and return a (value, units) tuple.
         The value should be a number or something that generates a numerical
@@ -113,24 +112,20 @@ class Quantity(object):
         except IndexError:
             raise Exception("No child elements found in Quantity element only "
                             "'{}'".format(element.text))
-        if value_element.tag == NINEML + 'ScalarValue':
+        if value_element.tag == NINEML + 'SingleValue':
             try:
                 value = float(value_element.text)
             except ValueError:
                 raise Exception("Provided value '{}' is not numeric"
                                 .format(value_element.text))
-        elif value_element.tag == NINEML + 'Reference':
-            # FIXME: Need to add option to read Function component type
-            value = Reference.from_xml(value_element, components)
-        elif value_element.tag == NINEML + 'Component':
-            value = BaseComponent.from_xml(value_element, components)
         elif value_element.tag in (NINEML + 'ArrayValue',
                                    NINEML + 'ExternalArrayValue'):
             raise NotImplementedError()
         else:
-            raise Exception("Unrecognised element '{}' was expecting one of "
-                            "'Value', 'Reference', 'Component', 'ArrayValue', "
-                            "'ExternalArrayValue'".format(value_element.tag))
+            value = resolve_ref(element, BaseComponent, context)
+#             raise Exception("Unrecognised element '{}' was expecting one of "
+#                             "'Value', 'Reference', 'Component', 'ArrayValue', "
+#                             "'ExternalArrayValue'".format(value_element.tag))
         units = element.attrib.get('units')
         return Quantity(value, units)
 
@@ -190,7 +185,7 @@ class InitialValue(BaseULObject):
 
     def to_xml(self):
         if isinstance(self.value, RandomDistribution):
-            value_element = E.reference(self.value.name)
+            value_element = E.prototype(self.value.name)
         elif (isinstance(self.value, collections.Iterable) and
               isinstance(self.value[0], Number)):
             value_element = E.array(" ".join(repr(x) for x in self.value))
@@ -204,14 +199,11 @@ class InitialValue(BaseULObject):
                  name=self.name)
 
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element, context):
         check_tag(element, cls)
-        quantity_element = element.find(NINEML +
-                                        "Quantity").find(NINEML + "Quantity")
-        value, unit = Quantity.from_xml(quantity_element, components)
+        qty = Quantity.from_xml(element.find(NINEML + "Quantity"), context)
         return InitialValue(name=element.attrib["name"],
-                            value=value,
-                            unit=unit)
+                            value=qty.value, unit=qty.unit)
 
 
 class PropertySet(dict):
@@ -254,11 +246,10 @@ class PropertySet(dict):
         return [self[name].to_xml() for name in sorted(self.keys())]
 
     @classmethod
-    def from_xml(cls, elements, components):
+    def from_xml(cls, elements, context):
         properties = []
         for parameter_element in elements:
-            properties.append(Property.from_xml(parameter_element,
-                                                 components))
+            properties.append(Property.from_xml(parameter_element, context))
         return cls(*properties)
 
 
@@ -279,9 +270,9 @@ class InitialValueSet(PropertySet):
         return "InitialValueSet(%s)" % dict(self)
 
     @classmethod
-    def from_xml(cls, elements, components):
+    def from_xml(cls, elements, context):
         initial_values = []
         for iv_element in elements:
             initial_values.append(InitialValue.from_xml(iv_element,
-                                                        components))
+                                                        context))
         return cls(*initial_values)

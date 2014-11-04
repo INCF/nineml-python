@@ -2,7 +2,7 @@ import re
 from .base import BaseULObject, NINEML, E
 from .utility import check_tag
 from .dynamics import SpikingNodeType
-from .components import BaseComponent, component_ref, StringValue
+from .components import BaseComponent, resolve_ref, StringValue
 import nineml.user_layer.containers
 
 
@@ -62,7 +62,7 @@ class Population(BaseULObject):
         check_tag(element, cls)
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML + 'number').text),
-                   cell=component_ref(element.find(NINEML + 'Cell'), context),
+                   cell=resolve_ref(element.find(NINEML + 'Cell'), context),
                    positions=PositionList.from_xml(
                               element.find(NINEML + PositionList.element_name),
                               context))
@@ -145,15 +145,15 @@ class PositionList(BaseULObject):
         return element
 
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element, context):
         if element is None:
             return None
         else:
             check_tag(element, cls)
             structure_element = element.find(NINEML + 'structure')
             if structure_element is not None:
-                return cls(structure=resolve_ref(structure_element.text,
-                                                 Structure, components))
+                return cls(structure=resolve_ref(structure_element,
+                                                 Structure, context))
             else:
                 positions = [(float(p.attrib['x']), float(p.attrib['y']),
                               float(p.attrib['z']))

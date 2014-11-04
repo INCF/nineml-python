@@ -2,7 +2,7 @@ from operator import and_
 from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
 import nineml.user_layer.population
-from ..components import BaseComponent, get_or_create_component
+from ..components import BaseComponent, resolve_ref
 from ..dynamics import SynapseType, ConnectionType
 import nineml.user_layer.containers
 from ...abstraction_layer.connection_generator import *
@@ -113,20 +113,19 @@ class Projection(BaseULObject):
                  name=self.name)
 
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element, context):
         check_tag(element, cls)
         return cls(name=element.attrib["name"],
                    source=element.find(NINEML + "Source").text,
                    target=element.find(NINEML + "Target").text,
-                   rule=get_or_create_component(
-                                            element.find(NINEML + "Rule").text,
-                                            ConnectionRule, components),
-                   synaptic_response=get_or_create_component(
-                                        element.find(NINEML + "Response").text,
-                                        SynapseType, components),
-                   connection_type=get_or_create_component(
-                                      element.find(NINEML + "Plasticity").text,
-                                      ConnectionType, components),
+                   rule=resolve_ref(element.find(NINEML + "Rule"),
+                                    ConnectionRule, context),
+                   synaptic_response=resolve_ref(
+                                            element.find(NINEML + "Response"),
+                                            SynapseType, context),
+                   connection_type=resolve_ref(
+                                           element.find(NINEML + "Plasticity"),
+                                           ConnectionType, context),
                    synaptic_response_ports=tuple((pc.attrib["port1"],
                                                   pc.attrib["port2"])
                                                  for pc in element.find(

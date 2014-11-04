@@ -8,7 +8,7 @@ root tag.
 """
 
 from . import E, NINEML
-import itertools
+from .utility import expect_single
 import collections
 
 
@@ -18,83 +18,55 @@ class Context(dict):
 
     ## Valid top-level NineML element names
     top_level = ['UnitDimension', 'Unit', 'ComponentClass', 'Component',
-                 'Population', 'PopulationGroup', 'Projection']
+                 'PositionList', 'Population', 'PopulationGroup', 'Projection']
 
     # A tuple to hold the unresolved elements
-    _Unresolved = collections.namedtuple('_Unresolved', 'name xml cls')
+    _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
-    def __init__(self, url=None):
-        # Create an empty dictionary for each valid top-level dictionary
-        super(Context, self).__init__((n, {}) for n in self.top_level)
-        # Stores the list of elements that are being resolved to check for
+    def __init__(self, *args, **kwargs):
+        super(Context, self).__init__(*args, **kwargs)
+        # Stores the list of elements that are being loaded to check for
         # circular references
-        self._resolving = []
-        self.url = url
+        self._loading = []
+        self.url = None
 
-    def __getitem__(self, nineml_type):
+    def __getitem__(self, name):
         """
-        Returns a dictionary containing resolved 9ml objects for all elements
-        matching the `nineml_type`
-        """
-        try:
-            elem_dict = super(Context, self).__getitem__[nineml_type]
-        except KeyError:
-            raise KeyError("'{}' not a valid top-level NineML element. Valid "
-                           "elements are '{}'"
-                           .format(nineml_type, "', '".join(self.top_level)))
-        # Make sure all elements are resolved before returning
-        for elem in elem_dict.itervalues():
-            if isinstance(elem, self._Unresolved):
-                self._resolve(elem, elem_dict)
-        return elem_dict
-
-    def get(self, nineml_type, name):
-        """
-        Returns an element in the context, lazily resolving form XML on demand
-        along with other the components in the context as they are
-        cross-referenced
+        Returns the element referenced by the given name
         """
         try:
-            elem_dict = super(Context, self).__getitem__[nineml_type]
+            elem = super(Context, self)[name]
         except KeyError:
-            raise KeyError("'{}' not a valid top-level NineML element. Valid "
-                           "elements are '{}'"
-                           .format(nineml_type, "', '".join(self.top_level)))
-        try:
-            elem = elem_dict[name]
-        except KeyError:
-            raise KeyError("No '{}' elements were found in current context "
-                           "with name '{}' (available '{}')."
-                           .format(nineml_type, name,
-                                   "', '".join(elem_dict.iterkeys())))
-        if isinstance(elem, self._Unresolved):
-            elem = self._resolve(elem, elem_dict)
+            raise KeyError("'{}' was not found in the NineML context{} ("
+                           "elements in the context were '{}')."
+                           .format(name, self.url or '',
+                                   "', '".join(self.iterkeys())))
+        if isinstance(elem, self._Unloaded):
+            elem = self._load_elem_from_xml(elem)
         return elem
 
-    def _resolve(self, unresolved, elem_dict):
+    def _load_elem_from_xml(self, unloaded):
         """
         Resolve an element from its XML description and store back in the
         element dictionary
         """
-        if unresolved in self._resolving:
+        if unloaded in self._loading:
             raise Exception("Circular reference detected in '{}(name={})' "
                             "element. Resolution stack was:\n"
-                            .format(unresolved.name,
+                            .format(unloaded.name,
                                     "\n".join('{}(name={})'.format(u.tag,
                                                                    u.name)
-                                              for u in self._resolving)))
-        self._resolving.append(unresolved)
-        elem_dict[unresolved.name] = unresolved.cls.from_xml(unresolved.xml,
-                                                             self)
-        assert self._resolving[-1] is unresolved
-        self._resolving.pop()
-        return elem_dict[unresolved.name]
+                                              for u in self._loading)))
+        self._loading.append(unloaded)
+        elem = unloaded.cls.from_xml(unloaded.xml, self)
+        assert self._loading[-1] is unloaded
+        self._loading.pop()
+        super(Context, self)[unloaded.name] = elem
+        return elem
 
     def to_xml(self):
         return E(self.element_name,
-                 *itertools.chain((child.to_xml()
-                                   for child in self[type_name].itervalues())
-                                  for type_name in self.top_level))
+                 *[c.to_xml() for c in self.itervalues()])
 
     @classmethod
     def from_xml(cls, element, url=None):
@@ -105,7 +77,10 @@ class Context(dict):
         from nineml import user_layer
         from nineml import abstraction_layer
         # Initialise the context
-        context = cls(url)
+        context = cls()
+        # This isn't set in the constructor to avoid screwing up the standard
+        # dictionary constructor
+        context.url = url
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
         for child in element.getchildren():
@@ -122,5 +97,5 @@ class Context(dict):
                 child_cls = getattr(user_layer, child.tag)
             except ImportError:
                 child_cls = getattr(abstraction_layer, child.tag)
-            context[child.tag][name] = cls._Unresolved(name, child, child_cls)
+            context[child.tag][name] = cls._Unloaded(name, child, child_cls)
         return context

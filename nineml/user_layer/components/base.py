@@ -1,11 +1,12 @@
 # encoding: utf-8
 import urllib
-from lxml import etree
 from operator import and_
-from ...abstraction_layer import BaseComponentClass
+import nineml
 from ..base import BaseULObject, E, NINEML
 from ... import abstraction_layer
-import nineml.context
+from ...utility import expect_single
+from nineml.context import Context
+
 
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet
@@ -22,34 +23,34 @@ class BaseComponent(BaseULObject):
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
-    def __init__(self, name, definition=None, properties={}, reference=None,
+    def __init__(self, name, definition=None, properties={}, prototype=None,
                  initial_values={}):
         """
         Create a new component with the given name, definition and properties,
-        or create a reference to another component that will be resolved later.
+        or create a prototype to another component that will be resolved later.
 
-        `name` - a name for the component that can be used to reference it.
+        `name` - a name for the component that can be used to prototype it.
         `definition` - a Definition instance, the URL of a component
-                       definition, or None if creating a reference.
+                       definition, or None if creating a prototype.
         `properties` - a PropertySet instance or a dictionary containing
                        (value,unit) pairs.
-        `reference` - the name of another component in the model, or None.
+        `prototype` - the name of another component in the model, or None.
         """
         self.name = name
         if isinstance(definition, Definition):
             self.definition = definition
-            assert reference is None, \
-                                   "Cannot give both definition and reference."
-        elif isinstance(definition, basestring):  # TODO: should also check is a valid URI @IgnorePep8
+            assert prototype is None, \
+                                   "Cannot give both definition and prototype."
+        elif isinstance(definition, basestring):
             self.definition = Definition(definition,
                                          self.abstraction_layer_module)
-            assert reference is None, \
-                                  "Cannot give both definition and reference."
+            assert prototype is None, \
+                                  "Cannot give both definition and prototype."
         elif definition is None:
-            assert reference is not None, \
-                                "Either definition or reference must be given."
-            assert isinstance(reference, basestring), \
-                                  "reference should be the name of a component"
+            assert prototype is not None, \
+                                "Either definition or prototype must be given."
+            assert isinstance(prototype, basestring), \
+                                  "prototype should be the name of a component"
             self.definition = None
         else:
             raise TypeError("definition must be a Definition, a Component or "
@@ -60,7 +61,7 @@ class BaseComponent(BaseULObject):
             self.properties = PropertySet(**properties)
         else:
             raise TypeError("properties must be a PropertySet or a dict")
-        self.reference = reference
+        self.prototype = prototype
         if isinstance(initial_values, InitialValueSet):
             self.initial_values = initial_values
         elif isinstance(initial_values, dict):
@@ -111,13 +112,13 @@ class BaseComponent(BaseULObject):
 
     def resolve(self, other_component):
         """
-        If the component is unresolved (contains a reference to another
+        If the component is unresolved (contains a prototype to another
         component), copy the definition and properties from the other
         component, and update those properties with the properties from this
         component.
         """
         assert other_component.__class__ == self.__class__
-        assert self.reference == other_component.name
+        assert self.prototype == other_component.name
         self.definition = other_component.definition
         # note that this behaves oppositely to dict.update
         self.properties.complete(other_component.properties)
@@ -131,7 +132,8 @@ class BaseComponent(BaseULObject):
     def check_properties(self):
         # First check the names
         properties = set(self.properties.iterkeys())
-        parameters = set(p.name for p in self.definition.component_class.parameters)
+        parameters = set(p.name
+                         for p in self.definition.component_class.parameters)
         msg = []
         diff_a = properties.difference(parameters)
         diff_b = parameters.difference(properties)
@@ -146,8 +148,7 @@ class BaseComponent(BaseULObject):
         if msg:
             # need a more specific type of Exception
             raise Exception(". ".join(msg))
-        # Now check dimensions
-        # TODO
+        # TODO: Now check dimensions
 
     def to_xml(self):
         properties_and_initial_values = (self.properties.to_xml() +
@@ -161,99 +162,32 @@ class BaseComponent(BaseULObject):
         return element
 
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element, context):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
-            element.findall(NINEML + Property.element_name), components)
+            element.findall(NINEML + Property.element_name), context)
         initial_values = InitialValueSet.from_xml(
-            element.findall(NINEML + InitialValue.element_name), components)
+            element.findall(NINEML + InitialValue.element_name), context)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
             definition = Definition.from_xml(definition_element)
             return cls(name, definition, properties,
                        initial_values=initial_values)
         else:
-            reference_element = element.find(NINEML + "Reference")
-            if reference_element is not None:
+            prototype_element = element.find(NINEML + "Prototype")
+            if prototype_element is not None:
                 return cls(name, None, properties,
-                           reference=reference_element.text,
+                           reference=prototype_element.text,
                            initial_values=initial_values)
             else:
                 raise Exception("A component must contain either a defintion "
-                                "or a reference")
+                                "or a prototype")
 
 
-class Definition(BaseULObject):
-
-    """
-    Encapsulate a component definition.
-
-    For now, this holds only the URI of an abstraction layer file, but this
-    could be expanded later to include definitions external to 9ML.
-    """
-    element_name = "Definition"
-    defining_attributes = ("url",)
-
-    def __init__(self, component_class_name, component_classes={}, url=None):
-        if url:
-            try:
-                url_root = nineml.context.Context.from_file(url)
-                component_classes = url_root.component_classes
-            except:  # FIXME: Need to work out what exceptions urllib throws
-                raise
-        try:
-            self.component_class = component_classes[component_class_name]
-        except KeyError:
-            raise Exception("Did not find ComponentClass matching '{}'{}"
-                            .format(component_class_name,
-                                   " in file '{}'".format(url) if url else ''))
-        self.url = url
-
-    def __hash__(self):
-        if self._component:
-            return hash(self._component)
-        else:
-            return hash(self.url)
-
-    @property
-    def component(self):
-        return self.retrieve()
-
-    def retrieve(self):
-        reader = getattr(abstraction_layer,
-                         self.abstraction_layer_module).readers.XMLReader
-        if self.abstraction_layer_module == "random":  # hack
-            self._component = reader.read_component(self.url)
-        else:
-            f = urllib.urlopen(self.url)
-            try:
-                component_class = reader.read_component(self.url)
-            finally:
-                f.close()
-        return component_class
-
-    def to_xml(self):
-        if hasattr(self, "url") and self.url:
-            return E(self.element_name, (E.link(self.url)), language="NineML")
-        else:  # inline
-            al_writer = getattr(abstraction_layer,
-                                self.abstraction_layer_module).\
-                                                            writers.XMLWriter()
-            return E(self.element_name,
-                     al_writer.visit(self._component),
-                     language="NineML")
-
-    @classmethod
-    def from_xml(cls, element, component_classes=[]):
-        url = element.attrib.get('url', None)
-        component_class_name = element.text
-        return cls(component_class_name, url=url)
-
-
-class Reference(BaseULObject):
+class BaseReference(BaseULObject):
 
     """
     Base class for model components that are defined in the abstraction layer.
@@ -263,19 +197,19 @@ class Reference(BaseULObject):
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
-    def __init__(self, component_name, context, url=None):
+    def __init__(self, name, context, url=None):
         """
         Create a new component with the given name, definition and properties,
-        or create a reference to another component that will be resolved later.
+        or create a prototype to another component that will be resolved later.
 
-        `component_name` - a name of an existing component to refer to
+        `name` - a name of an existing component to refer to
         `url`            - a url of the file containing the exiting component
         """
         self.url = url
         ref_context = context
         if url:
             ref_context = nineml.read(url)
-        self.component = ref_context.get('Component', component_name)
+        self._referred_to = ref_context[name]
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -310,12 +244,109 @@ class Reference(BaseULObject):
         return cls(component_name, context, url)
 
 
-def component_ref(xml, context):
-    ref_xml = xml.find(NINEML + 'Reference')
-    if ref_xml:
-        return Reference.from_xml(ref_xml, context)
+class Reference(BaseReference):
+
+    """
+    Base class for model components that are defined in the abstraction layer.
+    """
+    element_name = "Reference"
+
+    @property
+    def object(self):
+        return self._referred_to
+
+
+class Definition(BaseReference):
+
+    """
+    Base class for model components that are defined in the abstraction layer.
+    """
+    element_name = "Reference"
+
+    @property
+    def component_class(self):
+        return self._referred_to
+
+
+class Prototype(BaseReference):
+
+    element_name = "Prototype"
+
+    @property
+    def component(self):
+        return self._referred_to
+
+
+# class Definition(BaseULObject):
+# 
+#     """
+#     Encapsulate a component definition.
+# 
+#     For now, this holds only the URI of an abstraction layer file, but this
+#     could be expanded later to include definitions external to 9ML.
+#     """
+#     element_name = "Definition"
+#     defining_attributes = ("url",)
+# 
+#     def __init__(self, component_class_name, context=Context(), url=None):
+#         def_context = context
+#         if url:
+#             def_context = nineml.read(url)
+#         self.component_class = def_context[component_class_name]
+#         self.url = url
+# 
+#     def __hash__(self):
+#         if self._component:
+#             return hash(self._component)
+#         else:
+#             return hash(self.url)
+# 
+#     @property
+#     def component(self):
+#         return self.retrieve()
+# 
+#     def retrieve(self):
+#         reader = getattr(abstraction_layer,
+#                          self.abstraction_layer_module).readers.XMLReader
+#         if self.abstraction_layer_module == "random":  # hack
+#             self._component = reader.read_component(self.url)
+#         else:
+#             f = urllib.urlopen(self.url)
+#             try:
+#                 component_class = reader.read_component(self.url)
+#             finally:
+#                 f.close()
+#         return component_class
+# 
+#     def to_xml(self):
+#         if hasattr(self, "url") and self.url:
+#             return E(self.element_name, (E.link(self.url)), language="NineML")
+#         else:  # inline
+#             al_writer = getattr(abstraction_layer,
+#                                 self.abstraction_layer_module).\
+#                                                             writers.XMLWriter()
+#             return E(self.element_name,
+#                      al_writer.visit(self._component),
+#                      language="NineML")
+# 
+#     @classmethod
+#     def from_xml(cls, element, context):
+#         url = element.attrib.get('url', None)
+#         component_class_name = element.text
+#         return cls(component_class_name, context, url=url)
+
+
+def resolve_ref(containing_elem, expected_type, context):
+    elem = expect_single(containing_elem.getchildren())
+    if elem.tag == NINEML + Reference.element_name:
+        obj = Reference.from_xml(elem, context)
+        if not isinstance(obj.object, expected_type):
+            raise Exception("Type of referenced object ('{}') does not match "
+                            "expected type ('{}')".format(obj.object.__class__,
+                                                          expected_type))
     else:
-        return BaseComponent.from_xml(xml, context)
+        obj = expected_type.from_xml(elem, context)
+    return obj
 
 
 def get_or_create_component(ref, cls, components):
