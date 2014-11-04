@@ -57,10 +57,11 @@ class Context(dict):
                                    "', '".join(elem_dict.iterkeys())))
         if isinstance(stored, self._Unresolved):
             if stored in self._resolving:
-                raise Exception("Circular reference detected in '{}:{}' "
+                raise Exception("Circular reference detected in '{}(name={})' "
                                 "element. Resolution stack was:\n"
                                 .format(stored.name,
-                                        "\n".join('{}:{}'.format(e.tag, e.name)
+                                        "\n".join('{}(name={})'.format(e.tag,
+                                                                       e.name)
                                                   for e in self._resolving)))
             self._resolving.append(stored)
             elem_dict[name] = stored.cls.from_xml(stored.elem, self)
@@ -70,7 +71,16 @@ class Context(dict):
         return stored
 
     def __getitem__(self, nineml_type):
-        elem_dict = super(Context, self).__getitem__[nineml_type]
+        """
+        Returns a dictionary containing resolved 9ml objects for all elements
+        matching the `nineml_type`
+        """
+        try:
+            elem_dict = super(Context, self).__getitem__[nineml_type]
+        except KeyError:
+            raise KeyError("'{}' not a valid top-level NineML element. Valid "
+                           "elements are '{}'"
+                           .format(nineml_type, "', '".join(self.top_level)))
         # Make sure all elements are resolved before returning
         for name in elem_dict.iterkeys():
             self.get(nineml_type, name)
