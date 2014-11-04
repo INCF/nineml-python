@@ -22,7 +22,7 @@ Classes
     Parameter
     PropertySet
     Value
-    Group
+    Network
     Population
     PositionList
     Projection
@@ -48,7 +48,7 @@ from .base import NINEML
 from .dynamics import SpikingNodeType, SynapseType, CurrentSourceType
 from .population import (Population, PositionList, Structure, Selection,
                          Operator, Any, All, Not, Comparison, Eq, In)
-from .containers import Model, Group
+from .containers import Model, Network
 from .projection import Projection, ConnectionRule, ConnectionType
 from .random import RandomDistribution
 from .components import PropertySet

@@ -61,11 +61,11 @@ class Projection(BaseULObject):
         for name, cls_list in (('source',
                                 (nineml.user_layer.population.Population,
                                  nineml.user_layer.population.Selection,
-                                 nineml.user_layer.containers.Group)),
+                                 nineml.user_layer.containers.Network)),
                                ('target',
                                 (nineml.user_layer.population.Population,
                                  nineml.user_layer.population.Selection,
-                                 nineml.user_layer.containers.Group)),
+                                 nineml.user_layer.containers.Network)),
                                ('rule', (ConnectionRule,)),
                                ('synaptic_response', (SynapseType,)),
                                ('connection_type', (ConnectionType,))):
@@ -84,9 +84,9 @@ class Projection(BaseULObject):
                            "synaptic_response_ports", "connection_ports"]
         # to avoid infinite recursion, we do not include source or target in
         # the tests if they are Groups
-        if isinstance(self.source, nineml.user_layer.containers.Group):
+        if isinstance(self.source, nineml.user_layer.containers.Network):
             test_attributes.remove("source")
-        if isinstance(self.target, nineml.user_layer.containers.Group):
+        if isinstance(self.target, nineml.user_layer.containers.Network):
             test_attributes.remove("target")
         return reduce(and_, (getattr(self, attr) == getattr(other, attr)
                              for attr in test_attributes))

@@ -14,35 +14,38 @@ from collections import defaultdict
 class Context(defaultdict):
 
     element_name = 'NineML'
+    # A dictionary with the XML tag names as keys, and a tuple consisting of
+    # the modules they are found in (imports are performed on demand to prevent
+    # circular imports), the class name and the name of the identifier field 
+    # (typically name)
+    top_level = {'ComponentClass': ('nineml.abstraction_layer.components.base',
+                                    'BaseComponentClass', 'name'),
+                 'Component': ('nineml.user_layer.components.base',
+                               'BasComponent', 'name'),
+                 'PopulationGroup': ('nineml.user_layer.containers',
+                                     'PopulationGroup', 'name'),
+                 'Population', ('nineml.user_layer.population', 'Population',
+                                'Projection', 'Unit', 'UnitDimension']
 
-    top_level = ['ComponentClass', 'Component', 'PopulationGroup',
-                 'Population', 'Projection', 'Unit', 'UnitDimension']
-    _elem_lookup = dict((NINEML + e.element_name, e)
-                        for e in TOP_LEVEL_ELEMS)
-
-#     def __init__(self, componentclasses=[], components=[], groups=[],
-#                  populations=[], projections=[]):
-#         self.component_classes = dict((c.name, c) for c in componentclasses)
-#         self.components = dict((c.name, c) for c in components)
-#         self.groups = dict((g.name, g) for g in groups)
-#         self.populations = dict((p.name, p) for p in populations)
-#         self.projections = dict((p.name, p) for p in projections)
+    def __init__(self):
+        super(Context, self).__init__(dict)
 
     def to_xml(self):
-        return E(self.element_tag,
-                 *(c.to_xml() for c in self.children))
+        return E(self.element_name,
+                 *(child.to_xml()
+                   for child in self.itervalues()))
 
     @classmethod
     def from_xml(cls, element):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ({})".format(element.tag))
-        kwargs = defaultdict(list)
-        for child_elem in element.getchildren():
-            try:
-                child_cls = cls._elem_lookup[child_elem.tag]
-            except KeyError:
-                raise Exception("NineML root element contains invalid element "
-                                "'{}'".format(child_elem.tag))
+        context = cls()
+        for child in element.getchildren():
+            if child not in cls.top_level:
+                raise TypeError("Invalid top-level element '{}' found in "
+                                "NineML document (valid elements are '{}')."
+                                .format(child.tag, "', '".join(cls.top_level)))
+            child_cls = cls._elem_lookup[child_elem.tag]
             # Get the name of the element type and convert to lower case
             key = child_elem.tag.lower()
             # Strip namespace and add plural to get the kwarg for the

@@ -62,9 +62,9 @@ class Model(BaseULObject):
         Add a group to the model. Groups contain populations of nodes, where
         the nodes may be either individual neurons or other groups.
 
-        `group` - should be a Group instance.
+        `group` - should be a Network instance.
         """
-        assert isinstance(group, Group)
+        assert isinstance(group, Network)
         for component in group.get_components():
             self.add_component(component)
         for subgroup in group.get_subgroups():
@@ -85,7 +85,7 @@ class Model(BaseULObject):
         assert element.tag == NINEML + 'NineML'
         model = cls(element.get("name"))
         # Note that the components dict initially contains elementtree
-        # elements, but is modified within Group.from_xml(), and at the end
+        # elements, but is modified within Network.from_xml(), and at the end
         # contains Component instances.
         components = {}
         groups = {}
@@ -166,14 +166,50 @@ def find_difference(this, that):
                 find_difference(this[key], that[key])
 
 
-class Group(BaseULObject):
+class PopulationGroup(BaseULObject):
+
+    """
+    Container for multiple populations
+    """
+    element_name = "PopulationGroup"
+
+    def __init__(self, name):
+        self.name = name
+        self.populations = []
+
+    def to_xml(self):
+        return E(self.element_name,
+                 name=self.name,
+                 E.Concatenate(*[E.Item(p.name, index=i)
+                                 for i, p in enumerate(self.populations)]))
+
+    @classmethod
+    def from_xml(cls, element, context):
+        check_tag(element, cls)
+        # The only supported op at this stage
+        concatenate_op = element.find(NINEML + 'Concatenate')
+        if not concatenate_op:
+            raise TypeError("Did not find expected 'Concatenate' child element"
+                            " in 'PopulationGroup' element")
+        items = []
+        for child in concatenate_op.getchildren():
+            if child.tag != NINEML + 'Item':
+                raise TypeError("Was expecting only 'Item' elements, found "
+                                "'{}'".format(child.tag))
+            
+            group.add(obj)
+        group._resolve_population_references()
+        return group
+
+
+class Network(BaseULObject):
 
     """
     Container for populations and projections between those populations. May be
     used as the node prototype within a population, allowing hierarchical
     structures.
     """
-    element_name = "Group"
+    element_name = "Network"
     defining_attributes = ("name", "populations", "projections", "selections")
     children = ("populations", "projections", "selections")
 
@@ -186,7 +222,7 @@ class Group(BaseULObject):
     def add(self, *objs):
         """
         Add one or more Population, Projection or Selection instances to the
-        group.
+        network.
         """
         for obj in objs:
             if isinstance(obj, nineml.user_layer.population.Population):
@@ -220,9 +256,9 @@ class Group(BaseULObject):
             components.extend(p.get_components())
         return components
 
-    def get_subgroups(self):
+    def get_subnetworks(self):
         return [p.prototype for p in self.populations.values()
-                if isinstance(p.prototype, Group)]
+                if isinstance(p.prototype, Network)]
 
     def to_xml(self):
         return E(self.element_name,
@@ -232,13 +268,13 @@ class Group(BaseULObject):
                                              self.projections.values())])
 
     @classmethod
-    def from_xml(cls, element, components, groups):
+    def from_xml(cls, element, components, networks):
         check_tag(element, cls)
-        group = cls(name=element.attrib["name"])
-        groups[group.name] = group
+        network = cls(name=element.attrib["name"])
+        networks[network.name] = network
         for child in element.getchildren():
             if child.tag == NINEML + nineml.user_layer.population.Population.element_name:
-                obj = nineml.user_layer.population.Population.from_xml(child, components, groups)
+                obj = nineml.user_layer.population.Population.from_xml(child, components, networks)
             elif child.tag == NINEML + Projection.element_name:
                 obj = Projection.from_xml(child, components)
             elif child.tag == NINEML + nineml.user_layer.population.Selection.element_name:
@@ -246,6 +282,6 @@ class Group(BaseULObject):
             else:
                 raise Exception("<%s> elements may not contain <%s> elements" %
                                 (cls.element_name, child.tag))
-            group.add(obj)
-        group._resolve_population_references()
-        return group
+            network.add(obj)
+        network._resolve_population_references()
+        return network

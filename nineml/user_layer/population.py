@@ -20,7 +20,7 @@ class Population(BaseULObject):
         self.name = name
         self.number = number
         assert isinstance(prototype, (SpikingNodeType,
-                                      nineml.user_layer.containers.Group))
+                                      nineml.user_layer.containers.Network))
         self.prototype = prototype
         if positions is not None:
             assert isinstance(positions, PositionList)
@@ -38,7 +38,7 @@ class Population(BaseULObject):
                 components.extend(self.prototype.properties.get_random_distributions())
                 components.extend(self.prototype.initial_values.get_random_distributions())
             elif isinstance(self.prototype,
-                            nineml.user_layer.containers.Group):
+                            nineml.user_layer.containers.Network):
                 components.extend(self.prototype.get_components())
         if self.positions is not None:
             components.extend(self.positions.get_components())
@@ -268,7 +268,7 @@ class In(Comparison):
 class Selection(BaseULObject):
 
     """
-    A set of network nodes selected from existing populations within the Group.
+    A set of network nodes selected from existing populations within the Network.
     """
     element_name = "Set"
     defining_attributes = ("name", "condition")

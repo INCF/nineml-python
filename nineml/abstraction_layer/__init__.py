@@ -10,7 +10,7 @@ from xmlns import nineml_namespace, NINEML, MATHML
 from nineml import __version__
 import urllib
 from lxml import etree
-from components import Parameter, BaseComponentClass
+from components import Parameter, BaseComponentClass as ComponentClass
 from dynamics.component import (ComponentClass as DynamicsClass, Regime, On,
                                 OutputEvent, StateAssignment, TimeDerivative,
                                 AnalogSendPort, AnalogReceivePort,

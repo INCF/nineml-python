@@ -95,7 +95,7 @@ def simple_example():
                                 inh_cells, all_cells, connection_rule,
                                 inh_psr, inh_connection_type)
 
-    network = nineml.Group("Network")
+    network = nineml.Network("Network")
     network.add(exc_cells)
     network.add(inh_cells)
     network.add(all_cells)
@@ -156,7 +156,7 @@ def nested_example():
         prototype=inh_celltype,
         positions=nineml.PositionList(structure=inner_grid))
 
-    column = nineml.Group("Column")
+    column = nineml.Network("Column")
     column.add(exc_cells, inh_cells)
 
     exc_psr = nineml.SynapseType(
@@ -207,7 +207,7 @@ def nested_example():
         reference=intra_column_connector.name,
         properties={'p_connect': (0.05, "dimensionless")})
 
-    network = nineml.Group("Network")
+    network = nineml.Network("Network")
 
     columns = nineml.Population(
         name="Columns",
