@@ -1,29 +1,13 @@
 #!/usr/bin/env python
 
-from setuptools import setup  #, find_packages
-# from nineml.__init__ import __version__
+from setuptools import setup, find_packages
 
 setup(
     name="9ML",
-    # version = __version__,
     version="0.3dev",
-    packages=['nineml',
-              'nineml.abstraction_layer',
-              'nineml.abstraction_layer.components',
-              'nineml.abstraction_layer.connection_generator',
-              'nineml.abstraction_layer.dynamics',
-              'nineml.abstraction_layer.dynamics.component',
-              'nineml.abstraction_layer.dynamics.flattening',
-              'nineml.abstraction_layer.dynamics.readers',
-              'nineml.abstraction_layer.dynamics.testing_utils',
-              'nineml.abstraction_layer.dynamics.validators',
-              'nineml.abstraction_layer.dynamics.visitors',
-              'nineml.abstraction_layer.dynamics.writers',
-              'nineml.abstraction_layer.structure'
-              ],
     package_data={'nineml': ['examples/AL/demos/*.py', "examples/AL/sample_components/*.py"]},
-    # packages = find_packages(),
-    author="Andrew P. Davison, Eilif Muller, Mike Hull",
+    packages = find_packages(),
+    author="Andrew P. Davison, Eilif Muller, Mike Hull, Tom Close",
     # add your name here if you contribute to the code
     author_email="nineml-users@incf.org",
     description="A tool for reading, writing and generally working with 9ML files.",
