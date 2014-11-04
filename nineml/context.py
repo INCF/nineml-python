@@ -9,7 +9,11 @@ root tag.
 
 from . import E, NINEML
 from .utility import expect_single
+import itertools
 import collections
+from . import user_layer
+from . import abstraction_layer
+from .user_layer.components.base import Reference
 
 
 class Context(dict):
@@ -17,11 +21,17 @@ class Context(dict):
     element_name = 'NineML'
 
     ## Valid top-level NineML element names
-    top_level = ['UnitDimension', 'Unit', 'ComponentClass', 'Component',
-                 'PositionList', 'Population', 'PopulationGroup', 'Projection']
+    top_level_abstraction = ['ComponentClass']
+    top_level_user = ['UnitDimension', 'Unit', 'Component', 'PositionList',
+                      'Population', 'PopulationGroup', 'Projection']
 
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
+
+    @property
+    @classmethod
+    def top_level(cls):
+        return itertools.chain(cls.top_level_abstraction, cls.top_level_user)
 
     def __init__(self, *args, **kwargs):
         super(Context, self).__init__(*args, **kwargs)
@@ -29,6 +39,19 @@ class Context(dict):
         # circular references
         self._loading = []
         self.url = None
+
+    def resolve_ref(self, containing_elem, expected_type):
+        elem = expect_single(containing_elem.getchildren())
+        if elem.tag == NINEML + Reference.element_name:
+            ref = Reference.from_xml(elem, self)
+            if not isinstance(ref.object, expected_type):
+                raise Exception("Type of referenced object ('{}') does not "
+                                "match expected type ('{}')"
+                                .format(ref.object.__class__, expected_type))
+            obj = ref.object
+        else:
+            obj = expected_type.from_xml(elem, self)
+        return obj
 
     def __getitem__(self, name):
         """
@@ -72,10 +95,6 @@ class Context(dict):
     def from_xml(cls, element, url=None):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
-        # These modules are imported here to avoid circular imports between
-        # layers. Can you think of a better way to do this Andrew?
-        from nineml import user_layer
-        from nineml import abstraction_layer
         # Initialise the context
         context = cls()
         # This isn't set in the constructor to avoid screwing up the standard
@@ -84,18 +103,16 @@ class Context(dict):
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
         for child in element.getchildren():
-            if child.tag not in cls.top_level:
+            if child.tag in cls.top_level_user:
+                child_cls = getattr(user_layer, child.tag)
+            elif child.tag in cls.top_level_abstraction:
+                child_cls = getattr(abstraction_layer, child.tag)
+            else:
                 raise TypeError("Invalid top-level element '{}' found in "
                                 "NineML document (valid elements are '{}')."
                                 .format(child.tag, "', '".join(cls.top_level)))
             # Units use 'symbol' as their unique identifier (from LEMS) all
             # other elements use 'name'
             name = child.attrib.get('name', child.attrib.get('symbol'))
-            # Try to get child attribute from user_layer, failing that try
-            # abstraction layer
-            try:
-                child_cls = getattr(user_layer, child.tag)
-            except ImportError:
-                child_cls = getattr(abstraction_layer, child.tag)
             context[child.tag][name] = cls._Unloaded(name, child, child_cls)
         return context

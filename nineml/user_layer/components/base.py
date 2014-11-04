@@ -1,11 +1,7 @@
 # encoding: utf-8
-import urllib
 from operator import and_
 import nineml
 from ..base import BaseULObject, E, NINEML
-from ... import abstraction_layer
-from ...utility import expect_single
-from nineml.context import Context
 
 
 # This line is imported at the end of the file to avoid recursive imports
@@ -192,8 +188,6 @@ class BaseReference(BaseULObject):
     """
     Base class for model components that are defined in the abstraction layer.
     """
-    element_name = "Reference"
-    defining_attributes = ("url")
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
@@ -210,6 +204,7 @@ class BaseReference(BaseULObject):
         if url:
             ref_context = nineml.read(url)
         self._referred_to = ref_context[name]
+        self._referred_to.set_reference(self)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -334,19 +329,6 @@ class Prototype(BaseReference):
 #         url = element.attrib.get('url', None)
 #         component_class_name = element.text
 #         return cls(component_class_name, context, url=url)
-
-
-def resolve_ref(containing_elem, expected_type, context):
-    elem = expect_single(containing_elem.getchildren())
-    if elem.tag == NINEML + Reference.element_name:
-        obj = Reference.from_xml(elem, context)
-        if not isinstance(obj.object, expected_type):
-            raise Exception("Type of referenced object ('{}') does not match "
-                            "expected type ('{}')".format(obj.object.__class__,
-                                                          expected_type))
-    else:
-        obj = expected_type.from_xml(elem, context)
-    return obj
 
 
 def get_or_create_component(ref, cls, components):

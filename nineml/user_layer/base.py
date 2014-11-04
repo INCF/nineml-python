@@ -10,6 +10,9 @@ class BaseULObject(object):
     """
     children = []
 
+    def __init__(self):
+        self._from_reference = None
+
     def __eq__(self, other):
         return reduce(and_, [isinstance(other, self.__class__)] +
                             [getattr(self, name) == getattr(other, name)
@@ -32,3 +35,13 @@ class BaseULObject(object):
 
     def accept_visitor(self, visitor):
         visitor.visit(self)
+
+    def set_reference(self, reference):
+        self._from_reference = reference
+
+    def to_xml(self):
+        if self._from_reference:
+            xml = self._from_reference.to_xml()
+        else:
+            xml = self._to_xml()
+        return xml
