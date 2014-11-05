@@ -2,7 +2,7 @@ import re
 from .base import BaseULObject, NINEML, E
 from .utility import check_tag
 from .dynamics import SpikingNodeType
-from .components import BaseComponent, resolve_ref, StringValue
+from .components import BaseComponent, StringValue
 import nineml.user_layer.containers
 
 
@@ -35,8 +35,10 @@ class Population(BaseULObject):
         if self.prototype:
             if isinstance(self.prototype, SpikingNodeType):
                 components.append(self.prototype)
-                components.extend(self.prototype.properties.get_random_distributions())
-                components.extend(self.prototype.initial_values.get_random_distributions())
+                components.extend(self.prototype.properties.\
+                                                    get_random_distributions())
+                components.extend(self.prototype.initial_values.\
+                                                    get_random_distributions())
             elif isinstance(self.prototype,
                             nineml.user_layer.containers.Network):
                 components.extend(self.prototype.get_components())
@@ -44,7 +46,7 @@ class Population(BaseULObject):
             components.extend(self.positions.get_components())
         return components
 
-    def to_xml(self):
+    def _to_xml(self):
         if self.positions is None:
             return E(self.element_name,
                      E.number(str(self.number)),
@@ -60,12 +62,16 @@ class Population(BaseULObject):
     @classmethod
     def from_xml(cls, element, context):
         check_tag(element, cls)
+        layout_elem = element.find(NINEML + 'Layout')
+        kwargs = {}
+        if layout_elem:
+            kwargs['positions'] = context.resolve_ref(layout_elem,
+                                                      BaseComponent)
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML + 'number').text),
-                   cell=resolve_ref(element.find(NINEML + 'Cell'), context),
-                   positions=PositionList.from_xml(
-                              element.find(NINEML + PositionList.element_name),
-                              context))
+                   cell=context.resolve_ref(element.find(NINEML + 'Cell'),
+                                            BaseComponent),
+                   **kwargs)
 
 
 class PositionList(BaseULObject):
@@ -131,7 +137,7 @@ class PositionList(BaseULObject):
         else:
             return []
 
-    def to_xml(self):
+    def _to_xml(self):
         element = E(self.element_name)
         if self._positions:
             for pos in self._positions:
@@ -152,8 +158,8 @@ class PositionList(BaseULObject):
             check_tag(element, cls)
             structure_element = element.find(NINEML + 'structure')
             if structure_element is not None:
-                return cls(structure=resolve_ref(structure_element,
-                                                 Structure, context))
+                return cls(structure=context.resolve_ref(structure_element,
+                                                         Structure))
             else:
                 positions = [(float(p.attrib['x']), float(p.attrib['y']),
                               float(p.attrib['z']))
@@ -264,7 +270,8 @@ class In(Comparison):
 class Selection(BaseULObject):
 
     """
-    A set of network nodes selected from existing populations within the Network.
+    A set of network nodes selected from existing populations within the
+    Network.
     """
     element_name = "Set"
     defining_attributes = ("name", "condition")

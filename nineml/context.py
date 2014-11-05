@@ -44,11 +44,12 @@ class Context(dict):
         elem = expect_single(containing_elem.getchildren())
         if elem.tag == NINEML + Reference.element_name:
             ref = Reference.from_xml(elem, self)
-            if not isinstance(ref.object, expected_type):
+            if not isinstance(ref.user_layer_object, expected_type):
                 raise Exception("Type of referenced object ('{}') does not "
                                 "match expected type ('{}')"
-                                .format(ref.object.__class__, expected_type))
-            obj = ref.object
+                                .format(ref.user_layer_object.__class__,
+                                        expected_type))
+            obj = ref.user_layer_object
         else:
             obj = expected_type.from_xml(elem, self)
         return obj

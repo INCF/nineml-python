@@ -5,7 +5,7 @@ from operator import and_
 from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
-from .base import BaseComponent, Reference, resolve_ref
+from .base import BaseComponent, Reference
 
 
 class Property(BaseULObject):
@@ -110,22 +110,18 @@ class Quantity(object):
         try:
             value_element = element.getchildren()[0]
         except IndexError:
-            raise Exception("No child elements found in Quantity element only "
-                            "'{}'".format(element.text))
+            raise Exception("Expected child elements in Quantity element")
         if value_element.tag == NINEML + 'SingleValue':
             try:
                 value = float(value_element.text)
             except ValueError:
-                raise Exception("Provided value '{}' is not numeric"
+                raise ValueError("Provided value '{}' is not numeric"
                                 .format(value_element.text))
         elif value_element.tag in (NINEML + 'ArrayValue',
                                    NINEML + 'ExternalArrayValue'):
-            raise NotImplementedError()
+            raise NotImplementedError
         else:
-            value = resolve_ref(element, BaseComponent, context)
-#             raise Exception("Unrecognised element '{}' was expecting one of "
-#                             "'Value', 'Reference', 'Component', 'ArrayValue', "
-#                             "'ExternalArrayValue'".format(value_element.tag))
+            value = context.resolve_ref(element, BaseComponent)
         units = element.attrib.get('units')
         return Quantity(value, units)
 

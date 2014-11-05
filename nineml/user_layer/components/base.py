@@ -2,8 +2,6 @@
 from operator import and_
 import nineml
 from ..base import BaseULObject, E, NINEML
-
-
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet
 
@@ -146,7 +144,7 @@ class BaseComponent(BaseULObject):
             raise Exception(". ".join(msg))
         # TODO: Now check dimensions
 
-    def to_xml(self):
+    def _to_xml(self):
         properties_and_initial_values = (self.properties.to_xml() +
                                          [iv.to_xml()
                                           for iv in
@@ -164,19 +162,21 @@ class BaseComponent(BaseULObject):
                 NINEML, cls.element_name, element.tag))
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
-            element.findall(NINEML + Property.element_name), context)
+                               element.findall(NINEML + Property.element_name),
+                               context)
         initial_values = InitialValueSet.from_xml(
-            element.findall(NINEML + InitialValue.element_name), context)
+                           element.findall(NINEML + InitialValue.element_name),
+                           context)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
-            definition = Definition.from_xml(definition_element)
+            definition = Definition.from_xml(definition_element, context)
             return cls(name, definition, properties,
                        initial_values=initial_values)
         else:
             prototype_element = element.find(NINEML + "Prototype")
             if prototype_element is not None:
-                return cls(name, None, properties,
-                           reference=prototype_element.text,
+                prototype = Prototype.from_xml(element, context)
+                return cls(name, None, properties, prototype=prototype,
                            initial_values=initial_values)
             else:
                 raise Exception("A component must contain either a defintion "
@@ -200,10 +200,9 @@ class BaseReference(BaseULObject):
         `url`            - a url of the file containing the exiting component
         """
         self.url = url
-        ref_context = context
-        if url:
-            ref_context = nineml.read(url)
-        self._referred_to = ref_context[name]
+        if self.url:
+            context = nineml.read(url)
+        self._referred_to = context[name]
         self._referred_to.set_reference(self)
 
     def __eq__(self, other):
@@ -234,9 +233,9 @@ class BaseReference(BaseULObject):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
-        component_name = element.text
+        name = element.text
         url = element.attrib.get("url", None)
-        return cls(component_name, context, url)
+        return cls(name, context, url)
 
 
 class Reference(BaseReference):
@@ -247,7 +246,7 @@ class Reference(BaseReference):
     element_name = "Reference"
 
     @property
-    def object(self):
+    def user_layer_object(self):
         return self._referred_to
 
 
@@ -256,7 +255,7 @@ class Definition(BaseReference):
     """
     Base class for model components that are defined in the abstraction layer.
     """
-    element_name = "Reference"
+    element_name = "Definition"
 
     @property
     def component_class(self):
@@ -331,18 +330,18 @@ class Prototype(BaseReference):
 #         return cls(component_class_name, context, url=url)
 
 
-def get_or_create_component(ref, cls, components):
-    """
-    Each entry in `components` is either an instance of a BaseComponent
-    subclass, or the XML (elementtree Element) defining such an instance.
-
-    If given component does not exist, we create it and replace the XML in
-    `components` with the actual component. We then return the component.
-    """
-    assert ref in components, "%s not in %s" % (ref, components.keys())
-    if not isinstance(components[ref], BaseComponent):
-        components[ref] = cls.from_xml(components[ref], components)
-    return components[ref]
+# def get_or_create_component(ref, cls, components):
+#     """
+#     Each entry in `components` is either an instance of a BaseComponent
+#     subclass, or the XML (elementtree Element) defining such an instance.
+# 
+#     If given component does not exist, we create it and replace the XML in
+#     `components` with the actual component. We then return the component.
+#     """
+#     assert ref in components, "%s not in %s" % (ref, components.keys())
+#     if not isinstance(components[ref], BaseComponent):
+#         components[ref] = cls.from_xml(components[ref], components)
+#     return components[ref]
 
 # This is imported at the end to avoid recursive imports
 from .interface import Property, InitialValue, InitialValueSet, PropertySet

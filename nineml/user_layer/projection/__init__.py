@@ -2,7 +2,7 @@ from operator import and_
 from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
 import nineml.user_layer.population
-from ..components import BaseComponent, resolve_ref
+from ..components import BaseComponent
 from ..dynamics import SynapseType, ConnectionType
 import nineml.user_layer.containers
 from ...abstraction_layer.connection_generator import *
@@ -118,14 +118,14 @@ class Projection(BaseULObject):
         return cls(name=element.attrib["name"],
                    source=element.find(NINEML + "Source").text,
                    target=element.find(NINEML + "Target").text,
-                   rule=resolve_ref(element.find(NINEML + "Rule"),
-                                    ConnectionRule, context),
-                   synaptic_response=resolve_ref(
+                   rule=context.resolve_ref(element.find(NINEML + "Rule"),
+                                            ConnectionRule),
+                   synaptic_response=context.resolve_ref(
                                             element.find(NINEML + "Response"),
-                                            SynapseType, context),
-                   connection_type=resolve_ref(
+                                            SynapseType),
+                   connection_type=context.resolve_ref(
                                            element.find(NINEML + "Plasticity"),
-                                           ConnectionType, context),
+                                           ConnectionType),
                    synaptic_response_ports=tuple((pc.attrib["port1"],
                                                   pc.attrib["port2"])
                                                  for pc in element.find(

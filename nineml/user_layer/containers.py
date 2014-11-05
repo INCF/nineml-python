@@ -3,7 +3,9 @@ from operator import itemgetter
 from .base import BaseULObject, NINEML, nineml_namespace, E
 from utility import check_tag
 from .components.base import BaseComponent
-import nineml.user_layer.population
+# can't "from ninem.user_layer.population import *" because of circular imports
+import nineml.user_layer.population as ul_pop
+import nineml.user_layer.projection as ul_proj
 from .projection import Projection
 
 
@@ -177,7 +179,7 @@ class PopulationGroup(BaseULObject):
         self.name = name
         self.populations = list(populations)
 
-    def to_xml(self):
+    def _to_xml(self):
         return E(self.element_name,
                  name=self.name,
                  E.Concatenate(*[E.Item(p.name, index=i)
@@ -212,11 +214,11 @@ class Network(BaseULObject):
     defining_attributes = ("name", "populations", "projections", "selections")
     children = ("populations", "projections", "selections")
 
-    def __init__(self, name):
+    def __init__(self, name, populations={}, projections={}, selections={}):
         self.name = name
-        self.populations = {}
-        self.projections = {}
-        self.selections = {}
+        self.populations = populations
+        self.projections = projections
+        self.selections = selections
 
     def add(self, *objs):
         """
@@ -224,11 +226,11 @@ class Network(BaseULObject):
         network.
         """
         for obj in objs:
-            if isinstance(obj, nineml.user_layer.population.Population):
+            if isinstance(obj, ul_pop.Population):
                 self.populations[obj.name] = obj
             elif isinstance(obj, Projection):
                 self.projections[obj.name] = obj
-            elif isinstance(obj, nineml.user_layer.population.Selection):
+            elif isinstance(obj, ul_pop.Selection):
                 self.selections[obj.name] = obj
             else:
                 raise Exception("Groups may only contain Populations, "
@@ -259,7 +261,7 @@ class Network(BaseULObject):
         return [p.prototype for p in self.populations.values()
                 if isinstance(p.prototype, Network)]
 
-    def to_xml(self):
+    def _to_xml(self):
         return E(self.element_name,
                  name=self.name,
                  *[p.to_xml() for p in chain(self.populations.values(),
@@ -269,19 +271,18 @@ class Network(BaseULObject):
     @classmethod
     def from_xml(cls, element, context):
         check_tag(element, cls)
-        network = cls(name=element.attrib["name"])
-        for child in element.getchildren():
-            if child.tag == NINEML + nineml.user_layer.population.Population.element_name:
-                obj = nineml.user_layer.population.Population.from_xml(child,
-                                                                       context)
-            elif child.tag == NINEML + Projection.element_name:
-                obj = Projection.from_xml(child, context)
-            elif child.tag == NINEML + nineml.user_layer.population.Selection.element_name:
-                obj = nineml.user_layer.population.Selection.from_xml(child,
-                                                                      context)
-            else:
-                raise Exception("<%s> elements may not contain <%s> elements" %
-                                (cls.element_name, child.tag))
-            network.add(obj)
-        network._resolve_population_references()
+        populations = []
+        for pop_elem in element.findall(NINEML + 'PopulationItem'):
+            pop = context.resolve_ref(pop_elem, ul_pop.Population)
+            populations[pop.name] = pop
+        projections = []
+        for proj_elem in element.findall(NINEML + 'ProjectionItem'):
+            proj = context.resolve_ref(proj_elem, ul_proj.Projection)
+            projections[proj.name] = proj
+        selections = []
+        for sel_elem in element.findall(NINEML + 'SelectionItem'):
+            sel = context.resolve_ref(sel_elem, ul_pop.Selection)
+            selections[sel.name] = sel
+        network = cls(name=element.attrib["name"], populations=populations,
+                      projections=projections, selections=selections)
         return network
