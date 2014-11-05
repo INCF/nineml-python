@@ -1,4 +1,4 @@
-from .components import BaseComponent, get_or_create_component
+from .components import BaseComponent
 from .utility import check_units
 
 

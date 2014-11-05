@@ -51,4 +51,4 @@ from .population import (Population, PositionList, Structure, Selection,
 from .containers import Network
 from .projection import Projection, ConnectionRule, ConnectionType
 from .random import RandomDistribution
-from .components import PropertySet
+from .components import PropertySet, BaseComponent as Component

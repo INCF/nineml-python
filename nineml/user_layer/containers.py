@@ -3,10 +3,6 @@ from operator import itemgetter
 from .base import BaseULObject, NINEML, nineml_namespace, E
 from utility import check_tag
 from .components.base import BaseComponent
-# can't "from ninem.user_layer.population import *" because of circular imports
-import nineml.user_layer.population as ul_pop
-import nineml.user_layer.projection as ul_proj
-from .projection import Projection
 
 
 # class Model(BaseULObject):
@@ -181,9 +177,9 @@ class PopulationGroup(BaseULObject):
 
     def _to_xml(self):
         return E(self.element_name,
-                 name=self.name,
                  E.Concatenate(*[E.Item(p.name, index=i)
-                                 for i, p in enumerate(self.populations)]))
+                                 for i, p in enumerate(self.populations)]),
+                 name=self.name)
 
     @classmethod
     def from_xml(cls, element, context):
@@ -226,11 +222,11 @@ class Network(BaseULObject):
         network.
         """
         for obj in objs:
-            if isinstance(obj, ul_pop.Population):
+            if isinstance(obj, Population):
                 self.populations[obj.name] = obj
             elif isinstance(obj, Projection):
                 self.projections[obj.name] = obj
-            elif isinstance(obj, ul_pop.Selection):
+            elif isinstance(obj, Selection):
                 self.selections[obj.name] = obj
             else:
                 raise Exception("Groups may only contain Populations, "
@@ -273,16 +269,20 @@ class Network(BaseULObject):
         check_tag(element, cls)
         populations = []
         for pop_elem in element.findall(NINEML + 'PopulationItem'):
-            pop = context.resolve_ref(pop_elem, ul_pop.Population)
+            pop = context.resolve_ref(pop_elem, Population)
             populations[pop.name] = pop
         projections = []
         for proj_elem in element.findall(NINEML + 'ProjectionItem'):
-            proj = context.resolve_ref(proj_elem, ul_proj.Projection)
+            proj = context.resolve_ref(proj_elem, Projection)
             projections[proj.name] = proj
         selections = []
         for sel_elem in element.findall(NINEML + 'SelectionItem'):
-            sel = context.resolve_ref(sel_elem, ul_pop.Selection)
+            sel = context.resolve_ref(sel_elem, Selection)
             selections[sel.name] = sel
         network = cls(name=element.attrib["name"], populations=populations,
                       projections=projections, selections=selections)
         return network
+
+# can't "from ninem.user_layer.population import *" because of circular imports
+from .population import Population, Selection
+from .projection import Projection

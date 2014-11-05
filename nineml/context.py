@@ -11,8 +11,8 @@ from . import E, NINEML
 from .utility import expect_single
 import itertools
 import collections
-from . import user_layer
-from . import abstraction_layer
+import nineml.user_layer
+import nineml.abstraction_layer
 from .user_layer.components.base import Reference
 
 
@@ -28,13 +28,8 @@ class Context(dict):
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
-    @property
-    @classmethod
-    def top_level(cls):
-        return itertools.chain(cls.top_level_abstraction, cls.top_level_user)
-
     def __init__(self, *args, **kwargs):
-        super(Context, self).__init__(*args, **kwargs)
+        self._objects = dict(*args, **kwargs)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
@@ -59,7 +54,7 @@ class Context(dict):
         Returns the element referenced by the given name
         """
         try:
-            elem = super(Context, self)[name]
+            elem = self._objects[name]
         except KeyError:
             raise KeyError("'{}' was not found in the NineML context{} ("
                            "elements in the context were '{}')."
@@ -68,6 +63,23 @@ class Context(dict):
         if isinstance(elem, self._Unloaded):
             elem = self._load_elem_from_xml(elem)
         return elem
+
+    def __setitem__(self, name, val):
+        self._objects[name] = val
+
+    def __iter__(self):
+        return iter(self._objects)
+
+    @property
+    def components(self):
+        return (self[k] for k in self._objects.iterkeys()
+                if isinstance(self[k], nineml.user_layer.Component))
+
+    @property
+    def component_classes(self):
+        return (self[k] for k in self._objects.iterkeys()
+                if isinstance(self[k],
+                              nineml.abstraction_layer.ComponentClass))
 
     def _load_elem_from_xml(self, unloaded):
         """
@@ -104,16 +116,19 @@ class Context(dict):
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
         for child in element.getchildren():
-            if child.tag in cls.top_level_user:
-                child_cls = getattr(user_layer, child.tag)
-            elif child.tag in cls.top_level_abstraction:
-                child_cls = getattr(abstraction_layer, child.tag)
+            if child.tag in (NINEML + e for e in cls.top_level_user):
+                child_cls = getattr(nineml.user_layer, child.tag[len(NINEML):])
+            elif child.tag in (NINEML + e for e in cls.top_level_abstraction):
+                child_cls = getattr(nineml.abstraction_layer,
+                                    child.tag[len(NINEML):])
             else:
-                raise TypeError("Invalid top-level element '{}' found in "
+                top_level = itertools.chain(cls.top_level_abstraction,
+                                            cls.top_level_user)
+                raise Exception("Invalid top-level element '{}' found in "
                                 "NineML document (valid elements are '{}')."
-                                .format(child.tag, "', '".join(cls.top_level)))
+                                .format(child.tag, "', '".join(top_level)))
             # Units use 'symbol' as their unique identifier (from LEMS) all
             # other elements use 'name'
             name = child.attrib.get('name', child.attrib.get('symbol'))
-            context[child.tag][name] = cls._Unloaded(name, child, child_cls)
+            context[name] = cls._Unloaded(name, child, child_cls)
         return context

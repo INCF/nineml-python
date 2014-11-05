@@ -3,7 +3,6 @@ from .base import BaseULObject, NINEML, E
 from .utility import check_tag
 from .dynamics import SpikingNodeType
 from .components import BaseComponent, StringValue
-import nineml.user_layer.containers
 
 
 class Population(BaseULObject):
@@ -355,4 +354,4 @@ class Structure(BaseComponent):
                             "function")
 
 
-# this approach is crying out for a class factory
+import nineml.user_layer.containers

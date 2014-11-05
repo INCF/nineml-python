@@ -120,8 +120,14 @@ class Quantity(object):
         elif value_element.tag in (NINEML + 'ArrayValue',
                                    NINEML + 'ExternalArrayValue'):
             raise NotImplementedError
-        else:
+        elif value_element.tag in (NINEML + 'Reference', NINEML + 'Component'):
             value = context.resolve_ref(element, BaseComponent)
+        else:
+            raise KeyError("Unrecognised tag name '{tag}', was expecting one "
+                           "of '{nm}SingleValue', '{nm}ArrayValue', "
+                           "'{nm}ExternalArrayValue', '{nm}Reference' or "
+                           "'{nm}Component'"
+                           .format(tag=value_element.tag, nm=NINEML))
         units = element.attrib.get('units')
         return Quantity(value, units)
 

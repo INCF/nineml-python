@@ -24,7 +24,7 @@ class BaseComponentClass(object):
                                                                     visit(self)
 
     @classmethod
-    def from_xml(cls, element):
+    def from_xml(cls, element, context):  # @UnusedVariable
         if element.find(NINEML + 'Dynamics'):
             module_name = 'dynamics'
         elif element.find(NINEML + 'ConnectionRule'):
