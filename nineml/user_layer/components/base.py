@@ -43,9 +43,9 @@ class BaseComponent(BaseULObject):
         else:
             raise TypeError("properties must be a PropertySet or a dict")
         if isinstance(initial_values, InitialValueSet):
-            self.initial_values = initial_values
+            self._initial_values = initial_values
         elif isinstance(initial_values, dict):
-            self.initial_values = InitialValueSet(**initial_values)
+            self._initial_values = InitialValueSet(**initial_values)
         else:
             raise TypeError("initial_values must be an InitialValueSet or a "
                             "dict, not a %s" % type(initial_values))
@@ -64,7 +64,7 @@ class BaseComponent(BaseULObject):
         """
         defn = self._definition
         while not isinstance(defn, Definition):
-            defn = defn._definition
+            defn = defn.component._definition
         return defn.component_class
 
     @property
@@ -75,9 +75,21 @@ class BaseComponent(BaseULObject):
         """
         props = PropertySet()
         if isinstance(self._definition, Prototype):
-            props.update(self._definition.properties)
+            props.update(self._definition.component.properties)
         props.update(self._properties)
         return props
+
+    @property
+    def initial_values(self):
+        """
+        Recursively retrieves initial values defined in prototypes and updates
+        them with properties defined locally
+        """
+        vals = InitialValueSet()
+        if isinstance(self._definition, Prototype):
+            vals.update(self._definition.component.initial_values)
+        vals.update(self._initial_values)
+        return vals
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -115,8 +127,7 @@ class BaseComponent(BaseULObject):
     def check_properties(self):
         # First check the names
         properties = set(self.properties.iterkeys())
-        parameters = set(p.name
-                         for p in self.definition.component_class.parameters)
+        parameters = set(p.name for p in self.component_class.parameters)
         msg = []
         diff_a = properties.difference(parameters)
         diff_b = parameters.difference(properties)
@@ -157,14 +168,14 @@ class BaseComponent(BaseULObject):
                            element.findall(NINEML + InitialValue.element_name),
                            context)
         definition_element = element.find(NINEML + Definition.element_name)
-        if definition_element:
+        if definition_element is not None:
             definition = Definition.from_xml(definition_element, context)
         else:
             prototype_element = element.find(NINEML + "Prototype")
-            if not prototype_element:
+            if prototype_element is None:
                 raise Exception("A component must contain either a defintion "
                                 "or a prototype")
-            definition = Prototype.from_xml(element, context)
+            definition = Prototype.from_xml(prototype_element, context)
         return cls(name, definition, properties,
                        initial_values=initial_values)
 
