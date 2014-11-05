@@ -134,7 +134,7 @@ class BaseComponent(BaseULObject):
         # TODO: Now check dimensions
 
     def _to_xml(self):
-        properties_and_initial_values = (self.properties.to_xml() +
+        properties_and_initial_values = (self._properties.to_xml() +
                                          [iv.to_xml()
                                           for iv in
                                                  self.initial_values.values()])
