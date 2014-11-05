@@ -35,11 +35,11 @@ class Context(dict):
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
     def __init__(self, *args, **kwargs):
+        self.url = kwargs.pop('_url')
         super(Context, self).__init__(*args, **kwargs)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
-        self.url = None
 
     def resolve_ref(self, containing_elem, expected_type):
         """
@@ -121,10 +121,7 @@ class Context(dict):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
         # Initialise the context
-        context = cls()
-        # This isn't set in the constructor to avoid screwing up the standard
-        # dictionary constructor
-        context.url = url
+        elements = {'_url': url}
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
         for child in element.getchildren():
@@ -142,5 +139,12 @@ class Context(dict):
             # Units use 'symbol' as their unique identifier (from LEMS) all
             # other elements use 'name'
             name = child.attrib.get('name', child.attrib.get('symbol'))
-            context[name] = cls._Unloaded(name, child, child_cls)
-        return context
+            if name in elements:
+                raise Exception("Conflicting identifiers '{ob1}:{name} in "
+                                "{ob2}:{name} in NineML file '{url}'"
+                                .format(name=name,
+                                        ob1=elements[name].cls.element_name,
+                                        ob2=child_cls.element_name,
+                                        url=url or ''))
+            elements[name] = cls._Unloaded(name, child, child_cls)
+        return cls(**elements)

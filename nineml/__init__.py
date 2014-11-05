@@ -22,8 +22,8 @@ import utility
 from context import Context
 
 
-def load(root_element):
-    return Context.from_xml(root_element)
+def load(root_element, read_from=None):
+    return Context.from_xml(root_element, url=read_from)
 
 
 def read(url):
@@ -47,4 +47,4 @@ def read(url):
     except:  # FIXME: Need to work out what exceptions etree raises
         raise Exception("Could not parse XML file '{}'".format(url))
     root = xml.getroot()
-    return load(root)
+    return load(root, url)
