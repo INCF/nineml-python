@@ -9,6 +9,7 @@ This file defines classes for reading NineML files.
 import os
 from urllib2 import urlopen
 from lxml import etree
+from itertools import chain
 import quantities as pq
 
 import nineml
@@ -61,11 +62,11 @@ class XMLLoader(object):
         return al.ComponentClass(
                          name=element.get('name'),
                          parameters=subnodes["Parameter"],
-                         analog_send_ports=subnodes["AnalogSendPort"],
-                         analog_receive_ports=subnodes["AnalogReceivePort"],
-                         analog_reduce_ports=subnodes["AnalogReducePort"],
-                         event_send_ports=subnodes["EventSendPort"],
-                         event_receive_ports=subnodes["EventReceivePort"],
+                         analog_ports=chain(subnodes["AnalogSendPort"],
+                                            subnodes["AnalogReceivePort"],
+                                            subnodes["AnalogReducePort"]),
+                         event_ports=chain(subnodes["EventSendPort"],
+                                           subnodes["EventReceivePort"]),
                          dynamics=dynamics,
                          subnodes=dict(subnodes['Subnode']),
                          portconnections=subnodes["ConnectPorts"])
