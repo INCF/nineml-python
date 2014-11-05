@@ -239,5 +239,5 @@ def match_bracket(string, open_bracket, close_bracket, direction='forwards'):
 
 if __name__ == '__main__':
     calc = CalcExpr()
-    p = calc.parse("1 / (( 1 + mg_conc * eta *  exp ( -1 * gamma*V))")
+    p = calc.parse("1 / ( 1 + mg_conc * eta *  exp ( -1 * gamma*V))")
     print p
