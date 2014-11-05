@@ -47,8 +47,4 @@ def read(url):
     except:  # FIXME: Need to work out what exceptions etree raises
         raise Exception("Could not parse XML file '{}'".format(url))
     root = xml.getroot()
-#     try:
     return load(root)
-#     except Exception as e:
-#         raise Exception("Could not parse NineML file '{}', with error: \n "
-#                         "{}".format(url, e))

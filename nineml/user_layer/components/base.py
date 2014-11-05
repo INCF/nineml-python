@@ -1,5 +1,6 @@
 # encoding: utf-8
 from operator import and_
+from itertools import chain
 import nineml
 from ..base import BaseULObject, E, NINEML
 # This line is imported at the end of the file to avoid recursive imports
@@ -12,13 +13,12 @@ class BaseComponent(BaseULObject):
     Base class for model components that are defined in the abstraction layer.
     """
     element_name = "Component"
-    defining_attributes = ("name", "definition", "properties")
-    children = ("properties",)
+    defining_attributes = ("name")
+    children = ("Property", "Definition", 'Prototype')
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
-    def __init__(self, name, definition=None, properties={}, prototype=None,
-                 initial_values={}):
+    def __init__(self, name, definition, properties={}, initial_values={}):
         """
         Create a new component with the given name, definition and properties,
         or create a prototype to another component that will be resolved later.
@@ -31,63 +31,83 @@ class BaseComponent(BaseULObject):
         `prototype` - the name of another component in the model, or None.
         """
         self.name = name
-        if isinstance(definition, Definition):
-            self.definition = definition
-            assert prototype is None, \
-                                   "Cannot give both definition and prototype."
-        elif isinstance(definition, basestring):
-            self.definition = Definition(definition,
-                                         self.abstraction_layer_module)
-            assert prototype is None, \
-                                  "Cannot give both definition and prototype."
-        elif definition is None:
-            assert prototype is not None, \
-                                "Either definition or prototype must be given."
-            assert isinstance(prototype, basestring), \
-                                  "prototype should be the name of a component"
-            self.definition = None
-        else:
-            raise TypeError("definition must be a Definition, a Component or "
-                            "a url")
+        if not (isinstance(definition, Definition) or
+                isinstance(definition, Prototype)):
+            raise ValueError("'definition' must be either a 'Definition' or "
+                             "'Prototype' element")
+        self._definition = definition
         if isinstance(properties, PropertySet):
-            self.properties = properties
+            self._properties = properties
         elif isinstance(properties, dict):
-            self.properties = PropertySet(**properties)
+            self._properties = PropertySet(**properties)
         else:
             raise TypeError("properties must be a PropertySet or a dict")
-        self.prototype = prototype
         if isinstance(initial_values, InitialValueSet):
-            self.initial_values = initial_values
+            self._initial_values = initial_values
         elif isinstance(initial_values, dict):
-            self.initial_values = InitialValueSet(**initial_values)
+            self._initial_values = InitialValueSet(**initial_values)
         else:
             raise TypeError("initial_values must be an InitialValueSet or a "
                             "dict, not a %s" % type(initial_values))
-        if not self.unresolved:
-            self.check_properties()
-            if hasattr(self, 'check_initial_values'):
-                self.check_initial_values()
+        self.check_properties()
+        try:
+            self.check_initial_values()
+        except AttributeError:  # 'check_initial_values' is only in dynamics
+            pass
+
+    @property
+    def component_class(self):
+        """
+        Returns the component class from the definition object or the
+        prototype's definition, or the prototype's prototype's definition, etc.
+        depending on how the component is defined.
+        """
+        defn = self._definition
+        while not isinstance(defn, Definition):
+            defn = defn.component._definition
+        return defn.component_class
+
+    @property
+    def properties(self):
+        """
+        Recursively retrieves properties defined in prototypes and updates them
+        with properties defined locally
+        """
+        props = PropertySet()
+        if isinstance(self._definition, Prototype):
+            props.update(self._definition.component.properties)
+        props.update(self._properties)
+        return props
+
+    @property
+    def initial_values(self):
+        """
+        Recursively retrieves initial values defined in prototypes and updates
+        them with properties defined locally
+        """
+        vals = InitialValueSet()
+        if isinstance(self._definition, Prototype):
+            vals.update(self._definition.component.initial_values)
+        vals.update(self._initial_values)
+        return vals
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
         assert not (self.unresolved or other.unresolved)
         return reduce(and_, (self.name == other.name,
-                             self.definition == other.definition,
+                             self.component_class == other.component_class,
                              self.properties == other.properties))
 
     def __hash__(self):
         assert not self.unresolved
         return (hash(self.__class__) ^ hash(self.name) ^
-                hash(self.definition) ^ hash(self.properties))
+                hash(self.component_class) ^ hash(self.properties))
 
     def __repr__(self):
-        if self.definition:
-            return ('%s(name="%s", definition="%s")' %
-                    (self.__class__.__name__, self.name, self.definition))
-        else:
-            return ('%s(name="%s", UNRESOLVED)' %
-                    (self.__class__.__name__, self.name))
+        return ('%s(name="%s", componentclass="%s")' %
+                (self.__class__.__name__, self.name,
+                 self.component_class.name))
 
     def diff(self, other):
         d = []
@@ -99,24 +119,6 @@ class BaseComponent(BaseULObject):
             d += ["properties: %s != %s" % (self.properties, other.properties)]
         return "\n".join(d)
 
-    @property
-    def unresolved(self):
-        return self.definition is None
-
-    def resolve(self, other_component):
-        """
-        If the component is unresolved (contains a prototype to another
-        component), copy the definition and properties from the other
-        component, and update those properties with the properties from this
-        component.
-        """
-        assert other_component.__class__ == self.__class__
-        assert self.prototype == other_component.name
-        self.definition = other_component.definition
-        # note that this behaves oppositely to dict.update
-        self.properties.complete(other_component.properties)
-        self.check_properties()
-
     def get_definition(self):
         if not self.definition.component:
             self.definition.retrieve()
@@ -125,8 +127,7 @@ class BaseComponent(BaseULObject):
     def check_properties(self):
         # First check the names
         properties = set(self.properties.iterkeys())
-        parameters = set(p.name
-                         for p in self.definition.component_class.parameters)
+        parameters = set(p.name for p in self.component_class.parameters)
         msg = []
         diff_a = properties.difference(parameters)
         diff_b = parameters.difference(properties)
@@ -144,12 +145,12 @@ class BaseComponent(BaseULObject):
         # TODO: Now check dimensions
 
     def _to_xml(self):
-        properties_and_initial_values = (self.properties.to_xml() +
+        properties_and_initial_values = (self._properties.to_xml() +
                                          [iv.to_xml()
                                           for iv in
                                                  self.initial_values.values()])
         element = E(self.element_name,
-                    self.definition.to_xml(),
+                    self._definition.to_xml(),
                     *properties_and_initial_values,
                     name=self.name)
         return element
@@ -169,17 +170,14 @@ class BaseComponent(BaseULObject):
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
             definition = Definition.from_xml(definition_element, context)
-            return cls(name, definition, properties,
-                       initial_values=initial_values)
         else:
             prototype_element = element.find(NINEML + "Prototype")
-            if prototype_element is not None:
-                prototype = Prototype.from_xml(element, context)
-                return cls(name, None, properties, prototype=prototype,
-                           initial_values=initial_values)
-            else:
+            if prototype_element is None:
                 raise Exception("A component must contain either a defintion "
                                 "or a prototype")
+            definition = Prototype.from_xml(prototype_element, context)
+        return cls(name, definition, properties,
+                       initial_values=initial_values)
 
 
 class BaseReference(BaseULObject):
