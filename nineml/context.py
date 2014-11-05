@@ -17,6 +17,12 @@ from .user_layer.components.base import Reference
 
 
 class Context(dict):
+    """
+    Loads and stores all top-level elements in a NineML file (i.e. any element
+    that is able to sit directly within <NineML>...</NineML> tags). All
+    elements are stored initially but only converted to lib9ml objects on
+    demand so it doesn't matter which order they appear in the NineML file.
+    """
 
     element_name = 'NineML'
 
@@ -36,6 +42,18 @@ class Context(dict):
         self.url = None
 
     def resolve_ref(self, containing_elem, expected_type):
+        """
+        This method is used for resolving a member element that can either be
+        defined in the current file (i.e. within a 'Reference' tag without a
+        url attribute), in a separate file (i.e. within a 'Reference' tag with
+        a url attribute) or inline (i.e. no 'Reference' tag just the object).
+
+        `containing_elem` -- the XML element that contains the Reference or
+                             inline object
+        `expected_type`   -- the expected type of the object to be referenced.
+                             This is used to check the referene points to the
+                             correct object and also to convert inline objects.
+        """
         elem = expect_single(containing_elem.getchildren())
         if elem.tag == NINEML + Reference.element_name:
             ref = Reference.from_xml(elem, self)
