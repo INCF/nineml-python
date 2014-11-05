@@ -9,6 +9,7 @@ This file defines classes for reading NineML files.
 import os
 from urllib2 import urlopen
 from lxml import etree
+from itertools import chain
 import quantities as pq
 
 import nineml
