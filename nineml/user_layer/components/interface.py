@@ -90,7 +90,7 @@ class Quantity(object):
 
     def to_xml(self):
         if isinstance(self.value, float):
-            value_element = E('SingleValue', self.value)
+            value_element = E('SingleValue', str(self.value))
         else:
             value_element = self.value.to_xml()
         kwargs = {'units': self.units} if self.units else {}
