@@ -434,8 +434,13 @@ class ComponentClass(BaseComponentClass,
                                     state_variables=state_variables)
         self._query = componentqueryer.ComponentQueryer(self)
 
-        analog_receive_ports = [port for port in analog_ports if isinstance(port, AnalogReceivePort)]
-        analog_reduce_ports = [port for port in analog_ports if isinstance(port, AnalogReducePort)]
+        # Ensure analog_ports is a list not an iterator
+        analog_ports = list(analog_ports)
+
+        analog_receive_ports = [port for port in analog_ports
+                                if isinstance(port, AnalogReceivePort)]
+        analog_reduce_ports = [port for port in analog_ports
+                               if isinstance(port, AnalogReducePort)]
         incoming_port_names = [p.name for p in chain(analog_receive_ports,
                                                      analog_reduce_ports)]
         # EventPort, StateVariable and Parameter Inference:
@@ -465,10 +470,13 @@ class ComponentClass(BaseComponentClass,
             state_vars = [StateVariable(n) for n in
                           inferred_struct.state_variable_names]
             dynamics._state_variables = state_vars
-
+        # Ensure analog_ports is a list not an iterator
+        event_ports = list(event_ports)
         # Check Event Receive Ports Match:
-        event_receive_ports = [port for port in event_ports if isinstance(port, EventReceivePort)]
-        event_send_ports = [port for port in event_ports if isinstance(port, EventSendPort)]
+        event_receive_ports = [port for port in event_ports
+                               if isinstance(port, EventReceivePort)]
+        event_send_ports = [port for port in event_ports
+                            if isinstance(port, EventSendPort)]
         if event_receive_ports:
             # FIXME: not all OutputEvents are necessarily exposed as Ports,
             # so really we should just check that all declared output event

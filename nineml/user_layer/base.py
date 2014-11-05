@@ -1,12 +1,6 @@
 from itertools import chain
 from operator import and_
-from lxml.builder import ElementMaker
-
-nineml_namespace = 'http://nineml.net/9ML/1.0'
-NINEML = "{%s}" % nineml_namespace
-
-E = ElementMaker(namespace=nineml_namespace,
-                 nsmap={"nineml": nineml_namespace})
+from .. import NINEML, nineml_namespace, E  # @UnusedImport
 
 
 class BaseULObject(object):
@@ -15,6 +9,9 @@ class BaseULObject(object):
     Base class for user layer classes
     """
     children = []
+
+    def __init__(self):
+        self._from_reference = None
 
     def __eq__(self, other):
         return reduce(and_, [isinstance(other, self.__class__)] +
@@ -38,3 +35,13 @@ class BaseULObject(object):
 
     def accept_visitor(self, visitor):
         visitor.visit(self)
+
+    def set_reference(self, reference):
+        self._from_reference = reference
+
+    def to_xml(self):
+        if self._from_reference:
+            xml = self._from_reference.to_xml()
+        else:
+            xml = self._to_xml()
+        return xml

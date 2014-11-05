@@ -9,6 +9,7 @@ This file defines classes for reading NineML files.
 import os
 from urllib2 import urlopen
 from lxml import etree
+from itertools import chain
 import quantities as pq
 
 import nineml
@@ -30,7 +31,12 @@ class XMLLoader(object):
 
     """
 
-    def __init__(self, xmlroot, xml_node_filename_map):
+    # FIXME: TGC 1/11/14 - I am implementing a general NineML root class
+    #                      that will be able to read both User Layer and
+    #                      Abstraction layer elements that will make this
+    #                      obsolete I think (will create a GitHub issue about
+    #                      this when I get back to the internet)
+    def load_all_componentclasses(self, xmlroot, xml_node_filename_map):
 
         self.components = []
         self.component_srcs = {}
@@ -61,11 +67,11 @@ class XMLLoader(object):
         return al.ComponentClass(
                          name=element.get('name'),
                          parameters=subnodes["Parameter"],
-                         analog_send_ports=subnodes["AnalogSendPort"],
-                         analog_receive_ports=subnodes["AnalogReceivePort"],
-                         analog_reduce_ports=subnodes["AnalogReducePort"],
-                         event_send_ports=subnodes["EventSendPort"],
-                         event_receive_ports=subnodes["EventReceivePort"],
+                         analog_ports=chain(subnodes["AnalogSendPort"],
+                                            subnodes["AnalogReceivePort"],
+                                            subnodes["AnalogReducePort"]),
+                         event_ports=chain(subnodes["EventSendPort"],
+                                           subnodes["EventReceivePort"]),
                          dynamics=dynamics,
                          subnodes=dict(subnodes['Subnode']),
                          portconnections=subnodes["ConnectPorts"])
@@ -332,8 +338,10 @@ class XMLReader(object):
         root = cls._load_nested_xml(filename=filename,
                                    xml_node_filename_map=xml_node_filename_map)
 
-        loader = cls.loader(xmlroot=root,
-                            xml_node_filename_map=xml_node_filename_map)
+        loader = cls.loader()
+        loader.load_all_componentclasses(
+                                   xmlroot=root,
+                                   xml_node_filename_map=xml_node_filename_map)
 
         if component_name == None:
             key_func = lambda c: loader.component_srcs[c] == filename
@@ -354,6 +362,8 @@ class XMLReader(object):
         """
         xml_node_filename_map = {}
         root = cls._load_nested_xml(filename, xml_node_filename_map)
-        loader = cls.loader(xmlroot=root,
+        loader = cls.loader()
+        loader.load_all_componentclasses(
+                            xmlroot=root,
                             xml_node_filename_map=xml_node_filename_map)
         return loader.components

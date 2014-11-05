@@ -1,9 +1,11 @@
 
 
 import unittest
-from nineml.abstraction_layer import (ComponentClass, Regime, On, SendPort,
-                                      RecvPort, NamespaceAddress, OutputEvent)
-        
+from nineml.abstraction_layer import (Regime, On, AnalogSendPort,
+                                      AnalogReceivePort, NamespaceAddress,
+                                      OutputEvent)
+from nineml.abstraction_layer.dynamics import ComponentClass
+
 
 class ComponentQueryer_test(unittest.TestCase):
 
@@ -99,21 +101,21 @@ class ComponentQueryer_test(unittest.TestCase):
         # Signature: name(self)
                 # Get the namespace address of this component
         d = ComponentClass(
-            name='D', aliases=['A:=1', 'B:=2'], analog_ports=[SendPort('A'), SendPort('B')])
-        e = ComponentClass(name='E', analog_ports=[RecvPort('C')])
-        f = ComponentClass(name='F', analog_ports=[RecvPort('D')])
-        g = ComponentClass(name='G', analog_ports=[RecvPort('E')])
+            name='D', aliases=['A:=1', 'B:=2'], analog_ports=[AnalogSendPort('A'), AnalogSendPort('B')])
+        e = ComponentClass(name='E', analog_ports=[AnalogReceivePort('C')])
+        f = ComponentClass(name='F', analog_ports=[AnalogReceivePort('D')])
+        g = ComponentClass(name='G', analog_ports=[AnalogReceivePort('E')])
         b = ComponentClass(name='B', subnodes={
                            'd': d, 'e': e}, portconnections=[('d.A', 'e.C')])
         c = ComponentClass(name='C',
                            aliases=['G:=-1'],
-                           analog_ports=[SendPort('G')],
+                           analog_ports=[AnalogSendPort('G')],
                            subnodes={'f': f, 'g': g},
                            portconnections=[('G', 'f.D')])
 
         a = ComponentClass(name='A',
                            subnodes={'b': b, 'c': c},
-                           analog_ports=[RecvPort('F')],
+                           analog_ports=[AnalogReceivePort('F')],
                            portconnections=[('b.d.A', 'F')]
                            )
 
@@ -158,7 +160,7 @@ class ComponentQueryer_test(unittest.TestCase):
                        )
             ],
             aliases=['A:=0', 'C:=0'],
-            analog_ports=[SendPort('A'), RecvPort('B'), SendPort('C')]
+            analog_ports=[AnalogSendPort('A'), AnalogReceivePort('B'), AnalogSendPort('C')]
         )
 
         ports = list(c.query.ports)

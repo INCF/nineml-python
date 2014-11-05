@@ -2,7 +2,7 @@ from operator import and_
 from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
 import nineml.user_layer.population
-from ..components import BaseComponent, get_or_create_component
+from ..components import BaseComponent
 from ..dynamics import SynapseType, ConnectionType
 import nineml.user_layer.containers
 from ...abstraction_layer.connection_generator import *
@@ -61,11 +61,11 @@ class Projection(BaseULObject):
         for name, cls_list in (('source',
                                 (nineml.user_layer.population.Population,
                                  nineml.user_layer.population.Selection,
-                                 nineml.user_layer.containers.Group)),
+                                 nineml.user_layer.containers.Network)),
                                ('target',
                                 (nineml.user_layer.population.Population,
                                  nineml.user_layer.population.Selection,
-                                 nineml.user_layer.containers.Group)),
+                                 nineml.user_layer.containers.Network)),
                                ('rule', (ConnectionRule,)),
                                ('synaptic_response', (SynapseType,)),
                                ('connection_type', (ConnectionType,))):
@@ -84,9 +84,9 @@ class Projection(BaseULObject):
                            "synaptic_response_ports", "connection_ports"]
         # to avoid infinite recursion, we do not include source or target in
         # the tests if they are Groups
-        if isinstance(self.source, nineml.user_layer.containers.Group):
+        if isinstance(self.source, nineml.user_layer.containers.Network):
             test_attributes.remove("source")
-        if isinstance(self.target, nineml.user_layer.containers.Group):
+        if isinstance(self.target, nineml.user_layer.containers.Network):
             test_attributes.remove("target")
         return reduce(and_, (getattr(self, attr) == getattr(other, attr)
                              for attr in test_attributes))
@@ -113,20 +113,19 @@ class Projection(BaseULObject):
                  name=self.name)
 
     @classmethod
-    def from_xml(cls, element, components):
+    def from_xml(cls, element, context):
         check_tag(element, cls)
         return cls(name=element.attrib["name"],
                    source=element.find(NINEML + "Source").text,
                    target=element.find(NINEML + "Target").text,
-                   rule=get_or_create_component(
-                                            element.find(NINEML + "Rule").text,
-                                            ConnectionRule, components),
-                   synaptic_response=get_or_create_component(
-                                        element.find(NINEML + "Response").text,
-                                        SynapseType, components),
-                   connection_type=get_or_create_component(
-                                      element.find(NINEML + "Plasticity").text,
-                                      ConnectionType, components),
+                   rule=context.resolve_ref(element.find(NINEML + "Rule"),
+                                            ConnectionRule),
+                   synaptic_response=context.resolve_ref(
+                                            element.find(NINEML + "Response"),
+                                            SynapseType),
+                   connection_type=context.resolve_ref(
+                                           element.find(NINEML + "Plasticity"),
+                                           ConnectionType),
                    synaptic_response_ports=tuple((pc.attrib["port1"],
                                                   pc.attrib["port2"])
                                                  for pc in element.find(

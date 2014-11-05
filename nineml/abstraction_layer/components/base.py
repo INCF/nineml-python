@@ -6,13 +6,34 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
+import inspect
 from nineml.utility import filter_discrete_types
 from .interface import Parameter
+from nineml import NINEML
 
 
 class BaseComponentClass(object):
     """Base class for ComponentClasses in different 9ML modules."""
+
+    element_name = 'ComponentClass'
+
+    #FIXME: Not sure if this works for dynamics class but definitely won't
+    #       for other classes.
+    def to_xml(self):
+        return inspect.getmodule(self.__class__).writers.XMLWriter().\
+                                                                    visit(self)
+
+    @classmethod
+    def from_xml(cls, element, context):  # @UnusedVariable
+        if element.find(NINEML + 'Dynamics'):
+            module_name = 'dynamics'
+        elif element.find(NINEML + 'ConnectionRule'):
+            module_name = 'connection_generator'
+        elif element.find(NINEML + 'RandomDistribution'):
+            module_name = 'random'
+        exec('from nineml.abstraction_layer.{}.readers import XMLLoader'
+             .format(module_name))
+        return XMLLoader().load_componentclass(element)  # @UndefinedVariable
 
     def __init__(self, name, parameters=None):
         self._name = name

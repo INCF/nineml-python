@@ -12,7 +12,7 @@ class XMLLoader(object):
     # it would be better either to have a common base class, or to have
     # a single XMLLoader that worked for all AL modules.
 
-    def __init__(self, xmlroot, xml_node_filename_map):
+    def load_all_componentclasses(self, xmlroot, xml_node_filename_map):
         self.components = []
         self.component_srcs = {}
         for comp_block in xmlroot.findall(NINEML + "ComponentClass"):

@@ -3,6 +3,12 @@ from nineml.abstraction_layer.components import Parameter
 from .base import ComponentClass
 
 
+class XMLLoader(object):
+
+    def load_componentclass(self, element):
+        raise NotImplementedError
+
+
 class XMLReader(object):
 
     @classmethod

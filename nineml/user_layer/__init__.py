@@ -22,7 +22,7 @@ Classes
     Parameter
     PropertySet
     Value
-    Group
+    Network
     Population
     PositionList
     Projection
@@ -48,29 +48,7 @@ from .base import NINEML
 from .dynamics import SpikingNodeType, SynapseType, CurrentSourceType
 from .population import (Population, PositionList, Structure, Selection,
                          Operator, Any, All, Not, Comparison, Eq, In)
-from .containers import Model, Group
+from .containers import Network
 from .projection import Projection, ConnectionRule, ConnectionType
 from .random import RandomDistribution
-from .components import PropertySet
-
-
-def parse(url):
-    """
-    Read a NineML user-layer file and return a Model object.
-
-    If the URL does not have a scheme identifier, it is taken to refer to a
-    local file.
-    """
-    if not isinstance(url, file):
-        f = urllib.urlopen(url)
-        doc = etree.parse(f)
-        f.close()
-    else:
-        doc = etree.parse(url)
-
-    root = doc.getroot()
-    for import_element in root.findall(NINEML + "import"):
-        url = import_element.find(NINEML + "url").text
-        imported_doc = etree.parse(url)
-        root.extend(imported_doc.getroot().iterchildren())
-    return Model.from_xml(root)
+from .components import PropertySet, BaseComponent as Component
