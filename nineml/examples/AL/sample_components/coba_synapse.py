@@ -2,7 +2,7 @@ import nineml.abstraction_layer as al
 
 
 def get_component():
-    coba = al.ComponentClass(
+    coba = al.dynamics.ComponentClass(
         name="CobaSyn",
         aliases=["I:=g*(vrev-V)", ],
         regimes=[
@@ -13,7 +13,7 @@ def get_component():
             )
         ],
         state_variables=[al.StateVariable('g')],
-        analog_ports=[al.RecvPort("V"), al.SendPort("I"), ],
+        analog_ports=[al.AnalogReceivePort("V"), al.AnalogSendPort("I"), ],
         parameters=['tau', 'q', 'vrev']
     )
     return coba

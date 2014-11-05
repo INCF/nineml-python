@@ -2,7 +2,7 @@ import nineml.abstraction_layer as al
 
 
 def get_component():
-    iaf = al.ComponentClass(
+    iaf = al.dynamics.ComponentClass(
         name="iaf",
         regimes=[
             al.Regime(

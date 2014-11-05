@@ -1,8 +1,10 @@
 
 
 import unittest
-from nineml.abstraction_layer import (ComponentClass, Regime, On, OutputEvent,
-                                      RecvPort, SendPort, flattening)
+from nineml.abstraction_layer import (Regime, On, OutputEvent,
+                                      AnalogReceivePort, AnalogSendPort,
+                                      flattening)
+from nineml.abstraction_layer.dynamics import ComponentClass
 
 
 class ComponentFlattener_test(unittest.TestCase):
@@ -21,7 +23,8 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('cIn1'), RecvPort('cIn2'), SendPort('C1'), SendPort('C2')],
+            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
+                          AnalogSendPort('C1'), AnalogSendPort('C2')],
             parameters=['cp1', 'cp2']
         )
 
@@ -37,7 +40,8 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('dIn1'), RecvPort('dIn2'), SendPort('D1'), SendPort('D2')],
+            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
+                          AnalogSendPort('D1'), AnalogSendPort('D2')],
             parameters=['dp1', 'dp2']
         )
 
@@ -80,7 +84,7 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('cIn1'), RecvPort('cIn2'), SendPort('C1'), SendPort('C2')],
+            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'), AnalogSendPort('C1'), AnalogSendPort('C2')],
             parameters=['cp1', 'cp2']
         )
 
@@ -96,7 +100,7 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('dIn1'), RecvPort('dIn2'), SendPort('D1'), SendPort('D2')],
+            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'), AnalogSendPort('D1'), AnalogSendPort('D2')],
             parameters=['dp1', 'dp2']
         )
 
@@ -212,7 +216,7 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('cIn1'), RecvPort('cIn2'), SendPort('C1'), SendPort('C2')],
+            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'), AnalogSendPort('C1'), AnalogSendPort('C2')],
             parameters=['cp1', 'cp2']
         )
 
@@ -228,7 +232,7 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('dIn1'), RecvPort('dIn2'), SendPort('D1'), SendPort('D2')],
+            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'), AnalogSendPort('D1'), AnalogSendPort('D2')],
             parameters=['dp1', 'dp2']
         )
 
@@ -408,7 +412,7 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('cIn1'), RecvPort('cIn2'), SendPort('C1'), SendPort('C2')],
+            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'), AnalogSendPort('C1'), AnalogSendPort('C2')],
             parameters=['cp1', 'cp2']
         )
 
@@ -424,7 +428,7 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('dIn1'), RecvPort('dIn2'), SendPort('D1'), SendPort('D2')],
+            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'), AnalogSendPort('D1'), AnalogSendPort('D2')],
             parameters=['dp1', 'dp2']
         )
 
