@@ -35,7 +35,7 @@ class Context(dict):
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
     def __init__(self, *args, **kwargs):
-        self._objects = dict(*args, **kwargs)
+        super(Context, self).__init__(*args, **kwargs)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
@@ -72,7 +72,7 @@ class Context(dict):
         Returns the element referenced by the given name
         """
         try:
-            elem = self._objects[name]
+            elem = super(Context, self).__getitem__(name)
         except KeyError:
             raise KeyError("'{}' was not found in the NineML context{} ("
                            "elements in the context were '{}')."
@@ -82,20 +82,14 @@ class Context(dict):
             elem = self._load_elem_from_xml(elem)
         return elem
 
-    def __setitem__(self, name, val):
-        self._objects[name] = val
-
-    def __iter__(self):
-        return iter(self._objects)
-
     @property
     def components(self):
-        return (self[k] for k in self._objects.iterkeys()
+        return (self[k] for k in self.iterkeys()
                 if isinstance(self[k], nineml.user_layer.Component))
 
     @property
     def component_classes(self):
-        return (self[k] for k in self._objects.iterkeys()
+        return (self[k] for k in self.iterkeys()
                 if isinstance(self[k],
                               nineml.abstraction_layer.ComponentClass))
 
@@ -115,7 +109,7 @@ class Context(dict):
         elem = unloaded.cls.from_xml(unloaded.xml, self)
         assert self._loading[-1] is unloaded
         self._loading.pop()
-        self._objects[unloaded.name] = elem
+        self[unloaded.name] = elem
         return elem
 
     def to_xml(self):
