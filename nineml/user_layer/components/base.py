@@ -65,8 +65,7 @@ class BaseComponent(BaseULObject):
                             "dict, not a %s" % type(initial_values))
         if not self.unresolved:
             self.check_properties()
-            module_path = definition.component_class.__module__.split('.')
-            if 'dynamics' in module_path:
+            if hasattr(self, 'check_initial_values'):
                 self.check_initial_values()
 
     def __eq__(self, other):
@@ -203,7 +202,6 @@ class BaseReference(BaseULObject):
         if self.url:
             context = nineml.read(url)
         self._referred_to = context[name]
-        self._referred_to.set_reference(self)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -244,6 +242,21 @@ class Reference(BaseReference):
     Base class for model components that are defined in the abstraction layer.
     """
     element_name = "Reference"
+
+    # initial_values is temporary, the idea longer-term is to use a separate
+    # library such as SEDML
+    def __init__(self, name, context, url=None):
+        """
+        Create a new component with the given name, definition and properties,
+        or create a prototype to another component that will be resolved later.
+
+        `name`    -- a name of an existing component to refer to
+        `context` -- a nineml.context.Context object containing the top-level
+                     objects in the current file
+        `url`     -- a url of the file containing the exiting component
+        """
+        super(Reference, self).__init__(name, context, url)
+        self._referred_to.set_reference(self)
 
     @property
     def user_layer_object(self):

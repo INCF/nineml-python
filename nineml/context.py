@@ -97,7 +97,7 @@ class Context(dict):
         elem = unloaded.cls.from_xml(unloaded.xml, self)
         assert self._loading[-1] is unloaded
         self._loading.pop()
-        super(Context, self)[unloaded.name] = elem
+        self._objects[unloaded.name] = elem
         return elem
 
     def to_xml(self):
