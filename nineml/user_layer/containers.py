@@ -2,7 +2,7 @@ from itertools import chain
 from operator import itemgetter
 from .base import BaseULObject, NINEML, E
 from utility import check_tag
-from ..utility import check_single
+from ..utility import expect_single
 
 
 def find_difference(this, that):
@@ -38,9 +38,9 @@ class PopulationSelection(BaseULObject):
     """
     element_name = "PopulationSelection"
 
-    def __init__(self, name, populations):
+    def __init__(self, name, operation):
         self.name = name
-        self.populations = list(populations)
+        self.operation = operation
 
     def _to_xml(self):
         return E(self.element_name,
@@ -52,19 +52,10 @@ class PopulationSelection(BaseULObject):
     def from_xml(cls, element, context):
         check_tag(element, cls)
         # The only supported op at this stage
-        concatenate_op = expect_single(element.find(NINEML + 'Concatenate'))
-        if not concatenate_op:
-            raise TypeError("Did not find expected 'Concatenate' child element"
-                            " in 'PopulationSelection' element (the only "
-                            "supported operation at this stage).")
-        items = []
-        for child in concatenate_op.getchildren():
-            if child.tag != NINEML + 'Item':
-                raise TypeError("Was expecting only 'Item' elements, found "
-                                "'{}'".format(child.tag))
-            items.append((child.attrib['index'], context[child.text]))
-        items.sort(key=itemgetter(0))
-        return cls(element.attrib['name'], (p for _, p in items))
+        op = Concatenate.from_xml(expect_single(element.find(NINEML +
+                                                             'Concatenate')),
+                                  context)
+        return cls(element.attrib['name'], op)
 
 
 class Concatenate(BaseULObject):
@@ -72,7 +63,7 @@ class Concatenate(BaseULObject):
     Concatenates multiple Populations or PopulationSelections together into
     a greater PopulationSelection
     """
-    
+
     element_name = 'Concatenate'
 
     def __init__(self, items):
@@ -82,8 +73,20 @@ class Concatenate(BaseULObject):
     def items(self):
         return self._items
 
-    
-        
+    def to_xml(self):
+        return E(self.element_name,
+                 *[E.Item(item, index=i)
+                   for i, item in enumerate(self.items())])
+
+    @classmethod
+    def from_xml(cls, element, context):
+        # Load references and indices from xml
+        items = ((e.attrib['index'], context.resolve_ref(e))
+                 for e in element.findall(NINEML + 'Item'))
+        # Sort items by 'index' attribute
+        items.sort(key=itemgetter(0))
+        return cls(zip(items)[1])  # Strip off indices used to sort elements
+
 
 class Network(BaseULObject):
 

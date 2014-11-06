@@ -41,7 +41,7 @@ class Context(dict):
         # circular references
         self._loading = []
 
-    def resolve_ref(self, containing_elem, expected_type):
+    def resolve_ref(self, containing_elem, inline_type=None):
         """
         This method is used for resolving a member element that can either be
         defined in the current file (i.e. within a 'Reference' tag without a
@@ -50,21 +50,27 @@ class Context(dict):
 
         `containing_elem` -- the XML element that contains the Reference or
                              inline object
-        `expected_type`   -- the expected type of the object to be referenced.
+        `inline_type`     -- the expected type of the object to be referenced.
                              This is used to check the referene points to the
                              correct object and also to convert inline objects.
+                             If it is not provided in-line definitions are not
+                             permitted.
         """
         elem = expect_single(containing_elem.getchildren())
         if elem.tag == NINEML + Reference.element_name:
             ref = Reference.from_xml(elem, self)
-            if not isinstance(ref.user_layer_object, expected_type):
-                raise Exception("Type of referenced object ('{}') does not "
+            if inline_type and not isinstance(ref.user_layer_object,
+                                              inline_type):
+                raise TypeError("Type of referenced object ('{}') does not "
                                 "match expected type ('{}')"
                                 .format(ref.user_layer_object.__class__,
-                                        expected_type))
+                                        inline_type))
             obj = ref.user_layer_object
         else:
-            obj = expected_type.from_xml(elem, self)
+            if not inline_type:
+                raise Exception("This '{}' element does not permit inline "
+                                "child elements".format(containing_elem.tag))
+            obj = inline_type.from_xml(elem, self)
         return obj
 
     def __getitem__(self, name):
