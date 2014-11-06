@@ -29,7 +29,7 @@ class Context(dict):
     ## Valid top-level NineML element names
     top_level_abstraction = ['ComponentClass']
     top_level_user = ['UnitDimension', 'Unit', 'Component', 'PositionList',
-                      'Population', 'PopulationGroup', 'Projection']
+                      'Population', 'PopulationSelection', 'Projection']
 
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')

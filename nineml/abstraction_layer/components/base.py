@@ -25,11 +25,11 @@ class BaseComponentClass(object):
 
     @classmethod
     def from_xml(cls, element, context):  # @UnusedVariable
-        if element.find(NINEML + 'Dynamics'):
+        if element.find(NINEML + 'Dynamics') is not None:
             module_name = 'dynamics'
-        elif element.find(NINEML + 'ConnectionRule'):
+        elif element.find(NINEML + 'ConnectionRule') is not None:
             module_name = 'connection_generator'
-        elif element.find(NINEML + 'RandomDistribution'):
+        elif element.find(NINEML + 'RandomDistribution') is not None:
             module_name = 'random'
         exec('from nineml.abstraction_layer.{}.readers import XMLLoader'
              .format(module_name))

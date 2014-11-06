@@ -52,8 +52,8 @@ class PopulationSelection(BaseULObject):
     def from_xml(cls, element, context):
         check_tag(element, cls)
         # The only supported op at this stage
-        op = Concatenate.from_xml(expect_single(element.find(NINEML +
-                                                             'Concatenate')),
+        op = Concatenate.from_xml(expect_single(element.findall(NINEML +
+                                                               'Concatenate')),
                                   context)
         return cls(element.attrib['name'], op)
 
@@ -83,9 +83,19 @@ class Concatenate(BaseULObject):
         # Load references and indices from xml
         items = ((e.attrib['index'], context.resolve_ref(e))
                  for e in element.findall(NINEML + 'Item'))
-        # Sort items by 'index' attribute
-        items.sort(key=itemgetter(0))
-        return cls(zip(items)[1])  # Strip off indices used to sort elements
+        # Sort by 'index' attribute
+        indices, items = zip(*sorted(items, key=itemgetter(0)))
+        indices = [int(i) for i in indices]
+        if len(indices) != len(set(indices)):
+            raise ValueError("Duplicate indices found in Concatenate list ({})"
+                             .format(indices))
+        if indices[0] != 0:
+            raise ValueError("Indices of Concatenate items must start from 0 "
+                             "({})".format(indices))
+        if indices[-1] != len(indices) - 1:
+            raise ValueError("Missing indices in Concatenate items ({}), list "
+                             "must be contiguous.".format(indices))
+        return cls(items)  # Strip off indices used to sort elements
 
 
 class Network(BaseULObject):

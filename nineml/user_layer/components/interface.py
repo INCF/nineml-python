@@ -83,7 +83,7 @@ class Quantity(object):
                             "'Value', 'Reference', 'Component', 'ValueList', "
                             "'ExternalValueList'"
                             .format(value.__class__.__name__))
-        if not isinstance(units, basestring):
+        if not isinstance(units, basestring) and units is not None:
             raise Exception("Units ({}) must be a string".format(units))
         self.value = value
         self.units = units

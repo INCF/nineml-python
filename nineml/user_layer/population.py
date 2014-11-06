@@ -3,6 +3,7 @@ from .base import BaseULObject, NINEML, E
 from .utility import check_tag
 from .dynamics import SpikingNodeType
 from .components import BaseComponent, StringValue
+from ..utility import expect_single
 
 
 class Population(BaseULObject):
@@ -15,12 +16,14 @@ class Population(BaseULObject):
     element_name = "Population"
     defining_attributes = ("name", "number", "prototype", "positions")
 
-    def __init__(self, name, number, prototype, positions=None):
+    def __init__(self, name, number, cell, positions=None):
         self.name = name
         self.number = number
-        assert isinstance(prototype, (SpikingNodeType,
-                                      nineml.user_layer.containers.Network))
-        self.prototype = prototype
+# FIXME: TGC Probably need to make ComponentClass's metaclasses for this to
+#        work.
+#         assert isinstance(cell, (SpikingNodeType,
+#                                  nineml.user_layer.containers.Network))
+        self.prototype = cell
         if positions is not None:
             assert isinstance(positions, PositionList)
         self.positions = positions
@@ -67,8 +70,10 @@ class Population(BaseULObject):
             kwargs['positions'] = context.resolve_ref(layout_elem,
                                                       BaseComponent)
         return cls(name=element.attrib['name'],
-                   number=int(element.find(NINEML + 'number').text),
-                   cell=context.resolve_ref(element.find(NINEML + 'Cell'),
+                   number=int(expect_single(
+                                    element.findall(NINEML + 'Number')).text),
+                   cell=context.resolve_ref(expect_single(
+                                             element.findall(NINEML + 'Cell')),
                                             BaseComponent),
                    **kwargs)
 
