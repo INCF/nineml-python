@@ -1,6 +1,5 @@
 # encoding: utf-8
 from operator import and_
-from itertools import chain
 import nineml
 from ..base import BaseULObject, E, NINEML
 # This line is imported at the end of the file to avoid recursive imports
