@@ -6,6 +6,11 @@ Tests for the user_layer module
 import unittest
 from lxml import etree
 from nineml.user_layer.components.interface import Property, Quantity
+from nineml.abstraction_layer import Unit, Dimension
+from nineml import Context
+
+voltage = Dimension('voltage', m=1, l=2, t=-3, i=-1)
+mV = Unit(name='mV', dimension=voltage, power=-3)
 
 
 class ModelTest(unittest.TestCase):
@@ -51,10 +56,10 @@ class RandomDistributionTest(unittest.TestCase):
 class ParameterTest(unittest.TestCase):
 
     def test_xml_roundtrip(self):
-        p1 = Property("tau_m", Quantity(20.0, "mV"))
+        p1 = Property("tau_m", Quantity(20.0, mV))
         element = p1.to_xml()
         xml = etree.tostring(element, pretty_print=True)
-        p2 = Property.from_xml(element, [])
+        p2 = Property.from_xml(element, Context(mV=mV))
         self.assertEqual(p1, p2)
 
 

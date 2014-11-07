@@ -5,6 +5,9 @@ from .base import ComponentClass
 
 class XMLLoader(object):
 
+    def __init__(self, context=None):
+        self.context = context
+
     def load_componentclass(self, element):
         raise NotImplementedError
 

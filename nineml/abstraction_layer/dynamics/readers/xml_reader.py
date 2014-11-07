@@ -31,6 +31,9 @@ class XMLLoader(object):
 
     """
 
+    def __init__(self, context=None):
+        self.context = context
+
     # FIXME: TGC 1/11/14 - I am implementing a general NineML root class
     #                      that will be able to read both User Layer and
     #                      Abstraction layer elements that will make this
@@ -81,7 +84,7 @@ class XMLLoader(object):
 
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
-                         dimension=element.get('dimension'))
+                         dimension=self.context[element.get('dimension')])
 
     def load_eventsendport(self, element):
         return al.EventSendPort(name=element.get('name'))
@@ -90,17 +93,20 @@ class XMLLoader(object):
         return al.EventReceivePort(name=element.get('name'))
 
     def load_analogsendport(self, element):
-        return al.AnalogSendPort(name=element.get("name"),
-                                 dimension=element.get('dimension'))
+        return al.AnalogSendPort(
+                            name=element.get("name"),
+                            dimension=self.context[element.get('dimension')])
 
     def load_analogreceiveport(self, element):
-        return al.AnalogReceivePort(name=element.get("name"),
-                                    dimension=element.get('dimension'))
+        return al.AnalogReceivePort(
+                            name=element.get("name"),
+                            dimension=self.context[element.get('dimension')])
 
     def load_analogreduceport(self, element):
-        return al.AnalogReducePort(name=element.get('name'),
-                                  dimension=element.get('dimension'),
-                                  reduce_op=element.get("reduce_op"))
+        return al.AnalogReducePort(
+                              name=element.get('name'),
+                              dimension=self.context[element.get('dimension')],
+                              reduce_op=element.get("reduce_op"))
 
     def load_dynamics(self, element):
         subblocks = ('Regime', 'Alias', 'StateVariable')
@@ -120,7 +126,7 @@ class XMLLoader(object):
 
     def load_statevariable(self, element):
         name = element.get("name")
-        dimension = element.get('dimension')
+        dimension = self.context[element.get('dimension')]
         return al.StateVariable(name=name, dimension=dimension)
 
     def load_timederivative(self, element):

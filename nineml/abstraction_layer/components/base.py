@@ -33,7 +33,7 @@ class BaseComponentClass(object):
             module_name = 'random'
         exec('from nineml.abstraction_layer.{}.readers import XMLLoader'
              .format(module_name))
-        return XMLLoader().load_componentclass(element)  # @UndefinedVariable
+        return XMLLoader(context).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
 
     def __init__(self, name, parameters=None):
         self._name = name

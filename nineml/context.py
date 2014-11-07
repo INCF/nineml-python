@@ -36,7 +36,7 @@ class Context(dict):
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
     def __init__(self, *args, **kwargs):
-        self.url = kwargs.pop('_url')
+        self.url = kwargs.pop('_url', None)
         super(Context, self).__init__(*args, **kwargs)
         # Stores the list of elements that are being loaded to check for
         # circular references
@@ -81,6 +81,10 @@ class Context(dict):
         try:
             elem = super(Context, self).__getitem__(name)
         except KeyError:
+            # FIXME: Not sure if this is a good idea or not, it allows
+            #        attributes to be omitted from XML tags for example
+            if name is None:
+                return None
             raise KeyError("'{}' was not found in the NineML context{} ("
                            "elements in the context were '{}')."
                            .format(name, self.url or '',

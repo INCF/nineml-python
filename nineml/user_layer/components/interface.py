@@ -6,6 +6,7 @@ from ..base import BaseULObject, E, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
 from .base import BaseComponent, Reference
+from ...abstraction_layer import Unit
 
 
 class Property(BaseULObject):
@@ -83,8 +84,8 @@ class Quantity(object):
                             "'Value', 'Reference', 'Component', 'ValueList', "
                             "'ExternalValueList'"
                             .format(value.__class__.__name__))
-        if not isinstance(units, basestring) and units is not None:
-            raise Exception("Units ({}) must be a string".format(units))
+        if not isinstance(units, Unit) and units is not None:
+            raise Exception("Units ({}) must of type <Unit>".format(units))
         self.value = value
         self.units = units
 
@@ -93,7 +94,7 @@ class Quantity(object):
             value_element = E('SingleValue', str(self.value))
         else:
             value_element = self.value.to_xml()
-        kwargs = {'units': self.units} if self.units else {}
+        kwargs = {'units': self.units.name} if self.units else {}
         return E(self.element_name,
                  value_element,
                  **kwargs)
@@ -128,7 +129,12 @@ class Quantity(object):
                            "'{nm}ExternalArrayValue', '{nm}Reference' or "
                            "'{nm}Component'"
                            .format(tag=value_element.tag, nm=NINEML))
-        units = element.attrib.get('units')
+        units_str = element.attrib.get('units', None)
+        try:
+            units = context[units_str] if units_str else None
+        except KeyError:
+            raise Exception("Did not find definition of '{}' units in the "
+                            "current context.".format(units_str))
         return Quantity(value, units)
 
 
