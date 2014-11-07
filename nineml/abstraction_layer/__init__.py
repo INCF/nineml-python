@@ -22,6 +22,8 @@ from dynamics.component.util import parse
 import dynamics
 from dynamics import (component, visitors, readers, writers, validators,
                       component_modifiers, flattening, testing_utils)
+from units import Unit, Dimension
+from annotation import Annotation
 
 import structure
 import connection_generator
