@@ -78,8 +78,7 @@ class Quantity(object):
     element_name = "Quantity"
 
     def __init__(self, value, units):
-        if not (isinstance(value, float) or isinstance(value, Reference) or
-                isinstance(value, BaseComponent)):
+        if not isinstance(value, (int, float, Reference, BaseComponent)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference', 'Component', 'ValueList', "
                             "'ExternalValueList'"
@@ -90,7 +89,7 @@ class Quantity(object):
         self.units = units
 
     def to_xml(self):
-        if isinstance(self.value, float):
+        if isinstance(self.value, (int, float)):
             value_element = E('SingleValue', str(self.value))
         else:
             value_element = self.value.to_xml()
