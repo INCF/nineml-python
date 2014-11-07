@@ -42,7 +42,7 @@ class Unit(object):
     Defines the units of a quantity
     """
 
-    element_name = 'Dimension'
+    element_name = 'Unit'
     valid_dims = ['m', 'l', 't', 'i', 'n', 'k', 'j']
 
     def __init__(self, name, dimension, power, offset=0.0):
@@ -51,13 +51,16 @@ class Unit(object):
         self.power = power
         self.offset = offset
 
+    def __repr__(self):
+        return "Units({})".format(self.name)
+
     @property
     def symbol(self):
         return self.name
 
     def to_xml(self):
-        kwargs = {'symbol': self.name, 'dimension': self.dimension,
-                  'power': self.power}
+        kwargs = {'symbol': self.name, 'dimension': self.dimension.name,
+                  'power': str(self.power)}
         if self.offset:
             kwargs['offset'] = self.offset
         return E(self.element_name,
@@ -67,8 +70,8 @@ class Unit(object):
     def from_xml(cls, element, context):
         name = element.attrib['symbol']
         dimension = context[element.attrib['dimension']]
-        power = element.attrib['power']
-        offset = element.attrib.get('name', 0.0)
+        power = int(element.attrib['power'])
+        offset = float(element.attrib.get('name', 0.0))
         return cls(name, dimension, power, offset)
 
 
