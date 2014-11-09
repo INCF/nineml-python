@@ -39,7 +39,8 @@ class Parameter(object):
         return self._dimension
 
     def __repr__(self):
-        return "<Parameter: %r (%r)>" % (self.name, self.dimension.name)
+        dimension = self.dimension.name if self.dimension else 'dimensionless'
+        return "<Parameter: %r (%r)>" % (self.name, dimension)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

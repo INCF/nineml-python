@@ -16,7 +16,8 @@ from itertools import chain
 import itertools
 from nineml.abstraction_layer.components import BaseComponentClass, Parameter
 from dynamics import StateVariable
-from ports import EventPort, AnalogReceivePort, AnalogSendPort, AnalogReducePort, EventReceivePort, EventSendPort
+from ports import (AnalogReceivePort, AnalogSendPort, AnalogReducePort,
+                   EventReceivePort, EventSendPort)
 from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_c_variable_name, invert_dictionary,
                             assert_no_duplicates)
@@ -375,6 +376,8 @@ class ComponentClass(BaseComponentClass,
          For more information, see
 
     """
+
+    writer_name = 'dynamics'
 
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[],
