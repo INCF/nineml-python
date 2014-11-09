@@ -142,6 +142,13 @@ class BaseComponent(BaseULObject):
         if msg:
             # need a more specific type of Exception
             raise Exception(". ".join(msg))
+        # Check dimensions match
+        for p in self.component_class.parameters:
+            if properties[p.name].units.dimension != p.dimension:
+                raise Exception("Dimensions for '{}' parameter don't match, "
+                                "component class '{}', component '{}'."
+                                .format(p.name, p.dimension.name,
+                                        properties[p.name].units.dimension))
         # TODO: Now check dimensions
 
     def _to_xml(self):
