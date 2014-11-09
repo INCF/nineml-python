@@ -58,7 +58,7 @@ class XMLWriter(ComponentVisitor):
     def visit_statevariable(self, state_variable):
         return E('StateVariable',
                  name=state_variable.name,
-                 dimension=(state_variable.dimension
+                 dimension=(state_variable.dimension.name
                             if state_variable.dimension else 'dimensionless'))
 
     def visit_outputevent(self, output_event, **kwargs):  # @UnusedVariable
@@ -70,19 +70,32 @@ class XMLWriter(ComponentVisitor):
         if parameter.dimension is not None:
             kwargs['dimension'] = parameter.dimension.name
         return E('Parameter',
-                 name=parameter.name,
-                 **kwargs)
+                 name=parameter.name, **kwargs)
 
-    def visit_analogport(self, port, **kwargs):
-        if port.reduce_op:
-            kwargs['reduce_op'] = port.reduce_op
-        return E('AnalogPort', name=port.name, mode=port.mode,
-                 dimension=(port.dimension
+    def visit_analogreceiveport(self, port, **kwargs):
+        return E('AnalogReceivePort', name=port.name,
+                 dimension=(port.dimension.name
                             if port.dimension else 'dimensionless'),
                  **kwargs)
 
-    def visit_eventport(self, port, **kwargs):
-        return E('EventPort', name=port.name, mode=port.mode, **kwargs)
+    def visit_analogreduceport(self, port, **kwargs):
+        kwargs['operator'] = port.reduce_op
+        return E('AnalogReducePort', name=port.name,
+                 dimension=(port.dimension.name
+                            if port.dimension else 'dimensionless'),
+                 **kwargs)
+
+    def visit_analogsendport(self, port, **kwargs):
+        return E('AnalogSendPort', name=port.name,
+                 dimension=(port.dimension.name
+                            if port.dimension else 'dimensionless'),
+                 **kwargs)
+
+    def visit_eventsendport(self, port, **kwargs):
+        return E('EventSendPort', name=port.name, **kwargs)
+
+    def visit_eventreceiveport(self, port, **kwargs):
+        return E('EventReceivePort', name=port.name, **kwargs)
 
     def visit_assignment(self, assignment, **kwargs):  # @UnusedVariable
         return E('StateAssignment',
@@ -117,7 +130,7 @@ class XMLWriter(ComponentVisitor):
         elements = ([p.accept_visitor(self)
                      for p in on_event.state_assignments] +
                     [p.accept_visitor(self) for p in on_event.event_outputs])
-        kwargs = {'src_port': on_event.src_port_name}
+        kwargs = {'port': on_event.src_port_name}
         if on_event.target_regime:
             kwargs['target_regime'] = on_event.target_regime.name
         return E('OnEvent', *elements, **kwargs)

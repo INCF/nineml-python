@@ -60,12 +60,10 @@ class Projection(BaseULObject):
         self.connection_ports = connection_ports
         for name, cls_list in (('source',
                                 (nineml.user_layer.population.Population,
-                                 nineml.user_layer.population.Selection,
-                                 nineml.user_layer.containers.Network)),
+                                 nineml.user_layer.containers.PopulationSelection)),
                                ('target',
                                 (nineml.user_layer.population.Population,
-                                 nineml.user_layer.population.Selection,
-                                 nineml.user_layer.containers.Network)),
+                                 nineml.user_layer.containers.PopulationSelection)),
                                ('rule', (ConnectionRule,)),
                                ('synaptic_response', (SynapseType,)),
                                ('connection_type', (ConnectionType,))):

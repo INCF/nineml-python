@@ -78,8 +78,7 @@ class Quantity(object):
     element_name = "Quantity"
 
     def __init__(self, value, units):
-        if not (isinstance(value, float) or isinstance(value, Reference) or
-                isinstance(value, BaseComponent)):
+        if not isinstance(value, (int, float, Reference, BaseComponent)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference', 'Component', 'ValueList', "
                             "'ExternalValueList'"
@@ -90,7 +89,7 @@ class Quantity(object):
         self.units = units
 
     def to_xml(self):
-        if isinstance(self.value, float):
+        if isinstance(self.value, (int, float)):
             value_element = E('SingleValue', str(self.value))
         else:
             value_element = self.value.to_xml()
@@ -155,63 +154,12 @@ class StringValue(object):
         return element.text
 
 
-class InitialValue(BaseULObject):
+class InitialValue(Property):
 
     """
     temporary, longer-term plan is to use SEDML or something similar
     """
     element_name = "Initial"
-    defining_attributes = ("name", "value", "unit")
-
-    def __init__(self, name, value, unit=None):
-        self.name = name
-        if (not isinstance(value, (Number, list, RandomDistribution)) or
-            isinstance(value, bool)):
-            raise TypeError("Initial values may not be of type %s" %
-                            type(value))
-        self.value = value
-        self.unit = unit
-
-    def __repr__(self):
-        units = self.unit
-        if u"µ" in units:
-            units = units.replace(u"µ", "u")
-        return ("InitialValue(name=%s, value=%s, unit=%s)" %
-                (self.name, self.value, units))
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and \
-            reduce(and_, (self.name == other.name,
-                          self.value == other.value,
-                          self.unit == other.unit))  # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV @IgnorePep8
-
-    def __hash__(self):
-        return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
-
-    def is_random(self):
-        return isinstance(self.value, RandomDistribution)
-
-    def to_xml(self):
-        if isinstance(self.value, RandomDistribution):
-            value_element = E.prototype(self.value.name)
-        elif (isinstance(self.value, collections.Iterable) and
-              isinstance(self.value[0], Number)):
-            value_element = E.array(" ".join(repr(x) for x in self.value))
-        else:  # need to handle Function
-            value_element = E.scalar(repr(self.value))
-        return E(InitialValue.element_name,
-                 E.quantity(
-                 E.value(   # this extra level of tags is pointless, no?
-                 value_element,
-                 E.unit(self.unit or "dimensionless"))),
-                 name=self.name)
-
-    @classmethod
-    def from_xml(cls, element, context):
-        check_tag(element, cls)
-        qty = Quantity.from_xml(element.find(NINEML + "Quantity"), context)
-        return InitialValue(name=element.attrib["name"],
-                            value=qty.value, unit=qty.unit)
 
 
 class PropertySet(dict):
@@ -229,7 +177,7 @@ class PropertySet(dict):
         for prop in properties:
             self[prop.name] = prop  # should perhaps do a copy
         for name, (value, unit) in kwproperties.items():
-            self[name] = Property(name, value, unit)
+            self[name] = Property(name, Quantity(value, unit))
 
     def __hash__(self):
         return hash(tuple(self.items()))
@@ -272,7 +220,7 @@ class InitialValueSet(PropertySet):
         for iv in ivs:
             self[iv.name] = iv  # should perhaps do a copy
         for name, (value, unit) in kwivs.items():
-            self[name] = InitialValue(name, value, unit)
+            self[name] = InitialValue(name, Quantity(value, unit))
 
     def __repr__(self):
         return "InitialValueSet(%s)" % dict(self)

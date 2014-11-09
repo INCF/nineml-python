@@ -106,7 +106,7 @@ class XMLLoader(object):
         return al.AnalogReducePort(
                               name=element.get('name'),
                               dimension=self.context[element.get('dimension')],
-                              reduce_op=element.get("reduce_op"))
+                              reduce_op=element.get("operator"))
 
     def load_dynamics(self, element):
         subblocks = ('Regime', 'Alias', 'StateVariable')

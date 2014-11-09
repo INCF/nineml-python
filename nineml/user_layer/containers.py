@@ -41,11 +41,11 @@ class PopulationSelection(BaseULObject):
     def __init__(self, name, operation):
         self.name = name
         self.operation = operation
+        self._from_reference = False
 
     def _to_xml(self):
         return E(self.element_name,
-                 E.Concatenate(*[E.Item(p.name, index=i)
-                                 for i, p in enumerate(self.populations)]),
+                 self.operation.to_xml(),
                  name=self.name)
 
     @classmethod
@@ -66,7 +66,7 @@ class Concatenate(BaseULObject):
 
     element_name = 'Concatenate'
 
-    def __init__(self, items):
+    def __init__(self, *items):
         self._items = items
 
     @property
@@ -75,8 +75,8 @@ class Concatenate(BaseULObject):
 
     def to_xml(self):
         return E(self.element_name,
-                 *[E.Item(item, index=i)
-                   for i, item in enumerate(self.items())])
+                 *[E.Item(item, index=str(i))
+                   for i, item in enumerate(self.items)])
 
     @classmethod
     def from_xml(cls, element, context):
@@ -125,11 +125,11 @@ class Network(BaseULObject):
                 self.populations[obj.name] = obj
             elif isinstance(obj, Projection):
                 self.projections[obj.name] = obj
-            elif isinstance(obj, Selection):
+            elif isinstance(obj, PopulationSelection):
                 self.selections[obj.name] = obj
             else:
-                raise Exception("Groups may only contain Populations, "
-                                "Projections, Selections or Groups")
+                raise Exception("Networks may only contain Populations, "
+                                "Projections, or PopulationSelections")
 
     def _resolve_population_references(self):
         for prj in self.projections.values():
