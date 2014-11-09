@@ -17,6 +17,10 @@ class Dimension(object):
                                 .format(k, "', '".join(self.valid_dims)))
         self._dims = kwargs
 
+    def __eq__(self, other):
+        assert isinstance(other, Dimension)
+        return all(self.power(d) == other.power(d) for d in self.valid_dims)
+
     def power(self, dim_name):
         return self._dims.get(dim_name, 0)
 
@@ -38,14 +42,18 @@ class Unit(object):
     Defines the units of a quantity
     """
 
-    element_name = 'Dimension'
-    valid_dims = ['m', 'l', 't', 'i', 'n', 'k', 'j']
+    element_name = 'Unit'
 
     def __init__(self, name, dimension, power, offset=0.0):
         self.name = name
         self.dimension = dimension
         self.power = power
         self.offset = offset
+
+    def __eq__(self, other):
+        assert isinstance(other, Unit)
+        return (self.power == other.power and self.offset == other.power and
+                self.dimension == other.dimension)
 
     @property
     def symbol(self):
