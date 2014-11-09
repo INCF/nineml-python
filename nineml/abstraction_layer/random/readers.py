@@ -1,6 +1,9 @@
-
+from lxml import etree
+import nineml
+from nineml.utility import expect_single, filter_expect_single
+from nineml.abstraction_layer.xmlns import NINEML
 from nineml.abstraction_layer.components import Parameter
-from .base import ComponentClass
+from .base import ComponentClass, RandomDistribution
 
 
 class XMLLoader(object):
@@ -8,23 +11,55 @@ class XMLLoader(object):
     def __init__(self, context=None):
         self.context = context
 
+    def load_subnode(self, subnode):
+        namespace = subnode.get('namespace')
+        component = filter_expect_single(self.components,
+                                       lambda c: c.name == subnode.get('node'))
+        return namespace, component
+
     def load_componentclass(self, element):
-        raise NotImplementedError
 
+        blocks = ('Parameter', 'RandomDistribution')
 
-class XMLReader(object):
+        subnodes = self.loadBlocks(element, blocks=blocks)
 
-    @classmethod
-    def read_component(cls, url):
-        # this is a temporary hack. The url is not resolved, but is a label.
-        if "normal_distribution" in url:
-            parameters = [Parameter(name="standardDeviation", dimension=None),
-                          Parameter(name="mean", dimension=None)]
-        elif "uniform_distribution" in url:
-            parameters = [Parameter(name="lowerBound", dimension=None),
-                          Parameter(name="upperBound", dimension=None)]
-        elif "exponential_distribution" in url:
-            parameters = [Parameter(name="beta", dimension=None)]
-        else:
-            raise Exception("Random distribution %s not supported" % url)
-        return ComponentClass(url, parameters)
+        random_distribution = expect_single(subnodes["RandomDistribution"])
+        return ComponentClass(
+                         name=element.get('name'),
+                         random_distribution=random_distribution,
+                         parameters=subnodes["Parameter"])
+
+    def load_parameter(self, element):
+        return Parameter(name=element.get('name'),
+                         dimension=self.context[element.get('dimension')])
+
+    def load_randomdistribution(self, element):
+        return RandomDistribution(builtin_definition=element.get('builtin'))
+
+    # These blocks map directly in to classes:
+    def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
+        """
+        Creates a dictionary that maps class-types to instantiated objects
+        """
+
+        res = dict((block, []) for block in blocks)
+
+        for t in element.iterchildren(tag=etree.Element):
+            if t.tag.startswith(NINEML):
+                tag = t.tag[len(NINEML):]
+            else:
+                tag = t.tag
+
+            if check_for_spurious_blocks and not tag in blocks:
+                    err = "Unexpected Block tag: %s " % tag
+                    err += '\n Expected: %s' % ','.join(blocks)
+                    raise nineml.exceptions.NineMLRuntimeError(err)
+
+            res[tag].append(XMLLoader.tag_to_loader[tag](self, t))
+        return res
+
+    tag_to_loader = {
+        "ComponentClass": load_componentclass,
+        "RandomDistribution": load_randomdistribution,
+        "Parameter": load_parameter,
+    }
