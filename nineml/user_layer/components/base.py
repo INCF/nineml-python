@@ -3,6 +3,7 @@ import os.path
 from operator import and_
 import nineml
 from ..base import BaseULObject, E, NINEML
+from nineml.exceptions import NineMLUnitMismatchError
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet
 
@@ -143,12 +144,16 @@ class BaseComponent(BaseULObject):
             # need a more specific type of Exception
             raise Exception(". ".join(msg))
         # Check dimensions match
-        for p in self.component_class.parameters:
-            if properties[p.name].units.dimension != p.dimension:
-                raise Exception("Dimensions for '{}' parameter don't match, "
-                                "component class '{}', component '{}'."
-                                .format(p.name, p.dimension.name,
-                                        properties[p.name].units.dimension))
+        for param in self.component_class.parameters:
+            prop_units = self.properties[param.name].unit
+            prop_dimension = prop_units.dimension if prop_units else None
+            param_dimension = param.dimension
+            if prop_dimension != param_dimension:
+                err = ("Dimensions for '{}' parameter don't match, component "
+                       "class '{}', component '{}'."
+                       .format(param.name, param_dimension.name,
+                               prop_dimension.name))
+                raise NineMLUnitMismatchError(err)
         # TODO: Now check dimensions
 
     def _to_xml(self):

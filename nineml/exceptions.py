@@ -14,6 +14,10 @@ class NineMLMathParseError(ValueError):
     pass
 
 
+class NineMLUnitMismatchError(ValueError):
+    pass
+
+
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 

@@ -21,6 +21,14 @@ class Dimension(object):
         assert isinstance(other, Dimension)
         return all(self.power(d) == other.power(d) for d in self.valid_dims)
 
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __repr__(self):
+        return ("Dimension(name='{}'{})"
+                .format(self.name, ''.join(", {}={}".format(d, p)
+                                           for d, p in self._dims.items())))
+
     def power(self, dim_name):
         return self._dims.get(dim_name, 0)
 
@@ -54,6 +62,15 @@ class Unit(object):
         assert isinstance(other, Unit)
         return (self.power == other.power and self.offset == other.power and
                 self.dimension == other.dimension)
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __repr__(self):
+        return ("Unit(name='{}', dimension='{}', power={}{})"
+                .format(self.name, self.dimension.name, self.power,
+                        (", offset='{}'".format(self.offset)
+                         if self.offset else '')))
 
     @property
     def symbol(self):

@@ -38,7 +38,7 @@ class Property(BaseULObject):
         return self.quantity.units
 
     def __repr__(self):
-        units = self.unit
+        units = self.unit.name
         if u"µ" in units:
             units = units.replace(u"µ", "u")
         return "Property(name=%s, value=%s, unit=%s)" % (self.name,

@@ -39,7 +39,7 @@ class Parameter(object):
         return self._dimension
 
     def __repr__(self):
-        return "<Parameter: %r (%r)>" % (self.name, self.dimension)
+        return "<Parameter: %r (%r)>" % (self.name, self.dimension.name)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
