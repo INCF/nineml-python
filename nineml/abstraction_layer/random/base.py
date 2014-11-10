@@ -16,15 +16,13 @@ class ComponentClass(BaseComponentClass):
 
 class RandomDistribution(object):
 
-    def __init__(self, builtin_definition):
-        self.builtin_definition = builtin_definition
-
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_randomdistribution(self, **kwargs)
 
 
-class BuiltInRandomDistribution(RandomDistribution):
+class StandardLibraryRandomDistribution(RandomDistribution):
 
-    def __init__(self, uncertml_definition):
-        self.uncertml_definition = uncertml_definition
+    def __init__(self, name, reference_url):
+        self.name = name
+        self.reference_url = reference_url
