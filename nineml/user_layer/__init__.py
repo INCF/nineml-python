@@ -49,7 +49,7 @@ from .dynamics import SpikingNodeType, SynapseType, CurrentSourceType
 from .population import (Population, PositionList, Structure,
                          Operator, Any, All, Not, Comparison, Eq, In)
 from .containers import Network, Selection, Concatenate
-from .projection import Projection, ConnectionRule, ConnectionType
+from .projection import Projection
 from .random import RandomDistribution
 from .components import (PropertySet, BaseComponent as Component, Reference,
-                         Definition, Prototype)
+                         Definition, Prototype, Quantity)

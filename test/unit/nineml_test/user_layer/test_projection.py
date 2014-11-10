@@ -9,5 +9,5 @@ class TestPopulation(unittest.TestCase):
     def test_load(self):
         context = read(os.path.join(os.path.dirname(__file__), '..', '..',
                                     '..', '..', '..', '..', 'examples', 'xml',
-                                    'populations',  'simple.xml'))
-        self.assertEquals(type(context['HHPopulation']), Projection)
+                                    'projections',  'simple.xml'))
+        self.assertEquals(type(context['Izhikevich2HH']), Projection)

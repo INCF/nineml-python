@@ -1,7 +1,6 @@
 import re
 from .base import BaseULObject, NINEML, E
 from .utility import check_tag
-from .dynamics import SpikingNodeType
 from .components import BaseComponent, StringValue
 from ..utility import expect_single
 
@@ -31,15 +30,10 @@ class Population(BaseULObject):
     def get_components(self):
         components = []
         if self.cell:
-            if isinstance(self.cell, SpikingNodeType):
-                components.append(self.cell)
-                components.extend(self.cell.properties.\
+            components.append(self.cell)
+            components.extend(self.cell.properties.get_random_distributions())
+            components.extend(self.cell.initial_values.\
                                                     get_random_distributions())
-                components.extend(self.cell.initial_values.\
-                                                    get_random_distributions())
-            elif isinstance(self.cell,
-                            nineml.user_layer.containers.Network):
-                components.extend(self.cell.get_components())
         if self.positions is not None:
             components.extend(self.positions.get_components())
         return components
@@ -63,8 +57,9 @@ class Population(BaseULObject):
         return cls(name=element.attrib['name'],
                    number=int(expect_single(
                                     element.findall(NINEML + 'Number')).text),
-                   cell=context.resolve_ref(element.findall(NINEML + 'Cell'),
-                                            BaseComponent),
+                   cell=context.resolve_ref(
+                               expect_single(element.findall(NINEML + 'Cell')),
+                               BaseComponent),
                    **kwargs)
 
 
@@ -347,6 +342,3 @@ class Structure(BaseComponent):
         else:
             raise Exception("Structure cannot be transformed to CSA geometry "
                             "function")
-
-
-import nineml.user_layer.containers

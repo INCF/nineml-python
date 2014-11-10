@@ -8,7 +8,7 @@ root tag.
 """
 
 from . import E, NINEML
-from .utility import expect_single
+from .utility import expect_single, expect_none_or_single
 import itertools
 import collections
 import nineml.user_layer
@@ -57,8 +57,9 @@ class Context(dict):
                              If it is not provided in-line definitions are not
                              permitted.
         """
-        elem = expect_single(containing_elem.getchildren())
-        if elem.tag == NINEML + Reference.element_name:
+        elem = expect_none_or_single(
+                      containing_elem.findall(NINEML + Reference.element_name))
+        if elem is not None:
             ref = Reference.from_xml(elem, self)
             if inline_type and not isinstance(ref.user_layer_object,
                                               inline_type):
@@ -71,6 +72,7 @@ class Context(dict):
             if not inline_type:
                 raise Exception("This '{}' element does not permit inline "
                                 "child elements".format(containing_elem.tag))
+            elem = expect_single(containing_elem.findall(NINEML + 'Component'))
             obj = inline_type.from_xml(elem, self)
         return obj
 
