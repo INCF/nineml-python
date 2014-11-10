@@ -4,6 +4,8 @@ from operator import and_
 import nineml
 from ..base import BaseULObject, E, NINEML
 from nineml.exceptions import NineMLUnitMismatchError
+from ...exceptions import NineMLRuntimeError
+
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet
 
@@ -227,7 +229,7 @@ class BaseReference(BaseULObject):
 
     def __repr__(self):
             return ('{}(refers_to="{}"{})'
-                    .format(self.__class__.__name__, self.component_name,
+                    .format(self.__class__.__name__, self._referred_to.name,
                             ' in "{}"'.format(self.url) if self.url else ''))
 
     def to_xml(self):
@@ -267,6 +269,10 @@ class Reference(BaseReference):
         `url`     -- a url of the file containing the exiting component
         """
         super(Reference, self).__init__(name, context, url)
+        if not isinstance(self._referred_to, BaseULObject):
+            msg = ("Reference points to a non-user-layer object '{}'"
+                   .format(self._referred_to.name))
+            raise NineMLRuntimeError(msg)
         self._referred_to.set_reference(self)
 
     @property

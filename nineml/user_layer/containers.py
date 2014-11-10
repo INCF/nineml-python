@@ -31,12 +31,12 @@ def find_difference(this, that):
                 find_difference(this[key], that[key])
 
 
-class PopulationSelection(BaseULObject):
+class Selection(BaseULObject):
 
     """
-    Container for multiple populations
+    Container for combining multiple populations or subsets thereof
     """
-    element_name = "PopulationSelection"
+    element_name = "Selection"
 
     def __init__(self, name, operation):
         self.name = name
@@ -60,8 +60,8 @@ class PopulationSelection(BaseULObject):
 
 class Concatenate(BaseULObject):
     """
-    Concatenates multiple Populations or PopulationSelections together into
-    a greater PopulationSelection
+    Concatenates multiple Populations or Selections together into
+    a greater Selection
     """
 
     element_name = 'Concatenate'
@@ -102,7 +102,7 @@ class Network(BaseULObject):
 
     """
     Container for populations and projections between those populations. May be
-    used as the node prototype within a population, allowing hierarchical
+    used as the node cell within a population, allowing hierarchical
     structures.
     """
     element_name = "Network"
@@ -125,11 +125,11 @@ class Network(BaseULObject):
                 self.populations[obj.name] = obj
             elif isinstance(obj, Projection):
                 self.projections[obj.name] = obj
-            elif isinstance(obj, PopulationSelection):
+            elif isinstance(obj, Selection):
                 self.selections[obj.name] = obj
             else:
                 raise Exception("Networks may only contain Populations, "
-                                "Projections, or PopulationSelections")
+                                "Projections, or Selections")
 
     def _resolve_population_references(self):
         for prj in self.projections.values():
@@ -153,8 +153,8 @@ class Network(BaseULObject):
         return components
 
     def get_subnetworks(self):
-        return [p.prototype for p in self.populations.values()
-                if isinstance(p.prototype, Network)]
+        return [p.cell for p in self.populations.values()
+                if isinstance(p.cell, Network)]
 
     def _to_xml(self):
         return E(self.element_name,
@@ -183,5 +183,5 @@ class Network(BaseULObject):
         return network
 
 # can't "from ninem.user_layer.population import *" because of circular imports
-from .population import Population, Selection
+from .population import Population
 from .projection import Projection
