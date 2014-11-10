@@ -48,7 +48,7 @@ from .base import NINEML
 from .dynamics import SpikingNodeType, SynapseType, CurrentSourceType
 from .population import (Population, PositionList, Structure, Selection,
                          Operator, Any, All, Not, Comparison, Eq, In)
-from .containers import Network, PopulationSelection, Concatenate
+from .containers import Network, Selection, Concatenate
 from .projection import Projection, ConnectionRule, ConnectionType
 from .random import RandomDistribution
 from .components import PropertySet, BaseComponent as Component

@@ -30,7 +30,7 @@ class Context(dict):
     top_level_abstraction = ['Dimension', 'Unit', 'ComponentClass',
                              'Annotation']
     top_level_user = ['Component', 'PositionList',
-                      'Population', 'PopulationSelection', 'Projection']
+                      'Population', 'Selection', 'Projection']
 
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')

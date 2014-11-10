@@ -31,12 +31,12 @@ def find_difference(this, that):
                 find_difference(this[key], that[key])
 
 
-class PopulationSelection(BaseULObject):
+class Selection(BaseULObject):
 
     """
     Container for multiple populations
     """
-    element_name = "PopulationSelection"
+    element_name = "Selection"
 
     def __init__(self, name, operation):
         self.name = name
@@ -60,8 +60,8 @@ class PopulationSelection(BaseULObject):
 
 class Concatenate(BaseULObject):
     """
-    Concatenates multiple Populations or PopulationSelections together into
-    a greater PopulationSelection
+    Concatenates multiple Populations or Selections together into
+    a greater Selection
     """
 
     element_name = 'Concatenate'
@@ -125,11 +125,11 @@ class Network(BaseULObject):
                 self.populations[obj.name] = obj
             elif isinstance(obj, Projection):
                 self.projections[obj.name] = obj
-            elif isinstance(obj, PopulationSelection):
+            elif isinstance(obj, Selection):
                 self.selections[obj.name] = obj
             else:
                 raise Exception("Networks may only contain Populations, "
-                                "Projections, or PopulationSelections")
+                                "Projections, or Selections")
 
     def _resolve_population_references(self):
         for prj in self.projections.values():
