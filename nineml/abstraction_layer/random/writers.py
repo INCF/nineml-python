@@ -26,8 +26,9 @@ class XMLWriter(ComponentVisitor):
         return E('ComponentClass', *elements, name=component.name)
 
     def visit_randomdistribution(self, random_distribution):
+        # TODO: Only implemented built-in distributions at this stage
         return E('RandomDistribution',
-                 builtin=random_distribution.builtin_definition)
+                 E.BuiltIn(uncertml=random_distribution.uncertml_definition))
 
     def visit_parameter(self, parameter):
         kwargs = {}

@@ -22,3 +22,9 @@ class RandomDistribution(object):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_randomdistribution(self, **kwargs)
+
+
+class BuiltInRandomDistribution(RandomDistribution):
+
+    def __init__(self, uncertml_definition):
+        self.uncertml_definition = uncertml_definition

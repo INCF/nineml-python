@@ -3,7 +3,7 @@ import nineml
 from nineml.utility import expect_single, filter_expect_single
 from nineml.abstraction_layer.xmlns import NINEML
 from nineml.abstraction_layer.components import Parameter
-from .base import ComponentClass, RandomDistribution
+from .base import ComponentClass, RandomDistribution, BuiltInRandomDistribution
 
 
 class XMLLoader(object):
@@ -34,7 +34,13 @@ class XMLLoader(object):
                          dimension=self.context[element.get('dimension')])
 
     def load_randomdistribution(self, element):
-        return RandomDistribution(builtin_definition=element.get('builtin'))
+        blocks = ('StandardLibrary',)
+        subnodes = self.loadBlocks(element, blocks=blocks)
+        #TODO: Only implemented built-in distributions at this stage
+        return subnodes['StandardLibrary']
+
+    def load_standardlibrary(self, element):
+        return BuiltInRandomDistribution(uncertml=element.get('definition'))
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
@@ -61,5 +67,6 @@ class XMLLoader(object):
     tag_to_loader = {
         "ComponentClass": load_componentclass,
         "RandomDistribution": load_randomdistribution,
+        "StandardLibrary": load_standardlibrary,
         "Parameter": load_parameter,
     }
