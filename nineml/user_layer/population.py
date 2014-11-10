@@ -262,7 +262,7 @@ class Selection(BaseULObject):
     A set of network nodes selected from existing populations within the
     Network.
     """
-    element_name = "Set"
+    element_name = "Selection"
     defining_attributes = ("name", "condition")
 
     def __init__(self, name, condition):
