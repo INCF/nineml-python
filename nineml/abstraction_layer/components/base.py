@@ -28,7 +28,7 @@ class BaseComponentClass(object):
         if element.find(NINEML + 'Dynamics') is not None:
             module_name = 'dynamics'
         elif element.find(NINEML + 'ConnectionRule') is not None:
-            module_name = 'connection_generator'
+            module_name = 'connectionrule'
         elif element.find(NINEML + 'RandomDistribution') is not None:
             module_name = 'random'
         exec('from nineml.abstraction_layer.{}.readers import XMLLoader'

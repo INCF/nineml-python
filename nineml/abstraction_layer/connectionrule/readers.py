@@ -4,10 +4,16 @@ from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.xmlns import NINEML
 from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics.readers import XMLReader
-from .base import ComponentClass, ConnectionGenerator
+from .base import (ComponentClass, ConnectionGenerator,
+                   StandarLibraryConnectionRule)
+from ...utility import expect_none_or_single
 
 
 class XMLLoader(object):
+
+    def __init__(self, context=None):
+        self.context = context
+
     # for now we copy and modify the XMLLoader from the "dynamics" module
     # it would be better either to have a common base class, or to have
     # a single XMLLoader that worked for all AL modules.
@@ -36,15 +42,19 @@ class XMLLoader(object):
                          dimension=element.get('dimension'))
 
     def load_connectionrule(self, element):
-        closure = None
-        for t in element.iterchildren(tag=etree.Element):
-            try:
-                closure = ConnectionGenerator.fromXML(t)
-                return closure
-            except NotImplementedError:
-                pass
-        err = "No known implementation for ConnectionRule"
-        raise NineMLRuntimeError(err)
+        stdlib = expect_none_or_single(element.findall(NINEML +
+                                                       'StandardLibrary'))
+        if stdlib is not None:
+            return StandarLibraryConnectionRule(element.text,
+                                                element.get('reference'))
+        else:
+            for t in element.iterchildren(tag=etree.Element):
+                try:
+                    return ConnectionGenerator.fromXML(t)
+                except NotImplementedError:
+                    pass
+            err = "No known implementation for ConnectionRule"
+            raise NineMLRuntimeError(err)
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):

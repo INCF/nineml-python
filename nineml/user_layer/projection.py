@@ -2,6 +2,7 @@ from operator import and_
 from .base import BaseULObject, E, NINEML
 from collections import defaultdict
 from .components import BaseComponent
+from itertools import chain
 import nineml.user_layer
 from .utility import check_tag
 from ..utility import expect_single, expect_none_or_single
@@ -66,31 +67,29 @@ class Projection(BaseULObject):
 
     def _check_port_connections(self):
         for pc in self.port_connections:
-            try:
-                pc.sender.analog_send_ports[pc.send_port]
-                try:
-                    pc.receiver.analog_receive_ports[pc.receive_port]
-                except KeyError:
-                    raise KeyError("No analog receive port named '{}' in {} "
-                                   "component, '{}'."
-                                   .format(pc.receive_port, pc._receive_role,
-                                           pc.receiver.name))
-            except KeyError:
-                try:
-                    pc.sender.event_send_ports[pc.send_port]
-                    try:
-                        pc.receiver.event_receive_ports[pc.receive_port]
-                    except KeyError:
-                        raise KeyError("No analog receive port named '{}' in "
-                                       "{} component, '{}'."
-                                       .format(pc.receive_port,
-                                               pc._receive_role,
-                                               pc.receiver.name))
-                except KeyError:
-                    raise KeyError("'{}' send port was not found in {} "
-                                   "component, '{}'"
-                                   .format(pc.send_port, pc._send_role,
-                                           pc.sender.name))
+            if pc.send_port in (p.name
+                                for p in pc.send_class.analog_send_ports):
+                if (pc.receive_port not in
+                    (p.name
+                     for p in chain(pc.receive_class.analog_receive_ports,
+                                    pc.receive_class.analog_reduce_ports))):
+                    msg = ("No analog receive port named '{}' in {} component,"
+                           " '{}'.".format(pc.receive_port, pc._receive_role,
+                                           pc.receive_class.name))
+                    raise NineMLRuntimeError(msg)
+            elif pc.send_port in (p.name
+                                for p in pc.send_class.event_send_ports):
+                if (pc.receive_port not in
+                    (p.name for p in pc.receive_class.event_receive_ports)):
+                    msg = ("No event receive port named '{}' in {} component, "
+                           "'{}'.".format(pc.receive_port, pc._receive_role,
+                                           pc.receive_class.name))
+                    raise NineMLRuntimeError(msg)
+            else:
+                msg = ("'{}' send port was not found in {} component, '{}'"
+                       .format(pc.send_port, pc._send_role,
+                               pc.send_class.name))
+                raise NineMLRuntimeError(msg)
 
     def get_components(self):
         components = []
@@ -148,7 +147,8 @@ class Projection(BaseULObject):
                                 BaseComponent)
         # Get Delay
         delay = nineml.user_layer.Quantity.from_xml(
-                                 expect_single(element.find(NINEML + 'Delay')))
+                                 expect_single(element.find(NINEML + 'Delay')),
+                                 context)
         # Get port connections by Loop through 'source', 'destination',
         # 'response', 'plasticity' tags and extracting the "From*" elements
         port_connections = []
@@ -174,8 +174,8 @@ class Projection(BaseULObject):
                     for pc in pc_elems:
                         port_connections.append(
                                      PortConnection(sender_role, receive_role,
-                                                    pc.get('sender'),
-                                                    pc.get('receiver')))
+                                                    pc.get('send_port'),
+                                                    pc.get('receive_port')))
         return cls(name=element.attrib["name"],
                    source=source,
                    destination=destination,
@@ -210,13 +210,53 @@ class PortConnection(object):
         if sender == receiver:
             raise Exception("Sender and Receiver cannot be the same ('{}')"
                             .format(sender))
+        assert isinstance(send_port, basestring), ("invalid send port '{}'"
+                                                   .format(send_port))
+        assert isinstance(receive_port, basestring), ("invalid receive port '"
+                                                      "{}'"
+                                                      .format(receive_port))
         self._send_role = sender
         self._receive_role = receiver
         self.send_port = send_port
         self.receive_port = receive_port
-        self.sender = None
-        self.receiver = None
+        self._projection = None
 
     def set_projection(self, projection):
-        self.sender = getattr(projection, self._send_role)
-        self.receiver = getattr(projection, self._receive_role)
+        self._projection = projection
+
+    @property
+    def sender(self):
+        assert self._projection is not None, ("Projection not set on port "
+                                              "connection")
+        return getattr(self._projection, self._send_role)
+
+    @property
+    def receiver(self):
+        assert self._projection is not None, ("Projection not set on port "
+                                              "connection")
+        return getattr(self._projection, self._receive_role)
+
+    @property
+    def send_class(self):
+        return self._get_class(self.sender)
+
+    @property
+    def receive_class(self):
+        return self._get_class(self.receiver)
+
+    def _get_class(self, comp):
+        # Resolve ref
+        if isinstance(comp, nineml.user_layer.Reference):
+            comp = comp.user_layer_object
+        # Get component class
+        if isinstance(comp, nineml.user_layer.Population):
+            comp_class = comp.cell.component_class
+        elif isinstance(comp, nineml.user_layer.Component):
+            comp_class = comp.component_class
+        elif isinstance(comp, nineml.user_layer.Selection):
+            print ("Warning: port connections have not been check for '{}'"
+                   "Selection".format(comp.name))
+        else:
+            assert False, ("Invalid '{}' object in port connection"
+                           .format(type(comp)))
+        return comp_class

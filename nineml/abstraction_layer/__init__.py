@@ -26,7 +26,7 @@ from units import Unit, Dimension
 from annotation import Annotation
 
 import structure
-import connection_generator
+import connectionrule
 import random
 
 # Commented Out by TGC 2/11/14 - There is now a parse in the top-level module

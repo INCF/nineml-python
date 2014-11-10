@@ -55,6 +55,13 @@ class Mask:
         self.targets = IntervalSet(targets, targetSkip)
 
 
+class StandarLibraryConnectionRule:
+
+    def __init__(self, name, reference_url):
+        self.name = name
+        self.reference_url = reference_url
+
+
 class ConnectionGenerator:
 
     """
