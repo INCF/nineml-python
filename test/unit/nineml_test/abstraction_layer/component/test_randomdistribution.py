@@ -3,6 +3,7 @@ import unittest
 from lxml.etree import _Element, ElementTree
 from nineml import read
 from nineml.abstraction_layer.random import ComponentClass
+import tempfile
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
                             '..', '..', '..', 'catalog', 'randomdistributions')
@@ -19,5 +20,6 @@ class TestRandomDistribution(unittest.TestCase):
         comp_class = context['NormalDistribution']
         xml = comp_class.to_xml()
         self.assertEquals(_Element, type(xml))
-        ElementTree(xml).write('/home/tclose/Desktop/test.xml', encoding="UTF-8", pretty_print=True,
-                               xml_declaration=True)
+        with tempfile.TemporaryFile() as f:
+            ElementTree(xml).write(f, encoding="UTF-8", pretty_print=True,
+                                   xml_declaration=True)
