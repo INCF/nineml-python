@@ -37,7 +37,7 @@ class XMLLoader(object):
         blocks = ('StandardLibrary',)
         subnodes = self.loadBlocks(element, blocks=blocks)
         #TODO: Only implemented built-in distributions at this stage
-        return subnodes['StandardLibrary']
+        return expect_single(subnodes['StandardLibrary'])
 
     def load_standardlibrary(self, element):
         return StandardLibraryRandomDistribution(

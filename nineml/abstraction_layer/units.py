@@ -61,7 +61,7 @@ class Unit(object):
 
     def __eq__(self, other):
         assert isinstance(other, Unit)
-        return (self.power == other.power and self.offset == other.power and
+        return (self.power == other.power and self.offset == other.offset and
                 self.dimension == other.dimension)
 
     def __ne__(self, other):
