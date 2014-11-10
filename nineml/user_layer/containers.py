@@ -183,5 +183,5 @@ class Network(BaseULObject):
         return network
 
 # can't "from ninem.user_layer.population import *" because of circular imports
-from .population import Population, Selection
+from .population import Population
 from .projection import Projection
