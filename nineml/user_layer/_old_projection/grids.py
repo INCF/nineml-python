@@ -50,7 +50,7 @@ class GeometryImplementation(Geometry):
 def createUnstructuredGrid(ul_population):
     """
     """
-    if not isinstance(ul_population.prototype,
+    if not isinstance(ul_population.cell,
                       nineml.user_layer.SpikingNodeType):
         raise RuntimeError(
             'Currently, only populations of spiking neurones (not groups) are '

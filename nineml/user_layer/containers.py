@@ -34,7 +34,7 @@ def find_difference(this, that):
 class Selection(BaseULObject):
 
     """
-    Container for multiple populations
+    Container for combining multiple populations or subsets thereof
     """
     element_name = "Selection"
 
@@ -102,7 +102,7 @@ class Network(BaseULObject):
 
     """
     Container for populations and projections between those populations. May be
-    used as the node prototype within a population, allowing hierarchical
+    used as the node cell within a population, allowing hierarchical
     structures.
     """
     element_name = "Network"
@@ -153,8 +153,8 @@ class Network(BaseULObject):
         return components
 
     def get_subnetworks(self):
-        return [p.prototype for p in self.populations.values()
-                if isinstance(p.prototype, Network)]
+        return [p.cell for p in self.populations.values()
+                if isinstance(p.cell, Network)]
 
     def _to_xml(self):
         return E(self.element_name,

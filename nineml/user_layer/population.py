@@ -14,52 +14,43 @@ class Population(BaseULObject):
     columns, etc.)
     """
     element_name = "Population"
-    defining_attributes = ("name", "number", "prototype", "positions")
+    defining_attributes = ("name", "number", "cell", "positions")
 
     def __init__(self, name, number, cell, positions=None):
         self.name = name
         self.number = number
-# FIXME: TGC Probably need to make ComponentClass's metaclasses for this to
-#        work.
-#         assert isinstance(cell, (SpikingNodeType,
-#                                  nineml.user_layer.containers.Network))
-        self.prototype = cell
+        self.cell = cell
         if positions is not None:
             assert isinstance(positions, PositionList)
         self.positions = positions
 
     def __str__(self):
         return ('Population "%s": %dx"%s" %s' %
-                (self.name, self.number, self.prototype.name, self.positions))
+                (self.name, self.number, self.cell.name, self.positions))
 
     def get_components(self):
         components = []
-        if self.prototype:
-            if isinstance(self.prototype, SpikingNodeType):
-                components.append(self.prototype)
-                components.extend(self.prototype.properties.\
+        if self.cell:
+            if isinstance(self.cell, SpikingNodeType):
+                components.append(self.cell)
+                components.extend(self.cell.properties.\
                                                     get_random_distributions())
-                components.extend(self.prototype.initial_values.\
+                components.extend(self.cell.initial_values.\
                                                     get_random_distributions())
-            elif isinstance(self.prototype,
+            elif isinstance(self.cell,
                             nineml.user_layer.containers.Network):
-                components.extend(self.prototype.get_components())
+                components.extend(self.cell.get_components())
         if self.positions is not None:
             components.extend(self.positions.get_components())
         return components
 
     def _to_xml(self):
-        if self.positions is None:
-            return E(self.element_name,
-                     E.number(str(self.number)),
-                     E.prototype(self.prototype.name),
-                     name=self.name)
-        else:
-            return E(self.element_name,
-                     E.number(str(self.number)),
-                     E.prototype(self.prototype.name),
-                     self.positions.to_xml(),
-                     name=self.name)
+        positions = [self.positions.to_xml()] if self.positions else []
+        return E(self.element_name,
+                 E.Number(str(self.number)),
+                 E.Cell(self.cell.to_xml()),
+                 *positions,
+                 name=self.name)
 
     @classmethod
     def from_xml(cls, element, context):
@@ -72,8 +63,7 @@ class Population(BaseULObject):
         return cls(name=element.attrib['name'],
                    number=int(expect_single(
                                     element.findall(NINEML + 'Number')).text),
-                   cell=context.resolve_ref(expect_single(
-                                             element.findall(NINEML + 'Cell')),
+                   cell=context.resolve_ref(element.findall(NINEML + 'Cell'),
                                             BaseComponent),
                    **kwargs)
 
@@ -85,7 +75,7 @@ class PositionList(BaseULObject):
     explicit list of positions or a Structure instance that can be used to
     generate positions.
     """
-    element_name = "Positions"
+    element_name = "Layout"
     defining_attributes = []
 
     def __init__(self, positions=[], structure=None):
