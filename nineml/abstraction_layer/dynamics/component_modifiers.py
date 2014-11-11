@@ -70,4 +70,4 @@ class ComponentModifier(object):
         component._analog_ports.remove(port)
 
         # Add a new parameter:
-        component._parameters.append(Parameter(port_name))
+        component._parameters[port_name] = Parameter(port_name)

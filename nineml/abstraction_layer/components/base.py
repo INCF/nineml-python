@@ -7,8 +7,8 @@ This module provides the base class for these.
 :license: BSD-3, see LICENSE for details.
 """
 from operator import and_
-from nineml.utility import filter_discrete_types
-from .interface import Parameter
+# from nineml.utility import filter_discrete_types
+# from .interface import Parameter
 from nineml import NINEML
 
 
@@ -34,17 +34,20 @@ class BaseComponentClass(object):
              .format(module_name))
         return XMLLoader(context).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
 
-    def __init__(self, name, parameters=None):
+    def __init__(self, name, parameters=[]):
         self._name = name
-
-        # Turn any strings in the parameter list into Parameters:
-        if parameters is None:
-            self._parameters = []
-        else:
-            param_types = (basestring, Parameter)
-            param_td = filter_discrete_types(parameters, param_types)
-            params_from_strings = [Parameter(s) for s in param_td[basestring]]
-            self._parameters = param_td[Parameter] + params_from_strings
+        self._parameters = dict((p.name, p) for p in parameters)
+#       FIXME TGC 11/11/14: I didn't think this was necessary any more but have
+#                           kept it here just in case
+#
+#         # Turn any strings in the parameter list into Parameters:
+#         if parameters is None:
+#
+#         else:
+#             param_types = (basestring, Parameter)
+#             param_td = filter_discrete_types(parameters, param_types)
+#             params_from_strings =[Parameter(s) for s in param_td[basestring]]
+#             self._parameters = param_td[Parameter] + params_from_strings
 
     @property
     def name(self):
@@ -54,7 +57,10 @@ class BaseComponentClass(object):
     @property
     def parameters(self):
         """Returns an iterator over the local |Parameter| objects"""
-        return iter(self._parameters)
+        return self._parameters.itervalues()
+
+    def parameter(self, name):
+        return self._parameters[name]
 
     def __eq__(self, other):
         return reduce(and_, [isinstance(other, self.__class__)] +

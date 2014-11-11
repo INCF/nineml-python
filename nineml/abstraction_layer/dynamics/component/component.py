@@ -457,13 +457,12 @@ class ComponentClass(BaseComponentClass,
 
         # Check any supplied parameters match:
         if parameters is not None:
-            parameter_names = [p.name for p in self._parameters]
-            inf_check(parameter_names,
+            inf_check(self._parameters.keys(),
                       inferred_struct.parameter_names,
                       'Parameters')
         else:
-            self._parameters = [Parameter(n)
-                                for n in inferred_struct.parameter_names]
+            self._parameters = dict((n, Parameter(n))
+                                    for n in inferred_struct.parameter_names)
 
         # Check any supplied state_variables match:
         if dynamics._state_variables:
