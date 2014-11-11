@@ -37,7 +37,7 @@ class BaseComponentClass(BaseALObject):
              .format(module_name))
         return XMLLoader(context).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
 
-    def __init__(self, name, parameters=[]):
+    def __init__(self, name, parameters=None):
         self._name = name
         # Turn any strings in the parameter list into Parameters:
         if parameters is None:
