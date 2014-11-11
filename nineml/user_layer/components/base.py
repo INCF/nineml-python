@@ -16,7 +16,7 @@ class BaseComponent(BaseULObject):
     Base class for model components that are defined in the abstraction layer.
     """
     element_name = "Component"
-    defining_attributes = ("name")
+    defining_attributes = ('name', 'component_class', 'properties')
     children = ("Property", "Definition", 'Prototype')
 
     # initial_values is temporary, the idea longer-term is to use a separate
@@ -94,16 +94,14 @@ class BaseComponent(BaseULObject):
         vals.update(self._initial_values)
         return vals
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-        assert not (self.unresolved or other.unresolved)
-        return reduce(and_, (self.name == other.name,
-                             self.component_class == other.component_class,
-                             self.properties == other.properties))
+#     def __eq__(self, other):
+#         if not isinstance(other, self.__class__):
+#             return False
+#         return reduce(and_, (self.name == other.name,
+#                              self.component_class == other.component_class,
+#                              self.properties == other.properties))
 
     def __hash__(self):
-        assert not self.unresolved
         return (hash(self.__class__) ^ hash(self.name) ^
                 hash(self.component_class) ^ hash(self.properties))
 
@@ -223,7 +221,6 @@ class BaseReference(BaseULObject):
                              self.url == other.url))
 
     def __hash__(self):
-        assert not self.unresolved
         return (hash(self.__class__) ^ hash(self.component_name) ^
                 hash(self.url))
 
@@ -235,7 +232,7 @@ class BaseReference(BaseULObject):
     def to_xml(self):
         kwargs = {'url': self.url} if self.url else {}
         element = E(self.element_name,
-                    self.component_name,
+                    self._referred_to.name,
                     **kwargs)
         return element
 

@@ -37,6 +37,7 @@ class Selection(BaseULObject):
     Container for combining multiple populations or subsets thereof
     """
     element_name = "Selection"
+    defining_attributes = ('name', 'operation')
 
     def __init__(self, name, operation):
         self.name = name
@@ -65,6 +66,7 @@ class Concatenate(BaseULObject):
     """
 
     element_name = 'Concatenate'
+    defining_attributes = ('items',)
 
     def __init__(self, *items):
         self._items = items
@@ -75,7 +77,7 @@ class Concatenate(BaseULObject):
 
     def to_xml(self):
         return E(self.element_name,
-                 *[E.Item(item, index=str(i))
+                 *[E.Item(item.to_xml(), index=str(i))
                    for i, item in enumerate(self.items)])
 
     @classmethod
@@ -95,7 +97,7 @@ class Concatenate(BaseULObject):
         if indices[-1] != len(indices) - 1:
             raise ValueError("Missing indices in Concatenate items ({}), list "
                              "must be contiguous.".format(indices))
-        return cls(items)  # Strip off indices used to sort elements
+        return cls(*items)  # Strip off indices used to sort elements
 
 
 class Network(BaseULObject):

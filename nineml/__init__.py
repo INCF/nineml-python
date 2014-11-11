@@ -24,6 +24,13 @@ from context import Context
 
 
 def load(root_element, read_from=None):
+    """
+    Loads the lib9ml object model from a root lxml.etree.Element
+
+    root_element -- the 'NineML' etree.Element to load the object model from
+    read_from    -- specifies the url, which the xml should be considered to
+                    have been read from in order to resolve relative references
+    """
     return Context.from_xml(root_element, url=read_from)
 
 
@@ -51,3 +58,11 @@ def read(url, relative_to=None):
         raise Exception("Could not parse XML file '{}'".format(url))
     root = xml.getroot()
     return load(root, url)
+
+
+def write(context, filename):
+    """
+    Provided for symmetry with read method, takes a nineml.context.Context
+    object and writes it to the specified file
+    """
+    context.write(filename)

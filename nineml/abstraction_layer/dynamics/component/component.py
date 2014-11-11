@@ -376,6 +376,8 @@ class ComponentClass(BaseComponentClass,
          For more information, see
 
     """
+    defining_attributes = ('name', 'parameters', 'analog_ports', 'event_ports',
+                           'dynamics', 'state_variables', 'regimes', 'aliases')
 
     writer_name = 'dynamics'
 

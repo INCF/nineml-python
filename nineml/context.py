@@ -7,7 +7,7 @@ root tag.
 :license: BSD-3, see LICENSE for details.
 """
 
-from . import E, NINEML
+from . import E, NINEML, etree
 from .utility import expect_single, expect_none_or_single
 import itertools
 import collections
@@ -41,6 +41,14 @@ class Context(dict):
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
+
+    def __eq__(self, other):
+        # Ensure all objects are loaded
+        self.values()
+        other.values()
+        # Use the parent dictionary class equality
+        return (super(Context, self).__eq__(other) and
+                self.url == other.url)
 
     def resolve_ref(self, containing_elem, inline_type=None):
         """
@@ -83,8 +91,10 @@ class Context(dict):
         try:
             elem = super(Context, self).__getitem__(name)
         except KeyError:
-            # FIXME: Not sure if this is a good idea or not, it allows
-            #        attributes to be omitted from XML tags for example
+            # FIXME: Not sure if this is a good idea or not. It somewhat
+            #        simplifies code in a few places where an optional
+            #        attribute optionally refers to a name of another which
+            #        should be resolved if present but be set to None if not.
             if name is None:
                 return None
             raise KeyError("'{}' was not found in the NineML context{} ("
@@ -94,6 +104,24 @@ class Context(dict):
         if isinstance(elem, self._Unloaded):
             elem = self._load_elem_from_xml(elem)
         return elem
+
+    def itervalues(self):
+        for v in super(Context, self).itervalues():
+            if isinstance(v, self._Unloaded):
+                v = self._load_elem_from_xml(v)
+            yield v
+
+    def values(self):
+        return list(self.itervalues())
+
+    def iteritems(self):
+        for k, v in super(Context, self).iteritems():
+            if isinstance(v, self._Unloaded):
+                v = self._load_elem_from_xml(v)
+            yield k, v
+
+    def items(self):
+        return list(self.iteritems())
 
     @property
     def components(self):
@@ -127,7 +155,14 @@ class Context(dict):
 
     def to_xml(self):
         return E(self.element_name,
-                 *[c.to_xml() for c in self.itervalues()])
+                 *[c.to_xml(as_reference=False) for c in self.itervalues()])
+
+    def write(self, filename):
+        doc = self.to_xml()
+        with open(filename, 'w') as f:
+            etree.ElementTree(doc).write(f, encoding="UTF-8",
+                                         pretty_print=True,
+                                         xml_declaration=True)
 
     @classmethod
     def from_xml(cls, element, url=None):

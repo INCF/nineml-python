@@ -6,7 +6,7 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-import inspect
+from operator import and_
 from nineml.utility import filter_discrete_types
 from .interface import Parameter
 from nineml import NINEML
@@ -55,3 +55,8 @@ class BaseComponentClass(object):
     def parameters(self):
         """Returns an iterator over the local |Parameter| objects"""
         return iter(self._parameters)
+
+    def __eq__(self, other):
+        return reduce(and_, [isinstance(other, self.__class__)] +
+                            [getattr(self, name) == getattr(other, name)
+                             for name in self.__class__.defining_attributes])
