@@ -27,6 +27,12 @@ class Population(BaseULObject):
         return ('Population "%s": %dx"%s" %s' %
                 (self.name, self.number, self.cell.name, self.positions))
 
+    def __repr__(self):
+        return ("Population(name='{}', number={}, cell={}{})"
+                .format(self.name, self.number, self.cell.name,
+                        'positions={}'.format(self.positions)
+                        if self.positions else ''))
+
     def get_components(self):
         components = []
         if self.cell:
