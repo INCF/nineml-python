@@ -20,6 +20,8 @@ from ..base import BaseALObject
 
 class ComponentClass(BaseComponentClass):
 
+    defining_attributes = ('name', '_parameters', '_connection_rule')
+
     def __init__(self, name, parameters=None, connection_rule=None):
         super(ComponentClass, self).__init__(name, parameters)
         self._connection_rule = connection_rule

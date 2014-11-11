@@ -121,8 +121,8 @@ class XMLLoader(object):
         subnodes = self.loadBlocks(element, blocks=subblocks)
         transitions = subnodes["OnEvent"] + subnodes['OnCondition']
         return al.Regime(name=element.get('name'),
-                                time_derivatives=subnodes["TimeDerivative"],
-                                transitions=transitions)
+                         time_derivatives=subnodes["TimeDerivative"],
+                         transitions=transitions)
 
     def load_statevariable(self, element):
         name = element.get("name")

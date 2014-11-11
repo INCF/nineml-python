@@ -33,6 +33,7 @@ class BaseComponent(BaseULObject):
                        (value,unit) pairs.
         `prototype` - the name of another component in the model, or None.
         """
+        super(BaseComponent, self).__init__()
         self.name = name
         if not (isinstance(definition, Definition) or
                 isinstance(definition, Prototype)):
@@ -217,7 +218,7 @@ class BaseReference(BaseULObject):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return reduce(and_, (self.component_name == other.component_name,
+        return reduce(and_, (self._referred_to == other._referred_to,
                              self.url == other.url))
 
     def __hash__(self):
@@ -225,7 +226,7 @@ class BaseReference(BaseULObject):
                 hash(self.url))
 
     def __repr__(self):
-            return ('{}(refers_to="{}"{})'
+            return ('{}(name="{}"{})'
                     .format(self.__class__.__name__, self._referred_to.name,
                             ' in "{}"'.format(self.url) if self.url else ''))
 

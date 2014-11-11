@@ -88,6 +88,13 @@ class Quantity(object):
         self.value = value
         self.units = units
 
+    def __repr__(self):
+        return "Quantity({}, units={})".format(repr(self.value),
+                                               self.units.name)
+
+    def __eq__(self, other):
+        return self.value == other.value and self.units == other.units
+
     def to_xml(self):
         if isinstance(self.value, (int, float)):
             value_element = E('SingleValue', str(self.value))

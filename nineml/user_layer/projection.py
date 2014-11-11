@@ -17,7 +17,8 @@ class Projection(BaseULObject):
     """
     element_name = "Projection"
     defining_attributes = ("name", "source", "destination", "connectivity",
-                           "response", "plasticity")
+                           "response", "plasticity", "port_connections",
+                           "delay")
 
     _component_roles = set(['source', 'destination', 'plasticity', 'response'])
 
@@ -46,6 +47,7 @@ class Projection(BaseULObject):
                             'send_port' and 'receive_port' must be the name of
                             one of the ports in the corresponding components.
         """
+        super(Projection, self).__init__()
         self.name = name
         self.source = source
         self.destination = destination
@@ -53,17 +55,24 @@ class Projection(BaseULObject):
         self.plasticity = plasticity
         self.connectivity = connectivity
         self.delay = delay
-        self.port_connections = port_connections
+        self.port_connections = sorted(port_connections,
+                                       key=lambda x: (x._send_role,
+                                                      x._receive_role,
+                                                      x.send_port,
+                                                      x.receive_port))
         for pc in self.port_connections:
             pc.set_projection(self)
         self._check_port_connections()
 
-    def __eq__(self, other):
-        test_attributes = ["name", "source", "destination",
-                           "connectivity", "response", "plasticity",
-                           "port_connections"]
-        return reduce(and_, (getattr(self, attr) == getattr(other, attr)
-                             for attr in test_attributes))
+    def __repr__(self):
+        return ('Projection(name="{}", source={}, destination={}, '
+                'connectivity={}, response={}{}, delay={}, '
+                'with {} port-connections)'
+                .format(self.name, repr(self.source), repr(self.destination),
+                        repr(self.connectivity), repr(self.response),
+                        ('plasticity={}'.format(repr(self.plasticity))
+                         if self.plasticity else ''), repr(self.delay),
+                        len(self.port_connections)))
 
     def _check_port_connections(self):
         for pc in self.port_connections:
@@ -99,21 +108,22 @@ class Projection(BaseULObject):
                 components.append(component)
         return components
 
-    def to_xml(self):
+    def _to_xml(self):
         pcs = defaultdict(list)
         for pc in self.port_connections:
-            pcs[pc.receiver_role].append(
-                                      E('From' + pc.sender_role.capitalize(),
-                                      sendPort=pc.send_port,
-                                      receivePort=pc.receive_port))
-        return E(self.element_name,
-                 E.Source(self.source.to_xml(), *pcs['source']),
+            pcs[pc._receive_role].append(
+                                      E('From' + pc._send_role.capitalize(),
+                                      send_port=pc.send_port,
+                                      receive_port=pc.receive_port))
+        args = [E.Source(self.source.to_xml(), *pcs['source']),
                  E.Destination(self.destination.to_xml(), *pcs['destination']),
                  E.Connectivity(self.connectivity.to_xml()),
-                 E.Response(self.response.to_xml(), *pcs['response']),
-                 E.Plasticity(self.plasticity.to_xml(), *pcs['plasticity']),
-                 E.Delay(self.delay.to_xml()),
-                 name=self.name)
+                 E.Response(self.response.to_xml(), *pcs['response'])]
+        if self.plasticity:
+            args.append(E.Plasticity(self.plasticity.to_xml(),
+                                     *pcs['plasticity']))
+        args.append(E.Delay(self.delay.to_xml()))
+        return E(self.element_name, *args, name=self.name)
 
     @classmethod
     def from_xml(cls, element, context):
@@ -210,16 +220,23 @@ class PortConnection(object):
         if sender == receiver:
             raise Exception("Sender and Receiver cannot be the same ('{}')"
                             .format(sender))
-        assert isinstance(send_port, basestring), ("invalid send port '{}'"
-                                                   .format(send_port))
-        assert isinstance(receive_port, basestring), ("invalid receive port '"
-                                                      "{}'"
-                                                      .format(receive_port))
+        if not isinstance(send_port, basestring):
+            raise NineMLRuntimeError("invalid send port '{}'"
+                                     .format(send_port))
+        if not isinstance(receive_port, basestring):
+            raise NineMLRuntimeError("invalid receive port '{}'"
+                                     .format(receive_port))
         self._send_role = sender
         self._receive_role = receiver
         self.send_port = send_port
         self.receive_port = receive_port
         self._projection = None
+
+    def __eq__(self, other):
+        return  (self._send_role == other._send_role and
+                 self._receive_role == other._receive_role and
+                 self.send_port == other.send_port and
+                 self.receive_port == other.receive_port)
 
     def set_projection(self, projection):
         self._projection = projection

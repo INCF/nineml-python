@@ -109,7 +109,7 @@ class Transition(BaseALObject):
         """
         assert isinstance(target_regime, Regime)
         if self._target_regime:
-            assert self.target_regime == target_regime
+            assert id(self.target_regime) == id(target_regime)
             return
 
         # Did we already set the target_regime_name
@@ -257,8 +257,8 @@ class Regime(BaseALObject):
     be join the Regimes to other Regimes.
     """
 
-    defining_attributes = ('time_derivatives', 'transitions', 'on_events',
-                           'on_conditions', 'name')
+    defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
+                           'name')
 
     _n = 0
 
@@ -315,11 +315,15 @@ class Regime(BaseALObject):
         td_type_dict = filter_discrete_types(time_derivatives, td_types)
         td_from_str = [StrToExpr.time_derivative(o)
                        for o in td_type_dict[basestring]]
-        self._time_derivatives = td_type_dict[TimeDerivative] + td_from_str
+        time_derivatives = td_type_dict[TimeDerivative] + td_from_str
 
         # Check for double definitions:
-        td_dep_vars = [td.dependent_variable for td in self._time_derivatives]
+        td_dep_vars = [td.dependent_variable for td in time_derivatives]
         assert_no_duplicates(td_dep_vars)
+
+        # Store as a dictionary
+        self._time_derivatives = dict((td.dependent_variable, td)
+                                      for td in time_derivatives)
 
         # We support passing in 'transitions', which is a list of both OnEvents
         # and OnConditions. So, lets filter this by type and add them
@@ -334,6 +338,12 @@ class Regime(BaseALObject):
             self.add_on_event(event)
         for condition in f_dict[OnCondition]:
             self.add_on_condition(condition)
+
+        # Sort for equality checking
+        self._on_events = sorted(self._on_events,
+                                 key=lambda x: x.src_port_name)
+        self._on_conditions = sorted(self._on_conditions,
+                                     key=lambda x: x.trigger)
 
     def _resolve_references_on_transition(self, transition):
         if transition.target_regime_name is None:
@@ -395,7 +405,7 @@ class Regime(BaseALObject):
             defined, they are assumed to be zero in this regime.
 
         """
-        return iter(self._time_derivatives)
+        return self._time_derivatives.itervalues()
 
     @property
     def transitions(self):
@@ -489,7 +499,7 @@ class Dynamics(BaseALObject):
     and state variables
     """
 
-    defining_attributes = ('regimes', 'aliases', 'state_variables')
+    defining_attributes = ('_regimes', '_aliases', '_state_variables')
 
     def __init__(self, regimes=None, aliases=None, state_variables=None):
         """Dynamics object constructor
@@ -520,9 +530,9 @@ class Dynamics(BaseALObject):
                            for o in sv_td[basestring]]
         state_variables = sv_td[StateVariable] + sv_from_strings
 
-        self._regimes = regimes
-        self._aliases = aliases
-        self._state_variables = state_variables
+        self._regimes = dict((r.name, r) for r in regimes)
+        self._aliases = dict((a.lhs, a) for a in aliases)
+        self._state_variables = dict((s.name, s) for s in state_variables)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -530,31 +540,31 @@ class Dynamics(BaseALObject):
 
     @property
     def regimes(self):
-        return iter(self._regimes)
+        return self._regimes.itervalues()
 
     @property
     def regimes_map(self):
-        return dict((r.name, r) for r in self.regimes)
+        return self._regimes
 
     @property
     def transitions(self):
-        return chain(*[r.transitions for r in self._regimes])
+        return chain(*[r.transitions for r in self.regimes])
 
     @property
     def aliases(self):
-        return iter(self._aliases)
+        return self._aliases.itervalues()
 
     @property
     def aliases_map(self):
-        return dict([(a.lhs, a) for a in self._aliases])
+        return self._aliases
 
     @property
     def state_variables(self):
-        return iter(self._state_variables)
+        return self._state_variables.itervalues()
 
     @property
     def state_variables_map(self):
-        return dict([(sv.name, sv) for sv in self._state_variables])
+        return self._state_variables
 
 
 class StateVariable(BaseALObject):

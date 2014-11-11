@@ -13,7 +13,7 @@ import itertools
 import collections
 import nineml.user_layer
 import nineml.abstraction_layer
-from .user_layer.components.base import Reference
+from .user_layer.components.base import Reference, BaseULObject
 
 
 class Context(dict):
@@ -155,7 +155,9 @@ class Context(dict):
 
     def to_xml(self):
         return E(self.element_name,
-                 *[c.to_xml(as_reference=False) for c in self.itervalues()])
+                 *[c.to_xml(as_reference=False)
+                   if isinstance(c, BaseULObject) else c.to_xml()
+                   for c in self.itervalues()])
 
     def write(self, filename):
         doc = self.to_xml()

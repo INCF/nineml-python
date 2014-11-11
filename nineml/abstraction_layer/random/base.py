@@ -5,6 +5,7 @@ from ..base import BaseALObject
 class ComponentClass(BaseComponentClass):
 
     writer_name = 'random'
+    defining_attributes = ('name', '_parameters', 'random_distribution')
 
     def __init__(self, name, random_distribution, parameters=None):
         super(ComponentClass, self).__init__(name, parameters)
