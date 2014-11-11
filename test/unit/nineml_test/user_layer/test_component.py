@@ -1,7 +1,6 @@
 import os.path
 import unittest
-from nineml import read
-from nineml.user_layer import Component
+from nineml import read, load
 from nineml.exceptions import NineMLUnitMismatchError
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
@@ -10,13 +9,19 @@ examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
 
 class TestComponent(unittest.TestCase):
 
-    def test_load(self):
-        context = read(os.path.join(examples_dir, 'HodgkinHuxley.xml'))
-        self.assertEquals(type(context['HodgkinHuxley']), Component)
+    def test_component_xml_540degree_roundtrip(self):
+        test_file = os.path.join(examples_dir, 'HodgkinHuxley.xml')
+        context1 = read(test_file)
+        xml = context1.to_xml()
+        context2 = load(xml, read_from=test_file)
+        self.assertEquals(context1, context2)
 
-    def test_prototype(self):
-        context = read(os.path.join(examples_dir, 'HodgkinHuxleyModified.xml'))
-        self.assertEquals(type(context['HodgkinHuxleyModified']), Component)
+    def test_prototype_xml_540degree_roundtrip(self):
+        test_file = os.path.join(examples_dir, 'HodgkinHuxleyModified.xml')
+        context1 = read(test_file)
+        xml = context1.to_xml()
+        context2 = load(xml, read_from=test_file)
+        self.assertEquals(context1, context2)
 
     def test_mismatch_dimension(self):
         context = read(os.path.join(examples_dir, 'HodgkinHuxleyBadUnits.xml'))
