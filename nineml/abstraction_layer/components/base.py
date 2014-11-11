@@ -10,9 +10,10 @@ from operator import and_
 # from nineml.utility import filter_discrete_types
 # from .interface import Parameter
 from nineml import NINEML
+from ..base import BaseALObject
 
 
-class BaseComponentClass(object):
+class BaseComponentClass(BaseALObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     element_name = 'ComponentClass'
@@ -58,6 +59,10 @@ class BaseComponentClass(object):
     def parameters(self):
         """Returns an iterator over the local |Parameter| objects"""
         return self._parameters.itervalues()
+
+    @property
+    def parameter_names(self):
+        return self._parameters.iterkeys()
 
     def parameter(self, name):
         return self._parameters[name]

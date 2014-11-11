@@ -31,6 +31,7 @@ grid2D = ComponentClass(
 # IMPORTANT NOTE - this is just a bunch of crazy ideas to kick about for now.
 
 from nineml.abstraction_layer.components import BaseComponentClass
+from ..base import BaseALObject
 
 
 def Function(object):
@@ -40,7 +41,7 @@ def Function(object):
         self.value = value
 
 
-class StructureGenerator(object):
+class StructureGenerator(BaseALObject):
     """
     A representation of an algorithm for generating a list of positions in
     space given a list (or interval?) of indices.

@@ -1,4 +1,5 @@
 from nineml.abstraction_layer.components import BaseComponentClass
+from ..base import BaseALObject
 
 
 class ComponentClass(BaseComponentClass):
@@ -14,7 +15,7 @@ class ComponentClass(BaseComponentClass):
         return visitor.visit_componentclass(self, **kwargs)
 
 
-class RandomDistribution(object):
+class RandomDistribution(BaseALObject):
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

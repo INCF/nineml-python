@@ -1,7 +1,8 @@
 from .. import E
+from .base import BaseALObject
 
 
-class Dimension(object):
+class Dimension(BaseALObject):
     """
     Defines the dimension used for quantity units
     """
@@ -46,7 +47,7 @@ class Dimension(object):
         return cls(name, **kwargs)
 
 
-class Unit(object):
+class Unit(BaseALObject):
     """
     Defines the units of a quantity
     """

@@ -18,9 +18,10 @@ from nineml.utility import (filter_discrete_types,
 
 from nineml.exceptions import NineMLRuntimeError
 from ..visitors import ClonerVisitor
+from ...base import BaseALObject
 
 
-class Transition(object):
+class Transition(BaseALObject):
 
     def __init__(self, state_assignments=None, event_outputs=None,
                  target_regime_name=None):
@@ -239,7 +240,7 @@ class OnCondition(Transition):
         return self._trigger
 
 
-class Regime(object):
+class Regime(BaseALObject):
 
     """
     A Regime is something that contains |TimeDerivatives|, has temporal extent,
@@ -409,7 +410,7 @@ class Regime(object):
         return self._name
 
 
-class ComponentDynamics(object):
+class ComponentDynamics(BaseALObject):
     pass
 
 
@@ -468,7 +469,7 @@ def DoOnCondition(condition, do=None, to=None):
                        target_regime_name=to)
 
 
-class Dynamics(object):
+class Dynamics(BaseALObject):
 
     """
     A container class, which encapsulates a component's regimes, transitions,
@@ -500,8 +501,7 @@ class Dynamics(object):
         # Load the state variables as objects or strings:
         sv_types = (basestring, StateVariable)
         sv_td = filter_discrete_types(state_variables, sv_types)
-        sv_from_strings = [StateVariable(o,
-                                         dimension=None)
+        sv_from_strings = [StateVariable(o, dimension=None)
                            for o in sv_td[basestring]]
         state_variables = sv_td[StateVariable] + sv_from_strings
 
@@ -542,7 +542,7 @@ class Dynamics(object):
         return dict([(sv.name, sv) for sv in self._state_variables])
 
 
-class StateVariable(object):
+class StateVariable(BaseALObject):
 
     """A class representing a state-variable in a ``ComponentClass``.
 

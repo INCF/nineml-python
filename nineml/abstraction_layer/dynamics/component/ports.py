@@ -8,9 +8,11 @@ This file defines the Port classes used in NineML
 from nineml.utility import ensure_valid_c_variable_name  # , curry
 from nineml.exceptions import NineMLRuntimeError
 from abc import ABCMeta
+from operator import and_
+from ...base import BaseALObject
 
 
-class Port(object):
+class Port(BaseALObject):
 
     """ Base class for |AnalogSendPort|, |AnalogReceivePort|, |EventSendPort|,
     |EventReceivePort| and |AnalogReducePort|.
@@ -48,6 +50,11 @@ class Port(object):
         ensure_valid_c_variable_name(name)
         self._name = name
 
+    def __eq__(self, other):
+        return reduce(and_, [isinstance(other, self.__class__)] +
+                            [getattr(self, name) == getattr(other, name)
+                             for name in self.__class__.defining_attributes])
+
     @property
     def name(self):
         """The name of the port, local to the current component"""
@@ -60,8 +67,8 @@ class AnalogPort(Port):
     An |AnalogPort| represents a continuous input or output to/from a
     Component. For example, this could be the membrane-voltage into a synapse
     component, or the current provided by a ion-channel.
-
     """
+    defining_attributes = ('name', 'dimension')
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
     def __init__(self, name, dimension=None):
@@ -88,6 +95,7 @@ class EventPort(Port):
     to notify them to provide current to a post-synaptic neuron.
     """
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
+    defining_attributes = ('name',)
 
     def __repr__(self):
         classstring = self.__class__.__name__

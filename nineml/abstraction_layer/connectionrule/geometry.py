@@ -14,9 +14,10 @@ docstring goes here
 """
 
 from abc import ABCMeta, abstractmethod
+from ..base import BaseALObject
 
 
-class Geometry(object):
+class Geometry(BaseALObject):
 
     """
     Geometry interface has got three methods:

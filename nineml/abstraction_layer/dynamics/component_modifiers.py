@@ -9,9 +9,10 @@ from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics.visitors import ExpandPortDefinition
 from nineml.utility import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
+from ..base import BaseALObject
 
 
-class ComponentModifier(object):
+class ComponentModifier(BaseALObject):
 
     """Utility classes for modifying components"""
 

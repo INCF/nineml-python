@@ -14,15 +14,16 @@ from nineml.exceptions import NineMLRuntimeError
 from nineml.maths import (MathUtil, str_to_npfunc_map, func_namespace_split,
                           is_valid_lhs_target)
 from . import parse
+from ...base import BaseALObject
 
 
-class RegimeElement(object):
+class RegimeElement(BaseALObject):
 
     """ Base class for all things that can be elements of a regime """
     pass
 
 
-class Expression(object):
+class Expression(BaseALObject):
 
     """ This is a base class for Expressions and Conditionals which provides
     the basic interface for parsing, yielding of python functions,

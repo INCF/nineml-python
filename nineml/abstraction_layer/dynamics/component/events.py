@@ -6,9 +6,10 @@ This file contains the definitions for the Events
 """
 
 from nineml.utility import ensure_valid_c_variable_name
+from ...base import BaseALObject
 
 
-class OutputEvent(object):
+class OutputEvent(BaseALObject):
 
     """OutputEvent
 
