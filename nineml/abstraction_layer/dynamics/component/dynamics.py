@@ -23,6 +23,9 @@ from ...base import BaseALObject
 
 class Transition(BaseALObject):
 
+    defining_attributes = ('state_assignments', 'event_outputs',
+                           'target_regime_name')
+
     def __init__(self, state_assignments=None, event_outputs=None,
                  target_regime_name=None):
         """Abstract class representing a transition from one |Regime| to
@@ -176,6 +179,9 @@ class Transition(BaseALObject):
 
 class OnEvent(Transition):
 
+    defining_attributes = ('src_port_name', 'state_assignments',
+                           'event_outputs', 'target_regime_name')
+
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_onevent(self, **kwargs)
@@ -205,6 +211,9 @@ class OnEvent(Transition):
 
 
 class OnCondition(Transition):
+
+    defining_attributes = ('trigger', 'state_assignments',
+                           'event_outputs', 'target_regime_name')
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -247,6 +256,9 @@ class Regime(BaseALObject):
     defines a set of |Transitions| which occur based on |Conditions|, and can
     be join the Regimes to other Regimes.
     """
+
+    defining_attributes = ('time_derivatives', 'transitions', 'on_events',
+                           'on_conditions', 'name')
 
     _n = 0
 
@@ -416,6 +428,7 @@ class ComponentDynamics(BaseALObject):
 
 # Forwarding Function:
 def On(trigger, do=None, to=None):
+
     if isinstance(do, (OutputEvent, basestring)):
         do = [do]
     elif do == None:
@@ -475,6 +488,8 @@ class Dynamics(BaseALObject):
     A container class, which encapsulates a component's regimes, transitions,
     and state variables
     """
+
+    defining_attributes = ('regimes', 'aliases', 'state_variables')
 
     def __init__(self, regimes=None, aliases=None, state_variables=None):
         """Dynamics object constructor
@@ -549,6 +564,8 @@ class StateVariable(BaseALObject):
     This was originally a string, but if we intend to support units in the
     future, wrapping in into its own object may make the transition easier
     """
+
+    defining_attributes = ('name', 'dimension')
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

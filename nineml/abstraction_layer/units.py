@@ -53,6 +53,7 @@ class Unit(BaseALObject):
     """
 
     element_name = 'Unit'
+    defining_attributes = ('name', 'dimension', 'power', 'offset')
 
     def __init__(self, name, dimension, power, offset=0.0):
         self.name = name

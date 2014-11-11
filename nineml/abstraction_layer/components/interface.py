@@ -18,6 +18,8 @@ class Parameter(BaseALObject):
     future, wrapping in into its own object may make the transition easier
     """
 
+    defining_attributes = ('name', 'dimension')
+
     def __init__(self, name, dimension=None):
         """Parameter Constructor
 

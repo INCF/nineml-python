@@ -29,6 +29,8 @@ class Expression(BaseALObject):
     the basic interface for parsing, yielding of python functions,
     C equivalents, name substitution """
 
+    defining_attributes = ('_rhs',)
+
     def __init__(self, rhs):
         self._rhs = None
         self._rhs_names = None
@@ -170,6 +172,8 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS):
     """Represents a an equation with a simple left-hand-side.
     That is, a single symbol, for example 's = t+1'
     """
+
+    defining_attributes = ('_lhs', '_rhs')
 
     def __init__(self, lhs, rhs):
         ExpressionWithLHS.__init__(self, rhs)

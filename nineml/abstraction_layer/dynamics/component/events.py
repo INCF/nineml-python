@@ -18,6 +18,8 @@ class OutputEvent(BaseALObject):
     the component.
     """
 
+    defining_attributes = ('port_name',)
+
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_outputevent(self, **kwargs)

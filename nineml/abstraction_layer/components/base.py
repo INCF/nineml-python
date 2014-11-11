@@ -66,8 +66,3 @@ class BaseComponentClass(BaseALObject):
 
     def parameter(self, name):
         return self._parameters[name]
-
-    def __eq__(self, other):
-        return reduce(and_, [isinstance(other, self.__class__)] +
-                            [getattr(self, name) == getattr(other, name)
-                             for name in self.__class__.defining_attributes])

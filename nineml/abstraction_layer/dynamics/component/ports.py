@@ -50,11 +50,6 @@ class Port(BaseALObject):
         ensure_valid_c_variable_name(name)
         self._name = name
 
-    def __eq__(self, other):
-        return reduce(and_, [isinstance(other, self.__class__)] +
-                            [getattr(self, name) == getattr(other, name)
-                             for name in self.__class__.defining_attributes])
-
     @property
     def name(self):
         """The name of the port, local to the current component"""
@@ -68,7 +63,9 @@ class AnalogPort(Port):
     Component. For example, this could be the membrane-voltage into a synapse
     component, or the current provided by a ion-channel.
     """
+
     defining_attributes = ('name', 'dimension')
+
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
     def __init__(self, name, dimension=None):
@@ -95,6 +92,7 @@ class EventPort(Port):
     to notify them to provide current to a post-synaptic neuron.
     """
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
+
     defining_attributes = ('name',)
 
     def __repr__(self):
