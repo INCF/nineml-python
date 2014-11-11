@@ -246,7 +246,7 @@ class ComponentFlattener(object):
         self.reducedcomponent.set_flattener(self)
 
     @classmethod
-    def create_compound_regime(cls, regimetuple):
+    def create_compound_regime(cls, regimetuple, name):
 
         # Copy accross all the odes from each regime.
         # We don't worry about transitions yet, we deal with them later.
@@ -256,7 +256,7 @@ class ComponentFlattener(object):
             [r.time_derivatives for r in regimetuple])
         time_derivs = [ClonerVisitor().visit(td) for td in time_derivs]
 
-        return Regime(name=None, time_derivatives=time_derivs)
+        return Regime(name=name, time_derivatives=time_derivs)
 
     def build_new_regime_space(self):
 
@@ -267,7 +267,9 @@ class ComponentFlattener(object):
         self.old_regime_tuple_to_new_regime_map = {}
         regimes = [comp.regimes for comp in self.componentswithregimes]
         for regimetuple in itertools.product(*regimes):
-            new_regime = ComponentFlattener.create_compound_regime(regimetuple)
+            name = '_and_'.join(r.name for r in regimetuple)
+            new_regime = ComponentFlattener.create_compound_regime(regimetuple,
+                                                                   name)
             self.old_regime_tuple_to_new_regime_map[regimetuple] = new_regime
 
         # Create New Events for the Regime-Map
@@ -329,10 +331,11 @@ class ComponentFlattener(object):
                                                          self.reducedcomponent)
 
                 del new_analog_ports[dst_addr.get_local_name()]
-                self.reducedcomponent._analog_receive_ports.remove(
-                    expect_single([p 
-                                   for p in self.reducedcomponent.analog_receive_ports
-                                   if p.name == dst_addr.get_local_name()]))
+                del self.reducedcomponent._analog_receive_ports[
+                                                     dst_addr.get_local_name()]
+#                     expect_single([p 
+#                                    for p in self.reducedcomponent.analog_receive_ports
+#                                    if p.name == ]))
 
                 portconnections.remove((src_addr, dst_addr))
 

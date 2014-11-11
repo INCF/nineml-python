@@ -278,9 +278,9 @@ def assert_no_duplicates(lst, error_func=None):
 
     It raises an `NineMLRuntimeError` if the lengths are not equal.
     """
-
+    # Ensure it is a list not a generator
+    lst = list(lst)
     if len(lst) != len(set(lst)):
-
         # Find the duplication:
         seen_items = set()
         for i in lst:
@@ -289,7 +289,6 @@ def assert_no_duplicates(lst, error_func=None):
                 break
             else:
                 seen_items.add(i)
-
         _dispatch_error_func(error_func,
                              "Unxpected duplication found: %s \n in %s" %
                              (str(i),  str(lst)))

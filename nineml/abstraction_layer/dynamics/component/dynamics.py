@@ -531,6 +531,10 @@ class Dynamics(BaseALObject):
                            for o in sv_td[basestring]]
         state_variables = sv_td[StateVariable] + sv_from_strings
 
+        assert_no_duplicates(r.name for r in regimes)
+        assert_no_duplicates(a.lhs for a in aliases)
+        assert_no_duplicates(s.name for s in state_variables)
+
         self._regimes = dict((r.name, r) for r in regimes)
         self._aliases = dict((a.lhs, a) for a in aliases)
         self._state_variables = dict((s.name, s) for s in state_variables)
@@ -605,7 +609,10 @@ class StateVariable(BaseALObject):
         return self._dimension
 
     def __repr__(self):
-        return "<StateVariable: %s (%s)>" % (self.name, self.dimension)
+        return ("StateVariable({}{})"
+                .format(self.name,
+                        ', dimension={}'.format(self.dimension.name)
+                        if self.dimension else ''))
 
 # class SubComponent(BaseDynamicsComponent):
 #     pass

@@ -45,8 +45,10 @@ class Parameter(BaseALObject):
         return self._dimension
 
     def __repr__(self):
-        dimension = self.dimension.name if self.dimension else 'dimensionless'
-        return "<Parameter: %r (%r)>" % (self.name, dimension)
+        return ("Parameter({}{})"
+                .format(self.name,
+                        ', dimension={}'.format(self.dimension.name)
+                        if self.dimension else ''))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

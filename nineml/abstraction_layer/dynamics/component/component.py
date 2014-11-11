@@ -448,7 +448,7 @@ class ComponentClass(BaseComponentClass,
                 raise NineMLRuntimeError(err)
 
         else:
-            # We should always create a dynamics object, even is it is empty: TGC, Why?
+            # We should always create a dynamics object, even is it is empty. FIXME: TGC 11/11/14, Why? @IgnorePep8
             dynamics = dyn.Dynamics(regimes=regimes,
                                     aliases=aliases,
                                     state_variables=state_variables)
@@ -456,6 +456,13 @@ class ComponentClass(BaseComponentClass,
 
         # Ensure analog_ports is a list not an iterator
         analog_ports = list(analog_ports)
+        event_ports = list(event_ports)
+
+        # Check there aren't any duplicates in the port and parameter names
+        assert_no_duplicates(p if isinstance(p, basestring) else p.name
+                             for p in chain(parameters if parameters else [],
+                                            analog_ports,
+                                            event_ports))
 
         analog_receive_ports = [port for port in analog_ports
                                 if isinstance(port, AnalogReceivePort)]
@@ -489,8 +496,7 @@ class ComponentClass(BaseComponentClass,
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
             dynamics._state_variables = state_vars
-        # Ensure analog_ports is a list not an iterator
-        event_ports = list(event_ports)
+
         # Check Event Receive Ports Match:
         event_receive_ports = [port for port in event_ports
                                if isinstance(port, EventReceivePort)]
