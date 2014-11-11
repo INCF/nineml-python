@@ -303,9 +303,10 @@ class Regime(BaseALObject):
                                                         None))
         time_derivatives = list(args) + kw_tds
 
-        # Generate a name for unnamed regions:
-        self._name = name.strip() if name else Regime.get_next_name()
-        ensure_valid_c_variable_name(self._name)
+        self._name = name
+        if self.name is not None:
+            self._name = self._name.strip()
+            ensure_valid_c_variable_name(self._name)
 
         # Un-named arguments are time_derivatives:
         time_derivatives = normalise_parameter_as_list(time_derivatives)
