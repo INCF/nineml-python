@@ -14,6 +14,7 @@ import collections
 import nineml.user_layer
 import nineml.abstraction_layer
 from .user_layer.components.base import Reference, BaseULObject
+from .annotation import Annotation
 
 
 class Context(dict):
@@ -187,7 +188,7 @@ class Context(dict):
                                 "NineML document (valid elements are '{}')."
                                 .format(child.tag, "', '".join(top_level)))
             if child.tag == NINEML + 'Annotation':
-                elements['_annotation'] = child
+                elements['_annotation'] = Annotation.from_xml(child)
             else:
                 # Units use 'symbol' as their unique identifier (from LEMS) all
                 # other elements use 'name'

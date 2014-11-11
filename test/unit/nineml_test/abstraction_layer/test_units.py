@@ -1,25 +1,15 @@
 import os.path
 import unittest
-from nineml import read
-from nineml.abstraction_layer.units import Unit, Dimension
+from nineml import read, load
 
 
 class TestUnitsDimensions(unittest.TestCase):
 
-    def test_dimension(self):
-        context = read(os.path.join(os.path.dirname(__file__), '..', '..',
-                                    '..', '..', '..', '..', 'examples', 'xml',
-                                    'units.xml'))
-        for name in ('voltage', 'conductance', 'conductanceDensity',
-                     'per_voltage', 'charge', 'volume', 'permeability',
-                     'idealGasConstantDims'):
-            self.assertEquals(type(context[name]), Dimension)
+    test_file = os.path.join(os.path.dirname(__file__), '..', '..',
+                             '..', 'xml', 'units.xml')
 
-    def test_units(self):
-        context = read(os.path.join(os.path.dirname(__file__), '..', '..',
-                                    '..', '..', '..', '..', 'examples', 'xml',
-                                    'units.xml'))
-        for name in ('ms', 'hour', 'litre',
-                     'uS', 'uF', 'C', 'mol',
-                     'cm_per_ms'):
-            self.assertEquals(type(context[name]), Unit)
+    def test_xml_540degree_roundtrip(self):
+        context1 = read(self.test_file)
+        xml = context1.to_xml()
+        context2 = load(xml, read_from=self.test_file)
+        self.assertEquals(context1, context2)

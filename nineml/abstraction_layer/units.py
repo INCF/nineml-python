@@ -91,7 +91,7 @@ class Unit(BaseALObject):
     def from_xml(cls, element, context):
         name = element.attrib['symbol']
         dimension = context[element.attrib['dimension']]
-        power = int(element.attrib['power'])
+        power = int(element.get('power', 0))
         offset = float(element.attrib.get('name', 0.0))
         return cls(name, dimension, power, offset)
 
