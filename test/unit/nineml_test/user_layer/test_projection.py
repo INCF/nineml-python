@@ -5,9 +5,9 @@ from nineml import read, load
 
 class TestProjection(unittest.TestCase):
 
-    test_file = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
-                             '..', '..', 'examples', 'xml', 'projections',
-                             'simple.xml')
+    test_file = os.path.join(os.path.dirname(__file__), '..', '..', '..',
+                            'xml', 'projections',
+                            'simple.xml')
 
     def test_xml_540degree_roundtrip(self):
         context1 = read(self.test_file)

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NineML xmlns="http://nineml.net/9ML/1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://nineml.net/9ML/1.0/schema/NineML_v0.2.xsd">
+  <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
+  <Dimension name="current" i="1"/>
+  <Unit symbol="mV" dimension="voltage" power="-3"/>
+  <ComponentClass name="IzhikevichClass">
+    <Parameter name="a"/>
+    <Parameter name="b"/>
+    <Parameter name="c" dimension="voltage"/>
+    <Parameter name="d"/>
+    <Parameter name="theta" dimension="voltage"/>
+    <!-- AnalogPort or Exposure?? -->
+    <AnalogReducePort name="iSyn" dimension="current" operator="+"/>
+    <AnalogSendPort name="U"/>
+    <AnalogSendPort name="V" dimension="voltage"/>
+    <EventSendPort name="spikeOutput" mode="send"/>
+    <Dynamics>
+        <!-- Suggested addition Wednesday morning...-->
+        <StateVariable name="V" dimension="voltage"/>
+        <StateVariable name="U"/>
+        <Regime name="subthresholdRegime">
+          <!-- if "independent_variable" is missing, it should be assumed to be "t" -->
+          <!-- Should this "ODE" be called "Rate", RateODE, "RateEqn" ??-->
+          <TimeDerivative variable="U">
+            <MathInline>a*(b*V - U)</MathInline>
+          </TimeDerivative>
+          <TimeDerivative variable="V">
+            <MathInline>0.04*V*V + 5*V + 140.0 - U + iSyn</MathInline>
+          </TimeDerivative>
+          <OnCondition>
+            <Trigger>
+              <MathInline>V &gt; theta </MathInline>
+            </Trigger>
+            <StateAssignment variable="V" >
+              <MathInline>c</MathInline>
+            </StateAssignment>
+            <StateAssignment variable="U" >
+              <MathInline>U+d</MathInline>
+            </StateAssignment>
+            <EventOut port="spikeOutput" />
+          </OnCondition>
+        </Regime>
+    </Dynamics>
+  </ComponentClass>
+  <Component name="Izhikevich">
+    <Definition>IzhikevichClass</Definition>
+    <Property name="a">
+      <Quantity>
+        <SingleValue>0.02</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="b">
+      <Quantity>
+        <SingleValue>0.2</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="c">
+      <Quantity units="mV">
+        <SingleValue>-65.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="d">
+      <Quantity>
+        <SingleValue>8</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="theta">
+      <Quantity units="mV">
+        <SingleValue>-40.0</SingleValue>
+      </Quantity>
+    </Property>
+  </Component>
+</NineML>

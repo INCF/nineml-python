@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NineML xmlns="http://nineml.net/9ML/1.0">
+  <Dimension name="per_time" t="-1"/>
+  <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
+  <Unit symbol="per_ms" dimension="per_time" power="3"/>
+  <Unit symbol="mV" dimension="voltage" power="-3"/>
+  <Component name="HodgkinHuxleyModified">
+    <Prototype url="./HodgkinHuxley.xml">HodgkinHuxley</Prototype>
+    <Property name="m_alpha_A">
+      <Quantity units="per_ms">
+        <SingleValue>0.5</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="m_alpha_V0">
+      <Quantity units="mV">
+        <SingleValue>-20.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="m_alpha_K">
+      <Quantity units="mV">
+        <SingleValue>5.0</SingleValue>
+      </Quantity>
+    </Property>
+  </Component>
+</NineML>

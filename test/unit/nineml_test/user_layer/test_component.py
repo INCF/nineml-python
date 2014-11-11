@@ -3,8 +3,8 @@ import unittest
 from nineml import read, load
 from nineml.exceptions import NineMLUnitMismatchError
 
-examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
-                            '..', '..', 'examples', 'xml', 'neurons')
+examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
+                            'xml', 'neurons')
 
 
 class TestComponent(unittest.TestCase):

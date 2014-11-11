@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NineML xmlns="http://nineml.net/9ML/1.0">
+  <Dimension name="per_time" t="-1"/>
+  <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
+  <Dimension name="conductanceDensity" m="-1" l="-4" t="3" i="2"/>
+  <Dimension name="specificCapacitance" m="-1" l="-4" t="4" i="2"/>
+  <Unit symbol="per_ms" dimension="per_time" power="3"/>
+  <Unit symbol="mV" dimension="voltage" power="-3"/>
+  <Unit symbol="S_per_cm2" dimension="conductanceDensity" power="4"/>
+  <Unit symbol="uF_per_cm2" dimension="specificCapacitance" power="-2"/>
+  <Component name="HodgkinHuxley">
+    <Definition url="./HodgkinHuxleyClass.xml">HodgkinHuxleyClass</Definition>
+    <Property name="m_alpha_A">
+      <Quantity units="per_ms">
+        <SingleValue>0.1</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="m_alpha_V0">
+      <Quantity units="mV">
+        <SingleValue>-40.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="m_alpha_K">
+      <Quantity units="mV">
+        <SingleValue>10.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="m_beta_A">
+      <Quantity units="per_ms">
+        <SingleValue>4.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="m_beta_V0">
+      <Quantity units="mV">
+        <SingleValue>-65.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="m_beta_K">
+      <Quantity units="mV">
+        <SingleValue>18.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="h_alpha_A">
+      <Quantity units="per_ms">
+        <SingleValue>0.07</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="h_alpha_V0">
+      <Quantity units="mV">
+        <SingleValue>-65.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="h_alpha_K">
+      <Quantity units="mV">
+        <SingleValue>20.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="h_beta_A">
+      <Quantity units="per_ms">
+        <SingleValue>1.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="h_beta_V0">
+      <Quantity units="mV">
+        <SingleValue>-35.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="h_beta_K">
+      <Quantity units="mV">
+        <SingleValue>10.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="n_alpha_A">
+      <Quantity units="per_ms">
+        <SingleValue>0.01</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="n_alpha_V0">
+      <Quantity units="mV">
+        <SingleValue>-55.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="n_alpha_K">
+      <Quantity units="mV">
+        <SingleValue>10.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="n_beta_A">
+      <Quantity units="per_ms">
+        <SingleValue>0.125</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="n_beta_V0">
+      <Quantity units="mV">
+        <SingleValue>-65.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="n_beta_K">
+      <Quantity units="mV">
+        <SingleValue>80.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="gbarNa">
+      <Quantity units="S_per_cm2">
+        <SingleValue>0.12</SingleValue>
+      </Quantity>
+    </Property>  
+    <Property name="gbarK">
+      <Quantity units="S_per_cm2">
+        <SingleValue>0.036</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="gLeak">
+      <Quantity units="S_per_cm2">
+        <SingleValue>0.0003</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="eNa">
+      <Quantity units="mV">
+        <SingleValue>50.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="eK">
+      <Quantity units="mV">
+        <SingleValue>-77.0</SingleValue>
+      </Quantity>
+    </Property>  
+    <Property name="eLeak">
+      <Quantity units="mV">
+        <SingleValue>-54.4</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="eLeak">
+      <Quantity units="mV">
+        <SingleValue>-54.4</SingleValue>
+      </Quantity>
+    </Property>    
+    <Property name="C">
+      <Quantity units="uF_per_cm2">
+        <SingleValue>1.0</SingleValue>
+      </Quantity>
+    </Property>
+  </Component>
+</NineML>
