@@ -539,6 +539,11 @@ class Dynamics(BaseALObject):
         """ |VISITATION| """
         return visitor.visit_dynamics(self, **kwargs)
 
+    def __repr__(self):
+        return ('Dynamics({} regimes, {} aliases, {} state-variables)'
+                .format(len(self.regimes), len(self.aliases),
+                        len(self.state_variables)))
+
     @property
     def regimes(self):
         return self._regimes.itervalues()

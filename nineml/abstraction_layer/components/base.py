@@ -11,6 +11,8 @@ from operator import and_
 # from .interface import Parameter
 from nineml import NINEML
 from ..base import BaseALObject
+from .interface import Parameter
+from ...utility import filter_discrete_types
 
 
 class BaseComponentClass(BaseALObject):
@@ -37,18 +39,15 @@ class BaseComponentClass(BaseALObject):
 
     def __init__(self, name, parameters=[]):
         self._name = name
+        # Turn any strings in the parameter list into Parameters:
+        if parameters is None:
+            parameters = []
+        else:
+            param_types = (basestring, Parameter)
+            param_td = filter_discrete_types(parameters, param_types)
+            params_from_strings = [Parameter(s) for s in param_td[basestring]]
+            parameters = param_td[Parameter] + params_from_strings
         self._parameters = dict((p.name, p) for p in parameters)
-#       FIXME TGC 11/11/14: I didn't think this was necessary any more but have
-#                           kept it here just in case
-#
-#         # Turn any strings in the parameter list into Parameters:
-#         if parameters is None:
-#
-#         else:
-#             param_types = (basestring, Parameter)
-#             param_td = filter_discrete_types(parameters, param_types)
-#             params_from_strings =[Parameter(s) for s in param_td[basestring]]
-#             self._parameters = param_td[Parameter] + params_from_strings
 
     @property
     def name(self):

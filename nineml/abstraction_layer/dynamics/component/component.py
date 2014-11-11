@@ -448,7 +448,7 @@ class ComponentClass(BaseComponentClass,
                 raise NineMLRuntimeError(err)
 
         else:
-            # We should always create a dynamics object, even is it is empty:
+            # We should always create a dynamics object, even is it is empty: TGC, Why?
             dynamics = dyn.Dynamics(regimes=regimes,
                                     aliases=aliases,
                                     state_variables=state_variables)
@@ -486,8 +486,8 @@ class ComponentClass(BaseComponentClass,
                       inferred_struct.state_variable_names,
                       'StateVariables')
         else:
-            state_vars = [StateVariable(n) for n in
-                          inferred_struct.state_variable_names]
+            state_vars = dict((n, StateVariable(n)) for n in
+                              inferred_struct.state_variable_names)
             dynamics._state_variables = state_vars
         # Ensure analog_ports is a list not an iterator
         event_ports = list(event_ports)

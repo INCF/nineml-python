@@ -64,11 +64,15 @@ class ComponentFlattener_test(unittest.TestCase):
 
         #  - Ports & Parameters:
         self.assertEqual(
-            set(c_flat.query.analog_ports_map.keys()),  set(['cIn2', 'cIn1', 'C1', 'C2']))
+            set(c_flat.query.analog_ports_map.keys()),
+            set(['cIn2', 'cIn1', 'C1', 'C2']))
         self.assertEqual(
-            set(c_flat.query.event_ports_map.keys()),   set(['spikein', 'c_emit', 'emit']))
-        self.assertEqual(set(c_flat.query.parameters_map.keys()),    set(['cp1', 'cp2']))
-        self.assertEqual(set(c_flat.state_variables_map.keys()),     set(['SV1']))
+            set(c_flat.query.event_ports_map.keys()),
+            set(['spikein', 'c_emit', 'emit']))
+        self.assertEqual(set(c_flat.query.parameters_map.keys()),
+                         set(['cp1', 'cp2']))
+        self.assertEqual(set(c_flat.state_variables_map.keys()),
+                         set(['SV1']))
 
     def test_Flattening2(self):
 
@@ -84,7 +88,8 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'), AnalogSendPort('C1'), AnalogSendPort('C2')],
+            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
+                          AnalogSendPort('C1'), AnalogSendPort('C2')],
             parameters=['cp1', 'cp2']
         )
 
@@ -100,7 +105,8 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'), AnalogSendPort('D1'), AnalogSendPort('D2')],
+            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
+                          AnalogSendPort('D1'), AnalogSendPort('D2')],
             parameters=['dp1', 'dp2']
         )
 
@@ -412,7 +418,8 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'), AnalogSendPort('C1'), AnalogSendPort('C2')],
+            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
+                          AnalogSendPort('C1'), AnalogSendPort('C2')],
             parameters=['cp1', 'cp2']
         )
 
@@ -428,7 +435,8 @@ class ComponentFlattener_test(unittest.TestCase):
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'), AnalogSendPort('D1'), AnalogSendPort('D2')],
+            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
+                          AnalogSendPort('D1'), AnalogSendPort('D2')],
             parameters=['dp1', 'dp2']
         )
 
@@ -438,13 +446,15 @@ class ComponentFlattener_test(unittest.TestCase):
         # Everything should be as before:
         b = ComponentClass(name='B',
                            subnodes={'c1': c, 'c2': c, 'd': d},
-                           portconnections=[('c1.C1', 'c2.cIn2'), ('c2.C1', 'c1.cIn1')],
+                           portconnections=[('c1.C1', 'c2.cIn2'),
+                                            ('c2.C1', 'c1.cIn1')],
                            )
 
         a = ComponentClass(name='A',
                            subnodes={'b': b, 'c': c},
-                           portconnections=[('b.c1.C1', 'b.c1.cIn2'), (
-                                            'b.c1.C1', 'b.c2.cIn1'), ('b.c1.C2', 'b.d.dIn1')]
+                           portconnections=[('b.c1.C1', 'b.c1.cIn2'),
+                                            ('b.c1.C1', 'b.c2.cIn1'),
+                                            ('b.c1.C2', 'b.d.dIn1')]
                            )
 
         a_flat = flattening.flatten(a)
