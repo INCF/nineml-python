@@ -1,10 +1,9 @@
 # encoding: utf-8
-import os.path
-from operator import and_
-import nineml
-from ..base import BaseULObject, E, read_annotations, annotate_xml, NINEML
+from ..base import BaseULObject
+from ...base import E, read_annotations, annotate_xml, NINEML
+from ...context import BaseReference
 from nineml.exceptions import NineMLUnitMismatchError
-from ...exceptions import NineMLRuntimeError
+
 
 # This line is imported at the end of the file to avoid recursive imports
 # from .interface import Property, InitialValue, InitialValueSet, PropertySet

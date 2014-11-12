@@ -1,11 +1,10 @@
 # encoding: utf-8
-import collections
-from numbers import Number
 from operator import and_
-from ..base import BaseULObject, E, read_annotations, annotate_xml, NINEML
+from ..base import BaseULObject, Reference
+from ...base import E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
-from .base import BaseComponent, Reference
+from .base import BaseComponent
 from ...abstraction_layer import Unit
 
 

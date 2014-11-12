@@ -1,6 +1,7 @@
 from itertools import chain
 from operator import itemgetter
-from .base import BaseULObject, NINEML, E
+from .base import BaseULObject
+from ..base import NINEML, E
 from utility import check_tag
 from ..utility import expect_single
 from nineml.base import annotate_xml, read_annotations

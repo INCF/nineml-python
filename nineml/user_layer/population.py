@@ -1,7 +1,7 @@
-import re
-from .base import BaseULObject, NINEML, E
+from .base import BaseULObject
+from ..base import NINEML, E
 from .utility import check_tag
-from .components import BaseComponent, StringValue
+from .components import BaseComponent
 from ..utility import expect_single
 from nineml.base import annotate_xml, read_annotations
 

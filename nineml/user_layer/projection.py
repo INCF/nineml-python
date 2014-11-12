@@ -1,5 +1,5 @@
-from operator import and_
-from .base import BaseULObject, E, read_annotations, annotate_xml, NINEML
+from .base import BaseULObject
+from ..base import E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
 from .components import BaseComponent
 from itertools import chain

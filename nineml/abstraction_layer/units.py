@@ -1,4 +1,4 @@
-from .. import E
+from ..base import E
 from .base import BaseALObject
 from nineml.base import annotate_xml, read_annotations
 

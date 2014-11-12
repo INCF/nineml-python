@@ -6,12 +6,8 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from operator import and_
-# from nineml.utility import filter_discrete_types
-# from .interface import Parameter
-from nineml import NINEML
 from ..base import BaseALObject
-from ...base import read_annotations, annotate_xml
+from ...base import read_annotations, annotate_xml, NINEML
 from .interface import Parameter
 from ...utility import filter_discrete_types
 
