@@ -1,5 +1,6 @@
 from .. import E
 from .base import BaseALObject
+from nineml.base import annotate_xml, read_annotations
 
 
 class Dimension(BaseALObject):
@@ -33,6 +34,7 @@ class Dimension(BaseALObject):
     def power(self, dim_name):
         return self._dims.get(dim_name, 0)
 
+    @annotate_xml
     def to_xml(self):
         kwargs = {'name': self.name}
         kwargs.update(dict((k, str(v)) for k, v in self._dims.items()))
@@ -40,6 +42,7 @@ class Dimension(BaseALObject):
                  **kwargs)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, _):
         kwargs = dict(element.attrib)
         name = kwargs.pop('name')
@@ -79,6 +82,7 @@ class Unit(BaseALObject):
     def symbol(self):
         return self.name
 
+    @annotate_xml
     def to_xml(self):
         kwargs = {'symbol': self.name, 'dimension': self.dimension.name,
                   'power': str(self.power)}
@@ -88,6 +92,7 @@ class Unit(BaseALObject):
                  **kwargs)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         name = element.attrib['symbol']
         dimension = context[element.attrib['dimension']]

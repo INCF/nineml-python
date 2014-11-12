@@ -3,6 +3,7 @@ from .base import BaseULObject, NINEML, E
 from .utility import check_tag
 from .components import BaseComponent, StringValue
 from ..utility import expect_single
+from nineml.base import annotate_xml, read_annotations
 
 
 class Population(BaseULObject):
@@ -44,7 +45,8 @@ class Population(BaseULObject):
             components.extend(self.positions.get_components())
         return components
 
-    def _to_xml(self):
+    @annotate_xml
+    def to_xml(self):
         positions = [self.positions.to_xml()] if self.positions else []
         return E(self.element_name,
                  E.Number(str(self.number)),
@@ -53,6 +55,7 @@ class Population(BaseULObject):
                  name=self.name)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
         layout_elem = element.find(NINEML + 'Layout')
@@ -132,7 +135,8 @@ class PositionList(BaseULObject):
         else:
             return []
 
-    def _to_xml(self):
+    @annotate_xml
+    def to_xml(self):
         element = E(self.element_name)
         if self._positions:
             for pos in self._positions:
@@ -146,6 +150,7 @@ class PositionList(BaseULObject):
         return element
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         if element is None:
             return None

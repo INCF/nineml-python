@@ -2,7 +2,7 @@
 import collections
 from numbers import Number
 from operator import and_
-from ..base import BaseULObject, E, NINEML
+from ..base import BaseULObject, E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
 from .base import BaseComponent, Reference
@@ -56,12 +56,14 @@ class Property(BaseULObject):
     def is_random(self):
         return isinstance(self.value, RandomDistribution)
 
+    @annotate_xml
     def to_xml(self):
         return E(self.element_name,
                  self.quantity.to_xml(),
                  name=self.name)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
         quantity = Quantity.from_xml(element.find(NINEML + "Quantity"),
@@ -95,6 +97,7 @@ class Quantity(object):
     def __eq__(self, other):
         return self.value == other.value and self.units == other.units
 
+    @annotate_xml
     def to_xml(self):
         if isinstance(self.value, (int, float)):
             value_element = E('SingleValue', str(self.value))
@@ -106,6 +109,7 @@ class Quantity(object):
                  **kwargs)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         """
         Parse an XML ElementTree structure and return a (value, units) tuple.
@@ -152,6 +156,7 @@ class StringValue(object):
     element_name = "Value"
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element):
         """
         Parse an XML ElementTree structure and return a string value.
@@ -204,11 +209,13 @@ class PropertySet(dict):
     def get_random_distributions(self):
         return [p.value for p in self.values() if p.is_random()]
 
+    @annotate_xml
     def to_xml(self):
         # serialization is in alphabetical order
         return [self[name].to_xml() for name in sorted(self.keys())]
 
     @classmethod
+    @read_annotations
     def from_xml(cls, elements, context):
         properties = []
         for parameter_element in elements:
@@ -233,6 +240,7 @@ class InitialValueSet(PropertySet):
         return "InitialValueSet(%s)" % dict(self)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, elements, context):
         initial_values = []
         for iv_element in elements:

@@ -1,7 +1,7 @@
 from . import E
 
 
-class Annotation(dict):
+class Annotations(dict):
     """
     Defines the dimension used for quantity units
     """

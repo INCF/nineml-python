@@ -1,5 +1,5 @@
 from operator import and_
-from .base import BaseULObject, E, NINEML
+from .base import BaseULObject, E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
 from .components import BaseComponent
 from itertools import chain
@@ -108,7 +108,8 @@ class Projection(BaseULObject):
                 components.append(component)
         return components
 
-    def _to_xml(self):
+    @annotate_xml
+    def to_xml(self):
         pcs = defaultdict(list)
         for pc in self.port_connections:
             pcs[pc._receive_role].append(
@@ -126,6 +127,7 @@ class Projection(BaseULObject):
         return E(self.element_name, *args, name=self.name)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
         # Get Name

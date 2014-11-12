@@ -3,6 +3,7 @@ from operator import itemgetter
 from .base import BaseULObject, NINEML, E
 from utility import check_tag
 from ..utility import expect_single
+from nineml.base import annotate_xml, read_annotations
 
 
 def find_difference(this, that):
@@ -44,12 +45,14 @@ class Selection(BaseULObject):
         self.operation = operation
         self._from_reference = False
 
-    def _to_xml(self):
+    @annotate_xml
+    def to_xml(self):
         return E(self.element_name,
                  self.operation.to_xml(),
                  name=self.name)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
         # The only supported op at this stage
@@ -75,12 +78,14 @@ class Concatenate(BaseULObject):
     def items(self):
         return self._items
 
+    @annotate_xml
     def to_xml(self):
         return E(self.element_name,
                  *[E.Item(item.to_xml(), index=str(i))
                    for i, item in enumerate(self.items)])
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         # Load references and indices from xml
         items = ((e.attrib['index'], context.resolve_ref(e))
@@ -158,7 +163,8 @@ class Network(BaseULObject):
         return [p.cell for p in self.populations.values()
                 if isinstance(p.cell, Network)]
 
-    def _to_xml(self):
+    @annotate_xml
+    def to_xml(self):
         return E(self.element_name,
                  name=self.name,
                  *[p.to_xml() for p in chain(self.populations.values(),
@@ -166,6 +172,7 @@ class Network(BaseULObject):
                                              self.projections.values())])
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
         populations = []

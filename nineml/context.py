@@ -7,14 +7,14 @@ root tag.
 :license: BSD-3, see LICENSE for details.
 """
 
-from . import E, NINEML, etree
+from . import E, read_annotations, annotate_xml, NINEML, etree
 from .utility import expect_single, expect_none_or_single
 import itertools
 import collections
 import nineml.user_layer
 import nineml.abstraction_layer
 from .user_layer.components.base import Reference, BaseULObject
-from .annotation import Annotation
+from nineml.annotations import Annotations
 
 
 class Context(dict):
@@ -27,7 +27,7 @@ class Context(dict):
 
     element_name = 'NineML'
 
-    ## Valid top-level NineML element names
+    # Valid top-level NineML element names
     top_level_abstraction = ['Dimension', 'Unit', 'ComponentClass',
                              'Annotation']
     top_level_user = ['Component', 'PositionList',
@@ -67,7 +67,7 @@ class Context(dict):
                              permitted.
         """
         elem = expect_none_or_single(
-                      containing_elem.findall(NINEML + Reference.element_name))
+                      containing_elem.findall(NINEML + Reference.element_name))  # @IgnorePep8
         if elem is not None:
             ref = Reference.from_xml(elem, self)
             if inline_type and not isinstance(ref.user_layer_object,
@@ -94,7 +94,7 @@ class Context(dict):
         except KeyError:
             # FIXME: Not sure if this is a good idea or not. It somewhat
             #        simplifies code in a few places where an optional
-            #        attribute optionally refers to a name of another which
+            #        attribute refers to a name of an object which
             #        should be resolved if present but be set to None if not.
             if name is None:
                 return None
@@ -154,6 +154,7 @@ class Context(dict):
         self[unloaded.name] = elem
         return elem
 
+    @annotate_xml
     def to_xml(self):
         return E(self.element_name,
                  *[c.to_xml(as_reference=False)
@@ -168,6 +169,7 @@ class Context(dict):
                                          xml_declaration=True)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, url=None):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
