@@ -14,6 +14,9 @@
       <Quantity units="per_ms">
         <SingleValue>0.1</SingleValue>
       </Quantity>
+      <Annotations>
+        <Text>This is the alpha A value for the m gate of the Sodium channel</Text>
+      </Annotations>
     </Property>
     <Property name="m_alpha_V0">
       <Quantity units="mV">

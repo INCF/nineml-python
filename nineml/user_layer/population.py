@@ -62,14 +62,13 @@ class Population(BaseULObject):
         layout_elem = element.find(NINEML + 'Layout')
         kwargs = {}
         if layout_elem:
-            kwargs['positions'] = context.resolve_ref(layout_elem,
-                                                      BaseComponent)
+            kwargs['positions'] = BaseComponent.from_xml(layout_elem, context)
+        cell = expect_single(element.findall(NINEML + 'Cell'))
         return cls(name=element.attrib['name'],
-                   number=int(expect_single(
-                                    element.findall(NINEML + 'Number')).text),
-                   cell=context.resolve_ref(
-                               expect_single(element.findall(NINEML + 'Cell')),
-                               BaseComponent),
+                   number=int(element.find(NINEML + 'Number').text),
+                   cell=BaseComponent.from_xml(cell.find(NINEML + 'Component')
+                                               or cell.find(NINEML +
+                                                            'Reference')),
                    **kwargs)
 
 

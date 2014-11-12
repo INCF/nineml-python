@@ -1,6 +1,8 @@
 from lxml.builder import ElementMaker
 from itertools import chain
 from operator import and_
+from copy import copy
+from nineml.utility import expect_none_or_single
 
 nineml_namespace = 'http://nineml.net/9ML/1.0'
 NINEML = "{%s}" % nineml_namespace
@@ -59,17 +61,25 @@ class Annotations(dict):
 
 def read_annotations(from_xml):
     def annotate_from_xml(cls, element, context):
-        nineml_object = from_xml(cls, element, context)
-        annot_elem = element.find(NINEML + Annotations.element_name)
+        annot_elem = expect_none_or_single(
+                            element.findall(NINEML + Annotations.element_name))
         if annot_elem is not None:
-            nineml_object.annotations = Annotations.from_xml(element, context)
+            # Extract the annotations
+            annotations = Annotations.from_xml(annot_elem)
+            # Get a copy of the element with the annotations stripped
+            element = copy(element)
+            element.remove(element.find(NINEML + Annotations.element_name))
+        else:
+            annotations = None
+        nineml_object = from_xml(cls, element, context)
+        nineml_object.annotations = annotations
         return nineml_object
     return annotate_from_xml
 
 
 def annotate_xml(to_xml):
-    def annotate_to_xml(self):
-        elem = to_xml(self)
+    def annotate_to_xml(self, **kwargs):
+        elem = to_xml(self, **kwargs)
         if self.annotations is not None:
             elem.append(self.annotations.to_xml())
         return elem

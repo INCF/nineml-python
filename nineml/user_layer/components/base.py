@@ -177,7 +177,7 @@ class BaseComponent(BaseULObject):
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
                                element.findall(NINEML + Property.element_name),
-                               context)
+                                  context)
         initial_values = InitialValueSet.from_xml(
                            element.findall(NINEML + InitialValue.element_name),
                            context)

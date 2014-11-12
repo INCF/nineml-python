@@ -10,6 +10,7 @@ class BaseULObject(BaseNineMLObject):
     """
 
     def __init__(self):
+        super(BaseULObject, self).__init__()
         self._from_reference = None
 
     def __lt__(self, other):

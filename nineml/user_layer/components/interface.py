@@ -125,12 +125,12 @@ class Quantity(object):
                 value = float(value_element.text)
             except ValueError:
                 raise ValueError("Provided value '{}' is not numeric"
-                                .format(value_element.text))
+                                 .format(value_element.text))
         elif value_element.tag in (NINEML + 'ArrayValue',
                                    NINEML + 'ExternalArrayValue'):
             raise NotImplementedError
         elif value_element.tag in (NINEML + 'Reference', NINEML + 'Component'):
-            value = context.resolve_ref(element, BaseComponent)
+            value = BaseComponent.from_xml(value_element)
         else:
             raise KeyError("Unrecognised tag name '{tag}', was expecting one "
                            "of '{nm}SingleValue', '{nm}ArrayValue', "
@@ -207,13 +207,11 @@ class PropertySet(dict):
     def get_random_distributions(self):
         return [p.value for p in self.values() if p.is_random()]
 
-    @annotate_xml
     def to_xml(self):
         # serialization is in alphabetical order
         return [self[name].to_xml() for name in sorted(self.keys())]
 
     @classmethod
-    @read_annotations
     def from_xml(cls, elements, context):
         properties = []
         for parameter_element in elements:
@@ -238,7 +236,6 @@ class InitialValueSet(PropertySet):
         return "InitialValueSet(%s)" % dict(self)
 
     @classmethod
-    @read_annotations
     def from_xml(cls, elements, context):
         initial_values = []
         for iv_element in elements:

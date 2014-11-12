@@ -1,10 +1,9 @@
 from itertools import chain
 from operator import itemgetter
-from .base import BaseULObject
-from ..base import NINEML, E
+from .base import BaseULObject, Reference
+from ..base import NINEML, E, annotate_xml, read_annotations
 from utility import check_tag
 from ..utility import expect_single
-from nineml.base import annotate_xml, read_annotations
 
 
 def find_difference(this, that):
@@ -91,7 +90,7 @@ class Concatenate(BaseULObject):
     @read_annotations
     def from_xml(cls, element, context):
         # Load references and indices from xml
-        items = ((e.attrib['index'], context.resolve_ref(e))
+        items = ((e.attrib['index'], Reference.from_xml(e, context))
                  for e in element.findall(NINEML + 'Item'))
         # Sort by 'index' attribute
         indices, items = zip(*sorted(items, key=itemgetter(0)))
@@ -181,15 +180,15 @@ class Network(BaseULObject):
         check_tag(element, cls)
         populations = []
         for pop_elem in element.findall(NINEML + 'PopulationItem'):
-            pop = context.resolve_ref(pop_elem, Population)
+            pop = Population.from_xml(pop_elem, context)
             populations[pop.name] = pop
         projections = []
         for proj_elem in element.findall(NINEML + 'ProjectionItem'):
-            proj = context.resolve_ref(proj_elem, Projection)
+            proj = Projection.from_xml(proj_elem, context)
             projections[proj.name] = proj
         selections = []
-        for sel_elem in element.findall(NINEML + 'SelectionItem'):
-            sel = context.resolve_ref(sel_elem, Selection)
+        for sel_elem in element.findall(NINEML + 'Selection'):
+            sel = Selection.from_xml(sel_elem, context)
             selections[sel.name] = sel
         network = cls(name=element.attrib["name"], populations=populations,
                       projections=projections, selections=selections)

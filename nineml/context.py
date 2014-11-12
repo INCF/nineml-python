@@ -4,7 +4,8 @@ from lxml import etree
 from operator import and_
 import itertools
 import collections
-from .base import annotate_xml, read_annotations, NINEML, BaseNineMLObject, E
+from .base import (annotate_xml, read_annotations, NINEML, BaseNineMLObject, E,
+                   Annotations)
 import nineml.user_layer
 import nineml.abstraction_layer
 
@@ -42,40 +43,6 @@ class Context(dict, BaseNineMLObject):
         # Use the parent dictionary class equality
         return (super(Context, self).__eq__(other) and
                 self.url == other.url)
-
-#     def resolve_ref(self, containing_elem, inline_type=None):
-#         """
-#         This method is used for resolving a member element that can either be
-#         defined in the current file (i.e. within a 'Reference' tag without a
-#         url attribute), in a separate file (i.e. within a 'Reference' tag with
-#         a url attribute) or inline (i.e. no 'Reference' tag just the object).
-# 
-#         `containing_elem` -- the XML element that contains the Reference or
-#                              inline object
-#         `inline_type`     -- the expected type of the object to be referenced.
-#                              This is used to check the referene points to the
-#                              correct object and also to convert inline objects.
-#                              If it is not provided in-line definitions are not
-#                              permitted.
-#         """
-#         elem = expect_none_or_single(
-#                       containing_elem.findall(NINEML + Reference.element_name))  # @IgnorePep8
-#         if elem is not None:
-#             ref = Reference.from_xml(elem, self)
-#             if inline_type and not isinstance(ref.user_layer_object,
-#                                               inline_type):
-#                 raise TypeError("Type of referenced object ('{}') does not "
-#                                 "match expected type ('{}')"
-#                                 .format(ref.user_layer_object.__class__,
-#                                         inline_type))
-#             obj = ref.user_layer_object
-#         else:
-#             if not inline_type:
-#                 raise Exception("This '{}' element does not permit inline "
-#                                 "child elements".format(containing_elem.tag))
-#             elem = expect_single(containing_elem.findall(NINEML + 'Component'))
-#             obj = inline_type.from_xml(elem, self)
-#         return obj
 
     def __getitem__(self, name):
         """
@@ -198,6 +165,7 @@ class Context(dict, BaseNineMLObject):
             elements[name] = cls._Unloaded(name, child, child_cls)
         context = cls(**elements)
         context.annotations = annotations
+        return context
 
 
 class BaseReference(BaseNineMLObject):
