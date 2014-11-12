@@ -26,17 +26,8 @@ class BaseNineMLObject(object):
     def __ne__(self, other):
         return not self == other
 
-    def __lt__(self, other):
-        if self.__class__.__name__ < other.__class__.__name__:
-            return True
-        else:
-            return self.name < other.name
-
     def get_children(self):
-        if hasattr(self, "children"):
-            return chain(getattr(self, attr) for attr in self.children)
-        else:
-            return []
+        return chain(getattr(self, attr) for attr in self.children)
 
     def accept_visitor(self, visitor):
         visitor.visit(self)
@@ -47,10 +38,10 @@ class Annotations(dict):
     Defines the dimension used for quantity units
     """
 
-    element_name = 'Annotation'
+    element_name = 'Annotations'
 
     def __repr__(self):
-        return ("Annotation({})"
+        return ("Annotations({})"
                 .format(', '.join('{}={}'.format(k, v)
                                   for k, v in self.iteritems())))
 
@@ -79,7 +70,7 @@ def read_annotations(from_xml):
 def annotate_xml(to_xml):
     def annotate_to_xml(self):
         elem = to_xml(self)
-        if self._annotations is not None:
+        if self.annotations is not None:
             elem.append(self.annotations.to_xml())
         return elem
     return annotate_to_xml

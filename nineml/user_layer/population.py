@@ -17,6 +17,7 @@ class Population(BaseULObject):
     defining_attributes = ("name", "number", "cell", "positions")
 
     def __init__(self, name, number, cell, positions=None):
+        super(Population, self).__init__()
         self.name = name
         self.number = number
         self.cell = cell
@@ -93,6 +94,7 @@ class PositionList(BaseULObject):
                     array.
         `structure` should be a Structure component.
         """
+        super(PositionList, self).__init__()
         if positions and structure:
             raise Exception("Please provide either positions or structure, "
                             "not both.")

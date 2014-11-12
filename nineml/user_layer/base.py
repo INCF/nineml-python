@@ -12,6 +12,12 @@ class BaseULObject(BaseNineMLObject):
     def __init__(self):
         self._from_reference = None
 
+    def __lt__(self, other):
+        if self.__class__.__name__ < other.__class__.__name__:
+            return True
+        else:
+            return self.name < other.name
+
 #     def set_reference(self, reference):
 #         self._from_reference = reference
 #

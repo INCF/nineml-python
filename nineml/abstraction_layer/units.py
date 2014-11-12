@@ -12,6 +12,7 @@ class Dimension(BaseALObject):
     valid_dims = ['m', 'l', 't', 'i', 'n', 'k', 'j']
 
     def __init__(self, name, **kwargs):
+        super(Dimension, self).__init__()
         self.name = name
         for k in kwargs:
             if k not in self.valid_dims:
@@ -59,6 +60,7 @@ class Unit(BaseALObject):
     defining_attributes = ('name', 'dimension', 'power', 'offset')
 
     def __init__(self, name, dimension, power, offset=0.0):
+        super(Unit, self).__init__()
         self.name = name
         self.dimension = dimension
         self.power = power

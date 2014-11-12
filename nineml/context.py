@@ -9,7 +9,7 @@ import nineml.user_layer
 import nineml.abstraction_layer
 
 
-class Context(dict):
+class Context(dict, BaseNineMLObject):
     """
     Loads and stores all top-level elements in a NineML file (i.e. any element
     that is able to sit directly within <NineML>...</NineML> tags). All
@@ -21,7 +21,7 @@ class Context(dict):
 
     # Valid top-level NineML element names
     top_level_abstraction = ['Dimension', 'Unit', 'ComponentClass',
-                             'Annotation']
+                             'Annotations']
     top_level_user = ['Component', 'PositionList',
                       'Population', 'Selection', 'Projection']
 
@@ -146,7 +146,6 @@ class Context(dict):
         self[unloaded.name] = elem
         return elem
 
-    @annotate_xml
     def to_xml(self):
         return E(self.element_name,
                  *[c.to_xml(as_reference=False)
@@ -162,7 +161,6 @@ class Context(dict):
                                          xml_declaration=True)
 
     @classmethod
-    @read_annotations
     def from_xml(cls, element, url=None):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
@@ -170,8 +168,13 @@ class Context(dict):
         elements = {'_url': url}
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
+        annotations = None
         for child in element.getchildren():
-            if child.tag in (NINEML + e for e in cls.top_level_user):
+            if child.tag == NINEML + Annotations.element_name:
+                assert annotations is None, "Multiple annotations tags found"
+                annotations = Annotations.from_xml(child)
+                continue
+            elif child.tag in (NINEML + e for e in cls.top_level_user):
                 child_cls = getattr(nineml.user_layer, child.tag[len(NINEML):])
             elif child.tag in (NINEML + e for e in cls.top_level_abstraction):
                 child_cls = getattr(nineml.abstraction_layer,
@@ -193,7 +196,8 @@ class Context(dict):
                                         ob2=child_cls.element_name,
                                         url=url or ''))
             elements[name] = cls._Unloaded(name, child, child_cls)
-        return cls(**elements)
+        context = cls(**elements)
+        context.annotations = annotations
 
 
 class BaseReference(BaseNineMLObject):

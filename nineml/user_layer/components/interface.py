@@ -23,6 +23,7 @@ class Property(BaseULObject):
     defining_attributes = ("name", "quantity")
 
     def __init__(self, name, quantity):
+        super(Property, self).__init__()
         if not isinstance(quantity, Quantity):
             raise TypeError("Value must be provided as a Quantity object")
         self.name = name
@@ -96,7 +97,6 @@ class Quantity(object):
     def __eq__(self, other):
         return self.value == other.value and self.units == other.units
 
-    @annotate_xml
     def to_xml(self):
         if isinstance(self.value, (int, float)):
             value_element = E('SingleValue', str(self.value))
@@ -108,7 +108,6 @@ class Quantity(object):
                  **kwargs)
 
     @classmethod
-    @read_annotations
     def from_xml(cls, element, context):
         """
         Parse an XML ElementTree structure and return a (value, units) tuple.

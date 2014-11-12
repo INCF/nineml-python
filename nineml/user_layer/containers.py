@@ -42,6 +42,7 @@ class Selection(BaseULObject):
     defining_attributes = ('name', 'operation')
 
     def __init__(self, name, operation):
+        super(Selection, self).__init__()
         self.name = name
         self.operation = operation
         self._from_reference = False
@@ -73,6 +74,7 @@ class Concatenate(BaseULObject):
     defining_attributes = ('items',)
 
     def __init__(self, *items):
+        super(Concatenate, self).__init__()
         self._items = items
 
     @property
@@ -118,6 +120,7 @@ class Network(BaseULObject):
     children = ("populations", "projections", "selections")
 
     def __init__(self, name, populations={}, projections={}, selections={}):
+        super(Network, self).__init__()
         self.name = name
         self.populations = populations
         self.projections = projections
@@ -215,6 +218,7 @@ from .projection import Projection
 #         """
 #         condition - instance of an Operator subclass
 #         """
+#         super(Property, self).__init__()
 #         assert isinstance(condition, Operator)
 #         self.name = name
 #         self.condition = condition
@@ -313,6 +317,7 @@ from .projection import Projection
 #         return "%s in %s" % tuple(qstr(op) for op in self.operands)
 #
 # class Operator(BaseULObject):
+#     super(Property, self).__init__()
 #     defining_attributes = ("operands",)
 #     children = ("operands",)
 #
