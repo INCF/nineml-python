@@ -1,4 +1,4 @@
-from .base import BaseULObject
+from .base import BaseULObject, resolve_reference, write_reference
 from ..base import NINEML, E
 from .utility import check_tag
 from .components import BaseComponent
@@ -46,6 +46,7 @@ class Population(BaseULObject):
             components.extend(self.positions.get_components())
         return components
 
+    @write_reference
     @annotate_xml
     def to_xml(self):
         positions = [self.positions.to_xml()] if self.positions else []
@@ -56,6 +57,7 @@ class Population(BaseULObject):
                  name=self.name)
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
@@ -68,7 +70,8 @@ class Population(BaseULObject):
                    number=int(element.find(NINEML + 'Number').text),
                    cell=BaseComponent.from_xml(cell.find(NINEML + 'Component')
                                                or cell.find(NINEML +
-                                                            'Reference')),
+                                                            'Reference'),
+                                               context),
                    **kwargs)
 
 
@@ -136,6 +139,7 @@ class PositionList(BaseULObject):
         else:
             return []
 
+    @write_reference
     @annotate_xml
     def to_xml(self):
         element = E(self.element_name)
@@ -151,6 +155,7 @@ class PositionList(BaseULObject):
         return element
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
         if element is None:

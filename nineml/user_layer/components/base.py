@@ -1,5 +1,5 @@
 # encoding: utf-8
-from ..base import BaseULObject
+from ..base import BaseULObject, resolve_reference, write_reference
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ...context import BaseReference
 from nineml.exceptions import NineMLUnitMismatchError
@@ -156,6 +156,7 @@ class BaseComponent(BaseULObject):
                 raise NineMLUnitMismatchError(err)
         # TODO: Now check dimensions
 
+    @write_reference
     @annotate_xml
     def to_xml(self):
         properties_and_initial_values = (self._properties.to_xml() +
@@ -169,6 +170,7 @@ class BaseComponent(BaseULObject):
         return element
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
         if element.tag != NINEML + cls.element_name:

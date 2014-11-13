@@ -67,7 +67,7 @@ def resolve_reference(from_xml):
             reference = Reference.from_xml(element, context)
             ul_object = reference.user_layer_object
         else:
-            assert element.tag == cls.element_name
+            assert element.tag == NINEML + cls.element_name
             ul_object = from_xml(cls, element, context)
         return ul_object
     return resolving_from_xml

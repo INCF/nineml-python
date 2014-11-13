@@ -1,6 +1,6 @@
 # encoding: utf-8
 from operator import and_
-from ..base import BaseULObject, Reference
+from ..base import BaseULObject, resolve_reference, write_reference, Reference
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
@@ -56,6 +56,7 @@ class Property(BaseULObject):
     def is_random(self):
         return isinstance(self.value, RandomDistribution)
 
+    @write_reference
     @annotate_xml
     def to_xml(self):
         return E(self.element_name,
@@ -63,6 +64,7 @@ class Property(BaseULObject):
                  name=self.name)
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
@@ -154,6 +156,7 @@ class StringValue(object):
     element_name = "Value"
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element):
         """

@@ -1,6 +1,6 @@
 from itertools import chain
 from operator import itemgetter
-from .base import BaseULObject, Reference
+from .base import BaseULObject, resolve_reference, write_reference, Reference
 from ..base import NINEML, E, annotate_xml, read_annotations
 from utility import check_tag
 from ..utility import expect_single
@@ -46,6 +46,7 @@ class Selection(BaseULObject):
         self.operation = operation
         self._from_reference = False
 
+    @write_reference
     @annotate_xml
     def to_xml(self):
         return E(self.element_name,
@@ -53,6 +54,7 @@ class Selection(BaseULObject):
                  name=self.name)
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
@@ -80,6 +82,7 @@ class Concatenate(BaseULObject):
     def items(self):
         return self._items
 
+    @write_reference
     @annotate_xml
     def to_xml(self):
         return E(self.element_name,
@@ -87,10 +90,12 @@ class Concatenate(BaseULObject):
                    for i, item in enumerate(self.items)])
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
         # Load references and indices from xml
-        items = ((e.attrib['index'], Reference.from_xml(e, context))
+        items = ((e.attrib['index'],
+                  Reference.from_xml(e.find(NINEML + 'Reference'), context))
                  for e in element.findall(NINEML + 'Item'))
         # Sort by 'index' attribute
         indices, items = zip(*sorted(items, key=itemgetter(0)))
@@ -166,6 +171,7 @@ class Network(BaseULObject):
         return [p.cell for p in self.populations.values()
                 if isinstance(p.cell, Network)]
 
+    @write_reference
     @annotate_xml
     def to_xml(self):
         return E(self.element_name,
@@ -175,6 +181,7 @@ class Network(BaseULObject):
                                              self.projections.values())])
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)

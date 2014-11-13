@@ -1,4 +1,4 @@
-from .base import BaseULObject
+from .base import BaseULObject, resolve_reference, write_reference
 from ..base import E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
 from .components import BaseComponent
@@ -108,6 +108,7 @@ class Projection(BaseULObject):
                 components.append(component)
         return components
 
+    @write_reference
     @annotate_xml
     def to_xml(self):
         pcs = defaultdict(list)
@@ -127,6 +128,7 @@ class Projection(BaseULObject):
         return E(self.element_name, *args, name=self.name)
 
     @classmethod
+    @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
@@ -143,20 +145,25 @@ class Projection(BaseULObject):
                         expect_single(dest_elem.findall(NINEML + 'Reference')),
                         context)
         # Get Response
-        response = context.resolve_ref(
-                           expect_single(element.findall(NINEML + 'Response')),
-                           BaseComponent)
+        response = BaseComponent.from_xml(element.find(NINEML + 'Response').\
+                                          element.find(NINEML + 'Component') or
+                                          element.find(NINEML + 'Reference'),
+                                          context)
         # Get Plasticity
         pl_elem = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
         if pl_elem is not None:
-            plasticity = context.resolve_ref(pl_elem, BaseComponent)
+            plasticity = BaseComponent.from_xml(
+                                          pl_elem.find(NINEML + 'Component') or
+                                          pl_elem.find(NINEML + 'Reference'),
+                                          context)
         else:
             plasticity = None
         # Get Connectivity
-        connectivity = context.resolve_ref(
-                                expect_single(element.findall(NINEML +
-                                                              'Connectivity')),
-                                BaseComponent)
+        connectivity = BaseComponent.from_xml(element.find(NINEML +
+                                                           'Connectivity').\
+                                          element.find(NINEML + 'Component') or
+                                          element.find(NINEML + 'Reference'),
+                                              context)
         # Get Delay
         delay = nineml.user_layer.Quantity.from_xml(
                                  expect_single(element.find(NINEML + 'Delay')),

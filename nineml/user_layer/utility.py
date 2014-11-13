@@ -1,4 +1,4 @@
-from .base import BaseULObject, NINEML
+from .base import BaseULObject, resolve_reference, write_reference, NINEML
 
 
 def check_tag(element, cls):
