@@ -80,7 +80,7 @@ def read_annotations(from_xml):
 def annotate_xml(to_xml):
     def annotate_to_xml(self, **kwargs):
         elem = to_xml(self, **kwargs)
-        if self.annotations is not None:
+        if hasattr(self, 'annotations') and self.annotations is not None:
             elem.append(self.annotations.to_xml())
         return elem
     return annotate_to_xml

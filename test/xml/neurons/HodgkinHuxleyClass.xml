@@ -7,6 +7,8 @@
   <Dimension name="current" i="1"/>
   <Dimension name="temperature" k="1"/>
   <ComponentClass name="HodgkinHuxleyClass">
+    <Annotations>
+      <Description>This class is a </Description></Annotations>
     <Parameter name="m_alpha_A" dimension="per_time"/>
     <Parameter name="m_alpha_V0" dimension="voltage"/>
     <Parameter name="m_alpha_K" dimension="voltage"/>

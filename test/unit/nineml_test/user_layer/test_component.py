@@ -13,6 +13,7 @@ class TestComponent(unittest.TestCase):
         test_file = os.path.join(examples_dir, 'HodgkinHuxley.xml')
         context1 = read(test_file)
         xml = context1.to_xml()
+        print xml.tostring(pretty_print=True)
         context2 = load(xml, read_from=test_file)
         self.assertEquals(context1, context2)
 

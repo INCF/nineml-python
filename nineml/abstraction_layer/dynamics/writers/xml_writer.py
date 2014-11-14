@@ -12,6 +12,7 @@ from nineml.abstraction_layer.dynamics import flattening
 from nineml.abstraction_layer.xmlns import nineml_namespace
 from nineml.abstraction_layer.dynamics.component import ComponentClass
 from ..visitors import ComponentVisitor
+from nineml.base import annotate_xml
 
 
 class XMLWriter(ComponentVisitor):
@@ -23,6 +24,7 @@ class XMLWriter(ComponentVisitor):
                                      xml_declaration=True)
 
     @classmethod
+    @annotate_xml
     def to_xml(cls, component, flatten=True):  # @ReservedAssignment
         assert isinstance(component, ComponentClass)
         if not component.is_flat():
@@ -35,6 +37,7 @@ class XMLWriter(ComponentVisitor):
         xml = XMLWriter().visit(component)
         return E.NineML(xml, xmlns=nineml_namespace)
 
+    @annotate_xml
     def visit_componentclass(self, component):
         elements = ([p.accept_visitor(self) for p in component.analog_ports] +
                     [p.accept_visitor(self) for p in component.event_ports] +
@@ -42,12 +45,14 @@ class XMLWriter(ComponentVisitor):
                     [component.dynamics.accept_visitor(self)])
         return E('ComponentClass', *elements, name=component.name)
 
+    @annotate_xml
     def visit_dynamics(self, dynamics):
         elements = ([r.accept_visitor(self) for r in dynamics.regimes] +
                     [b.accept_visitor(self) for b in dynamics.aliases] +
                     [b.accept_visitor(self) for b in dynamics.state_variables])
         return E('Dynamics', *elements)
 
+    @annotate_xml
     def visit_regime(self, regime):
         nodes = ([node.accept_visitor(self)
                   for node in regime.time_derivatives] +
@@ -55,16 +60,19 @@ class XMLWriter(ComponentVisitor):
                  [node.accept_visitor(self) for node in regime.on_conditions])
         return E('Regime', name=regime.name, *nodes)
 
+    @annotate_xml
     def visit_statevariable(self, state_variable):
         return E('StateVariable',
                  name=state_variable.name,
                  dimension=(state_variable.dimension.name
                             if state_variable.dimension else 'dimensionless'))
 
+    @annotate_xml
     def visit_outputevent(self, output_event, **kwargs):  # @UnusedVariable
         return E('EventOut',
                  port=output_event.port_name)
 
+    @annotate_xml
     def visit_parameter(self, parameter):
         kwargs = {}
         if parameter.dimension is not None:
@@ -72,12 +80,14 @@ class XMLWriter(ComponentVisitor):
         return E('Parameter',
                  name=parameter.name, **kwargs)
 
+    @annotate_xml
     def visit_analogreceiveport(self, port, **kwargs):
         return E('AnalogReceivePort', name=port.name,
                  dimension=(port.dimension.name
                             if port.dimension else 'dimensionless'),
                  **kwargs)
 
+    @annotate_xml
     def visit_analogreduceport(self, port, **kwargs):
         kwargs['operator'] = port.reduce_op
         return E('AnalogReducePort', name=port.name,
@@ -85,33 +95,40 @@ class XMLWriter(ComponentVisitor):
                             if port.dimension else 'dimensionless'),
                  **kwargs)
 
+    @annotate_xml
     def visit_analogsendport(self, port, **kwargs):
         return E('AnalogSendPort', name=port.name,
                  dimension=(port.dimension.name
                             if port.dimension else 'dimensionless'),
                  **kwargs)
 
+    @annotate_xml
     def visit_eventsendport(self, port, **kwargs):
         return E('EventSendPort', name=port.name, **kwargs)
 
+    @annotate_xml
     def visit_eventreceiveport(self, port, **kwargs):
         return E('EventReceivePort', name=port.name, **kwargs)
 
+    @annotate_xml
     def visit_assignment(self, assignment, **kwargs):  # @UnusedVariable
         return E('StateAssignment',
                  E("MathInline", assignment.rhs),
                  variable=assignment.lhs)
 
+    @annotate_xml
     def visit_alias(self, alias, **kwargs):  # @UnusedVariable
         return E('Alias',
                  E("MathInline", alias.rhs),
                  name=alias.lhs)
 
+    @annotate_xml
     def visit_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         return E('TimeDerivative',
                  E("MathInline", time_derivative.rhs),
                  variable=time_derivative.dependent_variable)
 
+    @annotate_xml
     def visit_oncondition(self, on_condition):
         nodes = chain(on_condition.state_assignments,
                       on_condition.event_outputs, [on_condition.trigger])
@@ -121,11 +138,13 @@ class XMLWriter(ComponentVisitor):
             kwargs['target_regime'] = on_condition._target_regime.name
         return E('OnCondition', *newNodes, **kwargs)
 
+    @annotate_xml
     def visit_condition(self, condition):
         return E('Trigger',
                  E("MathInline", condition.rhs))
 
     # TODO:
+    @annotate_xml
     def visit_onevent(self, on_event, **kwargs):  # @UnusedVariable
         elements = ([p.accept_visitor(self)
                      for p in on_event.state_assignments] +
