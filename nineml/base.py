@@ -60,9 +60,9 @@ class Annotations(dict):
 
 
 def read_annotations(from_xml):
-    def annotate_from_xml(cls, element, context):
-        annot_elem = expect_none_or_single(
-                            element.findall(NINEML + Annotations.element_name))
+    def annotate_from_xml(cls, element, *args, **kwargs):
+        annot_elem = expect_none_or_single(element.findall(NINEML + 
+                                                     Annotations.element_name))
         if annot_elem is not None:
             # Extract the annotations
             annotations = Annotations.from_xml(annot_elem)
@@ -71,17 +71,25 @@ def read_annotations(from_xml):
             element.remove(element.find(NINEML + Annotations.element_name))
         else:
             annotations = None
-        nineml_object = from_xml(cls, element, context)
-        nineml_object.annotations = annotations
+        nineml_object = from_xml(cls, element, *args, **kwargs)
+        try:
+            nineml_object.annotations = annotations
+        except AttributeError:
+            raise
         return nineml_object
     return annotate_from_xml
 
 
 def annotate_xml(to_xml):
-    def annotate_to_xml(self, **kwargs):
-        elem = to_xml(self, **kwargs)
+    def annotate_to_xml(self, *args, **kwargs):
+        elem = to_xml(self, *args, **kwargs)
+        # If User Layer class
         if hasattr(self, 'annotations') and self.annotations is not None:
             elem.append(self.annotations.to_xml())
+        # If Abstraction Layer class
+        elif (len(args) and hasattr(args[0], 'annotations') and
+              args[0].annotations is not None):
+            elem.append(args[0].annotations.to_xml())
         return elem
     return annotate_to_xml
 

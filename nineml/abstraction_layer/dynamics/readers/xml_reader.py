@@ -177,7 +177,6 @@ class XMLLoader(object):
                           event_outputs=subnodes["EventOut"],
                           target_regime_name=target_regime_name)
 
-    @read_annotations
     def load_trigger(self, element):
         return self.load_single_internal_maths_block(element)
 
@@ -192,7 +191,6 @@ class XMLLoader(object):
         port_name = element.get('port')
         return al.OutputEvent(port_name=port_name)
 
-    @read_annotations
     def load_single_internal_maths_block(self, element, checkOnlyBlock=True):
         if checkOnlyBlock:
             elements = list(element.iterchildren(tag=etree.Element))
@@ -215,11 +213,9 @@ class XMLLoader(object):
                                                                    "Value")))
         return mblock
 
-    @read_annotations
     def load_mathml(self, mathml):
         raise NotImplementedError
 
-    @read_annotations
     def load_value(self, value):
         return pq.Quantity(float(value.text),
                            value.attrib.get('units', 'dimensionless'))

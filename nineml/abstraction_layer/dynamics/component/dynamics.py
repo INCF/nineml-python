@@ -545,8 +545,8 @@ class Dynamics(BaseALObject):
 
     def __repr__(self):
         return ('Dynamics({} regimes, {} aliases, {} state-variables)'
-                .format(len(self.regimes), len(self.aliases),
-                        len(self.state_variables)))
+                .format(len(list(self.regimes)), len(list(self.aliases)),
+                        len(list(self.state_variables))))
 
     @property
     def regimes(self):

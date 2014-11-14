@@ -37,7 +37,6 @@ class XMLWriter(ComponentVisitor):
         xml = XMLWriter().visit(component)
         return E.NineML(xml, xmlns=nineml_namespace)
 
-    @annotate_xml
     def visit_componentclass(self, component):
         elements = ([p.accept_visitor(self) for p in component.analog_ports] +
                     [p.accept_visitor(self) for p in component.event_ports] +

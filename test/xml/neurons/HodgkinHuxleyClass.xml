@@ -41,6 +41,7 @@
     <EventReceivePort name="incomingSpike"/>
     <EventSendPort name="outgoingSpike"/>
     <Dynamics>
+      <Annotations><Description>Dynamics are used to describe components that are added to the differential equation solver</Description></Annotations>
       <StateVariable name="v" dimension="voltage"/>
       <StateVariable name="m"/>
       <StateVariable name="h"/>
@@ -57,9 +58,11 @@
         </TimeDerivative>
         <TimeDerivative variable="n">
           <MathInline>(n_inf - n) / n_tau</MathInline>
+          <Annotations><Description>And time-derivatives too</Description></Annotations>
         </TimeDerivative>
         <OnEvent port="incomingSpike">
           <StateAssignment variable="v">
+            <Annotations><Description>Even State assignments can be annotated</Description></Annotations>
             <MathInline>v + 5</MathInline>
           </StateAssignment>
         </OnEvent>
