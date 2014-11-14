@@ -44,7 +44,6 @@ class Selection(BaseULObject):
         super(Selection, self).__init__()
         self.name = name
         self.operation = operation
-        self._from_reference = False
 
     @write_reference
     @annotate_xml
