@@ -1,6 +1,7 @@
 from ..base import E
 from .base import BaseALObject
 from nineml.base import annotate_xml, read_annotations
+from numpy.core.test_rational import numerator
 
 
 class Dimension(BaseALObject):
@@ -10,6 +11,8 @@ class Dimension(BaseALObject):
 
     element_name = 'Dimension'
     valid_dims = ['m', 'l', 't', 'i', 'n', 'k', 'j']
+    SI_unit_conversion = {'m': 'Kg', 'l': 'm', 't': 's', 'i': 'A', 'n': 'mol',
+                          'k': 'K', 'j': 'cd'}
 
     def __init__(self, name, **kwargs):
         super(Dimension, self).__init__()
@@ -34,6 +37,17 @@ class Dimension(BaseALObject):
 
     def power(self, dim_name):
         return self._dims.get(dim_name, 0)
+
+    def to_SI_units_str(self):
+        numer = '*'.join(('({}**{})'.format(self.SI_unit_conversion[n], p)
+                          if p > 1 else self.SI_unit_conversion[n])
+                         for n, p in self._dims.iteritems()
+                         if p > 0)
+        denom = '*'.join(('({}**{})'.format(self.SI_unit_conversion[n], p)
+                          if p > 1 else self.SI_unit_conversion[n])
+                         for n, p in self._dims.iteritems()
+                         if p < 0)
+        return '{}/({})'.format(numer, denom)
 
     @annotate_xml
     def to_xml(self):
@@ -79,6 +93,13 @@ class Unit(BaseALObject):
                 .format(self.name, self.dimension.name, self.power,
                         (", offset='{}'".format(self.offset)
                          if self.offset else '')))
+
+    def to_SI_units_str(self):
+        if self.offset != 0.0:
+            raise Exception("Cannot convert to SI unit string as offset is not"
+                            " zero ({})".format(self.offset))
+        return (self.dimension.to_SI_units_str() +
+                ' * 10**({})'.format(self.power) if self.power else '')
 
     @property
     def symbol(self):
