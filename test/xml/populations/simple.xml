@@ -15,7 +15,8 @@
   <Selection name="CombinedSelection">
     <Concatenate>
       <Item index="0"><Reference>HHPopulation</Reference></Item>
-      <Item index="1"><Reference>IzhiPopulation</Reference></Item>      
+      <Item index="1"><Reference>IzhiPopulation</Reference></Item>
+      <Annotations><Text>This is a test annotation</Text></Annotations>  
     </Concatenate>
   </Selection>
 </NineML>
