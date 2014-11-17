@@ -46,7 +46,7 @@ class XMLLoader(object):
                                                        'StandardLibrary'))
         if stdlib is not None:
             return StandarLibraryConnectionRule(element.text,
-                                                element.get('reference'))
+                                                element.get('webpage'))
         else:
             for t in element.iterchildren(tag=etree.Element):
                 try:

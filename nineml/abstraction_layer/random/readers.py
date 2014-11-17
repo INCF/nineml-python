@@ -24,10 +24,9 @@ class XMLLoader(object):
         subnodes = self.loadBlocks(element, blocks=blocks)
 
         random_distribution = expect_single(subnodes["RandomDistribution"])
-        return ComponentClass(
-                         name=element.get('name'),
-                         random_distribution=random_distribution,
-                         parameters=subnodes["Parameter"])
+        return ComponentClass(name=element.get('name'),
+                              random_distribution=random_distribution,
+                              parameters=subnodes["Parameter"])
 
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
@@ -40,9 +39,8 @@ class XMLLoader(object):
         return expect_single(subnodes['StandardLibrary'])
 
     def load_standardlibrary(self, element):
-        return StandardLibraryRandomDistribution(
-                                        name=element.text,
-                                        reference_url=element.get('reference'))
+        return StandardLibraryRandomDistribution(name=element.text,
+                                                webpage=element.get('webpage'))
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
