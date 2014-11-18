@@ -40,7 +40,7 @@ class XMLLoader(object):
 
     def load_standardlibrary(self, element):
         return StandardLibraryRandomDistribution(name=element.text,
-                                                webpage=element.get('webpage'))
+                                                url=element.get('url'))
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):

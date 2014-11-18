@@ -29,7 +29,7 @@ class XMLWriter(ComponentVisitor):
         # TODO: Only implemented built-in rules at this stage
         return E('ConnectionRule',
                  E.StandardLibrary(connection_rule.name,
-                                   webpage=connection_rule.webpage))
+                                   url=connection_rule.url))
 
     def visit_parameter(self, parameter):
         kwargs = {}

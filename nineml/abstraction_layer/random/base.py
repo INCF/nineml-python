@@ -25,8 +25,8 @@ class RandomDistribution(BaseALObject):
 
 class StandardLibraryRandomDistribution(RandomDistribution):
 
-    defining_attributes = ('name', 'webpage')
+    defining_attributes = ('name', 'url')
 
-    def __init__(self, name, webpage):
+    def __init__(self, name, url):
         self.name = name
-        self.webpage = webpage
+        self.url = url

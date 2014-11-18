@@ -29,7 +29,7 @@ class XMLWriter(ComponentVisitor):
         # TODO: Only implemented built-in distributions at this stage
         return E('RandomDistribution',
                  E.StandardLibrary(random_distribution.name,
-                                   webpage=random_distribution.webpage))
+                                   url=random_distribution.url))
 
     def visit_parameter(self, parameter):
         kwargs = {}
