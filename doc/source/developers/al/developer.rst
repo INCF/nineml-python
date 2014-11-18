@@ -10,7 +10,7 @@ Introduction
 .. toctree::
    :maxdepth: 3
     
-   /src_rst/developers/al/visitors
+   /developers/al/visitors
 
 
 
@@ -33,13 +33,13 @@ Module Reference [Common Classes]
 .. toctree::
    :maxdepth: 1
    
-   /src_rst/reference/component
-   /src_rst/reference/readers
-   /src_rst/reference/writers
-   /src_rst/reference/visitors
+   /reference/component
+   /reference/readers
+   /reference/writers
+   /reference/visitors
 
-   /src_rst/reference/component_modifiers
-   /src_rst/reference/validators
+   /reference/component_modifiers
+   /reference/validators
 
 
 .. toctree::
@@ -54,6 +54,6 @@ Module Reference: [Internal]
 .. toctree::
    :maxdepth: 2
 
-   /src_rst/reference/component_internal
+   /reference/component_internal
 
 

@@ -93,9 +93,9 @@ Python-NineML is the python implementation of the NineML specification.
     :maxdepth: 2
 
     python_nineml
-    src_rst/developers/developer
+    developers/developer
 
 
 * To start using Python NineML, we recommend you start with :doc:`The Python-NineML User Documentation</python_nineml>` 
 
-* For Python NineML developers, see the :doc:`Python-NineML Developer Documentation</src_rst/developers/developer>` 
+* For Python NineML developers, see the :doc:`Python-NineML Developer Documentation</developers/developer>`

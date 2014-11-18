@@ -1,0 +1,6 @@
+
+build/
+source/reference/nineml.abstraction_layer.*.rst
+source/reference/nineml.utility*.rst
+source/tutorial_example_code/*.xml
+

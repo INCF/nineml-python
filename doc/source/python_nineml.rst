@@ -20,7 +20,7 @@ Installation
 .. toctree::
    :maxdepth: 3
 
-   src_rst/tutorials/installation/installation
+   tutorials/installation/installation
    
 
 
@@ -31,7 +31,7 @@ Abstraction Layer Quickstart
 .. toctree::
    :maxdepth: 2
 
-   src_rst/tutorials/al/al
+   tutorials/al/al
 
 
 User Layer Quickstart
@@ -50,7 +50,7 @@ Examples
 .. toctree::
    :maxdepth: 3
    
-   src_rst/examples/examples_al_python
+   examples/examples_al_python
 
 
 
@@ -60,4 +60,4 @@ Futher Information
 ------------------
 
 
-More information for :doc:`developers</src_rst/developers/developer>` 
+More information for :doc:`developers</developers/developer>`

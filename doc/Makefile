@@ -45,8 +45,8 @@ spell:
 	sphinx-build -b spelling -d build/doctrees/ source build/spelling
 
 clean:
-	-rm -rf source/src_rst/reference/nineml.abstraction_layer.*.rst
-	-rm -rf source/src_rst/reference/nineml.utility.*.rst
+	-rm -rf source/reference/nineml.abstraction_layer.*.rst
+	-rm -rf source/reference/nineml.utility.*.rst
 	-rm -rf $(BUILDDIR)/*
 	-rm -rf _static/*
 
