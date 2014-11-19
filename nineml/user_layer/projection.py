@@ -1,12 +1,13 @@
-from .base import BaseULObject, resolve_reference, write_reference
+from .base import BaseULObject, resolve_reference, write_reference, Reference
 from ..base import E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
-from .components import BaseComponent
+from .components import BaseComponent, Quantity
 from itertools import chain
-import nineml.user_layer
 from .utility import check_tag
 from ..utility import expect_single, expect_none_or_single
 from ..exceptions import NineMLRuntimeError
+from .population import Population
+from .containers import Selection
 
 
 class Projection(BaseULObject):
@@ -137,11 +138,11 @@ class Projection(BaseULObject):
         # Get Source
         e = expect_single(element.findall(NINEML + 'Source'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        source = nineml.user_layer.Reference.from_xml(e, context)
+        source = Reference.from_xml(e, context)
         # Get Destination
         e = expect_single(element.findall(NINEML + 'Destination'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        destination = nineml.user_layer.Reference.from_xml(e, context)
+        destination = Reference.from_xml(e, context)
         # Get Response
         e = element.find(NINEML + 'Response')
         response = BaseComponent.from_xml(e.find(NINEML + 'Component') or
@@ -162,7 +163,7 @@ class Projection(BaseULObject):
                                               context)
         # Get Delay
         e = expect_single(element.find(NINEML + 'Delay'))
-        delay = nineml.user_layer.Quantity.from_xml(e, context)
+        delay = Quantity.from_xml(e, context)
         # Get port connections by Loop through 'source', 'destination',
         # 'response', 'plasticity' tags and extracting the "From*" elements
         port_connections = []
@@ -267,14 +268,14 @@ class PortConnection(object):
 
     def _get_class(self, comp):
         # Resolve ref
-        if isinstance(comp, nineml.user_layer.Reference):
+        if isinstance(comp, Reference):
             comp = comp.user_layer_object
         # Get component class
-        if isinstance(comp, nineml.user_layer.Population):
+        if isinstance(comp, Population):
             comp_class = comp.cell.component_class
-        elif isinstance(comp, nineml.user_layer.Component):
+        elif isinstance(comp, BaseComponent):
             comp_class = comp.component_class
-        elif isinstance(comp, nineml.user_layer.Selection):
+        elif isinstance(comp, Selection):
             print ("Warning: port connections have not been check for '{}'"
                    "Selection".format(comp.name))
         else:

@@ -15,7 +15,7 @@ setup(
     license="BSD 3 License",
     keywords="computational neuroscience modeling interoperability XML",
     url="http://nineml.incf.org",
-    classifiers=['Development Status :: 3 - Alpha',
+    classifiers=['Development Status :: 4 - Beta',
                  'Environment :: Console',
                  'Intended Audience :: Science/Research',
                  'License :: OSI Approved :: BSD License',
