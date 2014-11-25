@@ -24,8 +24,10 @@ class Dimension(BaseALObject):
         self._dims = kwargs
 
     def __eq__(self, other):
-        assert isinstance(other, Dimension)
-        return all(self.power(d) == other.power(d) for d in self.valid_dims)
+        try:
+            return all(self.power(d) == other.power(d) for d in self.valid_dims)
+        except:
+            raise
 
     def __ne__(self, other):
         return not (self == other)

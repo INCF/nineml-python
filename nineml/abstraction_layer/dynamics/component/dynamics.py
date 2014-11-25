@@ -19,6 +19,7 @@ from nineml.utility import (filter_discrete_types,
 from nineml.exceptions import NineMLRuntimeError
 from ..visitors import ClonerVisitor
 from ...base import BaseALObject
+from ...units import dimensionless
 
 
 class Transition(BaseALObject):
@@ -591,13 +592,13 @@ class StateVariable(BaseALObject):
         """ |VISITATION| """
         return visitor.visit_statevariable(self, **kwargs)
 
-    def __init__(self, name, dimension=""):
+    def __init__(self, name, dimension=None):
         """StateVariable Constructor
 
         :param name:  The name of the state variable.
         """
         self._name = name.strip()
-        self._dimension = dimension
+        self._dimension = dimension if dimension is not None else dimensionless
         ensure_valid_c_variable_name(self._name)
 
     @property

@@ -10,6 +10,7 @@ from nineml.exceptions import NineMLRuntimeError
 from abc import ABCMeta
 from operator import and_
 from ...base import BaseALObject
+from ...units import dimensionless
 
 
 class Port(BaseALObject):
@@ -70,7 +71,7 @@ class AnalogPort(Port):
 
     def __init__(self, name, dimension=None):
         super(AnalogPort, self).__init__(name)
-        self._dimension = dimension  # TODO: This needs checking
+        self._dimension = dimension if dimension is not None else dimensionless # TODO: This needs checking @IgnorePep8
 
     @property
     def dimension(self):

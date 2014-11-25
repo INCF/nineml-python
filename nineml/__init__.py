@@ -11,4 +11,5 @@ __version__ = "0.2dev"
 import abstraction_layer
 import user_layer
 import exceptions
+from abstraction_layer import Unit, Dimension
 from context import read, write, load
