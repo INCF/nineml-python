@@ -153,8 +153,8 @@ permeability = Dimension(name="permeability", l=1, t=-1)
 temperature = Dimension(name="temperature", k=1)
 idealGasConstantDims = Dimension(name="idealGasConstantDims", m=1, l=2, t=-2, k=-1, n=-1)
 rho_factor = Dimension(name="rho_factor", l=-1, n=1, i=-1, t=-1)
-dimensionless = None
- 
+dimensionless = Dimension(name="dimensionless")
+
 s = Unit(name="s", dimension=time, power=0)
 per_s = Unit(name="per_s", dimension=per_time, power=0)
 Hz = Unit(name="Hz", dimension=per_time, power=0)
