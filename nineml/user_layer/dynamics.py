@@ -24,6 +24,14 @@ class SpikingNodeType(BaseDynamicsComponent):
     pass
 
 
+class IonDynamicsType(BaseComponent):
+    """
+    Component representing either a ion channel or the dynamics of the
+    concentration of a pool of ions. Typically part of a SpikingNodeType.
+    """
+    pass
+
+
 class SynapseType(BaseDynamicsComponent):
     """
     Component representing a model of a post-synaptic response, i.e. the

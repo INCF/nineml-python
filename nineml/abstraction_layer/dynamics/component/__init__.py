@@ -8,7 +8,7 @@ Python module for reading 9ML abstraction layer files in XML format.
 
 from dynamics import Regime, Transition, On, OnEvent, OnCondition
 from dynamics import Dynamics, StateVariable
-from expressions import RegimeElement,  Expression, Equation
+from expressions import RegimeElement, Expression, Equation
 from expressions import ExpressionWithLHS, ExpressionWithSimpleLHS, Alias
 from expressions import StateAssignment, TimeDerivative, StrToExpr
 from conditions import Condition

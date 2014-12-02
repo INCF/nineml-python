@@ -123,6 +123,9 @@ class Unit(BaseALObject):
     def dimension(self):
         return self._dimension
 
+    def set_dimension(self, dimension):
+        self._dimension = dimension
+
     @property
     def power(self):
         return self._power

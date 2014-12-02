@@ -1,13 +1,11 @@
 # encoding: utf-8
-"""
-missing docstring
-"""
-
 from itertools import chain
+from lxml import etree
 from ..base import BaseULObject, resolve_reference, write_reference
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ...context import BaseReference, Context
 from nineml.exceptions import NineMLUnitMismatchError
+from ...abstraction_layer.units import unitless
 
 
 class BaseComponent(BaseULObject):
@@ -206,11 +204,9 @@ class BaseComponent(BaseULObject):
                 NINEML, cls.element_name, element.tag))
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
-                               element.findall(NINEML + Property.element_name),
-                                  context)
+            element.findall(NINEML + Property.element_name), context)
         initial_values = InitialValueSet.from_xml(
-                           element.findall(NINEML + InitialValue.element_name),
-                           context)
+            element.findall(NINEML + InitialValue.element_name), context)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
             definition = Definition.from_xml(definition_element, context)
@@ -222,6 +218,39 @@ class BaseComponent(BaseULObject):
             definition = Prototype.from_xml(prototype_element, context)
         return cls(name, definition, properties,
                        initial_values=initial_values)
+
+    @property
+    def units(self):
+        return set(p.unit for p in self.properties)
+
+    def standardize_units(self, reference_units=None,
+                          reference_dimensions=None):
+        """Standardized the units used to avoid naming conflicts writing to
+        """
+        if reference_units is None:
+            reference_units = self.units
+        if reference_dimensions is None:
+            reference_dimensions = set(u.dimension for u in reference_units)
+        else:
+            # Ensure that the units reference the same set of dimensions
+            for u in reference_units:
+                if u.dimension not in reference_dimensions:
+                    u.set_dimension(next(d for d in reference_units
+                                         if d == u.dimension))
+        for p in self.properties:
+            try:
+                std_unit = next(u for u in reference_units if u == p.dimension)
+            except StopIteration:
+                continue
+            p.set_unit(std_unit)
+
+    def write(self, file):  # @ReservedAssignment
+        self.standardize_units()
+        doc = self.to_xml()
+        doc.extend(chain(*((u.to_xml(), u.dimension.to_xml())
+                            for u in self.units if u != unitless)))
+        etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
+                                     xml_declaration=True)
 
 
 class Definition(BaseReference):

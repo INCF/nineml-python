@@ -80,8 +80,7 @@ class BaseComponentClass(BaseALObject):
         names do not conflict when writing to file
         """
         if reference_set is None:
-            reference_set = set(p.dimension
-                                for p in self._attributes_with_dimension)
+            reference_set = self.unit_dimensions
         for p in self._attributes_with_dimension:
             try:
                 std_dim = next(d for d in reference_set if d == p.dimension)

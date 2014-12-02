@@ -76,6 +76,9 @@ class Property(BaseULObject):
             raise Exception("Cannot access random distribution for component "
                             "or single value types")
 
+    def set_unit(self, unit):
+        self.quantity.unit = unit
+
     def __repr__(self):
         if self.unit is not None:
             units = self.unit.name
@@ -100,7 +103,7 @@ class Property(BaseULObject):
         kwargs = {'name': self.name}
         if self.unit:
             kwargs['units'] = self.unit.name
-        return E(self.element_name,
+       return E(self.element_name,
                  self._value.to_xml(),
                  **kwargs)
 
