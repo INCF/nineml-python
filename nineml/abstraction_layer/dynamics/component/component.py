@@ -604,3 +604,7 @@ class ComponentClass(BaseComponentClass,
                 errmsg = "Can't find regime: %s" % trans.target_regime_name
                 raise NineMLRuntimeError(errmsg)
             trans.set_target_regime(regime_map[trans.target_regime_name])
+
+    @property
+    def _attributes_with_dimension(self):
+        return chain(self.parameters, self.analog_ports, self.state_variables)
