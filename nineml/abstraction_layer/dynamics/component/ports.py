@@ -78,6 +78,9 @@ class AnalogPort(Port):
         """The dimension of the port"""
         return self._dimension
 
+    def set_dimension(self, dimension):
+        self._dimension = dimension
+
     def __repr__(self):
         classstring = self.__class__.__name__
         return "{}('{}', dimension='{}')".format(classstring, self.name,

@@ -47,6 +47,9 @@ class Parameter(BaseALObject):
         """Returns the dimensions of the parameter"""
         return self._dimension
 
+    def set_dimension(self, dimension):
+        self._dimension = dimension
+
     def __repr__(self):
         return ("Parameter({}{})"
                 .format(self.name,

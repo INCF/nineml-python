@@ -10,7 +10,8 @@ from nineml.utility import Settings
 from cv_types import ComponentValidatorTypes
 from cv_ports import ComponentValidatorEventPorts
 from cv_ports import ComponentValidatorOutputAnalogPorts
-from cv_namingconflicts import ComponentValidatorLocalNameConflicts
+from cv_namingconflicts import (ComponentValidatorLocalNameConflicts,
+                                ComponentValidatorDimensionNameConflicts)
 from cv_general import ComponentValidatorTimeDerivativesAreDeclared
 from cv_general import ComponentValidatorNoDuplicatedObjects
 # from cv_general import ComponentValidatorAliasesAndStateVariablesHaveNoUnResolvedSymbols
@@ -47,6 +48,7 @@ class ComponentValidator(object):
 
         ComponentValidatorDuplicateRegimeNames(component)
         ComponentValidatorLocalNameConflicts(component)
+        ComponentValidatorDimensionNameConflicts(component)
 
         ComponentValidatorEventPorts(component)
         ComponentValidatorOutputAnalogPorts(component)

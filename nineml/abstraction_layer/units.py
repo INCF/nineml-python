@@ -246,5 +246,8 @@ um_per_ms = Unit(name="um_per_ms", dimension=permeability, power=-3)
 cm_per_ms = Unit(name="cm_per_ms", dimension=permeability, power=1)
 degC = Unit(name="degC", dimension=temperature, power=0, offset=273.15)
 K = Unit(name="K", dimension=temperature, power=0)
-J_per_K_per_mol = Unit(name="J_per_K_per_mol", dimension=idealGasConstantDims, power=0)
-mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s", dimension=rho_factor, power=0)
+J_per_K_per_mol = Unit(name="J_per_K_per_mol", dimension=idealGasConstantDims,
+                       power=0)
+mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s",
+                             dimension=rho_factor, power=0)
+unitless = Unit(name="unitless", dimension=dimensionless, power=0)

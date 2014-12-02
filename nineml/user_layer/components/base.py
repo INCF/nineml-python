@@ -170,7 +170,7 @@ class BaseComponent(BaseULObject):
         # Check dimensions match
         for param in self.component_class.parameters:
             prop_units = self.properties[param.name].unit
-            prop_dimension = prop_units.dimension if prop_units else None
+            prop_dimension = prop_units.dimension
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
                 err = ("Dimensions for '{}' parameter don't match, component "
