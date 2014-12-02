@@ -177,6 +177,10 @@ class ComponentClassMixinFlatStructure(BaseALObject):
         from nineml.abstraction_layer.dynamics.writers import XMLWriter
         return XMLWriter.write(component=self, file=file, flatten=flatten)
 
+    @property
+    def unit_dimensions(self):
+        return (p.dimension for p in chain(self.parameters, self.analog_ports))
+
 
 class ComponentClassMixinNamespaceStructure(BaseALObject):
 
@@ -237,7 +241,7 @@ class ComponentClassMixinNamespaceStructure(BaseALObject):
             return self
 
         local_namespace_ref = namespace_addr.loctuple[0]
-        if not local_namespace_ref in self.subnodes:
+        if local_namespace_ref not in self.subnodes:
             err = "Attempted to lookup node: %s\n" % local_namespace_ref
             err += "Doesn't exist in this namespace: %s" % self.subnodes.keys()
             raise NineMLRuntimeError(err)
@@ -353,7 +357,7 @@ class InterfaceInferer(ActionVisitor):
         pass
 
     def _notify_atom(self, atom):
-        if not atom in self.accounted_for_symbols:
+        if atom not in self.accounted_for_symbols:
             self.free_atoms.add(atom)
 
     # Events:
@@ -479,9 +483,8 @@ class ComponentClass(BaseComponentClass,
         # EventPort, StateVariable and Parameter Inference:
         inferred_struct = InterfaceInferer(dynamics, incoming_port_names)
         inf_check = lambda l1, l2, desc: check_list_contain_same_items(
-                                            l1, l2, desc1='Declared',
-                                            desc2='Inferred', ignore=['t'],
-                                            desc=desc)
+            l1, l2, desc1='Declared', desc2='Inferred', ignore=['t'],
+            desc=desc)
 
         # Check any supplied parameters match:
         if parameters is not None:
@@ -532,14 +535,10 @@ class ComponentClass(BaseComponentClass,
 
         # Construct super-classes:
         ComponentClassMixinFlatStructure.__init__(
-                                  self,
-                                  analog_ports=analog_ports,
-                                  event_ports=event_ports,
-                                  dynamics=dynamics)
-
+            self, analog_ports=analog_ports, event_ports=event_ports,
+            dynamics=dynamics)
         ComponentClassMixinNamespaceStructure.__init__(
-                                               self, subnodes=subnodes,
-                                               portconnections=portconnections)
+            self, subnodes=subnodes, portconnections=portconnections)
 
         # Finalise initiation:
         self._resolve_transition_regime_names()
@@ -570,7 +569,7 @@ class ComponentClass(BaseComponentClass,
     def was_flattened(self):
         """Returns ``True`` if this component was created by flattening another
         component"""
-        return self.flattener != None
+        return self.flattener is not None
 
     def _validate_self(self):
         from nineml.abstraction_layer.dynamics.validators import ComponentValidator  # @IgnorePep8
@@ -605,7 +604,7 @@ class ComponentClass(BaseComponentClass,
         # We only worry about 'target' regimes, since source regimes are taken
         # care of for us by the Regime objects they are attached to.
         for trans in self.transitions:
-            if not trans.target_regime_name in regime_map:
+            if trans.target_regime_name not in regime_map:
                 errmsg = "Can't find regime: %s" % trans.target_regime_name
                 raise NineMLRuntimeError(errmsg)
             trans.set_target_regime(regime_map[trans.target_regime_name])
