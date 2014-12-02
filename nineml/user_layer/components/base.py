@@ -221,7 +221,7 @@ class BaseComponent(BaseULObject):
 
     @property
     def units(self):
-        return set(p.unit for p in self.properties)
+        return set(p.unit for p in self.properties.itervalues())
 
     def standardize_units(self, reference_units=None,
                           reference_dimensions=None):
@@ -237,9 +237,9 @@ class BaseComponent(BaseULObject):
                 if u.dimension not in reference_dimensions:
                     u.set_dimension(next(d for d in reference_units
                                          if d == u.dimension))
-        for p in self.properties:
+        for p in self.properties.itervalues():
             try:
-                std_unit = next(u for u in reference_units if u == p.dimension)
+                std_unit = next(u for u in reference_units if u == p.unit)
             except StopIteration:
                 continue
             p.set_unit(std_unit)
