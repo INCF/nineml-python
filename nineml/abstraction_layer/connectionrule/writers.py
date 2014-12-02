@@ -3,6 +3,7 @@ from lxml.builder import E
 from nineml.abstraction_layer.xmlns import nineml_namespace
 from .visitors import ComponentVisitor
 import nineml.abstraction_layer.connectionrule.base
+from nineml.abstraction_layer.units import dimensionless
 
 
 class XMLWriter(ComponentVisitor):
@@ -33,7 +34,7 @@ class XMLWriter(ComponentVisitor):
 
     def visit_parameter(self, parameter):
         kwargs = {}
-        if parameter.dimension is not None:
+        if parameter.dimension != dimensionless:
             kwargs['dimension'] = parameter.dimension.name
         return E('Parameter',
                  name=parameter.name,

@@ -13,7 +13,7 @@ from nineml.abstraction_layer.xmlns import nineml_namespace
 from nineml.abstraction_layer.dynamics.component import ComponentClass
 from ..visitors import ComponentVisitor
 from nineml.base import annotate_xml
-
+from nineml.abstraction_layer.units import dimensionless
 
 class XMLWriter(ComponentVisitor):
 
@@ -77,7 +77,7 @@ class XMLWriter(ComponentVisitor):
     @annotate_xml
     def visit_parameter(self, parameter):
         kwargs = {}
-        if parameter.dimension is not None:
+        if parameter.dimension != dimensionless:
             kwargs['dimension'] = parameter.dimension.name
         return E('Parameter',
                  name=parameter.name, **kwargs)
