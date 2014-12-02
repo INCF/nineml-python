@@ -609,6 +609,9 @@ class StateVariable(BaseALObject):
     def dimension(self):
         return self._dimension
 
+    def set_dimension(self, dimension):
+        self._dimension = dimension
+
     def __repr__(self):
         return ("StateVariable({}{})"
                 .format(self.name,

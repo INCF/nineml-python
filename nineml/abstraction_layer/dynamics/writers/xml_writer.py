@@ -19,6 +19,7 @@ class XMLWriter(ComponentVisitor):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment
+        component.standardize_unit_dimensions()
         doc = cls.to_xml(component, flatten)
         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
                                      xml_declaration=True)
