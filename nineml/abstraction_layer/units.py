@@ -16,7 +16,7 @@ class Dimension(BaseALObject):
 
     def __init__(self, name, **kwargs):
         super(Dimension, self).__init__()
-        self.name = name
+        self._name = name
         for k in kwargs:
             if k not in self.valid_dims:
                 raise Exception("'{}' is not a valid dimension name ('{}')"
@@ -37,6 +37,10 @@ class Dimension(BaseALObject):
         return ("Dimension(name='{}'{})"
                 .format(self.name, ''.join(", {}={}".format(d, p)
                                            for d, p in self._dims.items())))
+
+    @property
+    def name(self):
+        return self._name
 
     def power(self, dim_name):
         return self._dims.get(dim_name, 0)
@@ -82,10 +86,10 @@ class Unit(BaseALObject):
 
     def __init__(self, name, dimension, power, offset=0.0):
         super(Unit, self).__init__()
-        self.name = name
-        self.dimension = dimension
-        self.power = power
-        self.offset = offset
+        self._name = name
+        self._dimension = dimension
+        self._power = power
+        self._offset = offset
 
     def __eq__(self, other):
         assert isinstance(other, Unit)
@@ -110,6 +114,22 @@ class Unit(BaseALObject):
                             " zero ({})".format(self.offset))
         return (self.dimension.to_SI_units_str() +
                 ' * 10**({})'.format(self.power) if self.power else '')
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def dimension(self):
+        return self._dimension
+
+    @property
+    def power(self):
+        return self._power
+
+    @property
+    def offset(self):
+        return self._offset
 
     @property
     def symbol(self):
