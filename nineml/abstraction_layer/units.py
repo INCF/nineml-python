@@ -24,10 +24,11 @@ class Dimension(BaseALObject):
         self._dims = kwargs
 
     def __eq__(self, other):
-        try:
-            return all(self.power(d) == other.power(d) for d in self.valid_dims)
-        except:
-            raise
+        assert isinstance(other, Dimension)
+        return all(self.power(d) == other.power(d) for d in self.valid_dims)
+
+    def __hash__(self):
+        return hash(tuple(self.power(d) for d in self.valid_dims))
 
     def __ne__(self, other):
         return not (self == other)
@@ -90,6 +91,9 @@ class Unit(BaseALObject):
         assert isinstance(other, Unit)
         return (self.power == other.power and self.offset == other.offset and
                 self.dimension == other.dimension)
+
+    def __hash__(self):
+        return hash((self.power, self.offset, self.dimension))
 
     def __ne__(self, other):
         return not (self == other)
