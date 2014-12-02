@@ -65,3 +65,19 @@ class BaseComponentClass(BaseALObject):
 
     def parameter(self, name):
         return self._parameters[name]
+
+    @property
+    def all_unit_dimensions(self):
+        return (p.dimension for p in self.parameters)
+
+    def standardize_unit_dimensions(self, reference_set):
+        """
+        Replaces dimension objects with ones from a reference set so that their
+        names do not conflict when writing to file
+        """
+        for p in self.all_unit_dimensions:
+            try:
+                std_dim = next(d for d in reference_set if d == p.dimension)
+            except StopIteration:
+                continue
+            p.set_dimension(std_dim)

@@ -177,10 +177,6 @@ class ComponentClassMixinFlatStructure(BaseALObject):
         from nineml.abstraction_layer.dynamics.writers import XMLWriter
         return XMLWriter.write(component=self, file=file, flatten=flatten)
 
-    @property
-    def unit_dimensions(self):
-        return (p.dimension for p in chain(self.parameters, self.analog_ports))
-
 
 class ComponentClassMixinNamespaceStructure(BaseALObject):
 
