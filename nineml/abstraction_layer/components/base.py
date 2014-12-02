@@ -67,8 +67,12 @@ class BaseComponentClass(BaseALObject):
         return self._parameters[name]
 
     @property
+    def unit_dimensions(self):
+        return set(p.dimension for p in self._attributes_with_dimension)
+
+    @property
     def _attributes_with_dimension(self):
-        return self.paramters
+        return self.parameters
 
     def standardize_unit_dimensions(self, reference_set=None):
         """
