@@ -15,13 +15,15 @@ from ..visitors import ComponentVisitor
 from nineml.base import annotate_xml
 from nineml.abstraction_layer.units import dimensionless
 
+
 class XMLWriter(ComponentVisitor):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment
         component.standardize_unit_dimensions()
         doc = cls.to_xml(component, flatten)
-        doc.extend(d.to_xml() for d in component.unit_dimensions)
+        doc.extend(d.to_xml() for d in component.unit_dimensions
+                   if d != dimensionless)
         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
                                      xml_declaration=True)
 
@@ -64,10 +66,11 @@ class XMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_statevariable(self, state_variable):
+        kwargs = {}
+        if state_variable.dimension != dimensionless:
+            kwargs['dimension'] = state_variable.dimension.name
         return E('StateVariable',
-                 name=state_variable.name,
-                 dimension=(state_variable.dimension.name
-                            if state_variable.dimension else 'dimensionless'))
+                 name=state_variable.name, **kwargs)
 
     @annotate_xml
     def visit_outputevent(self, output_event, **kwargs):  # @UnusedVariable
