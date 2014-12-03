@@ -143,7 +143,7 @@ class Unit(BaseALObject):
         kwargs = {'symbol': self.name, 'dimension': self.dimension.name,
                   'power': str(self.power)}
         if self.offset:
-            kwargs['offset'] = self.offset
+            kwargs['offset'] = str(self.offset)
         return E(self.element_name,
                  **kwargs)
 
