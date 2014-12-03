@@ -5,6 +5,7 @@ from ..base import BaseULObject, resolve_reference, write_reference
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ...context import BaseReference, Context
 from nineml.exceptions import NineMLUnitMismatchError
+from nineml.abstraction_layer.xmlns import nineml_namespace
 from ...abstraction_layer.units import unitless
 
 
@@ -115,13 +116,6 @@ class BaseComponent(BaseULObject):
     @property
     def units(self):
         return set(p.unit for p in chain(self.properties.values(), self.initial_values.values()) if p.unit is not None)
-
-#     def __eq__(self, other):
-#         if not isinstance(other, self.__class__):
-#             return False
-#         return reduce(and_, (self.name == other.name,
-#                              self.component_class == other.component_class,
-#                              self.properties == other.properties))
 
     def __hash__(self):
         return (hash(self.__class__) ^ hash(self.name) ^
@@ -246,9 +240,10 @@ class BaseComponent(BaseULObject):
 
     def write(self, file):  # @ReservedAssignment
         self.standardize_units()
-        doc = self.to_xml()
-        doc.extend(chain(*((u.to_xml(), u.dimension.to_xml())
+        xml = [self.to_xml()]
+        xml.extend(chain(*((u.to_xml(), u.dimension.to_xml())
                             for u in self.units if u != unitless)))
+        doc = E.NineML(*xml, xmlns=nineml_namespace)
         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
                                      xml_declaration=True)
 
