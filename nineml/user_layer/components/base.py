@@ -214,7 +214,7 @@ class BaseComponent(BaseULObject):
                        initial_values=initial_values)
 
     @property
-    def units(self):
+    def used_units(self):
         return set(p.unit for p in self.properties.itervalues())
 
     def standardize_units(self, reference_units=None,
@@ -222,7 +222,7 @@ class BaseComponent(BaseULObject):
         """Standardized the units used to avoid naming conflicts writing to
         """
         if reference_units is None:
-            reference_units = self.units
+            reference_units = self.used_units
         if reference_dimensions is None:
             reference_dimensions = set(u.dimension for u in reference_units)
         else:
