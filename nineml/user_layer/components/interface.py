@@ -104,17 +104,24 @@ class Property(BaseULObject):
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
+        value = None
         for ValueType in (SingleValue, ArrayValue, ExternalArrayValue,
                           ComponentValue):
             if element.find(NINEML + ValueType.element_name):
                 value = ValueType.from_xml(element, context)
+        if value is None:
+            raise Exception("Did not find recognised value tag in property ("
+                            "found {})".format(
+                                ', '.join(c.tag
+                                          for c in element.getchildren())))
         units_str = element.attrib.get('units', None)
         try:
             units = context[units_str] if units_str else None
         except KeyError:
             raise Exception("Did not find definition of '{}' units in the "
                             "current context.".format(units_str))
-        return cls(name=element.attrib["name"], value, units)
+        return cls(name=element.attrib["name"], value=value,
+                   units=units)
 
 
 class InitialValue(Property):

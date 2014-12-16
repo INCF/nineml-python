@@ -107,7 +107,7 @@ class ArrayValueRow(BaseValue):
     @classmethod
     @read_annotations
     def from_xml(cls, element, _):
-        return cls(index=element.attrib["index"], element.text)
+        return cls(index=element.attrib["index"], value=element.text)
 
 
 class ExternalArrayValue(BaseValue):

@@ -48,5 +48,5 @@ from .containers import Network, Selection, Concatenate
 from .projection import Projection
 from .random import RandomDistribution
 from .components import (PropertySet, BaseComponent as Component,
-                         Definition, Prototype, Quantity)
+                         Definition, Prototype)
 from .base import Reference
