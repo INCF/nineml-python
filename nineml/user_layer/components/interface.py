@@ -1,6 +1,6 @@
 # encoding: utf-8
 from operator import and_
-from ..base import BaseULObject, resolve_reference, write_reference, Reference
+from ..base import BaseULObject, Reference
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
@@ -22,20 +22,18 @@ class Property(BaseULObject):
     element_name = "Property"
     defining_attributes = ("name", "quantity")
 
-    def __init__(self, name, quantity):
+    def __init__(self, name, value, units=None):
+        if not isinstance(value, (int, float, Reference, BaseComponent)):
+            raise Exception("Invalid type '{}' for value, can be one of "
+                            "'Value', 'Reference', 'Component', 'ValueList', "
+                            "'ExternalValueList'"
+                            .format(value.__class__.__name__))
+        if not isinstance(units, Unit) and units is not None:
+            raise Exception("Units ({}) must of type <Unit>".format(units))
         super(Property, self).__init__()
-        if not isinstance(quantity, Quantity):
-            raise TypeError("Value must be provided as a Quantity object")
         self.name = name
-        self.quantity = quantity
-
-    @property
-    def value(self):
-        return self.quantity.value
-
-    @property
-    def unit(self):
-        return self.quantity.units
+        self.value = value
+        self.unit = units
 
     def __repr__(self):
         units = self.unit.name
@@ -45,10 +43,13 @@ class Property(BaseULObject):
                                                           self.value, units)
 
     def __eq__(self, other):
+        # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV,
+        #        could use python-quantities package to do this if we are
+        #        okay with the dependency
         return isinstance(other, self.__class__) and \
             reduce(and_, (self.name == other.name,
                           self.value == other.value,
-                          self.unit == other.unit))  # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV @IgnorePep8
+                          self.unit == other.unit))
 
     def __hash__(self):
         return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
@@ -56,49 +57,7 @@ class Property(BaseULObject):
     def is_random(self):
         return isinstance(self.value, RandomDistribution)
 
-    @write_reference
     @annotate_xml
-    def to_xml(self):
-        return E(self.element_name,
-                 self.quantity.to_xml(),
-                 name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    def from_xml(cls, element, context):
-        check_tag(element, cls)
-        quantity = Quantity.from_xml(element.find(NINEML + "Quantity"),
-                                     context)
-        return cls(name=element.attrib["name"], quantity=quantity)
-
-
-class Quantity(object):
-
-    """
-    Represents a "quantity", a single value, random distribution or function
-    with associated units
-    """
-    element_name = "Quantity"
-
-    def __init__(self, value, units):
-        if not isinstance(value, (int, float, Reference, BaseComponent)):
-            raise Exception("Invalid type '{}' for value, can be one of "
-                            "'Value', 'Reference', 'Component', 'ValueList', "
-                            "'ExternalValueList'"
-                            .format(value.__class__.__name__))
-        if not isinstance(units, Unit) and units is not None:
-            raise Exception("Units ({}) must of type <Unit>".format(units))
-        self.value = value
-        self.units = units
-
-    def __repr__(self):
-        return "Quantity({}, units={})".format(repr(self.value),
-                                               self.units.name)
-
-    def __eq__(self, other):
-        return self.value == other.value and self.units == other.units
-
     def to_xml(self):
         if isinstance(self.value, (int, float)):
             value_element = E('SingleValue', str(self.value))
@@ -110,14 +69,9 @@ class Quantity(object):
                  **kwargs)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
-        """
-        Parse an XML ElementTree structure and return a (value, units) tuple.
-        The value should be a number or something that generates a numerical
-        value, e.g. a RandomDistribution instance).
-
-        `element` - should be an ElementTree Element instance.
-        """
+        check_tag(element, cls)
         try:
             value_element = element.getchildren()[0]
         except IndexError:
@@ -145,7 +99,7 @@ class Quantity(object):
         except KeyError:
             raise Exception("Did not find definition of '{}' units in the "
                             "current context.".format(units_str))
-        return Quantity(value, units)
+        return cls(name=element.attrib["name"], value, units)
 
 
 class StringValue(object):
@@ -156,7 +110,6 @@ class StringValue(object):
     element_name = "Value"
 
     @classmethod
-    @resolve_reference
     @read_annotations
     def from_xml(cls, element):
         """
@@ -190,7 +143,7 @@ class PropertySet(dict):
         for prop in properties:
             self[prop.name] = prop  # should perhaps do a copy
         for name, (value, unit) in kwproperties.items():
-            self[name] = Property(name, Quantity(value, unit))
+            self[name] = Property(name, value, unit)
 
     def __hash__(self):
         return hash(tuple(self.items()))
@@ -233,7 +186,7 @@ class InitialValueSet(PropertySet):
         for iv in ivs:
             self[iv.name] = iv  # should perhaps do a copy
         for name, (value, unit) in kwivs.items():
-            self[name] = InitialValue(name, Quantity(value, unit))
+            self[name] = InitialValue(name, value, unit)
 
     def __repr__(self):
         return "InitialValueSet(%s)" % dict(self)

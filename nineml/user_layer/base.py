@@ -19,16 +19,6 @@ class BaseULObject(BaseNineMLObject):
         else:
             return self.name < other.name
 
-#     def set_reference(self, reference):
-#         self._from_reference = reference
-#
-#     def to_xml(self, as_reference=True):
-#         if self._from_reference and as_reference:
-#             xml = self._from_reference.to_xml()
-#         else:
-#             xml = self._to_xml()
-#         return xml
-
 
 class Reference(BaseReference):
 
