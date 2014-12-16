@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <Annotation>
+  <Annotations>
     <Text>
       As NineML uses the format for units/dimensions that was developed for LEMS
       the units/dimension defined on this page have been copied from the example
@@ -8,7 +8,7 @@
       
       https://github.com/NeuroML/NeuroML2/blob/master/NeuroML2CoreTypes/NeuroMLCoreDimensions.xml
     </Text>
-  </Annotation>
+  </Annotations>
   <Dimension name="time" t="1"/>
   <Dimension name="per_time" t="-1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>

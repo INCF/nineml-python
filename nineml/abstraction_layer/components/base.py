@@ -6,11 +6,8 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from operator import and_
-# from nineml.utility import filter_discrete_types
-# from .interface import Parameter
-from nineml import NINEML
 from ..base import BaseALObject
+from ...base import read_annotations, annotate_xml, NINEML
 from .interface import Parameter
 from ...utility import filter_discrete_types
 
@@ -20,12 +17,14 @@ class BaseComponentClass(BaseALObject):
 
     element_name = 'ComponentClass'
 
+    @annotate_xml
     def to_xml(self):
         exec('from nineml.abstraction_layer.{}.writers import XMLWriter'
              .format(self.writer_name))
         return XMLWriter().visit(self)  # @UndefinedVariable
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):  # @UnusedVariable
         if element.find(NINEML + 'Dynamics') is not None:
             module_name = 'dynamics'
@@ -38,6 +37,7 @@ class BaseComponentClass(BaseALObject):
         return XMLLoader(context).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
 
     def __init__(self, name, parameters=None):
+        BaseALObject.__init__(self)
         self._name = name
         # Turn any strings in the parameter list into Parameters:
         if parameters is None:

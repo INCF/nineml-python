@@ -1,6 +1,7 @@
 import os.path
 import unittest
 from nineml import read, load
+from lxml import etree
 from nineml.exceptions import NineMLUnitMismatchError
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',

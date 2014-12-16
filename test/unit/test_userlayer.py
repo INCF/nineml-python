@@ -7,7 +7,7 @@ import unittest
 from lxml import etree
 from nineml.user_layer.components.interface import Property, Quantity
 from nineml.abstraction_layer import Unit, Dimension
-from nineml import Context
+from nineml.context import Context
 
 voltage = Dimension('voltage', m=1, l=2, t=-3, i=-1)
 mV = Unit(name='mV', dimension=voltage, power=-3)

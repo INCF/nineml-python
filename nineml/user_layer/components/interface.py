@@ -1,11 +1,10 @@
 # encoding: utf-8
-import collections
-from numbers import Number
 from operator import and_
-from ..base import BaseULObject, E, NINEML
+from ..base import BaseULObject, resolve_reference, write_reference, Reference
+from ...base import E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
 from ..random import RandomDistribution
-from .base import BaseComponent, Reference
+from .base import BaseComponent
 from ...abstraction_layer import Unit
 
 
@@ -24,6 +23,7 @@ class Property(BaseULObject):
     defining_attributes = ("name", "quantity")
 
     def __init__(self, name, quantity):
+        super(Property, self).__init__()
         if not isinstance(quantity, Quantity):
             raise TypeError("Value must be provided as a Quantity object")
         self.name = name
@@ -56,12 +56,16 @@ class Property(BaseULObject):
     def is_random(self):
         return isinstance(self.value, RandomDistribution)
 
+    @write_reference
+    @annotate_xml
     def to_xml(self):
         return E(self.element_name,
                  self.quantity.to_xml(),
                  name=self.name)
 
     @classmethod
+    @resolve_reference
+    @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
         quantity = Quantity.from_xml(element.find(NINEML + "Quantity"),
@@ -123,12 +127,12 @@ class Quantity(object):
                 value = float(value_element.text)
             except ValueError:
                 raise ValueError("Provided value '{}' is not numeric"
-                                .format(value_element.text))
+                                 .format(value_element.text))
         elif value_element.tag in (NINEML + 'ArrayValue',
                                    NINEML + 'ExternalArrayValue'):
             raise NotImplementedError
         elif value_element.tag in (NINEML + 'Reference', NINEML + 'Component'):
-            value = context.resolve_ref(element, BaseComponent)
+            value = BaseComponent.from_xml(value_element)
         else:
             raise KeyError("Unrecognised tag name '{tag}', was expecting one "
                            "of '{nm}SingleValue', '{nm}ArrayValue', "
@@ -152,6 +156,8 @@ class StringValue(object):
     element_name = "Value"
 
     @classmethod
+    @resolve_reference
+    @read_annotations
     def from_xml(cls, element):
         """
         Parse an XML ElementTree structure and return a string value.

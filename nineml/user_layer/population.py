@@ -1,8 +1,9 @@
-import re
-from .base import BaseULObject, NINEML, E
+from .base import BaseULObject, resolve_reference, write_reference
+from ..base import NINEML, E
 from .utility import check_tag
-from .components import BaseComponent, StringValue
+from .components import BaseComponent
 from ..utility import expect_single
+from nineml.base import annotate_xml, read_annotations
 
 
 class Population(BaseULObject):
@@ -16,6 +17,7 @@ class Population(BaseULObject):
     defining_attributes = ("name", "number", "cell", "positions")
 
     def __init__(self, name, number, cell, positions=None):
+        super(Population, self).__init__()
         self.name = name
         self.number = number
         self.cell = cell
@@ -44,7 +46,9 @@ class Population(BaseULObject):
             components.extend(self.positions.get_components())
         return components
 
-    def _to_xml(self):
+    @write_reference
+    @annotate_xml
+    def to_xml(self):
         positions = [self.positions.to_xml()] if self.positions else []
         return E(self.element_name,
                  E.Number(str(self.number)),
@@ -53,19 +57,21 @@ class Population(BaseULObject):
                  name=self.name)
 
     @classmethod
+    @resolve_reference
+    @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
         layout_elem = element.find(NINEML + 'Layout')
         kwargs = {}
         if layout_elem:
-            kwargs['positions'] = context.resolve_ref(layout_elem,
-                                                      BaseComponent)
+            kwargs['positions'] = BaseComponent.from_xml(layout_elem, context)
+        cell = expect_single(element.findall(NINEML + 'Cell'))
         return cls(name=element.attrib['name'],
-                   number=int(expect_single(
-                                    element.findall(NINEML + 'Number')).text),
-                   cell=context.resolve_ref(
-                               expect_single(element.findall(NINEML + 'Cell')),
-                               BaseComponent),
+                   number=int(element.find(NINEML + 'Number').text),
+                   cell=BaseComponent.from_xml(cell.find(NINEML + 'Component')
+                                               or cell.find(NINEML +
+                                                            'Reference'),
+                                               context),
                    **kwargs)
 
 
@@ -90,6 +96,7 @@ class PositionList(BaseULObject):
                     array.
         `structure` should be a Structure component.
         """
+        super(PositionList, self).__init__()
         if positions and structure:
             raise Exception("Please provide either positions or structure, "
                             "not both.")
@@ -132,7 +139,9 @@ class PositionList(BaseULObject):
         else:
             return []
 
-    def _to_xml(self):
+    @write_reference
+    @annotate_xml
+    def to_xml(self):
         element = E(self.element_name)
         if self._positions:
             for pos in self._positions:
@@ -146,6 +155,8 @@ class PositionList(BaseULObject):
         return element
 
     @classmethod
+    @resolve_reference
+    @read_annotations
     def from_xml(cls, element, context):
         if element is None:
             return None

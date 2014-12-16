@@ -17,6 +17,7 @@ from nineml.utility import expect_single, filter_expect_single
 from nineml.abstraction_layer.xmlns import NINEML, MATHML, nineml_namespace
 from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics import component as al
+from nineml.base import read_annotations
 
 __all__ = ['XMLReader']
 
@@ -58,6 +59,7 @@ class XMLLoader(object):
                                        lambda c: c.name == subnode.get('node'))
         return namespace, component
 
+    @read_annotations
     def load_componentclass(self, element):
 
         blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
@@ -82,32 +84,39 @@ class XMLLoader(object):
 #     def load_subcomponent(self, element):
 #         return al.SubComponent(name=element.get('name'))
 
+    @read_annotations
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
                          dimension=self.context[element.get('dimension')])
 
+    @read_annotations
     def load_eventsendport(self, element):
         return al.EventSendPort(name=element.get('name'))
 
+    @read_annotations
     def load_eventreceiveport(self, element):
         return al.EventReceivePort(name=element.get('name'))
 
+    @read_annotations
     def load_analogsendport(self, element):
         return al.AnalogSendPort(
                             name=element.get("name"),
                             dimension=self.context[element.get('dimension')])
 
+    @read_annotations
     def load_analogreceiveport(self, element):
         return al.AnalogReceivePort(
                             name=element.get("name"),
                             dimension=self.context[element.get('dimension')])
 
+    @read_annotations
     def load_analogreduceport(self, element):
         return al.AnalogReducePort(
                               name=element.get('name'),
                               dimension=self.context[element.get('dimension')],
                               reduce_op=element.get("operator"))
 
+    @read_annotations
     def load_dynamics(self, element):
         subblocks = ('Regime', 'Alias', 'StateVariable')
         subnodes = self.loadBlocks(element, blocks=subblocks)
@@ -116,6 +125,7 @@ class XMLLoader(object):
                                   aliases=subnodes["Alias"],
                                   state_variables=subnodes["StateVariable"])
 
+    @read_annotations
     def load_regime(self, element):
         subblocks = ('TimeDerivative', 'OnCondition', 'OnEvent')
         subnodes = self.loadBlocks(element, blocks=subblocks)
@@ -124,23 +134,27 @@ class XMLLoader(object):
                          time_derivatives=subnodes["TimeDerivative"],
                          transitions=transitions)
 
+    @read_annotations
     def load_statevariable(self, element):
         name = element.get("name")
         dimension = self.context[element.get('dimension')]
         return al.StateVariable(name=name, dimension=dimension)
 
+    @read_annotations
     def load_timederivative(self, element):
         variable = element.get("variable")
         expr = self.load_single_internal_maths_block(element)
         return al.TimeDerivative(dependent_variable=variable,
                                         rhs=expr)
 
+    @read_annotations
     def load_alias(self, element):
         name = element.get("name")
         rhs = self.load_single_internal_maths_block(element)
         return al.Alias(lhs=name,
                                rhs=rhs)
 
+    @read_annotations
     def load_oncondition(self, element):
         subblocks = ('Trigger', 'StateAssignment', 'EventOut')
         subnodes = self.loadBlocks(element, blocks=subblocks)
@@ -152,6 +166,7 @@ class XMLLoader(object):
                               event_outputs=subnodes["EventOut"],
                               target_regime_name=target_regime)
 
+    @read_annotations
     def load_onevent(self, element):
         subblocks = ('StateAssignment', 'EventOut')
         subnodes = self.loadBlocks(element, blocks=subblocks)
@@ -165,11 +180,13 @@ class XMLLoader(object):
     def load_trigger(self, element):
         return self.load_single_internal_maths_block(element)
 
+    @read_annotations
     def load_stateassignment(self, element):
         lhs = element.get('variable')
         rhs = self.load_single_internal_maths_block(element)
         return al.StateAssignment(lhs=lhs, rhs=rhs)
 
+    @read_annotations
     def load_eventout(self, element):
         port_name = element.get('port')
         return al.OutputEvent(port_name=port_name)

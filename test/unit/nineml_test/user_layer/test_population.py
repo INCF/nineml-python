@@ -1,6 +1,7 @@
 import os.path
 import unittest
 from nineml import read, load
+from lxml import etree
 
 
 class TestPopulation(unittest.TestCase):

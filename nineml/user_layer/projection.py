@@ -1,5 +1,5 @@
-from operator import and_
-from .base import BaseULObject, E, NINEML
+from .base import BaseULObject, resolve_reference, write_reference
+from ..base import E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
 from .components import BaseComponent
 from itertools import chain
@@ -108,7 +108,9 @@ class Projection(BaseULObject):
                 components.append(component)
         return components
 
-    def _to_xml(self):
+    @write_reference
+    @annotate_xml
+    def to_xml(self):
         pcs = defaultdict(list)
         for pc in self.port_connections:
             pcs[pc._receive_role].append(
@@ -126,51 +128,53 @@ class Projection(BaseULObject):
         return E(self.element_name, *args, name=self.name)
 
     @classmethod
+    @resolve_reference
+    @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
         # Get Name
         name = element.get('name')
         # Get Source
-        source_elem = expect_single(element.findall(NINEML + 'Source'))
-        source = nineml.user_layer.Reference.from_xml(
-                      expect_single(source_elem.findall(NINEML + 'Reference')),
-                      context)
+        e = expect_single(element.findall(NINEML + 'Source'))
+        e = expect_single(e.findall(NINEML + 'Reference'))
+        source = nineml.user_layer.Reference.from_xml(e, context)
         # Get Destination
-        dest_elem = expect_single(element.findall(NINEML + 'Destination'))
-        destination = nineml.user_layer.Reference.from_xml(
-                        expect_single(dest_elem.findall(NINEML + 'Reference')),
-                        context)
+        e = expect_single(element.findall(NINEML + 'Destination'))
+        e = expect_single(e.findall(NINEML + 'Reference'))
+        destination = nineml.user_layer.Reference.from_xml(e, context)
         # Get Response
-        response = context.resolve_ref(
-                           expect_single(element.findall(NINEML + 'Response')),
-                           BaseComponent)
+        e = element.find(NINEML + 'Response')
+        response = BaseComponent.from_xml(e.find(NINEML + 'Component') or
+                                          e.find(NINEML + 'Reference'),
+                                          context)
         # Get Plasticity
-        pl_elem = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
-        if pl_elem is not None:
-            plasticity = context.resolve_ref(pl_elem, BaseComponent)
+        e = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
+        if e is not None:
+            plasticity = BaseComponent.from_xml(e.find(NINEML + 'Component') or
+                                                e.find(NINEML + 'Reference'),
+                                                context)
         else:
             plasticity = None
         # Get Connectivity
-        connectivity = context.resolve_ref(
-                                expect_single(element.findall(NINEML +
-                                                              'Connectivity')),
-                                BaseComponent)
+        e = element.find(NINEML + 'Connectivity')
+        connectivity = BaseComponent.from_xml(e.find(NINEML + 'Component') or
+                                              e.find(NINEML + 'Reference'),
+                                              context)
         # Get Delay
-        delay = nineml.user_layer.Quantity.from_xml(
-                                 expect_single(element.find(NINEML + 'Delay')),
-                                 context)
+        e = expect_single(element.find(NINEML + 'Delay'))
+        delay = nineml.user_layer.Quantity.from_xml(e, context)
         # Get port connections by Loop through 'source', 'destination',
         # 'response', 'plasticity' tags and extracting the "From*" elements
         port_connections = []
         for receive_role in cls._component_roles:
             # Get element for component name
-            comp_elem = element.find(NINEML + receive_role.capitalize())
-            if comp_elem is not None:  # Plasticity is not required
+            e = element.find(NINEML + receive_role.capitalize())
+            if e is not None:  # Plasticity is not required
                 # Loop through all incoming port connections and add them to
                 # list
                 for sender_role in cls._component_roles:
-                    pc_elems = comp_elem.findall(
-                                    NINEML + 'From' + sender_role.capitalize())
+                    pc_elems = e.findall(NINEML +
+                                         'From' + sender_role.capitalize())
                     if sender_role == receive_role and pc_elems:
                         msg = ("{} port connection receives from itself in "
                                "Projection '{}'".format(name, name))
