@@ -3,9 +3,10 @@ from operator import and_
 from ..base import BaseULObject, Reference
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
-from ..random import RandomDistribution
 from .base import BaseComponent
 from ...abstraction_layer import Unit
+from ..values import (SingleValue, ArrayValue, ExternalArrayValue,
+                      ComponentValue)
 
 
 class Property(BaseULObject):
@@ -20,7 +21,7 @@ class Property(BaseULObject):
     numbers, e.g. a RandomDistribution instance.
     """
     element_name = "Property"
-    defining_attributes = ("name", "quantity")
+    defining_attributes = ("name", "value", "units")
 
     def __init__(self, name, value, units=None):
         if not isinstance(value, (int, float, Reference, BaseComponent)):
@@ -32,8 +33,45 @@ class Property(BaseULObject):
             raise Exception("Units ({}) must of type <Unit>".format(units))
         super(Property, self).__init__()
         self.name = name
-        self.value = value
+        self._value = value
         self.unit = units
+
+    def __hash__(self):
+        return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
+
+    def is_single(self):
+        return isinstance(self._value, SingleValue)
+
+    def is_random(self):
+        return isinstance(self._value, ComponentValue)
+
+    def is_array(self):
+        return (isinstance(self._value, ArrayValue) or
+                isinstance(self._value, ExternalArrayValue))
+
+    @property
+    def value(self):
+        if self.is_single():
+            return self._value.value
+        else:
+            raise Exception("Cannot access single value for array or component"
+                            " type")
+
+    @property
+    def value_array(self):
+        if self.is_array():
+            raise NotImplementedError
+        else:
+            raise Exception("Cannot access value array for component or single"
+                            " value types")
+
+    @property
+    def random_distribution(self):
+        if self.is_random():
+            return self._value.component
+        else:
+            raise Exception("Cannot access random distribution for component "
+                            "or single value types")
 
     def __repr__(self):
         units = self.unit.name
@@ -51,12 +89,6 @@ class Property(BaseULObject):
                           self.value == other.value,
                           self.unit == other.unit))
 
-    def __hash__(self):
-        return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
-
-    def is_random(self):
-        return isinstance(self.value, RandomDistribution)
-
     @annotate_xml
     def to_xml(self):
         if isinstance(self.value, (int, float)):
@@ -72,27 +104,10 @@ class Property(BaseULObject):
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
-        try:
-            value_element = element.getchildren()[0]
-        except IndexError:
-            raise Exception("Expected child elements in Quantity element")
-        if value_element.tag == NINEML + 'SingleValue':
-            try:
-                value = float(value_element.text)
-            except ValueError:
-                raise ValueError("Provided value '{}' is not numeric"
-                                 .format(value_element.text))
-        elif value_element.tag in (NINEML + 'ArrayValue',
-                                   NINEML + 'ExternalArrayValue'):
-            raise NotImplementedError
-        elif value_element.tag in (NINEML + 'Reference', NINEML + 'Component'):
-            value = BaseComponent.from_xml(value_element)
-        else:
-            raise KeyError("Unrecognised tag name '{tag}', was expecting one "
-                           "of '{nm}SingleValue', '{nm}ArrayValue', "
-                           "'{nm}ExternalArrayValue', '{nm}Reference' or "
-                           "'{nm}Component'"
-                           .format(tag=value_element.tag, nm=NINEML))
+        for ValueType in (SingleValue, ArrayValue, ExternalArrayValue,
+                          ComponentValue):
+            if element.find(NINEML + ValueType.element_name):
+                value = ValueType.from_xml(element, context)
         units_str = element.attrib.get('units', None)
         try:
             units = context[units_str] if units_str else None
@@ -100,24 +115,6 @@ class Property(BaseULObject):
             raise Exception("Did not find definition of '{}' units in the "
                             "current context.".format(units_str))
         return cls(name=element.attrib["name"], value, units)
-
-
-class StringValue(object):
-
-    """
-    Not intended to be instantiated: just provides the from_xml() classmethod.
-    """
-    element_name = "Value"
-
-    @classmethod
-    @read_annotations
-    def from_xml(cls, element):
-        """
-        Parse an XML ElementTree structure and return a string value.
-
-        `element` - should be an ElementTree Element instance.
-        """
-        return element.text
 
 
 class InitialValue(Property):
