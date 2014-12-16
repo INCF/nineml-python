@@ -1,11 +1,8 @@
 # encoding: utf-8
-from operator import and_
-from ..base import BaseULObject, Reference
-from ...base import E, read_annotations, annotate_xml, NINEML
-from ..utility import check_tag
-from ..random import RandomDistribution
-from .base import BaseComponent
-from ...abstraction_layer import Unit
+from .base import BaseULObject
+from ..base import E, read_annotations, annotate_xml, NINEML
+from .utility import check_tag
+from .components.base import BaseComponent
 
 
 class BaseValue(BaseULObject):
