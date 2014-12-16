@@ -161,7 +161,7 @@ class BaseComponent(BaseULObject):
             raise Exception(". ".join(msg))
         # Check dimensions match
         for param in self.component_class.parameters:
-            prop_units = self.properties[param.name].unit
+            prop_units = self.properties[param.name].units
             prop_dimension = prop_units.dimension
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
@@ -215,7 +215,7 @@ class BaseComponent(BaseULObject):
 
     @property
     def used_units(self):
-        return set(p.unit for p in self.properties.itervalues())
+        return set(p.units for p in self.properties.itervalues())
 
     def standardize_units(self, reference_units=None,
                           reference_dimensions=None):
@@ -233,7 +233,7 @@ class BaseComponent(BaseULObject):
                                          if d == u.dimension))
         for p in self.properties.itervalues():
             try:
-                std_unit = next(u for u in reference_units if u == p.unit)
+                std_unit = next(u for u in reference_units if u == p.units)
             except StopIteration:
                 continue
             p.set_unit(std_unit)
@@ -242,7 +242,7 @@ class BaseComponent(BaseULObject):
         self.standardize_units()
         xml = [self.to_xml()]
         xml.extend(chain(*((u.to_xml(), u.dimension.to_xml())
-                            for u in self.units if u != unitless)))
+                            for u in self.used_units if u != unitless)))
         doc = E.NineML(*xml, xmlns=nineml_namespace)
         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
                                      xml_declaration=True)

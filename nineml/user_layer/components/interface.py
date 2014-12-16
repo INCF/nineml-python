@@ -4,7 +4,8 @@ from ..base import BaseULObject
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
 from ...utility import expect_single  #FIXME: really should only have one utility @IgnorePep8
-from ...abstraction_layer import Unit
+from .base import BaseComponent
+from ...abstraction_layer.units import Unit, unitless
 from ..values import (SingleValue, ArrayValue, ExternalArrayValue,
                       ComponentValue)
 
@@ -37,7 +38,7 @@ class Property(BaseULObject):
         if isinstance(value, (int, float)):
             value = SingleValue(value)
         self._value = value
-        self.unit = units
+        self.units = units
 
     def __hash__(self):
         return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
@@ -77,7 +78,7 @@ class Property(BaseULObject):
                             "or single value types")
 
     def set_unit(self, unit):
-        self.quantity.unit = unit
+        self.unit = unit
 
     def __repr__(self):
         if self.unit is not None:
