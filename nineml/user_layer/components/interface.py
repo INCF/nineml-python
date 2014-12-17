@@ -1,9 +1,9 @@
 # encoding: utf-8
 from operator import and_
-from ..base import BaseULObject, Reference
+from ..base import BaseULObject
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
-from .base import BaseComponent
+from ...utility import expect_single  #FIXME: really should only have one utility @IgnorePep8
 from ...abstraction_layer import Unit
 from ..values import (SingleValue, ArrayValue, ExternalArrayValue,
                       ComponentValue)
@@ -24,7 +24,8 @@ class Property(BaseULObject):
     defining_attributes = ("name", "value", "units")
 
     def __init__(self, name, value, units=None):
-        if not isinstance(value, (int, float, Reference, BaseComponent)):
+        if not isinstance(value, (int, float, SingleValue, ArrayValue,
+                                  ExternalArrayValue, ComponentValue)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference', 'Component', 'ValueList', "
                             "'ExternalValueList'"
@@ -104,16 +105,22 @@ class Property(BaseULObject):
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
-        value = None
-        for ValueType in (SingleValue, ArrayValue, ExternalArrayValue,
-                          ComponentValue):
-            if element.find(NINEML + ValueType.element_name):
-                value = ValueType.from_xml(element, context)
-        if value is None:
-            raise Exception("Did not find recognised value tag in property ("
-                            "found {})".format(
-                                ', '.join(c.tag
-                                          for c in element.getchildren())))
+        if element.find(NINEML + 'SingleValue'):
+            value = SingleValue.from_xml(
+                expect_single(element.find(NINEML + 'SingleValue')))
+        elif element.find(NINEML + 'ArrayValue'):
+            value = ArrayValue.from_xml(
+                expect_single(element.find(NINEML + 'ArrayValue')))
+        elif element.find(NINEML + 'ExternalArrayValue'):
+            value = ArrayValue.from_xml(
+                expect_single(element.find(NINEML + 'ArrayValue')))
+        elif element.find(NINEML + 'ComponentValue'):
+            value = ArrayValue.from_xml(
+                expect_single(element.find(NINEML + 'ArrayValue')))
+        else:
+            raise Exception(
+                "Did not find recognised value tag in property (found {})"
+                .format(', '.join(c.tag for c in element.getchildren())))
         units_str = element.attrib.get('units', None)
         try:
             units = context[units_str] if units_str else None
