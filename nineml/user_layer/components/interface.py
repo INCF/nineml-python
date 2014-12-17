@@ -34,6 +34,8 @@ class Property(BaseULObject):
             raise Exception("Units ({}) must of type <Unit>".format(units))
         super(Property, self).__init__()
         self.name = name
+        if isinstance(value, (int, float)):
+            value = SingleValue(value)
         self._value = value
         self.unit = units
 
@@ -92,31 +94,33 @@ class Property(BaseULObject):
 
     @annotate_xml
     def to_xml(self):
-        if isinstance(self.value, (int, float)):
-            value_element = E('SingleValue', str(self.value))
-        else:
-            value_element = self.value.to_xml()
-        kwargs = {'units': self.units.name} if self.units else {}
+        kwargs = {'name': self.name}
+        if self.unit:
+            kwargs['units'] = self.unit.name
         return E(self.element_name,
-                 value_element,
+                 self._value.to_xml(),
                  **kwargs)
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, context):
         check_tag(element, cls)
-        if element.find(NINEML + 'SingleValue'):
+        if element.find(NINEML + 'SingleValue') is not None:
             value = SingleValue.from_xml(
-                expect_single(element.find(NINEML + 'SingleValue')))
-        elif element.find(NINEML + 'ArrayValue'):
+                expect_single(element.findall(NINEML + 'SingleValue')),
+                context)
+        elif element.find(NINEML + 'ArrayValue') is not None:
             value = ArrayValue.from_xml(
-                expect_single(element.find(NINEML + 'ArrayValue')))
-        elif element.find(NINEML + 'ExternalArrayValue'):
+                expect_single(element.findall(NINEML + 'ArrayValue')),
+                context)
+        elif element.find(NINEML + 'ExternalArrayValue') is not None:
             value = ArrayValue.from_xml(
-                expect_single(element.find(NINEML + 'ArrayValue')))
-        elif element.find(NINEML + 'ComponentValue'):
+                expect_single(element.findall(NINEML + 'ArrayValue')),
+                context)
+        elif element.find(NINEML + 'ComponentValue') is not None:
             value = ArrayValue.from_xml(
-                expect_single(element.find(NINEML + 'ArrayValue')))
+                expect_single(element.findall(NINEML + 'ArrayValue')),
+                context)
         else:
             raise Exception(
                 "Did not find recognised value tag in property (found {})"
@@ -127,7 +131,11 @@ class Property(BaseULObject):
         except KeyError:
             raise Exception("Did not find definition of '{}' units in the "
                             "current context.".format(units_str))
-        return cls(name=element.attrib["name"], value=value,
+        try:
+            name = element.attrib['name']
+        except KeyError:
+            raise Exception("Property did not have name")
+        return cls(name=name, value=value,
                    units=units)
 
 

@@ -64,10 +64,9 @@ class Mask(BaseALObject):
 
 class StandarLibraryConnectionRule(BaseALObject):
 
-    defining_attributes = ('name', 'reference_url')
+    defining_attributes = ('reference_url',)
 
-    def __init__(self, name, reference_url):
-        self.name = name
+    def __init__(self, reference_url):
         self.reference_url = reference_url
 
 

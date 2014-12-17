@@ -17,25 +17,17 @@
     <Response>
       <Component name="AMPA">
         <Definition url="../postsynapticresponses/DoubleExpCondSynapse.xml">DoubleExpCondSynapse</Definition>
-        <Property name="gBar">
-          <Quantity units="S_per_cm2">
-            <SingleValue>2.6e-3</SingleValue>
-          </Quantity>
+        <Property name="gBar" units="S_per_cm2">
+          <SingleValue>2.6e-3</SingleValue>
         </Property>        
-        <Property name="tau1">
-          <Quantity units="ms">
-            <SingleValue>0.03</SingleValue>
-          </Quantity>
+        <Property name="tau1" units="ms">
+          <SingleValue>0.03</SingleValue>
         </Property>
-        <Property name="tau2">
-          <Quantity units="ms">
-            <SingleValue>0.05</SingleValue>
-          </Quantity>
+        <Property name="tau2" units="ms">
+          <SingleValue>0.05</SingleValue>
         </Property>
-        <Property name="eReversal">
-          <Quantity units="mV">
-            <SingleValue>0.0</SingleValue>
-          </Quantity>
+        <Property name="eReversal" units="mV">
+          <SingleValue>-0.1</SingleValue>
         </Property>
       </Component>
       <FromSource send_port="spikeOutput" receive_port="spike"/>
@@ -46,10 +38,8 @@
         <Definition url="../connectionrules/all_to_all.xml">AllToAll</Definition>
       </Component>
     </Connectivity>
-    <Delay>
-      <Quantity units="ms">
-        <SingleValue>0.5</SingleValue>
-      </Quantity>
+    <Delay units="ms">
+      <SingleValue>0.5</SingleValue>
     </Delay>
   </Projection>
 </NineML>
