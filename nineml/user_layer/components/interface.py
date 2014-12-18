@@ -1,11 +1,12 @@
 # encoding: utf-8
 from operator import and_
-from ..base import BaseULObject, resolve_reference, write_reference, Reference
+from ..base import BaseULObject
 from ...base import E, read_annotations, annotate_xml, NINEML
 from ..utility import check_tag
-from ..random import RandomDistribution
-from .base import BaseComponent
+from ...utility import expect_single  #FIXME: really should only have one utility @IgnorePep8
 from ...abstraction_layer import Unit
+from ..values import (SingleValue, ArrayValue, ExternalArrayValue,
+                      ComponentValue)
 
 
 class Property(BaseULObject):
@@ -20,22 +21,60 @@ class Property(BaseULObject):
     numbers, e.g. a RandomDistribution instance.
     """
     element_name = "Property"
-    defining_attributes = ("name", "quantity")
+    defining_attributes = ("name", "value", "units")
 
-    def __init__(self, name, quantity):
+    def __init__(self, name, value, units=None):
+        if not isinstance(value, (int, float, SingleValue, ArrayValue,
+                                  ExternalArrayValue, ComponentValue)):
+            raise Exception("Invalid type '{}' for value, can be one of "
+                            "'Value', 'Reference', 'Component', 'ValueList', "
+                            "'ExternalValueList'"
+                            .format(value.__class__.__name__))
+        if not isinstance(units, Unit) and units is not None:
+            raise Exception("Units ({}) must of type <Unit>".format(units))
         super(Property, self).__init__()
-        if not isinstance(quantity, Quantity):
-            raise TypeError("Value must be provided as a Quantity object")
         self.name = name
-        self.quantity = quantity
+        if isinstance(value, (int, float)):
+            value = SingleValue(value)
+        self._value = value
+        self.unit = units
+
+    def __hash__(self):
+        return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
+
+    def is_single(self):
+        return isinstance(self._value, SingleValue)
+
+    def is_random(self):
+        return isinstance(self._value, ComponentValue)
+
+    def is_array(self):
+        return (isinstance(self._value, ArrayValue) or
+                isinstance(self._value, ExternalArrayValue))
 
     @property
     def value(self):
-        return self.quantity.value
+        if self.is_single():
+            return self._value.value
+        else:
+            raise Exception("Cannot access single value for array or component"
+                            " type")
 
     @property
-    def unit(self):
-        return self.quantity.units
+    def value_array(self):
+        if self.is_array():
+            raise NotImplementedError
+        else:
+            raise Exception("Cannot access value array for component or single"
+                            " value types")
+
+    @property
+    def random_distribution(self):
+        if self.is_random():
+            return self._value.component
+        else:
+            raise Exception("Cannot access random distribution for component "
+                            "or single value types")
 
     def __repr__(self):
         units = self.unit.name
@@ -45,126 +84,59 @@ class Property(BaseULObject):
                                                           self.value, units)
 
     def __eq__(self, other):
+        # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV,
+        #        could use python-quantities package to do this if we are
+        #        okay with the dependency
         return isinstance(other, self.__class__) and \
             reduce(and_, (self.name == other.name,
                           self.value == other.value,
-                          self.unit == other.unit))  # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV @IgnorePep8
+                          self.unit == other.unit))
 
-    def __hash__(self):
-        return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
-
-    def is_random(self):
-        return isinstance(self.value, RandomDistribution)
-
-    @write_reference
     @annotate_xml
     def to_xml(self):
+        kwargs = {'name': self.name}
+        if self.unit:
+            kwargs['units'] = self.unit.name
         return E(self.element_name,
-                 self.quantity.to_xml(),
-                 name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    def from_xml(cls, element, context):
-        check_tag(element, cls)
-        quantity = Quantity.from_xml(element.find(NINEML + "Quantity"),
-                                     context)
-        return cls(name=element.attrib["name"], quantity=quantity)
-
-
-class Quantity(object):
-
-    """
-    Represents a "quantity", a single value, random distribution or function
-    with associated units
-    """
-    element_name = "Quantity"
-
-    def __init__(self, value, units):
-        if not isinstance(value, (int, float, Reference, BaseComponent)):
-            raise Exception("Invalid type '{}' for value, can be one of "
-                            "'Value', 'Reference', 'Component', 'ValueList', "
-                            "'ExternalValueList'"
-                            .format(value.__class__.__name__))
-        if not isinstance(units, Unit) and units is not None:
-            raise Exception("Units ({}) must of type <Unit>".format(units))
-        self.value = value
-        self.units = units
-
-    def __repr__(self):
-        return "Quantity({}, units={})".format(repr(self.value),
-                                               self.units.name)
-
-    def __eq__(self, other):
-        return self.value == other.value and self.units == other.units
-
-    def to_xml(self):
-        if isinstance(self.value, (int, float)):
-            value_element = E('SingleValue', str(self.value))
-        else:
-            value_element = self.value.to_xml()
-        kwargs = {'units': self.units.name} if self.units else {}
-        return E(self.element_name,
-                 value_element,
+                 self._value.to_xml(),
                  **kwargs)
 
     @classmethod
+    @read_annotations
     def from_xml(cls, element, context):
-        """
-        Parse an XML ElementTree structure and return a (value, units) tuple.
-        The value should be a number or something that generates a numerical
-        value, e.g. a RandomDistribution instance).
-
-        `element` - should be an ElementTree Element instance.
-        """
-        try:
-            value_element = element.getchildren()[0]
-        except IndexError:
-            raise Exception("Expected child elements in Quantity element")
-        if value_element.tag == NINEML + 'SingleValue':
-            try:
-                value = float(value_element.text)
-            except ValueError:
-                raise ValueError("Provided value '{}' is not numeric"
-                                 .format(value_element.text))
-        elif value_element.tag in (NINEML + 'ArrayValue',
-                                   NINEML + 'ExternalArrayValue'):
-            raise NotImplementedError
-        elif value_element.tag in (NINEML + 'Reference', NINEML + 'Component'):
-            value = BaseComponent.from_xml(value_element)
+        check_tag(element, cls)
+        if element.find(NINEML + 'SingleValue') is not None:
+            value = SingleValue.from_xml(
+                expect_single(element.findall(NINEML + 'SingleValue')),
+                context)
+        elif element.find(NINEML + 'ArrayValue') is not None:
+            value = ArrayValue.from_xml(
+                expect_single(element.findall(NINEML + 'ArrayValue')),
+                context)
+        elif element.find(NINEML + 'ExternalArrayValue') is not None:
+            value = ArrayValue.from_xml(
+                expect_single(element.findall(NINEML + 'ArrayValue')),
+                context)
+        elif element.find(NINEML + 'ComponentValue') is not None:
+            value = ArrayValue.from_xml(
+                expect_single(element.findall(NINEML + 'ArrayValue')),
+                context)
         else:
-            raise KeyError("Unrecognised tag name '{tag}', was expecting one "
-                           "of '{nm}SingleValue', '{nm}ArrayValue', "
-                           "'{nm}ExternalArrayValue', '{nm}Reference' or "
-                           "'{nm}Component'"
-                           .format(tag=value_element.tag, nm=NINEML))
+            raise Exception(
+                "Did not find recognised value tag in property (found {})"
+                .format(', '.join(c.tag for c in element.getchildren())))
         units_str = element.attrib.get('units', None)
         try:
             units = context[units_str] if units_str else None
         except KeyError:
             raise Exception("Did not find definition of '{}' units in the "
                             "current context.".format(units_str))
-        return Quantity(value, units)
-
-
-class StringValue(object):
-
-    """
-    Not intended to be instantiated: just provides the from_xml() classmethod.
-    """
-    element_name = "Value"
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    def from_xml(cls, element):
-        """
-        Parse an XML ElementTree structure and return a string value.
-
-        `element` - should be an ElementTree Element instance.
-        """
-        return element.text
+        try:
+            name = element.attrib['name']
+        except KeyError:
+            raise Exception("Property did not have name")
+        return cls(name=name, value=value,
+                   units=units)
 
 
 class InitialValue(Property):
@@ -190,7 +162,7 @@ class PropertySet(dict):
         for prop in properties:
             self[prop.name] = prop  # should perhaps do a copy
         for name, (value, unit) in kwproperties.items():
-            self[name] = Property(name, Quantity(value, unit))
+            self[name] = Property(name, value, unit)
 
     def __hash__(self):
         return hash(tuple(self.items()))
@@ -233,7 +205,7 @@ class InitialValueSet(PropertySet):
         for iv in ivs:
             self[iv.name] = iv  # should perhaps do a copy
         for name, (value, unit) in kwivs.items():
-            self[name] = InitialValue(name, Quantity(value, unit))
+            self[name] = InitialValue(name, value, unit)
 
     def __repr__(self):
         return "InitialValueSet(%s)" % dict(self)

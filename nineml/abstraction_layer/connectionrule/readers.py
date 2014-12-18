@@ -42,11 +42,8 @@ class XMLLoader(object):
                          dimension=element.get('dimension'))
 
     def load_connectionrule(self, element):
-        stdlib = expect_none_or_single(element.findall(NINEML +
-                                                       'StandardLibrary'))
-        if stdlib is not None:
-            return StandarLibraryConnectionRule(element.text,
-                                                element.get('reference'))
+        if 'standardLibrary' in element.attrib:
+            return StandarLibraryConnectionRule(element.get('standardLibrary'))
         else:
             for t in element.iterchildren(tag=etree.Element):
                 try:
