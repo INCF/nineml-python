@@ -1,18 +1,40 @@
 # encoding: utf-8
+"""
+missing docstring
+"""
+
+from itertools import chain
 from ..base import BaseULObject, resolve_reference, write_reference
 from ...base import E, read_annotations, annotate_xml, NINEML
-from ...context import BaseReference
+from ...context import BaseReference, Context
 from nineml.exceptions import NineMLUnitMismatchError
 
 
-# This line is imported at the end of the file to avoid recursive imports
-# from .interface import Property, InitialValue, InitialValueSet, PropertySet
-
-
 class BaseComponent(BaseULObject):
-
     """
-    Base class for model components that are defined in the abstraction layer.
+    Base class for model components.
+
+    A :class:`Component` may be regarded as a parameterized instance of a
+    :class:`~nineml.abstraction_layer.ComponentClass`.
+
+    A component may be created either from a
+    :class:`~nineml.abstraction_layer.ComponentClass`  together with a set
+    of properties (parameter values), or by cloning then modifying an
+    existing component (the prototype).
+
+    *Arguments*:
+        `name`:
+             a name for the component.
+        `definition`:
+             the URL of an abstraction layer component class definition,
+             a :class:`Definition` or a :class:`Prototype` instance.
+        `properties`:
+             a dictionary containing (value,unit) pairs or a
+             :class:`PropertySet` for the component's properties.
+        `initial_values`:
+            a dictionary containing (value,unit) pairs or a
+            :class:`PropertySet` for the component's state variables.
+
     """
     element_name = "Component"
     defining_attributes = ('name', 'component_class', 'properties')
@@ -24,17 +46,13 @@ class BaseComponent(BaseULObject):
         """
         Create a new component with the given name, definition and properties,
         or create a prototype to another component that will be resolved later.
-
-        `name` - a name for the component that can be used to prototype it.
-        `definition` - a Definition instance, the URL of a component
-                       definition, or None if creating a prototype.
-        `properties` - a PropertySet instance or a dictionary containing
-                       (value,unit) pairs.
-        `prototype` - the name of another component in the model, or None.
         """
         super(BaseComponent, self).__init__()
         self.name = name
-        if not (isinstance(definition, Definition) or
+        if isinstance(definition, basestring):
+            definition = Definition(name=definition.replace(".xml", ""),
+                                    context=None, url=definition)
+        elif not (isinstance(definition, Definition) or
                 isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
                              "'Prototype' element")
@@ -73,9 +91,10 @@ class BaseComponent(BaseULObject):
     @property
     def properties(self):
         """
-        Recursively retrieves properties defined in prototypes and updates them
-        with properties defined locally
+        The set of component properties (parameter values).
         """
+        # Recursively retrieves properties defined in prototypes and updates them
+        # with properties defined locally
         props = PropertySet()
         if isinstance(self._definition, Prototype):
             props.update(self._definition.component.properties)
@@ -85,14 +104,19 @@ class BaseComponent(BaseULObject):
     @property
     def initial_values(self):
         """
-        Recursively retrieves initial values defined in prototypes and updates
-        them with properties defined locally
+        The set of initial values for the state variables of the component.
         """
+        # Recursively retrieves initial values defined in prototypes and updates
+        # them with properties defined locally
         vals = InitialValueSet()
         if isinstance(self._definition, Prototype):
             vals.update(self._definition.component.initial_values)
         vals.update(self._initial_values)
         return vals
+
+    @property
+    def units(self):
+        return set(p.unit for p in chain(self.properties.values(), self.initial_values.values()) if p.unit is not None)
 
 #     def __eq__(self, other):
 #         if not isinstance(other, self.__class__):
@@ -154,11 +178,14 @@ class BaseComponent(BaseULObject):
                        .format(param.name, param_dimension.name,
                                prop_dimension.name))
                 raise NineMLUnitMismatchError(err)
-        # TODO: Now check dimensions
 
     @write_reference
     @annotate_xml
     def to_xml(self):
+        """
+        docstring missing, although since the decorators don't
+        preserve the docstring, it doesn't matter at the moment.
+        """
         properties_and_initial_values = (self._properties.to_xml() +
                                          [iv.to_xml()
                                           for iv in
@@ -173,6 +200,7 @@ class BaseComponent(BaseULObject):
     @resolve_reference
     @read_annotations
     def from_xml(cls, element, context):
+        """docstring missing"""
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))

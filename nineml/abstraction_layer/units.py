@@ -49,6 +49,10 @@ class Dimension(BaseALObject):
                          if p < 0)
         return '{}/({})'.format(numer, denom)
 
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_dimension(self, **kwargs)
+
     @annotate_xml
     def to_xml(self):
         kwargs = {'name': self.name}

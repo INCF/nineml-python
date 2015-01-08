@@ -17,39 +17,30 @@ class BaseDynamicsComponent(BaseComponent):
 
 
 class SpikingNodeType(BaseDynamicsComponent):
-
     """
     Component representing a model of a spiking node, i.e. something that can
     emit (and optionally receive) spikes.
-
-    Should perhaps be called SpikingNodePrototype, since this is type +
-    properties
     """
     pass
 
 
 class SynapseType(BaseDynamicsComponent):
-
     """
     Component representing a model of a post-synaptic response, i.e. the
     current produced in response to a spike.
-
-    This class is probably mis-named. Should be PostSynapticResponseType.
     """
+    #This class is probably mis-named. Should be PostSynapticResponseType.
     pass
 
 
 class CurrentSourceType(BaseDynamicsComponent):
-
     """
     Component representing a model of a current source that may be injected
     into a spiking node.
     """
     pass
 
-
 class ConnectionType(BaseDynamicsComponent):
-
     """
     Component representing a model of a synaptic connection, including weight,
     delay, optionally a synaptic plasticity rule.

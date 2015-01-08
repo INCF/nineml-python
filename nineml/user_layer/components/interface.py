@@ -77,9 +77,12 @@ class Property(BaseULObject):
                             "or single value types")
 
     def __repr__(self):
-        units = self.unit.name
-        if u"µ" in units:
-            units = units.replace(u"µ", "u")
+        if self.unit is not None:
+            units = self.unit.name
+            if u"µ" in units:
+                units = units.replace(u"µ", "u")
+        else:
+            units = self.unit
         return "Property(name=%s, value=%s, unit=%s)" % (self.name,
                                                           self.value, units)
 

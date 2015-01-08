@@ -27,12 +27,9 @@ class Reference(BaseReference):
     """
     element_name = "Reference"
 
-    # initial_values is temporary, the idea longer-term is to use a separate
-    # library such as SEDML
     def __init__(self, name, context, url=None):
         """
-        Create a new component with the given name, definition and properties,
-        or create a prototype to another component that will be resolved later.
+        docstring needed
 
         `name`    -- a name of an existing component to refer to
         `context` -- a nineml.context.Context object containing the top-level

@@ -142,6 +142,12 @@ class ComponentClassMixinFlatStructure(BaseALObject):
     def state_variables_map(self):
         """Forwarding function to self.dynamics.state_variables_map"""
         return self._dynamics.state_variables_map
+
+    @property
+    def dimensions(self):
+        dims = set(obj.dimension for obj in chain(self.analog_ports, self.parameters, self.state_variables))
+        return dims
+
     # -------------------------- #
 
     def backsub_all(self):

@@ -57,7 +57,7 @@ class Context(dict, BaseNineMLObject):
             #        should be resolved if present but be set to None if not.
             if name is None:
                 return None
-            raise KeyError("'{}' was not found in the NineML context{} ("
+            raise KeyError("'{}' was not found in the NineML context {} ("
                            "elements in the context were '{}')."
                            .format(name, self.url or '',
                                    "', '".join(self.iterkeys())))
@@ -93,6 +93,13 @@ class Context(dict, BaseNineMLObject):
         return (self[k] for k in self.iterkeys()
                 if isinstance(self[k],
                               nineml.abstraction_layer.ComponentClass))
+
+    @property
+    def network_structures(self):
+        return (self[k] for k in self.iterkeys()
+                if isinstance(self[k], (nineml.user_layer.Population,
+                                        nineml.user_layer.Projection,
+                                        nineml.user_layer.Selection)))
 
     def _load_elem_from_xml(self, unloaded):
         """
@@ -186,7 +193,10 @@ class BaseReference(BaseNineMLObject):
         """
         self.url = url
         if self.url:
-            context = read(url, relative_to=os.path.dirname(context.url))
+            if context is None:
+                context = read(url, relative_to=os.getcwd())
+            else:
+                context = read(url, relative_to=os.path.dirname(context.url))
         self._referred_to = context[name]
 
     def __eq__(self, other):

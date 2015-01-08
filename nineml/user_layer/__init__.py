@@ -42,11 +42,12 @@ Classes
 
 import urllib
 from lxml import etree
-from .dynamics import SpikingNodeType, SynapseType, CurrentSourceType
+from .dynamics import SpikingNodeType, SynapseType, ConnectionType
+from .connectivity import ConnectionRule
 from .population import Population, PositionList, Structure
 from .containers import Network, Selection, Concatenate
-from .projection import Projection
+from .projection import Projection, PortConnection
 from .random import RandomDistribution
-from .components import (PropertySet, BaseComponent as Component,
+from .components import (PropertySet, Property, BaseComponent as Component,
                          Definition, Prototype)
 from .base import Reference

@@ -7,6 +7,7 @@ This file contains utility classes for modifying components.
 
 from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics.visitors import ExpandPortDefinition
+from nineml.abstraction_layer.dynamics.component.ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utility import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
 from ..base import BaseALObject
@@ -30,7 +31,14 @@ class ComponentModifier(BaseALObject):
         # Remove it from the list of ports:
         port = filter_expect_single(component.analog_ports,
                                     lambda ap: ap.name == port_name)
-        component._analog_ports.remove(port)
+        if isinstance(port, AnalogSendPort):
+            component._analog_send_ports.pop(port_name)
+        elif isinstance(port, AnalogReceivePort):
+            component._analog_receive_ports.pop(port_name)
+        elif isinstance(port, AnalogReducePort):
+            component._analog_reduce_ports.pop(port_name)
+        else:
+            raise TypeError("Expected an analog port")
 
     @classmethod
     def close_all_reduce_ports(cls, component, exclude=None):

@@ -1,8 +1,8 @@
 # encoding: utf-8
-from .base import BaseULObject, resolve_reference, write_reference
+from .base import BaseULObject, resolve_reference, write_reference, Reference
 from ..base import E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
-from .components import BaseComponent
+from .components import BaseComponent, Property
 from itertools import chain
 import nineml.user_layer
 from ..abstraction_layer import units as un
@@ -54,10 +54,17 @@ class Projection(BaseULObject):
         super(Projection, self).__init__()
         self.name = name
         self.source = source
+        if source._from_reference is None:  # when exporting to XML, should use reference
+            source._from_reference = Reference(source.name, {source.name: source})
         self.destination = destination
+        if destination._from_reference is None:
+            destination._from_reference = Reference(destination.name, {destination.name: destination})
         self.response = response
         self.plasticity = plasticity
         self.connectivity = connectivity
+        if isinstance(delay, tuple):
+            value, units = delay
+            delay = Delay(SingleValue(value), units)
         self.delay = delay
         self.port_connections = sorted(port_connections,
                                        key=lambda x: (x._send_role,
@@ -121,9 +128,9 @@ class Projection(BaseULObject):
                 E('From' + pc._send_role.capitalize(),
                   send_port=pc.send_port, receive_port=pc.receive_port))
         args = [E.Source(self.source.to_xml(), *pcs['source']),
-                 E.Destination(self.destination.to_xml(), *pcs['destination']),
-                 E.Connectivity(self.connectivity.to_xml()),
-                 E.Response(self.response.to_xml(), *pcs['response'])]
+                E.Destination(self.destination.to_xml(), *pcs['destination']),
+                E.Connectivity(self.connectivity.to_xml()),
+                E.Response(self.response.to_xml(), *pcs['response'])]
         if self.plasticity:
             args.append(E.Plasticity(self.plasticity.to_xml(),
                                      *pcs['plasticity']))
@@ -140,11 +147,11 @@ class Projection(BaseULObject):
         # Get Source
         e = expect_single(element.findall(NINEML + 'Source'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        source = nineml.user_layer.Reference.from_xml(e, context)
+        source = nineml.user_layer.Reference.from_xml(e, context).user_layer_object  ###?
         # Get Destination
         e = expect_single(element.findall(NINEML + 'Destination'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        destination = nineml.user_layer.Reference.from_xml(e, context)
+        destination = nineml.user_layer.Reference.from_xml(e, context).user_layer_object   ###?
         # Get Response
         e = element.find(NINEML + 'Response')
         response = BaseComponent.from_xml(e.find(NINEML + 'Component') or
@@ -350,6 +357,13 @@ class PortConnection(object):
                 self.send_port == other.send_port and
                 self.receive_port == other.receive_port)
 
+    def __repr__(self):
+        return "PortConnection('%s', '%s', '%s', '%s')" % (self._send_role, self._receive_role, self.send_port, self.receive_port)
+
+    def __hash__(self):
+        return (hash(self._send_role) ^ hash(self._receive_role) ^
+                hash(self.send_port) ^ hash(self.receive_port))
+
     def set_projection(self, projection):
         self._projection = projection
 
@@ -383,8 +397,21 @@ class PortConnection(object):
         elif isinstance(comp, nineml.user_layer.Component):
             comp_class = comp.component_class
         elif isinstance(comp, nineml.user_layer.Selection):
-            print ("Warning: port connections have not been check for '{}'"
-                   "Selection".format(comp.name))
+            #print ("Warning: port connections have not been check for '{}' "
+            #       "Selection".format(comp.name))
+            # only implemented for Concatenate
+            def resolve(item):   # doing this here is a hack, I think
+                if isinstance(item, Reference):
+                    return item.user_layer_object
+                else:
+                    return item
+            comp_classes = {}
+            for item in comp.operation.items:
+                cc = resolve(item).cell.component_class
+                comp_classes[cc.name] = cc   # here we use equality of component class names, should really use equality of component classes
+            if len(comp_classes) > 1:
+                raise Exception("Selection contains multiple component classes: %s" % str(comp_classes))
+            comp_class = comp_classes.values()[0]
         else:
             assert False, ("Invalid '{}' object in port connection"
                            .format(type(comp)))

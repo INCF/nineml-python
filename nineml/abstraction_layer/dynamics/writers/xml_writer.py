@@ -35,7 +35,8 @@ class XMLWriter(ComponentVisitor):
                                                                reducedcomponent
 
         xml = XMLWriter().visit(component)
-        return E.NineML(xml, xmlns=nineml_namespace)
+        xml = [XMLWriter().visit_dimension(d) for d in component.dimensions if d is not None] + [xml]
+        return E.NineML(*xml, xmlns=nineml_namespace)
 
     def visit_componentclass(self, component):
         elements = ([p.accept_visitor(self) for p in component.analog_ports] +
@@ -78,6 +79,13 @@ class XMLWriter(ComponentVisitor):
             kwargs['dimension'] = parameter.dimension.name
         return E('Parameter',
                  name=parameter.name, **kwargs)
+
+    @annotate_xml
+    def visit_dimension(self, dimension):
+        kwargs = {'name': dimension.name}
+        kwargs.update(dict((k, str(v)) for k, v in dimension._dims.items()))
+        return E('Dimension',
+                 **kwargs)
 
     @annotate_xml
     def visit_analogreceiveport(self, port, **kwargs):
