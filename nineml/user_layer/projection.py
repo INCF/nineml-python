@@ -222,10 +222,10 @@ class Delay(BaseULObject):
                             "(found {})".format(units))
         super(Delay, self).__init__()
         self._value = value
-        self.unit = units
+        self.units = units
 
     def __hash__(self):
-        return hash(self.name) ^ hash(self.value) ^ hash(self.unit)
+        return hash(self.name) ^ hash(self.value) ^ hash(self.units)
 
     def is_single(self):
         return isinstance(self._value, SingleValue)
@@ -262,10 +262,10 @@ class Delay(BaseULObject):
                             "or single value types")
 
     def __repr__(self):
-        units = self.unit.name
+        units = self.units.name
         if u"µ" in units:
             units = units.replace(u"µ", "u")
-        return "Delay(value=%s, unit=%s)" % (self.value, units)
+        return "Delay(value=%s, units=%s)" % (self.value, units)
 
     def __eq__(self, other):
         # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV,
@@ -273,11 +273,11 @@ class Delay(BaseULObject):
         #        okay with the dependency
         return (isinstance(other, self.__class__) and
                 self.value == other.value and
-                self.unit == other.unit)
+                self.units == other.units)
 
     @annotate_xml
     def to_xml(self):
-        kwargs = {'units': self.unit.name} if self.unit else {}
+        kwargs = {'units': self.units.name} if self.units else {}
         return E(self.element_name,
                  self._value.to_xml(),
                  **kwargs)

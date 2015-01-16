@@ -14,7 +14,7 @@ class SingleValue(BaseValue):
     """
     Representation of a numerical- or string-valued parameter.
 
-    A numerical parameter is a (name, value, unit) triplet, a string parameter
+    A numerical parameter is a (name, value, units) triplet, a string parameter
     is a (name, value) pair.
 
     Numerical values may either be numbers, or a component that generates

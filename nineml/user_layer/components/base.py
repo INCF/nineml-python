@@ -28,10 +28,10 @@ class BaseComponent(BaseULObject):
              the URL of an abstraction layer component class definition,
              a :class:`Definition` or a :class:`Prototype` instance.
         `properties`:
-             a dictionary containing (value,unit) pairs or a
+             a dictionary containing (value,units) pairs or a
              :class:`PropertySet` for the component's properties.
         `initial_values`:
-            a dictionary containing (value,unit) pairs or a
+            a dictionary containing (value,units) pairs or a
             :class:`PropertySet` for the component's state variables.
 
     """
@@ -115,7 +115,7 @@ class BaseComponent(BaseULObject):
 
     @property
     def units(self):
-        return set(p.unit for p in chain(self.properties.values(), self.initial_values.values()) if p.unit is not None)
+        return set(p.units for p in chain(self.properties.values(), self.initial_values.values()) if p.units is not None)
 
     def __hash__(self):
         return (hash(self.__class__) ^ hash(self.name) ^

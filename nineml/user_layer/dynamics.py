@@ -13,7 +13,7 @@ class BaseDynamicsComponent(BaseComponent):
             except KeyError:
                 raise Exception("Initial value not specified for %s" %
                                 var.name)
-            check_units(initial_value.unit, var.dimension)
+            check_units(initial_value.units, var.dimension)
 
 
 class SpikingNodeType(BaseDynamicsComponent):

@@ -110,7 +110,7 @@ class Unit(BaseALObject):
 
     def to_SI_units_str(self):
         if self.offset != 0.0:
-            raise Exception("Cannot convert to SI unit string as offset is not"
+            raise Exception("Cannot convert to SI units string as offset is not"
                             " zero ({})".format(self.offset))
         return (self.dimension.to_SI_units_str() +
                 ' * 10**({})'.format(self.power) if self.power else '')

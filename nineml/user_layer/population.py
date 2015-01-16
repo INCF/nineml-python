@@ -147,7 +147,7 @@ class PositionList(BaseULObject):
             for pos in self._positions:
                 x, y, z = pos
                 element.append(E.position(x=str(x), y=str(y), z=str(z),
-                                          unit="um"))
+                                          units="um"))
         elif self.structure:
             element.append(E.structure(self.structure.name))
         else:
