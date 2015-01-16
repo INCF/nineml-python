@@ -176,21 +176,11 @@ class Context(dict, BaseNineMLObject):
 
 
 class BaseReference(BaseNineMLObject):
-
     """
-    Base class for model components that are defined in the abstraction layer.
+    Base class for references to model components that are defined in the abstraction layer.
     """
 
-    # initial_values is temporary, the idea longer-term is to use a separate
-    # library such as SEDML
     def __init__(self, name, context, url=None):
-        """
-        Create a new component with the given name, definition and properties,
-        or create a prototype to another component that will be resolved later.
-
-        `name` - a name of an existing component to refer to
-        `url`            - a url of the file containing the exiting component
-        """
         self.url = url
         if self.url:
             if context.url is None:

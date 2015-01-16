@@ -21,9 +21,20 @@ class BaseULObject(BaseNineMLObject):
 
 
 class Reference(BaseReference):
-
     """
-    Base class for model components that are defined in the abstraction layer.
+    A reference to a NineML user layer object previously defined or defined elsewhere.
+
+    **Arguments**:
+        *name*
+            The name of a NineML object which already exists, or which is
+            defined in a separate XML file.
+        *context*
+            A dictionary or :class:`Context` object containing the object
+            being referred to, if the object already exists.
+        *url*
+            If the object is defined in a separate XML file, the URL
+            of the file.
+
     """
     element_name = "Reference"
 
@@ -45,6 +56,7 @@ class Reference(BaseReference):
 
     @property
     def user_layer_object(self):
+        """The object being referred to."""
         return self._referred_to
 
 

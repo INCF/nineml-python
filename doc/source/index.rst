@@ -1,6 +1,6 @@
-=================
-NineML Python API
-=================
+=====================
+NineML Python library
+=====================
 
 NineML_ is a language for describing the dynamics and connectivity of neuronal network
 simulations; in particular for large-scale simulations of many point neurons.
@@ -23,8 +23,9 @@ Users' guide
     getting_started
     examples/index
     api_reference/index
+    annotations
     getting_help
-
+    releases/index
 
 Developers' guide
 -----------------
@@ -34,7 +35,6 @@ Developers' guide
 
     contributing
     implementation_reference
-
 
 
 .. _NineML: http://nineml.net

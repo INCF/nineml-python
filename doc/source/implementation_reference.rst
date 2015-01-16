@@ -1,2 +1,2 @@
-Implementation reference
-========================
+Implementation reference (for developers)
+=========================================

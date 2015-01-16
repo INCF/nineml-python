@@ -62,6 +62,11 @@ class Property(BaseULObject):
                             " type")
 
     @property
+    def quantity(self):
+        """The value of the parameter (magnitude and units)."""
+        return (self.value, self.units)
+
+    @property
     def value_array(self):
         if self.is_array():
             raise NotImplementedError

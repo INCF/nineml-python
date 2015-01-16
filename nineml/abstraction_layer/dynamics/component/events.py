@@ -43,3 +43,6 @@ class OutputEvent(BaseALObject):
 
     def __str__(self):
         return 'Output Event( port: %s )' % self.port_name
+
+    def __repr__(self):
+        return "OutputEvent('%s')" % self.port_name

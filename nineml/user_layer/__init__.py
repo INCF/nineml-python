@@ -46,8 +46,8 @@ from .dynamics import SpikingNodeType, SynapseType, ConnectionType
 from .connectivity import ConnectionRule
 from .population import Population, PositionList, Structure
 from .containers import Network, Selection, Concatenate
-from .projection import Projection, PortConnection
+from .projection import Projection, PortConnection, Delay
 from .random import RandomDistribution
 from .components import (PropertySet, Property, BaseComponent as Component,
-                         Definition, Prototype)
+                         Definition, Prototype, InitialValue, InitialValueSet)
 from .base import Reference

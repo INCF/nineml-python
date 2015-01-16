@@ -35,9 +35,15 @@ def find_difference(this, that):
 
 
 class Selection(BaseULObject):
-
     """
-    Container for combining multiple populations or subsets thereof
+    Container for combining multiple populations or subsets thereof.
+
+    **Arguments**:
+        *name*
+            a name for the selection
+        *operation*
+            a "selector" object which determines which neurons form part of the selection.
+            Only :class:`Concatenate` is currently supported.
     """
     element_name = "Selection"
     defining_attributes = ('name', 'operation')
@@ -46,6 +52,9 @@ class Selection(BaseULObject):
         super(Selection, self).__init__()
         self.name = name
         self.operation = operation
+
+    def __repr__(self):
+        return "Selection('%s', '%r')" % (self.name, self.operation)
 
     @write_reference
     @annotate_xml
@@ -72,8 +81,8 @@ class Selection(BaseULObject):
 
 class Concatenate(BaseULObject):
     """
-    Concatenates multiple Populations or Selections together into
-    a greater Selection
+    Concatenates multiple :class:`Population`\s or :class:`Selection`\s together into
+    a larger :class:`Selection`.
     """
 
     element_name = 'Concatenate'
@@ -83,8 +92,14 @@ class Concatenate(BaseULObject):
         super(Concatenate, self).__init__()
         self._items = items
 
+    def __repr__(self):
+        return "Concatenate(%s)" % ", ".join(repr(item) for item in self.items)
+
     @property
     def items(self):
+        """Return a list of the items in the concatenation."""
+        # should this perhaps flatten to a list of Populations, where the concatenation includes other Selections?
+        # or should that be a separate method?
         return self._items
 
     @write_reference
@@ -123,15 +138,21 @@ class Concatenate(BaseULObject):
 
 
 class Network(object):
-
     """
     Container for populations and projections between those populations.
-    """
-    #element_name = "Network"
-    #defining_attributes = ("name", "populations", "projections", "selections")
-    #children = ("populations", "projections", "selections")
 
-    def __init__(self, name="anonymous", populations={}, projections={}, selections={}):
+    **Arguments**:
+        *name*
+            a name for the network.
+        *populations*
+            a dict containing the populations contained in the network.
+        *projections*
+            a dict containing the projections contained in the network.
+        *selections*
+            a dict containing the selections contained in the network.
+    """
+
+    def __init__(self, name="anonymous", populations={}, projections={}, selections={}):  # better would be *items, then sort by type, taking the name from the item
         super(Network, self).__init__()
         self.name = name
         self.populations = populations

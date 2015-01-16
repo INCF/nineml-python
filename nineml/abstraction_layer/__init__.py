@@ -17,11 +17,13 @@ from dynamics.component import (ComponentClass as DynamicsClass, Regime, On,
                                 AnalogReducePort, EventSendPort,
                                 EventReceivePort, Dynamics, OnCondition,
                                 Condition, StateVariable, NamespaceAddress,
-                                Alias, OnEvent, SpikeOutputEvent, Expression)
+                                Alias, OnEvent, SpikeOutputEvent, Expression,
+                                Port, AnalogPort, EventPort)
 from dynamics.component.util import parse
 import dynamics
 from dynamics import (component, visitors, readers, writers, validators,
                       component_modifiers, flattening, testing_utils)
+import units
 from units import Unit, Dimension
 
 import structure

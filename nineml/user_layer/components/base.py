@@ -50,7 +50,7 @@ class BaseComponent(BaseULObject):
         self.name = name
         if isinstance(definition, basestring):
             definition = Definition(name=definition.replace(".xml", ""),
-                                    context=None, url=definition)
+                                    context=Context(_url=definition), url=definition)
         elif not (isinstance(definition, Definition) or
                 isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "

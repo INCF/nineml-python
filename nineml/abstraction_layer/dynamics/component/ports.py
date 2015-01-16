@@ -24,11 +24,11 @@ class Port(BaseALObject):
     Generally, a send port can be connected to receive port to allow different
     components to communicate.
 
-    |AnalogSendPort| and |EventSendPort|s can be connected to any number of
-    |AnalogReceivePort| and |EventReceivePort|s respectively, but each
+    |AnalogSendPort| and |EventSendPorts| can be connected to any number of
+    |AnalogReceivePort| and |EventReceivePorts| respectively, but each
     |AnalogReceivePort| and |EventReceivePort| can only be connected to a
     single |AnalogSendPort| and |EventSendPort| respectively. port. In order to
-    collect analog inputs from several |AnalogSendPort|s into a single port, we
+    collect analog inputs from several |AnalogSendPorts| into a single port, we
     use a |AnalogReducePort|. An |AnalogReducePort| port requires an additional
     parameter, ``reduce_op``, which specifies how to combine the information
     from the ports, for example, by adding their values together, `+`.
