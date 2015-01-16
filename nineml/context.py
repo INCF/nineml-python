@@ -163,8 +163,8 @@ class Context(dict, BaseNineMLObject):
             # other elements use 'name'
             name = child.attrib.get('name', child.attrib.get('symbol'))
             if name in elements:
-                raise Exception("Conflicting identifiers '{ob1}:{name} in "
-                                "{ob2}:{name} in NineML file '{url}'"
+                raise Exception("Duplicate identifier '{ob1}:{name}'in NineML "
+                                "file '{url}'"
                                 .format(name=name,
                                         ob1=elements[name].cls.element_name,
                                         ob2=child_cls.element_name,
@@ -193,7 +193,7 @@ class BaseReference(BaseNineMLObject):
         """
         self.url = url
         if self.url:
-            if context is None:
+            if context.url is None:
                 context = read(url, relative_to=os.getcwd())
             else:
                 context = read(url, relative_to=os.path.dirname(context.url))

@@ -20,10 +20,7 @@ class XMLWriter(ComponentVisitor):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment
-        component.standardize_unit_dimensions()
         doc = cls.to_xml(component, flatten)
-        doc.extend(d.to_xml() for d in component.used_dimensions
-                   if d != dimensionless)
         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
                                      xml_declaration=True)
 
@@ -36,10 +33,11 @@ class XMLWriter(ComponentVisitor):
                 assert False, 'Trying to save nested models not yet supported'
             else:
                 component = flattening.ComponentFlattener(component).\
-                                                               reducedcomponent
-
+                    reducedcomponent
+        component.standardize_unit_dimensions()
         xml = XMLWriter().visit(component)
-        xml = [XMLWriter().visit_dimension(d) for d in component.dimensions if d is not None] + [xml]
+        xml = [XMLWriter().visit_dimension(d) for d in component.dimensions
+               if d is not None] + [xml]
         return E.NineML(*xml, xmlns=nineml_namespace)
 
     def visit_componentclass(self, component):

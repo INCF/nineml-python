@@ -145,7 +145,9 @@ class ComponentClassMixinFlatStructure(BaseALObject):
 
     @property
     def dimensions(self):
-        dims = set(obj.dimension for obj in chain(self.analog_ports, self.parameters, self.state_variables))
+        dims = set(obj.dimension for obj in chain(self.analog_ports,
+                                                  self.parameters,
+                                                  self.state_variables))
         return dims
 
     # -------------------------- #

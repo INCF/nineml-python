@@ -67,7 +67,7 @@ class BaseComponentClass(BaseALObject):
         return self._parameters[name]
 
     @property
-    def used_dimensions(self):
+    def dimensions(self):
         return set(p.dimension for p in self._attributes_with_dimension)
 
     @property
@@ -80,7 +80,7 @@ class BaseComponentClass(BaseALObject):
         names do not conflict when writing to file
         """
         if reference_set is None:
-            reference_set = self.used_dimensions
+            reference_set = self.dimensions
         for p in self._attributes_with_dimension:
             try:
                 std_dim = next(d for d in reference_set if d == p.dimension)
