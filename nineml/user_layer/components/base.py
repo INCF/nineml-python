@@ -236,7 +236,7 @@ class BaseComponent(BaseULObject):
                 std_unit = next(u for u in reference_units if u == p.units)
             except StopIteration:
                 continue
-            p.set_unit(std_unit)
+            p.set_units(std_unit)
 
     def write(self, file):  # @ReservedAssignment
         self.standardize_units()

@@ -77,7 +77,7 @@ class Property(BaseULObject):
             raise Exception("Cannot access random distribution for component "
                             "or single value types")
 
-    def set_unit(self, units):
+    def set_units(self, units):
         self.units = units
 
     def __repr__(self):
