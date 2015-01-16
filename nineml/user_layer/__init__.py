@@ -42,7 +42,8 @@ Classes
 
 import urllib
 from lxml import etree
-from .dynamics import SpikingNodeType, SynapseType, ConnectionType
+from .dynamics import (SpikingNodeType, SynapseType, ConnectionType,
+                       IonDynamicsType)
 from .connectivity import ConnectionRule
 from .population import Population, PositionList, Structure
 from .containers import Network, Selection, Concatenate

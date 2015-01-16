@@ -108,10 +108,6 @@ class ComponentClassMixinFlatStructure(BaseALObject):
         return "<dynamics.ComponentClass %s>" % self.name
 
     # Forwarding functions to the dynamics #
-    @property
-    def aliases_map(self):
-        """Forwarding function to self.dynamics.alias_map"""
-        return self._dynamics.aliases_map
 
     @property
     def aliases(self):
@@ -137,6 +133,51 @@ class ComponentClassMixinFlatStructure(BaseALObject):
     def state_variables(self):
         """Forwarding function to self.dynamics.state_variables"""
         return self._dynamics.state_variables
+
+    @property
+    def analog_send_ports_map(self):
+        """
+        Returns the underlying dictionary containing the AnalogSendPort
+        objects
+        """
+        return self._analog_send_ports
+
+    @property
+    def analog_receive_ports_map(self):
+        """
+        Returns the underlying dictionary containing the AnalogReceivePort
+        objects
+        """
+        return self._analog_receive_ports
+
+    @property
+    def analog_reduce_ports_map(self):
+        """
+        Returns the underlying dictionary containing the AnalogReducePort
+        objects
+        """
+        return self._analog_reduce_ports
+
+    @property
+    def event_send_ports_map(self):
+        """
+        Returns the underlying dictionary containing the EventSendPort
+        objects
+        """
+        return self._event_send_ports
+
+    @property
+    def event_receive_ports_map(self):
+        """
+        Returns the underlying dictionary containing the EventReceivePort
+        objects
+        """
+        return self._event_receive_ports
+
+    @property
+    def aliases_map(self):
+        """Forwarding function to self.dynamics.alias_map"""
+        return self._dynamics.aliases_map
 
     @property
     def state_variables_map(self):

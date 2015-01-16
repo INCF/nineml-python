@@ -60,6 +60,12 @@ class BaseComponentClass(BaseALObject):
         return self._parameters.itervalues()
 
     @property
+    def parameters_map(self):
+        """Returns the underlying parameters dictionary containing the local
+          |Parameter| objects"""
+        return self._parameters
+
+    @property
     def parameter_names(self):
         return self._parameters.iterkeys()
 
