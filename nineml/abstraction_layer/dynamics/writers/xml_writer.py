@@ -111,19 +111,19 @@ class XMLWriter(ComponentVisitor):
         return E('EventReceivePort', name=port.name)
 
     @annotate_xml
-    def visit_assignment(self, assignment):  # @UnusedVariable
+    def visit_assignment(self, assignment):
         return E('StateAssignment',
                  E("MathInline", assignment.rhs),
                  variable=assignment.lhs)
 
     @annotate_xml
-    def visit_alias(self, alias, **kwargs):  # @UnusedVariable
+    def visit_alias(self, alias):
         return E('Alias',
                  E("MathInline", alias.rhs),
                  name=alias.lhs)
 
     @annotate_xml
-    def visit_timederivative(self, time_derivative):  # @UnusedVariable @IgnorePep8
+    def visit_timederivative(self, time_derivative):
         return E('TimeDerivative',
                  E("MathInline", time_derivative.rhs),
                  variable=time_derivative.dependent_variable)
@@ -142,9 +142,8 @@ class XMLWriter(ComponentVisitor):
     def visit_condition(self, condition):
         return E('Trigger', E("MathInline", condition.rhs))
 
-    # TODO:
     @annotate_xml
-    def visit_onevent(self, on_event, **kwargs):  # @UnusedVariable
+    def visit_onevent(self, on_event):
         elements = ([p.accept_visitor(self)
                      for p in on_event.state_assignments] +
                     [p.accept_visitor(self) for p in on_event.event_outputs])
