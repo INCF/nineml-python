@@ -64,11 +64,9 @@ class XMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_statevariable(self, state_variable):
-        kwargs = {}
-        if state_variable.dimension != dimensionless:
-            kwargs['dimension'] = state_variable.dimension.name
         return E('StateVariable',
-                 name=state_variable.name, **kwargs)
+                 name=state_variable.name,
+                 dimension=state_variable.dimension.name)
 
     @annotate_xml
     def visit_outputevent(self, output_event, **kwargs):  # @UnusedVariable
@@ -77,11 +75,9 @@ class XMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_parameter(self, parameter):
-        kwargs = {}
-        if parameter.dimension != dimensionless:
-            kwargs['dimension'] = parameter.dimension.name
         return E('Parameter',
-                 name=parameter.name, **kwargs)
+                 name=parameter.name,
+                 dimension=parameter.dimension.name)
 
     @annotate_xml
     def visit_dimension(self, dimension):
@@ -91,37 +87,31 @@ class XMLWriter(ComponentVisitor):
                  **kwargs)
 
     @annotate_xml
-    def visit_analogreceiveport(self, port, **kwargs):
+    def visit_analogreceiveport(self, port):
         return E('AnalogReceivePort', name=port.name,
-                 dimension=(port.dimension.name
-                            if port.dimension else 'dimensionless'),
-                 **kwargs)
+                 dimension=port.dimension.name)
 
     @annotate_xml
-    def visit_analogreduceport(self, port, **kwargs):
-        kwargs['operator'] = port.reduce_op
+    def visit_analogreduceport(self, port):
         return E('AnalogReducePort', name=port.name,
-                 dimension=(port.dimension.name
-                            if port.dimension else 'dimensionless'),
-                 **kwargs)
+                 dimension=port.dimension.name,
+                 operator=port.reduce_op)
 
     @annotate_xml
-    def visit_analogsendport(self, port, **kwargs):
+    def visit_analogsendport(self, port):
         return E('AnalogSendPort', name=port.name,
-                 dimension=(port.dimension.name
-                            if port.dimension else 'dimensionless'),
-                 **kwargs)
+                 dimension=port.dimension.name)
 
     @annotate_xml
-    def visit_eventsendport(self, port, **kwargs):
-        return E('EventSendPort', name=port.name, **kwargs)
+    def visit_eventsendport(self, port):
+        return E('EventSendPort', name=port.name)
 
     @annotate_xml
-    def visit_eventreceiveport(self, port, **kwargs):
-        return E('EventReceivePort', name=port.name, **kwargs)
+    def visit_eventreceiveport(self, port):
+        return E('EventReceivePort', name=port.name)
 
     @annotate_xml
-    def visit_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def visit_assignment(self, assignment):  # @UnusedVariable
         return E('StateAssignment',
                  E("MathInline", assignment.rhs),
                  variable=assignment.lhs)
@@ -133,7 +123,7 @@ class XMLWriter(ComponentVisitor):
                  name=alias.lhs)
 
     @annotate_xml
-    def visit_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+    def visit_timederivative(self, time_derivative):  # @UnusedVariable @IgnorePep8
         return E('TimeDerivative',
                  E("MathInline", time_derivative.rhs),
                  variable=time_derivative.dependent_variable)
@@ -150,8 +140,7 @@ class XMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_condition(self, condition):
-        return E('Trigger',
-                 E("MathInline", condition.rhs))
+        return E('Trigger', E("MathInline", condition.rhs))
 
     # TODO:
     @annotate_xml
