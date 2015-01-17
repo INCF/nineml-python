@@ -363,11 +363,11 @@ class InterfaceInferer(ActionVisitor):
                     self.state_variable_names.add(state_assignment.lhs)
 
         # Which symbols can we account for:
-        alias_symbols = set(dynamics.aliases_map.keys())
-
         self.accounted_for_symbols = set(itertools.chain(
             self.state_variable_names,
-            alias_symbols,
+            dynamics.aliases_map.keys(),
+            dynamics.constants_map.keys(),
+            dynamics.random_variables_map.keys(),
             incoming_port_names,
             get_reserved_and_builtin_symbols()
         ))
