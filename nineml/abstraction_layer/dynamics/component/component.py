@@ -144,11 +144,8 @@ class ComponentClassMixinFlatStructure(BaseALObject):
         return self._dynamics.state_variables_map
 
     @property
-    def dimensions(self):
-        dims = set(obj.dimension for obj in chain(self.analog_ports,
-                                                  self.parameters,
-                                                  self.state_variables))
-        return dims
+    def _attributes_with_dimension(self):
+        return chain(self.analog_ports, self.parameters, self.state_variables)
 
     # -------------------------- #
 

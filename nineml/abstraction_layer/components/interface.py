@@ -53,8 +53,7 @@ class Parameter(BaseALObject):
     def __repr__(self):
         return ("Parameter({}{})"
                 .format(self.name,
-                        ', dimension={}'.format(self.dimension.name)
-                        if self.dimension else ''))
+                        ', dimension={}'.format(self.dimension.name)))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

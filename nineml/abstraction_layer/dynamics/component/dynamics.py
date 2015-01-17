@@ -595,7 +595,7 @@ class StateVariable(BaseALObject):
     def __init__(self, name, dimension=None):
         """StateVariable Constructor
 
-        :param name:  The name of the state variable.
+        `name` -- The name of the state variable.
         """
         self._name = name.strip()
         self._dimension = dimension if dimension is not None else dimensionless
@@ -615,8 +615,7 @@ class StateVariable(BaseALObject):
     def __repr__(self):
         return ("StateVariable({}{})"
                 .format(self.name,
-                        ', dimension={}'.format(self.dimension.name)
-                        if self.dimension else ''))
+                        ', dimension={}'.format(self.dimension.name)))
 
 # class SubComponent(BaseDynamicsComponent):
 #     pass

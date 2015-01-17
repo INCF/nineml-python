@@ -34,10 +34,10 @@ class XMLWriter(ComponentVisitor):
             else:
                 component = flattening.ComponentFlattener(component).\
                     reducedcomponent
+        # Convert the component class and the dimensions it uses to xml
         component.standardize_unit_dimensions()
-        xml = XMLWriter().visit(component)
-        xml = [XMLWriter().visit_dimension(d) for d in component.dimensions
-               if d is not None] + [xml]
+        xml = [XMLWriter().visit(component)] + [XMLWriter().visit_dimension(d)
+                                                for d in component.dimensions]
         return E.NineML(*xml, xmlns=nineml_namespace)
 
     def visit_componentclass(self, component):
