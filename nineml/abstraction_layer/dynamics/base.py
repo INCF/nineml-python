@@ -9,9 +9,10 @@ components definitions of interface and dynamics
 
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.dynamics.namespace import NamespaceAddress
-import componentqueryer
-from nineml.abstraction_layer.dynamics import regimes as dyn
+from ..queryer import Queryer
+from ...utility import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
+from ..maths.expressions import Alias, StrToExpr
 
 import itertools
 from ..base import BaseComponentClass, Parameter
@@ -22,8 +23,9 @@ from nineml.abstraction_layer.ports import (AnalogReceivePort, AnalogSendPort,
 from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
-from nineml.abstraction_layer.maths.__init__.__init__ import get_reserved_and_builtin_symbols
-from ..visitors import ExpandAliasDefinition, ClonerVisitor, ActionVisitor
+from ..maths import get_reserved_and_builtin_symbols
+from ..visitors import ActionVisitor
+from .cloner import ExpandAliasDefinition, ClonerVisitor
 from ..base import BaseALObject
 
 
@@ -217,7 +219,7 @@ class ComponentClassMixinFlatStructure(BaseALObject):
             flattened before saving
 
         """
-        from nineml.abstraction_layer.dynamics.writers import XMLWriter
+        from .writer import XMLWriter
         return XMLWriter.write(component=self, file=file, flatten=flatten)
 
 
@@ -497,11 +499,10 @@ class ComponentClass(BaseComponentClass,
                 raise NineMLRuntimeError(err)
 
         else:
-            # We should always create a dynamics object, even is it is empty. FIXME: TGC 11/11/14, Why? @IgnorePep8
-            dynamics = dyn.Dynamics(regimes=regimes,
+            dynamics = Dynamics(regimes=regimes,
                                     aliases=aliases,
                                     state_variables=state_variables)
-        self._query = componentqueryer.Queryer(self)
+        self._query = Queryer(self)
 
         # Ensure analog_ports is a list not an iterator
         analog_ports = list(analog_ports)
@@ -611,7 +612,7 @@ class ComponentClass(BaseComponentClass,
         return self.flattener is not None
 
     def _validate_self(self):
-        from nineml.abstraction_layer.dynamics.validators import ComponentValidator  # @IgnorePep8
+        from ..validators import ComponentValidator
         ComponentValidator.validate_component(self)
 
     @property

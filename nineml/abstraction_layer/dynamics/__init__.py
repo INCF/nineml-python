@@ -9,4 +9,3 @@ from .base import ComponentClass, Dynamics
 from .regimes import Regime, StateAssignment, TimeDerivative, StateVariable
 from .transitions import EventOut, OnCondition, Condition, OnEvent
 from .namespace import NamespaceAddress
-

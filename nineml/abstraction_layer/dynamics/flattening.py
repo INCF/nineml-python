@@ -7,10 +7,9 @@ docstring needed
 
 import itertools
 from collections import defaultdict
-from nineml.utility import flatten_first_level, expect_single
-from nineml.abstraction_layer.dynamics.visitors import (ClonerVisitor,
-                                                        ClonerVisitorPrefixNamespace,
-                                                        ExpandPortDefinition)
+from ...utility import flatten_first_level
+from .cloner import (ClonerVisitor, ClonerVisitorPrefixNamespace,
+                     ExpandPortDefinition)
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.dynamics.namespace import NamespaceAddress
 from .base import ComponentClass
@@ -97,7 +96,7 @@ class TransitionResolver(object):
         # print self.send_rev_map.keys()
         for ev_out in transition.event_outputs:
             # print ' -- Checking for port connections from:', ev_out
-            if not ev_out.port_name in self.send_rev_map:
+            if ev_out.port_name not in self.send_rev_map:
                 continue
 
             for recv_port in self.send_rev_map[ev_out.port_name]:
@@ -105,7 +104,8 @@ class TransitionResolver(object):
 
                 # So this port is connected, but are we in a regime that
                 # triggers from this port??
-                for cascade_regime_index, regime in enumerate(self.dst_regime_tuple):
+                for cascade_regime_index, regime in enumerate(
+                        self.dst_regime_tuple):
                     for cascade_ev in regime.on_events:
                         if cascade_ev.src_port_name == recv_port:
                             # print '     (**Cascade found**)'
@@ -167,7 +167,7 @@ class ComponentFlattener(object):
         target_regime_tuple = []
         for c in self.componentswithregimes:
             comp_ns = c.get_node_addr()
-            if not comp_ns in ns_regimename:
+            if comp_ns not in ns_regimename:
                 err = ('Looking for a regime in namespace: {}, but not found.'
                        .format(comp_ns))
                 err += ('\nNamespaces: {}'
@@ -178,7 +178,7 @@ class ComponentFlattener(object):
             target_regime_name = ns_regimename[comp_ns]
 
             regime_map = dict([(r.name, r) for r in c.regimes])
-            if not target_regime_name in regime_map:
+            if target_regime_name not in regime_map:
                 err = 'Namespace has no regime named: %s'
                 err += '\nRegimes: %s' % (str(regime_map.keys()))
                 raise NineMLRuntimeError(err)
@@ -285,10 +285,11 @@ class ComponentFlattener(object):
                         transition_regime_tuple_index=regime_index,
                         flattener=self,
                     )
-                    new_oncondition = OnCondition(oldtransition.trigger,
-                                                  state_assignments=tr.state_assignments,
-                                                  event_outputs=tr.event_outputs,
-                                                  target_regime_name=tr.target_regime.name)
+                    new_oncondition = OnCondition(
+                        oldtransition.trigger,
+                        state_assignments=tr.state_assignments,
+                        event_outputs=tr.event_outputs,
+                        target_regime_name=tr.target_regime.name)
 
                     regime_new.add_on_condition(new_oncondition)
 
@@ -299,10 +300,11 @@ class ComponentFlattener(object):
                         transition_regime_tuple_index=regime_index,
                         flattener=self,
                     )
-                    new_onevent = OnEvent(oldtransition.src_port_name,
-                                          state_assignments=tr.state_assignments,
-                                          event_outputs=tr.event_outputs,
-                                          target_regime_name=tr.target_regime.name)
+                    new_onevent = OnEvent(
+                        oldtransition.src_port_name,
+                        state_assignments=tr.state_assignments,
+                        event_outputs=tr.event_outputs,
+                        target_regime_name=tr.target_regime.name)
                     regime_new.add_on_event(new_onevent)
 
     def remap_analog_ports(self):
@@ -327,13 +329,13 @@ class ComponentFlattener(object):
             dstport = new_analog_ports[dst_addr.get_local_name()]
             if dstport.mode == 'recv':
 
-                ExpandPortDefinition(originalname=dstport.name,
-                                     targetname=srcport.name).visit(
-                                                         self.reducedcomponent)
+                ExpandPortDefinition(
+                    originalname=dstport.name, targetname=srcport.name).visit(
+                        self.reducedcomponent)
 
                 del new_analog_ports[dst_addr.get_local_name()]
                 del self.reducedcomponent._analog_receive_ports[
-                                                     dst_addr.get_local_name()]
+                    dst_addr.get_local_name()]
 #                     expect_single([p 
 #                                    for p in self.reducedcomponent.analog_receive_ports
 #                                    if p.name == ]))
@@ -357,9 +359,9 @@ class ComponentFlattener(object):
             reduce_expr = dstport.reduce_op.join(terms)
 
             # globalRemapPort( dstport.name, reduce_expr )
-            ExpandPortDefinition(originalname=dstport.name,
-                                 targetname=reduce_expr).visit(
-                                                         self.reducedcomponent)
+            ExpandPortDefinition(
+                originalname=dstport.name, targetname=reduce_expr).visit(
+                    self.reducedcomponent)
 
 
 def flatten(model, componentname=None):

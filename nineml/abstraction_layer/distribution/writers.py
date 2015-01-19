@@ -1,7 +1,7 @@
 from lxml import etree
 from lxml.builder import E
 from nineml.xmlns import nineml_namespace
-from nineml.abstraction_layer.distribution import ComponentVisitor
+from .distribution import ComponentVisitor
 import nineml.abstraction_layer.distribution.base
 from nineml.abstraction_layer.units import dimensionless
 
@@ -16,7 +16,8 @@ class XMLWriter(ComponentVisitor):
 
     @classmethod
     def to_xml(cls, component, flatten=True):
-        assert isinstance(component, nineml.abstraction_layer.distribution.base.\
+        assert isinstance(component,
+                          nineml.abstraction_layer.distribution.base.\
                                                                 ComponentClass)
         xml = XMLWriter().visit(component)
         return E.NineML(xml, xmlns=nineml_namespace)
@@ -26,7 +27,7 @@ class XMLWriter(ComponentVisitor):
                     [component.random_distribution.accept_visitor(self)])
         return E('ComponentClass', *elements, name=component.name)
 
-    def visit_randomdistribution(self, random_distribution):
+    def visit_distribution(self, random_distribution):
         # TODO: Only implemented built-in distributions at this stage
         return E('RandomDistribution',
                  E.StandardLibrary(random_distribution.name,
