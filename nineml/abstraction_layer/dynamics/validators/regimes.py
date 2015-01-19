@@ -5,14 +5,14 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from base import ComponentValidatorPerNamespace
+from base import PerNamespaceValidator
 from nineml.utility import assert_no_duplicates
 
 
-class ComponentValidatorDuplicateRegimeNames(ComponentValidatorPerNamespace):
+class DuplicateRegimeNamesValidator(PerNamespaceValidator):
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
         self.visit(component)
 

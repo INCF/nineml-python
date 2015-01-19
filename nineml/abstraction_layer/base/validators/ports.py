@@ -7,10 +7,10 @@ docstring needed
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from .base import ComponentValidatorPerNamespace
+from .base import PerNamespaceValidator
 
 
-class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):
+class EventPortsValidator(PerNamespaceValidator):
 
     """
     Check that each OutputEvent and OnEvent has a corresponding EventPort
@@ -18,7 +18,7 @@ class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(
+        PerNamespaceValidator.__init__(
             self, explicitly_require_action_overrides=False)
 
         # Mapping component to list of events/eventports at that component
@@ -74,7 +74,7 @@ class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):
 
 # Check that the sub-components stored are all of the
 # right types:
-class ComponentValidatorOutputAnalogPorts(ComponentValidatorPerNamespace):
+class OutputAnalogPortsValidator(PerNamespaceValidator):
 
     """
     Check that all output AnalogPorts reference a local symbol, either an alias
@@ -82,7 +82,7 @@ class ComponentValidatorOutputAnalogPorts(ComponentValidatorPerNamespace):
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(
+        PerNamespaceValidator.__init__(
             self, explicitly_require_action_overrides=False)
 
         self.output_analogports = defaultdict(list)

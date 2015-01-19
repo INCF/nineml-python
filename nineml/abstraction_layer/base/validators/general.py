@@ -8,7 +8,7 @@ docstring needed
 from collections import defaultdict
 
 
-from base import ComponentValidatorPerNamespace
+from base import PerNamespaceValidator
 
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.maths.__init__.__init__ import get_reserved_and_builtin_symbols, is_valid_lhs_target
@@ -16,15 +16,15 @@ from nineml.abstraction_layer.dynamics.namespace import NamespaceAddress  # @Ign
 from nineml.utility import assert_no_duplicates
 
 
-class ComponentValidatorTimeDerivativesAreDeclared(
-                                               ComponentValidatorPerNamespace):
+class TimeDerivativesAreDeclaredValidator(
+                                               PerNamespaceValidator):
 
     """ Check all variables used in TimeDerivative blocks are defined
         as  StateVariables.
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
         self.sv_declared = defaultdict(list)
         self.time_derivatives_used = defaultdict(list)
@@ -46,14 +46,14 @@ class ComponentValidatorTimeDerivativesAreDeclared(
                                              timederivative.dependent_variable)
 
 
-class ComponentValidatorStateAssignmentsAreOnStateVariables(
-                                               ComponentValidatorPerNamespace):
+class StateAssignmentsAreOnStateVariablesValidator(
+                                               PerNamespaceValidator):
 
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
         self.sv_declared = defaultdict(list)
         self.state_assignments_lhses = defaultdict(list)
@@ -75,12 +75,12 @@ class ComponentValidatorStateAssignmentsAreOnStateVariables(
         self.state_assignments_lhses[namespace].append(state_assignment.lhs)
 
 
-class ComponentValidatorAliasesAreNotRecursive(ComponentValidatorPerNamespace):
+class AliasesAreNotRecursiveValidator(PerNamespaceValidator):
 
     """Check that aliases are not self-referential"""
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
         self.visit(component)
 
@@ -112,14 +112,14 @@ class ComponentValidatorAliasesAreNotRecursive(ComponentValidatorPerNamespace):
                 raise NineMLRuntimeError(errmsg)
 
 
-class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbols(ComponentValidatorPerNamespace):  # @IgnorePep8
+class AssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbolsValidator(PerNamespaceValidator):  # @IgnorePep8
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
 
         self.available_symbols = defaultdict(list)
@@ -192,14 +192,14 @@ class ComponentValidatorAssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbo
         self.state_assignments[namespace].append(state_assignment)
 
 
-class ComponentValidatorPortConnections(ComponentValidatorPerNamespace):
+class PortConnectionsValidator(PerNamespaceValidator):
 
     """Check that all the port connections point to a port, and that
     each send & recv port only has a single connection.
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
 
         self.ports = defaultdict(list)
@@ -279,10 +279,10 @@ class ComponentValidatorPortConnections(ComponentValidatorPerNamespace):
             self.portconnections.append((full_src, full_sink))
 
 
-class ComponentValidatorRegimeGraph(ComponentValidatorPerNamespace):
+class RegimeGraphValidator(PerNamespaceValidator):
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
 
         self.connected_regimes_from_regime = defaultdict(set)
@@ -319,10 +319,10 @@ class ComponentValidatorRegimeGraph(ComponentValidatorPerNamespace):
                                                                         regime)
 
 
-class ComponentValidatorNoDuplicatedObjects(ComponentValidatorPerNamespace):
+class NoDuplicatedObjectsValidator(PerNamespaceValidator):
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                       explicitly_require_action_overrides=True)
         self.all_objects = list()
         self.visit(component)
@@ -380,11 +380,11 @@ class ComponentValidatorNoDuplicatedObjects(ComponentValidatorPerNamespace):
         self.all_objects.append(on_event)
 
 
-class ComponentValidatorRegimeOnlyHasOneHandlerPerEvent(
-                                               ComponentValidatorPerNamespace):
+class RegimeOnlyHasOneHandlerPerEventValidator(
+                                               PerNamespaceValidator):
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
         self.visit(component)
 
@@ -394,8 +394,8 @@ class ComponentValidatorRegimeOnlyHasOneHandlerPerEvent(
         assert_no_duplicates(event_triggers)
 
 
-class ComponentValidatorCheckNoLHSAssignmentsToMathsNamespace(
-                                               ComponentValidatorPerNamespace):
+class CheckNoLHSAssignmentsToMathsNamespaceValidator(
+                                               PerNamespaceValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -403,7 +403,7 @@ class ComponentValidatorCheckNoLHSAssignmentsToMathsNamespace(
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
+        PerNamespaceValidator.__init__(self,
                                      explicitly_require_action_overrides=False)
 
         self.visit(component)

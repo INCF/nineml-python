@@ -6,22 +6,8 @@ This file contains the ComponentValidator class for validating component
 """
 from nineml.utility import Settings
 
-from .types import TypesValidator
-from .ports import EventPortsValidator
-from .ports import OutputAnalogPortsValidator
-from .namingconflicts import (LocalNameConflictsValidator,
-                              DimensionNameConflictsValidator)
-from .general import TimeDerivativesAreDeclaredValidator
-from .general import NoDuplicatedObjectsValidator
-from .general import AssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbolsValidator  # @IgnorePep8
-from .general import PortConnectionsValidator
-from .general import StateAssignmentsAreOnStateVariablesValidator
-from .general import AliasesAreNotRecursiveValidator
-from .general import RegimeGraphValidator
-from .general import RegimeOnlyHasOneHandlerPerEventValidator
-from .general import CheckNoLHSAssignmentsToMathsNamespaceValidator
+from .regimes import DuplicateRegimeNamesValidator
 from ..visitors import ActionVisitor
-from equality_checker import ComponentEqualityChecker
 
 
 class BaseValidator(object):
@@ -30,7 +16,7 @@ class BaseValidator(object):
         raise NotImplementedError()
 
 
-class BaseComponentValidator(object):
+class ComponentValidator(BaseComponentValidator):
 
     """Class for grouping all the component-validations tests together"""
 
@@ -47,6 +33,7 @@ class BaseComponentValidator(object):
             return
         TypesValidator(component)
         NoDuplicatedObjectsValidator(component)
+        DuplicateRegimeNamesValidator(component)
         LocalNameConflictsValidator(component)
         DimensionNameConflictsValidator(component)
         EventPortsValidator(component)
@@ -74,4 +61,3 @@ class PerNamespaceValidator(ActionVisitor, BaseValidator):
         namespace = component.get_node_addr()
         ActionVisitor.visit_componentclass(self, component,
                                            namespace=namespace)
-
