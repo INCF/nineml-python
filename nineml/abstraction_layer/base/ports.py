@@ -4,19 +4,17 @@ This file defines the Port classes used in NineML
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
-from nineml.utility import ensure_valid_identifier  # , curry
-from nineml.exceptions import NineMLRuntimeError
 from abc import ABCMeta
-from operator import and_
-from ...base import BaseALObject
-from ...units import dimensionless
+from .base import BaseALObject
+from ..units import dimensionless
+from ...utility import ensure_valid_identifier
 
 
 class Port(BaseALObject):
 
-    """ Base class for |AnalogSendPort|, |AnalogReceivePort|, |EventSendPort|,
-    |EventReceivePort| and |AnalogReducePort|.
+    """
+    Base class for |PropertySendPort|, |PropertyReceivePort|, |IndexSendPort|,
+    |IndexReceivePort| and |PropertyReducePort|.
 
     In general, a port has a ``name``, which can be used to reference it,
     and a ``mode``, which specifies whether it sends or receives information.
@@ -24,20 +22,10 @@ class Port(BaseALObject):
     Generally, a send port can be connected to receive port to allow different
     components to communicate.
 
-    |AnalogSendPort| and |EventSendPort|s can be connected to any number of
-    |AnalogReceivePort| and |EventReceivePort|s respectively, but each
-    |AnalogReceivePort| and |EventReceivePort| can only be connected to a
-    single |AnalogSendPort| and |EventSendPort| respectively. port. In order to
-    collect analog inputs from several |AnalogSendPort|s into a single port, we
-    use a |AnalogReducePort|. An |AnalogReducePort| port requires an additional
-    parameter, ``reduce_op``, which specifies how to combine the information
-    from the ports, for example, by adding their values together, `+`.
-
-    For example, if we had several Hodgkin-Huxley channels on a neuron, we
-    would want each one to have a |AnalogSendPort|, ``i`` containing the
-    current passing through that type of channel. Then, we would have a single
-    |AnalogReducePort|, ``I_in`` for example, with ``op='+'``, which would
-    combine them together to calculate the voltage change in the neuron.
+    |PropertySendPort| and |IndexSendPort|s can be connected to any number of
+    |PropertyReceivePort| and |IndexReceivePort|s respectively, but each
+    |PropertyReceivePort| and |IndexReceivePort| can only be connected to a
+    single |PropertySendPort| and |IndexSendPort| respectively.
 
     """
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
@@ -45,7 +33,7 @@ class Port(BaseALObject):
     def __init__(self, name):
         """ Port Constructor.
 
-        :param name: The name of the port, as a `string`
+        `name` -- The name of the port, as a `string`
         """
         name = name.strip()
         ensure_valid_identifier(name)
@@ -57,21 +45,21 @@ class Port(BaseALObject):
         return self._name
 
 
-class AnalogPort(Port):
-    """AnalogPort
+class PropertyPort(Port):
+    """PropertyPort
 
-    An |AnalogPort| represents a continuous input or output to/from a
-    Component. For example, this could be the membrane-voltage into a synapse
-    component, or the current provided by a ion-channel.
+    An |PropertyPort| represents a input or output to/from a property of a
+    Component. For example, this could be the source cell x-coordinate to be
+    passed to a connection rule.
     """
 
     defining_attributes = ('name', 'dimension')
 
-    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
+    __metaclass__ = ABCMeta
 
     def __init__(self, name, dimension=None):
-        super(AnalogPort, self).__init__(name)
-        self._dimension = dimension if dimension is not None else dimensionless # TODO: This needs checking @IgnorePep8
+        super(PropertyPort, self).__init__(name)
+        self._dimension = dimension if dimension is not None else dimensionless
 
     @property
     def dimension(self):
@@ -87,15 +75,13 @@ class AnalogPort(Port):
                                                  self.dimension)
 
 
-class EventPort(Port):
-    """EventPort
+class IndexPort(Port):
+    """IndexPort
 
-    An |EventPort| is a port that can transmit and receive discrete events at
-    points in time. For example, an integrate-and-fire could 'send' events to
-    notify other components that it had fired; or synapses could receive events
-    to notify them to provide current to a post-synaptic neuron.
+    An |IndexPort| is a port that receives indices from the container or
+    generates a dendritic tree.
     """
-    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
+    __metaclass__ = ABCMeta
 
     defining_attributes = ('name',)
 
@@ -104,12 +90,12 @@ class EventPort(Port):
         return "{}('{}')".format(classstring, self.name)
 
 
-class AnalogSendPort(AnalogPort):
-    """AnalogSendPort
+class PropertySendPort(PropertyPort):
+    """PropertySendPort
 
-    An |AnalogSendPort| represents a continuous output from a
-    Component. For example, this could be the membrane-voltage into a synapse
-    component, or the current provided by a ion-channel.
+    An |PropertySendPort| represents an output from a distribution class used
+    to derive properties across a container (i.e. |Population|, |Projection| or
+    |MultiCompartmental|)
 
     """
     mode = "send"
@@ -122,12 +108,12 @@ class AnalogSendPort(AnalogPort):
         return False
 
 
-class AnalogReceivePort(AnalogPort):
-    """AnalogReceivePort
+class PropertyReceivePort(PropertyPort):
+    """PropertyReceivePort
 
-    An |AnalogReceivePort| represents a continuous input to a
-    Component. For example, this could be the membrane-voltage into a synapse
-    component, or the current provided by a ion-channel.
+    An |PropertyReceivePort| represents port to a property of a Component. For
+    example, this could be the source cell x-coordinate to be passed to a
+    connection rule.
 
     """
     mode = "recv"
@@ -140,12 +126,12 @@ class AnalogReceivePort(AnalogPort):
         return True
 
 
-class EventSendPort(EventPort):
-    """EventSendPort
+class IndexSendPort(IndexPort):
+    """IndexSendPort
 
-    An |EventSendPort| is a port that can transmit discrete events at
-    points in time. For example, an integrate-and-fire could 'send' events to
-    notify other components that it had fired.
+    An |IndexSendPort| is a port that can be used to generate arrays of indices
+    from |DistribtutionClass|es. This can be useful in mapping dendritic trees
+    to dynamic domains in |Multicompartmental| models.
     """
     mode = "send"
 
@@ -157,12 +143,12 @@ class EventSendPort(EventPort):
         return False
 
 
-class EventReceivePort(EventPort):
-    """EventReceivePort
+class IndexReceivePort(IndexPort):
+    """IndexReceivePort
 
-    An |EventReceivePort| is a port that can receive discrete events at
-    points in time. For example, synapses could receive events
-    to notify them to provide current to a post-synaptic neuron.
+    An |IndexReceivePort| is a port that receives indices from the container,
+    such as the index of a source cell in a Projection to be used in a
+    connection rule
     """
     mode = "recv"
 
@@ -172,53 +158,3 @@ class EventReceivePort(EventPort):
 
     def is_incoming(self):
         return True
-
-
-class AnalogReducePort(AnalogPort):
-    """AnalogReducePort
-
-    An |AnalogReducePort| represents a collection of continuous inputs to a
-    Component from a common type of input that can be reduced into a single
-    input. For example, or the currents provided by a collection of
-    ion-channels.
-
-    .. note::
-
-        Currently support ``reduce_op`` s are: ``+``.
-
-    """
-    mode = "reduce"
-    _reduce_op_map = {'add': '+', '+': '+', }
-
-    def __init__(self, name, dimension=None, reduce_op='+'):
-        if reduce_op not in self._reduce_op_map.keys():
-            err = ("%s('%s')" + "specified undefined reduce_op: '%s'") %\
-                  (self.__class__.__name__, name, str(reduce_op))
-            raise NineMLRuntimeError(err)
-        super(AnalogReducePort, self).__init__(name, dimension)
-        self._reduce_op = reduce_op
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogreduceport(self, **kwargs)
-
-    @property
-    def reduce_op(self):
-        return self._reduce_op
-
-    def __repr__(self):
-        classstring = self.__class__.__name__
-        return ("{}('{}', dimension='{}', op='{}')"
-               .format(classstring, self.name, self.dimension, self.reduce_op))
-
-    def is_incoming(self):
-        return True
-
-
-# Syntactic sugar
-ReducePort = AnalogReducePort  # curry(AnalogPort, mode="reduce")
-RecvPort = AnalogReceivePort  # curry(AnalogPort, mode="recv")
-SendPort = AnalogSendPort  # curry(AnalogPort, mode="send")
-
-RecvEventPort = EventReceivePort  # curry(EventPort, mode="recv")
-SendEventPort = EventSendPort  # curry(EventPort, mode="send")

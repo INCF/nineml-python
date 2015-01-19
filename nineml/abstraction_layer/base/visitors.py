@@ -9,13 +9,13 @@ docstring needed
 from itertools import chain
 
 
-class BaseVisitor(object):
+class ComponentVisitor(object):
 
     def visit(self, obj, **kwargs):
         return obj.accept_visitor(self, **kwargs)
 
 
-class BaseActionVisitor(BaseVisitor):
+class ActionVisitor(ComponentVisitor):
 
     def __init__(self, explicitly_require_action_overrides=True):
         self.explicitly_require_action_overrides = explicitly_require_action_overrides  # @IgnorePep8

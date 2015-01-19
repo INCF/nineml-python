@@ -5,7 +5,7 @@ from nineml.utility import expect_single, filter_expect_single
 from nineml.xmlns import NINEML
 from nineml.abstraction_layer.base import Parameter
 from .base import DistributionClass
-from ..xml import XMLWriter as BaseXMLWriter
+from ..base.xml import XMLWriter as BaseXMLWriter
 import nineml.abstraction_layer.distribution.base
 from nineml.abstraction_layer.units import dimensionless
 

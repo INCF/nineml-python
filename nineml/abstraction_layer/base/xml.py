@@ -10,18 +10,18 @@ from itertools import chain
 from lxml import etree
 from lxml.builder import E
 from .visitors import ComponentVisitor
-from .dynamics import DynamicsClass
-from .distribution import DistributionClass
-from .connectionrule import ConnectionRuleClass
-from .maths.expressions import Alias
+from ..dynamics import DynamicsClass
+from ..distribution import DistributionClass
+from ..connectionrule import ConnectionRuleClass
+from ..maths.expressions import Alias
 from .base import Parameter
-from ..base import annotate_xml, read_annotations
-from ..utility import expect_single, filter_expect_single
-from ..xmlns import NINEML, MATHML, nineml_namespace
-from ..exceptions import NineMLRuntimeError
+from ...base import annotate_xml, read_annotations
+from ...utility import expect_single, filter_expect_single
+from ...xmlns import NINEML, MATHML, nineml_namespace
+from ...exceptions import NineMLRuntimeError
 
 
-class XMLLoader(object):
+class BaseXMLLoader(object):
 
     """This class is used by XMLReader internally.
 
@@ -161,11 +161,11 @@ class XMLLoader(object):
     }
 
 
-class XMLReader(object):
+class BaseXMLReader(object):
 
     """A class that can read |COMPONENTCLASS| objects from a NineML XML file.
     """
-    loader = XMLLoader
+    loader = BaseXMLLoader
 
     @classmethod
     def _load_include(cls, include_element, basedir, xml_node_filename_map):
@@ -284,7 +284,7 @@ class XMLReader(object):
         return loader.components
 
 
-class XMLWriter(ComponentVisitor):
+class BaseXMLWriter(ComponentVisitor):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment
@@ -297,8 +297,8 @@ class XMLWriter(ComponentVisitor):
     def to_xml(cls, component):
         assert isinstance(component, DynamicsClass)
         component.standardize_unit_dimensions()
-        xml = XMLWriter().visit(component)
-        xml = [XMLWriter().visit_dimension(d) for d in component.dimensions
+        xml = BaseXMLWriter().visit(component)
+        xml = [BaseXMLWriter().visit_dimension(d) for d in component.dimensions
                if d is not None] + [xml]
         return E.NineML(*xml, xmlns=nineml_namespace)
 
