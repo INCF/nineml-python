@@ -9,7 +9,7 @@ from urllib2 import urlopen
 from itertools import chain
 from lxml import etree
 from lxml.builder import E
-from .subcomponent import ComponentFlattener
+from .flatten import ComponentFlattener
 from .visitors import ComponentVisitor
 from ...base import annotate_xml
 from ..units import dimensionless
@@ -18,11 +18,12 @@ from ...utility import expect_single, filter_expect_single
 from ...xmlns import NINEML, MATHML, nineml_namespace
 from .base import DynamicsClass, Parameter, Dynamics
 from ...base import read_annotations
-from ..ports import (EventSendPort, EventReceivePort, AnalogSendPort,
-                     AnalogReceivePort, AnalogReducePort)
+from .ports import (EventSendPort, EventReceivePort, AnalogSendPort,
+                    AnalogReceivePort, AnalogReducePort)
 from .transitions import OnEvent, OnCondition, StateAssignment, EventOut
 from .regimes import Regime, StateVariable, TimeDerivative
 from ..maths.expressions import Alias
+from nineml.exceptions import NineMLRuntimeError
 
 ____ = ['XMLReader']
 
@@ -62,8 +63,8 @@ class XMLLoader(object):
     @read_annotations
     def load_componentclass(self, element):
 
-        blocks = ('Parameter', 'AngSendPort', 'AngReceivePort',
-                  'EventSendPort', 'EventReceivePort', 'AngReducePort',
+        blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
+                  'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
                   'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
 
         subnodes = self.loadBlocks(element, blocks=blocks)
@@ -72,9 +73,9 @@ class XMLLoader(object):
         return DynamicsClass(
             name=element.get('name'),
             parameters=subnodes["Parameter"],
-            ang_ports=chain(subnodes["AngSendPort"],
-                               subnodes["AngReceivePort"],
-                               subnodes["AngReducePort"]),
+            ang_ports=chain(subnodes["AnalogSendPort"],
+                               subnodes["AnalogReceivePort"],
+                               subnodes["AnalogReducePort"]),
             event_ports=chain(subnodes["EventSendPort"],
                               subnodes["EventReceivePort"]),
             dynamics=dynamics,
@@ -95,19 +96,19 @@ class XMLLoader(object):
         return EventReceivePort(name=element.get('name'))
 
     @read_annotations
-    def load_angsendport(self, element):
+    def load_analogsendport(self, element):
         return AnalogSendPort(
             name=element.get("name"),
             dimension=self.document[element.get('dimension')])
 
     @read_annotations
-    def load_angreceiveport(self, element):
+    def load_analogreceiveport(self, element):
         return AnalogReceivePort(
             name=element.get("name"),
             dimension=self.document[element.get('dimension')])
 
     @read_annotations
-    def load_angreduceport(self, element):
+    def load_analogreduceport(self, element):
         return AnalogReducePort(
             name=element.get('name'),
             dimension=self.document[element.get('dimension')],
@@ -194,14 +195,17 @@ class XMLLoader(object):
             if len(elements) != 1:
                 print elements
                 assert 0, 'Unexpected tags found'
-        assert (len(element.find(MATHML + "MathML")) +
-                len(element.find(NINEML + "MathInline"))) == 1
-        if element.find(NINEML + "MathInline"):
-            mblock = expect_single(element.find(NINEML +
-                                                   'MathInline')).text.strip()
-        elif element.find(MATHML + "MathML"):
+        assert (len(element.findall(MATHML + "MathML")) +
+                len(element.findall(NINEML + "MathInline"))) == 1
+        if element.find(NINEML + "MathInline") is not None:
+            mblock = element.find(NINEML + 'MathInline').text.strip()
+        elif element.find(MATHML + "MathML") is not None:
             mblock = self.load_mathml(expect_single(element.find(MATHML +
-                                                                    "MathML")))
+                                                                 "MathML")))
+        else:
+            raise NineMLRuntimeError(
+                "Unrecognised elements in internal maths block '{}'"
+                .format(', '.join(str(c) for c in element.getchildren())))
         return mblock
 
     def load_mathml(self, mathml):
@@ -235,10 +239,10 @@ class XMLLoader(object):
         "StateVariable": load_statevariable,
         "Parameter": load_parameter,
         "EventSendPort": load_eventsendport,
-        "AngSendPort": load_angsendport,
+        "AnalogSendPort": load_analogsendport,
         "EventReceivePort": load_eventreceiveport,
-        "AngReceivePort": load_angreceiveport,
-        "AngReducePort": load_angreduceport,
+        "AnalogReceivePort": load_analogreceiveport,
+        "AnalogReducePort": load_analogreduceport,
         "Dynamics": load_dynamics,
         "OnCondition": load_oncondition,
         "OnEvent": load_onevent,

@@ -2,15 +2,13 @@
 from .base import BaseULObject, resolve_reference, write_reference, Reference
 from ..base import E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
-from .components import Component, Property
+from .base import Component
 from itertools import chain
 import nineml.user_layer
 from ..abstraction_layer import units as un
-from .utility import check_tag
-from ..utility import expect_single, expect_none_or_single
+from ..utility import expect_single, expect_none_or_single, check_tag
 from ..exceptions import NineMLRuntimeError
-from .values import (SingleValue, ArrayValue, ExternalArrayValue,
-                     ComponentValue)
+from .values import SingleValue, ArrayValue, ExternalArrayValue
 
 
 class Projection(BaseULObject):
@@ -54,11 +52,13 @@ class Projection(BaseULObject):
         super(Projection, self).__init__()
         self.name = name
         self.source = source
-        if source._from_reference is None:  # when exporting to XML, should use reference
-            source._from_reference = Reference(source.name, {source.name: source})
+        if source._from_reference is None:  # when exporting to XML, should use reference @IgnorePep8
+            source._from_reference = Reference(source.name,
+                                               {source.name: source})
         self.destination = destination
         if destination._from_reference is None:
-            destination._from_reference = Reference(destination.name, {destination.name: destination})
+            destination._from_reference = Reference(
+                destination.name, {destination.name: destination})
         self.response = response
         self.plasticity = plasticity
         self.connectivity = connectivity

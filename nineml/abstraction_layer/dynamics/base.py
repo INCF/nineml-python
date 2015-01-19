@@ -8,7 +8,7 @@ components definitions of interface and dynamics
 """
 import itertools
 from ...exceptions import NineMLRuntimeError
-from .subcomponent import NamespaceAddress
+from ..base import NamespaceAddress
 from ..queryer import Queryer
 from ...utility import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain

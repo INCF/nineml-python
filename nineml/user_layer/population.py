@@ -1,8 +1,7 @@
-from .base import BaseULObject, resolve_reference, write_reference
+from . import BaseULObject
+from .base import resolve_reference, write_reference, Component
 from ..base import NINEML, E
-from .utility import check_tag
-from .components import Component
-from ..utility import expect_single
+from ..utility import expect_single, check_tag
 from nineml.base import annotate_xml, read_annotations
 
 
@@ -40,8 +39,8 @@ class Population(BaseULObject):
         if self.cell:
             components.append(self.cell)
             components.extend(self.cell.properties.get_random_distributions())
-            components.extend(self.cell.initial_values.\
-                                                    get_random_distributions())
+            components.extend(
+                self.cell.initial_values.get_random_distributions())
         if self.positions is not None:
             components.extend(self.positions.get_components())
         return components
@@ -164,8 +163,8 @@ class PositionList(BaseULObject):
             check_tag(element, cls)
             structure_element = element.find(NINEML + 'structure')
             if structure_element is not None:
-                return cls(structure=document.resolve_ref(structure_element,
-                                                         Structure))
+                return cls(structure=document.resolve_ref(
+                    structure_element, Structure))
             else:
                 positions = [(float(p.attrib['x']), float(p.attrib['y']),
                               float(p.attrib['z']))

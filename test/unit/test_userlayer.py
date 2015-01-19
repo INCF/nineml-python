@@ -5,7 +5,7 @@ Tests for the user_layer module
 
 import unittest
 from lxml import etree
-from nineml.user_layer.components.interface import Property
+from nineml.user_layer import Property
 from nineml.abstraction_layer import Unit, Dimension
 from nineml.document import Document
 

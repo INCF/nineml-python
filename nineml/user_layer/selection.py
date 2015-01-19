@@ -1,11 +1,7 @@
-from itertools import chain
 from operator import itemgetter
-from lxml import etree
 from .base import BaseULObject, resolve_reference, write_reference, Reference
 from ..base import NINEML, E, annotate_xml, read_annotations
-from ..document import Document
-from utility import check_tag
-from ..utility import expect_single
+from ..utility import expect_single, check_tag
 
 
 def find_difference(this, that):

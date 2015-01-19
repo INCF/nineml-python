@@ -4,13 +4,10 @@ This file defines the Port classes used in NineML
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
-from nineml.utility import ensure_valid_identifier  # , curry
 from nineml.exceptions import NineMLRuntimeError
 from abc import ABCMeta
-from operator import and_
-from ..base import BaseALObject
-from ...units import dimensionless
+from ..units import dimensionless
+from ..base.ports import Port
 
 
 class AnalogPort(Port):

@@ -5,9 +5,8 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.abstraction_layer.dynamics import readers, writers, validators
-from nineml.abstraction_layer.dynamics import flattening2
-                                               validators)
+from nineml.abstraction_layer.dynamics import xml, validators
+from nineml.abstraction_layer.dynamics import flatten as flattening2
 from nineml.utility import file_sha1_hexdigest
 
 
@@ -25,16 +24,16 @@ class TestXMLWriteReadWrite(object):
         xmlfile2 = build_dir + component.name + '2.xml'
 
         print '    -- Saving Component To XML:', xmlfile1
-        writers.XMLWriter.write(component, xmlfile1)
+        xml.XMLWriter.write(component, xmlfile1)
 
         print '    -- Loading Component To XML.'
-        reloaded_comp = readers.XMLReader.read(xmlfile1)
+        reloaded_comp = xml.XMLReader.read(xmlfile1)
 
         print '    -- Checking Components are identical'
         validators.ComponentEqualityChecker.check_equal(component, reloaded_comp)
 
         print '    -- Saving Reloaded Component to XML', xmlfile2
-        writers.XMLWriter.write(reloaded_comp, xmlfile2)
+        xml.XMLWriter.write(reloaded_comp, xmlfile2)
 
         print '    -- Checking the SHA1 Checksum of the two xml files:'
         hash1 = file_sha1_hexdigest(xmlfile1)

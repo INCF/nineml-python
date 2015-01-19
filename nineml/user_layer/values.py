@@ -1,8 +1,7 @@
 # encoding: utf-8
-from .base import BaseULObject
+from . import BaseULObject
 from ..base import E, read_annotations, annotate_xml, NINEML
-from .utility import check_tag
-from nineml.user_layer.base import Component
+from ..utility import check_tag
 
 
 class BaseValue(BaseULObject):
@@ -140,36 +139,37 @@ class ExternalArrayValue(BaseValue):
                    columnName=element.attrib["columnName"])
 
 
-class ComponentValue(BaseValue):
-
-    element_name = "ComponentValue"
-    defining_attributes = ("port", "component")
-
-    def __init__(self, component, port):
-        self.port = port
-        self.component = component
-
-    def __repr__(self):
-        return ("ComponentValue({} port of {} component)"
-                .format(self.port, self.component.name))
-
-    def __eq__(self, other):
-        return (self.port == other.port and self.component == other.component)
-
-    @annotate_xml
-    def to_xml(self):
-        return E(self.element_name, self.component.to_xml(), port=self.url)
-
-    @classmethod
-    @read_annotations
-    def from_xml(cls, element, document):
-        comp_element = element.find(NINEML + 'Component')
-        if comp_element is None:
-            comp_element = element.find(NINEML + 'Reference')
-            if comp_element is None:
-                raise Exception("Did not find component in ComponentValue")
-        component = Component.from_xml(comp_element, document)
-        return cls(component, port=element.attrib["port"])
+# class ComponentValue(BaseValue):
+#
+#     element_name = "ComponentValue"
+#     defining_attributes = ("port", "component")
+#
+#     def __init__(self, component, port):
+#         self.port = port
+#         self.component = component
+#
+#     def __repr__(self):
+#         return ("ComponentValue({} port of {} component)"
+#                 .format(self.port, self.component.name))
+#
+#     def __eq__(self, other):
+#         return (self.port == other.port and
+#                 self.component == other.component)
+#
+#     @annotate_xml
+#     def to_xml(self):
+#         return E(self.element_name, self.component.to_xml(), port=self.url)
+#
+#     @classmethod
+#     @read_annotations
+#     def from_xml(cls, element, document):
+#         comp_element = element.find(NINEML + 'Component')
+#         if comp_element is None:
+#             comp_element = element.find(NINEML + 'Reference')
+#             if comp_element is None:
+#                 raise Exception("Did not find component in ComponentValue")
+#         component = Component.from_xml(comp_element, document)
+#         return cls(component, port=element.attrib["port"])
 
 
 class StringValue(BaseValue):
@@ -188,4 +188,3 @@ class StringValue(BaseValue):
         `element` - should be an ElementTree Element instance.
         """
         return element.text
-

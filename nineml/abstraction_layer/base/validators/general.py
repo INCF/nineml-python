@@ -11,18 +11,18 @@ from nineml.exceptions import NineMLRuntimeError
 from ...maths import get_reserved_and_builtin_symbols
 from ...maths.expressions import is_valid_lhs_target
 from nineml.utility import assert_no_duplicates
+from ..namespace import NamespaceAddress
 
 
-class TimeDerivativesAreDeclaredValidator(
-                                               PerNamespaceValidator):
+class TimeDerivativesAreDeclaredValidator(PerNamespaceValidator):
 
     """ Check all variables used in TimeDerivative blocks are defined
         as  StateVariables.
     """
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
         self.sv_declared = defaultdict(list)
         self.time_derivatives_used = defaultdict(list)
 

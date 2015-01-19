@@ -4,7 +4,7 @@ import unittest
 from nineml.abstraction_layer import (Regime, On, AnalogSendPort,
                                       AnalogReceivePort, NamespaceAddress,
                                       OutputEvent)
-from nineml.abstraction_layer.dynamics import ComponentClass
+from nineml.abstraction_layer.dynamics import DynamicsClass as ComponentClass
 
 
 class Queryer_test(unittest.TestCase):

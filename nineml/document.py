@@ -4,10 +4,10 @@ from lxml import etree
 from operator import and_
 import itertools
 import collections
-from .base import (annotate_xml, read_annotations, NINEML, BaseNineMLObject, E,
-                   Annotations)
+from .base import (annotate_xml, read_annotations, NINEML, E, Annotations)
 import nineml.user_layer
 import nineml.abstraction_layer
+from . import BaseNineMLObject
 
 
 class Document(dict, BaseNineMLObject):

@@ -2,14 +2,15 @@ import os.path
 import unittest
 from lxml.etree import _Element, ElementTree
 from nineml import read
-from nineml.abstraction_layer.random import ComponentClass
+from nineml.abstraction_layer.distribution import (
+    DistributionClass as ComponentClass)
 import tempfile
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
                             '..', '..', '..', 'catalog', 'randomdistributions')
 
 
-class TestRandomDistribution(unittest.TestCase):
+class TestDistribution(unittest.TestCase):
 
     def test_load(self):
         document = read(os.path.join(examples_dir, 'normal.xml'))

@@ -58,8 +58,8 @@ class BaseXMLLoader(object):
     @read_annotations
     def load_componentclass(self, element):
 
-        blocks = ('Parameter', 'AngSendPort', 'AngReceivePort',
-                  'IndexSendPort', 'IndexReceivePort', 'AngReducePort',
+        blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
+                  'IndexSendPort', 'IndexReceivePort', 'AnalogReducePort',
                   'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
 
         subnodes = self.loadBlocks(element, blocks=blocks)
@@ -68,9 +68,9 @@ class BaseXMLLoader(object):
         return DynamicsClass(
             name=element.get('name'),
             parameters=subnodes["Parameter"],
-            ang_ports=chain(subnodes["AngSendPort"],
-                               subnodes["AngReceivePort"],
-                               subnodes["AngReducePort"]),
+            ang_ports=chain(subnodes["AnalogSendPort"],
+                               subnodes["AnalogReceivePort"],
+                               subnodes["AnalogReducePort"]),
             index_ports=chain(subnodes["IndexSendPort"],
                               subnodes["IndexReceivePort"]),
             dynamics=dynamics,

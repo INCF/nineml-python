@@ -11,7 +11,7 @@ from base import PerNamespaceValidator
 from nineml.exceptions import NineMLRuntimeError
 from ...maths import get_reserved_and_builtin_symbols
 from ...maths.expressions import is_valid_lhs_target
-from ..subcomponent import NamespaceAddress
+from ...base import NamespaceAddress
 from nineml.utility import assert_no_duplicates
 
 

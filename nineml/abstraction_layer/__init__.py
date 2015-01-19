@@ -20,15 +20,16 @@ import dynamics
 import maths.expressions
 import connectionrule
 import distribution
-from .base import Parameter, ComponentClass as ComponentClass
+from .base import Parameter, ComponentClass, NamespaceAddress
 from .maths.expressions import Alias, Expression
 from .dynamics import (DynamicsClass, Regime,
                        EventOut, StateAssignment, TimeDerivative,
                        AnalogSendPort, AnalogReceivePort,
                        AnalogReducePort, EventSendPort,
                        EventReceivePort, Dynamics, OnCondition,
-                       Condition, StateVariable, NamespaceAddress,
-                       OnEvent)
+                       Condition, StateVariable, OnEvent, On,
+                       EventOut as OutputEvent)  # For old tests
+from .dynamics import flatten as flattening  # For old tests
 from .connectionrule import ConnectionRuleClass
 from .distribution import DistributionClass
 from .units import Unit, Dimension

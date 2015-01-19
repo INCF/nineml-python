@@ -6,11 +6,11 @@ from nineml.exceptions import NineMLUnitMismatchError
 from nineml.xmlns import nineml_namespace
 from ..exceptions import NineMLRuntimeError
 from operator import and_
-from ..base import BaseNineMLObject, E, read_annotations, annotate_xml, NINEML
+from ..base import E, read_annotations, annotate_xml, NINEML
 from ..utility import expect_single, check_tag, check_units
 from ..abstraction_layer.units import Unit, unitless
-from .values import (SingleValue, ArrayValue, ExternalArrayValue,
-                     ComponentValue)
+from .values import SingleValue, ArrayValue, ExternalArrayValue
+from . import BaseULObject
 
 
 class Reference(BaseReference):
@@ -24,10 +24,10 @@ class Reference(BaseReference):
         """
         docstring needed
 
-        `name`    -- a name of an existing component to refer to
-        `document` -- a nineml.document.Document object containing the top-level
-                     objects in the current file
-        `url`     -- a url of the file containing the exiting component
+        `name`     -- a name of an existing component to refer to
+        `document` -- a Document object containing the top-level
+                      objects in the current file
+        `url`      -- a url of the file containing the exiting component
         """
         super(Reference, self).__init__(name, document, url)
         if not isinstance(self._referred_to, BaseULObject):
@@ -341,7 +341,7 @@ class Property(BaseULObject):
 
     def __init__(self, name, value, units=None):
         if not isinstance(value, (int, float, SingleValue, ArrayValue,
-                                  ExternalArrayValue, ComponentValue)):
+                                  ExternalArrayValue)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference', 'Component', 'ValueList', "
                             "'ExternalValueList'"
@@ -362,7 +362,7 @@ class Property(BaseULObject):
         return isinstance(self._value, SingleValue)
 
     def is_random(self):
-        return isinstance(self._value, ComponentValue)
+        raise NotImplementedError
 
     def is_array(self):
         return (isinstance(self._value, ArrayValue) or

@@ -16,7 +16,7 @@ from . import (MathUtil, str_to_npfunc_map, func_namespace_split,
 from .. import BaseALObject
 
 
-class Expression(BaseALObject):
+class Expression(object):
 
     """ This is a base class for Expressions and Conditionals which provides
     the basic interface for parsing, yielding of python functions,
@@ -192,7 +192,7 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS):
         self._lhs = name_map.get(self.lhs, self.lhs)
 
 
-class Alias(ExpressionWithSimpleLHS, RegimeElement):
+class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
     """Aliases are a way of defining a variable local to a ``ComponentClass``,
     in terms of its ``Parameters``, ``StateVariables`` and input ``Analog
@@ -245,7 +245,6 @@ class Alias(ExpressionWithSimpleLHS, RegimeElement):
             Component.
 
         """
-        RegimeElement.__init__(self)
         ExpressionWithSimpleLHS.__init__(self, lhs, rhs)
 
     def __repr__(self):
@@ -256,7 +255,7 @@ class Alias(ExpressionWithSimpleLHS, RegimeElement):
         return visitor.visit_alias(self, **kwargs)
 
 
-class ODE(ExpressionWithLHS, RegimeElement):
+class ODE(ExpressionWithLHS):
 
     """ An ordinary, first order differential equation.
 
@@ -268,7 +267,6 @@ class ODE(ExpressionWithLHS, RegimeElement):
     """
 
     def __init__(self, dependent_variable, independent_variable, rhs):
-        RegimeElement.__init__(self)
         ExpressionWithLHS.__init__(self, rhs)
 
         self._dependent_variable = dependent_variable
@@ -357,7 +355,7 @@ def expr_to_obj(s, name=None):
     # import re
 
     # Is our job already done?
-    if isinstance(s, (RegimeElement)):
+    if isinstance(s, Expression):
         return s
 
     # strip surrounding whitespace

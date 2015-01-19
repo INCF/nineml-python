@@ -6,7 +6,6 @@ This file contains the main classes for defining dynamics
 """
 from itertools import chain
 from nineml.abstraction_layer.maths.expressions import StrToExpr
-from .transitions import EventOut, OnEvent, OnCondition, StateAssignment
 from ..maths.expressions import MathUtil
 from ...utility import (filter_discrete_types, ensure_valid_identifier,
                         normalise_parameter_as_list, assert_no_duplicates)
@@ -343,3 +342,4 @@ def DoOnCondition(condition, do=None, to=None):
                        event_outputs=output_events,
                        target_regime_name=to)
 
+from .transitions import EventOut, OnEvent, OnCondition, StateAssignment

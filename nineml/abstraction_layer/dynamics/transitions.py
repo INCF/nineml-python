@@ -7,7 +7,6 @@ This file contains the definitions for the Events
 
 from ...utility import ensure_valid_identifier, filter_discrete_types
 from ..base import BaseALObject
-from .regimes import Regime
 from nineml.abstraction_layer.maths.expressions import Expression, ExpressionWithSimpleLHS, StrToExpr
 from ...exceptions import NineMLRuntimeError
 from .cloner import ClonerVisitor
@@ -381,3 +380,6 @@ class EventOut(BaseALObject):
 
 def SpikeOutputEvent():
     return EventOut('spikeoutput')
+
+
+from .regimes import Regime
