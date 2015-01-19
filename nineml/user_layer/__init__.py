@@ -38,15 +38,33 @@ Classes
 
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
-"""
 
-import urllib
-from lxml import etree
+"""
+from .. import BaseNineMLObject
+
+
+class BaseULObject(BaseNineMLObject):
+
+    """
+    Base class for user layer classes
+    """
+
+    def __init__(self):
+        super(BaseULObject, self).__init__()
+        self._from_reference = None
+
+    def __lt__(self, other):
+        if self.__class__.__name__ < other.__class__.__name__:
+            return True
+        else:
+            return self.name < other.name
+
+
 from .network import Network
 from .population import Population, PositionList, Structure
 from .selection import Selection, Concatenate
 from .projection import Projection, PortConnection
 from .base import (PropertySet, Property, Component, Definition, Prototype,
                    DynamicsComponent, ConnectionRuleComponent,
-                   DistributionComponent)
-from .base import Reference
+                   DistributionComponent, resolve_reference,
+                   write_reference, Reference)

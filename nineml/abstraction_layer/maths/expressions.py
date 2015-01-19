@@ -11,9 +11,9 @@ import quantities as pq
 
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.maths.__init__.py import (
-    MathUtil, str_to_npfunc_map, func_namespace_split, is_valid_lhs_target)
-from ..base import BaseALObject
+from . import (MathUtil, str_to_npfunc_map, func_namespace_split,
+               is_valid_lhs_target)
+from .. import BaseALObject
 
 
 class Expression(BaseALObject):

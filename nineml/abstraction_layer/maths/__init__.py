@@ -9,7 +9,7 @@ expressions.
 
 import re
 import numpy
-from ..exceptions import NineMLMathParseError
+from ...exceptions import NineMLMathParseError
 
 
 _constants = set(['pi'])

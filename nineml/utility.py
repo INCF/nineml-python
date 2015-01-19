@@ -15,7 +15,7 @@ import hashlib
 
 from .exceptions import internal_error
 from .exceptions import NineMLRuntimeError
-from .user_layer import BaseULObject, resolve_reference, write_reference, NINEML
+from .xmlns import NINEML
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
@@ -530,14 +530,16 @@ valid_uri_re = re.compile(r'^(?:https?|file)://'  # http:// or https://
 
 def check_tag(element, cls):
     assert element.tag in (cls.element_name, NINEML + cls.element_name), \
-                  "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
+        "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
 
 
 def walk(obj, visitor=None, depth=0):
     if visitor:
         visitor.depth = depth
-    if isinstance(obj, BaseULObject):
+    try:
         obj.accept_visitor(visitor)
+    except AttributeError:
+        pass
     if hasattr(obj, "get_children"):
         get_children = obj.get_children
     else:
@@ -568,8 +570,8 @@ def flatten(obj):
 
 
 def check_units(units, dimension):
-    # primitive unit checking, should really use Pint, Quantities or Mike
-    # Hull's tools
+    # FIXME: primitive unit checking, should really use Pint, Quantities or
+    # Mike Hull's tools
     if not dimension:
         raise ValueError("dimension not specified")
     base_units = {
@@ -582,12 +584,9 @@ def check_units(units, dimension):
         "dimensionless": "",
     }
     if len(units) == 1:
-        prefix = ""
         base = units
     else:
-        prefix = units[0]
         base = units[1:]
     if base != base_units[dimension]:
         raise ValueError("Units %s are invalid for dimension %s" %
                          (units, dimension))
-

@@ -1,5 +1,5 @@
 from ..base import E
-from .base import BaseALObject
+from . import BaseALObject
 from nineml.base import annotate_xml, read_annotations
 from numpy.core.test_rational import numerator
 

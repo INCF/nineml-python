@@ -13,23 +13,6 @@ from .values import (SingleValue, ArrayValue, ExternalArrayValue,
                      ComponentValue)
 
 
-class BaseULObject(BaseNineMLObject):
-
-    """
-    Base class for user layer classes
-    """
-
-    def __init__(self):
-        super(BaseULObject, self).__init__()
-        self._from_reference = None
-
-    def __lt__(self, other):
-        if self.__class__.__name__ < other.__class__.__name__:
-            return True
-        else:
-            return self.name < other.name
-
-
 class Reference(BaseReference):
 
     """

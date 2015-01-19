@@ -7,7 +7,7 @@ This file contains the main classes for defining dynamics
 from itertools import chain
 from nineml.abstraction_layer.maths.expressions import StrToExpr
 from .transitions import EventOut, OnEvent, OnCondition, StateAssignment
-from nineml.abstraction_layer.maths.__init__.__init__ import MathUtil
+from ..maths.expressions import MathUtil
 from ...utility import (filter_discrete_types, ensure_valid_identifier,
                         normalise_parameter_as_list, assert_no_duplicates)
 from ...exceptions import NineMLRuntimeError
@@ -200,62 +200,6 @@ class Regime(BaseALObject):
         return self._name
 
 
-# Forwarding Function:
-def On(trigger, do=None, to=None):
-
-    if isinstance(do, (EventOut, basestring)):
-        do = [do]
-    elif do is None:
-        do = []
-    else:
-        pass
-
-    if isinstance(trigger, basestring):
-        if MathUtil.is_single_symbol(trigger):
-            return DoOnEvent(input_event=trigger, do=do, to=to)
-        else:
-            return DoOnCondition(condition=trigger, do=do, to=to)
-
-    elif isinstance(trigger, OnCondition):
-        return DoOnCondition(condition=trigger, do=do, to=to)
-    else:
-        err = "Unexpected Type for On() trigger: %s %s" % (type(trigger),
-                                                           str(trigger))
-        raise NineMLRuntimeError(err)
-
-
-def do_to_assignments_and_events(doList):
-    if not doList:
-        return [], []
-    # 'doList' is a list of strings, OutputEvents, and StateAssignments.
-    do_type_list = (EventOut, basestring, StateAssignment)
-    do_types = filter_discrete_types(doList, do_type_list)
-
-    # Convert strings to StateAssignments:
-    sa_from_strs = [StrToExpr.state_assignment(s)
-                    for s in do_types[basestring]]
-
-    return do_types[StateAssignment] + sa_from_strs, do_types[EventOut]
-
-
-def DoOnEvent(input_event, do=None, to=None):
-    assert isinstance(input_event, basestring)
-
-    assignments, output_events = do_to_assignments_and_events(do)
-    return OnEvent(src_port_name=input_event,
-                   state_assignments=assignments,
-                   event_outputs=output_events,
-                   target_regime_name=to)
-
-
-def DoOnCondition(condition, do=None, to=None):
-    assignments, output_events = do_to_assignments_and_events(do)
-    return OnCondition(trigger=condition,
-                       state_assignments=assignments,
-                       event_outputs=output_events,
-                       target_regime_name=to)
-
-
 class StateVariable(BaseALObject):
 
     """A class representing a state-variable in a ``DynamicsClass``.
@@ -342,3 +286,60 @@ class TimeDerivative(ODE):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_timederivative(self, **kwargs)
+
+
+# Forwarding Function:
+def On(trigger, do=None, to=None):
+
+    if isinstance(do, (EventOut, basestring)):
+        do = [do]
+    elif do is None:
+        do = []
+    else:
+        pass
+
+    if isinstance(trigger, basestring):
+        if MathUtil.is_single_symbol(trigger):
+            return DoOnEvent(input_event=trigger, do=do, to=to)
+        else:
+            return DoOnCondition(condition=trigger, do=do, to=to)
+
+    elif isinstance(trigger, OnCondition):
+        return DoOnCondition(condition=trigger, do=do, to=to)
+    else:
+        err = "Unexpected Type for On() trigger: %s %s" % (type(trigger),
+                                                           str(trigger))
+        raise NineMLRuntimeError(err)
+
+
+def do_to_assignments_and_events(doList):
+    if not doList:
+        return [], []
+    # 'doList' is a list of strings, OutputEvents, and StateAssignments.
+    do_type_list = (EventOut, basestring, StateAssignment)
+    do_types = filter_discrete_types(doList, do_type_list)
+
+    # Convert strings to StateAssignments:
+    sa_from_strs = [StrToExpr.state_assignment(s)
+                    for s in do_types[basestring]]
+
+    return do_types[StateAssignment] + sa_from_strs, do_types[EventOut]
+
+
+def DoOnEvent(input_event, do=None, to=None):
+    assert isinstance(input_event, basestring)
+
+    assignments, output_events = do_to_assignments_and_events(do)
+    return OnEvent(src_port_name=input_event,
+                   state_assignments=assignments,
+                   event_outputs=output_events,
+                   target_regime_name=to)
+
+
+def DoOnCondition(condition, do=None, to=None):
+    assignments, output_events = do_to_assignments_and_events(do)
+    return OnCondition(trigger=condition,
+                       state_assignments=assignments,
+                       event_outputs=output_events,
+                       target_regime_name=to)
+

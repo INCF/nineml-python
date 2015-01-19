@@ -23,7 +23,8 @@ from nineml.utility import (check_list_contain_same_items,
                             assert_no_duplicates)
 from ..maths import get_reserved_and_builtin_symbols
 from .cloner import ExpandAliasDefinition, ClonerVisitor
-from ..base import BaseALObject
+from .. import BaseALObject
+from .visitors import ActionVisitor
 
 
 class FlatMixin(object):

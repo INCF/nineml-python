@@ -7,17 +7,10 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...base import read_annotations, annotate_xml, NINEML, BaseNineMLObject
+from .. import BaseALObject
+from ...base import read_annotations, annotate_xml, NINEML
 from ...utility import filter_discrete_types, ensure_valid_identifier
 from ..units import dimensionless, Dimension
-
-
-class BaseALObject(BaseNineMLObject):
-
-    """
-    Base class for abstraction layer classes
-    """
-    pass
 
 
 class ComponentClass(BaseALObject):

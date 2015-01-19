@@ -1,38 +1,10 @@
 from lxml.builder import ElementMaker
-from itertools import chain
-from operator import and_
 from copy import copy
-from nineml.utility import expect_none_or_single
 
 nineml_namespace = 'http://nineml.net/9ML/1.0'
 NINEML = "{%s}" % nineml_namespace
 E = ElementMaker(namespace=nineml_namespace,
                  nsmap={"nineml": nineml_namespace})
-
-
-class BaseNineMLObject(object):
-
-    """
-    Base class for user layer classes
-    """
-    children = []
-
-    def __init__(self):
-        self.annotations = None
-
-    def __eq__(self, other):
-        return reduce(and_, [isinstance(other, self.__class__)] +
-                            [getattr(self, name) == getattr(other, name)
-                             for name in self.__class__.defining_attributes])
-
-    def __ne__(self, other):
-        return not self == other
-
-    def get_children(self):
-        return chain(getattr(self, attr) for attr in self.children)
-
-    def accept_visitor(self, visitor):
-        visitor.visit(self)
 
 
 class Annotations(dict):
@@ -92,3 +64,6 @@ def annotate_xml(to_xml):
             elem.append(args[0].annotations.to_xml())
         return elem
     return annotate_to_xml
+
+from .utility import expect_none_or_single
+

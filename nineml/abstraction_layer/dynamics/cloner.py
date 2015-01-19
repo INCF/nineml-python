@@ -7,7 +7,7 @@ docstring needed
 from ...exceptions import NineMLRuntimeError
 from ..maths import is_builtin_symbol
 from ..maths.expressions import MathUtil
-from .multi import NamespaceAddress
+from .subcomponent import NamespaceAddress
 from .visitors import ActionVisitor, ComponentVisitor
 
 
