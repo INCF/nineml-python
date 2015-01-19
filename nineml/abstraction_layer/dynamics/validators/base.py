@@ -5,9 +5,25 @@ This file contains the ComponentValidator class for validating component
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.utility import Settings
+from ...base.validators import BaseComponentValidator
+
 
 from .regimes import DuplicateRegimeNamesValidator
 from ..visitors import ActionVisitor
+from .ports import EventPortsValidator
+from .ports import OutputAnalogPortsValidator
+from .namingconflicts import (LocalNameConflictsValidator,
+                              DimensionNameConflictsValidator)
+from .general import TimeDerivativesAreDeclaredValidator
+from .general import NoUnresolvedSymbolsValidator  # @IgnorePep8
+from .general import PortConnectionsValidator
+from .general import StateAssignmentsAreOnStateVariablesValidator
+from .general import RegimeGraphValidator
+from .general import RegimeOnlyHasOneHandlerPerEventValidator
+from ...base.validators import (AliasesAreNotRecursiveValidator,
+                                NoDuplicatedObjectsValidator)
+from ..visitors import ActionVisitor
+from .equality_checker import ComponentEqualityChecker
 
 
 class BaseValidator(object):
@@ -21,31 +37,25 @@ class ComponentValidator(BaseComponentValidator):
     """Class for grouping all the component-validations tests together"""
 
     @classmethod
-    def validate_component(cls, component):
+    def validate_component(cls, componentclass):
         """ Tests a componentclass against a variety of tests, to verify its
         internal structure
         """
-        if not Settings.enable_component_validation:
-            import os
-            assert os.getlogin() == 'hull', \
-                   """Checking only mike turns off component-validation :) """
-            print "**** WARNING WARNIGN COMPONENT VALIDATION TURNRED OFF ****"
-            return
-        TypesValidator(component)
-        NoDuplicatedObjectsValidator(component)
-        DuplicateRegimeNamesValidator(component)
-        LocalNameConflictsValidator(component)
-        DimensionNameConflictsValidator(component)
-        EventPortsValidator(component)
-        OutputAnalogPortsValidator(component)
-        TimeDerivativesAreDeclaredValidator(component)
-        StateAssignmentsAreOnStateVariablesValidator(component)
-        AliasesAreNotRecursiveValidator(component)
-        AssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbolsValidator(component)  # @IgnorePep8
-        PortConnectionsValidator(component)
-        RegimeGraphValidator(component)
-        RegimeOnlyHasOneHandlerPerEventValidator(component)
-        CheckNoLHSAssignmentsToMathsNamespaceValidator(component)
+        TypesValidator(componentclass)
+        NoDuplicatedObjectsValidator(componentclass)
+        LocalNameConflictsValidator(componentclass)
+        DimensionNameConflictsValidator(componentclass)
+        EventPortsValidator(componentclass)
+        OutputAnalogPortsValidator(componentclass)
+        TimeDerivativesAreDeclaredValidator(componentclass)
+        StateAssignmentsAreOnStateVariablesValidator(componentclass)
+        AliasesAreNotRecursiveValidator(componentclass)
+        NoUnresolvedSymbolsValidator(componentclass)  # @IgnorePep8
+        PortConnectionsValidator(componentclass)
+        RegimeGraphValidator(componentclass)
+        RegimeOnlyHasOneHandlerPerEventValidator(componentclass)
+        CheckNoLHSAssignmentsToMathsNamespaceValidator(componentclass)
+        ComponentEqualityChecker(componentclass)
 
 
 class PerNamespaceValidator(ActionVisitor, BaseValidator):

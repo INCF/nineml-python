@@ -6,25 +6,22 @@ components definitions of interface and dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
-from nineml.exceptions import NineMLRuntimeError
-from .multi import NamespaceAddress
+import itertools
+from ...exceptions import NineMLRuntimeError
+from .subcomponent import NamespaceAddress
 from ..queryer import Queryer
 from ...utility import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from ..maths.expressions import Alias, StrToExpr
-
-import itertools
 from ..base import ComponentClass, Parameter
-from nineml.abstraction_layer.dynamics.regimes import StateVariable
-from nineml.abstraction_layer.ports import (AnalogReceivePort, AnalogSendPort,
-                                            AnalogReducePort, EventReceivePort,
-                                            EventSendPort)
+from .regimes import StateVariable
+from .ports import (AnalogReceivePort, AnalogSendPort,
+                    AnalogReducePort, EventReceivePort,
+                    EventSendPort)
 from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
 from ..maths import get_reserved_and_builtin_symbols
-from ..visitors import ActionVisitor
 from .cloner import ExpandAliasDefinition, ClonerVisitor
 from ..base import BaseALObject
 

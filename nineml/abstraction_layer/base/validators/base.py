@@ -13,7 +13,7 @@ from .namingconflicts import (LocalNameConflictsValidator,
                               DimensionNameConflictsValidator)
 from .general import TimeDerivativesAreDeclaredValidator
 from .general import NoDuplicatedObjectsValidator
-from .general import AssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbolsValidator  # @IgnorePep8
+from .general import NoUnresolvedSymbolsValidator  # @IgnorePep8
 from .general import PortConnectionsValidator
 from .general import StateAssignmentsAreOnStateVariablesValidator
 from .general import AliasesAreNotRecursiveValidator
@@ -21,7 +21,7 @@ from .general import RegimeGraphValidator
 from .general import RegimeOnlyHasOneHandlerPerEventValidator
 from .general import CheckNoLHSAssignmentsToMathsNamespaceValidator
 from ..visitors import ActionVisitor
-from equality_checker import ComponentEqualityChecker
+from .equality_checker import ComponentEqualityChecker
 
 
 class BaseValidator(object):
@@ -35,43 +35,37 @@ class BaseComponentValidator(object):
     """Class for grouping all the component-validations tests together"""
 
     @classmethod
-    def validate_component(cls, component):
-        """ Tests a componentclass against a variety of tests, to verify its
+    def validate_componentclass(cls, componentclass):
+        """ Tests a componentclassclass against a variety of tests, to verify its
         internal structure
         """
-        if not Settings.enable_component_validation:
-            import os
-            assert os.getlogin() == 'hull', \
-                   """Checking only mike turns off component-validation :) """
-            print "**** WARNING WARNIGN COMPONENT VALIDATION TURNRED OFF ****"
-            return
-        TypesValidator(component)
-        NoDuplicatedObjectsValidator(component)
-        LocalNameConflictsValidator(component)
-        DimensionNameConflictsValidator(component)
-        EventPortsValidator(component)
-        OutputAnalogPortsValidator(component)
-        TimeDerivativesAreDeclaredValidator(component)
-        StateAssignmentsAreOnStateVariablesValidator(component)
-        AliasesAreNotRecursiveValidator(component)
-        AssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbolsValidator(component)  # @IgnorePep8
-        PortConnectionsValidator(component)
-        RegimeGraphValidator(component)
-        RegimeOnlyHasOneHandlerPerEventValidator(component)
-        CheckNoLHSAssignmentsToMathsNamespaceValidator(component)
+        TypesValidator(componentclass)
+        NoDuplicatedObjectsValidator(componentclass)
+        LocalNameConflictsValidator(componentclass)
+        DimensionNameConflictsValidator(componentclass)
+        EventPortsValidator(componentclass)
+        OutputAnalogPortsValidator(componentclass)
+        TimeDerivativesAreDeclaredValidator(componentclass)
+        StateAssignmentsAreOnStateVariablesValidator(componentclass)
+        AliasesAreNotRecursiveValidator(componentclass)
+        NoUnresolvedSymbolsValidator(componentclass)  # @IgnorePep8
+        PortConnectionsValidator(componentclass)
+        RegimeGraphValidator(componentclass)
+        RegimeOnlyHasOneHandlerPerEventValidator(componentclass)
+        CheckNoLHSAssignmentsToMathsNamespaceValidator(componentclass)
+        ComponentEqualityChecker(componentclass)
 
 
 class PerNamespaceValidator(ActionVisitor, BaseValidator):
 
     def __init__(self, explicitly_require_action_overrides=True):
-        ActionVisitor.__init__(self,
-            explicitly_require_action_overrides=explicitly_require_action_overrides)  # @IgnorePep8
+        ActionVisitor.__init__(
+            self, explicitly_require_action_overrides=explicitly_require_action_overrides)  # @IgnorePep8
         BaseValidator.__init__(self)
 
     # Over-ride this function, so we can extract out the
     # namespace, then propogate this as a parameter.
-    def visit_componentclass(self, component, **kwargs):
+    def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
         namespace = component.get_node_addr()
         ActionVisitor.visit_componentclass(self, component,
                                            namespace=namespace)
-

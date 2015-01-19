@@ -80,7 +80,7 @@ def write_reference(to_xml):
     return unresolving_to_xml
 
 
-class BaseComponent(BaseULObject):
+class Component(BaseULObject):
     """
     Base class for model components.
 
@@ -117,7 +117,7 @@ class BaseComponent(BaseULObject):
         Create a new component with the given name, definition and properties,
         or create a prototype to another component that will be resolved later.
         """
-        super(BaseComponent, self).__init__()
+        super(Component, self).__init__()
         self.name = name
         if isinstance(definition, basestring):
             definition = Definition(name=definition.replace(".xml", ""),
@@ -558,7 +558,7 @@ class InitialValueSet(PropertySet):
         return cls(*initial_values)
 
 
-class DynamicsComponent(BaseComponent):
+class DynamicsComponent(Component):
 
     def check_initial_values(self):
         for var in self.definition.component.state_variables:
@@ -570,14 +570,14 @@ class DynamicsComponent(BaseComponent):
             check_units(initial_value.units, var.dimension)
 
 
-class ConnectionRuleComponent(BaseComponent):
+class ConnectionRuleComponent(Component):
     """
     docstring needed
     """
     pass
 
 
-class DistributionComponent(BaseComponent):
+class DistributionComponent(Component):
     """
     Component representing a random number distribution, e.g. normal, gamma,
     binomial.

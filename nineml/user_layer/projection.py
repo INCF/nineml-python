@@ -2,7 +2,7 @@
 from .base import BaseULObject, resolve_reference, write_reference, Reference
 from ..base import E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
-from .components import BaseComponent, Property
+from .components import Component, Property
 from itertools import chain
 import nineml.user_layer
 from ..abstraction_layer import units as un
@@ -154,20 +154,20 @@ class Projection(BaseULObject):
         destination = nineml.user_layer.Reference.from_xml(e, document).user_layer_object   ###?
         # Get Response
         e = element.find(NINEML + 'Response')
-        response = BaseComponent.from_xml(e.find(NINEML + 'Component') or
+        response = Component.from_xml(e.find(NINEML + 'Component') or
                                           e.find(NINEML + 'Reference'),
                                           document)
         # Get Plasticity
         e = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
         if e is not None:
-            plasticity = BaseComponent.from_xml(e.find(NINEML + 'Component') or
+            plasticity = Component.from_xml(e.find(NINEML + 'Component') or
                                                 e.find(NINEML + 'Reference'),
                                                 document)
         else:
             plasticity = None
         # Get Connectivity
         e = element.find(NINEML + 'Connectivity')
-        connectivity = BaseComponent.from_xml(e.find(NINEML + 'Component') or
+        connectivity = Component.from_xml(e.find(NINEML + 'Component') or
                                               e.find(NINEML + 'Reference'),
                                               document)
         # Get Delay

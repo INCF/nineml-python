@@ -11,7 +11,7 @@ Classes
 -------
     Model
     Definition
-    BaseComponent
+    Component
         SpikingNodeType
         SynapseType
         CurrentSourceType
@@ -42,13 +42,11 @@ Classes
 
 import urllib
 from lxml import etree
-from .dynamics import (SpikingNodeType, SynapseType, ConnectionType,
-                       IonDynamicsType)
-from nineml.user_layer.connectionrule import ConnectionRule
+from .network import Network
 from .population import Population, PositionList, Structure
-from nineml.user_layer.selection import Network, Selection, Concatenate
+from .selection import Selection, Concatenate
 from .projection import Projection, PortConnection
-from nineml.user_layer.distribution import RandomDistribution
-from .components import (PropertySet, Property, BaseComponent as Component,
-                         Definition, Prototype)
+from .base import (PropertySet, Property, Component, Definition, Prototype,
+                   DynamicsComponent, ConnectionRuleComponent,
+                   DistributionComponent)
 from .base import Reference

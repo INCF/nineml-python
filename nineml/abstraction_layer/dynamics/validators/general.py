@@ -6,33 +6,34 @@ docstring needed
 """
 
 from collections import defaultdict
+
 from base import PerNamespaceValidator
 from nineml.exceptions import NineMLRuntimeError
 from ...maths import get_reserved_and_builtin_symbols
 from ...maths.expressions import is_valid_lhs_target
+from ..subcomponent import NamespaceAddress
 from nineml.utility import assert_no_duplicates
 
 
-class TimeDerivativesAreDeclaredValidator(
-                                               PerNamespaceValidator):
+class TimeDerivativesAreDeclaredValidator(PerNamespaceValidator):
 
     """ Check all variables used in TimeDerivative blocks are defined
         as  StateVariables.
     """
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
         self.sv_declared = defaultdict(list)
         self.time_derivatives_used = defaultdict(list)
 
         self.visit(component)
 
-        for namespace, time_derivatives in self.time_derivatives_used.\
-                                                                   iteritems():
+        for (namespace,
+             time_derivatives) in self.time_derivatives_used.iteritems():
             for td in time_derivatives:
-                if not td in self.sv_declared[namespace]:
-                    err = 'StateVariable not declared: %s' % td
+                if td not in self.sv_declared[namespace]:
+                    err = 'StateVariable not declared: {}'.format(td)
                     raise NineMLRuntimeError(err)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -40,18 +41,17 @@ class TimeDerivativesAreDeclaredValidator(
 
     def action_timederivative(self, timederivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.time_derivatives_used[namespace].append(
-                                             timederivative.dependent_variable)
+            timederivative.dependent_variable)
 
 
-class StateAssignmentsAreOnStateVariablesValidator(
-                                               PerNamespaceValidator):
+class StateAssignmentsAreOnStateVariablesValidator(PerNamespaceValidator):
 
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
         self.sv_declared = defaultdict(list)
         self.state_assignments_lhses = defaultdict(list)
 
@@ -60,7 +60,7 @@ class StateAssignmentsAreOnStateVariablesValidator(
         for namespace, state_assignments_lhs in self.state_assignments_lhses.\
                                                                    iteritems():
             for td in state_assignments_lhs:
-                if not td in self.sv_declared[namespace]:
+                if td not in self.sv_declared[namespace]:
                     err = 'Not Assigning to state-variable: {}'.format(td)
                     raise NineMLRuntimeError(err)
 
@@ -109,42 +109,38 @@ class AliasesAreNotRecursiveValidator(PerNamespaceValidator):
                 raise NineMLRuntimeError(errmsg)
 
 
-class NoUnresolvedSymbolsValidator(PerNamespaceValidator):  # @IgnorePep8
+class NoUnresolvedSymbolsValidator(PerNamespaceValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
-
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
         self.available_symbols = defaultdict(list)
         self.aliases = defaultdict(list)
         self.time_derivatives = defaultdict(list)
         self.state_assignments = defaultdict(list)
 
         self.visit(component)
-
         excludes = get_reserved_and_builtin_symbols()
-
         # Check Aliases:
         for ns, aliases in self.aliases.iteritems():
             for alias in aliases:
                 for rhs_atom in alias.rhs_atoms:
                     if rhs_atom in excludes:
                         continue
-                    if not rhs_atom in self.available_symbols[ns]:
+                    if rhs_atom not in self.available_symbols[ns]:
                         err = ('Unresolved Symbol in Alias: %s [%s]' %
                                (rhs_atom, alias))
                         raise NineMLRuntimeError(err)
-
         # Check TimeDerivatives:
         for ns, timederivatives in self.time_derivatives.iteritems():
             for timederivative in timederivatives:
                 for rhs_atom in timederivative.rhs_atoms:
-                    if (not rhs_atom in self.available_symbols[ns] and
-                        not rhs_atom in excludes):
+                    if (rhs_atom not in self.available_symbols[ns] and
+                            rhs_atom not in excludes):
                         err = ('Unresolved Symbol in Time Derivative: %s [%s]'
                                % (rhs_atom, timederivative))
                         raise NineMLRuntimeError(err)
@@ -153,8 +149,8 @@ class NoUnresolvedSymbolsValidator(PerNamespaceValidator):  # @IgnorePep8
         for ns, state_assignments in self.state_assignments.iteritems():
             for state_assignment in state_assignments:
                 for rhs_atom in state_assignment.rhs_atoms:
-                    if (not rhs_atom in self.available_symbols[ns] and
-                        not rhs_atom in excludes):
+                    if (rhs_atom not in self.available_symbols[ns] and
+                            rhs_atom not in excludes):
                         err = ('Unresolved Symbol in Assignment: %s [%s]' %
                                (rhs_atom, state_assignment))
                         raise NineMLRuntimeError(err)
@@ -196,16 +192,12 @@ class PortConnectionsValidator(PerNamespaceValidator):
     """
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
-
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
         self.ports = defaultdict(list)
         self.portconnections = list()
-
         self.visit(component)
-
         connected_recv_ports = set()
-
         # Check for duplicate connections in the
         # portconnections. This can only really happen in the
         # case of connecting 'send to reduce ports' more than once.
@@ -215,11 +207,10 @@ class PortConnectionsValidator(PerNamespaceValidator):
                 err = 'Duplicate Port Connection: %s -> %s' % (pc[0], pc[1])
                 raise NineMLRuntimeError(err)
             seen_port_connections.add(pc)
-
         # Check each source and sink exist,
         # and that each recv port is connected at max once.
         for src, sink in self.portconnections:
-            if not src in self.ports:
+            if src not in self.ports:
                 raise NineMLRuntimeError(
                     'Unable to find port specified in connection: %s' %
                     (src))
@@ -227,17 +218,14 @@ class PortConnectionsValidator(PerNamespaceValidator):
                 raise NineMLRuntimeError(
                     'Port was specified as a source, but is incoming: %s' %
                     (src))
-
-            if not sink in self.ports:
+            if sink not in self.ports:
                 raise NineMLRuntimeError(
                     'Unable to find port specified in connection: %s' %
                     (sink))
-
             if not self.ports[sink].is_incoming():
                 raise NineMLRuntimeError(
                     'Port was specified as a sink, but is not incoming: %s' %
                     (sink))
-
             if self.ports[sink].mode == 'recv':
                 if self.ports[sink] in connected_recv_ports:
                     raise NineMLRuntimeError(
@@ -279,8 +267,8 @@ class PortConnectionsValidator(PerNamespaceValidator):
 class RegimeGraphValidator(PerNamespaceValidator):
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
 
         self.connected_regimes_from_regime = defaultdict(set)
         self.regimes_in_namespace = defaultdict(set)
@@ -290,7 +278,7 @@ class RegimeGraphValidator(PerNamespaceValidator):
         def add_connected_regimes_recursive(regime, connected):
             connected.add(regime)
             for r in self.connected_regimes_from_regime[regime]:
-                if not r in connected:
+                if r not in connected:
                     add_connected_regimes_recursive(r, connected)
 
         for namespace, regimes in self.regimes_in_namespace.iteritems():
@@ -311,78 +299,16 @@ class RegimeGraphValidator(PerNamespaceValidator):
     def action_regime(self, regime, namespace):  # @UnusedVariable
         for transition in regime.transitions:
             self.connected_regimes_from_regime[regime].add(
-                                                      transition.target_regime)
+                transition.target_regime)
             self.connected_regimes_from_regime[transition.target_regime].add(
-                                                                        regime)
+                regime)
 
 
-class NoDuplicatedObjectsValidator(PerNamespaceValidator):
-
-    def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                      explicitly_require_action_overrides=True)
-        self.all_objects = list()
-        self.visit(component)
-        assert_no_duplicates(self.all_objects)
-
-    def action_componentclass(self, component, **kwargs):  # @UnusedVariable
-        self.all_objects.append(component)
-
-    def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
-        self.all_objects.append(dynamics)
-
-    def action_regime(self, regime, **kwargs):  # @UnusedVariable
-        self.all_objects.append(regime)
-
-    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(state_variable)
-
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        self.all_objects.append(parameter)
-
-    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
-        self.all_objects.append(output_event)
-
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
-        self.all_objects.append(assignment)
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self.all_objects.append(alias)
-
-    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(time_derivative)
-
-    def action_condition(self, condition, **kwargs):  # @UnusedVariable
-        self.all_objects.append(condition)
-
-    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
-        self.all_objects.append(on_condition)
-
-    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        self.all_objects.append(on_event)
-
-
-class RegimeOnlyHasOneHandlerPerEventValidator(
-                                               PerNamespaceValidator):
+class RegimeOnlyHasOneHandlerPerEventValidator(PerNamespaceValidator):
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
         self.visit(component)
 
     def action_regime(self, regime, namespace, **kwargs):  # @UnusedVariable
@@ -391,8 +317,7 @@ class RegimeOnlyHasOneHandlerPerEventValidator(
         assert_no_duplicates(event_triggers)
 
 
-class CheckNoLHSAssignmentsToMathsNamespaceValidator(
-                                               PerNamespaceValidator):
+class CheckNoLHSAssignmentsToMathsNamespaceValidator(PerNamespaceValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -400,8 +325,8 @@ class CheckNoLHSAssignmentsToMathsNamespaceValidator(
     """
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
 
         self.visit(component)
 
@@ -412,17 +337,17 @@ class CheckNoLHSAssignmentsToMathsNamespaceValidator(
             err = 'Symbol: %s found on left-hand-side of an equation'
             raise NineMLRuntimeError(err)
 
-    def action_statevariable(self, state_variable, **kwargs):
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(state_variable.name)
 
-    def action_parameter(self, parameter, **kwargs):
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(parameter.name)
 
-    def action_assignment(self, assignment, **kwargs):
+    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(assignment.lhs)
 
-    def action_alias(self, alias, **kwargs):
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(alias.lhs)
 
-    def action_timederivative(self, time_derivative, **kwargs):
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_lhssymbol_is_valid(time_derivative.dependent_variable)

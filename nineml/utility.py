@@ -13,8 +13,9 @@ import re
 import itertools
 import hashlib
 
-from nineml.exceptions import internal_error
-from nineml.exceptions import NineMLRuntimeError
+from .exceptions import internal_error
+from .exceptions import NineMLRuntimeError
+from .user_layer import BaseULObject, resolve_reference, write_reference, NINEML
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
@@ -525,8 +526,6 @@ valid_uri_re = re.compile(r'^(?:https?|file)://'  # http:// or https://
                           r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
                           r'(?::\d+)?'  # optional port
                           r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-
-from .base import BaseULObject, resolve_reference, write_reference, NINEML
 
 
 def check_tag(element, cls):

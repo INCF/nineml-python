@@ -1,7 +1,7 @@
 from .base import BaseULObject, resolve_reference, write_reference
 from ..base import NINEML, E
 from .utility import check_tag
-from .components import BaseComponent
+from .components import Component
 from ..utility import expect_single
 from nineml.base import annotate_xml, read_annotations
 
@@ -64,11 +64,11 @@ class Population(BaseULObject):
         layout_elem = element.find(NINEML + 'Layout')
         kwargs = {}
         if layout_elem:
-            kwargs['positions'] = BaseComponent.from_xml(layout_elem, document)
+            kwargs['positions'] = Component.from_xml(layout_elem, document)
         cell = expect_single(element.findall(NINEML + 'Cell'))
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML + 'Number').text),
-                   cell=BaseComponent.from_xml(cell.find(NINEML + 'Component')
+                   cell=Component.from_xml(cell.find(NINEML + 'Component')
                                                or cell.find(NINEML +
                                                             'Reference'),
                                                document),
@@ -180,7 +180,7 @@ def qstr(obj):
         return obj.__str__()
 
 
-class Structure(BaseComponent):
+class Structure(Component):
 
     """
     Component representing the structure of a network, e.g. 2D grid, random

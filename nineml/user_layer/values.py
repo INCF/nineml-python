@@ -2,7 +2,7 @@
 from .base import BaseULObject
 from ..base import E, read_annotations, annotate_xml, NINEML
 from .utility import check_tag
-from nineml.user_layer.base import BaseComponent
+from nineml.user_layer.base import Component
 
 
 class BaseValue(BaseULObject):
@@ -168,7 +168,7 @@ class ComponentValue(BaseValue):
             comp_element = element.find(NINEML + 'Reference')
             if comp_element is None:
                 raise Exception("Did not find component in ComponentValue")
-        component = BaseComponent.from_xml(comp_element, document)
+        component = Component.from_xml(comp_element, document)
         return cls(component, port=element.attrib["port"])
 
 
