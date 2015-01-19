@@ -11,16 +11,9 @@ import quantities as pq
 
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.maths import (MathUtil, str_to_npfunc_map, func_namespace_split,
-                          is_valid_lhs_target)
-from . import parse
-from ...base import BaseALObject
-
-
-class RegimeElement(BaseALObject):
-
-    """ Base class for all things that can be elements of a regime """
-    pass
+from nineml.abstraction_layer.maths.__init__.py import (
+    MathUtil, str_to_npfunc_map, func_namespace_split, is_valid_lhs_target)
+from ..base import BaseALObject
 
 
 class Expression(BaseALObject):
@@ -117,7 +110,7 @@ class Expression(BaseALObject):
     #    """ yield names of functions in the RHS which are not in the math
     #    namespace"""
     #    raise NineMLRuntimeError()
-    #    from nineml.abstraction_layer.maths import is_builtin_math_function
+    #    from nineml.abstraction_layer.maths.__init__.py import is_builtin_math_function
     #    for func in self.rhs_funcs:
     #        if not is_builtin_math_function(func):
     #            raise NineMLRuntimeError('Unexpected Missing Function: %s'%func)
@@ -127,7 +120,7 @@ class Expression(BaseALObject):
     #    assert False
     #    """ returns True if at least 1 function on the RHS is not in the math
     #    namespace"""
-    #    from nineml.abstraction_layer.maths import is_builtin_math_function
+    #    from nineml.abstraction_layer.maths.__init__.py import is_builtin_math_function
     #    for func in self.rhs_funcs:
     #        if not is_builtin_math_function(func):
     #            raise NineMLRuntimeError('Unexpected Missing Function: %s'%func)
@@ -261,40 +254,6 @@ class Alias(ExpressionWithSimpleLHS, RegimeElement):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_alias(self, **kwargs)
-
-
-class StateAssignment(ExpressionWithSimpleLHS, RegimeElement):
-
-    """Assignments represent a change that happens to the value of a
-    ``StateVariable`` during a transition between regimes.
-
-    For example, in an integrate-and-fire neuron, we may want to reset the
-    voltage back to zero, after it has reached a certain threshold. In this
-    case, we would have an ``OnCondition`` object, that is triggered when
-    ``v>vthres``. Attached to this OnCondition transition, we would attach an
-    StateAssignment which sets ``v=vreset``.
-
-    The left-hand-side symbol must be a state-variable of the component.
-
-    """
-
-    def __init__(self, lhs, rhs):
-        """StateAssignment Constructor
-
-        :param lhs: A `string`, which must be a state-variable of the component.
-        :param rhs: A `string`, representing the new value of the state after
-            this assignment.
-
-        """
-        RegimeElement.__init__(self)
-        ExpressionWithSimpleLHS.__init__(self, lhs=lhs, rhs=rhs)
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_assignment(self, **kwargs)
-
-    def __repr__(self):
-        return "StateAssignment('%s', '%s')" % (self.lhs, self.rhs)
 
 
 class ODE(ExpressionWithLHS, RegimeElement):

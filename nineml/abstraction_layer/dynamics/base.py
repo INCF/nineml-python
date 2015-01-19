@@ -22,7 +22,7 @@ from nineml.abstraction_layer.ports import (AnalogReceivePort, AnalogSendPort,
 from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
-from nineml.abstraction_layer.maths import get_reserved_and_builtin_symbols
+from nineml.abstraction_layer.maths.__init__.__init__ import get_reserved_and_builtin_symbols
 from ..visitors import ExpandAliasDefinition, ClonerVisitor, ActionVisitor
 from ..base import BaseALObject
 

@@ -25,16 +25,16 @@ docstring needed
 import ply.lex as lex
 import ply.yacc as yacc
 import os
-from expr_parse import call_expr_func
+from nineml.abstraction_layer.maths.expr_parse import call_expr_func
 from nineml.utility import LocationMgr
 from nineml.exceptions import NineMLMathParseError
-from nineml.abstraction_layer.maths import is_builtin_math_function, get_builtin_symbols
+from nineml.abstraction_layer.maths.__init__.py import is_builtin_math_function, get_builtin_symbols
 
 # for now avoid duplication, but maintain distinctness
 call_cond_func = call_expr_func
 
 
-class Parser(object):
+class CondParser(object):
 
     """
     Base class for a lexer/parser that has the rules defined as methods
@@ -79,7 +79,7 @@ class Parser(object):
         return self.names, set(self.funcs)
 
 
-class CalcCond(Parser):
+class CalcCond(CondParser):
 
     tokens = (
         'NAME', 'NUMBER', 'CONDITIONAL', 'NOT', 'LOGICAL',

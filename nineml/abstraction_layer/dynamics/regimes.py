@@ -5,13 +5,13 @@ This file contains the main classes for defining dynamics
 :license: BSD-3, see LICENSE for details.
 """
 from itertools import chain
-from ..expressions import StrToExpr
+from nineml.abstraction_layer.maths.expressions import StrToExpr
 from .transitions import EventOut, OnEvent, OnCondition, StateAssignment
-from ..maths import MathUtil
+from nineml.abstraction_layer.maths.__init__.__init__ import MathUtil
 from ...utility import (filter_discrete_types, ensure_valid_identifier,
                         normalise_parameter_as_list, assert_no_duplicates)
 from ...exceptions import NineMLRuntimeError
-from ..expressions import ODE
+from nineml.abstraction_layer.maths.expressions import ODE
 from ..base import BaseALObject
 from ..units import dimensionless
 
@@ -60,7 +60,7 @@ class Regime(BaseALObject):
         """
         valid_kwargs = ('name', 'transitions', 'time_derivatives')
         for arg in kwargs:
-            if not arg in valid_kwargs:
+            if arg not in valid_kwargs:
                 err = 'Unexpected Arg: %s' % arg
                 raise NineMLRuntimeError(err)
 
@@ -200,16 +200,12 @@ class Regime(BaseALObject):
         return self._name
 
 
-class ComponentDynamics(BaseALObject):
-    pass
-
-
 # Forwarding Function:
 def On(trigger, do=None, to=None):
 
     if isinstance(do, (EventOut, basestring)):
         do = [do]
-    elif do == None:
+    elif do is None:
         do = []
     else:
         pass

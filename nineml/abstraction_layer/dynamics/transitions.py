@@ -5,8 +5,46 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.utility import ensure_valid_identifier
+from ...utility import ensure_valid_identifier, filter_discrete_types
 from ..base import BaseALObject
+from .regimes import Regime
+from nineml.abstraction_layer.maths.expressions import Expression, ExpressionWithSimpleLHS, StrToExpr
+from ...exceptions import NineMLRuntimeError
+from .cloner import ClonerVisitor
+
+
+class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
+
+    """Assignments represent a change that happens to the value of a
+    ``StateVariable`` during a transition between regimes.
+
+    For example, in an integrate-and-fire neuron, we may want to reset the
+    voltage back to zero, after it has reached a certain threshold. In this
+    case, we would have an ``OnCondition`` object, that is triggered when
+    ``v>vthres``. Attached to this OnCondition transition, we would attach an
+    StateAssignment which sets ``v=vreset``.
+
+    The left-hand-side symbol must be a state-variable of the component.
+
+    """
+
+    def __init__(self, lhs, rhs):
+        """StateAssignment Constructor
+
+        :param lhs: A `string`, which must be a state-variable of the component.
+        :param rhs: A `string`, representing the new value of the state after
+            this assignment.
+
+        """
+        BaseALObject.__init__(self)
+        ExpressionWithSimpleLHS.__init__(self, lhs=lhs, rhs=rhs)
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_assignment(self, **kwargs)
+
+    def __repr__(self):
+        return "StateAssignment('%s', '%s')" % (self.lhs, self.rhs)
 
 
 class Transition(BaseALObject):
@@ -247,7 +285,7 @@ class Condition(Expression):
         Expression.__init__(self, rhs)
 
     def _parse_rhs(self, rhs):
-        import parse
+
         return parse.cond(rhs)
 
     # def is_bool(self):
@@ -264,8 +302,9 @@ class Condition(Expression):
     #    namespace and returns the result """
     #    namespace = namespace or {}
     #    return eval("lambda %s: %s" % (','.join(self.rhs_names), self.rhs), \
-    #            nineml.abstraction_layer.maths.str_to_npfunc_map, namespace)
+    #            nineml.abstraction_layer.maths.__init__.__init__.str_to_npfunc_map, namespace)
     # math_namespace.namespace, namespace)
+
     def rhs_as_python_func(self, namespace={}):
         """ Returns a python callable which evaluates the expression in
         namespace and returns the result """

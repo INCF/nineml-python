@@ -24,7 +24,7 @@ import ply.yacc as yacc
 
 from nineml.utility import LocationMgr
 from nineml.exceptions import NineMLMathParseError
-from nineml.abstraction_layer.maths import get_builtin_symbols
+from nineml.abstraction_layer.maths.__init__.py import get_builtin_symbols
 
 
 def call_expr_func(expr_func, ns):
@@ -38,7 +38,7 @@ def call_expr_func(expr_func, ns):
     return expr_func(*args)
 
 
-class Parser(object):
+class ExprParser(object):
 
     """
     Base class for a lexer/parser that has the rules defined as methods
@@ -82,7 +82,7 @@ class Parser(object):
         return self.names, set(self.funcs)
 
 
-class CalcExpr(Parser):
+class CalcExpr(ExprParser):
 
     tokens = (
         'NAME', 'NUMBER',

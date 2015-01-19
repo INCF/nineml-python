@@ -7,7 +7,7 @@ docstring needed
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from nineml.abstraction_layer.dynamics.validators.base import ComponentValidatorPerNamespace  # @IgnorePep8
+from .base import ComponentValidatorPerNamespace
 
 
 class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):
@@ -18,8 +18,8 @@ class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        ComponentValidatorPerNamespace.__init__(
+            self, explicitly_require_action_overrides=False)
 
         # Mapping component to list of events/eventports at that component
         self.event_send_ports = defaultdict(dict)
@@ -34,8 +34,8 @@ class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):
         for ns, output_events in self.output_events.iteritems():
             for output_event in output_events:
                 assert output_event in self.event_send_ports[ns], \
-                          ("Can't find port definition matching OP-Event: %s" %
-                           output_event)
+                    ("Can't find port definition matching OP-Event: {}"
+                     .format(output_event))
 
         # Check that each input event has a corresponding event_port with a
         # recv/reduce mode:
@@ -57,12 +57,12 @@ class ComponentValidatorEventPorts(ComponentValidatorPerNamespace):
                     print ('Unable to find events generated for: ', ns,
                            evt_port_name)
 
-    def action_eventsendport(self, port, namespace, **kwargs):  # @UnusedVariable
-        assert not port.name in self.event_send_ports[namespace]
+    def action_eventsendport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        assert port.name not in self.event_send_ports[namespace]
         self.event_send_ports[namespace][port.name] = port
 
-    def action_eventreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable
-        assert not port.name in self.event_receive_ports[namespace]
+    def action_eventreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        assert port.name not in self.event_receive_ports[namespace]
         self.event_receive_ports[namespace][port.name] = port
 
     def action_outputevent(self, output_event, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -82,8 +82,8 @@ class ComponentValidatorOutputAnalogPorts(ComponentValidatorPerNamespace):
     """
 
     def __init__(self, component):
-        ComponentValidatorPerNamespace.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        ComponentValidatorPerNamespace.__init__(
+            self, explicitly_require_action_overrides=False)
 
         self.output_analogports = defaultdict(list)
         self.available_symbols = defaultdict(list)
@@ -92,13 +92,13 @@ class ComponentValidatorOutputAnalogPorts(ComponentValidatorPerNamespace):
 
         for namespace, analogports in self.output_analogports.iteritems():
             for ap in analogports:
-                if not ap in self.available_symbols[namespace]:
+                if ap not in self.available_symbols[namespace]:
                     raise NineMLRuntimeError(
                         'Unable to find an Alias or State variable for '
                         'analog-port: %s' % ap)
 
     def add_symbol(self, namespace, symbol):
-        assert not symbol in self.available_symbols[namespace]
+        assert symbol not in self.available_symbols[namespace]
         self.available_symbols[namespace].append(symbol)
 
     def action_analogsendport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8

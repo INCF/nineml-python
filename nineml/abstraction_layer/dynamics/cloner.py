@@ -4,12 +4,10 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
-from itertools import chain
-from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.maths import is_builtin_symbol, MathUtil
-from nineml.abstraction_layer.dynamics.namespace import NamespaceAddress
-from nineml.abstraction_layer.dynamics.visitors.visitor import ActionVisitor, ComponentVisitor
+from ...exceptions import NineMLRuntimeError
+from nineml.abstraction_layer.maths.__init__.__init__ import is_builtin_symbol, MathUtil
+from .namespace import NamespaceAddress
+from .visitors import ActionVisitor, ComponentVisitor
 
 NSA = NamespaceAddress
 

@@ -11,7 +11,7 @@ from collections import defaultdict
 from base import ComponentValidatorPerNamespace
 
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.maths import get_reserved_and_builtin_symbols, is_valid_lhs_target
+from nineml.abstraction_layer.maths.__init__.__init__ import get_reserved_and_builtin_symbols, is_valid_lhs_target
 from nineml.abstraction_layer.dynamics.namespace import NamespaceAddress  # @IgnorePep8
 from nineml.utility import assert_no_duplicates
 
