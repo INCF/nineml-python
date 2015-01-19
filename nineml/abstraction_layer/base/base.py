@@ -20,7 +20,7 @@ class BaseALObject(BaseNineMLObject):
     pass
 
 
-class BaseComponentClass(BaseALObject):
+class ComponentClass(BaseALObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     element_name = 'ComponentClass'

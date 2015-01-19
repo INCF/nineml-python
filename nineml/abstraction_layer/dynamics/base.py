@@ -15,7 +15,7 @@ from itertools import chain
 from ..maths.expressions import Alias, StrToExpr
 
 import itertools
-from ..base import BaseComponentClass, Parameter
+from ..base import ComponentClass, Parameter
 from nineml.abstraction_layer.dynamics.regimes import StateVariable
 from nineml.abstraction_layer.ports import (AnalogReceivePort, AnalogSendPort,
                                             AnalogReducePort, EventReceivePort,
@@ -429,7 +429,7 @@ class InterfaceInferer(ActionVisitor):
         pass
 
 
-class DynamicsClass(BaseComponentClass, FlatMixin, NamespaceMixin):
+class DynamicsClass(ComponentClass, FlatMixin, NamespaceMixin):
 
     """A DynamicsClass object represents a *component* in NineML.
 
@@ -487,7 +487,7 @@ class DynamicsClass(BaseComponentClass, FlatMixin, NamespaceMixin):
             For examples
 
         """
-        BaseComponentClass.__init__(self, name, parameters)
+        ComponentClass.__init__(self, name, parameters)
         # We can specify in the componentclass, and they will get forwarded to
         # the dynamics class. We check that we do not specify half-and-half:
         if dynamics is not None:

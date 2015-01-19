@@ -61,8 +61,8 @@ class Annotations(dict):
 
 def read_annotations(from_xml):
     def annotate_from_xml(cls, element, *args, **kwargs):
-        annot_elem = expect_none_or_single(element.findall(NINEML + 
-                                                     Annotations.element_name))
+        annot_elem = expect_none_or_single(
+            element.findall(NINEML + Annotations.element_name))
         if annot_elem is not None:
             # Extract the annotations
             annotations = Annotations.from_xml(annot_elem)
@@ -92,4 +92,3 @@ def annotate_xml(to_xml):
             elem.append(args[0].annotations.to_xml())
         return elem
     return annotate_to_xml
-

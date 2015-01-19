@@ -14,10 +14,10 @@ docstring goes here
 """
 
 from abc import ABCMeta, abstractmethod, abstractproperty
-from ..base import BaseALObject, BaseComponentClass
+from ..base import BaseALObject, ComponentClass
 
 
-class ConnectionRuleClass(BaseComponentClass):
+class ConnectionRuleClass(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_connection_rule')
 
