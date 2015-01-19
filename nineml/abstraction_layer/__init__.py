@@ -6,13 +6,13 @@ format.
 :license: BSD-3, see LICENSE for details.
 """
 
-from xmlns import nineml_namespace, NINEML, MATHML
+from nineml.xmlns import nineml_namespace, NINEML, MATHML
 from nineml import __version__
 import urllib
 from lxml import etree
-from components import Parameter, BaseComponentClass as ComponentClass
+from base import Parameter, BaseComponentClass as ComponentClass
 from dynamics.component import (ComponentClass as DynamicsClass, Regime, On,
-                                OutputEvent, StateAssignment, TimeDerivative,
+                                EventOut, StateAssignment, TimeDerivative,
                                 AnalogSendPort, AnalogReceivePort,
                                 AnalogReducePort, EventSendPort,
                                 EventReceivePort, Dynamics, OnCondition,
@@ -20,34 +20,10 @@ from dynamics.component import (ComponentClass as DynamicsClass, Regime, On,
                                 Alias, OnEvent, SpikeOutputEvent, Expression)
 from dynamics.component.util import parse
 import dynamics
-from dynamics import (component, visitors, readers, writers, validators,
+from dynamics import component, visitors, readers, writers, validators, testing_utils
+from nineml.abstraction_layer.dynamics import flattening2
+from nineml.abstraction_layer import modifiers
                       component_modifiers, flattening, testing_utils)
 from units import Unit, Dimension
-
-import structure
 import connectionrule
-import random
-
-# Commented Out by TGC 2/11/14 - There is now a parse in the top-level module
-#                                which can load both user layer and abstraction
-#                                layer objects.
-# def parse(url):
-#     """
-#     Read a NineML abstraction layer file and return all component classes
-# 
-#     If the URL does not have a scheme identifier, it is taken to refer to a
-#     local file.
-#     """
-#     if not isinstance(url, file):
-#         f = urllib.urlopen(url)
-#         doc = etree.parse(f)
-#         f.close()
-#     else:
-#         doc = etree.parse(url)
-# 
-#     root = doc.getroot()
-#     for import_element in root.findall(NINEML + "import"):
-#         url = import_element.find(NINEML + "url").text
-#         imported_doc = etree.parse(url)
-#         root.extend(imported_doc.getroot().iterchildren())
-#     return Model.from_xml(root)
+from nineml.abstraction_layer import distribution

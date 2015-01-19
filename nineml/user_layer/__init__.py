@@ -44,11 +44,11 @@ import urllib
 from lxml import etree
 from .dynamics import (SpikingNodeType, SynapseType, ConnectionType,
                        IonDynamicsType)
-from .connectivity import ConnectionRule
+from nineml.user_layer.connectionrule import ConnectionRule
 from .population import Population, PositionList, Structure
-from .containers import Network, Selection, Concatenate
+from nineml.user_layer.selection import Network, Selection, Concatenate
 from .projection import Projection, PortConnection
-from .random import RandomDistribution
+from nineml.user_layer.distribution import RandomDistribution
 from .components import (PropertySet, Property, BaseComponent as Component,
                          Definition, Prototype)
 from .base import Reference

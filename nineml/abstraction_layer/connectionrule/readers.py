@@ -1,7 +1,7 @@
 from lxml import etree
 
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.xmlns import NINEML
+from nineml.xmlns import NINEML
 from nineml.abstraction_layer.components import Parameter
 from nineml.abstraction_layer.dynamics.readers import XMLReader
 from .base import (ComponentClass, ConnectionGenerator,

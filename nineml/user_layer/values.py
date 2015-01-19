@@ -2,7 +2,7 @@
 from .base import BaseULObject
 from ..base import E, read_annotations, annotate_xml, NINEML
 from .utility import check_tag
-from .components.base import BaseComponent
+from nineml.user_layer.base import BaseComponent
 
 
 class BaseValue(BaseULObject):
