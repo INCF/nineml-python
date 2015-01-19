@@ -33,9 +33,6 @@ class XMLWriter(ComponentVisitor):
                                    url=connection_rule.url))
 
     def visit_parameter(self, parameter):
-        kwargs = {}
-        if parameter.dimension != dimensionless:
-            kwargs['dimension'] = parameter.dimension.name
         return E('Parameter',
                  name=parameter.name,
-                 **kwargs)
+                 dimension=parameter.dimension.name)
