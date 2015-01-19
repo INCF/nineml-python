@@ -69,7 +69,7 @@ class Transition(BaseALObject):
             transition.  ``None`` implies staying in the same regime. This has
             to be specified as a string, not the object, because in general the
             |Regime| object is not yet constructed. This is automatically
-            resolved by the |ComponentClass| in
+            resolved by the |DynamicsClass| in
             ``_ResolveTransitionRegimeNames()`` during construction.
 
 
@@ -103,7 +103,7 @@ class Transition(BaseALObject):
     def set_source_regime(self, source_regime):
         """ Internal method, used during component construction.
 
-        Used internally by the ComponentClass objects after all objects have be
+        Used internally by the DynamicsClass objects after all objects have be
         constructed, in the ``_ResolveTransitionRegimeNames()`` method. This is
         because when we build Transitions, the Regimes that they refer to
         generally are not build yet, so are referred to by strings. This method
@@ -170,7 +170,7 @@ class Transition(BaseALObject):
 
         .. note::
 
-            This method will only be available after the ComponentClass
+            This method will only be available after the DynamicsClass
             containing this transition has been built. See
             ``set_source_regime``
         """
@@ -184,7 +184,7 @@ class Transition(BaseALObject):
 
         .. note::
 
-            This method will only be available after the |ComponentClass|
+            This method will only be available after the |DynamicsClass|
             containing this transition has been built. See
             ``set_source_regime``
         """

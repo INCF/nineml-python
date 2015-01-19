@@ -258,7 +258,7 @@ def DoOnCondition(condition, do=None, to=None):
 
 class StateVariable(BaseALObject):
 
-    """A class representing a state-variable in a ``ComponentClass``.
+    """A class representing a state-variable in a ``DynamicsClass``.
 
     This was originally a string, but if we intend to support units in the
     future, wrapping in into its own object may make the transition easier

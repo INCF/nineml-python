@@ -5,7 +5,7 @@ Python module for reading 9ML abstraction layer files in XML format.
 :license: BSD-3, see LICENSE for details.
 """
 
-from .base import ComponentClass, Dynamics
+from .base import DynamicsClass, Dynamics
 from .regimes import Regime, StateAssignment, TimeDerivative, StateVariable
 from .transitions import EventOut, OnCondition, Condition, OnEvent
 from .namespace import NamespaceAddress

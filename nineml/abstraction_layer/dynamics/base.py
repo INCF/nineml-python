@@ -1,5 +1,5 @@
 """
-Definitions for the ComponentClass. ComponentClass derives from 2 other mixin
+Definitions for the DynamicsClass. DynamicsClass derives from 2 other mixin
 classes, which provide functionality for hierachical components and for local
 components definitions of interface and dynamics
 
@@ -8,7 +8,7 @@ components definitions of interface and dynamics
 """
 
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.dynamics.namespace import NamespaceAddress
+from .multi import NamespaceAddress
 from ..queryer import Queryer
 from ...utility import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
@@ -29,7 +29,7 @@ from .cloner import ExpandAliasDefinition, ClonerVisitor
 from ..base import BaseALObject
 
 
-class ComponentClassMixinFlatStructure(BaseALObject):
+class FlatMixin(object):
 
     """Mixin Class that provides the infrastructure for *local* component
     definitions - i.e. the dynamics
@@ -38,7 +38,7 @@ class ComponentClassMixinFlatStructure(BaseALObject):
     def __init__(self, analog_ports=[],
                  event_ports=[], dynamics=None):
         """Constructor - For parameter descriptions, see the
-        ComponentClass.__init__() method
+        DynamicsClass.__init__() method
         """
         self._analog_send_ports = dict((port.name, port)
                                        for port in analog_ports
@@ -107,7 +107,7 @@ class ComponentClassMixinFlatStructure(BaseALObject):
     # -------------------------- #
 
     def __repr__(self):
-        return "<dynamics.ComponentClass %s>" % self.name
+        return "<dynamics.DynamicsClass %s>" % self.name
 
     # Forwarding functions to the dynamics #
 
@@ -219,19 +219,19 @@ class ComponentClassMixinFlatStructure(BaseALObject):
             flattened before saving
 
         """
-        from .writer import XMLWriter
+        from .xml import XMLWriter
         return XMLWriter.write(component=self, file=file, flatten=flatten)
 
 
-class ComponentClassMixinNamespaceStructure(BaseALObject):
+class NamespaceMixin(object):
 
     """ A mixin class that provides the hierarchical structure for
-    components.
+    (sub) components.
     """
 
     def __init__(self, subnodes=None, portconnections=None):
         """Constructor - For parameter descriptions, see the
-        ComponentClass.__init__() method
+        DynamicsClass.__init__() method
         """
 
         # Prevent dangers with default arguments.
@@ -294,7 +294,7 @@ class ComponentClassMixinNamespaceStructure(BaseALObject):
     def insert_subnode(self, namespace, subnode):
         """Insert a subnode into this component
 
-        :param subnode: An object of type ``ComponentClass``.
+        :param subnode: An object of type ``DynamicsClass``.
         :param namespace: A `string` specifying the name of the component in
             this components namespace.
 
@@ -310,7 +310,7 @@ class ComponentClassMixinNamespaceStructure(BaseALObject):
             err = 'Invalid namespace: %s' % type(subnode)
             raise NineMLRuntimeError(err)
 
-        if not isinstance(subnode, ComponentClass):
+        if not isinstance(subnode, DynamicsClass):
             err = 'Attempting to insert invalid '
             err += 'object as subcomponent: %s' % type(subnode)
             raise NineMLRuntimeError(err)
@@ -429,11 +429,9 @@ class InterfaceInferer(ActionVisitor):
         pass
 
 
-class ComponentClass(BaseComponentClass,
-                     ComponentClassMixinFlatStructure,
-                     ComponentClassMixinNamespaceStructure):
+class DynamicsClass(BaseComponentClass, FlatMixin, NamespaceMixin):
 
-    """A ComponentClass object represents a *component* in NineML.
+    """A DynamicsClass object represents a *component* in NineML.
 
       .. todo::
 
@@ -452,7 +450,7 @@ class ComponentClass(BaseComponentClass,
                  dynamics=None, subnodes=None,
                  portconnections=None, regimes=None,
                  aliases=None, state_variables=None):
-        """Constructs a ComponentClass
+        """Constructs a DynamicsClass
 
         :param name: The name of the component.
         :param parameters: A list containing either |Parameter| objects
@@ -466,8 +464,8 @@ class ComponentClass(BaseComponentClass,
         :param dynamics: A |Dynamics| object, defining the local dynamics of
                          the component.
         :param subnodes: A dictionary mapping namespace-names to sub-component.
-            [Type: ``{string:|ComponentClass|, string:|ComponentClass|,
-            string:|ComponentClass|}`` ] describing the namespace of
+            [Type: ``{string:|DynamicsClass|, string:|DynamicsClass|,
+            string:|DynamicsClass|}`` ] describing the namespace of
             subcomponents for this component.
         :param portconnections: A list of pairs, specifying the connections
             between the ports of the subcomponents in this component. These can
@@ -480,7 +478,7 @@ class ComponentClass(BaseComponentClass,
 
         Examples:
 
-        >>> a = ComponentClass(name='MyComponent1')
+        >>> a = DynamicsClass(name='MyComponent1')
 
         .. todo::
 
@@ -574,10 +572,10 @@ class ComponentClass(BaseComponentClass,
                 event_ports.append(EventSendPort(name=evt_port_name))
 
         # Construct super-classes:
-        ComponentClassMixinFlatStructure.__init__(
+        FlatMixin.__init__(
             self, analog_ports=analog_ports, event_ports=event_ports,
             dynamics=dynamics)
-        ComponentClassMixinNamespaceStructure.__init__(
+        NamespaceMixin.__init__(
             self, subnodes=subnodes, portconnections=portconnections)
 
         # Finalise initiation:

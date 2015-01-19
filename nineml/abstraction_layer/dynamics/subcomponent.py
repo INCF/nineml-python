@@ -11,8 +11,7 @@ from ...utility import flatten_first_level
 from .cloner import (ClonerVisitor, ClonerVisitorPrefixNamespace,
                      ExpandPortDefinition)
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.dynamics.namespace import NamespaceAddress
-from .base import ComponentClass
+from .base import DynamicsClass
 from nineml.abstraction_layer.dynamics.regimes import Regime
 from .transitions import OnCondition, OnEvent
 
@@ -194,7 +193,7 @@ class ComponentFlattener(object):
     # Flattening Functions:
     # --------------------- #
     def __init__(self, component, componentname=None):
-        assert isinstance(component, ComponentClass)
+        assert isinstance(component, DynamicsClass)
 
         # Is our component already flat??
         if component.is_flat():
@@ -215,10 +214,10 @@ class ComponentFlattener(object):
         self.componentswithregimes = [
             m for m in self.all_components if list(m.regimes)]
 
-        # This will get filled in build_new_regime_space():
-        # (It maps { (Regime,Regime,...,Regime) : Regime, (Regime,Regime,...,Regime) : Regime,}
-        # Where the key tuple represents the regimes in the hierachical component,
-        # corresponding to self.componentswithregimes.
+        # This will get filled in build_new_regime_space(): (It maps {
+        # (Regime,Regime,...,Regime) : Regime, (Regime,Regime,...,Regime) :
+        # Regime,} Where the key tuple represents the regimes in the
+        # hierachical component, corresponding to self.componentswithregimes.
         # And the values are the regimes in the new component.
         self.old_regime_tuple_to_new_regime_map = None
 
@@ -227,7 +226,7 @@ class ComponentFlattener(object):
         self.build_new_regime_space()
 
         # Build Our New Component
-        self.reducedcomponent = ComponentClass(
+        self.reducedcomponent = DynamicsClass(
             name=self.componentname,
             aliases=flatten_first_level(
                 [m.aliases for m in self.all_components]),
@@ -274,7 +273,8 @@ class ComponentFlattener(object):
             self.old_regime_tuple_to_new_regime_map[regimetuple] = new_regime
 
         # Create New Events for the Regime-Map
-        for regimetuple, regime_new in self.old_regime_tuple_to_new_regime_map.iteritems():
+        for regimetuple, regime_new in (self.old_regime_tuple_to_new_regime_map
+                                        .iteritems()):
             for regime_index, regime in enumerate(regimetuple):
 
                 for oldtransition in regime.on_conditions:
@@ -336,9 +336,9 @@ class ComponentFlattener(object):
                 del new_analog_ports[dst_addr.get_local_name()]
                 del self.reducedcomponent._analog_receive_ports[
                     dst_addr.get_local_name()]
-#                     expect_single([p 
-#                                    for p in self.reducedcomponent.analog_receive_ports
-#                                    if p.name == ]))
+#                    expect_single(
+#                        [p for p in self.reducedcomponent.analog_receive_ports
+#                         if p.name == ]))
 
                 portconnections.remove((src_addr, dst_addr))
 
@@ -362,6 +362,138 @@ class ComponentFlattener(object):
             ExpandPortDefinition(
                 originalname=dstport.name, targetname=reduce_expr).visit(
                     self.reducedcomponent)
+
+
+class NamespaceAddress(object):
+
+    @classmethod
+    def create_root(cls):
+        """Returns a empty (root) namespace address
+
+
+        >>> nineml.abstraction_layer.NamespaceAddress.create_root()
+        NameSpaceAddress: '//'
+
+        """
+
+        return NamespaceAddress(loc=())
+
+    @classmethod
+    def concat(cls, *args):
+        """Concatenates all the Namespace Addresses.
+
+        This method take all the arguments supplied, converts each one into a
+        namespace object, then, produces a new namespace object which is the
+        concatenation of all the arguments' namespaces.
+
+        For example:
+
+        >>> NamespaceAddress.concat('first.second','third.forth','fifth.sixth')
+            NameSpaceAddress: '/first/second/third/forth/fifth/sixth'
+
+
+        """
+
+        # Turn all the arguments into NamespaceAddress Objects:
+        args = [NamespaceAddress(a) for a in args]
+
+        # Combine all the location tuples in each argument
+        # into one long list.
+        loc = flatten_first_level([list(a.loctuple) for a in args])
+
+        # Create a namespace out of this long new tuple:
+        return NamespaceAddress(loc=tuple(loc))
+
+    def __init__(self, loc):
+        if isinstance(loc, basestring):
+            if '.' in loc:
+                self.loctuple = tuple(loc.split('.'))
+            else:
+                self.loctuple = (loc),
+        elif isinstance(loc, tuple):
+            self.loctuple = loc
+        elif isinstance(loc, NamespaceAddress):
+            self.loctuple = loc.loctuple
+        else:
+            print loc, type(loc)
+            assert False
+
+    # Since we often store Namespace addresses in dictionaries:
+    def __hash__(self):
+        # print self.loctuple
+        assert isinstance(self.loctuple, tuple)
+        return hash(self.loctuple)
+
+    def __eq__(self, rhs):
+
+        if not isinstance(rhs, self.__class__):
+            return False
+        return self.loctuple == rhs.loctuple
+
+    def __str__(self):
+        print self.loctuple
+        return "<NameSpaceAddress: '" + "/" + "/".join(self.loctuple) + "/'>"
+
+    def is_root_namespace(self):
+        return len(self.loctuple) == 0
+
+    def get_subns_addr(self, component_name):
+        """Returns the address of a subcomponent at this address.
+
+        For example:
+
+        >>> a = NamespaceAddress('level1.level2.level3')
+        >>> a.get_subns_addr('subcomponent')
+        NameSpaceAddress: '/level1/level2/level3/subcomponent/'
+
+        """
+        return NamespaceAddress.concat(self.loctuple, component_name)
+
+    def get_parent_addr(self):
+        """Return the address of an namespace higher
+
+        >>> a = NamespaceAddress('level1.level2.level3')
+        >>> a
+        NameSpaceAddress: '/level1/level2/level3/'
+        >>> a.get_parent_addr()
+        NameSpaceAddress: '/level1/level2/'
+
+        """
+
+        if self.is_root_namespace():
+            err = "Can't call get_parent_addr() on root namespace"
+            raise NineMLRuntimeError(err)
+
+        return NamespaceAddress(loc=tuple(self.loctuple[:-1]))
+
+    def get_local_name(self):
+        """ Returns the local reference; i.e. the last field in the
+        address, as a ``string``
+        """
+
+        if self.is_root_namespace():
+            err = "Can't call get_local_name() on root namespace"
+            raise NineMLRuntimeError(err)
+        return self.loctuple[-1]
+
+    def getstr(self, join_char='_'):
+        """Returns the namespace address as a string.
+
+        :param join_char: The character used to join the levels in the address.
+
+        """
+        return join_char.join(self.loctuple)
+
+    def get_str_prefix(self, join_char='_'):
+        """Returns the same as ``getstr``, but prepends the ``join_char`` to
+        the end of the string, so that the string can be used to prefix
+        variables.
+
+        :param join_char: The character used to join the levels in the address.
+
+
+        """
+        return self.getstr(join_char=join_char) + join_char
 
 
 def flatten(model, componentname=None):

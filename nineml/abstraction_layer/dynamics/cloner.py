@@ -5,11 +5,10 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from ...exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.maths.__init__.__init__ import is_builtin_symbol, MathUtil
-from .namespace import NamespaceAddress
+from ..maths import is_builtin_symbol
+from ..maths.expressions import MathUtil
+from .multi import NamespaceAddress
 from .visitors import ActionVisitor, ComponentVisitor
-
-NSA = NamespaceAddress
 
 
 class ExpandPortDefinition(ActionVisitor):
@@ -189,18 +188,18 @@ class ClonerVisitor(ComponentVisitor):
 
     def visit_componentclass(self, component, **kwargs):
         ccn = component.__class__(
-                 name=component.name,
-                 parameters=[p.accept_visitor(self, **kwargs)
-                             for p in component.parameters],
-                 analog_ports=[p.accept_visitor(self, **kwargs)
-                               for p in component.analog_ports],
-                 event_ports=[p.accept_visitor(self, **kwargs)
-                              for p in component.event_ports],
-                 dynamics=(component.dynamics.accept_visitor(self, **kwargs)
-                           if component.dynamics else None),
-                 subnodes=dict([(k, v.accept_visitor(self, **kwargs))
-                                for (k, v) in component.subnodes.iteritems()]),
-                 portconnections=component.portconnections[:])
+            name=component.name,
+            parameters=[p.accept_visitor(self, **kwargs)
+                        for p in component.parameters],
+            analog_ports=[p.accept_visitor(self, **kwargs)
+                          in component.analog_ports],
+            event_ports=[p.accept_visitor(self, **kwargs)
+                         for p in component.event_ports],
+            dynamics=(component.dynamics.accept_visitor(self, **kwargs)
+                      if component.dynamics else None),
+            subnodes=dict([(k, v.accept_visitor(self, **kwargs))
+                           for (k, v) in component.subnodes.iteritems()]),
+            portconnections=component.portconnections[:])
         return ccn
 
     def visit_dynamics(self, dynamics, **kwargs):
@@ -331,34 +330,36 @@ class ClonerVisitorPrefixNamespace(ClonerVisitor):
             # port address, i.e. the parent address, then add the prefixed
             # string:
             src_new = NamespaceAddress.concat(
-                        src.get_parent_addr(),
-                        NSA.concat(component.get_node_addr(),
-                                   src.get_parent_addr()).get_str_prefix() +
-                        self.prefix_variable(src.get_local_name()))
+                src.get_parent_addr(),
+                NamespaceAddress.concat(
+                    component.get_node_addr(),
+                    src.get_parent_addr()).get_str_prefix() +
+                self.prefix_variable(src.get_local_name()))
             sink_new = NamespaceAddress.concat(
-                        sink.get_parent_addr(),
-                        NSA.concat(component.get_node_addr(),
-                                   sink.get_parent_addr()).get_str_prefix() +
-                        self.prefix_variable(sink.get_local_name()))
-
+                sink.get_parent_addr(), NamespaceAddress.concat(
+                    component.get_node_addr(),
+                    sink.get_parent_addr()).get_str_prefix() +
+                self.prefix_variable(sink.get_local_name()))
             # self.prefix_variable(sink.get_local_name(), **kwargs) )
 
-            # print 'Mapping Ports:', src, '->', src_new, '(%s)'%src.get_local_name(), prefix
+            # print 'Mapping Ports:', src, '->', src_new, '(%s)' %
+#                  src.get_local_name(), prefix
             # print 'Mapping Ports:', sink, '->', sink_new
-            # src_new = NamespaceAddress.concat( src.get_parent_addr(), src.getstr() )
-            # sink_new = NamespaceAddress.concat( sink.get_parent_addr(), sink.getstr() )
+            # src_new = NamespaceAddress.concat(
+#                 src.get_parent_addr(), src.getstr() )
+            # sink_new = NamespaceAddress.concat(
+#                 sink.get_parent_addr(), sink.getstr() )
             port_connections.append((src_new, sink_new))
-
         return component.__class__(
-                 name=component.name,
-                 parameters=[p.accept_visitor(self, **kwargs)
-                             for p in component.parameters],
-                 analog_ports=[p.accept_visitor(self, **kwargs)
-                               for p in component.analog_ports],
-                 event_ports=[p.accept_visitor(self, **kwargs)
-                              for p in component.event_ports],
-                 dynamics=(component.dynamics.accept_visitor(self, **kwargs)
-                           if component.dynamics else None),
-                 subnodes=dict([(k, v.accept_visitor(self, **kwargs))
-                                for (k, v) in component.subnodes.iteritems()]),
-                 portconnections=port_connections)
+            name=component.name,
+            parameters=[p.accept_visitor(self, **kwargs)
+                        for p in component.parameters],
+            analog_ports=[p.accept_visitor(self, **kwargs)
+                          for p in component.analog_ports],
+            event_ports=[p.accept_visitor(self, **kwargs)
+                         for p in component.event_ports],
+            dynamics=(component.dynamics.accept_visitor(self, **kwargs)
+                      if component.dynamics else None),
+            subnodes=dict([(k, v.accept_visitor(self, **kwargs))
+                           for (k, v) in component.subnodes.iteritems()]),
+            portconnections=port_connections)

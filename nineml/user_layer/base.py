@@ -7,8 +7,7 @@ from nineml.xmlns import nineml_namespace
 from ..exceptions import NineMLRuntimeError
 from operator import and_
 from ..base import BaseNineMLObject, E, read_annotations, annotate_xml, NINEML
-from .utility import check_tag
-from ..utility import expect_single
+from ..utility import expect_single, check_tag, check_units
 from ..abstraction_layer.units import Unit, unitless
 from .values import (SingleValue, ArrayValue, ExternalArrayValue,
                      ComponentValue)
@@ -81,7 +80,6 @@ def write_reference(to_xml):
     return unresolving_to_xml
 
 
-
 class BaseComponent(BaseULObject):
     """
     Base class for model components.
@@ -125,7 +123,7 @@ class BaseComponent(BaseULObject):
             definition = Definition(name=definition.replace(".xml", ""),
                                     context=None, url=definition)
         elif not (isinstance(definition, Definition) or
-                isinstance(definition, Prototype)):
+                  isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
                              "'Prototype' element")
         self._definition = definition
@@ -165,8 +163,8 @@ class BaseComponent(BaseULObject):
         """
         The set of component properties (parameter values).
         """
-        # Recursively retrieves properties defined in prototypes and updates them
-        # with properties defined locally
+        # Recursively retrieves properties defined in prototypes and updates
+        # them with properties defined locally
         props = PropertySet()
         if isinstance(self._definition, Prototype):
             props.update(self._definition.component.properties)
@@ -178,8 +176,8 @@ class BaseComponent(BaseULObject):
         """
         The set of initial values for the state variables of the component.
         """
-        # Recursively retrieves initial values defined in prototypes and updates
-        # them with properties defined locally
+        # Recursively retrieves initial values defined in prototypes and
+        # updates them with properties defined locally
         vals = InitialValueSet()
         if isinstance(self._definition, Prototype):
             vals.update(self._definition.component.initial_values)
@@ -188,7 +186,9 @@ class BaseComponent(BaseULObject):
 
     @property
     def units(self):
-        return set(p.units for p in chain(self.properties.values(), self.initial_values.values()) if p.units is not None)
+        return set(p.units for p in chain(self.properties.values(),
+                                          self.initial_values.values())
+                   if p.units is not None)
 
     def __hash__(self):
         return (hash(self.__class__) ^ hash(self.name) ^
@@ -556,3 +556,34 @@ class InitialValueSet(PropertySet):
             initial_values.append(InitialValue.from_xml(iv_element,
                                                         context))
         return cls(*initial_values)
+
+
+class DynamicsComponent(BaseComponent):
+
+    def check_initial_values(self):
+        for var in self.definition.component.state_variables:
+            try:
+                initial_value = self.initial_values[var.name]
+            except KeyError:
+                raise Exception("Initial value not specified for %s" %
+                                var.name)
+            check_units(initial_value.units, var.dimension)
+
+
+class ConnectionRuleComponent(BaseComponent):
+    """
+    docstring needed
+    """
+    pass
+
+
+class DistributionComponent(BaseComponent):
+    """
+    Component representing a random number distribution, e.g. normal, gamma,
+    binomial.
+
+    *Example*::
+
+        example goes here
+    """
+    pass
