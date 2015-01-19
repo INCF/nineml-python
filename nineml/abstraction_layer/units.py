@@ -149,9 +149,9 @@ class Unit(BaseALObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         name = element.attrib['symbol']
-        dimension = context[element.attrib['dimension']]
+        dimension = document[element.attrib['dimension']]
         power = int(element.get('power', 0))
         offset = float(element.attrib.get('name', 0.0))
         return cls(name, dimension, power, offset)

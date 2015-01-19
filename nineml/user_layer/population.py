@@ -59,19 +59,19 @@ class Population(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         check_tag(element, cls)
         layout_elem = element.find(NINEML + 'Layout')
         kwargs = {}
         if layout_elem:
-            kwargs['positions'] = BaseComponent.from_xml(layout_elem, context)
+            kwargs['positions'] = BaseComponent.from_xml(layout_elem, document)
         cell = expect_single(element.findall(NINEML + 'Cell'))
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML + 'Number').text),
                    cell=BaseComponent.from_xml(cell.find(NINEML + 'Component')
                                                or cell.find(NINEML +
                                                             'Reference'),
-                                               context),
+                                               document),
                    **kwargs)
 
 
@@ -157,14 +157,14 @@ class PositionList(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         if element is None:
             return None
         else:
             check_tag(element, cls)
             structure_element = element.find(NINEML + 'structure')
             if structure_element is not None:
-                return cls(structure=context.resolve_ref(structure_element,
+                return cls(structure=document.resolve_ref(structure_element,
                                                          Structure))
             else:
                 positions = [(float(p.attrib['x']), float(p.attrib['y']),

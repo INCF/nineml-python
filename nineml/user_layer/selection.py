@@ -3,7 +3,7 @@ from operator import itemgetter
 from lxml import etree
 from .base import BaseULObject, resolve_reference, write_reference, Reference
 from ..base import NINEML, E, annotate_xml, read_annotations
-from ..context import Context
+from ..document import Document
 from utility import check_tag
 from ..utility import expect_single
 
@@ -57,12 +57,12 @@ class Selection(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         check_tag(element, cls)
         # The only supported op at this stage
         op = Concatenate.from_xml(expect_single(element.findall(NINEML +
                                                                'Concatenate')),
-                                  context)
+                                  document)
         return cls(element.attrib['name'], op)
 
     def evaluate(self):
@@ -102,10 +102,10 @@ class Concatenate(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         # Load references and indices from xml
         items = ((e.attrib['index'],
-                  Reference.from_xml(e.find(NINEML + 'Reference'), context))
+                  Reference.from_xml(e.find(NINEML + 'Reference'), document))
                  for e in element.findall(NINEML + 'Item'))
         # Sort by 'index' attribute
         indices, items = zip(*sorted(items, key=itemgetter(0)))

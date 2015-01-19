@@ -1,7 +1,7 @@
 # encoding: utf-8
 from itertools import chain
 from lxml import etree
-from ..context import BaseReference
+from ..document import BaseReference
 from nineml.exceptions import NineMLUnitMismatchError
 from nineml.xmlns import nineml_namespace
 from ..exceptions import NineMLRuntimeError
@@ -37,16 +37,16 @@ class Reference(BaseReference):
     """
     element_name = "Reference"
 
-    def __init__(self, name, context, url=None):
+    def __init__(self, name, document, url=None):
         """
         docstring needed
 
         `name`    -- a name of an existing component to refer to
-        `context` -- a nineml.context.Context object containing the top-level
+        `document` -- a nineml.document.Document object containing the top-level
                      objects in the current file
         `url`     -- a url of the file containing the exiting component
         """
-        super(Reference, self).__init__(name, context, url)
+        super(Reference, self).__init__(name, document, url)
         if not isinstance(self._referred_to, BaseULObject):
             msg = ("Reference points to a non-user-layer object '{}'"
                    .format(self._referred_to.name))
@@ -59,13 +59,13 @@ class Reference(BaseReference):
 
 
 def resolve_reference(from_xml):
-    def resolving_from_xml(cls, element, context):
+    def resolving_from_xml(cls, element, document):
         if element.tag == NINEML + Reference.element_name:
-            reference = Reference.from_xml(element, context)
+            reference = Reference.from_xml(element, document)
             ul_object = reference.user_layer_object
         else:
             assert element.tag == NINEML + cls.element_name
-            ul_object = from_xml(cls, element, context)
+            ul_object = from_xml(cls, element, document)
         return ul_object
     return resolving_from_xml
 
@@ -121,7 +121,7 @@ class BaseComponent(BaseULObject):
         self.name = name
         if isinstance(definition, basestring):
             definition = Definition(name=definition.replace(".xml", ""),
-                                    context=None, url=definition)
+                                    document=None, url=definition)
         elif not (isinstance(definition, Definition) or
                   isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
@@ -264,25 +264,25 @@ class BaseComponent(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         """docstring missing"""
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
-            element.findall(NINEML + Property.element_name), context)
+            element.findall(NINEML + Property.element_name), document)
         initial_values = InitialValueSet.from_xml(
-            element.findall(NINEML + InitialValue.element_name), context)
+            element.findall(NINEML + InitialValue.element_name), document)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
-            definition = Definition.from_xml(definition_element, context)
+            definition = Definition.from_xml(definition_element, document)
         else:
             prototype_element = element.find(NINEML + "Prototype")
             if prototype_element is None:
                 raise Exception("A component must contain either a defintion "
                                 "or a prototype")
-            definition = Prototype.from_xml(prototype_element, context)
+            definition = Prototype.from_xml(prototype_element, document)
         return cls(name, definition, properties,
                        initial_values=initial_values)
 
@@ -442,34 +442,34 @@ class Property(BaseULObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         check_tag(element, cls)
         if element.find(NINEML + 'SingleValue') is not None:
             value = SingleValue.from_xml(
                 expect_single(element.findall(NINEML + 'SingleValue')),
-                context)
+                document)
         elif element.find(NINEML + 'ArrayValue') is not None:
             value = ArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ArrayValue')),
-                context)
+                document)
         elif element.find(NINEML + 'ExternalArrayValue') is not None:
             value = ArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ArrayValue')),
-                context)
+                document)
         elif element.find(NINEML + 'ComponentValue') is not None:
             value = ArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ArrayValue')),
-                context)
+                document)
         else:
             raise Exception(
                 "Did not find recognised value tag in property (found {})"
                 .format(', '.join(c.tag for c in element.getchildren())))
         units_str = element.attrib.get('units', None)
         try:
-            units = context[units_str] if units_str else None
+            units = document[units_str] if units_str else None
         except KeyError:
             raise Exception("Did not find definition of '{}' units in the "
-                            "current context.".format(units_str))
+                            "current document.".format(units_str))
         try:
             name = element.attrib['name']
         except KeyError:
@@ -526,10 +526,10 @@ class PropertySet(dict):
         return [self[name].to_xml() for name in sorted(self.keys())]
 
     @classmethod
-    def from_xml(cls, elements, context):
+    def from_xml(cls, elements, document):
         properties = []
         for parameter_element in elements:
-            properties.append(Property.from_xml(parameter_element, context))
+            properties.append(Property.from_xml(parameter_element, document))
         return cls(*properties)
 
 
@@ -550,11 +550,11 @@ class InitialValueSet(PropertySet):
         return "InitialValueSet(%s)" % dict(self)
 
     @classmethod
-    def from_xml(cls, elements, context):
+    def from_xml(cls, elements, document):
         initial_values = []
         for iv_element in elements:
             initial_values.append(InitialValue.from_xml(iv_element,
-                                                        context))
+                                                        document))
         return cls(*initial_values)
 
 

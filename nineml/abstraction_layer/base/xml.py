@@ -13,6 +13,8 @@ from .visitors import ComponentVisitor
 from ..dynamics import DynamicsClass
 from ..distribution import DistributionClass
 from ..connectionrule import ConnectionRuleClass
+from .ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
+                    IndexReceivePort)
 from ..maths.expressions import Alias
 from .base import Parameter
 from ...base import annotate_xml, read_annotations
@@ -31,8 +33,8 @@ class BaseXMLLoader(object):
 
     """
 
-    def __init__(self, context=None):
-        self.context = context
+    def __init__(self, document=None):
+        self.document = document
 
     def load__componentclasses(self, xmlroot, xml_node_filename_map):
 
@@ -78,19 +80,19 @@ class BaseXMLLoader(object):
     @read_annotations
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
-                         dimension=self.context[element.get('dimension')])
+                         dimension=self.document[element.get('dimension')])
 
     @read_annotations
     def load_propertysendport(self, element):
         return PropertySendPort(
             name=element.get("name"),
-            dimension=self.context[element.get('dimension')])
+            dimension=self.document[element.get('dimension')])
 
     @read_annotations
     def load_propertyreceiveport(self, element):
         return PropertyReceivePort(
             name=element.get("name"),
-            dimension=self.context[element.get('dimension')])
+            dimension=self.document[element.get('dimension')])
 
     @read_annotations
     def load_indexsendport(self, element):
@@ -145,7 +147,7 @@ class BaseXMLLoader(object):
                     err += '\n Expected: %s' % ','.join(blocks)
                     raise NineMLRuntimeError(err)
 
-            res[tag].append(XMLLoader.tag_to_loader[tag](self, t))
+            res[tag].append(BaseXMLLoader.tag_to_loader[tag](self, t))
         return res
 
     tag_to_loader = {
@@ -197,11 +199,11 @@ class BaseXMLReader(object):
     def _load_nested_xml(cls, filename, xml_node_filename_map):
         """ Load the XML, including   referenced Include files .
 
-        We o populate a dictionary, ``xml_node_filename_map`` which maps
-        each node to the name of the filename that it was originy in, so
-        that when we load in single components from a file, which are
-        hierachicand contain references to other components, we can find the
-        components that were in the file specified.
+        We o populate a dictionary, ``xml_node_filename_map`` which maps each
+        node to the name of the filename that it was originy in, so that when
+        we load in single components from a file, which are hierachically and
+        contain references to other components, we can find the components that
+        were in the file specified.
 
         """
 

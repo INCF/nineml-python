@@ -6,63 +6,61 @@ docstring needed
 """
 
 from nineml.abstraction_layer.dynamics.visitors import ActionVisitor
-from nineml.abstraction_layer.components import Parameter
-from nineml.abstraction_layer.dynamics import component as al
+from ..base import ComponentClass, Parameter
 
 
-class ComponentValidatorTypes(ActionVisitor):
+class ComponentVdatorTypes(ActionVisitor):
 
     def __init__(self, component):
         self.visit(component)
 
     def action_componentclass(self, component):
-        assert isinstance(component, al.ComponentClass)
+        assert isinstance(component, ComponentClass)
 
     def action_dynamics(self, dynamics):
-        assert isinstance(dynamics, al.Dynamics)
+        assert isinstance(dynamics, Dynamics)
 
     def action_regime(self, regime):
-        assert isinstance(regime, al.Regime)
+        assert isinstance(regime, Regime)
 
     def action_statevariable(self, state_variable):
-        assert isinstance(state_variable, al.StateVariable)
+        assert isinstance(state_variable, StateVariable)
 
     def action_parameter(self, parameter):
-        assert isinstance(parameter, Parameter), \
-                                      "%s != %s" % (type(parameter), Parameter)
+        assert isinstance(parameter, Parameter)
 
-    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, al.AnalogSendPort)
+    def action_angsendport(self, port, **kwargs):  # @UnusedVariable
+        assert isinstance(port, AnalogSendPort)
 
-    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, al.AnalogReceivePort)
+    def action_angreceiveport(self, port, **kwargs):  # @UnusedVariable
+        assert isinstance(port, AnalogReceivePort)
 
-    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, al.AnalogReducePort)
+    def action_angreduceport(self, port, **kwargs):  # @UnusedVariable
+        assert isinstance(port, AnalogReducePort)
 
     def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, al.EventSendPort)
+        assert isinstance(port, EventSendPort)
 
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, al.EventReceivePort)
+        assert isinstance(port, EventReceivePort)
 
     def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
-        assert isinstance(output_event, al.EventOut)
+        assert isinstance(output_event, EventOut)
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
-        assert isinstance(assignment, al.StateAssignment)
+        assert isinstance(assignment, StateAssignment)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        assert isinstance(alias, al.Alias)
+        assert isinstance(alias, Alias)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        assert isinstance(time_derivative, al.TimeDerivative)
+        assert isinstance(time_derivative, TimeDerivative)
 
     def action_condition(self, condition):
-        assert isinstance(condition, al.Condition)
+        assert isinstance(condition, Condition)
 
     def action_oncondition(self, on_condition):
-        assert isinstance(on_condition, al.OnCondition)
+        assert isinstance(on_condition, OnCondition)
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        assert isinstance(on_event, al.OnEvent)
+        assert isinstance(on_event, OnEvent)

@@ -7,10 +7,9 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ..base import read_annotations, annotate_xml, NINEML
-from ..utility import filter_discrete_types, ensure_valid_identifier
-from ..base import BaseNineMLObject
-from .units import dimensionless, Dimension
+from ...base import read_annotations, annotate_xml, NINEML, BaseNineMLObject
+from ...utility import filter_discrete_types, ensure_valid_identifier
+from ..units import dimensionless, Dimension
 
 
 class BaseALObject(BaseNineMLObject):
@@ -34,7 +33,7 @@ class BaseComponentClass(BaseALObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, context):  # @UnusedVariable
+    def from_xml(cls, element, document):  # @UnusedVariable
         if element.find(NINEML + 'Dynamics') is not None:
             module_name = 'dynamics'
         elif element.find(NINEML + 'ConnectionRule') is not None:
@@ -43,7 +42,7 @@ class BaseComponentClass(BaseALObject):
             module_name = 'random'
         exec('from nineml.abstraction_layer.{}.readers import XMLLoader'
              .format(module_name))
-        return XMLLoader(context).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
+        return XMLLoader(document).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
 
     def __init__(self, name, parameters=None):
         BaseALObject.__init__(self)

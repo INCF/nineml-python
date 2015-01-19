@@ -140,40 +140,40 @@ class Projection(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         check_tag(element, cls)
         # Get Name
         name = element.get('name')
         # Get Source
         e = expect_single(element.findall(NINEML + 'Source'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        source = nineml.user_layer.Reference.from_xml(e, context).user_layer_object  ###?
+        source = nineml.user_layer.Reference.from_xml(e, document).user_layer_object  ###?
         # Get Destination
         e = expect_single(element.findall(NINEML + 'Destination'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        destination = nineml.user_layer.Reference.from_xml(e, context).user_layer_object   ###?
+        destination = nineml.user_layer.Reference.from_xml(e, document).user_layer_object   ###?
         # Get Response
         e = element.find(NINEML + 'Response')
         response = BaseComponent.from_xml(e.find(NINEML + 'Component') or
                                           e.find(NINEML + 'Reference'),
-                                          context)
+                                          document)
         # Get Plasticity
         e = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
         if e is not None:
             plasticity = BaseComponent.from_xml(e.find(NINEML + 'Component') or
                                                 e.find(NINEML + 'Reference'),
-                                                context)
+                                                document)
         else:
             plasticity = None
         # Get Connectivity
         e = element.find(NINEML + 'Connectivity')
         connectivity = BaseComponent.from_xml(e.find(NINEML + 'Component') or
                                               e.find(NINEML + 'Reference'),
-                                              context)
+                                              document)
         # Get Delay
         delay = Delay.from_xml(expect_single(element.findall(NINEML +
                                                              'Delay')),
-                               context)
+                               document)
         # Get port connections by Loop through 'source', 'destination',
         # 'response', 'plasticity' tags and extracting the "From*" elements
         port_connections = []
@@ -284,34 +284,34 @@ class Delay(BaseULObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         check_tag(element, cls)
         if element.find(NINEML + 'SingleValue') is not None:
             value = SingleValue.from_xml(
                 expect_single(element.findall(NINEML + 'SingleValue')),
-                context)
+                document)
         elif element.find(NINEML + 'ArrayValue') is not None:
             value = ArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ArrayValue')),
-                context)
+                document)
         elif element.find(NINEML + 'ExternalArrayValue') is not None:
             value = ArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ArrayValue')),
-                context)
+                document)
         elif element.find(NINEML + 'ComponentValue') is not None:
             value = ArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ArrayValue')),
-                context)
+                document)
         else:
             raise Exception(
                 "Did not find recognised value tag in delay (found {})"
                 .format(', '.join(c.tag for c in element.getchildren())))
         units_str = element.attrib.get('units', None)
         try:
-            units = context[units_str] if units_str else None
+            units = document[units_str] if units_str else None
         except KeyError:
             raise Exception("Did not find definition of '{}' units in the "
-                            "current context.".format(units_str))
+                            "current document.".format(units_str))
         return cls(value=value, units=units)
 
 

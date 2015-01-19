@@ -12,12 +12,12 @@ examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
 class TestRandomDistribution(unittest.TestCase):
 
     def test_load(self):
-        context = read(os.path.join(examples_dir, 'normal.xml'))
-        self.assertEquals(type(context['NormalDistribution']), ComponentClass)
+        document = read(os.path.join(examples_dir, 'normal.xml'))
+        self.assertEquals(type(document['NormalDistribution']), ComponentClass)
 
     def test_to_xml(self):
-        context = read(os.path.join(examples_dir, 'normal.xml'))
-        comp_class = context['NormalDistribution']
+        document = read(os.path.join(examples_dir, 'normal.xml'))
+        comp_class = document['NormalDistribution']
         xml = comp_class.to_xml()
         self.assertEquals(_Element, type(xml))
         with tempfile.TemporaryFile() as f:

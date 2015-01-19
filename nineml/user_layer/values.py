@@ -71,10 +71,10 @@ class ArrayValue(BaseValue):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         rows = []
         for row_xml in element.findall(NINEML + ArrayValueRow.element_name):
-            rows.append(ArrayValueRow.from_xml(row_xml, context))
+            rows.append(ArrayValueRow.from_xml(row_xml, document))
         sorted_rows = sorted(rows, key=lambda r: r.index)
         if any(r.index != i for i, r in enumerate(sorted_rows)):
             raise Exception("Missing or duplicate indices in ArrayValue rows "
@@ -162,13 +162,13 @@ class ComponentValue(BaseValue):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         comp_element = element.find(NINEML + 'Component')
         if comp_element is None:
             comp_element = element.find(NINEML + 'Reference')
             if comp_element is None:
                 raise Exception("Did not find component in ComponentValue")
-        component = BaseComponent.from_xml(comp_element, context)
+        component = BaseComponent.from_xml(comp_element, document)
         return cls(component, port=element.attrib["port"])
 
 

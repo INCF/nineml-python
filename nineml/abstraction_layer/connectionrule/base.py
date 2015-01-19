@@ -14,16 +14,15 @@ docstring goes here
 """
 
 from abc import ABCMeta, abstractmethod, abstractproperty
-from nineml.abstraction_layer.components import BaseComponentClass
-from ..base import BaseALObject
+from ..base import BaseALObject, BaseComponentClass
 
 
-class ComponentClass(BaseComponentClass):
+class ConnectionRuleClass(BaseComponentClass):
 
     defining_attributes = ('name', '_parameters', '_connection_rule')
 
     def __init__(self, name, parameters=None, connection_rule=None):
-        super(ComponentClass, self).__init__(name, parameters)
+        super(ConnectionRuleClass, self).__init__(name, parameters)
         self._connection_rule = connection_rule
 
 

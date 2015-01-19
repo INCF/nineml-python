@@ -37,8 +37,8 @@ class XMLLoader(object):
 
     """
 
-    def __init__(self, context=None):
-        self.context = context
+    def __init__(self, document=None):
+        self.document = document
 
     def load__componentclasses(self, xmlroot, xml_node_filename_map):
 
@@ -84,7 +84,7 @@ class XMLLoader(object):
     @read_annotations
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
-                         dimension=self.context[element.get('dimension')])
+                         dimension=self.document[element.get('dimension')])
 
     @read_annotations
     def load_eventsendport(self, element):
@@ -98,19 +98,19 @@ class XMLLoader(object):
     def load_angsendport(self, element):
         return AnalogSendPort(
             name=element.get("name"),
-            dimension=self.context[element.get('dimension')])
+            dimension=self.document[element.get('dimension')])
 
     @read_annotations
     def load_angreceiveport(self, element):
         return AnalogReceivePort(
             name=element.get("name"),
-            dimension=self.context[element.get('dimension')])
+            dimension=self.document[element.get('dimension')])
 
     @read_annotations
     def load_angreduceport(self, element):
         return AnalogReducePort(
             name=element.get('name'),
-            dimension=self.context[element.get('dimension')],
+            dimension=self.document[element.get('dimension')],
             reduce_op=element.get("operator"))
 
     @read_annotations
@@ -134,7 +134,7 @@ class XMLLoader(object):
     @read_annotations
     def load_statevariable(self, element):
         name = element.get("name")
-        dimension = self.context[element.get('dimension')]
+        dimension = self.document[element.get('dimension')]
         return StateVariable(name=name, dimension=dimension)
 
     @read_annotations

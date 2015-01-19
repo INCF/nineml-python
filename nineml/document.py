@@ -10,7 +10,7 @@ import nineml.user_layer
 import nineml.abstraction_layer
 
 
-class Context(dict, BaseNineMLObject):
+class Document(dict, BaseNineMLObject):
     """
     Loads and stores all top-level elements in a NineML file (i.e. any element
     that is able to sit directly within <NineML>...</NineML> tags). All
@@ -31,7 +31,7 @@ class Context(dict, BaseNineMLObject):
 
     def __init__(self, *args, **kwargs):
         self.url = kwargs.pop('_url', None)
-        super(Context, self).__init__(*args, **kwargs)
+        super(Document, self).__init__(*args, **kwargs)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
@@ -41,7 +41,7 @@ class Context(dict, BaseNineMLObject):
         self.values()
         other.values()
         # Use the parent dictionary class equality
-        return (super(Context, self).__eq__(other) and
+        return (super(Document, self).__eq__(other) and
                 self.url == other.url)
 
     def __getitem__(self, name):
@@ -49,7 +49,7 @@ class Context(dict, BaseNineMLObject):
         Returns the element referenced by the given name
         """
         try:
-            elem = super(Context, self).__getitem__(name)
+            elem = super(Document, self).__getitem__(name)
         except KeyError:
             # FIXME: Not sure if this is a good idea or not. It somewhat
             #        simplifies code in a few places where an optional
@@ -57,8 +57,8 @@ class Context(dict, BaseNineMLObject):
             #        should be resolved if present but be set to None if not.
             if name is None:
                 return None
-            raise KeyError("'{}' was not found in the NineML context {} ("
-                           "elements in the context were '{}')."
+            raise KeyError("'{}' was not found in the NineML document {} ("
+                           "elements in the document were '{}')."
                            .format(name, self.url or '',
                                    "', '".join(self.iterkeys())))
         if isinstance(elem, self._Unloaded):
@@ -66,7 +66,7 @@ class Context(dict, BaseNineMLObject):
         return elem
 
     def itervalues(self):
-        for v in super(Context, self).itervalues():
+        for v in super(Document, self).itervalues():
             if isinstance(v, self._Unloaded):
                 v = self._load_elem_from_xml(v)
             yield v
@@ -75,7 +75,7 @@ class Context(dict, BaseNineMLObject):
         return list(self.itervalues())
 
     def iteritems(self):
-        for k, v in super(Context, self).iteritems():
+        for k, v in super(Document, self).iteritems():
             if isinstance(v, self._Unloaded):
                 v = self._load_elem_from_xml(v)
             yield k, v
@@ -138,7 +138,7 @@ class Context(dict, BaseNineMLObject):
     def from_xml(cls, element, url=None):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
-        # Initialise the context
+        # Initialise the document
         elements = {'_url': url}
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
@@ -170,9 +170,9 @@ class Context(dict, BaseNineMLObject):
                                         ob2=child_cls.element_name,
                                         url=url or ''))
             elements[name] = cls._Unloaded(name, child, child_cls)
-        context = cls(**elements)
-        context.annotations = annotations
-        return context
+        document = cls(**elements)
+        document.annotations = annotations
+        return document
 
 
 class BaseReference(BaseNineMLObject):
@@ -183,7 +183,7 @@ class BaseReference(BaseNineMLObject):
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
-    def __init__(self, name, context, url=None):
+    def __init__(self, name, document, url=None):
         """
         Create a new component with the given name, definition and properties,
         or create a prototype to another component that will be resolved later.
@@ -193,11 +193,11 @@ class BaseReference(BaseNineMLObject):
         """
         self.url = url
         if self.url:
-            if context.url is None:
-                context = read(url, relative_to=os.getcwd())
+            if document.url is None:
+                document = read(url, relative_to=os.getcwd())
             else:
-                context = read(url, relative_to=os.path.dirname(context.url))
-        self._referred_to = context[name]
+                document = read(url, relative_to=os.path.dirname(document.url))
+        self._referred_to = document[name]
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -224,13 +224,13 @@ class BaseReference(BaseNineMLObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, context):
+    def from_xml(cls, element, document):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
         name = element.text
         url = element.attrib.get("url", None)
-        return cls(name, context, url)
+        return cls(name, document, url)
 
 
 def load(root_element, read_from=None):
@@ -241,7 +241,7 @@ def load(root_element, read_from=None):
     read_from    -- specifies the url, which the xml should be considered to
                     have been read from in order to resolve relative references
     """
-    return Context.from_xml(root_element, url=read_from)
+    return Document.from_xml(root_element, url=read_from)
 
 
 def read(url, relative_to=None):
@@ -270,9 +270,9 @@ def read(url, relative_to=None):
     return load(root, url)
 
 
-def write(context, filename):
+def write(document, filename):
     """
-    Provided for symmetry with read method, takes a nineml.context.Context
+    Provided for symmetry with read method, takes a nineml.document.Document
     object and writes it to the specified file
     """
-    context.write(filename)
+    document.write(filename)

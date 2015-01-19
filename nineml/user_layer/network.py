@@ -2,7 +2,7 @@ from itertools import chain
 from .population import Population
 from .projection import Projection
 from .selection import Selection
-from ..context import Context
+from ..document import Document
 
 
 class Network(object):
@@ -71,35 +71,35 @@ class Network(object):
     #@classmethod
     #@resolve_reference
     #@read_annotations
-    #def from_xml(cls, element, context):
+    #def from_xml(cls, element, document):
     #    check_tag(element, cls)
     #    populations = []
     #    for pop_elem in element.findall(NINEML + 'PopulationItem'):
-    #        pop = Population.from_xml(pop_elem, context)
+    #        pop = Population.from_xml(pop_elem, document)
     #        populations[pop.name] = pop
     #    projections = []
     #    for proj_elem in element.findall(NINEML + 'ProjectionItem'):
-    #        proj = Projection.from_xml(proj_elem, context)
+    #        proj = Projection.from_xml(proj_elem, document)
     #        projections[proj.name] = proj
     #    selections = []
     #    for sel_elem in element.findall(NINEML + 'Selection'):
-    #        sel = Selection.from_xml(sel_elem, context)
+    #        sel = Selection.from_xml(sel_elem, document)
     #        selections[sel.name] = sel
     #    network = cls(name=element.attrib["name"], populations=populations,
     #                  projections=projections, selections=selections)
     #    return network
 
     def write(self, filename):
-        context = Context()
+        document = Document()
         units = set()
         for name, obj in chain(self.populations.items(),
                                self.projections.items()):
-            context[name] = obj
+            document[name] = obj
             for c in obj.get_components():
                 units = units.union(c.units)
         for name, obj in self.selections.items():
-            context[name] = obj
+            document[name] = obj
         for u in units:
-            context[u.dimension.name] = u.dimension
-            context[u.name] = u
-        context.write(filename)
+            document[u.dimension.name] = u.dimension
+            document[u.name] = u
+        document.write(filename)

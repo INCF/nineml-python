@@ -12,8 +12,8 @@ from nineml.abstraction_layer.units import dimensionless
 
 class XMLLoader(object):
 
-    def __init__(self, context=None):
-        self.context = context
+    def __init__(self, document=None):
+        self.document = document
 
     def load_subnode(self, subnode):
         namespace = subnode.get('namespace')
@@ -34,7 +34,7 @@ class XMLLoader(object):
 
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
-                         dimension=self.context[element.get('dimension')])
+                         dimension=self.document[element.get('dimension')])
 
     def load_randomdistribution(self, element):
         blocks = ('StandardLibrary',)
