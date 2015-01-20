@@ -25,7 +25,7 @@ class PerNamespaceValidator(ActionVisitor, BaseValidator):
 
     # Over-ride this function, so we can extract out the
     # namespace, then propogate this as a parameter.
-    def visit_componentclass(self, component, **kwargs):
+    def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
         namespace = component.get_node_addr()
         ActionVisitor.visit_componentclass(self, component,
                                            namespace=namespace)
