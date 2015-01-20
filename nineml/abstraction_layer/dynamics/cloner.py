@@ -5,8 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from ...exceptions import NineMLRuntimeError
-from ..maths import is_builtin_symbol
-from nineml.abstraction_layer.maths.base import MathUtil
+from ..expressions.util import is_builtin_symbol, MathUtil
 from ..base import NamespaceAddress
 from .visitors import ActionVisitor, ComponentVisitor
 

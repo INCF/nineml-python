@@ -9,8 +9,8 @@ from collections import defaultdict
 
 from base import PerNamespaceValidator
 from nineml.exceptions import NineMLRuntimeError
-from ...maths import get_reserved_and_builtin_symbols
-from nineml.abstraction_layer.maths.base import is_valid_lhs_target
+from ...expressions.util import (get_reserved_and_builtin_symbols,
+                                 is_valid_lhs_target)
 from ...base import NamespaceAddress
 from nineml.utility import assert_no_duplicates
 

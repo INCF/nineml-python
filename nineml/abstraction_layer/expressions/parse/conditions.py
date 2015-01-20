@@ -25,10 +25,10 @@ docstring needed
 import ply.lex as lex
 import ply.yacc as yacc
 import os
-from nineml.abstraction_layer.maths.expr_parse import call_expr_func
+from .expressions import call_expr_func
 from nineml.utility import LocationMgr
 from nineml.exceptions import NineMLMathParseError
-from nineml.abstraction_layer.maths.__init__.py import is_builtin_math_function, get_builtin_symbols
+from ..util import is_builtin_math_function, get_builtin_symbols
 
 # for now avoid duplication, but maintain distinctness
 call_cond_func = call_expr_func
