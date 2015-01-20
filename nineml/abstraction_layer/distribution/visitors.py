@@ -6,7 +6,7 @@ docstring needed
 """
 
 
-class ComponentVisitor(object):
+class ComponentClassVisitor(object):
 
     def visit(self, obj, **kwargs):
         return obj.accept_visitor(self, **kwargs)

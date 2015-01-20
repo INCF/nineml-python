@@ -7,7 +7,7 @@ docstring needed
 from ...exceptions import NineMLRuntimeError
 from ..expressions.util import is_builtin_symbol, MathUtil
 from ..base import NamespaceAddress
-from .visitors import ActionVisitor, ComponentVisitor
+from .visitors import ActionVisitor, ComponentClassVisitor
 
 
 class ExpandPortDefinition(ActionVisitor):
@@ -171,7 +171,7 @@ class RenameSymbol(ActionVisitor):
             self.note_rhs_changed(on_event)
 
 
-class ClonerVisitor(ComponentVisitor):
+class ClonerVisitor(ComponentClassVisitor):
 
     def prefix_variable(self, variable, **kwargs):
         prefix = kwargs.get('prefix', '')

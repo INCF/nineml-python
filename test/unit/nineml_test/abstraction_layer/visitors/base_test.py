@@ -250,8 +250,8 @@ class ActionVisitor_test(unittest.TestCase):
         # raise NotImplementedError()
 
 
-# Testing Skeleton for class: ComponentVisitor
-class ComponentVisitor_test(unittest.TestCase):
+# Testing Skeleton for class: ComponentClassVisitor
+class ComponentClassVisitor_test(unittest.TestCase):
 
     def test_Constructor(self):
         pass
@@ -259,6 +259,6 @@ class ComponentVisitor_test(unittest.TestCase):
     def test_visit(self):
         # Signature: name(self, obj, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ComponentVisitor
+        # from nineml.abstraction_layer.visitors.base import ComponentClassVisitor
         warnings.warn('Tests not implemented')
         # raise NotImplementedError()

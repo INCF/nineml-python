@@ -10,7 +10,7 @@ from itertools import chain
 from lxml import etree
 from lxml.builder import E
 from .flatten import ComponentFlattener
-from .visitors import ComponentVisitor
+from .visitors import ComponentClassVisitor
 from nineml.annotations import annotate_xml
 import nineml
 from ...utility import expect_single, filter_expect_single
@@ -377,7 +377,7 @@ class XMLReader(object):
         return loader.components
 
 
-class XMLWriter(ComponentVisitor):
+class XMLWriter(ComponentClassVisitor):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment

@@ -9,7 +9,7 @@ from urllib2 import urlopen
 from itertools import chain
 from lxml import etree
 from nineml.xmlns import E
-from .visitors import ComponentVisitor
+from .visitors import ComponentClassVisitor
 from ..dynamics import DynamicsClass
 from ..ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
                      IndexReceivePort)
@@ -284,7 +284,7 @@ class BaseXMLReader(object):
         return loader.components
 
 
-class BaseXMLWriter(ComponentVisitor):
+class BaseXMLWriter(ComponentClassVisitor):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment
