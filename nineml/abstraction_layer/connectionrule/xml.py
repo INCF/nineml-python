@@ -1,11 +1,12 @@
 from lxml import etree
-from lxml.builder import E
+from nineml.xmlns import E, NINEML
+from nineml.exceptions import NineMLRuntimeError
 from ..base.xml import BaseXMLLoader, BaseXMLReader, BaseXMLWriter
-from .base import ConnectionRuleClass
+from .base import ConnectionRuleClass, ConnectionRule
 from nineml.xmlns import nineml_namespace
 
 
-class XMLLoader(BaseXMLLoader):
+class XMLLoader(object):
 
     def __init__(self, document=None):
         self.document = document
@@ -21,7 +22,39 @@ class XMLLoader(BaseXMLLoader):
                                    connection_rule=connection_rule)
 
     def load_connectionrule(self, element):
-        raise NotImplementedError
+        return ConnectionRule()
+
+    def load_componentclasses(self, xmlroot, xml_node_filename_map):
+
+        self.components = []
+        self.component_srcs = {}
+        for comp_block in xmlroot.find(NINEML + "ComponentClass"):
+            component = self.load_componentclass(comp_block)
+
+            self.components.append(component)
+            self.component_srcs[component] = xml_node_filename_map[comp_block]
+
+    # These blocks map directly onto classes:
+    def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
+        """
+        Creates a dictionary that maps class-types to instantiated objects
+        """
+
+        res = dict((block, []) for block in blocks)
+
+        for t in element.iterchildren(tag=etree.Element):
+            if t.tag.startswith(NINEML):
+                tag = t.tag[len(NINEML):]
+            else:
+                tag = t.tag
+
+            if check_for_spurious_blocks and tag not in blocks:
+                    err = "Unexpected Block tag: %s " % tag
+                    err += '\n Expected: %s' % ','.join(blocks)
+                    raise NineMLRuntimeError(err)
+
+            res[tag].append(self.tag_to_loader[tag](self, t))
+        return res
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,

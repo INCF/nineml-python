@@ -175,8 +175,8 @@ class Projection(BaseULObject):
         # Get Response
         e = element.find(NINEML + 'Response')
         response = Component.from_xml(e.find(NINEML + 'Component') or
-                                          e.find(NINEML + 'Reference'),
-                                          document)
+                                      e.find(NINEML + 'Reference'),
+                                      document)
         # Get Plasticity
         e = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
         if e is not None:

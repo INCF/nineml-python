@@ -40,7 +40,7 @@ class XMLLoader(object):
     def __init__(self, document=None):
         self.document = document
 
-    def load__componentclasses(self, xmlroot, xml_node_filename_map):
+    def load_componentclasses(self, xmlroot, xml_node_filename_map):
 
         self.components = []
         self.component_srcs = {}
@@ -349,7 +349,7 @@ class XMLReader(object):
             filename=filename, xml_node_filename_map=xml_node_filename_map)
 
         loader = cls.loader()
-        loader.load__componentclasses(
+        loader.load_componentclasses(
             xmlroot=root, xml_node_filename_map=xml_node_filename_map)
 
         if component_name is None:
@@ -372,7 +372,7 @@ class XMLReader(object):
         xml_node_filename_map = {}
         root = cls._load_nested_xml(filename, xml_node_filename_map)
         loader = cls.loader()
-        loader.load__componentclasses(
+        loader.load_componentclasses(
             xmlroot=root, xml_node_filename_map=xml_node_filename_map)
         return loader.components
 

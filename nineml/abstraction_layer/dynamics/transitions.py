@@ -256,17 +256,17 @@ class OnCondition(Transition):
                  event_outputs=None, target_regime_name=None):
         """Constructor for ``OnEvent``
 
-            :param trigger: Either a |Condition| object or a ``string`` object
+            :param trigger: Either a |Trigger| object or a ``string`` object
                 specifying the conditions under which this transition should
                 occur.
 
             See ``Transition.__init__`` for the definitions of the remaining
             parameters.
         """
-        if isinstance(trigger, Condition):
+        if isinstance(trigger, Trigger):
             self._trigger = ClonerVisitor().visit(trigger)
         elif isinstance(trigger, basestring):
-            self._trigger = Condition(rhs=trigger)
+            self._trigger = Trigger(rhs=trigger)
         else:
             assert False
 
@@ -282,7 +282,7 @@ class OnCondition(Transition):
         return self._trigger
 
 
-class Condition(Expression):
+class Trigger(Expression):
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -333,21 +333,21 @@ class Condition(Expression):
         return eval(lmda_str, str_to_npfunc_map, namespace)
 
     def __repr__(self):
-        return "Condition('%s')" % (self.rhs)
+        return "Trigger('%s')" % (self.rhs)
 
 
 def cond_to_obj(cond_str):
 
-    if isinstance(cond_str, Condition):
+    if isinstance(cond_str, Trigger):
         return cond_str
 
     elif cond_str is None:
         return None
 
     elif isinstance(cond_str, str):
-        return Condition(cond_str.strip())
+        return Trigger(cond_str.strip())
 
-    raise ValueError("Condition: expected None, str, or Condition object")
+    raise ValueError("Trigger: expected None, str, or Trigger object")
 
 
 class EventOut(BaseALObject):

@@ -7,7 +7,7 @@ docstring needed
 
 from ...dynamics.visitors import ActionVisitor
 from ...dynamics.regimes import Regime, StateVariable, TimeDerivative
-from ...dynamics.transitions import (EventOut, StateAssignment, Condition,
+from ...dynamics.transitions import (EventOut, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
 from ...componentclass import ComponentClass, Parameter
 from ...expressions import Alias
@@ -65,8 +65,8 @@ class TypesValidator(ActionVisitor):
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         assert isinstance(time_derivative, TimeDerivative)
 
-    def action_condition(self, condition):
-        assert isinstance(condition, Condition)
+    def action_condition(self, trigger):
+        assert isinstance(trigger, Trigger)
 
     def action_oncondition(self, on_condition):
         assert isinstance(on_condition, OnCondition)

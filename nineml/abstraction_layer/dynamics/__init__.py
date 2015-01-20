@@ -8,7 +8,7 @@ Python module for reading 9ML abstraction layer files in XML format.
 from .base import DynamicsClass, Dynamics
 from .regimes import (Regime, TimeDerivative,
                       StateVariable)
-from .transitions import (EventOut, OnCondition, Condition, OnEvent,
+from .transitions import (EventOut, OnCondition, Trigger, OnEvent,
                           StateAssignment, On)
 from ..ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                      EventSendPort, EventReceivePort)

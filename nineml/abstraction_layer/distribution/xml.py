@@ -5,9 +5,8 @@ from nineml.utility import expect_single, filter_expect_single
 from nineml.xmlns import NINEML
 from nineml.abstraction_layer.componentclass import Parameter
 from nineml.abstraction_layer.ports import PropertySendPort
-from .base import DistributionClass
+from .base import DistributionClass, Distribution
 from ..base.xml import BaseXMLWriter
-from nineml.abstraction_layer.units import dimensionless
 from nineml.exceptions import NineMLRuntimeError
 
 
@@ -28,9 +27,9 @@ class XMLLoader(object):
 
         subnodes = self.loadBlocks(element, blocks=blocks)
 
-        random_distribution = expect_single(subnodes["Distribution"])
+        distribution = expect_single(subnodes["Distribution"])
         return DistributionClass(name=element.get('name'),
-                                 random_distribution=random_distribution,
+                                 distribution=distribution,
                                  parameters=subnodes["Parameter"])
 
     def load_parameter(self, element):
@@ -42,11 +41,14 @@ class XMLLoader(object):
                                 dimension=self.document[
                                     element.get('dimension')])
 
+    def load_randomvariable(self, element):
+        return Distribution()  # FIXME: Should be implemented in dev2.0 changes
+
     def load_distribution(self, element):
-        blocks = ('Distribution',)
+        blocks = ('RandomVariable',)
         subnodes = self.loadBlocks(element, blocks=blocks)
         # TODO: Only implemented built-in distributions at this stage
-        return expect_single(subnodes['Distribution'])
+        return expect_single(subnodes['RandomVariable'])
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
@@ -74,7 +76,8 @@ class XMLLoader(object):
         "ComponentClass": load_componentclass,
         "Distribution": load_distribution,
         "Parameter": load_parameter,
-        "PropertySendPort": load_propertysendport
+        "PropertySendPort": load_propertysendport,
+        "RandomVariable": load_randomvariable
     }
 
 
@@ -94,19 +97,15 @@ class XMLWriter(BaseXMLWriter):
 
     def visit_componentclass(self, component):
         elements = ([p.accept_visitor(self) for p in component.parameters] +
-                    [component.random_distribution.accept_visitor(self)])
+                    [component.distribution.accept_visitor(self)])
         return E('ComponentClass', *elements, name=component.name)
 
-    def visit_distribution(self, random_distribution):
+    def visit_distribution(self, distribution):
         # TODO: Only implemented built-in distributions at this stage
         return E('Distribution',
-                 E.StandardLibrary(random_distribution.name,
-                                   url=random_distribution.url))
+                 E.Distribution())
 
     def visit_parameter(self, parameter):
-        kwargs = {}
-        if parameter.dimension != dimensionless:
-            kwargs['dimension'] = parameter.dimension.name
         return E('Parameter',
                  name=parameter.name,
-                 **kwargs)
+                 dimension=parameter.dimension.name)

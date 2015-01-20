@@ -21,7 +21,7 @@ class ComponentClass(BaseALObject):
 
     @annotate_xml
     def to_xml(self):
-        exec('from nineml.abstraction_layer.{}.writers import XMLWriter'
+        exec('from nineml.abstraction_layer.{}.xml import XMLWriter'
              .format(self.writer_name))
         return XMLWriter().visit(self)  # @UndefinedVariable
 

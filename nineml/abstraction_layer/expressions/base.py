@@ -32,6 +32,9 @@ class Expression(object):
 
         self._set_rhs(rhs)
 
+    def __eq__(self, other):
+        return self._rhs == other._rhs
+
     # Subclasses can over-ride this, if need be.
     def _parse_rhs(self, rhs):
         # A temporary measure, this is until the parser is
@@ -130,6 +133,10 @@ class ExpressionWithLHS(Expression):
     @property
     def lhs_atoms(self):
         raise NotImplementedError()
+
+    def __eq__(self, other):
+        return (super(ExpressionWithLHS, self).__eq__(other) and
+                self.lhs == other.lhs)
 
 
 class ExpressionWithSimpleLHS(ExpressionWithLHS):
@@ -256,6 +263,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
 
     """
+    defining_attributes = ('_lhs', '_rhs')
 
     def __init__(self, lhs=None, rhs=None):
         """ Constructor for an Alias
