@@ -1,52 +1,35 @@
+============
 Installation
 ============
 
-Use of the Python 9ML API requires that you have Python (version 2.5, 2.6 or 2.7) and the `lxml` package installed. The abstraction layer API also requires the `PLY` package.
+Use of the Python 9ML API requires that you have Python (version 2.7) and the
+`lxml`, `ply`, `numpy` and `quantities` packages installed.
 
 Installing Python
------------------
+=================
 
-If you are using Linux, Python is available via your package management system. For Mac OS X or Windows, you can download the Python installer from http://www.python.org, or install an all-in-one package for scientific computing with Python from Enthought (http://www.enthought.com/products/epd.php; free academic licence) or Python(x,y) (http://www.pythonxy.com/; free).
+If you are using Linux, Python is available via your package management system.
+For Mac OS X or Windows, you can download the Python installer from http://www.python.org,
+or install an all-in-one package for scientific computing with Python from
+Enthought (http://www.enthought.com/products/epd.php; free academic licence),
+Python(x,y) (http://www.pythonxy.com/; free) or Anaconda (http://continuum.io/downloads).
+We strongly recommend using virtualenv or Anaconda's virtual Python environments.
 
-Installing lxml
----------------
+Installing dependencies
+=======================
 
-See http://codespeak.net/lxml/installation.html
+On Linux, most or all of the dependencies can be installed via the package management system.
+If using Anaconda, use "conda install". Otherwise:
 
-Installing PLY
---------------
+* lxml - see http://lxml.de/installation.html
+* ply - `pip install ply`
+* NumPy - see http://docs.scipy.org/doc/numpy/user/install.html
+* quantities - `pip install quantities`
+
+
+Installing the nineml package
+=============================
 
 ::
 
-    $ easy_install ply
-
-or download from http://pypi.python.org/pypi/ply/ or install from your packaging system.
-
-Installing the nineml package
------------------------------
-
-Start by checking out the 9ML source code from the Subversion repository (see http://subversion.apache.org/packages.html if you need to install Subversion)::
-
-    $ svn checkout http://svn.incf.org/svn/nineml/trunk nineml_trunk
-    $ cd nineml_trunk/lib9ml/python
-    $ python setup.py install
-    
-This will install it to your python ``site-packages`` directory, and may require root privileges. If you wish to install it elsewhere use the ``--prefix`` or ``--home`` option, and set the ``PYTHONPATH`` environment variable accordingly.
-
-Now run the tests::
-
-    $ cd test
-    $ python tester.py all
-
-Updating the nineml package
----------------------------
-
-To update your  ``nineml`` installation to the latest version::
-
-    $ cd /path/to/nineml_trunk
-    $ svn update
-    $ cd lib9ml/python
-    $ python setup.py install
-
-    
-
+    $ pip install nineml
