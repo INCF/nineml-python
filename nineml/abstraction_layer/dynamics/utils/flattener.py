@@ -8,7 +8,7 @@ docstring needed
 import itertools
 from collections import defaultdict
 from nineml.utility import flatten_first_level
-from ...componentclass.utils import (
+from ...componentclass.utils.cloner import (
     ClonerVisitor, ClonerVisitorPrefixNamespace, ExpandPortDefinition)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from nineml.exceptions import NineMLRuntimeError

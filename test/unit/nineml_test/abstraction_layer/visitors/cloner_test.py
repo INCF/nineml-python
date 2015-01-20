@@ -8,7 +8,7 @@ from nineml.abstraction_layer import (
     DynamicsClass as ComponentClass, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
     NamespaceAddress)
-from nineml.abstraction_layer.dynamics.cloner import (
+from nineml.abstraction_layer.componentclass.utils.cloner import (
     ClonerVisitorPrefixNamespace)
 
 NSA = NamespaceAddress

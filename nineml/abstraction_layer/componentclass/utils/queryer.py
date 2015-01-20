@@ -9,18 +9,18 @@ from itertools import chain
 from nineml.utility import filter_expect_single
 
 
-__all__ = ['Queryer']
+__all__ = ['ComponentClassQueryer']
 
 
-class Queryer(object):
+class ComponentClassQueryer(object):
 
     """
-    Queryer provides a way of adding methods to query a
+    ComponentClassQueryer provides a way of adding methods to query a
     ComponentClass object, without polluting the class
     """
 
     def __init__(self, component):
-        """Constructor for the Queryer"""
+        """Constructor for the ComponentClassQueryer"""
         self.component = component
 
     @property

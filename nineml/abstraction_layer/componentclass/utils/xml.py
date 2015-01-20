@@ -10,7 +10,6 @@ from itertools import chain
 from lxml import etree
 from nineml.xmlns import E
 from . import ComponentClassVisitor
-from ...dynamics import DynamicsClass
 from ...ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
                       IndexReceivePort)
 from ...expressions import Alias
@@ -35,12 +34,10 @@ class ComponentClassXMLLoader(object):
         self.document = document
 
     def load_componentclasses(self, xmlroot, xml_node_filename_map):
-
         self.components = []
         self.component_srcs = {}
         for comp_block in xmlroot.find(NINEML + "ComponentClass"):
             component = self.load_componentclass(comp_block)
-
             self.components.append(component)
             self.component_srcs[component] = xml_node_filename_map[comp_block]
 
@@ -63,6 +60,7 @@ class ComponentClassXMLLoader(object):
         subnodes = self.loadBlocks(element, blocks=blocks)
 
         dynamics = expect_single(subnodes["Dynamics"])
+        from ...dynamics import DynamicsClass
         return DynamicsClass(
             name=element.get('name'),
             parameters=subnodes["Parameter"],
@@ -295,6 +293,7 @@ class ComponentClassXMLWriter(ComponentClassVisitor):
     @classmethod
     @annotate_xml
     def to_xml(cls, component):
+        from ...dynamics import DynamicsClass
         assert isinstance(component, DynamicsClass)
         component.standardize_unit_dimensions()
         xml = ComponentClassXMLWriter().visit(component)

@@ -10,7 +10,7 @@ from nineml.abstraction_layer.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ..expressions.utils import MathUtil, str_to_npfunc_map
 from ...exceptions import NineMLRuntimeError
-from ..componentclass.utils import ClonerVisitor
+from ..componentclass.utils.cloner import ClonerVisitor
 from ..expressions import parse
 
 

@@ -13,7 +13,7 @@ from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
 
 
-class ComponentModifier(BaseALObject):
+class ComponentClassModifier(BaseALObject):
 
     """Utility classes for modifying components"""
 

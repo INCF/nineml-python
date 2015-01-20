@@ -10,7 +10,7 @@ from nineml.abstraction_layer.componentclass.utils.xml import ComponentClassXMLW
 from nineml.exceptions import NineMLRuntimeError
 
 
-class XMLLoader(object):
+class DistributionClassXMLLoader(object):
 
     def __init__(self, document=None):
         self.document = document
@@ -69,7 +69,7 @@ class XMLLoader(object):
                     err += '\n Expected: %s' % ','.join(blocks)
                     raise NineMLRuntimeError(err)
 
-            res[tag].append(XMLLoader.tag_to_loader[tag](self, t))
+            res[tag].append(DistributionClassXMLLoader.tag_to_loader[tag](self, t))
         return res
 
     tag_to_loader = {
@@ -81,7 +81,7 @@ class XMLLoader(object):
     }
 
 
-class XMLWriter(ComponentClassXMLWriter):
+class DistributionClassXMLWriter(ComponentClassXMLWriter):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment
@@ -92,7 +92,7 @@ class XMLWriter(ComponentClassXMLWriter):
     @classmethod
     def to_xml(cls, component):
         assert isinstance(component, DistributionClass)
-        xml = XMLWriter().visit(component)
+        xml = DistributionClassXMLWriter().visit(component)
         return E.NineML(xml, xmlns=nineml_namespace)
 
     def visit_componentclass(self, component):

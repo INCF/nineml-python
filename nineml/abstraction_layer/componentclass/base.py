@@ -21,8 +21,8 @@ class ComponentClass(BaseALObject):
 
     @annotate_xml
     def to_xml(self):
-        exec('from nineml.abstraction_layer.{}.xml import XMLWriter'
-             .format(self.writer_name))
+        exec('from nineml.abstraction_layer.{}.utils.xml import {}XMLWriter'
+             ' as XMLWriter'.format(self.writer_name, self.__class__.__name__))
         return XMLWriter().visit(self)  # @UndefinedVariable
 
     @classmethod
@@ -30,12 +30,20 @@ class ComponentClass(BaseALObject):
     def from_xml(cls, element, document):  # @UnusedVariable
         if element.find(NINEML + 'Dynamics') is not None:
             module_name = 'dynamics'
+            loader_name = 'Dynamics'
         elif element.find(NINEML + 'ConnectionRule') is not None:
             module_name = 'connectionrule'
+            loader_name = 'ConnectionRule'
         elif element.find(NINEML + 'Distribution') is not None:
             module_name = 'distribution'
-        exec('from nineml.abstraction_layer.{}.xml import XMLLoader'
-             .format(module_name))
+            loader_name = 'Distribution'
+        try:
+            exec('from nineml.abstraction_layer.{}.utils.xml '
+                 'import {}ClassXMLLoader as XMLLoader'
+                 .format(module_name, loader_name))
+        except ImportError:
+            assert False, ("Could not load xml loader from module '{}'"
+                           .format(module_name))
         return XMLLoader(document).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
 
     def __init__(self, name, parameters=None):

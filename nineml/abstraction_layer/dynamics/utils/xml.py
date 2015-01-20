@@ -8,7 +8,6 @@ import os
 from urllib2 import urlopen
 from itertools import chain
 from lxml import etree
-from ...componentclass.utils import ComponentClassVisitor
 from .flattener import ComponentFlattener
 from nineml.annotations import annotate_xml
 import nineml
@@ -22,12 +21,11 @@ from ..transitions import OnEvent, OnCondition, StateAssignment, EventOut
 from ..regimes import Regime, StateVariable, TimeDerivative
 from ...expressions import Alias
 from nineml.exceptions import NineMLRuntimeError
-from ..componentclass.utils.xml import ComponentClassXMLLoader
+from ...componentclass.utils.xml import (
+    ComponentClassXMLLoader, ComponentClassXMLWriter, ComponentClassXMLReader)
 
-____ = ['XMLReader']
 
-
-class XMLLoader(object):
+class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -38,7 +36,7 @@ class XMLLoader(object):
     """
 
     def __init__(self, document=None):
-        self.document = document
+        super(DynamicsClassXMLLoader, self).__init__(document)
 
     def load_componentclasses(self, xmlroot, xml_node_filename_map):
 
@@ -228,7 +226,7 @@ class XMLLoader(object):
                     err += '\n Expected: %s' % ','.join(blocks)
                     raise nineml.exceptions.NineMLRuntimeError(err)
 
-            res[tag].append(XMLLoader.tag_to_loader[tag](self, t))
+            res[tag].append(DynamicsClassXMLLoader.tag_to_loader[tag](self, t))
         return res
 
     tag_to_loader = {
@@ -254,11 +252,11 @@ class XMLLoader(object):
     }
 
 
-class XMLReader(object):
+class DynamicsClassXMLReader(ComponentClassXMLReader):
 
     """A class that can read |COMPONENTCLASS| objects from a NineML XML file.
     """
-    loader = XMLLoader
+    loader = DynamicsClassXMLLoader
 
     @classmethod
     def _load_include(cls, include_element, basedir, xml_node_filename_map):
@@ -377,7 +375,7 @@ class XMLReader(object):
         return loader.components
 
 
-class XMLWriter(ComponentClassVisitor):
+class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment
@@ -397,8 +395,9 @@ class XMLWriter(ComponentClassVisitor):
                     reducedcomponent
         # Convert the component class and the dimensions it uses to xml
         component.standardize_unit_dimensions()
-        xml = [XMLWriter().visit(component)] + [XMLWriter().visit_dimension(d)
-                                                for d in component.dimensions]
+        xml = [DynamicsClassXMLWriter().visit(component)]
+        xml += [DynamicsClassXMLWriter().visit_dimension(d)
+                for d in component.dimensions]
         return E.NineML(*xml, xmlns=nineml_namespace)
 
     def visit_componentclass(self, component):

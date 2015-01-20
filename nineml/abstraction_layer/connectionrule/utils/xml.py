@@ -6,7 +6,7 @@ from ..base import ConnectionRuleClass, ConnectionRule
 from nineml.xmlns import nineml_namespace
 
 
-class XMLLoader(object):
+class ConnectionRuleClassXMLLoader(object):
 
     def __init__(self, document=None):
         self.document = document
@@ -62,8 +62,8 @@ class XMLLoader(object):
     }
 
 
-class XMLReader(ComponentClassXMLReader):
-    loader = XMLLoader
+class ConnectionRuleXMLReader(ComponentClassXMLReader):
+    loader = ConnectionRuleClassXMLLoader
 
 
 class XMLWriter(ComponentClassXMLWriter):

@@ -22,8 +22,8 @@ from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
 from ..expressions.utils import get_reserved_and_builtin_symbols
-from ..componentclass.utils import (ExpandAliasDefinition, ClonerVisitor,
-                                    ActionVisitor, Queryer)
+from ..componentclass.utils import ActionVisitor, ComponentClassQueryer
+from ..componentclass.utils.cloner import ExpandAliasDefinition, ClonerVisitor
 from .. import BaseALObject
 
 
@@ -495,7 +495,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
             dynamics = Dynamics(regimes=regimes,
                                     aliases=aliases,
                                     state_variables=state_variables)
-        self._query = Queryer(self)
+        self._query = ComponentClassQueryer(self)
 
         # Ensure analog_ports is a list not an iterator
         analog_ports = list(analog_ports)

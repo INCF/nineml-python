@@ -5,7 +5,7 @@ import unittest
 
 from nineml.abstraction_layer.dynamics import StateAssignment, TimeDerivative
 from nineml.abstraction_layer.expressions import Alias
-from nineml.abstraction_layer.expressions.util import MathUtil
+from nineml.abstraction_layer.expressions.utils import MathUtil
 
 # Testing Skeleton for function:
 
