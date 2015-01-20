@@ -5,9 +5,9 @@ from nineml.utility import expect_single, filter_expect_single
 from nineml.xmlns import NINEML
 from nineml.abstraction_layer.base import Parameter
 from .base import DistributionClass
-from ..base.xml import XMLWriter as BaseXMLWriter
-import nineml.abstraction_layer.distribution.base
+from ..base.xml import BaseXMLWriter
 from nineml.abstraction_layer.units import dimensionless
+from nineml.exceptions import NineMLRuntimeError
 
 
 class XMLLoader(object):
@@ -39,7 +39,7 @@ class XMLLoader(object):
     def load_randomdistribution(self, element):
         blocks = ('StandardLibrary',)
         subnodes = self.loadBlocks(element, blocks=blocks)
-        #TODO: Only implemented built-in distributions at this stage
+        # TODO: Only implemented built-in distributions at this stage
         return expect_single(subnodes['StandardLibrary'])
 
     # These blocks map directly in to classes:
@@ -59,7 +59,7 @@ class XMLLoader(object):
             if check_for_spurious_blocks and tag not in blocks:
                     err = "Unexpected Block tag: %s " % tag
                     err += '\n Expected: %s' % ','.join(blocks)
-                    raise nineml.exceptions.NineMLRuntimeError(err)
+                    raise NineMLRuntimeError(err)
 
             res[tag].append(XMLLoader.tag_to_loader[tag](self, t))
         return res

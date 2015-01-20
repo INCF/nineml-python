@@ -10,9 +10,9 @@ from ...base.validators import BaseComponentValidator
 
 from .regimes import DuplicateRegimeNamesValidator
 from ..visitors import ActionVisitor
-from .ports import EventPortsValidator
-from .ports import OutputAnalogPortsValidator
-from .namingconflicts import (LocalNameConflictsValidator,
+from ..ports import EventPortsValidator
+from ..ports import OutputAnalogPortsValidator
+from ..namingconflicts import (LocalNameConflictsValidator,
                               DimensionNameConflictsValidator)
 from .general import TimeDerivativesAreDeclaredValidator
 from .general import NoUnresolvedSymbolsValidator  # @IgnorePep8

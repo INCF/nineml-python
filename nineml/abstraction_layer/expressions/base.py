@@ -280,7 +280,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
     @classmethod
     def from_str(cls, alias_string):
         """Creates an Alias object from a string"""
-        if not cls.is_alias(alias_string):
+        if not cls.is_alias_str(alias_string):
             errmsg = "Invalid Alias: %s" % alias_string
             raise NineMLRuntimeError(errmsg)
 

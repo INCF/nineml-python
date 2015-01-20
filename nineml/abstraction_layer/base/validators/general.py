@@ -6,7 +6,7 @@ docstring needed
 """
 
 from collections import defaultdict
-from base import PerNamespaceValidator
+from . import PerNamespaceValidator
 from nineml.exceptions import NineMLRuntimeError
 from ...expressions.util import (get_reserved_and_builtin_symbols,
                                  is_valid_lhs_target)

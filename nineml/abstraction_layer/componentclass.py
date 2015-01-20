@@ -33,7 +33,7 @@ class ComponentClass(BaseALObject):
         elif element.find(NINEML + 'ConnectionRule') is not None:
             module_name = 'connectionrule'
         elif element.find(NINEML + 'RandomDistribution') is not None:
-            module_name = 'random'
+            module_name = 'distribution'
         exec('from nineml.abstraction_layer.{}.xml import XMLLoader'
              .format(module_name))
         return XMLLoader(document).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
