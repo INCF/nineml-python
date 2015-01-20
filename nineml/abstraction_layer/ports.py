@@ -198,7 +198,7 @@ class EventSendPort(EventPort, SendPort):
         return visitor.visit_eventsendport(self, **kwargs)
 
 
-class EventReceivePort(EventPort):
+class EventReceivePort(EventPort, ReceivePort):
     """EventReceivePort
 
     An |EventReceivePort| is a port that can receive discrete events at

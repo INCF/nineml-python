@@ -32,7 +32,7 @@ class ComponentClass(BaseALObject):
             module_name = 'dynamics'
         elif element.find(NINEML + 'ConnectionRule') is not None:
             module_name = 'connectionrule'
-        elif element.find(NINEML + 'RandomDistribution') is not None:
+        elif element.find(NINEML + 'Distribution') is not None:
             module_name = 'distribution'
         exec('from nineml.abstraction_layer.{}.xml import XMLLoader'
              .format(module_name))

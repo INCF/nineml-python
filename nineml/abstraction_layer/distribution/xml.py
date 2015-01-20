@@ -3,7 +3,8 @@ from lxml.builder import E
 from nineml.xmlns import nineml_namespace
 from nineml.utility import expect_single, filter_expect_single
 from nineml.xmlns import NINEML
-from nineml.abstraction_layer.base import Parameter
+from nineml.abstraction_layer.componentclass import Parameter
+from nineml.abstraction_layer.ports import PropertySendPort
 from .base import DistributionClass
 from ..base.xml import BaseXMLWriter
 from nineml.abstraction_layer.units import dimensionless
@@ -23,7 +24,7 @@ class XMLLoader(object):
 
     def load_componentclass(self, element):
 
-        blocks = ('Parameter', 'Distribution')
+        blocks = ('Parameter', 'PropertySendPort', 'Distribution')
 
         subnodes = self.loadBlocks(element, blocks=blocks)
 
@@ -36,11 +37,16 @@ class XMLLoader(object):
         return Parameter(name=element.get('name'),
                          dimension=self.document[element.get('dimension')])
 
-    def load_randomdistribution(self, element):
-        blocks = ('StandardLibrary',)
+    def load_propertysendport(self, element):
+        return PropertySendPort(name=element.get('name'),
+                                dimension=self.document[
+                                    element.get('dimension')])
+
+    def load_distribution(self, element):
+        blocks = ('Distribution',)
         subnodes = self.loadBlocks(element, blocks=blocks)
         # TODO: Only implemented built-in distributions at this stage
-        return expect_single(subnodes['StandardLibrary'])
+        return expect_single(subnodes['Distribution'])
 
     # These blocks map directly in to classes:
     def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
@@ -66,8 +72,9 @@ class XMLLoader(object):
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
-        "Distribution": load_randomdistribution,
+        "Distribution": load_distribution,
         "Parameter": load_parameter,
+        "PropertySendPort": load_propertysendport
     }
 
 

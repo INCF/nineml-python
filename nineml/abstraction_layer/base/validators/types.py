@@ -38,13 +38,13 @@ class TypesValidator(ActionVisitor):
         assert (isinstance(parameter, Parameter),
                 "{} != {}".format(type(parameter), Parameter))
 
-    def action_angsendport(self, port, **kwargs):  # @UnusedVariable
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, AnalogSendPort)
 
-    def action_angreceiveport(self, port, **kwargs):  # @UnusedVariable
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, AnalogReceivePort)
 
-    def action_angreduceport(self, port, **kwargs):  # @UnusedVariable
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, AnalogReducePort)
 
     def action_eventsendport(self, port, **kwargs):  # @UnusedVariable

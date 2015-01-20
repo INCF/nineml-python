@@ -2,7 +2,7 @@ import nineml.abstraction_layer as al
 
 
 def get_component():
-    coba = al.dynamics.ComponentClass(
+    coba = al.dynamics.DynamicsClass(
         name="CobaSyn",
         aliases=["I:=g*(vrev-V)", ],
         regimes=[
