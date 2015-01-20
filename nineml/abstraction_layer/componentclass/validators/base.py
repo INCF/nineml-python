@@ -7,7 +7,7 @@ docstring needed
 
 # from nineml.abstraction_layer.visitors import ActionVisitor
 
-from nineml.abstraction_layer.componentclass import ActionVisitor
+from ..utils import ActionVisitor
 
 
 class BaseValidator(object):
@@ -23,7 +23,7 @@ class PerNamespaceValidator(ActionVisitor, BaseValidator):
             require_explicit_overrides=require_explicit_overrides)  # @IgnorePep8
         BaseValidator.__init__(self)
 
-    # Over-ride this function, so we can extract out the
+    # Override this function, so we can extract out the
     # namespace, then propogate this as a parameter.
     def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
         namespace = component.get_node_addr()

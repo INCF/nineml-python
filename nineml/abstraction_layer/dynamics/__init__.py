@@ -10,5 +10,3 @@ from .regimes import (Regime, TimeDerivative,
                       StateVariable)
 from .transitions import (EventOut, OnCondition, Trigger, OnEvent,
                           StateAssignment, On)
-from ..ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
-                     EventSendPort, EventReceivePort)

@@ -5,10 +5,9 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.expressions.util import (is_builtin_symbol,
-                                                       MathUtil)
-from ...dynamics.utils.namespace import NamespaceAddress
-from nineml.abstraction_layer.componentclass import ActionVisitor, ComponentClassVisitor
+from ...expressions.utils import (is_builtin_symbol, MathUtil)
+from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
+from . import ActionVisitor, ComponentClassVisitor
 
 
 class ExpandPortDefinition(ActionVisitor):

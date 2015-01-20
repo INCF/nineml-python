@@ -1,4 +1,5 @@
-from nineml.abstraction_layer.componentclass import ComponentClass, BaseALObject
+from .. import BaseALObject
+from ..componentclass import ComponentClass
 
 
 class DistributionClass(ComponentClass):

@@ -6,11 +6,12 @@ This module provides the base class for these.
 
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
-"""nineml.abstraction_layer.componentclassfrom . import BaseALObject
+"""
+from .. import BaseALObject
 from nineml.xmlns import NINEML
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utility import filter_discrete_types, ensure_valid_identifier
-from nineml.abstraction_layer.componentclass import dimensionless, Dimension
+from ..units import dimensionless, Dimension
 
 
 class ComponentClass(BaseALObject):

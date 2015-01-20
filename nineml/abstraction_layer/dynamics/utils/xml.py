@@ -8,7 +8,7 @@ import os
 from urllib2 import urlopen
 from itertools import chain
 from lxml import etree
-from nineml.abstraction_layer.componentclass import ComponentClassVisitor
+from ...componentclass.utils import ComponentClassVisitor
 from .flattener import ComponentFlattener
 from nineml.annotations import annotate_xml
 import nineml

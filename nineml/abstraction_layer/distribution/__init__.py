@@ -1,1 +1,1 @@
-from .base import DistributionClass
+from .base import DistributionClass, Distribution

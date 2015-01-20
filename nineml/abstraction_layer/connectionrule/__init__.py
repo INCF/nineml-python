@@ -1,1 +1,1 @@
-from .base import ConnectionRuleClass
+from .base import ConnectionRuleClass, ConnectionRule

@@ -5,11 +5,11 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ...dynamics.visitors import ActionVisitor
+from ..utils import ActionVisitor
 from ...dynamics.regimes import Regime, StateVariable, TimeDerivative
 from ...dynamics.transitions import (EventOut, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
-from nineml.abstraction_layer.componentclass.base import ComponentClass, Parameter
+from ..base import ComponentClass, Parameter
 from ...expressions import Alias
 from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                       EventSendPort, EventReceivePort)

@@ -9,16 +9,16 @@ from urllib2 import urlopen
 from itertools import chain
 from lxml import etree
 from nineml.xmlns import E
-from nineml.abstraction_layer.componentclass import ComponentClassVisitor
-from nineml.abstraction_layer.componentclass import DynamicsClass
-from nineml.abstraction_layer.componentclass import (PropertySendPort, PropertyReceivePort, IndexSendPort,
-                     IndexReceivePort)
-from nineml.abstraction_layer.componentclass import Alias
+from . import ComponentClassVisitor
+from ...dynamics import DynamicsClass
+from ...ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
+                      IndexReceivePort)
+from ...expressions import Alias
 from nineml.abstraction_layer.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
-from ...utility import expect_single, filter_expect_single
-from ...xmlns import NINEML, MATHML, nineml_namespace
-from ...exceptions import NineMLRuntimeError
+from nineml.utility import expect_single, filter_expect_single
+from nineml.xmlns import NINEML, MATHML, nineml_namespace
+from nineml.exceptions import NineMLRuntimeError
 
 
 class BaseXMLLoader(object):

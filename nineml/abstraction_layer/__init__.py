@@ -22,7 +22,7 @@ import connectionrule
 import distribution
 import units
 import ports
-from nineml.abstraction_layer.componentclass import Parameter, ComponentClass, NamespaceAddress
+from .componentclass import Parameter, ComponentClass, NamespaceAddress
 from .expressions import Alias, Expression
 from .dynamics import (DynamicsClass, Regime,
                        EventOut, StateAssignment, TimeDerivative,

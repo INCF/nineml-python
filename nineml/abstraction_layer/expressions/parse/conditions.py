@@ -28,7 +28,7 @@ import os
 from .expressions import call_expr_func
 from nineml.utility import LocationMgr
 from nineml.exceptions import NineMLMathParseError
-from ..util import is_builtin_math_function, get_builtin_symbols
+from ..utils import is_builtin_math_function, get_builtin_symbols
 
 # for now avoid duplication, but maintain distinctness
 call_cond_func = call_expr_func

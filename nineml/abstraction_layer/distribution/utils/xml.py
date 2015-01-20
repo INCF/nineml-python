@@ -5,7 +5,7 @@ from nineml.utility import expect_single, filter_expect_single
 from nineml.xmlns import NINEML
 from nineml.abstraction_layer.componentclass.base import Parameter
 from nineml.abstraction_layer.ports import PropertySendPort
-from .base import DistributionClass, Distribution
+from ..base import DistributionClass, Distribution
 from nineml.abstraction_layer.componentclass.utils.xml import BaseXMLWriter
 from nineml.exceptions import NineMLRuntimeError
 
@@ -17,8 +17,8 @@ class XMLLoader(object):
 
     def load_subnode(self, subnode):
         namespace = subnode.get('namespace')
-        component = filter_expect_single(self.components,
-                                       lambda c: c.name == subnode.get('node'))
+        component = filter_expect_single(
+            self.components, lambda c: c.name == subnode.get('node'))
         return namespace, component
 
     def load_componentclass(self, element):

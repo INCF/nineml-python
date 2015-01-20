@@ -6,9 +6,9 @@ docstring needed
 """
 
 from nineml.abstraction_layer.dynamics.utils import xml
-from nineml.abstraction_layer.dynamics import validators
-from nineml.abstraction_layer.dynamics.utils import flattener as flattening2
+from ..utils import flattener as flattening2
 from nineml.utility import file_sha1_hexdigest
+from ...componentclass.validators import ComponentEqualityChecker
 
 
 class TestXMLWriteReadWrite(object):
@@ -19,7 +19,7 @@ class TestXMLWriteReadWrite(object):
         print '  -- Testing One and a half trips...'
 
         if not component.is_flat():
-            component = flattening2.flattener(component)
+            component = flattening2.flatten(component)
 
         xmlfile1 = build_dir + component.name + '1.xml'
         xmlfile2 = build_dir + component.name + '2.xml'
@@ -31,7 +31,7 @@ class TestXMLWriteReadWrite(object):
         reloaded_comp = xml.XMLReader.read(xmlfile1)
 
         print '    -- Checking Components are identical'
-        validators.ComponentEqualityChecker.check_equal(component, reloaded_comp)
+        ComponentEqualityChecker.check_equal(component, reloaded_comp)
 
         print '    -- Saving Reloaded Component to XML', xmlfile2
         xml.XMLWriter.write(reloaded_comp, xmlfile2)
