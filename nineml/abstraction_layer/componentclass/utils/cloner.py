@@ -8,7 +8,7 @@ from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.expressions.util import (is_builtin_symbol,
                                                        MathUtil)
 from ...dynamics.utils.namespace import NamespaceAddress
-from .visitors import ActionVisitor, ComponentClassVisitor
+from nineml.abstraction_layer.componentclass import ActionVisitor, ComponentClassVisitor
 
 
 class ExpandPortDefinition(ActionVisitor):

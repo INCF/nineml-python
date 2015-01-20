@@ -8,12 +8,12 @@ components definitions of interface and dynamics
 """
 import itertools
 from ...exceptions import NineMLRuntimeError
-from ..base import NamespaceAddress
+from nineml.abstraction_layer.componentclass import NamespaceAddress
 
 from ...utility import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from ..expressions import Alias
-from ..base import ComponentClass, Parameter
+from nineml.abstraction_layer.componentclass import ComponentClass, Parameter
 from .regimes import StateVariable
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
@@ -22,10 +22,10 @@ from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
 from ..expressions.util import get_reserved_and_builtin_symbols
-from ..base.utils.cloner import ExpandAliasDefinition, ClonerVisitor
+from nineml.abstraction_layer.componentclass import ExpandAliasDefinition, ClonerVisitor
 from .. import BaseALObject
-from ..base.utils.visitors import ActionVisitor
-from ..base.utils.queryer import Queryer
+from nineml.abstraction_layer.componentclass import ActionVisitor
+from nineml.abstraction_layer.componentclass import Queryer
 
 
 class _FlatMixin(object):

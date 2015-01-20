@@ -7,7 +7,7 @@ docstring needed
 
 # from nineml.abstraction_layer.visitors import ActionVisitor
 
-from ..visitors import ActionVisitor
+from nineml.abstraction_layer.componentclass import ActionVisitor
 
 
 class BaseValidator(object):

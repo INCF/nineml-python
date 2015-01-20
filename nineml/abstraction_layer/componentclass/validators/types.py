@@ -9,7 +9,7 @@ from ...dynamics.visitors import ActionVisitor
 from ...dynamics.regimes import Regime, StateVariable, TimeDerivative
 from ...dynamics.transitions import (EventOut, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
-from ...componentclass import ComponentClass, Parameter
+from nineml.abstraction_layer.componentclass.base import ComponentClass, Parameter
 from ...expressions import Alias
 from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                       EventSendPort, EventReceivePort)

@@ -8,8 +8,8 @@ docstring needed
 import itertools
 from collections import defaultdict
 from nineml.utility import flatten_first_level
-from ...base.utils import (ClonerVisitor, ClonerVisitorPrefixNamespace,
-                           ExpandPortDefinition)
+from ...componentclass import (ClonerVisitor, ClonerVisitorPrefixNamespace,
+                               ExpandPortDefinition)
 from .namespace import NamespaceAddress
 from nineml.exceptions import NineMLRuntimeError
 from ..base import DynamicsClass

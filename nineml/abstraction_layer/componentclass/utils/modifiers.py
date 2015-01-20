@@ -5,12 +5,11 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
-from ...componentclass import Parameter
-from .cloner import ExpandPortDefinition
+from nineml.abstraction_layer.componentclass.base import Parameter
+from nineml.abstraction_layer.componentclass import ExpandPortDefinition
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utility import filter_expect_single
-from nineml.exceptions import NineMLRuntimeError
-from .. import BaseALObject
+from nineml.exceptions import NineMLRuntimeErronineml.abstraction_layer.componentclassfrom .. import BaseALObject
 
 
 class ComponentModifier(BaseALObject):

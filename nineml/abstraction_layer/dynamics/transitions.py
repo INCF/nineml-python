@@ -6,7 +6,7 @@ This file contains the definitions for the Events
 """
 
 from ...utility import ensure_valid_identifier, filter_discrete_types
-from ..base import BaseALObject
+from nineml.abstraction_layer.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ..expressions.util import MathUtil, str_to_npfunc_map
 from ...exceptions import NineMLRuntimeError

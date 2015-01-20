@@ -3,10 +3,10 @@ from lxml.builder import E
 from nineml.xmlns import nineml_namespace
 from nineml.utility import expect_single, filter_expect_single
 from nineml.xmlns import NINEML
-from nineml.abstraction_layer.componentclass import Parameter
+from nineml.abstraction_layer.componentclass.base import Parameter
 from nineml.abstraction_layer.ports import PropertySendPort
 from .base import DistributionClass, Distribution
-from nineml.abstraction_layer.base.utils.xml import BaseXMLWriter
+from nineml.abstraction_layer.componentclass.utils.xml import BaseXMLWriter
 from nineml.exceptions import NineMLRuntimeError
 
 

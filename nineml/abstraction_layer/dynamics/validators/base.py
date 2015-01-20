@@ -4,19 +4,19 @@ This file contains the ComponentValidator class for validating component
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...base.validators.types import TypesValidator
-from ...base.validators.ports import (
+from nineml.abstraction_layer.componentclass import TypesValidator
+from nineml.abstraction_layer.componentclass import (
     EventPortsValidator, OutputAnalogPortsValidator)
-from ...base.validators.namingconflicts import (
+from nineml.abstraction_layer.componentclass import (
     LocalNameConflictsValidator, DimensionNameConflictsValidator)
-from ...base.validators.general import (
+from nineml.abstraction_layer.componentclass import (
     TimeDerivativesAreDeclaredValidator, NoDuplicatedObjectsValidator,
     NoUnresolvedSymbolsValidator,
     PortConnectionsValidator, StateAssignmentsAreOnStateVariablesValidator,
     AliasesAreNotRecursiveValidator, RegimeGraphValidator,
     RegimeOnlyHasOneHandlerPerEventValidator,
     CheckNoLHSAssignmentsToMathsNamespaceValidator)
-from ...base.validators.regimenames import DuplicateRegimeNamesValidator
+from nineml.abstraction_layer.componentclass import DuplicateRegimeNamesValidator
 
 
 class ComponentValidator(object):

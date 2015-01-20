@@ -7,7 +7,7 @@ docstring needed
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from .base import PerNamespaceValidator
+from nineml.abstraction_layer.componentclass import PerNamespaceValidator
 
 
 class EventPortsValidator(PerNamespaceValidator):

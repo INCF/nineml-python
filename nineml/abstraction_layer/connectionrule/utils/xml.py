@@ -1,7 +1,7 @@
 from lxml import etree
 from nineml.xmlns import E, NINEML
 from nineml.exceptions import NineMLRuntimeError
-from ...base.utils.xml import BaseXMLLoader, BaseXMLReader, BaseXMLWriter
+from nineml.abstraction_layer.componentclass import BaseXMLLoader, BaseXMLReader, BaseXMLWriter
 from .base import ConnectionRuleClass, ConnectionRule
 from nineml.xmlns import nineml_namespace
 

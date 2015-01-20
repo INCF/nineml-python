@@ -14,7 +14,7 @@ docstring goes here
 """
 
 from abc import ABCMeta, abstractmethod, abstractproperty
-from ..base import BaseALObject, ComponentClass
+from nineml.abstraction_layer.componentclass import BaseALObject, ComponentClass
 
 
 class ConnectionRuleClass(ComponentClass):
