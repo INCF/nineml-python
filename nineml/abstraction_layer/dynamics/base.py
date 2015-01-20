@@ -605,7 +605,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         return self.flattener is not None
 
     def _validate_self(self):
-        from .validators import ComponentValidator
+        from nineml.abstraction_layer.dynamics.validators import ComponentValidator
         ComponentValidator.validate_component(self)
 
     @property

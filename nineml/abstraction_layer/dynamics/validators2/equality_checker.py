@@ -6,6 +6,7 @@ docstring needed
 """
 
 from nineml.utility import safe_dict
+import types
 
 
 class UnequalException(Exception):
@@ -23,39 +24,30 @@ class UnequalException(Exception):
         return s
 
 
-import types
-
-
 def assert_equal(o1, o2, msg=''):
-
     if not isinstance(o1, (types.NoneType, basestring)):
         print o1, o2
         assert not (o1 is o2)
-
     assert type(o1) == type(o2)
     assert isinstance(o1, (basestring, types.NoneType))
-
     if o1 == o2:
         return
-
     raise UnequalException(o1, o2, msg)
 
 
 def assert_equal_list(o1, o2, msg='', do_sort=True):
-    assert not o1 is o2
+    assert o1 is not o2
     assert type(o1) == type(o2)
     assert isinstance(o1, (tuple, list))
-
-    if sorted(o1) == sorted(o2):
+    if do_sort and sorted(o1) == sorted(o2):
         return
-
     raise UnequalException(sorted(o1), sorted(o2), msg)
 
 
 class ComponentEqualityChecker(object):
 
     @classmethod
-    def check_equal(cls,  comp1, comp2, strict_aliases=True):
+    def check_equal(cls, comp1, comp2, strict_aliases=True):
         """Forwarding Function :Easier Interface"""
         cls.check_equal_component(comp1, comp2, strict_aliases=strict_aliases)
 

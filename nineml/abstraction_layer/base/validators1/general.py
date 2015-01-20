@@ -6,26 +6,23 @@ docstring needed
 """
 
 from collections import defaultdict
-
-
-from base import PerNamespaceValidator
-
+from . import PerNamespaceValidator
 from nineml.exceptions import NineMLRuntimeError
-from nineml.maths import get_reserved_and_builtin_symbols, is_valid_lhs_target
-from nineml.abstraction_layer.dynamics.component.namespaceaddress import NamespaceAddress  # @IgnorePep8
+from ...expressions.util import (get_reserved_and_builtin_symbols,
+                                 is_valid_lhs_target)
 from nineml.utility import assert_no_duplicates
+from ..namespace import NamespaceAddress
 
 
-class TimeDerivativesAreDeclaredValidator(
-                                               PerNamespaceValidator):
+class TimeDerivativesAreDeclaredValidator(PerNamespaceValidator):
 
     """ Check all variables used in TimeDerivative blocks are defined
         as  StateVariables.
     """
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
         self.sv_declared = defaultdict(list)
         self.time_derivatives_used = defaultdict(list)
 
@@ -80,8 +77,8 @@ class AliasesAreNotRecursiveValidator(PerNamespaceValidator):
     """Check that aliases are not self-referential"""
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, explicitly_require_action_overrides=False)
         self.visit(component)
 
     def action_componentclass(self, component, namespace):
@@ -112,7 +109,7 @@ class AliasesAreNotRecursiveValidator(PerNamespaceValidator):
                 raise NineMLRuntimeError(errmsg)
 
 
-class AssignmentsAliasesAndStateVariablesHaveNoUnResolvedSymbolsValidator(PerNamespaceValidator):  # @IgnorePep8
+class NoUnresolvedSymbolsValidator(PerNamespaceValidator):  # @IgnorePep8
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
