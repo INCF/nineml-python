@@ -382,7 +382,10 @@ class EventOut(BaseALObject):
         return self._port_name
 
     def __str__(self):
-        return 'Output Event( port: %s )' % self.port_name
+        return 'EventOut( port: %s )' % self.port_name
+
+    def __repr__(self):
+        return "EventOut('%s')" % self.port_name
 
 
 def SpikeOutputEvent():

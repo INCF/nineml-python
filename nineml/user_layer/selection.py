@@ -1,5 +1,6 @@
 from operator import itemgetter
-from nineml.user_layer.component import BaseULObject, resolve_reference, write_reference, Reference
+from . import BaseULObject
+from .component import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
 from ..utility import expect_single, check_tag
@@ -32,9 +33,15 @@ def find_difference(this, that):
 
 
 class Selection(BaseULObject):
-
     """
-    Container for combining multiple populations or subsets thereof
+    Container for combining multiple populations or subsets thereof.
+
+    **Arguments**:
+        *name*
+            a name for the selection
+        *operation*
+            a "selector" object which determines which neurons form part of the
+            selection. Only :class:`Concatenate` is currently supported.
     """
     element_name = "Selection"
     defining_attributes = ('name', 'operation')
@@ -43,6 +50,9 @@ class Selection(BaseULObject):
         super(Selection, self).__init__()
         self.name = name
         self.operation = operation
+
+    def __repr__(self):
+        return "Selection('%s', '%r')" % (self.name, self.operation)
 
     @write_reference
     @annotate_xml
@@ -57,20 +67,20 @@ class Selection(BaseULObject):
     def from_xml(cls, element, document):
         check_tag(element, cls)
         # The only supported op at this stage
-        op = Concatenate.from_xml(expect_single(element.findall(NINEML +
-                                                               'Concatenate')),
-                                  document)
+        op = Concatenate.from_xml(
+            expect_single(element.findall(NINEML + 'Concatenate')), document)
         return cls(element.attrib['name'], op)
 
     def evaluate(self):
-        assert isinstance(self.operation, Concatenate), "Only concatenation is currently supported"
+        assert (isinstance(self.operation, Concatenate),
+                "Only concatenation is currently supported")
         return (item.user_layer_object for item in self.operation.items)
 
 
 class Concatenate(BaseULObject):
     """
-    Concatenates multiple Populations or Selections together into
-    a greater Selection
+    Concatenates multiple :class:`Population`\s or :class:`Selection`\s
+    together into a larger :class:`Selection`.
     """
 
     element_name = 'Concatenate'
@@ -80,8 +90,15 @@ class Concatenate(BaseULObject):
         super(Concatenate, self).__init__()
         self._items = items
 
+    def __repr__(self):
+        return "Concatenate(%s)" % ", ".join(repr(item) for item in self.items)
+
     @property
     def items(self):
+        """Return a list of the items in the concatenation."""
+        # should this perhaps flatten to a list of Populations, where the
+        # concatenation includes other Selections? or should that be a separate
+        # method?
         return self._items
 
     @write_reference
@@ -94,7 +111,7 @@ class Concatenate(BaseULObject):
                 return E.Reference(item.name)
         return E(self.element_name,
                  *[E.Item(item_to_xml(item), index=str(i))
-                  for i, item in enumerate(self.items)])
+                   for i, item in enumerate(self.items)])
 
     @classmethod
     @resolve_reference
@@ -124,7 +141,7 @@ class Concatenate(BaseULObject):
 #            salvaging as we look to implement some of this functionality for
 #            version 2.0
 #
-#class Set(BaseULObject):
+# class Set(BaseULObject):
 #     """
 #     A set of network nodes selected from existing populations within the
 #     Network.

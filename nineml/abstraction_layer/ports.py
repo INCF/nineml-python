@@ -14,8 +14,8 @@ from nineml.exceptions import NineMLRuntimeError
 class Port(BaseALObject):
 
     """
-    Base class for |PropertySendPort|, |PropertyReceivePort|, |IndexSendPort|,
-    |IndexReceivePort| and |PropertyReducePort|.
+    Base class for |PropertySendPorts|, |PropertyReceivePorts|,
+    |IndexSendPorts|, |IndexReceivePorts| and |PropertyReducePorts|.
 
     In general, a port has a ``name``, which can be used to reference it,
     and a ``mode``, which specifies whether it sends or receives information.
@@ -23,8 +23,8 @@ class Port(BaseALObject):
     Generally, a send port can be connected to receive port to allow different
     components to communicate.
 
-    |PropertySendPort| and |IndexSendPort|s can be connected to any number of
-    |PropertyReceivePort| and |IndexReceivePort|s respectively, but each
+    |PropertySendPorts| and |IndexSendPorts| can be connected to any number of
+    |PropertyReceivePorts| and |IndexReceivePorts| respectively, but each
     |PropertyReceivePort| and |IndexReceivePort| can only be connected to a
     single |PropertySendPort| and |IndexSendPort| respectively.
 

@@ -17,18 +17,21 @@ class BaseALObject(BaseNineMLObject):
 
 
 import dynamics
-import nineml.abstraction_layer.maths.base
+import expressions
 import connectionrule
 import distribution
+import units
+import ports
 from .base import Parameter, ComponentClass, NamespaceAddress
-from nineml.abstraction_layer.maths.base import Alias, Expression
+from .expressions import Alias, Expression
 from .dynamics import (DynamicsClass, Regime,
                        EventOut, StateAssignment, TimeDerivative,
-                       AnalogSendPort, AnalogReceivePort,
-                       AnalogReducePort, EventSendPort,
-                       EventReceivePort, Dynamics, OnCondition,
+                       Dynamics, OnCondition,
                        Condition, StateVariable, OnEvent, On,
                        EventOut as OutputEvent)  # For old tests
+from .ports import (AnalogSendPort, AnalogReceivePort,
+                    AnalogReducePort, EventSendPort,
+                    EventReceivePort, AnalogPort, EventPort, Port)
 from .dynamics import flatten as flattening  # For old tests
 from .connectionrule import ConnectionRuleClass
 from .distribution import DistributionClass

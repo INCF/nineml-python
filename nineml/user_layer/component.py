@@ -12,12 +12,24 @@ from ..utility import expect_single, check_tag, check_units
 from ..abstraction_layer.units import Unit, unitless
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
+from nineml.document import Document
 
 
 class Reference(BaseReference):
-
     """
-    Base class for model components that are defined in the abstraction layer.
+    A reference to a NineML user layer object previously defined or defined elsewhere.
+
+    **Arguments**:
+        *name*
+            The name of a NineML object which already exists, or which is
+            defined in a separate XML file.
+        *context*
+            A dictionary or :class:`Context` object containing the object
+            being referred to, if the object already exists.
+        *url*
+            If the object is defined in a separate XML file, the URL
+            of the file.
+
     """
     element_name = "Reference"
 
@@ -39,6 +51,7 @@ class Reference(BaseReference):
 
     @property
     def user_layer_object(self):
+        """The object being referred to."""
         return self._referred_to
 
 
@@ -105,7 +118,8 @@ class Component(BaseULObject):
         self.name = name
         if isinstance(definition, basestring):
             definition = Definition(name=definition.replace(".xml", ""),
-                                    document=None, url=definition)
+                                    document=Document(_url=definition),
+                                    url=definition)
         elif not (isinstance(definition, Definition) or
                   isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
@@ -376,6 +390,11 @@ class Property(BaseULObject):
         else:
             raise Exception("Cannot access single value for array or component"
                             " type")
+
+    @property
+    def quantity(self):
+        """The value of the parameter (magnitude and units)."""
+        return (self.value, self.units)
 
     @property
     def value_array(self):

@@ -6,11 +6,19 @@ from nineml.annotations import annotate_xml, read_annotations
 
 
 class Population(BaseULObject):
-
     """
-    A collection of network nodes all of the same type. Nodes may either be
-    individual spiking nodes (neurons) or groups (motifs, microcircuits,
-    columns, etc.)
+    A collection of spiking neurons all of the same type.
+
+    **Arguments**:
+        *name*
+            a name for the population.
+        *number*
+            an integer, the number of neurons in the population
+        *cell*
+            a :class:`Component`, or :class:`Reference` to a component defining
+            the cell type (i.e. the mathematical model and its parameterisation).
+        *positions*
+            TODO: need to check if positions/structure are in the v1 spec
     """
     element_name = "Population"
     defining_attributes = ("name", "number", "cell", "positions")
@@ -35,6 +43,9 @@ class Population(BaseULObject):
                         if self.positions else ''))
 
     def get_components(self):
+        """
+        Return a list of all components used by the population.
+        """
         components = []
         if self.cell:
             components.append(self.cell)
@@ -75,11 +86,19 @@ class Population(BaseULObject):
 
 
 class PositionList(BaseULObject):
-
     """
-    Represents a list of network node positions. May contain either an
-    explicit list of positions or a Structure instance that can be used to
+    Represents a list of network node positions. May contain either an explicit
+    list of positions or a :class:`Structure` instance that can be used to
     generate positions.
+
+    Either `positions` or `structure` should be provided. Providing both
+    will raise an Exception.
+
+    **Arguments**:
+        *positions*
+            a list of (x,y,z) tuples or a 3xN (Nx3?) numpy array.
+        *structure*
+            a :class:`Structure` component.
     """
     element_name = "Layout"
     defining_attributes = []

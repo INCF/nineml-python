@@ -14,9 +14,40 @@ from .values import SingleValue, ArrayValue, ExternalArrayValue
 
 
 class Projection(BaseULObject):
-
     """
-    A collection of connections between two Populations.
+    A collection of connections between two :class:`Population`\s.
+
+    **Arguments**:
+        *name*
+            a name for this projection.
+        *source*
+            the presynaptic :class:`Population`.
+        *destination*
+            the postsynaptic :class:`Population`.
+        *response*
+            a `dynamics` :class:`Component` that defines the post-synaptic
+            response.
+        *plasticity*
+            a `dynamics` :class:`Component` that defines the plasticity
+            rule for the synaptic weight/efficacy.
+        *connectivity*
+            a `connection rule` :class:`Component` that defines
+            an algorithm for wiring up the neurons.
+        *delay*
+            a :class:`Delay` object specifying the delay of the connections.
+        *port_connections*
+            a list of :class:`PortConnection` tuples
+            `(sender, receiver, send_port, receive_port)` that
+            define the connections between the 4 components
+            of the projection, 'source', 'destination', 'response', 'plasticity'.
+            'sender' and 'receiver' must be one of these 4 names and
+            'send_port' and 'receive_port' must each be the name of
+            one of the ports in the corresponding components.
+
+    **Attributes**:
+
+    Each of the arguments to the constructor is available as an attribute of
+    the same name.
 
     """
     element_name = "Projection"
@@ -30,31 +61,13 @@ class Projection(BaseULObject):
                  plasticity, connectivity, delay, port_connections):
         """
         Create a new projection.
-
-        name             -- a name for this Projection
-        source           -- the presynaptic Population
-        destination      -- the postsynaptic Population
-        response         -- a Component>Dynamics that defines the post-synaptic
-                            response of the connections
-        plasticity       -- a Component>Dynamics that defines the plasticity
-                            rule on the response synaptic response
-        connectivity     -- a Component>ConnectionRule instance, encapsulating
-                            an algorithm for wiring up the connections.
-        delay            -- a Quantity object specifying the delay of the
-                            connections
-        port_connections -- a list of `PortConnection` tuples
-                            (sender, receiver, send_port, receive_port) that
-                            define the connections between the 4 components
-                            of the projection, 'source', 'destination',
-                            'response', 'plasticity'. 'sender' and 'receiver'
-                            must be one of these 4 component names and
-                            'send_port' and 'receive_port' must be the name of
-                            one of the ports in the corresponding components.
         """
         super(Projection, self).__init__()
         self.name = name
         self.source = source
-        if source._from_reference is None:  # when exporting to XML, should use reference @IgnorePep8
+        # When exporting to XML we use the reference instead of the object
+        # maintaing the original format of the XML.
+        if source._from_reference is None:
             source._from_reference = Reference(source.name,
                                                {source.name: source})
         self.destination = destination
@@ -114,6 +127,9 @@ class Projection(BaseULObject):
                 raise NineMLRuntimeError(msg)
 
     def get_components(self):
+        """
+        Return a list of all components used by the projection.
+        """
         components = []
         for name in ('connectivity', 'response', 'plasticity'):
             component = getattr(self, name)
@@ -149,11 +165,13 @@ class Projection(BaseULObject):
         # Get Source
         e = expect_single(element.findall(NINEML + 'Source'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        source = nineml.user_layer.Reference.from_xml(e, document).user_layer_object  ###?
+        source = nineml.user_layer.Reference.from_xml(
+            e, document).user_layer_object
         # Get Destination
         e = expect_single(element.findall(NINEML + 'Destination'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        destination = nineml.user_layer.Reference.from_xml(e, document).user_layer_object   ###?
+        destination = nineml.user_layer.Reference.from_xml(
+            e, document).user_layer_object
         # Get Response
         e = element.find(NINEML + 'Response')
         response = Component.from_xml(e.find(NINEML + 'Component') or
@@ -215,7 +233,23 @@ class Projection(BaseULObject):
 
 # TODO: This and Property should inherit from a BaseQuantity class
 class Delay(BaseULObject):
+    """
+    Representation of the connection delay.
 
+    **Arguments**:
+        *value*
+            a numerical value, array of such values, or a component which
+            generates such values (e.g. a random number generator). Allowed
+            types are :class:`int`, :class:`float`, :class:`SingleValue`,
+            :class:`ArrayValue', :class:`ExternalArrayValue`,
+            :class:`ComponentValue`.
+        *units*
+            a :class:`Unit` object representing the physical units of the
+            value.
+
+    Numerical values may either be numbers, or a component that generates
+    numbers, e.g. a RandomDistribution instance.
+    """
     element_name = 'Delay'
 
     def __init__(self, value, units):
@@ -233,7 +267,7 @@ class Delay(BaseULObject):
         return isinstance(self._value, SingleValue)
 
     def is_random(self):
-        return isinstance(self._value, ComponentValue)
+        raise NotImplementedError
 
     def is_array(self):
         return (isinstance(self._value, ArrayValue) or
@@ -270,7 +304,7 @@ class Delay(BaseULObject):
         return "Delay(value=%s, units=%s)" % (self.value, units)
 
     def __eq__(self, other):
-        # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV,
+        # FIXME: obviously we should resolve the units, so 0.001 s == 1 ms,
         #        could use python-quantities package to do this if we are
         #        okay with the dependency
         return (isinstance(other, self.__class__) and
@@ -320,18 +354,20 @@ class Delay(BaseULObject):
 class PortConnection(object):
     """
     Specifies the connection of a send port with a receive port between two
-    components in the projection
+    :class:`Component`\s in a :class:`Projection`.
+
+    **Arguments**:
+        *sender*
+           one of 'source', 'destination', 'plasticity' or 'response'.
+        *receiver*
+            one of 'source', 'destination', 'plasticity' or 'response'.
+        *send_port*
+            the name of a send port in the sender component.
+        *receive_port*
+            the name of a receive or reduce port in the receiver component.
     """
 
     def __init__(self, sender, receiver, send_port, receive_port):
-        """
-        sender_role   -- one of 'source', 'destination', 'plasticity' or
-                         'response'
-        receiver_role -- one of 'source', 'destination', 'plasticity' or
-                         'response'
-        send_port     -- A port name of a send port in the sender component
-        receive_port  -- A port name of a send port in the receiver component
-        """
         if sender not in Projection._component_roles:
             raise Exception("Sender must be one of '{}'"
                             .format("', '".join(Projection._component_roles)))
@@ -360,33 +396,40 @@ class PortConnection(object):
                 self.receive_port == other.receive_port)
 
     def __repr__(self):
-        return "PortConnection('%s', '%s', '%s', '%s')" % (self._send_role, self._receive_role, self.send_port, self.receive_port)
+        return ("PortConnection('{}', '{}', '{}', '{}')"
+                .format(self._send_role, self._receive_role, self.send_port,
+                        self.receive_port))
 
     def __hash__(self):
         return (hash(self._send_role) ^ hash(self._receive_role) ^
                 hash(self.send_port) ^ hash(self.receive_port))
 
     def set_projection(self, projection):
+        """docstring"""
         self._projection = projection
 
     @property
     def sender(self):
+        """The sending component."""
         assert self._projection is not None, ("Projection not set on port "
                                               "connection")
         return getattr(self._projection, self._send_role)
 
     @property
     def receiver(self):
+        """The receiving component."""
         assert self._projection is not None, ("Projection not set on port "
                                               "connection")
         return getattr(self._projection, self._receive_role)
 
     @property
     def send_class(self):
+        """The class of the sending component."""
         return self._get_class(self.sender)
 
     @property
     def receive_class(self):
+        """The class of the receiving component."""
         return self._get_class(self.receiver)
 
     def _get_class(self, comp):
@@ -399,8 +442,8 @@ class PortConnection(object):
         elif isinstance(comp, nineml.user_layer.Component):
             comp_class = comp.component_class
         elif isinstance(comp, nineml.user_layer.Selection):
-            #print ("Warning: port connections have not been check for '{}' "
-            #       "Selection".format(comp.name))
+            # print ("Warning: port connections have not been checked for '{}'"
+            #        " Selection".format(comp.name))
             # only implemented for Concatenate
             def resolve(item):   # doing this here is a hack, I think
                 if isinstance(item, Reference):
@@ -410,9 +453,13 @@ class PortConnection(object):
             comp_classes = {}
             for item in comp.operation.items:
                 cc = resolve(item).cell.component_class
-                comp_classes[cc.name] = cc   # here we use equality of component class names, should really use equality of component classes
+                # here we use equality of component class names, should really
+                # use equality of component classes
+                comp_classes[cc.name] = cc
             if len(comp_classes) > 1:
-                raise Exception("Selection contains multiple component classes: %s" % str(comp_classes))
+                raise Exception(
+                    "Selection contains multiple component classes: {}"
+                    .format(comp_classes))
             comp_class = comp_classes.values()[0]
         else:
             assert False, ("Invalid '{}' object in port connection"

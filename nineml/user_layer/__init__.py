@@ -63,8 +63,9 @@ class BaseULObject(BaseNineMLObject):
 from .network import Network
 from .population import Population, PositionList, Structure
 from .selection import Selection, Concatenate
-from .projection import Projection, PortConnection
-from nineml.user_layer.component import (PropertySet, Property, Component, Definition, Prototype,
-                   DynamicsComponent, ConnectionRuleComponent,
-                   DistributionComponent, resolve_reference,
-                   write_reference, Reference)
+from .projection import Projection, PortConnection, Delay
+from .component import (PropertySet, Property, Component, Definition,
+                        Prototype, DynamicsComponent, ConnectionRuleComponent,
+                        DistributionComponent, resolve_reference,
+                        write_reference, Reference, InitialValue,
+                        InitialValueSet)
