@@ -76,7 +76,7 @@ class ComponentClass(BaseALObject):
 
     @property
     def dimensions(self):
-        return set(p.dimension for p in self._attributes_with_dimension)
+        return set(a.dimension for a in self._attributes_with_dimension)
 
     @property
     def _attributes_with_dimension(self):

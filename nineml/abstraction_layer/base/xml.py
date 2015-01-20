@@ -316,31 +316,31 @@ class BaseXMLWriter(ComponentVisitor):
                  dimension=parameter.dimension.name)
 
     @annotate_xml
-    def visit_propertyreceiveport(self, port, **kwargs):
+    def visit_propertyreceiveport(self, port):
         return E('PropertyReceivePort', name=port.name,
-                 dimension=port.dimension.name, **kwargs)
+                 dimension=port.dimension.name)
 
     @annotate_xml
-    def visit_propertysendport(self, port, **kwargs):
+    def visit_propertysendport(self, port):
         return E('PropertySendPort', name=port.name,
-                 dimension=port.dimension.name, **kwargs)
+                 dimension=port.dimension.name)
 
     @annotate_xml
-    def visit_indexsendport(self, port, **kwargs):
-        return E('IndexSendPort', name=port.name, **kwargs)
+    def visit_indexsendport(self, port):
+        return E('IndexSendPort', name=port.name)
 
     @annotate_xml
-    def visit_indexreceiveport(self, port, **kwargs):
-        return E('IndexReceivePort', name=port.name, **kwargs)
+    def visit_indexreceiveport(self, port):
+        return E('IndexReceivePort', name=port.name)
 
     @annotate_xml
     def visit_dimension(self, dimension):
         kwargs = {'name': dimension.name}
         kwargs.update(dict((k, str(v)) for k, v in dimension._dims.items()))
-        return E('Dimension', **kwargs)
+        return E('Dimension')
 
     @annotate_xml
-    def visit_alias(self, alias, **kwargs):  # @UnusedVariable
+    def visit_alias(self, alias):
         return E('Alias',
                  E("MathInline", alias.rhs),
                  name=alias.lhs)

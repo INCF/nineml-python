@@ -427,76 +427,50 @@ class XMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_statevariable(self, state_variable):
-        kwargs = {}
-        if state_variable.dimension != dimensionless:
-            kwargs['dimension'] = state_variable.dimension.name
         return E('StateVariable',
-                 name=state_variable.name, **kwargs)
+                 name=state_variable.name,
+                 dimension=state_variable.dimension.name)
 
     @annotate_xml
-    def visit_outputevent(self, output_event, **kwargs):  # @UnusedVariable
+    def visit_outputevent(self, output_event):
         return E('EventOut',
                  port=output_event.port_name)
 
     @annotate_xml
-    def visit_parameter(self, parameter):
-        kwargs = {}
-        if parameter.dimension != dimensionless:
-            kwargs['dimension'] = parameter.dimension.name
-        return E('Parameter',
-                 name=parameter.name, **kwargs)
-
-    @annotate_xml
-    def visit_dimension(self, dimension):
-        kwargs = {'name': dimension.name}
-        kwargs.update(dict((k, str(v)) for k, v in dimension._dims.items()))
-        return E('Dimension',
-                 **kwargs)
-
-    @annotate_xml
-    def visit_analogreceiveport(self, port, **kwargs):
+    def visit_analogreceiveport(self, port):
         return E('AnalogReceivePort', name=port.name,
-                 dimension=(port.dimension.name
-                            if port.dimension else 'dimensionless'),
-                 **kwargs)
+                 dimension=port.dimension.name)
 
     @annotate_xml
-    def visit_analogreduceport(self, port, **kwargs):
-        kwargs['operator'] = port.reduce_op
+    def visit_analogreduceport(self, port):
         return E('AnalogReducePort', name=port.name,
-                 dimension=(port.dimension.name
-                            if port.dimension else 'dimensionless'),
-                 **kwargs)
+                 dimension=port.dimension.name, operator=port.reduce_op)
 
     @annotate_xml
-    def visit_analogsendport(self, port, **kwargs):
+    def visit_analogsendport(self, port):
         return E('AnalogSendPort', name=port.name,
-                 dimension=(port.dimension.name
-                            if port.dimension else 'dimensionless'),
-                 **kwargs)
+                 dimension=port.dimension.name)
 
     @annotate_xml
-    def visit_eventsendport(self, port, **kwargs):
-        return E('EventSendPort', name=port.name, **kwargs)
+    def visit_eventsendport(self, port):
+        return E('EventSendPort', name=port.name)
 
     @annotate_xml
-    def visit_eventreceiveport(self, port, **kwargs):
-        return E('EventReceivePort', name=port.name, **kwargs)
+    def visit_eventreceiveport(self, port):
+        return E('EventReceivePort', name=port.name)
 
     @annotate_xml
-    def visit_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def visit_assignment(self, assignment):
         return E('StateAssignment',
                  E("MathInline", assignment.rhs),
                  variable=assignment.lhs)
 
     @annotate_xml
-    def visit_alias(self, alias, **kwargs):  # @UnusedVariable
-        return E('Alias',
-                 E("MathInline", alias.rhs),
-                 name=alias.lhs)
+    def visit_alias(self, alias):
+        return E('Alias', E("MathInline", alias.rhs), name=alias.lhs)
 
     @annotate_xml
-    def visit_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+    def visit_timederivative(self, time_derivative):
         return E('TimeDerivative',
                  E("MathInline", time_derivative.rhs),
                  variable=time_derivative.dependent_variable)
@@ -506,10 +480,8 @@ class XMLWriter(ComponentVisitor):
         nodes = chain(on_condition.state_assignments,
                       on_condition.event_outputs, [on_condition.trigger])
         newNodes = [n.accept_visitor(self) for n in nodes]
-        kwargs = {}
-        if on_condition.target_regime:
-            kwargs['target_regime'] = on_condition._target_regime.name
-        return E('OnCondition', *newNodes, **kwargs)
+        return E('OnCondition', *newNodes,
+                 target_regime=on_condition._target_regime.name)
 
     @annotate_xml
     def visit_condition(self, condition):
@@ -517,12 +489,9 @@ class XMLWriter(ComponentVisitor):
                  E("MathInline", condition.rhs))
 
     @annotate_xml
-    def visit_onevent(self, on_event, **kwargs):  # @UnusedVariable
+    def visit_onevent(self, on_event):
         elements = ([p.accept_visitor(self)
                      for p in on_event.state_assignments] +
                     [p.accept_visitor(self) for p in on_event.event_outputs])
-        kwargs = {'port': on_event.src_port_name}
-        if on_event.target_regime:
-            kwargs['target_regime'] = on_event.target_regime.name
-        return E('OnEvent', *elements, **kwargs)
-        assert False
+        return E('OnEvent', *elements, port=on_event.src_port_name,
+                 target_regime=on_event.target_regime.name)
