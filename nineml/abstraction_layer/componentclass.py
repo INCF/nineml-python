@@ -8,7 +8,8 @@ This module provides the base class for these.
 :license: BSD-3, see LICENSE for details.
 """
 from . import BaseALObject
-from nineml.annotations import read_annotations, annotate_xml, NINEML
+from nineml.xmlns import NINEML
+from nineml.annotations import read_annotations, annotate_xml
 from nineml.utility import filter_discrete_types, ensure_valid_identifier
 from .units import dimensionless, Dimension
 
@@ -109,7 +110,7 @@ class Parameter(BaseALObject):
     def __init__(self, name, dimension=None):
         """Parameter Constructor
 
-        :param name:  The name of the parameter.
+        `name` -- The name of the parameter.
         """
         name = name.strip()
         ensure_valid_identifier(name)

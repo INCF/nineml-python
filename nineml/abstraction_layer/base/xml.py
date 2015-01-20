@@ -8,6 +8,7 @@ import os
 from urllib2 import urlopen
 from itertools import chain
 from lxml import etree
+from nineml.xmlns import E
 from .visitors import ComponentVisitor
 from ..dynamics import DynamicsClass
 from ..ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,

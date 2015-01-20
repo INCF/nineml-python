@@ -1,6 +1,7 @@
 # encoding: utf-8
 from . import BaseULObject
-from nineml.annotations import E, read_annotations, annotate_xml, NINEML
+from nineml.xmlns import E, NINEML
+from nineml.annotations import read_annotations, annotate_xml
 from ..utility import check_tag
 
 

@@ -1,6 +1,7 @@
 from operator import itemgetter
 from nineml.user_layer.component import BaseULObject, resolve_reference, write_reference, Reference
-from nineml.annotations import NINEML, E, annotate_xml, read_annotations
+from nineml.xmlns import NINEML, E
+from nineml.annotations import annotate_xml, read_annotations
 from ..utility import expect_single, check_tag
 
 

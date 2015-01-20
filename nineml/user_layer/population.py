@@ -1,6 +1,6 @@
 from . import BaseULObject
 from nineml.user_layer.component import resolve_reference, write_reference, Component
-from nineml.annotations import NINEML, E
+from nineml.xmlns import NINEML, E
 from ..utility import expect_single, check_tag
 from nineml.annotations import annotate_xml, read_annotations
 

@@ -4,7 +4,8 @@ from lxml import etree
 from operator import and_
 import itertools
 import collections
-from nineml.annotations import (annotate_xml, read_annotations, NINEML, E, Annotations)
+from nineml.xmlns import NINEML, E
+from nineml.annotations import annotate_xml, read_annotations, Annotations
 import nineml.user_layer
 import nineml.abstraction_layer
 from . import BaseNineMLObject

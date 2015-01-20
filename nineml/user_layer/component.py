@@ -6,7 +6,8 @@ from nineml.exceptions import NineMLUnitMismatchError
 from nineml.xmlns import nineml_namespace
 from ..exceptions import NineMLRuntimeError
 from operator import and_
-from nineml.annotations import E, read_annotations, annotate_xml, NINEML
+from nineml.xmlns import NINEML, E
+from nineml.annotations import read_annotations, annotate_xml
 from ..utility import expect_single, check_tag, check_units
 from ..abstraction_layer.units import Unit, unitless
 from .values import SingleValue, ArrayValue, ExternalArrayValue
