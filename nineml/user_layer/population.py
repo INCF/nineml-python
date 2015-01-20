@@ -1,5 +1,5 @@
 from . import BaseULObject
-from .base import resolve_reference, write_reference, Component
+from nineml.user_layer.component import resolve_reference, write_reference, Component
 from ..base import NINEML, E
 from ..utility import expect_single, check_tag
 from nineml.base import annotate_xml, read_annotations

@@ -22,7 +22,7 @@ from .ports import (EventSendPort, EventReceivePort, AnalogSendPort,
                     AnalogReceivePort, AnalogReducePort)
 from .transitions import OnEvent, OnCondition, StateAssignment, EventOut
 from .regimes import Regime, StateVariable, TimeDerivative
-from ..maths.expressions import Alias
+from nineml.abstraction_layer.maths.base import Alias
 from nineml.exceptions import NineMLRuntimeError
 
 ____ = ['XMLReader']

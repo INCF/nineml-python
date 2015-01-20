@@ -1,5 +1,5 @@
 from operator import itemgetter
-from .base import BaseULObject, resolve_reference, write_reference, Reference
+from nineml.user_layer.component import BaseULObject, resolve_reference, write_reference, Reference
 from ..base import NINEML, E, annotate_xml, read_annotations
 from ..utility import expect_single, check_tag
 

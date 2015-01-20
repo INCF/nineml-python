@@ -9,15 +9,15 @@ components definitions of interface and dynamics
 import itertools
 from ...exceptions import NineMLRuntimeError
 from ..base import NamespaceAddress
-from ..queryer import Queryer
+from nineml.abstraction_layer.dynamics.queryer import Queryer
 from ...utility import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
-from ..maths.expressions import Alias, StrToExpr
+from nineml.abstraction_layer.maths.base import Alias, StrToExpr
 from ..base import ComponentClass, Parameter
 from .regimes import StateVariable
-from .ports import (AnalogReceivePort, AnalogSendPort,
-                    AnalogReducePort, EventReceivePort,
-                    EventSendPort)
+from ..ports import (AnalogReceivePort, AnalogSendPort,
+                     AnalogReducePort, EventReceivePort,
+                     EventSendPort)
 from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
@@ -27,7 +27,7 @@ from .. import BaseALObject
 from .visitors import ActionVisitor
 
 
-class FlatMixin(object):
+class _FlatMixin(object):
 
     """Mixin Class that provides the infrastructure for *local* component
     definitions - i.e. the dynamics
@@ -221,7 +221,7 @@ class FlatMixin(object):
         return XMLWriter.write(component=self, file=file, flatten=flatten)
 
 
-class NamespaceMixin(object):
+class _NamespaceMixin(object):
 
     """ A mixin class that provides the hierarchical structure for
     (sub) components.
@@ -366,7 +366,7 @@ class InterfaceInferer(ActionVisitor):
         self.accounted_for_symbols = set(itertools.chain(
             self.state_variable_names,
             dynamics.aliases_map.keys(),
-            dynamics.constants_map.keys(),
+            #dynamics.constants_map.keys(),  # TODO: Need to add this @IgnorePep8
             dynamics.random_variables_map.keys(),
             incoming_port_names,
             get_reserved_and_builtin_symbols()
@@ -427,7 +427,7 @@ class InterfaceInferer(ActionVisitor):
         pass
 
 
-class DynamicsClass(ComponentClass, FlatMixin, NamespaceMixin):
+class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
 
     """A DynamicsClass object represents a *component* in NineML.
 
@@ -570,10 +570,10 @@ class DynamicsClass(ComponentClass, FlatMixin, NamespaceMixin):
                 event_ports.append(EventSendPort(name=evt_port_name))
 
         # Construct super-classes:
-        FlatMixin.__init__(
+        _FlatMixin.__init__(
             self, analog_ports=analog_ports, event_ports=event_ports,
             dynamics=dynamics)
-        NamespaceMixin.__init__(
+        _NamespaceMixin.__init__(
             self, subnodes=subnodes, portconnections=portconnections)
 
         # Finalise initiation:
@@ -608,7 +608,7 @@ class DynamicsClass(ComponentClass, FlatMixin, NamespaceMixin):
         return self.flattener is not None
 
     def _validate_self(self):
-        from ..validators import ComponentValidator
+        from .validators import ComponentValidator
         ComponentValidator.validate_component(self)
 
     @property
@@ -678,7 +678,7 @@ class Dynamics(BaseALObject):
 
         # Load the aliases as objects or strings:
         alias_td = filter_discrete_types(aliases, (basestring, Alias))
-        aliases_from_strs = [StrToExpr.alias(o) for o in alias_td[basestring]]
+        aliases_from_strs = [Alias.from_str(o) for o in alias_td[basestring]]
         aliases = alias_td[Alias] + aliases_from_strs
 
         # Load the state variables as objects or strings:

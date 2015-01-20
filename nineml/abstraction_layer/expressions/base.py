@@ -11,8 +11,8 @@ import quantities as pq
 
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-from . import (MathUtil, str_to_npfunc_map, func_namespace_split,
-               is_valid_lhs_target)
+from .util import (MathUtil, str_to_npfunc_map, func_namespace_split,
+                   is_valid_lhs_target)
 from .. import BaseALObject
 
 
@@ -53,7 +53,7 @@ class Expression(object):
                 assert name not in self._rhs_funcs
             for func in self._rhs_funcs:
                 assert func not in self._rhs_names
-        elif isinstance(rhs, pq.Quantity):
+        elif isinstance(rhs, pq.Quantity):  # FIXME: This should be in Constant
             self._rhs_names = []
             self._rhs_funcs = []
         else:
@@ -105,41 +105,12 @@ class Expression(object):
         return atoms
 
 
-    #@property
-    # def rhs_missing_functions(self):
-    #    """ yield names of functions in the RHS which are not in the math
-    #    namespace"""
-    #    raise NineMLRuntimeError()
-    #    from nineml.abstraction_layer.maths.__init__.py import is_builtin_math_function
-    #    for func in self.rhs_funcs:
-    #        if not is_builtin_math_function(func):
-    #            raise NineMLRuntimeError('Unexpected Missing Function: %s'%func)
-    #            yield func
-    #
-    # def rhs_has_missing_functions(self):
-    #    assert False
-    #    """ returns True if at least 1 function on the RHS is not in the math
-    #    namespace"""
-    #    from nineml.abstraction_layer.maths.__init__.py import is_builtin_math_function
-    #    for func in self.rhs_funcs:
-    #        if not is_builtin_math_function(func):
-    #            raise NineMLRuntimeError('Unexpected Missing Function: %s'%func)
-    #            return True
-    #    return False
-
-# TO GO:
-class Equation(Expression):
-
-    def __init__(self, rhs):
-        Expression.__init__(self, rhs)
-
-
-class ExpressionWithLHS(Equation):
-    # Sub-classes should over ride this, to allow
+class ExpressionWithLHS(Expression):
+    # Sub-classes should override this, to allow
     # proper-prefixing:
 
     def __init__(self, rhs):
-        Equation.__init__(self, rhs)
+        Expression.__init__(self, rhs)
 
     def name_transform_inplace(self, name_map):
 
@@ -190,6 +161,57 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS):
 
     def lhs_name_transform_inplace(self, name_map):
         self._lhs = name_map.get(self.lhs, self.lhs)
+
+
+class ODE(ExpressionWithLHS):
+
+    """ An ordinary, first order differential equation.
+
+        .. note::
+
+            These should not be created directly, this class is
+            used as base class for ``TimeDerivative``
+
+    """
+
+    def __init__(self, dependent_variable, independent_variable, rhs):
+        ExpressionWithLHS.__init__(self, rhs)
+
+        self._dependent_variable = dependent_variable
+        self._independent_variable = independent_variable
+
+    def __repr__(self):
+        return "ODE(d%s/d%s = %s)" % (self.dependent_variable,
+                                      self.independent_variable,
+                                      self.rhs)
+
+    @property
+    def lhs(self):
+        """Return a string of the lhs of the form: 'dS/dt' """
+        return "d%s/d%s" % (self.dependent_variable, self.independent_variable)
+
+    @property
+    def dependent_variable(self):
+        """Return the dependent variable"""
+        return self._dependent_variable
+
+    @property
+    def independent_variable(self):
+        """Return the independent variable"""
+        return self._independent_variable
+
+    def lhs_name_transform_inplace(self, name_map):
+        """Replace atoms on the LHS with mapping in name_map """
+
+        dep = self._dependent_variable
+        self._dependent_variable = name_map.get(dep, dep)
+
+        indep = self._independent_variable
+        self._independent_variable = name_map.get(indep, indep)
+
+    @property
+    def lhs_atoms(self):
+        return [self.independent_variable, self.dependent_variable]
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -254,69 +276,8 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         """ |VISITATION| """
         return visitor.visit_alias(self, **kwargs)
 
-
-class ODE(ExpressionWithLHS):
-
-    """ An ordinary, first order differential equation.
-
-        .. note::
-
-            These should not be created directly, this class is
-            used as base class for ``TimeDerivative``
-
-    """
-
-    def __init__(self, dependent_variable, independent_variable, rhs):
-        ExpressionWithLHS.__init__(self, rhs)
-
-        self._dependent_variable = dependent_variable
-        self._independent_variable = independent_variable
-
-    def __repr__(self):
-        return "ODE(d%s/d%s = %s)" % (self.dependent_variable,
-                                      self.independent_variable,
-                                      self.rhs)
-
-    @property
-    def lhs(self):
-        """Return a string of the lhs of the form: 'dS/dt' """
-        return "d%s/d%s" % (self.dependent_variable, self.independent_variable)
-
-    @property
-    def dependent_variable(self):
-        """Return the dependent variable"""
-        return self._dependent_variable
-
-    @property
-    def independent_variable(self):
-        """Return the independent variable"""
-        return self._independent_variable
-
-    def lhs_name_transform_inplace(self, name_map):
-        """Replace atoms on the LHS with mapping in name_map """
-
-        dep = self._dependent_variable
-        self._dependent_variable = name_map.get(dep, dep)
-
-        indep = self._independent_variable
-        self._independent_variable = name_map.get(indep, indep)
-
-    @property
-    def lhs_atoms(self):
-        return [self.independent_variable, self.dependent_variable]
-
-
-class StrToExpr(object):
-
-    """Class containing static methods for building Mathematical objects"""
-
     @classmethod
-    def is_alias(cls, alias_string):
-        """ Returns True if the string could be an alias"""
-        return ':=' in alias_string
-
-    @classmethod
-    def alias(cls, alias_string):
+    def from_str(cls, alias_string):
         """Creates an Alias object from a string"""
         if not cls.is_alias(alias_string):
             errmsg = "Invalid Alias: %s" % alias_string
@@ -326,76 +287,6 @@ class StrToExpr(object):
         return Alias(lhs=lhs.strip(), rhs=rhs.strip())
 
     @classmethod
-    def time_derivative(cls, time_derivative_string):
-        """Creates an TimeDerivative object from a string"""
-        # Note: \w = [a-zA-Z0-9_]
-        tdre = re.compile(r"""\s* d(?P<dependent_var>[a-zA-Z][a-zA-Z0-9_]*)/dt
-                           \s* = \s*
-                           (?P<rhs> .*) """, re.VERBOSE)
-
-        match = tdre.match(time_derivative_string)
-        if not match:
-            err = "Unable to load time derivative: %s" % time_derivative_string
-            raise NineMLRuntimeError(err)
-        dependent_variable = match.groupdict()['dependent_var']
-        rhs = match.groupdict()['rhs']
-        return TimeDerivative(dependent_variable=dependent_variable,
-                                 rhs=rhs)
-
-    @classmethod
-    def state_assignment(cls, state_assignment_string):
-        """Creates an StateAssignment object from a string"""
-        lhs, rhs = state_assignment_string.split('=')
-        return StateAssignment(lhs=lhs, rhs=rhs)
-
-
-def expr_to_obj(s, name=None):
-    """ Construct nineml objects from expressions """
-
-    # import re
-
-    # Is our job already done?
-    if isinstance(s, Expression):
-        return s
-
-    # strip surrounding whitespace
-    s = s.strip()
-
-    # Do we have a alias?
-    if StrToExpr.is_alias(s):
-        return StrToExpr.alias(s)
-
-    # re for an expression -> groups into lhs, op, rhs
-    p_eqn = re.compile(
-        r"(?P<lhs>[a-zA-Z_]+[a-zA-Z_0-9]*(/?[a-zA-Z_]+[a-zA-Z_0-9]*)?)"
-        r"\s*(?P<op>[+\-*/:]?=)\s*(?P<rhs>.*)")
-    m = p_eqn.match(s)
-    if not m:
-        raise ValueError("Not a valid nineml expression: %s" % s)
-
-    # get lhs, op, rhs
-    lhs, op, rhs = [m.group(x) for x in ['lhs', 'op', 'rhs']]
-
-    # do we have an TimeDerivative?
-    # re for lhs for TimeDerivative
-    p_ode_lhs = re.compile(r"(?:d)([a-zA-Z_]+[a-zA-Z_0-9]*)/(?:d)([a-zA-Z_]+"
-                           r"[a-zA-Z_0-9]*)")
-    m = p_ode_lhs.match(lhs)
-    if m:
-        if op != "=":
-            raise ValueError("TimeDerivative lhs, but op not '=' in %s" % s)
-
-        dep_var = m.group(1)
-        indep_var = m.group(2)
-        return TimeDerivative(dep_var, indep_var, rhs, name=name)
-
-    # Do we have an Inplace op?
-    # if op in Inplace.op_name_map.keys():
-    #    return Inplace(lhs,op,rhs, name = name)
-
-    # Do we have an assignment?
-    if op == "=":
-        return StateAssignment(lhs, rhs, name=name)
-
-    # If we get here, what do we have?
-    raise ValueError("Cannot map expr '%s' to a nineml Expression" % s)
+    def is_alias_str(cls, alias_str):
+        """ Returns True if the string could be an alias"""
+        return ':=' in alias_str

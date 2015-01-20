@@ -6,7 +6,7 @@ docstring needed
 """
 
 from nineml.abstraction_layer.dynamics.visitors import ActionVisitor
-from ..base import ComponentClass, Parameter
+from nineml.abstraction_layer.componentclass import ComponentClass, Parameter
 
 
 class ComponentVdatorTypes(ActionVisitor):

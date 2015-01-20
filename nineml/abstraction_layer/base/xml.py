@@ -13,10 +13,10 @@ from .visitors import ComponentVisitor
 from ..dynamics import DynamicsClass
 from ..distribution import DistributionClass
 from ..connectionrule import ConnectionRuleClass
-from .ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
+from nineml.abstraction_layer.ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
                     IndexReceivePort)
-from ..maths.expressions import Alias
-from .base import Parameter
+from nineml.abstraction_layer.maths.base import Alias
+from nineml.abstraction_layer.componentclass import Parameter
 from ...base import annotate_xml, read_annotations
 from ...utility import expect_single, filter_expect_single
 from ...xmlns import NINEML, MATHML, nineml_namespace

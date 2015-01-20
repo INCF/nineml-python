@@ -123,7 +123,7 @@ class Document(dict, BaseNineMLObject):
     def to_xml(self):
         return E(self.element_name,
                  *[c.to_xml(as_reference=False)
-                   if isinstance(c, nineml.user_layer.base.BaseULObject)
+                   if isinstance(c, nineml.user_layer.component.BaseULObject)
                    else c.to_xml()
                    for c in self.itervalues()])
 

@@ -6,7 +6,7 @@ docstring needed
 """
 from ...exceptions import NineMLRuntimeError
 from ..maths import is_builtin_symbol
-from ..maths.expressions import MathUtil
+from nineml.abstraction_layer.maths.base import MathUtil
 from ..base import NamespaceAddress
 from .visitors import ActionVisitor, ComponentVisitor
 

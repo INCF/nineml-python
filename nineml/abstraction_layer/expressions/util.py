@@ -86,10 +86,10 @@ def is_builtin_math_function(funcname):
     # Is it a namespace:
     if math_namespace_separator in funcname:
         namespace, func = funcname.split(math_namespace_separator)
-        if not namespace in _math_namespaces:
+        if namespace not in _math_namespaces:
             err = 'Unrecognised math namespace: %s' % namespace
             raise NineMLMathParseError(err)
-        if not func in _math_namespaces[namespace]:
+        if func not in _math_namespaces[namespace]:
             err = ('Unrecognised function in namespace: %s %s' %
                    (namespace, func))
             raise NineMLMathParseError(err)
@@ -145,7 +145,7 @@ def func_namespace_split(func_name):
     'namespace','func'
     or None,'func' if it is not in a namespace
     """
-    if not math_namespace_separator in func_name:
+    if math_namespace_separator not in func_name:
         return None, func_name
 
     toks = func_name.split(math_namespace_separator)

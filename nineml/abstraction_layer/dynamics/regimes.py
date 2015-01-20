@@ -5,13 +5,12 @@ This file contains the main classes for defining dynamics
 :license: BSD-3, see LICENSE for details.
 """
 from itertools import chain
-from nineml.abstraction_layer.maths.expressions import StrToExpr
-from ..maths.expressions import MathUtil
-from ...utility import (filter_discrete_types, ensure_valid_identifier,
-                        normalise_parameter_as_list, assert_no_duplicates)
-from ...exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.maths.expressions import ODE
-from ..base import BaseALObject
+import re
+from nineml.utility import (filter_discrete_types, ensure_valid_identifier,
+                            normalise_parameter_as_list, assert_no_duplicates)
+from nineml.exceptions import NineMLRuntimeError
+from ..expressions import ODE
+from .. import BaseALObject
 from ..units import dimensionless
 
 
@@ -80,7 +79,7 @@ class Regime(BaseALObject):
 
         td_types = (basestring, TimeDerivative)
         td_type_dict = filter_discrete_types(time_derivatives, td_types)
-        td_from_str = [StrToExpr.time_derivative(o)
+        td_from_str = [TimeDerivative.from_str(o)
                        for o in td_type_dict[basestring]]
         time_derivatives = td_type_dict[TimeDerivative] + td_from_str
 
@@ -286,60 +285,20 @@ class TimeDerivative(ODE):
         """ |VISITATION| """
         return visitor.visit_timederivative(self, **kwargs)
 
+    @classmethod
+    def from_str(cls, time_derivative_string):
+        """Creates an TimeDerivative object from a string"""
+        # Note: \w = [a-zA-Z0-9_]
+        tdre = re.compile(r"""\s* d(?P<dependent_var>[a-zA-Z][a-zA-Z0-9_]*)/dt
+                           \s* = \s*
+                           (?P<rhs> .*) """, re.VERBOSE)
 
-# Forwarding Function:
-def On(trigger, do=None, to=None):
+        match = tdre.match(time_derivative_string)
+        if not match:
+            err = "Unable to load time derivative: %s" % time_derivative_string
+            raise NineMLRuntimeError(err)
+        dependent_variable = match.groupdict()['dependent_var']
+        rhs = match.groupdict()['rhs']
+        return TimeDerivative(dependent_variable=dependent_variable, rhs=rhs)
 
-    if isinstance(do, (EventOut, basestring)):
-        do = [do]
-    elif do is None:
-        do = []
-    else:
-        pass
-
-    if isinstance(trigger, basestring):
-        if MathUtil.is_single_symbol(trigger):
-            return DoOnEvent(input_event=trigger, do=do, to=to)
-        else:
-            return DoOnCondition(condition=trigger, do=do, to=to)
-
-    elif isinstance(trigger, OnCondition):
-        return DoOnCondition(condition=trigger, do=do, to=to)
-    else:
-        err = "Unexpected Type for On() trigger: %s %s" % (type(trigger),
-                                                           str(trigger))
-        raise NineMLRuntimeError(err)
-
-
-def do_to_assignments_and_events(doList):
-    if not doList:
-        return [], []
-    # 'doList' is a list of strings, OutputEvents, and StateAssignments.
-    do_type_list = (EventOut, basestring, StateAssignment)
-    do_types = filter_discrete_types(doList, do_type_list)
-
-    # Convert strings to StateAssignments:
-    sa_from_strs = [StrToExpr.state_assignment(s)
-                    for s in do_types[basestring]]
-
-    return do_types[StateAssignment] + sa_from_strs, do_types[EventOut]
-
-
-def DoOnEvent(input_event, do=None, to=None):
-    assert isinstance(input_event, basestring)
-
-    assignments, output_events = do_to_assignments_and_events(do)
-    return OnEvent(src_port_name=input_event,
-                   state_assignments=assignments,
-                   event_outputs=output_events,
-                   target_regime_name=to)
-
-
-def DoOnCondition(condition, do=None, to=None):
-    assignments, output_events = do_to_assignments_and_events(do)
-    return OnCondition(trigger=condition,
-                       state_assignments=assignments,
-                       event_outputs=output_events,
-                       target_regime_name=to)
-
-from .transitions import EventOut, OnEvent, OnCondition, StateAssignment
+from .transitions import OnEvent, OnCondition

@@ -24,7 +24,7 @@ import ply.yacc as yacc
 
 from nineml.utility import LocationMgr
 from nineml.exceptions import NineMLMathParseError
-from nineml.abstraction_layer.maths.__init__.py import get_builtin_symbols
+from ..until import get_builtin_symbols
 
 
 def call_expr_func(expr_func, ns):

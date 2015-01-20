@@ -17,11 +17,11 @@ class BaseALObject(BaseNineMLObject):
 
 
 import dynamics
-import maths.expressions
+import nineml.abstraction_layer.maths.base
 import connectionrule
 import distribution
 from .base import Parameter, ComponentClass, NamespaceAddress
-from .maths.expressions import Alias, Expression
+from nineml.abstraction_layer.maths.base import Alias, Expression
 from .dynamics import (DynamicsClass, Regime,
                        EventOut, StateAssignment, TimeDerivative,
                        AnalogSendPort, AnalogReceivePort,

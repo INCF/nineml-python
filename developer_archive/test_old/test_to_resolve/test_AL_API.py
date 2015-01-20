@@ -1,15 +1,66 @@
-
+import re
 import unittest
 import nineml.abstraction_layer as nineml
+from nineml.abstraction_layer.expressions import Expression, Alias
+from nineml.abstraction_layer.dynamics.regimes import TimeDerivative
+from nineml.abstraction_layer.dynamics.transitions import StateAssignment
 
-import os
-import tempfile
+
+def expr_to_obj(s, name=None):
+    """ Construct nineml objects from expressions """
+
+    # import re
+
+    # Is our job already done?
+    if isinstance(s, Expression):
+        return s
+
+    # strip surrounding whitespace
+    s = s.strip()
+
+    # Do we have a alias?
+    if Alias.is_alias_str(s):
+        return Alias.from_str(s)
+
+    # re for an expression -> groups into lhs, op, rhs
+    p_eqn = re.compile(
+        r"(?P<lhs>[a-zA-Z_]+[a-zA-Z_0-9]*(/?[a-zA-Z_]+[a-zA-Z_0-9]*)?)"
+        r"\s*(?P<op>[+\-*/:]?=)\s*(?P<rhs>.*)")
+    m = p_eqn.match(s)
+    if not m:
+        raise ValueError("Not a valid nineml expression: %s" % s)
+
+    # get lhs, op, rhs
+    lhs, op, rhs = [m.group(x) for x in ['lhs', 'op', 'rhs']]
+
+    # do we have an TimeDerivative?
+    # re for lhs for TimeDerivative
+    p_ode_lhs = re.compile(r"(?:d)([a-zA-Z_]+[a-zA-Z_0-9]*)/(?:d)([a-zA-Z_]+"
+                           r"[a-zA-Z_0-9]*)")
+    m = p_ode_lhs.match(lhs)
+    if m:
+        if op != "=":
+            raise ValueError("TimeDerivative lhs, but op not '=' in %s" % s)
+
+        dep_var = m.group(1)
+        indep_var = m.group(2)
+        return TimeDerivative(dep_var, indep_var, rhs, name=name)
+
+    # Do we have an Inplace op?
+    # if op in Inplace.op_name_map.keys():
+    #    return Inplace(lhs,op,rhs, name = name)
+
+    # Do we have an assignment?
+    if op == "=":
+        return StateAssignment(lhs, rhs, name=name)
+
+    # If we get here, what do we have?
+    raise ValueError("Cannot map expr '%s' to a nineml Expression" % s)
 
 
 class ComponentTestCase(unittest.TestCase):
 
     def test_expressions(self):
-        from nineml.abstraction_layer import expr_to_obj
 
         # no redefining or modifying math symbols
         self.assertRaises(ValueError, expr_to_obj, "pi:=11")
@@ -35,7 +86,7 @@ class ComponentTestCase(unittest.TestCase):
         assert not e.self_referencing()
 
     def test_alias_backsub(self):
-        from nineml.abstraction_layer import expr_to_obj, get_args
+        from nineml.abstraction_layer import get_args
 
         # Determine missing functions
         e = expr_to_obj("U(x,y):= exp(x) + y")

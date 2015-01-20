@@ -7,7 +7,8 @@ This file contains the definitions for the Events
 
 from ...utility import ensure_valid_identifier, filter_discrete_types
 from ..base import BaseALObject
-from nineml.abstraction_layer.maths.expressions import Expression, ExpressionWithSimpleLHS, StrToExpr
+from ..expressions import Expression, ExpressionWithSimpleLHS
+from ..expressions.util import MathUtil, str_to_npfunc_map
 from ...exceptions import NineMLRuntimeError
 from .cloner import ClonerVisitor
 
@@ -30,9 +31,9 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
     def __init__(self, lhs, rhs):
         """StateAssignment Constructor
 
-        :param lhs: A `string`, which must be a state-variable of the component.
-        :param rhs: A `string`, representing the new value of the state after
-            this assignment.
+        `lhs` -- A `string`, which must be a state-variable of the component.
+        `rhs` -- A `string`, representing the new value of the state after
+                 this assignment.
 
         """
         BaseALObject.__init__(self)
@@ -44,6 +45,12 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
 
     def __repr__(self):
         return "StateAssignment('%s', '%s')" % (self.lhs, self.rhs)
+
+    @classmethod
+    def from_str(cls, state_assignment_string):
+        """Creates an StateAssignment object from a string"""
+        lhs, rhs = state_assignment_string.split('=')
+        return StateAssignment(lhs=lhs, rhs=rhs)
 
 
 class Transition(BaseALObject):
@@ -86,7 +93,7 @@ class Transition(BaseALObject):
 
         sa_types = (basestring, StateAssignment)
         sa_type_dict = filter_discrete_types(state_assignments, sa_types)
-        sa_from_str = [StrToExpr.state_assignment(o)
+        sa_from_str = [StateAssignment.from_str(o)
                        for o in sa_type_dict[basestring]]
         self._state_assignments = sa_type_dict[StateAssignment] + sa_from_str
 
@@ -301,7 +308,7 @@ class Condition(Expression):
     #    namespace and returns the result """
     #    namespace = namespace or {}
     #    return eval("lambda %s: %s" % (','.join(self.rhs_names), self.rhs), \
-    #            nineml.abstraction_layer.maths.__init__.__init__.str_to_npfunc_map, namespace)
+    #                str_to_npfunc_map, namespace)
     # math_namespace.namespace, namespace)
 
     def rhs_as_python_func(self, namespace={}):
@@ -333,7 +340,7 @@ def cond_to_obj(cond_str):
     if isinstance(cond_str, Condition):
         return cond_str
 
-    elif cond_str == None:
+    elif cond_str is None:
         return None
 
     elif isinstance(cond_str, str):
@@ -380,6 +387,62 @@ class EventOut(BaseALObject):
 
 def SpikeOutputEvent():
     return EventOut('spikeoutput')
+
+
+def do_to_assignments_and_events(doList):
+    if not doList:
+        return [], []
+    # 'doList' is a list of strings, OutputEvents, and StateAssignments.
+    do_type_list = (EventOut, basestring, StateAssignment)
+    do_types = filter_discrete_types(doList, do_type_list)
+
+    # Convert strings to StateAssignments:
+    sa_from_strs = [StateAssignment.from_str(s)
+                    for s in do_types[basestring]]
+
+    return do_types[StateAssignment] + sa_from_strs, do_types[EventOut]
+
+
+# Forwarding Function:
+def On(trigger, do=None, to=None):
+
+    if isinstance(do, (EventOut, basestring)):
+        do = [do]
+    elif do is None:
+        do = []
+    else:
+        pass
+
+    if isinstance(trigger, basestring):
+        if MathUtil.is_single_symbol(trigger):
+            return DoOnEvent(input_event=trigger, do=do, to=to)
+        else:
+            return DoOnCondition(condition=trigger, do=do, to=to)
+
+    elif isinstance(trigger, OnCondition):
+        return DoOnCondition(condition=trigger, do=do, to=to)
+    else:
+        err = "Unexpected Type for On() trigger: %s %s" % (type(trigger),
+                                                           str(trigger))
+        raise NineMLRuntimeError(err)
+
+
+def DoOnEvent(input_event, do=None, to=None):
+    assert isinstance(input_event, basestring)
+
+    assignments, output_events = do_to_assignments_and_events(do)
+    return OnEvent(src_port_name=input_event,
+                   state_assignments=assignments,
+                   event_outputs=output_events,
+                   target_regime_name=to)
+
+
+def DoOnCondition(condition, do=None, to=None):
+    assignments, output_events = do_to_assignments_and_events(do)
+    return OnCondition(trigger=condition,
+                       state_assignments=assignments,
+                       event_outputs=output_events,
+                       target_regime_name=to)
 
 
 from .regimes import Regime
