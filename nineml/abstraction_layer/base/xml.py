@@ -8,16 +8,13 @@ import os
 from urllib2 import urlopen
 from itertools import chain
 from lxml import etree
-from lxml.builder import E
 from .visitors import ComponentVisitor
 from ..dynamics import DynamicsClass
-from ..distribution import DistributionClass
-from ..connectionrule import ConnectionRuleClass
-from nineml.abstraction_layer.ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
-                    IndexReceivePort)
-from nineml.abstraction_layer.maths.base import Alias
+from ..ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
+                     IndexReceivePort)
+from ..expressions import Alias
 from nineml.abstraction_layer.componentclass import Parameter
-from ...base import annotate_xml, read_annotations
+from nineml.annotations import annotate_xml, read_annotations
 from ...utility import expect_single, filter_expect_single
 from ...xmlns import NINEML, MATHML, nineml_namespace
 from ...exceptions import NineMLRuntimeError

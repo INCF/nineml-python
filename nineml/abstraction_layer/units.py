@@ -1,6 +1,6 @@
-from ..base import E
+from nineml.annotations import E
 from . import BaseALObject
-from nineml.base import annotate_xml, read_annotations
+from nineml.annotations import annotate_xml, read_annotations
 from numpy.core.test_rational import numerator
 
 

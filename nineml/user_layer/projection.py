@@ -1,6 +1,6 @@
 # encoding: utf-8
 from nineml.user_layer.component import BaseULObject, resolve_reference, write_reference, Reference
-from ..base import E, read_annotations, annotate_xml, NINEML
+from nineml.annotations import E, read_annotations, annotate_xml, NINEML
 from collections import defaultdict
 from nineml.user_layer.component import Component
 from itertools import chain

@@ -8,7 +8,7 @@ This module provides the base class for these.
 :license: BSD-3, see LICENSE for details.
 """
 from . import BaseALObject
-from nineml.base import read_annotations, annotate_xml, NINEML
+from nineml.annotations import read_annotations, annotate_xml, NINEML
 from nineml.utility import filter_discrete_types, ensure_valid_identifier
 from .units import dimensionless, Dimension
 

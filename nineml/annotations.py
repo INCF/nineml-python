@@ -1,10 +1,5 @@
-from lxml.builder import ElementMaker
 from copy import copy
-
-nineml_namespace = 'http://nineml.net/9ML/1.0'
-NINEML = "{%s}" % nineml_namespace
-E = ElementMaker(namespace=nineml_namespace,
-                 nsmap={"nineml": nineml_namespace})
+from nineml.xmlns import E, NINEML
 
 
 class Annotations(dict):
@@ -66,4 +61,3 @@ def annotate_xml(to_xml):
     return annotate_to_xml
 
 from .utility import expect_none_or_single
-

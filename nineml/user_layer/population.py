@@ -1,8 +1,8 @@
 from . import BaseULObject
 from nineml.user_layer.component import resolve_reference, write_reference, Component
-from ..base import NINEML, E
+from nineml.annotations import NINEML, E
 from ..utility import expect_single, check_tag
-from nineml.base import annotate_xml, read_annotations
+from nineml.annotations import annotate_xml, read_annotations
 
 
 class Population(BaseULObject):
