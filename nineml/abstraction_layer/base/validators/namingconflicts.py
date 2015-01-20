@@ -24,7 +24,7 @@ class LocalNameConflictsValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+                                     require_explicit_overrides=False)
         self.symbols = defaultdict(list)
 
         self.visit(component)
@@ -60,7 +60,7 @@ class DimensionNameConflictsValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
         self.dimensions = {}
         self.visit(component)
 

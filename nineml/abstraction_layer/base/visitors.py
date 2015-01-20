@@ -17,8 +17,8 @@ class ComponentVisitor(object):
 
 class ActionVisitor(ComponentVisitor):
 
-    def __init__(self, explicitly_require_action_overrides=True):
-        self.explicitly_require_action_overrides = explicitly_require_action_overrides  # @IgnorePep8
+    def __init__(self, require_explicit_overrides=True):
+        self.require_explicit_overrides = require_explicit_overrides  # @IgnorePep8
 
     def visit_componentclass(self, component, **kwargs):
         self.action_componentclass(component, **kwargs)
@@ -68,8 +68,8 @@ class ActionVisitor(ComponentVisitor):
     def visit_eventreceiveport(self, port, **kwargs):
         self.action_eventreceiveport(port, **kwargs)
 
-    def visit_outputevent(self, output_event, **kwargs):
-        self.action_outputevent(output_event, **kwargs)
+    def visit_eventout(self, output_event, **kwargs):
+        self.action_eventout(output_event, **kwargs)
 
     def visit_inputevent(self, input_event, **kwargs):
         assert False, 'We should remove this'
@@ -104,7 +104,7 @@ class ActionVisitor(ComponentVisitor):
             p.accept_visitor(self, **kwargs)
 
     def check_pass(self):
-        if self.explicitly_require_action_overrides:
+        if self.require_explicit_overrides:
             assert False, "There is some over-riding missing"
         else:
             pass
@@ -140,7 +140,7 @@ class ActionVisitor(ComponentVisitor):
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
+    def action_eventout(self, output_event, **kwargs):  # @UnusedVariable
         self.check_pass()
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable

@@ -5,13 +5,21 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.abstraction_layer.dynamics.visitors import ActionVisitor
-from ...componentclass import Parameter
+from ...dynamics.visitors import ActionVisitor
+from ...dynamics.regimes import Regime, StateVariable, TimeDerivative
+from ...dynamics.transitions import (EventOut, StateAssignment, Condition,
+                                     OnCondition, OnEvent)
+from ...componentclass import ComponentClass, Parameter
+from ...expressions import Alias
+from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
+                      EventSendPort, EventReceivePort)
+from ...dynamics.base import Dynamics
 
 
-class TypesVdator(ActionVisitor):
+class TypesValidator(ActionVisitor):
 
     def __init__(self, component):
+        super(TypesValidator, self).__init__()
         self.visit(component)
 
     def action_componentclass(self, component):
@@ -27,17 +35,17 @@ class TypesVdator(ActionVisitor):
         assert isinstance(state_variable, StateVariable)
 
     def action_parameter(self, parameter):
-        assert isinstance(parameter, Parameter), \
-                                      "%s != %s" % (type(parameter), Parameter)
+        assert (isinstance(parameter, Parameter),
+                "{} != {}".format(type(parameter), Parameter))
 
     def action_angsendport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, AngSendPort)
+        assert isinstance(port, AnalogSendPort)
 
     def action_angreceiveport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, AngReceivePort)
+        assert isinstance(port, AnalogReceivePort)
 
     def action_angreduceport(self, port, **kwargs):  # @UnusedVariable
-        assert isinstance(port, AngReducePort)
+        assert isinstance(port, AnalogReducePort)
 
     def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, EventSendPort)
@@ -45,14 +53,14 @@ class TypesVdator(ActionVisitor):
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, EventReceivePort)
 
-    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
-        assert isinstance(output_event, OutputEvent)
+    def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
+        assert isinstance(event_out, EventOut)
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assert isinstance(assignment, StateAssignment)
 
-    def action_as(self, as, **kwargs):  # @UnusedVariable
-        assert isinstance(as, Alias)
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        assert isinstance(alias, Alias)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         assert isinstance(time_derivative, TimeDerivative)

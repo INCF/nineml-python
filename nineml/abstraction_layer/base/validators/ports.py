@@ -7,7 +7,7 @@ docstring needed
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from . import PerNamespaceValidator
+from .base import PerNamespaceValidator
 
 
 class EventPortsValidator(PerNamespaceValidator):
@@ -19,23 +19,23 @@ class EventPortsValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
 
         # Mapping component to list of events/eventports at that component
         self.event_send_ports = defaultdict(dict)
         self.event_receive_ports = defaultdict(dict)
-        self.output_events = defaultdict(list)
+        self.event_outs = defaultdict(list)
         self.input_events = defaultdict(list)
 
         self.visit(component)
 
         # Check that each output event has a corresponding event_port with a
         # send mode:
-        for ns, output_events in self.output_events.iteritems():
-            for output_event in output_events:
-                assert output_event in self.event_send_ports[ns], \
+        for ns, event_outs in self.event_outs.iteritems():
+            for event_out in event_outs:
+                assert event_out in self.event_send_ports[ns], \
                     ("Can't find port definition matching OP-Event: {}"
-                     .format(output_event))
+                     .format(event_out))
 
         # Check that each input event has a corresponding event_port with a
         # recv/reduce mode:
@@ -48,7 +48,7 @@ class EventPortsValidator(PerNamespaceValidator):
                                      self.event_receive_ports.iteritems()):
             for evt_port_name in event_ports.keys():
 
-                op_evts_on_port = [ev for ev in self.output_events[ns]
+                op_evts_on_port = [ev for ev in self.event_outs[ns]
                                    if ev == evt_port_name]
                 ip_evts_on_port = [ev for ev in self.input_events[ns]
                                    if ev == evt_port_name]
@@ -65,8 +65,8 @@ class EventPortsValidator(PerNamespaceValidator):
         assert port.name not in self.event_receive_ports[namespace]
         self.event_receive_ports[namespace][port.name] = port
 
-    def action_outputevent(self, output_event, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.output_events[namespace].append(output_event.port_name)
+    def action_eventout(self, event_out, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.event_outs[namespace].append(event_out.port_name)
 
     def action_onevent(self, on_event, namespace, **kwargs):  # @UnusedVariable
         self.input_events[namespace].append(on_event.src_port_name)
@@ -83,7 +83,7 @@ class OutputAnalogPortsValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
 
         self.output_analogports = defaultdict(list)
         self.available_symbols = defaultdict(list)

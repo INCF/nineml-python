@@ -348,7 +348,7 @@ class InterfaceInferer(ActionVisitor):
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
     def __init__(self, dynamics, incoming_port_names):
-        ActionVisitor.__init__(self, explicitly_require_action_overrides=True)
+        ActionVisitor.__init__(self, require_explicit_overrides=True)
 
         # State Variables:
         self.state_variable_names = set()
@@ -397,7 +397,7 @@ class InterfaceInferer(ActionVisitor):
             self.free_atoms.add(atom)
 
     # Events:
-    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
+    def action_eventout(self, output_event, **kwargs):  # @UnusedVariable
         self.output_event_port_names.add(output_event.port_name)
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
@@ -605,8 +605,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         return self.flattener is not None
 
     def _validate_self(self):
-        from nineml.abstraction_layer.dynamics.validators import ComponentValidator
-        ComponentValidator.validate_component(self)
+        ComponentValidator.validate_componentclass(self)
 
     @property
     def query(self):
@@ -729,3 +728,5 @@ class Dynamics(BaseALObject):
     @property
     def state_variables_map(self):
         return self._state_variables
+
+from .validators import ComponentValidator

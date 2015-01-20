@@ -22,7 +22,7 @@ class TimeDerivativesAreDeclaredValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
         self.sv_declared = defaultdict(list)
         self.time_derivatives_used = defaultdict(list)
 
@@ -50,7 +50,7 @@ class StateAssignmentsAreOnStateVariablesValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
         self.sv_declared = defaultdict(list)
         self.state_assignments_lhses = defaultdict(list)
 
@@ -77,7 +77,7 @@ class AliasesAreNotRecursiveValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
         self.visit(component)
 
     def action_componentclass(self, component, namespace):
@@ -116,7 +116,7 @@ class NoUnresolvedSymbolsValidator(PerNamespaceValidator):  # @IgnorePep8
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
 
         self.available_symbols = defaultdict(list)
         self.aliases = defaultdict(list)
@@ -196,7 +196,7 @@ class PortConnectionsValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
 
         self.ports = defaultdict(list)
         self.portconnections = list()
@@ -279,7 +279,7 @@ class RegimeGraphValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
 
         self.connected_regimes_from_regime = defaultdict(set)
         self.regimes_in_namespace = defaultdict(set)
@@ -319,7 +319,7 @@ class NoDuplicatedObjectsValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=True)
+            self, require_explicit_overrides=True)
         self.all_objects = list()
         self.visit(component)
         assert_no_duplicates(self.all_objects)
@@ -354,8 +354,8 @@ class NoDuplicatedObjectsValidator(PerNamespaceValidator):
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self.all_objects.append(port)
 
-    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
-        self.all_objects.append(output_event)
+    def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
+        self.all_objects.append(event_out)
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         self.all_objects.append(assignment)
@@ -380,7 +380,7 @@ class RegimeOnlyHasOneHandlerPerEventValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
         self.visit(component)
 
     def action_regime(self, regime, namespace, **kwargs):  # @UnusedVariable
@@ -398,7 +398,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceValidator(PerNamespaceValidator):
 
     def __init__(self, component):
         PerNamespaceValidator.__init__(
-            self, explicitly_require_action_overrides=False)
+            self, require_explicit_overrides=False)
 
         self.visit(component)
 

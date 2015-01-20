@@ -14,7 +14,7 @@ class ExpandPortDefinition(ActionVisitor):
 
     def __init__(self, originalname, targetname):
 
-        ActionVisitor.__init__(self, explicitly_require_action_overrides=False)
+        ActionVisitor.__init__(self, require_explicit_overrides=False)
 
         self.originalname = originalname
         self.targetname = targetname
@@ -41,7 +41,7 @@ class ExpandAliasDefinition(ActionVisitor):
 
     def __init__(self, originalname, targetname):
 
-        ActionVisitor.__init__(self, explicitly_require_action_overrides=False)
+        ActionVisitor.__init__(self, require_explicit_overrides=False)
 
         self.originalname = originalname
         self.targetname = targetname
@@ -67,7 +67,7 @@ class RenameSymbol(ActionVisitor):
     """
 
     def __init__(self, component, old_symbol_name, new_symbol_name):
-        ActionVisitor.__init__(self, explicitly_require_action_overrides=True)
+        ActionVisitor.__init__(self, require_explicit_overrides=True)
         self.old_symbol_name = old_symbol_name
         self.new_symbol_name = new_symbol_name
         self.namemap = {old_symbol_name: new_symbol_name}
@@ -130,7 +130,7 @@ class RenameSymbol(ActionVisitor):
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self._action_port(port, **kwargs)
 
-    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable
+    def action_eventout(self, output_event, **kwargs):  # @UnusedVariable
         if output_event.port_name == self.old_symbol_name:
             output_event._port_name = self.new_symbol_name
             self.note_rhs_changed(output_event)
@@ -191,7 +191,7 @@ class ClonerVisitor(ComponentVisitor):
             parameters=[p.accept_visitor(self, **kwargs)
                         for p in component.parameters],
             analog_ports=[p.accept_visitor(self, **kwargs)
-                          in component.analog_ports],
+                          for p in component.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in component.event_ports],
             dynamics=(component.dynamics.accept_visitor(self, **kwargs)
@@ -248,7 +248,7 @@ class ClonerVisitor(ComponentVisitor):
         return port.__class__(
             name=self.prefix_variable(port.name, **kwargs))
 
-    def visit_outputevent(self, output_event, **kwargs):
+    def visit_eventout(self, output_event, **kwargs):
         return output_event.__class__(
             port_name=self.prefix_variable(output_event.port_name, **kwargs))
 

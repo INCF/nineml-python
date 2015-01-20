@@ -363,7 +363,7 @@ class EventOut(BaseALObject):
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
-        return visitor.visit_outputevent(self, **kwargs)
+        return visitor.visit_eventout(self, **kwargs)
 
     def __init__(self, port_name):
         """EventOut Constructor

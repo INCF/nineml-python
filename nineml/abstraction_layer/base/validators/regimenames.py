@@ -12,8 +12,8 @@ from nineml.utility import assert_no_duplicates
 class DuplicateRegimeNamesValidator(PerNamespaceValidator):
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     explicitly_require_action_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, require_explicit_overrides=False)
         self.visit(component)
 
     def action_componentclass(self, componentclass, namespace):  # @UnusedVariable @IgnorePep8

@@ -18,9 +18,9 @@ class BaseValidator(object):
 
 class PerNamespaceValidator(ActionVisitor, BaseValidator):
 
-    def __init__(self, explicitly_require_action_overrides=True):
+    def __init__(self, require_explicit_overrides=True):
         ActionVisitor.__init__(self,
-            explicitly_require_action_overrides=explicitly_require_action_overrides)  # @IgnorePep8
+            require_explicit_overrides=require_explicit_overrides)  # @IgnorePep8
         BaseValidator.__init__(self)
 
     # Over-ride this function, so we can extract out the

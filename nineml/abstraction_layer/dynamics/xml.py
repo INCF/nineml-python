@@ -430,7 +430,7 @@ class XMLWriter(ComponentVisitor):
                  dimension=state_variable.dimension.name)
 
     @annotate_xml
-    def visit_outputevent(self, output_event):
+    def visit_eventout(self, output_event):
         return E('EventOut',
                  port=output_event.port_name)
 
