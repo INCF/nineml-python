@@ -12,17 +12,16 @@ from lxml.builder import E
 from .flatten import ComponentFlattener
 from .visitors import ComponentVisitor
 from nineml.annotations import annotate_xml
-from ..units import dimensionless
 import nineml
 from ...utility import expect_single, filter_expect_single
 from ...xmlns import NINEML, MATHML, nineml_namespace
 from .base import DynamicsClass, Parameter, Dynamics
 from nineml.annotations import read_annotations
-from .ports import (EventSendPort, EventReceivePort, AnalogSendPort,
-                    AnalogReceivePort, AnalogReducePort)
+from ..ports import (EventSendPort, EventReceivePort, AnalogSendPort,
+                     AnalogReceivePort, AnalogReducePort)
 from .transitions import OnEvent, OnCondition, StateAssignment, EventOut
 from .regimes import Regime, StateVariable, TimeDerivative
-from nineml.abstraction_layer.maths.base import Alias
+from ..expressions import Alias
 from nineml.exceptions import NineMLRuntimeError
 
 ____ = ['XMLReader']
@@ -397,10 +396,10 @@ class XMLWriter(ComponentVisitor):
             else:
                 component = ComponentFlattener(component).\
                     reducedcomponent
+        # Convert the component class and the dimensions it uses to xml
         component.standardize_unit_dimensions()
-        xml = XMLWriter().visit(component)
-        xml = [XMLWriter().visit_dimension(d) for d in component.dimensions
-               if d is not None] + [xml]
+        xml = [XMLWriter().visit(component)] + [XMLWriter().visit_dimension(d)
+                                                for d in component.dimensions]
         return E.NineML(*xml, xmlns=nineml_namespace)
 
     def visit_componentclass(self, component):

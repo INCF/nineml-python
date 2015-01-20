@@ -12,7 +12,7 @@ from ..base import NamespaceAddress
 from nineml.abstraction_layer.dynamics.queryer import Queryer
 from ...utility import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
-from nineml.abstraction_layer.maths.base import Alias, StrToExpr
+from ..expressions import Alias
 from ..base import ComponentClass, Parameter
 from .regimes import StateVariable
 from ..ports import (AnalogReceivePort, AnalogSendPort,
@@ -21,7 +21,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
 from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
-from ..maths import get_reserved_and_builtin_symbols
+from ..expressions.util import get_reserved_and_builtin_symbols
 from .cloner import ExpandAliasDefinition, ClonerVisitor
 from .. import BaseALObject
 from .visitors import ActionVisitor
@@ -185,11 +185,8 @@ class _FlatMixin(object):
         return self._dynamics.state_variables_map
 
     @property
-    def dimensions(self):
-        dims = set(obj.dimension for obj in chain(self.analog_ports,
-                                                  self.parameters,
-                                                  self.state_variables))
-        return dims
+    def _attributes_with_dimension(self):
+        return chain(self.analog_ports, self.parameters, self.state_variables)
 
     # -------------------------- #
 

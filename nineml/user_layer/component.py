@@ -313,7 +313,7 @@ class Component(BaseULObject):
         self.standardize_units()
         xml = [self.to_xml()]
         xml.extend(chain(*((u.to_xml(), u.dimension.to_xml())
-                            for u in self.used_units if u != unitless)))
+                            for u in self.used_units)))
         doc = E.NineML(*xml, xmlns=nineml_namespace)
         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
                                      xml_declaration=True)
@@ -416,14 +416,11 @@ class Property(BaseULObject):
         self.units = units
 
     def __repr__(self):
-        if self.units is not None:
-            units = self.units.name
-            if u"µ" in units:
-                units = units.replace(u"µ", "u")
-        else:
-            units = self.units
-        return "Property(name=%s, value=%s, units=%s)" % (self.name,
-                                                          self.value, units)
+        units = self.units.name
+        if u"µ" in units:
+            units = units.replace(u"µ", "u")
+        return ("Property(name={}, value={}, units={})"
+                .format(self.name, self.value, units))
 
     def __eq__(self, other):
         # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV,
@@ -436,12 +433,10 @@ class Property(BaseULObject):
 
     @annotate_xml
     def to_xml(self):
-        kwargs = {'name': self.name}
-        if self.units:
-            kwargs['units'] = self.units.name
         return E(self.element_name,
                  self._value.to_xml(),
-                 **kwargs)
+                 name=self.name,
+                 units=self.units.name)
 
     @classmethod
     @read_annotations

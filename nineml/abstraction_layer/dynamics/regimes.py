@@ -235,8 +235,7 @@ class StateVariable(BaseALObject):
     def __repr__(self):
         return ("StateVariable({}{})"
                 .format(self.name,
-                        ', dimension={}'.format(self.dimension.name)
-                        if self.dimension else ''))
+                        ', dimension={}'.format(self.dimension.name)))
 
 
 class TimeDerivative(ODE):
@@ -300,5 +299,6 @@ class TimeDerivative(ODE):
         dependent_variable = match.groupdict()['dependent_var']
         rhs = match.groupdict()['rhs']
         return TimeDerivative(dependent_variable=dependent_variable, rhs=rhs)
+
 
 from .transitions import OnEvent, OnCondition

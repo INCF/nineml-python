@@ -89,12 +89,12 @@ class ComponentClass(BaseALObject):
         """
         if reference_set is None:
             reference_set = self.dimensions
-        for p in self._attributes_with_dimension:
+        for a in self._attributes_with_dimension:
             try:
-                std_dim = next(d for d in reference_set if d == p.dimension)
+                std_dim = next(d for d in reference_set if d == a.dimension)
             except StopIteration:
                 continue
-            p.set_dimension(std_dim)
+            a.set_dimension(std_dim)
 
 
 class Parameter(BaseALObject):
@@ -139,8 +139,7 @@ class Parameter(BaseALObject):
     def __repr__(self):
         return ("Parameter({}{})"
                 .format(self.name,
-                        ', dimension={}'.format(self.dimension.name)
-                        if self.dimension else ''))
+                        ', dimension={}'.format(self.dimension.name)))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
