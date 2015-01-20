@@ -11,6 +11,7 @@ from ..expressions import Expression, ExpressionWithSimpleLHS
 from ..expressions.util import MathUtil, str_to_npfunc_map
 from ...exceptions import NineMLRuntimeError
 from .cloner import ClonerVisitor
+from ..expressions import parse
 
 
 class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):

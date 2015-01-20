@@ -14,6 +14,7 @@ from nineml.exceptions import NineMLRuntimeError
 from .util import (MathUtil, str_to_npfunc_map, func_namespace_split,
                    is_valid_lhs_target)
 from .. import BaseALObject
+from . import parse
 
 
 class Expression(object):

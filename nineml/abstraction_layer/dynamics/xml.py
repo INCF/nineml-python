@@ -72,7 +72,7 @@ class XMLLoader(object):
         return DynamicsClass(
             name=element.get('name'),
             parameters=subnodes["Parameter"],
-            ang_ports=chain(subnodes["AnalogSendPort"],
+            analog_ports=chain(subnodes["AnalogSendPort"],
                                subnodes["AnalogReceivePort"],
                                subnodes["AnalogReducePort"]),
             event_ports=chain(subnodes["EventSendPort"],
@@ -119,8 +119,8 @@ class XMLLoader(object):
         subnodes = self.loadBlocks(element, blocks=subblocks)
 
         return Dynamics(regimes=subnodes["Regime"],
-                                  ases=subnodes["Alias"],
-                                  state_variables=subnodes["StateVariable"])
+                        aliases=subnodes["Alias"],
+                        state_variables=subnodes["StateVariable"])
 
     @read_annotations
     def load_regime(self, element):
@@ -128,8 +128,8 @@ class XMLLoader(object):
         subnodes = self.loadBlocks(element, blocks=subblocks)
         transitions = subnodes["OnEvent"] + subnodes['OnCondition']
         return Regime(name=element.get('name'),
-                         time_derivatives=subnodes["TimeDerivative"],
-                         transitions=transitions)
+                      time_derivatives=subnodes["TimeDerivative"],
+                      transitions=transitions)
 
     @read_annotations
     def load_statevariable(self, element):
@@ -142,14 +142,13 @@ class XMLLoader(object):
         variable = element.get("variable")
         expr = self.load_single_internmaths_block(element)
         return TimeDerivative(dependent_variable=variable,
-                                        rhs=expr)
+                              rhs=expr)
 
     @read_annotations
     def load_alias(self, element):
         name = element.get("name")
         rhs = self.load_single_internmaths_block(element)
-        return Alias(lhs=name,
-                               rhs=rhs)
+        return Alias(lhs=name, rhs=rhs)
 
     @read_annotations
     def load_oncondition(self, element):
@@ -159,9 +158,9 @@ class XMLLoader(object):
         trigger = expect_single(subnodes["Trigger"])
 
         return OnCondition(trigger=trigger,
-                              state_assignments=subnodes["StateAssignment"],
-                              event_outputs=subnodes["EventOut"],
-                              target_regime_name=target_regime)
+                           state_assignments=subnodes["StateAssignment"],
+                           event_outputs=subnodes["EventOut"],
+                           target_regime_name=target_regime)
 
     @read_annotations
     def load_onevent(self, element):
@@ -170,9 +169,9 @@ class XMLLoader(object):
         target_regime_name = element.get('target_regime', None)
 
         return OnEvent(src_port_name=element.get('port'),
-                          state_assignments=subnodes["StateAssignment"],
-                          event_outputs=subnodes["EventOut"],
-                          target_regime_name=target_regime_name)
+                       state_assignments=subnodes["StateAssignment"],
+                       event_outputs=subnodes["EventOut"],
+                       target_regime_name=target_regime_name)
 
     def load_trigger(self, element):
         return self.load_single_internmaths_block(element)

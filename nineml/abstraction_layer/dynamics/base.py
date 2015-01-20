@@ -363,8 +363,8 @@ class InterfaceInferer(ActionVisitor):
         self.accounted_for_symbols = set(itertools.chain(
             self.state_variable_names,
             dynamics.aliases_map.keys(),
-            #dynamics.constants_map.keys(),  # TODO: Need to add this @IgnorePep8
-            dynamics.random_variables_map.keys(),
+            # dynamics.constants_map.keys(),  # TODO: Need to add this
+            # dynamics.random_variables_map.keys(),
             incoming_port_names,
             get_reserved_and_builtin_symbols()
         ))
