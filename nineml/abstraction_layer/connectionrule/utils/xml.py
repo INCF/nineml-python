@@ -1,7 +1,7 @@
 from lxml import etree
 from nineml.xmlns import E, NINEML
 from nineml.exceptions import NineMLRuntimeError
-from ...componentclass.utils import BaseXMLLoader, BaseXMLReader, BaseXMLWriter
+from ...componentclass.utils import ComponentClassXMLLoader, ComponentClassXMLReader, ComponentClassXMLWriter
 from ..base import ConnectionRuleClass, ConnectionRule
 from nineml.xmlns import nineml_namespace
 
@@ -62,11 +62,11 @@ class XMLLoader(object):
     }
 
 
-class XMLReader(BaseXMLReader):
+class XMLReader(ComponentClassXMLReader):
     loader = XMLLoader
 
 
-class XMLWriter(BaseXMLWriter):
+class XMLWriter(ComponentClassXMLWriter):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment

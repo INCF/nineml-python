@@ -21,7 +21,7 @@ from nineml.xmlns import NINEML, MATHML, nineml_namespace
 from nineml.exceptions import NineMLRuntimeError
 
 
-class BaseXMLLoader(object):
+class ComponentClassXMLLoader(object):
 
     """This class is used by XMLReader internally.
 
@@ -104,8 +104,7 @@ class BaseXMLLoader(object):
     def load_alias(self, element):
         name = element.get("name")
         rhs = self.load_single_internmaths_block(element)
-        return Alias(lhs=name,
-                               rhs=rhs)
+        return Alias(lhs=name, rhs=rhs)
 
     def load_single_internmaths_block(self, element, checkOnlyBlock=True):
         if checkOnlyBlock:
@@ -119,8 +118,8 @@ class BaseXMLLoader(object):
             mblock = expect_single(element.find(NINEML +
                                                    'MathInline')).text.strip()
         elif element.find(MATHML + "MathML"):
-            mblock = self.load_mathml(expect_single(element.find(MATHML +
-                                                                    "MathML")))
+            mblock = self.load_mathml(
+                expect_single(element.find(MATHML + "MathML")))
         return mblock
 
     def load_mathml(self, mathml):
@@ -145,7 +144,8 @@ class BaseXMLLoader(object):
                     err += '\n Expected: %s' % ','.join(blocks)
                     raise NineMLRuntimeError(err)
 
-            res[tag].append(BaseXMLLoader.tag_to_loader[tag](self, t))
+            res[tag].append(
+                ComponentClassXMLLoader.tag_to_loader[tag](self, t))
         return res
 
     tag_to_loader = {
@@ -161,11 +161,11 @@ class BaseXMLLoader(object):
     }
 
 
-class BaseXMLReader(object):
+class ComponentClassXMLReader(object):
 
     """A class that can read |COMPONENTCLASS| objects from a NineML XML file.
     """
-    loader = BaseXMLLoader
+    loader = ComponentClassXMLLoader
 
     @classmethod
     def _load_include(cls, include_element, basedir, xml_node_filename_map):
@@ -284,7 +284,7 @@ class BaseXMLReader(object):
         return loader.components
 
 
-class BaseXMLWriter(ComponentClassVisitor):
+class ComponentClassXMLWriter(ComponentClassVisitor):
 
     @classmethod
     def write(cls, component, file, flatten=True):  # @ReservedAssignment
@@ -297,8 +297,9 @@ class BaseXMLWriter(ComponentClassVisitor):
     def to_xml(cls, component):
         assert isinstance(component, DynamicsClass)
         component.standardize_unit_dimensions()
-        xml = BaseXMLWriter().visit(component)
-        xml = [BaseXMLWriter().visit_dimension(d) for d in component.dimensions
+        xml = ComponentClassXMLWriter().visit(component)
+        xml = [ComponentClassXMLWriter().visit_dimension(d)
+               for d in component.dimensions
                if d is not None] + [xml]
         return E.NineML(*xml, xmlns=nineml_namespace)
 

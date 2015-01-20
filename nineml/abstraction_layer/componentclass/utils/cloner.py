@@ -7,7 +7,7 @@ docstring needed
 from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import (is_builtin_symbol, MathUtil)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
-from . import ActionVisitor, ComponentClassVisitor
+from .visitors import ActionVisitor, ComponentClassVisitor
 
 
 class ExpandPortDefinition(ActionVisitor):

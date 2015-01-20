@@ -6,7 +6,7 @@ This file contains utility classes for modifying components.
 """
 
 from ..base import Parameter
-from . import ExpandPortDefinition
+from .cloner import ExpandPortDefinition
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utility import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError

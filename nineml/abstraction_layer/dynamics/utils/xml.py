@@ -22,6 +22,7 @@ from ..transitions import OnEvent, OnCondition, StateAssignment, EventOut
 from ..regimes import Regime, StateVariable, TimeDerivative
 from ...expressions import Alias
 from nineml.exceptions import NineMLRuntimeError
+from ..componentclass.utils.xml import ComponentClassXMLLoader
 
 ____ = ['XMLReader']
 
