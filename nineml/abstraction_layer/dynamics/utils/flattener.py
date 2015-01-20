@@ -7,14 +7,14 @@ docstring needed
 
 import itertools
 from collections import defaultdict
-from ...utility import flatten_first_level
-from .cloner import (ClonerVisitor, ClonerVisitorPrefixNamespace,
-                     ExpandPortDefinition)
-from ..base import NamespaceAddress
+from nineml.utility import flatten_first_level
+from ...base.utils import (ClonerVisitor, ClonerVisitorPrefixNamespace,
+                           ExpandPortDefinition)
+from .namespace import NamespaceAddress
 from nineml.exceptions import NineMLRuntimeError
-from .base import DynamicsClass
+from ..base import DynamicsClass
 from nineml.abstraction_layer.dynamics.regimes import Regime
-from .transitions import OnCondition, OnEvent
+from ..transitions import OnCondition, OnEvent
 
 
 class TransitionResolver(object):
@@ -363,7 +363,6 @@ class ComponentFlattener(object):
             ExpandPortDefinition(
                 originalname=dstport.name, targetname=reduce_expr).visit(
                     self.reducedcomponent)
-
 
 
 def flatten(model, componentname=None):

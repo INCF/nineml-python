@@ -5,9 +5,9 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.abstraction_layer.dynamics import xml
+from nineml.abstraction_layer.dynamics.utils import xml
 from nineml.abstraction_layer.dynamics import validators
-from nineml.abstraction_layer.dynamics import flatten as flattening2
+from nineml.abstraction_layer.dynamics.utils import flattener as flattening2
 from nineml.utility import file_sha1_hexdigest
 
 
@@ -19,7 +19,7 @@ class TestXMLWriteReadWrite(object):
         print '  -- Testing One and a half trips...'
 
         if not component.is_flat():
-            component = flattening2.flatten(component)
+            component = flattening2.flattener(component)
 
         xmlfile1 = build_dir + component.name + '1.xml'
         xmlfile2 = build_dir + component.name + '2.xml'

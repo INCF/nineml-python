@@ -6,7 +6,7 @@ from nineml.xmlns import NINEML
 from nineml.abstraction_layer.componentclass import Parameter
 from nineml.abstraction_layer.ports import PropertySendPort
 from .base import DistributionClass, Distribution
-from ..base.xml import BaseXMLWriter
+from nineml.abstraction_layer.base.utils.xml import BaseXMLWriter
 from nineml.exceptions import NineMLRuntimeError
 
 

@@ -6,7 +6,7 @@ docstring needed
 """
 
 
-from nineml.abstraction_layer.dynamics import xml
+from nineml.abstraction_layer.dynamics.utils import xml
 
 
 class TestWriteDot(object):

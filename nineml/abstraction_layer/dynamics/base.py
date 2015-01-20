@@ -9,7 +9,7 @@ components definitions of interface and dynamics
 import itertools
 from ...exceptions import NineMLRuntimeError
 from ..base import NamespaceAddress
-from nineml.abstraction_layer.dynamics.queryer import Queryer
+
 from ...utility import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from ..expressions import Alias
@@ -22,9 +22,10 @@ from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
 from ..expressions.util import get_reserved_and_builtin_symbols
-from .cloner import ExpandAliasDefinition, ClonerVisitor
+from ..base.utils.cloner import ExpandAliasDefinition, ClonerVisitor
 from .. import BaseALObject
-from .visitors import ActionVisitor
+from ..base.utils.visitors import ActionVisitor
+from ..base.utils.queryer import Queryer
 
 
 class _FlatMixin(object):
@@ -214,7 +215,7 @@ class _FlatMixin(object):
             flattened before saving
 
         """
-        from .xml import XMLWriter
+        from nineml.abstraction_layer.dynamics.utils.xml import XMLWriter
         return XMLWriter.write(component=self, file=file, flatten=flatten)
 
 
@@ -649,7 +650,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
 class Dynamics(BaseALObject):
 
     """
-    A container class, which encapsulates a component's regimes, transitions,
+    An object, which encapsulates a component's regimes, transitions,
     and state variables
     """
 

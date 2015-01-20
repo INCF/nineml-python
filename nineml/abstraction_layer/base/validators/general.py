@@ -11,7 +11,7 @@ from nineml.exceptions import NineMLRuntimeError
 from ...expressions.util import (get_reserved_and_builtin_symbols,
                                  is_valid_lhs_target)
 from nineml.utility import assert_no_duplicates
-from ..namespace import NamespaceAddress
+from nineml.abstraction_layer.dynamics.utils.namespace import NamespaceAddress
 
 
 class TimeDerivativesAreDeclaredValidator(PerNamespaceValidator):

@@ -8,20 +8,19 @@ import os
 from urllib2 import urlopen
 from itertools import chain
 from lxml import etree
-from lxml.builder import E
-from .flatten import ComponentFlattener
-from .visitors import ComponentClassVisitor
+from ...base.utils import ComponentClassVisitor
+from .flattener import ComponentFlattener
 from nineml.annotations import annotate_xml
 import nineml
-from ...utility import expect_single, filter_expect_single
-from ...xmlns import NINEML, MATHML, nineml_namespace
-from .base import DynamicsClass, Parameter, Dynamics
+from nineml.utility import expect_single, filter_expect_single
+from nineml.xmlns import NINEML, MATHML, nineml_namespace, E
+from ..base import DynamicsClass, Parameter, Dynamics
 from nineml.annotations import read_annotations
-from ..ports import (EventSendPort, EventReceivePort, AnalogSendPort,
-                     AnalogReceivePort, AnalogReducePort)
-from .transitions import OnEvent, OnCondition, StateAssignment, EventOut
-from .regimes import Regime, StateVariable, TimeDerivative
-from ..expressions import Alias
+from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
+                      AnalogReceivePort, AnalogReducePort)
+from ..transitions import OnEvent, OnCondition, StateAssignment, EventOut
+from ..regimes import Regime, StateVariable, TimeDerivative
+from ...expressions import Alias
 from nineml.exceptions import NineMLRuntimeError
 
 ____ = ['XMLReader']

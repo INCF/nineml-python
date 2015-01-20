@@ -5,9 +5,9 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
-from ..componentclass import Parameter
+from ...componentclass import Parameter
 from .cloner import ExpandPortDefinition
-from ..ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
+from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utility import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject

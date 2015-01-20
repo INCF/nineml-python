@@ -4,9 +4,10 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...exceptions import NineMLRuntimeError
-from ..expressions.util import is_builtin_symbol, MathUtil
-from ..base import NamespaceAddress
+from nineml.exceptions import NineMLRuntimeError
+from nineml.abstraction_layer.expressions.util import (is_builtin_symbol,
+                                                       MathUtil)
+from ...dynamics.utils.namespace import NamespaceAddress
 from .visitors import ActionVisitor, ComponentClassVisitor
 
 
@@ -148,7 +149,7 @@ class RenameSymbol(ActionVisitor):
             self.note_rhs_changed(alias)
             alias.name_transform_inplace(self.namemap)
 
-    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable
+    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         if timederivative.dependent_variable == self.old_symbol_name:
             self.note_lhs_changed(timederivative)
             timederivative.name_transform_inplace(self.namemap)

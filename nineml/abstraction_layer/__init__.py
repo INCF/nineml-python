@@ -32,7 +32,7 @@ from .dynamics import (DynamicsClass, Regime,
 from .ports import (AnalogSendPort, AnalogReceivePort,
                     AnalogReducePort, EventSendPort,
                     EventReceivePort, AnalogPort, EventPort, Port)
-from .dynamics import flatten as flattening  # For old tests
+from nineml.abstraction_layer.dynamics.utils import flattener as flattening
 from .connectionrule import ConnectionRuleClass
 from .distribution import DistributionClass
 from .units import Unit, Dimension
