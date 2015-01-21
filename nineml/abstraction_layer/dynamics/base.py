@@ -404,7 +404,6 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
                 err = "Either specify a 'dynamics' parameter, or "
                 err += "state_variables /regimes/aliases, but not both!"
                 raise NineMLRuntimeError(err)
-
         else:
             dynamics = Dynamics(regimes=regimes, aliases=aliases,
                                 state_variables=state_variables)
@@ -414,24 +413,20 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         analog_ports = list(analog_ports)
         event_ports = list(event_ports)
 
-        # Construct super classes:
-        _FlatMixin.__init__(
-            self, analog_ports=analog_ports, event_ports=event_ports,
-            dynamics=dynamics)
-        _NamespaceMixin.__init__(
-            self, subnodes=subnodes, portconnections=portconnections)
-
         # Check there aren't any duplicates in the port and parameter names
         assert_no_duplicates(p if isinstance(p, basestring) else p.name
                              for p in chain(parameters if parameters else [],
-                                            analog_ports,
-                                            event_ports))
+                                            analog_ports, event_ports))
 
+        analog_receive_ports = [port for port in analog_ports
+                                if isinstance(port, AnalogReceivePort)]
+        analog_reduce_ports = [port for port in analog_ports
+                               if isinstance(port, AnalogReducePort)]
+        incoming_port_names = [p.name for p in chain(analog_receive_ports,
+                                                     analog_reduce_ports)]
         # EventPort, StateVariable and Parameter Inference:
-        inferred_struct = DynamicsClassInterfaceInferer(self)
-        inf_check = lambda l1, l2, desc: check_list_contain_same_items(
-            l1, l2, desc1='Declared', desc2='Inferred', ignore=['t'],
-            desc=desc)
+        inferred_struct = DynamicsClassInterfaceInferer(dynamics,
+                                                        incoming_port_names)
 
         # Check any supplied parameters match:
         if parameters is not None:
@@ -456,9 +451,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         # Check Event Receive Ports Match:
         event_receive_ports = [port for port in event_ports
                                if isinstance(port, EventReceivePort)]
-        event_send_ports = [port for port in event_ports
-                            if isinstance(port, EventSendPort)]
-        if event_receive_ports is not None:
+        if event_receive_ports:
             # FIXME: not all OutputEvents are necessarily exposed as Ports,
             # so really we should just check that all declared output event
             # ports are in the list of inferred ports, not that the declared
@@ -470,19 +463,26 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
             # FIXME: TGC don't like this shorthand
             # Event ports not supplied, so lets use the inferred ones.
             for evt_port_name in inferred_struct.input_event_port_names:
-                self._event_receive_ports.append(
-                    EventReceivePort(name=evt_port_name))
+                event_ports.append(EventReceivePort(name=evt_port_name))
 
         # Check Event Send Ports Match:
-        if event_send_ports is not None:
+        event_send_ports = [port for port in event_ports
+                            if isinstance(port, EventSendPort)]
+        if event_send_ports:
             inf_check([p.name for p in event_send_ports],
                       inferred_struct.event_out_port_names,
                       'Event Ports Out')
         else:
             # Event ports not supplied, so lets use the inferred ones.
             for evt_port_name in inferred_struct.event_out_port_names:
-                self._event_send_ports.append(
-                    EventSendPort(name=evt_port_name))
+                event_ports.append(EventSendPort(name=evt_port_name))
+
+        # Construct super classes:
+        _FlatMixin.__init__(
+            self, analog_ports=analog_ports, event_ports=event_ports,
+            dynamics=dynamics)
+        _NamespaceMixin.__init__(
+            self, subnodes=subnodes, portconnections=portconnections)
 
         # Finalise initiation:
         self._resolve_transition_regime_names()
@@ -639,6 +639,11 @@ class Dynamics(BaseALObject):
     @property
     def state_variables_map(self):
         return self._state_variables
+
+
+def inf_check(l1, l2, desc):
+    check_list_contain_same_items(l1, l2, desc1='Declared',
+                                  desc2='Inferred', ignore=['t'], desc=desc)
 
 from .validators import ComponentValidator
 from .utils import DynamicsClassInterfaceInferer

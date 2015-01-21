@@ -23,8 +23,8 @@ class LocalNameConflictsValidator(PerNamespaceValidator):
     """
 
     def __init__(self, component):
-        PerNamespaceValidator.__init__(self,
-                                     require_explicit_overrides=False)
+        PerNamespaceValidator.__init__(
+            self, require_explicit_overrides=False)
         self.symbols = defaultdict(list)
 
         self.visit(component)
