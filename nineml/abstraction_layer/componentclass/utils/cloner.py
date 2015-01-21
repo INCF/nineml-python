@@ -7,14 +7,14 @@ docstring needed
 from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import (is_builtin_symbol, MathUtil)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
-from .visitors import ActionVisitor, ComponentClassVisitor
+from .visitors import ComponentClassActionVisitor, ComponentClassVisitor
 
 
-class ExpandPortDefinition(ActionVisitor):
+class ExpandPortDefinition(ComponentClassActionVisitor):
 
     def __init__(self, originalname, targetname):
 
-        ActionVisitor.__init__(self, require_explicit_overrides=False)
+        ComponentClassActionVisitor.__init__(self, require_explicit_overrides=False)
 
         self.originalname = originalname
         self.targetname = targetname
@@ -33,7 +33,7 @@ class ExpandPortDefinition(ActionVisitor):
         condition.rhs_name_transform_inplace(self.namemap)
 
 
-class ExpandAliasDefinition(ActionVisitor):
+class ExpandAliasDefinition(ComponentClassActionVisitor):
 
     """ An action-class that walks over a component, and expands an alias in
     Assignments, Aliases, TimeDerivatives and Conditions
@@ -41,7 +41,7 @@ class ExpandAliasDefinition(ActionVisitor):
 
     def __init__(self, originalname, targetname):
 
-        ActionVisitor.__init__(self, require_explicit_overrides=False)
+        ComponentClassActionVisitor.__init__(self, require_explicit_overrides=False)
 
         self.originalname = originalname
         self.targetname = targetname
@@ -60,14 +60,14 @@ class ExpandAliasDefinition(ActionVisitor):
         condition.rhs_name_transform_inplace(self.namemap)
 
 
-class RenameSymbol(ActionVisitor):
+class RenameSymbol(ComponentClassActionVisitor):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
     """
 
     def __init__(self, component, old_symbol_name, new_symbol_name):
-        ActionVisitor.__init__(self, require_explicit_overrides=True)
+        ComponentClassActionVisitor.__init__(self, require_explicit_overrides=True)
         self.old_symbol_name = old_symbol_name
         self.new_symbol_name = new_symbol_name
         self.namemap = {old_symbol_name: new_symbol_name}
@@ -130,10 +130,10 @@ class RenameSymbol(ActionVisitor):
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self._action_port(port, **kwargs)
 
-    def action_eventout(self, output_event, **kwargs):  # @UnusedVariable
-        if output_event.port_name == self.old_symbol_name:
-            output_event._port_name = self.new_symbol_name
-            self.note_rhs_changed(output_event)
+    def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
+        if event_out.port_name == self.old_symbol_name:
+            event_out._port_name = self.new_symbol_name
+            self.note_rhs_changed(event_out)
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         if self.old_symbol_name in assignment.atoms:
@@ -248,9 +248,9 @@ class ClonerVisitor(ComponentClassVisitor):
         return port.__class__(
             name=self.prefix_variable(port.name, **kwargs))
 
-    def visit_eventout(self, output_event, **kwargs):
-        return output_event.__class__(
-            port_name=self.prefix_variable(output_event.port_name, **kwargs))
+    def visit_eventout(self, event_out, **kwargs):
+        return event_out.__class__(
+            port_name=self.prefix_variable(event_out.port_name, **kwargs))
 
     def visit_assignment(self, assignment, **kwargs):
         prefix = kwargs.get('prefix', '')

@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ..utils import ActionVisitor
+from ..utils import ComponentClassActionVisitor
 from ...dynamics.regimes import Regime, StateVariable, TimeDerivative
 from ...dynamics.transitions import (EventOut, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
@@ -16,7 +16,7 @@ from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
 from ...dynamics.base import Dynamics
 
 
-class TypesValidator(ActionVisitor):
+class TypesValidator(ComponentClassActionVisitor):
 
     def __init__(self, component):
         super(TypesValidator, self).__init__()

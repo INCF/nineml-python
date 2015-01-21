@@ -395,7 +395,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
         # raise NotImplementedError()
 
     def test_action_eventout(self):
-        # Signature: name(self, output_event, **kwargs)
+        # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
         warnings.warn('Tests not implemented')
@@ -514,7 +514,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
         # raise NotImplementedError()
 
     def test_visit_eventout(self):
-        # Signature: name(self, output_event, **kwargs)
+        # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
         warnings.warn('Tests not implemented')
@@ -640,7 +640,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         # raise NotImplementedError()
 
     def test_action_eventout(self):
-        # Signature: name(self, output_event, **kwargs)
+        # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
         warnings.warn('Tests not implemented')
@@ -759,7 +759,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         # raise NotImplementedError()
 
     def test_visit_eventout(self):
-        # Signature: name(self, output_event, **kwargs)
+        # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
         warnings.warn('Tests not implemented')
@@ -885,7 +885,7 @@ class RenameSymbol_test(unittest.TestCase):
         # raise NotImplementedError()
 
     def test_action_eventout(self):
-        # Signature: name(self, output_event, **kwargs)
+        # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
         warnings.warn('Tests not implemented')
@@ -1025,7 +1025,7 @@ class RenameSymbol_test(unittest.TestCase):
         # raise NotImplementedError()
 
     def test_visit_eventout(self):
-        # Signature: name(self, output_event, **kwargs)
+        # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
         warnings.warn('Tests not implemented')

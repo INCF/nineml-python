@@ -19,7 +19,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
 from nineml.utility import (check_list_contain_same_items,
                             ensure_valid_identifier, invert_dictionary,
                             assert_no_duplicates)
-from ..componentclass.utils import ComponentClassQueryer, InterfaceInferer
+from ..componentclass.utils import ComponentClassQueryer
 from ..componentclass.utils.cloner import ExpandAliasDefinition, ClonerVisitor
 from .. import BaseALObject
 
@@ -470,14 +470,14 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         # Check Event Send Ports Match:
         if event_send_ports:
             inf_check([p.name for p in event_send_ports],
-                      inferred_struct.output_event_port_names,
+                      inferred_struct.event_out_port_names,
                       'Event Ports Out')
         else:
             event_ports = []
             # Event ports not supplied, so lets use the inferred ones.
             for evt_port_name in inferred_struct.input_event_port_names:
                 event_ports.append(EventReceivePort(name=evt_port_name))
-            for evt_port_name in inferred_struct.output_event_port_names:
+            for evt_port_name in inferred_struct.event_out_port_names:
                 event_ports.append(EventSendPort(name=evt_port_name))
 
         # Construct super-classes:
@@ -644,3 +644,4 @@ class Dynamics(BaseALObject):
         return self._state_variables
 
 from .validators import ComponentValidator
+from .utils import InterfaceInferer

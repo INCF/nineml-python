@@ -5,9 +5,9 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-# from nineml.abstraction_layer.visitors import ActionVisitor
+# from nineml.abstraction_layer.visitors import ComponentClassActionVisitor
 
-from ..utils import ActionVisitor
+from ..utils import ComponentClassActionVisitor
 
 
 class BaseValidator(object):
@@ -16,10 +16,10 @@ class BaseValidator(object):
         raise NotImplementedError()
 
 
-class PerNamespaceValidator(ActionVisitor, BaseValidator):
+class PerNamespaceValidator(ComponentClassActionVisitor, BaseValidator):
 
     def __init__(self, require_explicit_overrides=True):
-        ActionVisitor.__init__(self,
+        ComponentClassActionVisitor.__init__(self,
             require_explicit_overrides=require_explicit_overrides)  # @IgnorePep8
         BaseValidator.__init__(self)
 
@@ -27,5 +27,5 @@ class PerNamespaceValidator(ActionVisitor, BaseValidator):
     # namespace, then propogate this as a parameter.
     def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
         namespace = component.get_node_addr()
-        ActionVisitor.visit_componentclass(self, component,
+        ComponentClassActionVisitor.visit_componentclass(self, component,
                                            namespace=namespace)

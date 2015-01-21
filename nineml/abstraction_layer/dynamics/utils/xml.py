@@ -199,9 +199,9 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
                  dimension=state_variable.dimension.name)
 
     @annotate_xml
-    def visit_eventout(self, output_event):
+    def visit_eventout(self, event_out):
         return E('EventOut',
-                 port=output_event.port_name)
+                 port=event_out.port_name)
 
     @annotate_xml
     def visit_analogreceiveport(self, port):
