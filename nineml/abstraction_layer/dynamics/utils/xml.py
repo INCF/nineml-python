@@ -5,11 +5,10 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from itertools import chain
-from lxml import etree
 from .flattener import ComponentFlattener
 from nineml.annotations import annotate_xml
 from nineml.utility import expect_single
-from nineml.xmlns import nineml_namespace, E
+from nineml.xmlns import E
 from ..base import DynamicsClass, Dynamics
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
@@ -133,8 +132,8 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
                        event_outputs=subnodes["EventOut"],
                        target_regime_name=target_regime_name)
 
-    # FIXME:   This should return a Trigger element not just an internal
-    # TGC 1/15 maths block
+    # FIXME: This should return a Trigger element not just an internal
+    #        maths block (TGC 1/15)
     def load_trigger(self, element):
         return self.load_single_internmaths_block(element)
 
@@ -169,29 +168,6 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
 
 class DynamicsClassXMLWriter(ComponentClassXMLWriter):
-
-#     @classmethod
-#     def write(cls, component, file, flatten=True):  # @ReservedAssignment
-#         doc = cls.to_xml(component, flatten)
-#         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
-#                                      xml_declaration=True)
-# 
-#     @classmethod
-#     @annotate_xml
-#     def to_xml(cls, component, flatten=True):  # @ReservedAssignment
-#         assert isinstance(component, DynamicsClass)
-#         if not component.is_flat():
-#             if not flatten:
-#                 assert False, 'Trying to save nested models not yet supported'
-#             else:
-#                 component = ComponentFlattener(component).\
-#                     reducedcomponent
-#         # Convert the component class and the dimensions it uses to xml
-#         component.standardize_unit_dimensions()
-#         xml = [DynamicsClassXMLWriter().visit(component)]
-#         xml += [DynamicsClassXMLWriter().visit_dimension(d)
-#                 for d in component.dimensions]
-#         return E.NineML(*xml, xmlns=nineml_namespace)
 
     @annotate_xml
     def visit_componentclass(self, component):

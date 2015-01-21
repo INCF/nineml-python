@@ -10,7 +10,8 @@ import nineml.user_layer
 from ..abstraction_layer import units as un
 from ..utility import expect_single, expect_none_or_single, check_tag
 from ..exceptions import NineMLRuntimeError
-from .values import SingleValue, ArrayValue, ExternalArrayValue
+from .values import SingleValue
+from .component import Quantity
 
 
 class Projection(BaseULObject):
@@ -139,8 +140,8 @@ class Projection(BaseULObject):
 
     @property
     def units(self):
-        return chain((c.units for c in self.get_components()),
-                     self.delay.units)
+        return chain([self.delay.units],
+                     *[c.units for c in self.get_components()])
 
     def standardize_units(self, reference_units=None,
                           reference_dimensions=None):
@@ -247,8 +248,7 @@ class Projection(BaseULObject):
                    port_connections=port_connections)
 
 
-# TODO: This and Property should inherit from a BaseQuantity class
-class Delay(BaseULObject):
+class Delay(Quantity):
     """
     Representation of the connection delay.
 
@@ -272,99 +272,7 @@ class Delay(BaseULObject):
         if units.dimension != un.time:
             raise Exception("Units for delay must be of the time dimension "
                             "(found {})".format(units))
-        super(Delay, self).__init__()
-        self._value = value
-        self.units = units
-
-    def __hash__(self):
-        return hash(self.name) ^ hash(self.value) ^ hash(self.units)
-
-    def is_single(self):
-        return isinstance(self._value, SingleValue)
-
-    def is_random(self):
-        raise NotImplementedError
-
-    def is_array(self):
-        return (isinstance(self._value, ArrayValue) or
-                isinstance(self._value, ExternalArrayValue))
-
-    @property
-    def value(self):
-        if self.is_single():
-            return self._value.value
-        else:
-            raise Exception("Cannot access single value for array or component"
-                            " type")
-
-    @property
-    def value_array(self):
-        if self.is_array():
-            raise NotImplementedError
-        else:
-            raise Exception("Cannot access value array for component or single"
-                            " value types")
-
-    @property
-    def random_distribution(self):
-        if self.is_random():
-            return self._value.component
-        else:
-            raise Exception("Cannot access random distribution for component "
-                            "or single value types")
-
-    def __repr__(self):
-        units = self.units.name
-        if u"µ" in units:
-            units = units.replace(u"µ", "u")
-        return "Delay(value=%s, units=%s)" % (self.value, units)
-
-    def __eq__(self, other):
-        # FIXME: obviously we should resolve the units, so 0.001 s == 1 ms,
-        #        could use python-quantities package to do this if we are
-        #        okay with the dependency
-        return (isinstance(other, self.__class__) and
-                self.value == other.value and
-                self.units == other.units)
-
-    @annotate_xml
-    def to_xml(self):
-        kwargs = {'units': self.units.name} if self.units else {}
-        return E(self.element_name,
-                 self._value.to_xml(),
-                 **kwargs)
-
-    @classmethod
-    @read_annotations
-    def from_xml(cls, element, document):
-        check_tag(element, cls)
-        if element.find(NINEML + 'SingleValue') is not None:
-            value = SingleValue.from_xml(
-                expect_single(element.findall(NINEML + 'SingleValue')),
-                document)
-        elif element.find(NINEML + 'ArrayValue') is not None:
-            value = ArrayValue.from_xml(
-                expect_single(element.findall(NINEML + 'ArrayValue')),
-                document)
-        elif element.find(NINEML + 'ExternalArrayValue') is not None:
-            value = ArrayValue.from_xml(
-                expect_single(element.findall(NINEML + 'ArrayValue')),
-                document)
-        elif element.find(NINEML + 'ComponentValue') is not None:
-            value = ArrayValue.from_xml(
-                expect_single(element.findall(NINEML + 'ArrayValue')),
-                document)
-        else:
-            raise Exception(
-                "Did not find recognised value tag in delay (found {})"
-                .format(', '.join(c.tag for c in element.getchildren())))
-        units_str = element.attrib.get('units', None)
-        try:
-            units = document[units_str] if units_str else None
-        except KeyError:
-            raise Exception("Did not find definition of '{}' units in the "
-                            "current document.".format(units_str))
-        return cls(value=value, units=units)
+        super(Delay, self).__init__(value, units)
 
 
 class PortConnection(object):

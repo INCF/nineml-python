@@ -1,3 +1,4 @@
+from itertools import chain
 from . import BaseULObject
 from .component import resolve_reference, write_reference, Component
 from nineml.xmlns import NINEML, E
@@ -59,7 +60,7 @@ class Population(BaseULObject):
 
     @property
     def units(self):
-        return (c.units for c in self.get_components())
+        return chain(*[c.units for c in self.get_components()])
 
     def standardize_units(self, reference_units=None,
                           reference_dimensions=None):

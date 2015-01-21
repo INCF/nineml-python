@@ -1,6 +1,7 @@
 # encoding: utf-8
 from itertools import chain
 from lxml import etree
+from abc import ABCMeta
 from ..document import BaseReference
 from nineml.exceptions import NineMLUnitMismatchError
 from nineml.xmlns import nineml_namespace
@@ -9,7 +10,7 @@ from operator import and_
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from ..utility import expect_single, check_tag, check_units
-from ..abstraction_layer.units import Unit, unitless
+from ..abstraction_layer.units import Unit
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
@@ -104,6 +105,8 @@ class Component(BaseULObject):
             :class:`PropertySet` for the component's state variables.
 
     """
+    __metaclass__ = ABCMeta  # Abstract base class
+
     element_name = "Component"
     defining_attributes = ('name', 'component_class', 'properties')
     children = ("Property", "Definition", 'Prototype')
@@ -250,13 +253,13 @@ class Component(BaseULObject):
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
         """
-        properties_and_initial_values = (self._properties.to_xml() +
-                                         [iv.to_xml()
-                                          for iv in
-                                                 self.initial_values.values()])
+        self.standardize_units()
+        props_and_initial_values = (self._properties.to_xml() +
+                                    [iv.to_xml()
+                                     for iv in self.initial_values.values()])
         element = E(self.element_name,
                     self._definition.to_xml(),
-                    *properties_and_initial_values,
+                    *props_and_initial_values,
                     name=self.name)
         return element
 
@@ -341,7 +344,7 @@ class Prototype(BaseReference):
         return self._referred_to
 
 
-class Property(BaseULObject):
+class Quantity(BaseULObject):
 
     """
     Representation of a numerical- or string-valued parameter.
@@ -352,10 +355,11 @@ class Property(BaseULObject):
     Numerical values may either be numbers, or a component that generates
     numbers, e.g. a RandomDistribution instance.
     """
-    element_name = "Property"
+    __metaclass__ = ABCMeta  # Abstract base class
+
     defining_attributes = ("name", "value", "units")
 
-    def __init__(self, name, value, units=None):
+    def __init__(self, value, units=None):
         if not isinstance(value, (int, float, SingleValue, ArrayValue,
                                   ExternalArrayValue)):
             raise Exception("Invalid type '{}' for value, can be one of "
@@ -364,21 +368,20 @@ class Property(BaseULObject):
                             .format(value.__class__.__name__))
         if not isinstance(units, Unit) and units is not None:
             raise Exception("Units ({}) must of type <Unit>".format(units))
-        super(Property, self).__init__()
-        self.name = name
+        super(Quantity, self).__init__()
         if isinstance(value, (int, float)):
             value = SingleValue(value)
         self._value = value
         self.units = units
 
     def __hash__(self):
-        return hash(self.name) ^ hash(self.value) ^ hash(self.units)
+        return hash(self.value) ^ hash(self.units)
 
     def is_single(self):
         return isinstance(self._value, SingleValue)
 
     def is_random(self):
-        raise NotImplementedError
+        return False
 
     def is_array(self):
         return (isinstance(self._value, ArrayValue) or
@@ -414,35 +417,36 @@ class Property(BaseULObject):
                             "or single value types")
 
     def set_units(self, units):
+        if units.dimension != self.units.dimension:
+            raise NineMLRuntimeError(
+                "Can't change dimension of quantity from '{}' to '{}'"
+                .format(self.units.dimension, units.dimension))
         self.units = units
 
     def __repr__(self):
         units = self.units.name
         if u"µ" in units:
             units = units.replace(u"µ", "u")
-        return ("Property(name={}, value={}, units={})"
-                .format(self.name, self.value, units))
+        return ("{}(value={}, units={})"
+                .format(self.element_name, self.value, units))
 
     def __eq__(self, other):
         # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV,
         #        could use python-quantities package to do this if we are
         #        okay with the dependency
         return isinstance(other, self.__class__) and \
-            reduce(and_, (self.name == other.name,
-                          self.value == other.value,
+            reduce(and_, (self.value == other.value,
                           self.units == other.units))
 
     @annotate_xml
     def to_xml(self):
         return E(self.element_name,
                  self._value.to_xml(),
-                 name=self.name,
                  units=self.units.name)
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        check_tag(element, cls)
         if element.find(NINEML + 'SingleValue') is not None:
             value = SingleValue.from_xml(
                 expect_single(element.findall(NINEML + 'SingleValue')),
@@ -469,12 +473,56 @@ class Property(BaseULObject):
         except KeyError:
             raise Exception("Did not find definition of '{}' units in the "
                             "current document.".format(units_str))
+        return cls(value=value, units=units)
+
+
+class Property(Quantity):
+
+    """
+    Representation of a numerical- or string-valued parameter.
+
+    A numerical parameter is a (name, value, units) triplet, a string parameter
+    is a (name, value) pair.
+
+    Numerical values may either be numbers, or a component that generates
+    numbers, e.g. a RandomDistribution instance.
+    """
+    element_name = "Property"
+
+    def __init__(self, name, value, units=None):
+        super(Property, self).__init__(value, units)
+        self.name = name
+
+    def __hash__(self):
+        return hash(self.name) ^ super(Property, self).__hash__()
+
+    def __eq__(self, other):
+        return self.name == other.name and super(Property, self).__eq__(other)
+
+    def __repr__(self):
+        units = self.units.name
+        if u"µ" in units:
+            units = units.replace(u"µ", "u")
+        return ("{}(name={}, value={}, units={})"
+                .format(self.element_name, self.name, self.value, units))
+
+    @annotate_xml
+    def to_xml(self):
+        return E(self.element_name,
+                 self._value.to_xml(),
+                 name=self.name,
+                 units=self.units.name)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        check_tag(element, cls)
+        quantity = Quantity.from_xml(element, document)
         try:
             name = element.attrib['name']
         except KeyError:
-            raise Exception("Property did not have name")
-        return cls(name=name, value=value,
-                   units=units)
+            raise Exception("Property did not have a name")
+        return cls(name=name, value=quantity.value, units=quantity.units)
 
 
 class InitialValue(Property):

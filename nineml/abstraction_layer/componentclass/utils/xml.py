@@ -35,45 +35,8 @@ class ComponentClassXMLLoader(object):
     def __init__(self, document=None):
         self.document = document
 
-    def load_componentclasses(self, xmlroot, xml_node_filename_map):
-        self.components = []
-        self.component_srcs = {}
-        for comp_block in xmlroot.find(NINEML + "ComponentClass"):
-            component = self.load_componentclass(comp_block)
-            self.components.append(component)
-            self.component_srcs[component] = xml_node_filename_map[comp_block]
-
     def load_connectports(self, element):
         return element.get('source'), element.get('sink')
-
-    def load_subnode(self, subnode):
-        namespace = subnode.get('namespace')
-        component_class = filter_expect_single(
-            self.components, lambda c: c.name == subnode.get('node'))
-        return namespace, component_class
-
-#     @read_annotations
-#     def load_componentclass(self, element):
-# 
-#         blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
-#                   'IndexSendPort', 'IndexReceivePort', 'AnalogReducePort',
-#                   'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
-# 
-#         subnodes = self._load_blocks(element, blocks)
-# 
-#         dynamics = expect_single(subnodes["Dynamics"])
-#         from ...dynamics import DynamicsClass
-#         return DynamicsClass(
-#             name=element.get('name'),
-#             parameters=subnodes["Parameter"],
-#             ang_ports=chain(subnodes["AnalogSendPort"],
-#                                subnodes["AnalogReceivePort"],
-#                                subnodes["AnalogReducePort"]),
-#             index_ports=chain(subnodes["IndexSendPort"],
-#                               subnodes["IndexReceivePort"]),
-#             dynamics=dynamics,
-#             subnodes=dict(subnodes['Subnode']),
-#             portconnections=subnodes["ConnectPorts"])
 
     @read_annotations
     def load_parameter(self, element):
@@ -112,12 +75,12 @@ class ComponentClassXMLLoader(object):
             if len(elements) != 1:
                 print elements
                 assert 0, 'Unexpected tags found'
-        assert (len(element.find(MATHML + "MathML")) +
-                len(element.find(NINEML + "MathInline"))) == 1
-        if element.find(NINEML + "MathInline"):
-            mblock = expect_single(element.find(NINEML +
-                                                   'MathInline')).text.strip()
-        elif element.find(MATHML + "MathML"):
+        assert (len(element.findall(MATHML + "MathML")) +
+                len(element.findall(NINEML + "MathInline"))) == 1
+        if element.find(NINEML + "MathInline") is not None:
+            mblock = expect_single(
+                element.findall(NINEML + 'MathInline')).text.strip()
+        elif element.find(MATHML + "MathML") is not None:
             mblock = self.load_mathml(
                 expect_single(element.find(MATHML + "MathML")))
         return mblock
@@ -173,6 +136,43 @@ class ComponentClassXMLLoader(object):
         "IndexReceivePort": load_indexreceiveport,
         "Alias": load_alias,
     }
+
+
+class ComponentClassXMLWriter(ComponentClassVisitor):
+
+    @annotate_xml
+    def visit_parameter(self, parameter):
+        return E('Parameter',
+                 name=parameter.name,
+                 dimension=parameter.dimension.name)
+
+    @annotate_xml
+    def visit_propertyreceiveport(self, port):
+        return E('PropertyReceivePort', name=port.name,
+                 dimension=port.dimension.name)
+
+    @annotate_xml
+    def visit_propertysendport(self, port):
+        return E('PropertySendPort', name=port.name,
+                 dimension=port.dimension.name)
+
+    @annotate_xml
+    def visit_indexsendport(self, port):
+        return E('IndexSendPort', name=port.name)
+
+    @annotate_xml
+    def visit_indexreceiveport(self, port):
+        return E('IndexReceivePort', name=port.name)
+
+#     @annotate_xml
+#     def visit_dimension(self, dimension):
+#         kwargs = {'name': dimension.name}
+#         kwargs.update(dict((k, str(v)) for k, v in dimension._dims.items()))
+#         return E('Dimension')
+
+    @annotate_xml
+    def visit_alias(self, alias):
+        return E('Alias', E("MathInline", alias.rhs), name=alias.lhs)
 
 
 class ComponentClassXMLReader(object):
@@ -296,65 +296,3 @@ class ComponentClassXMLReader(object):
         loader.load_componentclasses(
             xmlroot=root, xml_node_filename_map=xml_node_filename_map)
         return loader.components
-
-
-class ComponentClassXMLWriter(ComponentClassVisitor):
-
-    @classmethod
-    def write(cls, component, file, flatten=True):  # @ReservedAssignment
-        doc = cls.to_xml(component, flatten)
-        etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
-                                     xml_declaration=True)
-
-#     @classmethod
-#     @annotate_xml
-#     def to_xml(cls, component):
-#         component.standardize_unit_dimensions()
-#         xml = ComponentClassXMLWriter().visit(component)
-#         xml = [ComponentClassXMLWriter().visit_dimension(d)
-#                for d in component.dimensions
-#                if d is not None] + [xml]
-#         return E.NineML(*xml, xmlns=nineml_namespace)
-
-    def visit_componentclass(self, comp_cls):
-        elements = ([p.accept_visitor(self) for p in comp_cls.property_ports] +
-                    [p.accept_visitor(self) for p in comp_cls.index_ports] +
-                    [p.accept_visitor(self) for p in comp_cls.parameters] +
-                    [comp_cls.dynamics.accept_visitor(self)])
-        return E('ComponentClass', *elements, name=comp_cls.name)
-
-    @annotate_xml
-    def visit_parameter(self, parameter):
-        return E('Parameter',
-                 name=parameter.name,
-                 dimension=parameter.dimension.name)
-
-    @annotate_xml
-    def visit_propertyreceiveport(self, port):
-        return E('PropertyReceivePort', name=port.name,
-                 dimension=port.dimension.name)
-
-    @annotate_xml
-    def visit_propertysendport(self, port):
-        return E('PropertySendPort', name=port.name,
-                 dimension=port.dimension.name)
-
-    @annotate_xml
-    def visit_indexsendport(self, port):
-        return E('IndexSendPort', name=port.name)
-
-    @annotate_xml
-    def visit_indexreceiveport(self, port):
-        return E('IndexReceivePort', name=port.name)
-
-    @annotate_xml
-    def visit_dimension(self, dimension):
-        kwargs = {'name': dimension.name}
-        kwargs.update(dict((k, str(v)) for k, v in dimension._dims.items()))
-        return E('Dimension')
-
-    @annotate_xml
-    def visit_alias(self, alias):
-        return E('Alias',
-                 E("MathInline", alias.rhs),
-                 name=alias.lhs)

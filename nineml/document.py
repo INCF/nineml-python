@@ -34,6 +34,9 @@ class Document(dict, BaseNineMLObject):
 
     def __init__(self, *args, **kwargs):
         self.url = kwargs.pop('_url', None)
+        # FIXME: should be able to take NineMLObjects read their names and
+        #        populate the dictionary. Then kwargs could be reserved for
+        #        other items.
         super(Document, self).__init__(*args, **kwargs)
         # Stores the list of elements that are being loaded to check for
         # circular references
@@ -139,16 +142,20 @@ class Document(dict, BaseNineMLObject):
         Updates the units and dimensions to match the ones currently used
         in the components/class and network structures
         """
-        units = set(chain(*(c.units for c in self.components)))
-        units.update(chain(*(p.units for p in self.populations)))
-        units.update(chain(*(p.units for p in self.projections)))
-        dimensions = set(chain(*(c.dimensions for c in self.componentclasses)))
+        # Get complete set of units and dimensions across each item in the
+        # document
+        units = set(chain(*[c.units for c in self.components]))
+        units.update(chain(*[p.units for p in self.populations]))
+        units.update(chain(*[p.units for p in self.projections]))
+        dimensions = set(chain(*[c.dimensions for c in self.componentclasses]))
         dimensions.update(u.dimension for u in units)
+        # Delete unused units and dimensions from the document
         for k, o in self.items():
             if (isinstance(o, (nineml.abstraction_layer.Unit,
                                nineml.abstraction_layer.Dimension))
                     and o not in units and o not in dimensions):
                 del self[k]
+        # Add missing units and dimensions to the document
         for unit in units:
             if unit.name in self:
                 if unit != self[unit.name]:
@@ -165,17 +172,18 @@ class Document(dict, BaseNineMLObject):
                         " of differring value or type '{}' and '{}'"
                         .format(dimension.name, dimension, self[unit.name]))
             self[dimension.name] = dimension
+        # Standardize the units and dimensions used by the items in the
+        # document, i.e. ensure that equal dimensions use the same name
         for compclass in self.componentclasses:
             compclass.standardize_unit_dimensions(reference_set=dimensions)
         for o in chain(self.components, self.populations, self.projections):
             o.standardize_units(reference_units=units,
                                 reference_dimensions=dimensions)
-# ö
 
-    def to_xml(self, maintain_references=True):
+    def to_xml(self):
         self._standardize_units_and_dimensions()
         return E(self.element_name,
-                 *[c.to_xml(as_reference=maintain_references)
+                 *[c.to_xml(as_reference=False)
                    if isinstance(c, nineml.user_layer.component.BaseULObject)
                    else c.to_xml()
                    for c in self.itervalues()])

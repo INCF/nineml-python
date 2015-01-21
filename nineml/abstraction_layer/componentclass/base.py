@@ -24,12 +24,11 @@ class ComponentClass(BaseALObject):
 
     @annotate_xml
     def to_xml(self):
+        self.standardize_unit_dimensions()
         XMLWriter = getattr(nineml.abstraction_layer,
                             self.__class__.__name__ + 'XMLWriter')
-        xml = [XMLWriter().visit(self)]
-        xml += [d.to_xml() for d in self.dimensions]
-        
-        
+        return XMLWriter().visit(self)
+
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):  # @UnusedVariable
