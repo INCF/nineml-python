@@ -30,30 +30,6 @@ class _FlatMixin(object):
     definitions - i.e. the dynamics
     """
 
-    def __init__(self, analog_ports=[],
-                 event_ports=[], dynamics=None):
-        """Constructor - For parameter descriptions, see the
-        DynamicsClass.__init__() method
-        """
-        self._analog_send_ports = dict((port.name, port)
-                                       for port in analog_ports
-                                       if isinstance(port, AnalogSendPort))
-        self._analog_receive_ports = dict((port.name, port)
-                                          for port in analog_ports
-                                          if isinstance(port,
-                                                        AnalogReceivePort))
-        self._analog_reduce_ports = dict((port.name, port)
-                                         for port in analog_ports
-                                         if isinstance(port, AnalogReducePort))
-        self._event_send_ports = dict((port.name, port)
-                                      for port in event_ports
-                                      if isinstance(port, EventSendPort))
-        self._event_receive_ports = dict((port.name, port)
-                                         for port in event_ports
-                                         if isinstance(port, EventReceivePort))
-        self._dynamics = dynamics
-        ensure_valid_identifier(self.name)
-
     @property
     def ports(self):
         return chain(self.analog_send_ports, self.analog_receive_ports,
@@ -418,15 +394,22 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
                              for p in chain(parameters if parameters else [],
                                             analog_ports, event_ports))
 
-        analog_receive_ports = [port for port in analog_ports
-                                if isinstance(port, AnalogReceivePort)]
-        analog_reduce_ports = [port for port in analog_ports
-                               if isinstance(port, AnalogReducePort)]
-        incoming_port_names = [p.name for p in chain(analog_receive_ports,
-                                                     analog_reduce_ports)]
+        self._dynamics = dynamics
+        self._analog_send_ports = dict(
+            (p.name, p) for p in analog_ports if isinstance(p, AnalogSendPort))
+        self._analog_receive_ports = dict(
+            (p.name, p) for p in analog_ports if isinstance(p,
+                                                            AnalogReceivePort))
+        self._analog_reduce_ports = dict(
+            (p.name, p) for p in analog_ports if isinstance(p,
+                                                            AnalogReducePort))
+
+        # Create dummy event ports to keep the ActionVisitor base class of
+        # the interface inferrer happy
+        self._event_receive_ports = self._event_send_ports = self.subnodes = {}
+
         # EventPort, StateVariable and Parameter Inference:
-        inferred_struct = DynamicsClassInterfaceInferer(dynamics,
-                                                        incoming_port_names)
+        inferred_struct = DynamicsClassInterfaceInferer(self)
 
         # Check any supplied parameters match:
         if parameters is not None:
@@ -448,39 +431,37 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
                               inferred_struct.state_variable_names)
             dynamics._state_variables = state_vars
 
-        # Check Event Receive Ports Match:
-        event_receive_ports = [port for port in event_ports
-                               if isinstance(port, EventReceivePort)]
-        if event_receive_ports:
+        # Set and check event receive ports match inferred
+        self._event_receive_ports = dict(
+            (p.name, p) for p in event_ports if isinstance(p,
+                                                           EventReceivePort))
+        if len(self._event_receive_ports):
             # FIXME: not all OutputEvents are necessarily exposed as Ports,
             # so really we should just check that all declared output event
             # ports are in the list of inferred ports, not that the declared
             # list is identical to the inferred one.
-            inf_check([p.name for p in event_receive_ports],
+            inf_check(self._event_receive_ports.keys(),
                       inferred_struct.input_event_port_names,
                       'Event Ports In')
         else:
             # FIXME: TGC don't like this shorthand
             # Event ports not supplied, so lets use the inferred ones.
-            for evt_port_name in inferred_struct.input_event_port_names:
-                event_ports.append(EventReceivePort(name=evt_port_name))
+            for pname in inferred_struct.input_event_port_names:
+                self._event_receive_ports[pname] = EventReceivePort(name=pname)
 
-        # Check Event Send Ports Match:
-        event_send_ports = [port for port in event_ports
-                            if isinstance(port, EventSendPort)]
-        if event_send_ports:
-            inf_check([p.name for p in event_send_ports],
+        # Set and check event send ports match inferred
+        self._event_send_ports = dict(
+            (p.name, p) for p in event_ports if isinstance(p, EventSendPort))
+        if len(self._event_send_ports):
+            inf_check(self._event_send_ports.keys(),
                       inferred_struct.event_out_port_names,
                       'Event Ports Out')
         else:
             # Event ports not supplied, so lets use the inferred ones.
-            for evt_port_name in inferred_struct.event_out_port_names:
-                event_ports.append(EventSendPort(name=evt_port_name))
+            for pname in inferred_struct.event_out_port_names:
+                self._event_send_ports[pname] = EventSendPort(name=pname)
 
-        # Construct super classes:
-        _FlatMixin.__init__(
-            self, analog_ports=analog_ports, event_ports=event_ports,
-            dynamics=dynamics)
+        # Call namespace mixin constructor
         _NamespaceMixin.__init__(
             self, subnodes=subnodes, portconnections=portconnections)
 

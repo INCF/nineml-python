@@ -7,9 +7,9 @@ class DynamicsClassInterfaceInferer(DynamicsClassActionVisitor,
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
-    def __init__(self, dynamicsclass, incoming_ports):
+    def __init__(self, dynamicsclass):
         self.state_variable_names = set()
-        super(DynamicsClassInterfaceInferer, self).__init__(dynamicsclass, incoming_ports)
+        super(DynamicsClassInterfaceInferer, self).__init__(dynamicsclass)
 
     def action_statevariable(self, state_variable):
         self.declared_symbols.add(state_variable.name)
@@ -27,11 +27,15 @@ class DynamicsClassInterfaceInferer(DynamicsClassActionVisitor,
         self.declared_symbols.add(analog_reduce_port.name)
 
     def action_assignment(self, assignment):
-        self.state_variable_names.add(assignment.lhs)
+        inferred_sv = assignment.lhs
+        self.declared_symbols.add(inferred_sv)
+        self.state_variable_names.add(inferred_sv)
         self.atoms.update(assignment.rhs_atoms)
 
     def action_timederivative(self, time_derivative):
-        self.state_variable_names.add(time_derivative.dependent_variable)
+        inferred_sv = time_derivative.dependent_variable
+        self.state_variable_names.add(inferred_sv)
+        self.declared_symbols.add(inferred_sv)
         self.atoms.update(time_derivative.rhs_atoms)
 
     def action_condition(self, condition):

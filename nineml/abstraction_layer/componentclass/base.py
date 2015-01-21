@@ -38,6 +38,7 @@ class ComponentClass(BaseALObject):
         return XMLLoader(document).load_componentclass(element)
 
     def __init__(self, name, parameters=None):
+        ensure_valid_identifier(name)
         BaseALObject.__init__(self)
         self._name = name
         # Turn any strings in the parameter list into Parameters:

@@ -41,7 +41,12 @@ class EventPortsValidator(PerNamespaceValidator):
         # recv/reduce mode:
         for ns, input_events in self.input_events.iteritems():
             for input_event in input_events:
-                assert input_event in self.event_receive_ports[ns]
+                try:
+                    assert input_event in self.event_receive_ports[ns]
+                except AssertionError:
+                    print input_event
+                    print self.event_receive_ports[ns]
+                    raise
 
         # Check that each Event port emits/recieves at least one
         for ns, event_ports in chain(self.event_send_ports.iteritems(),
