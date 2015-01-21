@@ -36,3 +36,8 @@ from nineml.abstraction_layer.dynamics.utils import flattener as flattening
 from .connectionrule import ConnectionRuleClass
 from .distribution import DistributionClass
 from .units import Unit, Dimension
+from .dynamics import DynamicsClassXMLLoader, DynamicsClassXMLWriter
+from .distribution import (DistributionClassXMLLoader,
+                           DistributionClassXMLWriter)
+from .connectionrule import (ConnectionRuleClassXMLLoader,
+                             ConnectionRuleClassXMLWriter)

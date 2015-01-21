@@ -214,8 +214,8 @@ class _FlatMixin(object):
             flattened before saving
 
         """
-        from nineml.abstraction_layer.dynamics.utils.xml import XMLWriter
-        return XMLWriter.write(component=self, file=file, flatten=flatten)
+        return self.xml_writer.write(component=self, file=file,
+                                     flatten=flatten)
 
 
 class _NamespaceMixin(object):
@@ -437,8 +437,6 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
                            '_analog_receive_ports', '_analog_reduce_ports',
                            '_event_send_ports', '_event_receive_ports',
                            'dynamics')
-
-    writer_name = 'dynamics'
 
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[],

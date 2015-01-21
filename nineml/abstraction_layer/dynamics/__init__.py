@@ -10,3 +10,4 @@ from .regimes import (Regime, TimeDerivative,
                       StateVariable)
 from .transitions import (EventOut, OnCondition, Trigger, OnEvent,
                           StateAssignment, On)
+from .utils import DynamicsClassXMLLoader, DynamicsClassXMLWriter

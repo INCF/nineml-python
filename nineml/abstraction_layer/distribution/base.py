@@ -4,7 +4,6 @@ from ..componentclass import ComponentClass
 
 class DistributionClass(ComponentClass):
 
-    writer_name = 'distribution'
     defining_attributes = ('name', '_parameters', 'distribution')
 
     def __init__(self, name, distribution, parameters=None):

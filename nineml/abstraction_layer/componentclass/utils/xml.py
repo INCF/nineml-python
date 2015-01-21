@@ -6,8 +6,8 @@ docstring needed
 """
 import os
 from urllib2 import urlopen
-from itertools import chain
 from lxml import etree
+from itertools import chain
 from nineml.xmlns import E
 from . import ComponentClassVisitor
 from ...ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
@@ -30,6 +30,8 @@ class ComponentClassXMLLoader(object):
 
     """
 
+    class_types = ('Dynamics', 'Distribution', 'ConnectionRule')
+
     def __init__(self, document=None):
         self.document = document
 
@@ -50,28 +52,28 @@ class ComponentClassXMLLoader(object):
             self.components, lambda c: c.name == subnode.get('node'))
         return namespace, component_class
 
-    @read_annotations
-    def load_componentclass(self, element):
-
-        blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
-                  'IndexSendPort', 'IndexReceivePort', 'AnalogReducePort',
-                  'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
-
-        subnodes = self.loadBlocks(element, blocks=blocks)
-
-        dynamics = expect_single(subnodes["Dynamics"])
-        from ...dynamics import DynamicsClass
-        return DynamicsClass(
-            name=element.get('name'),
-            parameters=subnodes["Parameter"],
-            ang_ports=chain(subnodes["AnalogSendPort"],
-                               subnodes["AnalogReceivePort"],
-                               subnodes["AnalogReducePort"]),
-            index_ports=chain(subnodes["IndexSendPort"],
-                              subnodes["IndexReceivePort"]),
-            dynamics=dynamics,
-            subnodes=dict(subnodes['Subnode']),
-            portconnections=subnodes["ConnectPorts"])
+#     @read_annotations
+#     def load_componentclass(self, element):
+# 
+#         blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
+#                   'IndexSendPort', 'IndexReceivePort', 'AnalogReducePort',
+#                   'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
+# 
+#         subnodes = self._load_blocks(element, blocks)
+# 
+#         dynamics = expect_single(subnodes["Dynamics"])
+#         from ...dynamics import DynamicsClass
+#         return DynamicsClass(
+#             name=element.get('name'),
+#             parameters=subnodes["Parameter"],
+#             ang_ports=chain(subnodes["AnalogSendPort"],
+#                                subnodes["AnalogReceivePort"],
+#                                subnodes["AnalogReducePort"]),
+#             index_ports=chain(subnodes["IndexSendPort"],
+#                               subnodes["IndexReceivePort"]),
+#             dynamics=dynamics,
+#             subnodes=dict(subnodes['Subnode']),
+#             portconnections=subnodes["ConnectPorts"])
 
     @read_annotations
     def load_parameter(self, element):
@@ -123,39 +125,53 @@ class ComponentClassXMLLoader(object):
     def load_mathml(self, mathml):
         raise NotImplementedError
 
-    # These blocks map directly onto classes:
-    def loadBlocks(self, element, blocks=None, check_for_spurious_blocks=True):
+    def _load_blocks(self, element, blocks):
         """
         Creates a dictionary that maps class-types to instantiated objects
         """
-
-        res = dict((block, []) for block in blocks)
+        # Initialise loaded objects with empty lists
+        loaded_objects = dict((block, []) for block in blocks)
 
         for t in element.iterchildren(tag=etree.Element):
-            if t.tag.startswith(NINEML):
-                tag = t.tag[len(NINEML):]
-            else:
-                tag = t.tag
+            # Strip namespace
+            tag = t.tag[len(NINEML):] if t.tag.startswith(NINEML) else t.tag
+            if tag not in blocks:
+                err = "Unexpected block tag: %s " % tag
+                err += '\n Expected: %s' % ','.join(blocks)
+                raise NineMLRuntimeError(err)
+            loaded_objects[tag].append(self._get_loader(tag)(self, t))
+        return loaded_objects
 
-            if check_for_spurious_blocks and tag not in blocks:
-                    err = "Unexpected Block tag: %s " % tag
-                    err += '\n Expected: %s' % ','.join(blocks)
-                    raise NineMLRuntimeError(err)
+    def _get_loader(self, tag):
+        try:
+            loader = self.tag_to_loader[tag]
+        except KeyError:
+            try:
+                loader = self.base_tag_to_loader[tag]
+            except KeyError:
+                assert False, "Did not finder loader for '{}' tag".format(tag)
+        return loader
 
-            res[tag].append(
-                ComponentClassXMLLoader.tag_to_loader[tag](self, t))
-        return res
+    @classmethod
+    def read_class_type(cls, element):
+        """
+        Returns the name of the tag that defines the type of the ComponentClass
+        """
+        assert (element.tag == 'ComponentClass',
+                "Not a component class ('{}')".format(element.tag))
+        class_type = expect_single(chain(*(element.findall(NINEML + t)
+                                           for t in cls.class_types))).tag
+        if class_type.startswith(NINEML):
+            class_type = class_type[len(NINEML):]
+        return class_type
 
-    tag_to_loader = {
-        "ComponentClass": load_componentclass,
+    base_tag_to_loader = {
         "Parameter": load_parameter,
         "PropertySendPort": load_propertysendport,
         "PropertyReceivePort": load_propertyreceiveport,
         "IndexSendPort": load_indexsendport,
         "IndexReceivePort": load_indexreceiveport,
         "Alias": load_alias,
-        "Subnode": load_subnode,
-        "ConnectPorts": load_connectports,
     }
 
 
@@ -290,17 +306,15 @@ class ComponentClassXMLWriter(ComponentClassVisitor):
         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
                                      xml_declaration=True)
 
-    @classmethod
-    @annotate_xml
-    def to_xml(cls, component):
-        from ...dynamics import DynamicsClass
-        assert isinstance(component, DynamicsClass)
-        component.standardize_unit_dimensions()
-        xml = ComponentClassXMLWriter().visit(component)
-        xml = [ComponentClassXMLWriter().visit_dimension(d)
-               for d in component.dimensions
-               if d is not None] + [xml]
-        return E.NineML(*xml, xmlns=nineml_namespace)
+#     @classmethod
+#     @annotate_xml
+#     def to_xml(cls, component):
+#         component.standardize_unit_dimensions()
+#         xml = ComponentClassXMLWriter().visit(component)
+#         xml = [ComponentClassXMLWriter().visit_dimension(d)
+#                for d in component.dimensions
+#                if d is not None] + [xml]
+#         return E.NineML(*xml, xmlns=nineml_namespace)
 
     def visit_componentclass(self, comp_cls):
         elements = ([p.accept_visitor(self) for p in comp_cls.property_ports] +

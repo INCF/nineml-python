@@ -1,4 +1,5 @@
 import os.path
+from itertools import chain
 from urllib import urlopen
 from lxml import etree
 from operator import and_
@@ -49,19 +50,19 @@ class Document(dict, BaseNineMLObject):
         """
         Returns the element referenced by the given name
         """
+        # This simplifies code in a few places where an optional
+        # attribute refers to a name of an object which
+        # should be resolved if present but be set to None if not.
+        if name is None:
+            return None
         try:
             elem = super(Document, self).__getitem__(name)
         except KeyError:
-            # FIXME: Not sure if this is a good idea or not. It somewhat
-            #        simplifies code in a few places where an optional
-            #        attribute refers to a name of an object which
-            #        should be resolved if present but be set to None if not.
-            if name is None:
-                return None
             raise KeyError("'{}' was not found in the NineML document {} ("
                            "elements in the document were '{}')."
                            .format(name, self.url or '',
                                    "', '".join(self.iterkeys())))
+        # Load (lazily) the element from the xml description
         if isinstance(elem, self._Unloaded):
             elem = self._load_elem_from_xml(elem)
         return elem
@@ -86,21 +87,32 @@ class Document(dict, BaseNineMLObject):
 
     @property
     def components(self):
-        return (self[k] for k in self.iterkeys()
-                if isinstance(self[k], nineml.user_layer.Component))
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.user_layer.Component))
 
     @property
-    def component_classes(self):
-        return (self[k] for k in self.iterkeys()
-                if isinstance(self[k],
-                              nineml.abstraction_layer.ComponentClass))
+    def componentclasses(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.abstraction_layer.ComponentClass))
+
+    @property
+    def populations(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.user_layer.Population))
+
+    @property
+    def projections(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.user_layer.Projection))
+
+    @property
+    def selections(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.user_layer.Selection))
 
     @property
     def network_structures(self):
-        return (self[k] for k in self.iterkeys()
-                if isinstance(self[k], (nineml.user_layer.Population,
-                                        nineml.user_layer.Projection,
-                                        nineml.user_layer.Selection)))
+        return chain(self.populations, self.projections, self.selections)
 
     def _load_elem_from_xml(self, unloaded):
         """
@@ -120,6 +132,22 @@ class Document(dict, BaseNineMLObject):
         self._loading.pop()
         self[unloaded.name] = elem
         return elem
+
+    def _update_units_and_dimensions(self):
+        units = set(chain(*(c.units for c in self.components)))
+        units.update(chain(*(p.units for p in self.populations)))
+        units.update(chain(*(p.units for p in self.projections)))
+        dimensions = set(chain(*(c.dimensions for c in self.componentclasses)))
+        dimensions.update(u.dimension for u in units)
+        for k, o in self.items():
+            if (isinstance(o, (nineml.abstraction_layer.Unit,
+                               nineml.abstraction_layer.Dimension))
+                    and o not in units and o not in dimensions):
+                del self[k]
+        for unit in units:
+            self[unit.name] = unit
+        for dimension in dimensions:
+            self[dimension.name] = dimension
 
     def to_xml(self):
         return E(self.element_name,

@@ -51,9 +51,8 @@ class ComponentClassModifier(BaseALObject):
         for arp in component.query.analog_reduce_ports:
             if exclude and arp.name in exclude:
                 continue
-            ComponentModifier.close_analog_port(component=component,
-                                                port_name=arp.name,
-                                                value='0')
+            cls.close_analog_port(component=component, port_name=arp.name,
+                                  value='0')
 
     @classmethod
     def rename_port(cls, component, old_port_name, new_port_name):

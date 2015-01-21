@@ -7,8 +7,9 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from abc import ABCMeta
 from .. import BaseALObject
-from nineml.xmlns import NINEML
+import nineml
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utility import filter_discrete_types, ensure_valid_identifier
 from ..units import dimensionless, Dimension
@@ -17,34 +18,25 @@ from ..units import dimensionless, Dimension
 class ComponentClass(BaseALObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
+    __metaclass__ = ABCMeta  # Abstract base class
+
     element_name = 'ComponentClass'
 
     @annotate_xml
     def to_xml(self):
-        exec('from nineml.abstraction_layer.{}.utils.xml import {}XMLWriter'
-             ' as XMLWriter'.format(self.writer_name, self.__class__.__name__))
-        return XMLWriter().visit(self)  # @UndefinedVariable
-
+        XMLWriter = getattr(nineml.abstraction_layer,
+                            self.__class__.__name__ + 'XMLWriter')
+        xml = [XMLWriter().visit(self)]
+        xml += [d.to_xml() for d in self.dimensions]
+        
+        
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):  # @UnusedVariable
-        if element.find(NINEML + 'Dynamics') is not None:
-            module_name = 'dynamics'
-            loader_name = 'Dynamics'
-        elif element.find(NINEML + 'ConnectionRule') is not None:
-            module_name = 'connectionrule'
-            loader_name = 'ConnectionRule'
-        elif element.find(NINEML + 'Distribution') is not None:
-            module_name = 'distribution'
-            loader_name = 'Distribution'
-        try:
-            exec('from nineml.abstraction_layer.{}.utils.xml '
-                 'import {}ClassXMLLoader as XMLLoader'
-                 .format(module_name, loader_name))
-        except ImportError:
-            assert False, ("Could not load xml loader from module '{}'"
-                           .format(module_name))
-        return XMLLoader(document).load_componentclass(element)  # @UndefinedVariable @IgnorePep8
+        XMLLoader = getattr(nineml.abstraction_layer,
+                            ComponentClassXMLLoader.read_class_type(element) +
+                            'ClassXMLLoader')
+        return XMLLoader(document).load_componentclass(element)
 
     def __init__(self, name, parameters=None):
         BaseALObject.__init__(self)
@@ -152,3 +144,5 @@ class Parameter(BaseALObject):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_parameter(self, **kwargs)
+
+from .utils.xml import ComponentClassXMLLoader

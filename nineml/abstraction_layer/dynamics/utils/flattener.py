@@ -12,7 +12,6 @@ from ...componentclass.utils.cloner import (
     ClonerVisitor, ClonerVisitorPrefixNamespace, ExpandPortDefinition)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from nineml.exceptions import NineMLRuntimeError
-from ..base import DynamicsClass
 from nineml.abstraction_layer.dynamics.regimes import Regime
 from ..transitions import OnCondition, OnEvent
 
@@ -368,3 +367,5 @@ class ComponentFlattener(object):
 def flatten(model, componentname=None):
     reducer = ComponentFlattener(model, componentname)
     return reducer.reducedcomponent
+
+from ..base import DynamicsClass
