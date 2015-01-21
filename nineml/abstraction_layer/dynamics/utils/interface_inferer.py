@@ -1,45 +1,37 @@
-import itertools
-from ...componentclass.utils import InterfaceInferer
+from ...componentclass.utils import ComponentClassInterfaceInferer
 from .visitors import DynamicsClassActionVisitor
-from ...expressions.utils import get_reserved_and_builtin_symbols
 
 
-class InterfaceInferer(DynamicsClassActionVisitor, InterfaceInferer):
+class DynamicsClassInterfaceInferer(DynamicsClassActionVisitor,
+                                    ComponentClassInterfaceInferer):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
-    def action_dynamics(self, dynamics, **kwargs):
-        pass
+    def __init__(self, dynamicsclass):
+        self.state_variable_names = set()
+        super(DynamicsClassInterfaceInferer, self).__init__(dynamicsclass)
 
-    def action_regime(self, regime, **kwargs):
-        pass
+    def action_statevariable(self, state_variable):
+        self.state_variable_names.add(state_variable.name)
+        self.declared_symbols.add(state_variable.name)
 
-    def action_statevariable(self, state_variable, **kwargs):
-        pass
-
-    def _notify_atom(self, atom):
-        if atom not in self.accounted_for_symbols:
-            self.free_atoms.add(atom)
-
-    # Events:
-    def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
+    def action_eventout(self, event_out):
         self.event_out_port_names.add(event_out.port_name)
 
-    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
+    def action_onevent(self, on_event):
         self.input_event_port_names.add(on_event.src_port_name)
 
-    # Atoms (possible parameters):
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
-        for atom in assignment.rhs_atoms:
-            self._notify_atom(atom)
+    def action_analogreceiveport(self, analog_receive_port):
+        self.declared_symbols.add(analog_receive_port.name)
 
-    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        for atom in time_derivative.rhs_atoms:
-            self._notify_atom(atom)
+    def action_analogreduceport(self, analog_reduce_port):
+        self.declared_symbols.add(analog_reduce_port.name)
 
-    def action_condition(self, condition, **kwargs):  # @UnusedVariable
-        for atom in condition.rhs_atoms:
-            self._notify_atom(atom)
+    def action_assignment(self, assignment):
+        self.atoms.update(assignment.rhs_atoms)
 
-    def action_oncondition(self, on_condition, **kwargs):
-        pass
+    def action_timederivative(self, time_derivative):
+        self.atoms.update(time_derivative.rhs_atoms)
+
+    def action_condition(self, condition):
+        self.atoms.update(condition.rhs_atoms)
