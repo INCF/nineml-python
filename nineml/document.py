@@ -10,6 +10,7 @@ from nineml.annotations import annotate_xml, read_annotations, Annotations
 import nineml.user_layer
 import nineml.abstraction_layer
 from . import BaseNineMLObject
+from nineml.exceptions import NineMLRuntimeError
 
 
 class Document(dict, BaseNineMLObject):
@@ -133,7 +134,11 @@ class Document(dict, BaseNineMLObject):
         self[unloaded.name] = elem
         return elem
 
-    def _update_units_and_dimensions(self):
+    def _standardize_units_and_dimensions(self):
+        """
+        Updates the units and dimensions to match the ones currently used
+        in the components/class and network structures
+        """
         units = set(chain(*(c.units for c in self.components)))
         units.update(chain(*(p.units for p in self.populations)))
         units.update(chain(*(p.units for p in self.projections)))
@@ -145,13 +150,32 @@ class Document(dict, BaseNineMLObject):
                     and o not in units and o not in dimensions):
                 del self[k]
         for unit in units:
+            if unit.name in self:
+                if unit != self[unit.name]:
+                    raise NineMLRuntimeError(
+                        "Name of unit '{}' conflicts with existing object of "
+                        "differring value or type '{}' and '{}'"
+                        .format(unit.name, unit, self[unit.name]))
             self[unit.name] = unit
         for dimension in dimensions:
+            if dimension.name in self:
+                if dimension != self[dimension.name]:
+                    raise NineMLRuntimeError(
+                        "Name of dimension '{}' conflicts with existing object"
+                        " of differring value or type '{}' and '{}'"
+                        .format(dimension.name, dimension, self[unit.name]))
             self[dimension.name] = dimension
+        for compclass in self.componentclasses:
+            compclass.standardize_unit_dimensions(reference_set=dimensions)
+        for o in chain(self.components, self.populations, self.projections):
+            o.standardize_units(reference_units=units,
+                                reference_dimensions=dimensions)
+# ö
 
-    def to_xml(self):
+    def to_xml(self, maintain_references=True):
+        self._standardize_units_and_dimensions()
         return E(self.element_name,
-                 *[c.to_xml(as_reference=False)
+                 *[c.to_xml(as_reference=maintain_references)
                    if isinstance(c, nineml.user_layer.component.BaseULObject)
                    else c.to_xml()
                    for c in self.itervalues()])

@@ -67,12 +67,12 @@ class Projection(BaseULObject):
         self.source = source
         # When exporting to XML we use the reference instead of the object
         # maintaing the original format of the XML.
-        if source._from_reference is None:
-            source._from_reference = Reference(source.name,
+        if source.from_reference is None:
+            source.from_reference = Reference(source.name,
                                                {source.name: source})
         self.destination = destination
-        if destination._from_reference is None:
-            destination._from_reference = Reference(
+        if destination.from_reference is None:
+            destination.from_reference = Reference(
                 destination.name, {destination.name: destination})
         self.response = response
         self.plasticity = plasticity
@@ -137,6 +137,23 @@ class Projection(BaseULObject):
                 components.append(component)
         return components
 
+    @property
+    def units(self):
+        return chain((c.units for c in self.get_components()),
+                     self.delay.units)
+
+    def standardize_units(self, reference_units=None,
+                          reference_dimensions=None):
+        for c in self.get_components():
+            c.standardize_units(reference_units=reference_units,
+                                reference_dimensions=reference_dimensions)
+        try:
+            std_unit = next(u for u in reference_units
+                            if u == self.delay.units)
+            self.delay.set_units(std_unit)
+        except StopIteration:
+            pass
+
     @write_reference
     @annotate_xml
     def to_xml(self):
@@ -181,19 +198,18 @@ class Projection(BaseULObject):
         e = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
         if e is not None:
             plasticity = Component.from_xml(e.find(NINEML + 'Component') or
-                                                e.find(NINEML + 'Reference'),
-                                                document)
+                                            e.find(NINEML + 'Reference'),
+                                            document)
         else:
             plasticity = None
         # Get Connectivity
         e = element.find(NINEML + 'Connectivity')
         connectivity = Component.from_xml(e.find(NINEML + 'Component') or
-                                              e.find(NINEML + 'Reference'),
-                                              document)
+                                          e.find(NINEML + 'Reference'),
+                                          document)
         # Get Delay
-        delay = Delay.from_xml(expect_single(element.findall(NINEML +
-                                                             'Delay')),
-                               document)
+        delay = Delay.from_xml(
+            expect_single(element.findall(NINEML + 'Delay')), document)
         # Get port connections by Loop through 'source', 'destination',
         # 'response', 'plasticity' tags and extracting the "From*" elements
         port_connections = []

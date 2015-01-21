@@ -1,7 +1,7 @@
 from . import BaseULObject
-from nineml.user_layer.component import resolve_reference, write_reference, Component
+from .component import resolve_reference, write_reference, Component
 from nineml.xmlns import NINEML, E
-from ..utility import expect_single, check_tag
+from nineml.utility import expect_single, check_tag
 from nineml.annotations import annotate_xml, read_annotations
 
 
@@ -16,7 +16,8 @@ class Population(BaseULObject):
             an integer, the number of neurons in the population
         *cell*
             a :class:`Component`, or :class:`Reference` to a component defining
-            the cell type (i.e. the mathematical model and its parameterisation).
+            the cell type (i.e. the mathematical model and its
+            parameterisation).
         *positions*
             TODO: need to check if positions/structure are in the v1 spec
     """
@@ -56,6 +57,16 @@ class Population(BaseULObject):
             components.extend(self.positions.get_components())
         return components
 
+    @property
+    def units(self):
+        return (c.units for c in self.get_components())
+
+    def standardize_units(self, reference_units=None,
+                          reference_dimensions=None):
+        for c in self.get_components():
+            c.standardize_units(reference_units=reference_units,
+                                reference_dimensions=reference_dimensions)
+
     @write_reference
     @annotate_xml
     def to_xml(self):
@@ -78,11 +89,9 @@ class Population(BaseULObject):
         cell = expect_single(element.findall(NINEML + 'Cell'))
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML + 'Number').text),
-                   cell=Component.from_xml(cell.find(NINEML + 'Component')
-                                               or cell.find(NINEML +
-                                                            'Reference'),
-                                               document),
-                   **kwargs)
+                   cell=Component.from_xml(cell.find(NINEML + 'Component') or
+                                           cell.find(NINEML + 'Reference'),
+                                           document), **kwargs)
 
 
 class PositionList(BaseULObject):

@@ -170,28 +170,28 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
 class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
-    @classmethod
-    def write(cls, component, file, flatten=True):  # @ReservedAssignment
-        doc = cls.to_xml(component, flatten)
-        etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
-                                     xml_declaration=True)
-
-    @classmethod
-    @annotate_xml
-    def to_xml(cls, component, flatten=True):  # @ReservedAssignment
-        assert isinstance(component, DynamicsClass)
-        if not component.is_flat():
-            if not flatten:
-                assert False, 'Trying to save nested models not yet supported'
-            else:
-                component = ComponentFlattener(component).\
-                    reducedcomponent
-        # Convert the component class and the dimensions it uses to xml
-        component.standardize_unit_dimensions()
-        xml = [DynamicsClassXMLWriter().visit(component)]
-        xml += [DynamicsClassXMLWriter().visit_dimension(d)
-                for d in component.dimensions]
-        return E.NineML(*xml, xmlns=nineml_namespace)
+#     @classmethod
+#     def write(cls, component, file, flatten=True):  # @ReservedAssignment
+#         doc = cls.to_xml(component, flatten)
+#         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
+#                                      xml_declaration=True)
+# 
+#     @classmethod
+#     @annotate_xml
+#     def to_xml(cls, component, flatten=True):  # @ReservedAssignment
+#         assert isinstance(component, DynamicsClass)
+#         if not component.is_flat():
+#             if not flatten:
+#                 assert False, 'Trying to save nested models not yet supported'
+#             else:
+#                 component = ComponentFlattener(component).\
+#                     reducedcomponent
+#         # Convert the component class and the dimensions it uses to xml
+#         component.standardize_unit_dimensions()
+#         xml = [DynamicsClassXMLWriter().visit(component)]
+#         xml += [DynamicsClassXMLWriter().visit_dimension(d)
+#                 for d in component.dimensions]
+#         return E.NineML(*xml, xmlns=nineml_namespace)
 
     @annotate_xml
     def visit_componentclass(self, component):

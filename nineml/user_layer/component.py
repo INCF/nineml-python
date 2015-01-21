@@ -17,7 +17,8 @@ from nineml.document import Document
 
 class Reference(BaseReference):
     """
-    A reference to a NineML user layer object previously defined or defined elsewhere.
+    A reference to a NineML user layer object previously defined or defined
+    elsewhere.
 
     **Arguments**:
         *name*
@@ -47,7 +48,7 @@ class Reference(BaseReference):
             msg = ("Reference points to a non-user-layer object '{}'"
                    .format(self._referred_to.name))
             raise NineMLRuntimeError(msg)
-        self._referred_to._from_reference = self
+        self._referred_to.from_reference = self
 
     @property
     def user_layer_object(self):
@@ -69,8 +70,8 @@ def resolve_reference(from_xml):
 
 def write_reference(to_xml):
     def unresolving_to_xml(self, as_reference=True):
-        if self._from_reference is not None and as_reference:
-            xml = self._from_reference.to_xml()
+        if self.from_reference is not None and as_reference:
+            xml = self.from_reference.to_xml()
         else:
             xml = to_xml(self)
         return xml
