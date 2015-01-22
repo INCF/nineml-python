@@ -229,7 +229,7 @@ class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
     for flattening
     """
 
-    def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
+    def visit_componentclass(self, componentclass, **kwargs):  # @UnusedVariable
         prefix = componentclass.get_node_addr().get_str_prefix()
         if prefix == '_':
             prefix = ''
@@ -237,7 +237,7 @@ class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
         kwargs = {'prefix': prefix, 'prefix_excludes': prefix_excludes}
 
         port_connections = []
-        for src, sink in component.portconnections:
+        for src, sink in componentclass.portconnections:
             # To calculate the new address of the ports, we take of the 'local'
             # port address, i.e. the parent address, then add the prefixed
             # string:
@@ -262,16 +262,16 @@ class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
             # sink_new = NamespaceAddress.concat(
 #                 sink.get_parent_addr(), sink.getstr() )
             port_connections.append((src_new, sink_new))
-        return component.__class__(
-            name=component.name,
+        return componentclass.__class__(
+            name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
-                        for p in component.parameters],
+                        for p in componentclass.parameters],
             analog_ports=[p.accept_visitor(self, **kwargs)
-                          for p in component.analog_ports],
+                          for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
-                         for p in component.event_ports],
+                         for p in componentclass.event_ports],
             dynamics=(componentclass.dynamics.accept_visitor(self, **kwargs)
-                      if component.dynamics else None),
+                      if componentclass.dynamics else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=port_connections)

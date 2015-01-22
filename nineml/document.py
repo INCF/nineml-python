@@ -184,7 +184,7 @@ class Document(dict, BaseNineMLObject):
         self._standardize_units_and_dimensions()
         return E(self.element_name,
                  *[c.to_xml(as_reference=False)
-                   if isinstance(c, nineml.user_layer.componentclass.BaseULObject)
+                   if isinstance(c, nineml.user_layer.component.BaseULObject)
                    else c.to_xml()
                    for c in self.itervalues()])
 

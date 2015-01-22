@@ -16,8 +16,8 @@ from ..utils.visitors import DynamicsActionVisitor
 # Check that the sub-components stored are all of the
 # right types:
 class LocalNameConflictsDynamicsValidator(
-        DynamicsActionVisitor,
-        LocalNameConflictsComponentValidator):
+        LocalNameConflictsComponentValidator,
+        DynamicsActionVisitor):
 
     """
     Check for conflicts between Aliases, StateVariables, Parameters, and
