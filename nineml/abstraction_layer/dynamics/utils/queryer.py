@@ -7,14 +7,13 @@ Definitions for the ComponentQuery Class
 
 from itertools import chain
 from nineml.utility import filter_expect_single
+from ...componentclass.utils.queryer import ComponentQueryer
 
-__all__ = ['ComponentQueryer']
 
-
-class ComponentQueryer(object):
+class DynamicsQueryer(ComponentQueryer):
 
     """
-    ComponentQueryer provides a way of adding methods to query a
+    DynamicsQueryer provides a way of adding methods to query a
     ComponentClass object, without polluting the class
     """
 

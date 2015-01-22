@@ -18,8 +18,8 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      EventSendPort)
 from nineml.utility import (check_list_contain_same_items, invert_dictionary,
                             assert_no_duplicates)
-from ..componentclass.utils import ComponentClassQueryer
-from ..componentclass.utils.cloner import ExpandAliasDefinition, ClonerVisitor
+from ..componentclass.utils import ComponentQueryer
+from ..componentclass.utils.cloner import ComponentExpandAliasDefinition, ComponentClonerVisitor
 from .. import BaseALObject
 
 
@@ -173,7 +173,7 @@ class _FlatMixin(object):
         """
 
         for alias in self.aliases:
-            alias_expander = ExpandAliasDefinition(originalname=alias.lhs,
+            alias_expander = ComponentExpandAliasDefinition(originalname=alias.lhs,
                                                    targetname=("(%s)" %
                                                                alias.rhs))
             alias_expander.visit(self)
@@ -285,7 +285,7 @@ class _NamespaceMixin(object):
         if namespace in self.subnodes:
             err = 'Key already exists in namespace: %s' % namespace
             raise NineMLRuntimeError(err)
-        self.subnodes[namespace] = ClonerVisitor().visit(subnode)
+        self.subnodes[namespace] = ComponentClonerVisitor().visit(subnode)
         self.subnodes[namespace].set_parent_model(self)
 
         self._validate_self()
@@ -382,7 +382,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         else:
             dynamics = Dynamics(regimes=regimes, aliases=aliases,
                                 state_variables=state_variables)
-        self._query = ComponentClassQueryer(self)
+        self._query = ComponentQueryer(self)
 
         # Ensure analog_ports is a list not an iterator
         analog_ports = list(analog_ports)

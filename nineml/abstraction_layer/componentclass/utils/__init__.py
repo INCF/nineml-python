@@ -1,6 +1,6 @@
 # from cloner import (ExpandPortDefinition, ExpandAliasDefinition, RenameSymbol,
 #                     ClonerVisitor, ClonerVisitorPrefixNamespace)
-from queryer import ComponentClassQueryer
+from queryer import ComponentQueryer
 from visitors import ComponentClassVisitor, ComponentClassActionVisitor
 from .xml import (
     ComponentClassXMLLoader, ComponentClassXMLReader, ComponentClassXMLWriter)

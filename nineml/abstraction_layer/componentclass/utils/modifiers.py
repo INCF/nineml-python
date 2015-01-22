@@ -6,7 +6,7 @@ This file contains utility classes for modifying components.
 """
 
 from ..base import Parameter
-from .cloner import ExpandPortDefinition
+from .cloner import ComponentExpandPortDefinition
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utility import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
@@ -26,7 +26,7 @@ class ComponentClassModifier(BaseALObject):
                                      'component')
 
         # Subsitute the value in:
-        component.accept_visitor(ExpandPortDefinition(port_name, value))
+        component.accept_visitor(ComponentExpandPortDefinition(port_name, value))
 
         # Remove it from the list of ports:
         port = filter_expect_single(component.analog_ports,

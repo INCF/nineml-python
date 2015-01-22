@@ -7,14 +7,18 @@ docstring needed
 from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import (is_builtin_symbol, MathUtil)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
-from .visitors import ComponentClassActionVisitor, ComponentClassVisitor
+from ...componentclass.utils.visitors import ComponentClassActionVisitor
+from ...componentclass.utils.cloner import (
+    ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
+    ComponentRenameSymbol, ComponentClonerVisitor,
+    ComponentClonerVisitorPrefixNamespace)
 
 
-class ComponentExpandPortDefinition(ComponentClassActionVisitor):
+class DynamicsExpandPortDefinition(ComponentExpandPortDefinition):
 
     def __init__(self, originalname, targetname):
 
-        super(ComponentExpandPortDefinition, self).__init__(
+        super(DynamicsExpandPortDefinition, self).__init__(
             require_explicit_overrides=False)
         self.originalname = originalname
         self.targetname = targetname
@@ -33,7 +37,7 @@ class ComponentExpandPortDefinition(ComponentClassActionVisitor):
         trigger.rhs_name_transform_inplace(self.namemap)
 
 
-class ComponentExpandAliasDefinition(ComponentClassActionVisitor):
+class DynamicsExpandAliasDefinition(ComponentExpandAliasDefinition):
 
     """ An action-class that walks over a component, and expands an alias in
     Assignments, Aliases, TimeDerivatives and Conditions
@@ -41,7 +45,7 @@ class ComponentExpandAliasDefinition(ComponentClassActionVisitor):
 
     def __init__(self, originalname, targetname):
 
-        super(ComponentExpandAliasDefinition, self).__init__(
+        super(DynamicsExpandAliasDefinition, self).__init__(
             require_explicit_overrides=False)
         self.originalname = originalname
         self.targetname = targetname
@@ -60,7 +64,7 @@ class ComponentExpandAliasDefinition(ComponentClassActionVisitor):
         trigger.rhs_name_transform_inplace(self.namemap)
 
 
-class ComponentRenameSymbol(ComponentClassActionVisitor):
+class DynamicsRenameSymbol(ComponentRenameSymbol):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
@@ -172,7 +176,7 @@ class ComponentRenameSymbol(ComponentClassActionVisitor):
             self.note_rhs_changed(on_event)
 
 
-class ComponentClonerVisitor(ComponentClassVisitor):
+class DynamicsClonerVisitor(ComponentClonerVisitor):
 
     def prefix_variable(self, variable, **kwargs):
         prefix = kwargs.get('prefix', '')
@@ -310,7 +314,8 @@ class ComponentClonerVisitor(ComponentClassVisitor):
         )
 
 
-class ComponentClonerVisitorPrefixNamespace(ComponentClonerVisitor):
+class DynamicsClonerVisitorPrefixNamespace(
+        ComponentClonerVisitorPrefixNamespace):
 
     """ A visitor that walks over a hierarchical component, and prefixes every
     variable with the namespace that that variable is in. This is preparation
