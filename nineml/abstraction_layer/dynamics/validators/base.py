@@ -8,7 +8,7 @@ from .general import (
     TimeDerivativesAreDeclaredDynamicsValidator,
     StateAssignmentsAreOnStateVariablesDynamicsValidator,
     AliasesAreNotRecursiveDynamicsValidator,
-    NoUnresolvedSymbolsDynamicsValidator, PortConnectionsDynamicsValidator,
+    NoUnresolvedSymbolsDynamicsValidator,
     RegimeGraphDynamicsValidator, NoDuplicatedObjectsDynamicsValidator,
     RegimeOnlyHasOneHandlerPerEventDynamicsValidator,
     CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator)
@@ -17,7 +17,8 @@ from .namingconflicts import (
     DimensionNameConflictsDynamicsValidator,
     DuplicateRegimeNamesDynamicsValidator)
 from .ports import (
-    EventPortsDynamicsValidator, OutputAnalogPortsDynamicsValidator)
+    EventPortsDynamicsValidator, OutputAnalogPortsDynamicsValidator,
+    PortConnectionsDynamicsValidator)
 from .types import (
     TypesDynamicsValidator)
 

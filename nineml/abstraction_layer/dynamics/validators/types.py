@@ -9,21 +9,12 @@ from ...componentclass.validators.types import TypesComponentValidator
 from ..regimes import Regime, StateVariable, TimeDerivative
 from ..transitions import (EventOut, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
-from ..base import ComponentClass, Parameter
-from ...expressions import Alias
 from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                       EventSendPort, EventReceivePort)
 from ..base import Dynamics
 
 
 class TypesDynamicsValidator(TypesComponentValidator):
-
-    def __init__(self, componentclass):
-        super(TypesComponentValidator, self).__init__()
-        self.visit(componentclass)
-
-    def action_componentclass(self, component):
-        assert isinstance(component, ComponentClass)
 
     def action_dynamics(self, dynamics):
         assert isinstance(dynamics, Dynamics)
@@ -33,10 +24,6 @@ class TypesDynamicsValidator(TypesComponentValidator):
 
     def action_statevariable(self, state_variable):
         assert isinstance(state_variable, StateVariable)
-
-    def action_parameter(self, parameter):
-        assert (isinstance(parameter, Parameter),
-                "{} != {}".format(type(parameter), Parameter))
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, AnalogSendPort)
@@ -58,9 +45,6 @@ class TypesDynamicsValidator(TypesComponentValidator):
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assert isinstance(assignment, StateAssignment)
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        assert isinstance(alias, Alias)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         assert isinstance(time_derivative, TimeDerivative)

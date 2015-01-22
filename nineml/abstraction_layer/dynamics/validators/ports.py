@@ -8,6 +8,9 @@ from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
 from ...componentclass.validators import PerNamespaceValidator
+from ...componentclass.namespace import NamespaceAddress
+from ...componentclass.validators.ports import (
+    PortConnectionsComponentValidator)
 
 
 class EventPortsDynamicsValidator(PerNamespaceValidator):
@@ -115,3 +118,26 @@ class OutputAnalogPortsDynamicsValidator(PerNamespaceValidator):
 
     def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
         self.add_symbol(namespace=namespace, symbol=alias.lhs)
+
+
+class PortConnectionsDynamicsValidator(
+        PortConnectionsComponentValidator):
+
+    """Check that all the port connections point to a port, and that
+    each send & recv port only has a single connection.
+    """
+
+    def action_analogsendport(self, analogsendport, namespace):
+        self._action_port(analogsendport, namespace)
+
+    def action_analogreceiveport(self, analogreceiveport, namespace):
+        self._action_port(analogreceiveport, namespace)
+
+    def action_analogreduceport(self, analogreduceport, namespace):
+        self._action_port(analogreduceport, namespace)
+
+    def action_eventsendport(self, eventsendport, namespace):
+        self._action_port(eventsendport, namespace)
+
+    def action_eventreceiveport(self, eventreceiveport, namespace):
+        self._action_port(eventreceiveport, namespace)

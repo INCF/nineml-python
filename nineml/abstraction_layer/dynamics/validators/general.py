@@ -9,12 +9,9 @@ from nineml.exceptions import NineMLRuntimeError
 from nineml.utility import assert_no_duplicates
 from ...expressions.utils import (get_reserved_and_builtin_symbols,
                                   is_valid_lhs_target)
-from ...componentclass.validators import PerNamespaceValidator
-from ...componentclass.namespace import NamespaceAddress
-
 from ...componentclass.validators import (
-    AliasesAreNotRecursiveComponentValidator,
-    NoUnresolvedSymbolsComponentValidator, PortConnectionsComponentValidator,
+    PerNamespaceValidator, AliasesAreNotRecursiveComponentValidator,
+    NoUnresolvedSymbolsComponentValidator,
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
 
@@ -82,37 +79,7 @@ class AliasesAreNotRecursiveDynamicsValidator(
 
     """Check that aliases are not self-referential"""
 
-    def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
-            self, require_explicit_overrides=False)
-        self.visit(componentclass)
-
-    def action_componentclass(self, component, namespace):
-
-        unresolved_aliases = dict((a.lhs, a) for a in component.aliases)
-
-        def alias_contains_unresolved_symbols(alias):
-            unresolved = [sym for sym in alias.rhs_atoms
-                          if sym in unresolved_aliases]
-            return len(unresolved) != 0
-
-        def get_resolved_aliases():
-            return [alias for alias in unresolved_aliases.values()
-                    if not alias_contains_unresolved_symbols(alias)]
-
-        while(unresolved_aliases):
-
-            resolved_aliases = get_resolved_aliases()
-            if resolved_aliases:
-                for r in resolved_aliases:
-                    del unresolved_aliases[r.lhs]
-
-            else:
-                errmsg = "Unable to resolve all aliases in %s. " % namespace
-                errmsg += "You may have a recursion issue."
-                errmsg += ("Remaining Aliases: %s" %
-                           ','.join(unresolved_aliases.keys()))
-                raise NineMLRuntimeError(errmsg)
+    pass
 
 
 class NoUnresolvedSymbolsDynamicsValidator(
@@ -121,57 +88,6 @@ class NoUnresolvedSymbolsDynamicsValidator(
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
-
-    def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
-            self, require_explicit_overrides=False)
-
-        self.available_symbols = defaultdict(list)
-        self.aliases = defaultdict(list)
-        self.time_derivatives = defaultdict(list)
-        self.state_assignments = defaultdict(list)
-
-        self.visit(componentclass)
-
-        excludes = get_reserved_and_builtin_symbols()
-
-        # Check Aliases:
-        for ns, aliases in self.aliases.iteritems():
-            for alias in aliases:
-                for rhs_atom in alias.rhs_atoms:
-                    if rhs_atom in excludes:
-                        continue
-                    if rhs_atom not in self.available_symbols[ns]:
-                        err = ('Unresolved Symbol in Alias: %s [%s]' %
-                               (rhs_atom, alias))
-                        raise NineMLRuntimeError(err)
-
-        # Check TimeDerivatives:
-        for ns, timederivatives in self.time_derivatives.iteritems():
-            for timederivative in timederivatives:
-                for rhs_atom in timederivative.rhs_atoms:
-                    if (rhs_atom not in self.available_symbols[ns] and
-                            rhs_atom not in excludes):
-                        err = ('Unresolved Symbol in Time Derivative: %s [%s]'
-                               % (rhs_atom, timederivative))
-                        raise NineMLRuntimeError(err)
-
-        # Check StateAssignments
-        for ns, state_assignments in self.state_assignments.iteritems():
-            for state_assignment in state_assignments:
-                for rhs_atom in state_assignment.rhs_atoms:
-                    if (rhs_atom not in self.available_symbols[ns] and
-                            rhs_atom not in excludes):
-                        err = ('Unresolved Symbol in Assignment: %s [%s]' %
-                               (rhs_atom, state_assignment))
-                        raise NineMLRuntimeError(err)
-
-    def add_symbol(self, namespace, symbol):
-        if symbol in self.available_symbols[namespace]:
-            err = ("Duplicate Symbol: [%s] found in namespace: %s" %
-                   (symbol, namespace))
-            raise NineMLRuntimeError(err)
-        self.available_symbols[namespace].append(symbol)
 
     def action_analogreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.available_symbols[namespace].append(port.name)
@@ -185,103 +101,8 @@ class NoUnresolvedSymbolsDynamicsValidator(
     def action_timederivative(self, time_derivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.time_derivatives[namespace].append(time_derivative)
 
-    def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
-        self.add_symbol(namespace=namespace, symbol=alias.lhs)
-        self.aliases[namespace].append(alias)
-
-    def action_parameter(self, parameter, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.add_symbol(namespace=namespace, symbol=parameter.name)
-
     def action_assignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.state_assignments[namespace].append(state_assignment)
-
-
-class PortConnectionsDynamicsValidator(
-        PortConnectionsComponentValidator):
-
-    """Check that all the port connections point to a port, and that
-    each send & recv port only has a single connection.
-    """
-
-    def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
-            self, require_explicit_overrides=False)
-
-        self.ports = defaultdict(list)
-        self.portconnections = list()
-
-        self.visit(componentclass)
-
-        connected_recv_ports = set()
-
-        # Check for duplicate connections in the
-        # portconnections. This can only really happen in the
-        # case of connecting 'send to reduce ports' more than once.
-        seen_port_connections = set()
-        for pc in self.portconnections:
-            if pc in seen_port_connections:
-                err = 'Duplicate Port Connection: %s -> %s' % (pc[0], pc[1])
-                raise NineMLRuntimeError(err)
-            seen_port_connections.add(pc)
-
-        # Check each source and sink exist,
-        # and that each recv port is connected at max once.
-        for src, sink in self.portconnections:
-            if src not in self.ports:
-                raise NineMLRuntimeError(
-                    'Unable to find port specified in connection: %s' %
-                    (src))
-            if self.ports[src].is_incoming():
-                raise NineMLRuntimeError(
-                    'Port was specified as a source, but is incoming: %s' %
-                    (src))
-
-            if sink not in self.ports:
-                raise NineMLRuntimeError(
-                    'Unable to find port specified in connection: %s' %
-                    (sink))
-
-            if not self.ports[sink].is_incoming():
-                raise NineMLRuntimeError(
-                    'Port was specified as a sink, but is not incoming: %s' %
-                    (sink))
-
-            if self.ports[sink].mode == 'recv':
-                if self.ports[sink] in connected_recv_ports:
-                    raise NineMLRuntimeError(
-                        "Port was 'recv' and specified twice: %s" % (sink))
-                connected_recv_ports.add(self.ports[sink])
-
-    def _action_port(self, port, namespace):
-        port_address = NamespaceAddress.concat(namespace, port.name)
-        if port_address in self.ports:
-            raise NineMLRuntimeError(
-                'Duplicated Name for port found: %s' % port_address)
-        self.ports[port_address] = port
-
-    def action_analogsendport(self, analogsendport, namespace):
-        self._action_port(analogsendport, namespace)
-
-    def action_analogreceiveport(self, analogreceiveport, namespace):
-        self._action_port(analogreceiveport, namespace)
-
-    def action_analogreduceport(self, analogreduceport, namespace):
-        self._action_port(analogreduceport, namespace)
-
-    def action_eventsendport(self, eventsendport, namespace):
-        self._action_port(eventsendport, namespace)
-
-    def action_eventreceiveport(self, eventreceiveport, namespace):
-        self._action_port(eventreceiveport, namespace)
-
-    def action_componentclass(self, component, namespace):
-        for src, sink in component.portconnections:
-            full_src = NamespaceAddress.concat(namespace, src)
-            full_sink = NamespaceAddress.concat(namespace, sink)
-
-            # print 'Adding Port:',full_src
-            # print 'Adding Port:',full_sink
-            self.portconnections.append((full_src, full_sink))
 
 
 class RegimeGraphDynamicsValidator(PerNamespaceValidator):
@@ -313,8 +134,8 @@ class RegimeGraphDynamicsValidator(PerNamespaceValidator):
                 raise NineMLRuntimeError('Transition graph is contains '
                                          'islands')
 
-    def action_componentclass(self, component, namespace):
-        self.regimes_in_namespace[namespace] = list(component.regimes)
+    def action_componentclass(self, componentclass, namespace):
+        self.regimes_in_namespace[namespace] = list(componentclass.regimes)
 
     def action_regime(self, regime, namespace):  # @UnusedVariable
         for transition in regime.transitions:
@@ -327,16 +148,6 @@ class RegimeGraphDynamicsValidator(PerNamespaceValidator):
 class NoDuplicatedObjectsDynamicsValidator(
         NoDuplicatedObjectsComponentValidator):
 
-    def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
-            self, require_explicit_overrides=True)
-        self.all_objects = list()
-        self.visit(componentclass)
-        assert_no_duplicates(self.all_objects)
-
-    def action_componentclass(self, component, **kwargs):  # @UnusedVariable
-        self.all_objects.append(component)
-
     def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
         self.all_objects.append(dynamics)
 
@@ -345,9 +156,6 @@ class NoDuplicatedObjectsDynamicsValidator(
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.all_objects.append(state_variable)
-
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        self.all_objects.append(parameter)
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         self.all_objects.append(port)
@@ -369,9 +177,6 @@ class NoDuplicatedObjectsDynamicsValidator(
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         self.all_objects.append(assignment)
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self.all_objects.append(alias)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.all_objects.append(time_derivative)
@@ -407,30 +212,11 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
     on the left-hand-side of an equation
     """
 
-    def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
-            self, require_explicit_overrides=False)
-
-        self.visit(componentclass)
-
-    def check_lhssymbol_is_valid(self, symbol):
-        assert isinstance(symbol, basestring)
-
-        if not is_valid_lhs_target(symbol):
-            err = 'Symbol: %s found on left-hand-side of an equation'
-            raise NineMLRuntimeError(err)
-
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_lhssymbol_is_valid(state_variable.name)
 
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        self.check_lhssymbol_is_valid(parameter.name)
-
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(assignment.lhs)
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self.check_lhssymbol_is_valid(alias.lhs)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_lhssymbol_is_valid(time_derivative.dependent_variable)

@@ -6,7 +6,6 @@ docstring needed
 """
 from nineml.utility import assert_no_duplicates
 from nineml.exceptions import NineMLRuntimeError
-from collections import defaultdict
 from ...componentclass.validators import (
     PerNamespaceValidator, LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
@@ -25,25 +24,9 @@ class LocalNameConflictsDynamicsValidator(
     will use names.
     """
 
-    def __init__(self, componentclass):
-        super(LocalNameConflictsDynamicsValidator, self).__init__(
-            componentclass)
-        self.symbols = defaultdict(list)
-        self.visit(componentclass)
-
-    def check_conflicting_symbol(self, namespace, symbol):
-        if symbol in self.symbols[namespace]:
-            err = 'Duplication of symbol found: %s in %s' % (symbol, namespace)
-            raise NineMLRuntimeError(err)
-        self.symbols[namespace].append(symbol)
-
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace,
                                       symbol=state_variable.name)
-
-    def action_parameter(self, parameter, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(namespace=namespace,
-                                      symbol=parameter.name)
 
     def action_analogreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
@@ -53,9 +36,6 @@ class LocalNameConflictsDynamicsValidator(
 
     def action_eventreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
-
-    def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
-        self.check_conflicting_symbol(namespace=namespace, symbol=alias.lhs)
 
 
 class DimensionNameConflictsDynamicsValidator(
@@ -80,9 +60,6 @@ class DimensionNameConflictsDynamicsValidator(
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(state_variable.dimension)
-
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_dimension(parameter.dimension)
 
     def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(port.dimension)
