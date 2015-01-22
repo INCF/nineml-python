@@ -366,8 +366,8 @@ class NoDuplicatedObjectsValidator(PerNamespaceValidator):
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.all_objects.append(time_derivative)
 
-    def action_condition(self, condition, **kwargs):  # @UnusedVariable
-        self.all_objects.append(condition)
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        self.all_objects.append(trigger)
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         self.all_objects.append(on_condition)

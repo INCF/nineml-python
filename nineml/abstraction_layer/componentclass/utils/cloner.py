@@ -29,8 +29,8 @@ class ExpandPortDefinition(ComponentClassActionVisitor):
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         time_derivative.name_transform_inplace(self.namemap)
 
-    def action_condition(self, condition, **kwargs):  # @UnusedVariable
-        condition.rhs_name_transform_inplace(self.namemap)
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        trigger.rhs_name_transform_inplace(self.namemap)
 
 
 class ExpandAliasDefinition(ComponentClassActionVisitor):
@@ -56,8 +56,8 @@ class ExpandAliasDefinition(ComponentClassActionVisitor):
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         time_derivative.name_transform_inplace(self.namemap)
 
-    def action_condition(self, condition, **kwargs):  # @UnusedVariable
-        condition.rhs_name_transform_inplace(self.namemap)
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        trigger.rhs_name_transform_inplace(self.namemap)
 
 
 class RenameSymbol(ComponentClassActionVisitor):
@@ -67,7 +67,8 @@ class RenameSymbol(ComponentClassActionVisitor):
     """
 
     def __init__(self, component, old_symbol_name, new_symbol_name):
-        ComponentClassActionVisitor.__init__(self, require_explicit_overrides=True)
+        ComponentClassActionVisitor.__init__(
+            self, require_explicit_overrides=True)
         self.old_symbol_name = old_symbol_name
         self.new_symbol_name = new_symbol_name
         self.namemap = {old_symbol_name: new_symbol_name}
@@ -156,10 +157,10 @@ class RenameSymbol(ComponentClassActionVisitor):
             self.note_rhs_changed(timederivative)
             timederivative.name_transform_inplace(self.namemap)
 
-    def action_condition(self, condition, **kwargs):  # @UnusedVariable
-        if self.old_symbol_name in condition.rhs_atoms:
-            self.note_rhs_changed(condition)
-            condition.rhs_name_transform_inplace(self.namemap)
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        if self.old_symbol_name in trigger.rhs_atoms:
+            self.note_rhs_changed(trigger)
+            trigger.rhs_name_transform_inplace(self.namemap)
 
     def action_oncondition(self, on_condition, **kwargs):
         """ Handled in action_condition """
@@ -280,12 +281,12 @@ class ClonerVisitor(ComponentClassVisitor):
             expr_obj=time_derivative, prefix=prefix, exclude=prefix_excludes)
         return time_derivative.__class__(dependent_variable=dep, rhs=rhs)
 
-    def visit_condition(self, condition, **kwargs):
+    def visit_trigger(self, trigger, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
         rhs = MathUtil.get_prefixed_rhs_string(
-            expr_obj=condition, prefix=prefix, exclude=prefix_excludes)
-        return condition.__class__(rhs=rhs)
+            expr_obj=trigger, prefix=prefix, exclude=prefix_excludes)
+        return trigger.__class__(rhs=rhs)
 
     def visit_oncondition(self, on_condition, **kwargs):
         return on_condition.__class__(

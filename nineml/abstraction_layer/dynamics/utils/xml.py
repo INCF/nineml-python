@@ -247,9 +247,8 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
                  target_regime=on_condition._target_regime.name)
 
     @annotate_xml
-    def visit_condition(self, condition):
-        return E('Trigger',
-                 E("MathInline", condition.rhs))
+    def visit_trigger(self, trigger):
+        return E('Trigger', E("MathInline", trigger.rhs))
 
     @annotate_xml
     def visit_onevent(self, on_event):

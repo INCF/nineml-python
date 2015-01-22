@@ -66,8 +66,8 @@ class DynamicsClassActionVisitor(ComponentClassActionVisitor):
     def visit_timederivative(self, time_derivative, **kwargs):
         self.action_timederivative(time_derivative, **kwargs)
 
-    def visit_condition(self, condition, **kwargs):
-        self.action_condition(condition, **kwargs)
+    def visit_trigger(self, trigger, **kwargs):
+        self.action_trigger(trigger, **kwargs)
 
     def visit_oncondition(self, on_condition, **kwargs):
         self.action_oncondition(on_condition, **kwargs)
@@ -118,7 +118,7 @@ class DynamicsClassActionVisitor(ComponentClassActionVisitor):
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_pass()
 
-    def action_condition(self, condition, **kwargs):  # @UnusedVariable
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
         self.check_pass()
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable

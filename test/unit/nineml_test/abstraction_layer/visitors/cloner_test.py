@@ -352,8 +352,8 @@ class ExpandPortDefinition_test(unittest.TestCase):
         warnings.warn('Tests not implemented')
         # raise NotImplementedError()
 
-    def test_action_condition(self):
-        # Signature: name(self, condition, **kwargs)
+    def test_action_trigger(self):
+        # Signature: name(self, trigger, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
         warnings.warn('Tests not implemented')
@@ -597,8 +597,8 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         warnings.warn('Tests not implemented')
         # raise NotImplementedError()
 
-    def test_action_condition(self):
-        # Signature: name(self, condition, **kwargs)
+    def test_action_trigger(self):
+        # Signature: name(self, trigger, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
         warnings.warn('Tests not implemented')
@@ -842,8 +842,8 @@ class RenameSymbol_test(unittest.TestCase):
         warnings.warn('Tests not implemented')
         # raise NotImplementedError()
 
-    def test_action_condition(self):
-        # Signature: name(self, condition, **kwargs)
+    def test_action_trigger(self):
+        # Signature: name(self, trigger, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
         warnings.warn('Tests not implemented')

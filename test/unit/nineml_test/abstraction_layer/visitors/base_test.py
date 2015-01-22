@@ -53,8 +53,8 @@ class ActionVisitor_test(unittest.TestCase):
         warnings.warn('Tests not implemented')
         # raise NotImplementedError()
 
-    def test_action_condition(self):
-        # Signature: name(self, condition, **kwargs)
+    def test_action_trigger(self):
+        # Signature: name(self, trigger, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.base import ActionVisitor
         warnings.warn('Tests not implemented')

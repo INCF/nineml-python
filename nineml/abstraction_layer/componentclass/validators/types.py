@@ -65,7 +65,7 @@ class TypesValidator(ComponentClassActionVisitor):
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         assert isinstance(time_derivative, TimeDerivative)
 
-    def action_condition(self, trigger):
+    def action_trigger(self, trigger):
         assert isinstance(trigger, Trigger)
 
     def action_oncondition(self, on_condition):

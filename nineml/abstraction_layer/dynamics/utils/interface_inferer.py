@@ -38,5 +38,5 @@ class DynamicsClassInterfaceInferer(DynamicsClassActionVisitor,
         self.declared_symbols.add(inferred_sv)
         self.atoms.update(time_derivative.rhs_atoms)
 
-    def action_condition(self, condition):
-        self.atoms.update(condition.rhs_atoms)
+    def action_trigger(self, trigger):
+        self.atoms.update(trigger.rhs_atoms)

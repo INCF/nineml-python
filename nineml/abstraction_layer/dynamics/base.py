@@ -16,8 +16,7 @@ from .regimes import StateVariable
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
-from nineml.utility import (check_list_contain_same_items,
-                            ensure_valid_identifier, invert_dictionary,
+from nineml.utility import (check_list_contain_same_items, invert_dictionary,
                             assert_no_duplicates)
 from ..componentclass.utils import ComponentClassQueryer
 from ..componentclass.utils.cloner import ExpandAliasDefinition, ClonerVisitor
