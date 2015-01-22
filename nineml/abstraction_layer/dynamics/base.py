@@ -19,8 +19,93 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
 from nineml.utility import (check_list_contain_same_items, invert_dictionary,
                             assert_no_duplicates)
 from ..componentclass.utils import ComponentQueryer
-from ..componentclass.utils.cloner import ComponentExpandAliasDefinition, ComponentClonerVisitor
+from ..componentclass.utils.cloner import (
+    ComponentExpandAliasDefinition, ComponentClonerVisitor)
 from .. import BaseALObject
+
+
+class Dynamics(BaseALObject):
+
+    """
+    An object, which encapsulates a component's regimes, transitions,
+    and state variables
+    """
+
+    defining_attributes = ('_regimes', '_aliases', '_state_variables')
+
+    def __init__(self, regimes=None, aliases=None, state_variables=None):
+        """Dynamics object constructor
+
+           :param aliases: A list of aliases, which must be either |Alias|
+               objects or ``string``s.
+           :param regimes: A list containing at least one |Regime| object.
+           :param state_variables: An optional list of the state variables,
+                which can either be |StateVariable| objects or `string` s. If
+                provided, it must match the inferred state-variables from the
+                regimes; if it is not provided it will be inferred
+                automatically.
+        """
+
+        aliases = normalise_parameter_as_list(aliases)
+        regimes = normalise_parameter_as_list(regimes)
+        state_variables = normalise_parameter_as_list(state_variables)
+
+        # Load the aliases as objects or strings:
+        alias_td = filter_discrete_types(aliases, (basestring, Alias))
+        aliases_from_strs = [Alias.from_str(o) for o in alias_td[basestring]]
+        aliases = alias_td[Alias] + aliases_from_strs
+
+        # Load the state variables as objects or strings:
+        sv_types = (basestring, StateVariable)
+        sv_td = filter_discrete_types(state_variables, sv_types)
+        sv_from_strings = [StateVariable(o, dimension=None)
+                           for o in sv_td[basestring]]
+        state_variables = sv_td[StateVariable] + sv_from_strings
+
+        assert_no_duplicates(r.name for r in regimes)
+        assert_no_duplicates(a.lhs for a in aliases)
+        assert_no_duplicates(s.name for s in state_variables)
+
+        self._regimes = dict((r.name, r) for r in regimes)
+        self._aliases = dict((a.lhs, a) for a in aliases)
+        self._state_variables = dict((s.name, s) for s in state_variables)
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_dynamics(self, **kwargs)
+
+    def __repr__(self):
+        return ('Dynamics({} regimes, {} aliases, {} state-variables)'
+                .format(len(list(self.regimes)), len(list(self.aliases)),
+                        len(list(self.state_variables))))
+
+    @property
+    def regimes(self):
+        return self._regimes.itervalues()
+
+    @property
+    def regimes_map(self):
+        return self._regimes
+
+    @property
+    def transitions(self):
+        return chain(*[r.transitions for r in self.regimes])
+
+    @property
+    def aliases(self):
+        return self._aliases.itervalues()
+
+    @property
+    def aliases_map(self):
+        return self._aliases
+
+    @property
+    def state_variables(self):
+        return self._state_variables.itervalues()
+
+    @property
+    def state_variables_map(self):
+        return self._state_variables
 
 
 class _FlatMixin(object):
@@ -173,9 +258,8 @@ class _FlatMixin(object):
         """
 
         for alias in self.aliases:
-            alias_expander = ComponentExpandAliasDefinition(originalname=alias.lhs,
-                                                   targetname=("(%s)" %
-                                                               alias.rhs))
+            alias_expander = ComponentExpandAliasDefinition(
+                originalname=alias.lhs, targetname=("(%s)" % alias.rhs))
             alias_expander.visit(self)
 
     def write(self, file, flatten=True):  # @ReservedAssignment
@@ -347,14 +431,14 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
             will be automatically inferred from the dynamics block.
         :param dynamics: A |Dynamics| object, defining the local dynamics of
                          the componentclass.
-        :param subnodes: A dictionary mapping namespace-names to sub-componentclass.
-            [Type: ``{string:|DynamicsClass|, string:|DynamicsClass|,
-            string:|DynamicsClass|}`` ] describing the namespace of
-            subcomponents for this componentclass.
+        :param subnodes: A dictionary mapping namespace-names to sub-
+            componentclass. [Type: ``{string:|DynamicsClass|,
+            string:|DynamicsClass|, string:|DynamicsClass|}`` ] describing the
+            namespace of subcomponents for this componentclass.
         :param portconnections: A list of pairs, specifying the connections
-            between the ports of the subcomponents in this componentclass. These can
-            be `(|NamespaceAddress|, |NamespaceAddress|)' or ``(string,
-            string)``.
+            between the ports of the subcomponents in this componentclass.
+            These can be `(|NamespaceAddress|, |NamespaceAddress|)' or
+            ``(string, string)``.
         :param interface: A shorthand way of specifying the **interface** for
             this componentclass; |Parameters|, |AnalogPorts| and |EventPorts|.
             ``interface`` takes a list of these objects, and automatically
@@ -535,90 +619,6 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
     @property
     def _attributes_with_dimension(self):
         return chain(self.parameters, self.analog_ports, self.state_variables)
-
-
-class Dynamics(BaseALObject):
-
-    """
-    An object, which encapsulates a component's regimes, transitions,
-    and state variables
-    """
-
-    defining_attributes = ('_regimes', '_aliases', '_state_variables')
-
-    def __init__(self, regimes=None, aliases=None, state_variables=None):
-        """Dynamics object constructor
-
-           :param aliases: A list of aliases, which must be either |Alias|
-               objects or ``string``s.
-           :param regimes: A list containing at least one |Regime| object.
-           :param state_variables: An optional list of the state variables,
-                which can either be |StateVariable| objects or `string` s. If
-                provided, it must match the inferred state-variables from the
-                regimes; if it is not provided it will be inferred
-                automatically.
-        """
-
-        aliases = normalise_parameter_as_list(aliases)
-        regimes = normalise_parameter_as_list(regimes)
-        state_variables = normalise_parameter_as_list(state_variables)
-
-        # Load the aliases as objects or strings:
-        alias_td = filter_discrete_types(aliases, (basestring, Alias))
-        aliases_from_strs = [Alias.from_str(o) for o in alias_td[basestring]]
-        aliases = alias_td[Alias] + aliases_from_strs
-
-        # Load the state variables as objects or strings:
-        sv_types = (basestring, StateVariable)
-        sv_td = filter_discrete_types(state_variables, sv_types)
-        sv_from_strings = [StateVariable(o, dimension=None)
-                           for o in sv_td[basestring]]
-        state_variables = sv_td[StateVariable] + sv_from_strings
-
-        assert_no_duplicates(r.name for r in regimes)
-        assert_no_duplicates(a.lhs for a in aliases)
-        assert_no_duplicates(s.name for s in state_variables)
-
-        self._regimes = dict((r.name, r) for r in regimes)
-        self._aliases = dict((a.lhs, a) for a in aliases)
-        self._state_variables = dict((s.name, s) for s in state_variables)
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_dynamics(self, **kwargs)
-
-    def __repr__(self):
-        return ('Dynamics({} regimes, {} aliases, {} state-variables)'
-                .format(len(list(self.regimes)), len(list(self.aliases)),
-                        len(list(self.state_variables))))
-
-    @property
-    def regimes(self):
-        return self._regimes.itervalues()
-
-    @property
-    def regimes_map(self):
-        return self._regimes
-
-    @property
-    def transitions(self):
-        return chain(*[r.transitions for r in self.regimes])
-
-    @property
-    def aliases(self):
-        return self._aliases.itervalues()
-
-    @property
-    def aliases_map(self):
-        return self._aliases
-
-    @property
-    def state_variables(self):
-        return self._state_variables.itervalues()
-
-    @property
-    def state_variables_map(self):
-        return self._state_variables
 
 
 def inf_check(l1, l2, desc):
