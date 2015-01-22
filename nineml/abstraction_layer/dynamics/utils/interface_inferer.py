@@ -1,8 +1,8 @@
 from ...componentclass.utils import ComponentClassInterfaceInferer
-from .visitors import DynamicsClassActionVisitor
+from .visitors import DynamicsActionVisitor
 
 
-class DynamicsClassInterfaceInferer(DynamicsClassActionVisitor,
+class DynamicsClassInterfaceInferer(DynamicsActionVisitor,
                                     ComponentClassInterfaceInferer):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""

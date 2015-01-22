@@ -10,7 +10,7 @@ from itertools import chain
 from ...componentclass.utils import ComponentActionVisitor
 
 
-class DynamicsClassActionVisitor(ComponentActionVisitor):
+class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_componentclass(self, component, **kwargs):
         self.action_componentclass(component, **kwargs)
