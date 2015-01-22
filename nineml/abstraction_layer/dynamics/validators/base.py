@@ -1,21 +1,28 @@
 """
-This file contains the ComponentValidator class for validating component
+This file contains the DynamicsValidator class for validating component
 
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...componentclass.validators import (
-    AliasesAreNotRecursiveValidator, TimeDerivativesAreDeclaredValidator,
-    StateAssignmentsAreOnStateVariablesValidator, NoUnresolvedSymbolsValidator,
-    PortConnectionsValidator, RegimeGraphValidator,
-    NoDuplicatedObjectsValidator, RegimeOnlyHasOneHandlerPerEventValidator,
-    CheckNoLHSAssignmentsToMathsNamespaceValidator,
-    LocalNameConflictsValidator, DimensionNameConflictsValidator,
-    EventPortsValidator, OutputAnalogPortsValidator,
-    DuplicateRegimeNamesValidator, TypesValidator)
+from .general import (
+    TimeDerivativesAreDeclaredDynamicsValidator,
+    StateAssignmentsAreOnStateVariablesDynamicsValidator,
+    AliasesAreNotRecursiveDynamicsValidator,
+    NoUnresolvedSymbolsDynamicsValidator, PortConnectionsDynamicsValidator,
+    RegimeGraphDynamicsValidator, NoDuplicatedObjectsDynamicsValidator,
+    RegimeOnlyHasOneHandlerPerEventDynamicsValidator,
+    CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator)
+from .namingconflicts import (
+    LocalNameConflictsDynamicsValidator,
+    DimensionNameConflictsDynamicsValidator,
+    DuplicateRegimeNamesDynamicsValidator)
+from .ports import (
+    EventPortsDynamicsValidator, OutputAnalogPortsDynamicsValidator)
+from .types import (
+    TypesDynamicsValidator)
 
 
-class ComponentValidator(object):
+class DynamicsValidator(object):
 
     """Class for grouping all the component-validations tests together"""
 
@@ -26,18 +33,18 @@ class ComponentValidator(object):
         internal structure
         """
         # Check class structure:
-        TypesValidator(componentclass)
-        NoDuplicatedObjectsValidator(componentclass)
-        DuplicateRegimeNamesValidator(componentclass)
-        LocalNameConflictsValidator(componentclass)
-        DimensionNameConflictsValidator(componentclass)
-        EventPortsValidator(componentclass)
-        OutputAnalogPortsValidator(componentclass)
-        TimeDerivativesAreDeclaredValidator(componentclass)
-        StateAssignmentsAreOnStateVariablesValidator(componentclass)
-        AliasesAreNotRecursiveValidator(componentclass)
-        NoUnresolvedSymbolsValidator(componentclass)
-        PortConnectionsValidator(componentclass)
-        RegimeGraphValidator(componentclass)
-        RegimeOnlyHasOneHandlerPerEventValidator(componentclass)
-        CheckNoLHSAssignmentsToMathsNamespaceValidator(componentclass)
+        TypesDynamicsValidator(componentclass)
+        NoDuplicatedObjectsDynamicsValidator(componentclass)
+        DuplicateRegimeNamesDynamicsValidator(componentclass)
+        LocalNameConflictsDynamicsValidator(componentclass)
+        DimensionNameConflictsDynamicsValidator(componentclass)
+        EventPortsDynamicsValidator(componentclass)
+        OutputAnalogPortsDynamicsValidator(componentclass)
+        TimeDerivativesAreDeclaredDynamicsValidator(componentclass)
+        StateAssignmentsAreOnStateVariablesDynamicsValidator(componentclass)
+        AliasesAreNotRecursiveDynamicsValidator(componentclass)
+        NoUnresolvedSymbolsDynamicsValidator(componentclass)
+        PortConnectionsDynamicsValidator(componentclass)
+        RegimeGraphDynamicsValidator(componentclass)
+        RegimeOnlyHasOneHandlerPerEventDynamicsValidator(componentclass)
+        CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(componentclass)

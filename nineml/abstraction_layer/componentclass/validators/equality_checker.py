@@ -89,7 +89,7 @@ class ComponentEqualityChecker(object):
         for subnamespace in comp1.subnodes.keys():
             subcomp1 = comp1.subnodes[subnamespace]
             subcomp2 = comp2.subnodes[subnamespace]
-            check_equal_component(subcomp1, subcomp2)
+            cls.check_equal_component(subcomp1, subcomp2)
 
         # Port Connections:
         # Tuples are comparable, so lets make 2 lists of tuples and compare

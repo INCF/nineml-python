@@ -5,15 +5,80 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from collections import defaultdict
-from . import PerNamespaceValidator
 from nineml.exceptions import NineMLRuntimeError
+from nineml.utility import assert_no_duplicates
 from ...expressions.utils import (get_reserved_and_builtin_symbols,
                                   is_valid_lhs_target)
-from nineml.utility import assert_no_duplicates
-from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
+from ...componentclass.validators import PerNamespaceValidator
+from ...componentclass.namespace import NamespaceAddress
+
+from ...componentclass.validators import (
+    AliasesAreNotRecursiveComponentValidator,
+    NoUnresolvedSymbolsComponentValidator, PortConnectionsComponentValidator,
+    NoDuplicatedObjectsComponentValidator,
+    CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
 
 
-class AliasesAreNotRecursiveComponentValidator(PerNamespaceValidator):
+class TimeDerivativesAreDeclaredDynamicsValidator(PerNamespaceValidator):
+
+    """ Check all variables used in TimeDerivative blocks are defined
+        as  StateVariables.
+    """
+
+    def __init__(self, componentclass):
+        PerNamespaceValidator.__init__(
+            self, require_explicit_overrides=False)
+        self.sv_declared = defaultdict(list)
+        self.time_derivatives_used = defaultdict(list)
+
+        self.visit(componentclass)
+
+        for namespace, time_derivatives in self.time_derivatives_used.\
+                                                                   iteritems():
+            for td in time_derivatives:
+                if td not in self.sv_declared[namespace]:
+                    err = 'StateVariable not declared: %s' % td
+                    raise NineMLRuntimeError(err)
+
+    def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.sv_declared[namespace].append(state_variable.name)
+
+    def action_timederivative(self, timederivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.time_derivatives_used[namespace].append(
+            timederivative.dependent_variable)
+
+
+class StateAssignmentsAreOnStateVariablesDynamicsValidator(
+        PerNamespaceValidator):
+
+    """ Check that we only attempt to make StateAssignments to state-variables.
+    """
+
+    def __init__(self, componentclass):
+        PerNamespaceValidator.__init__(
+            self, require_explicit_overrides=False)
+        self.sv_declared = defaultdict(list)
+        self.state_assignments_lhses = defaultdict(list)
+
+        self.visit(componentclass)
+
+        for namespace, state_assignments_lhs in self.state_assignments_lhses.\
+                                                                   iteritems():
+            for td in state_assignments_lhs:
+                if td not in self.sv_declared[namespace]:
+                    err = 'Not Assigning to state-variable: {}'.format(td)
+                    raise NineMLRuntimeError(err)
+
+    def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.sv_declared[namespace].append(state_variable.name)
+
+    def action_stateassignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        assert False
+        self.state_assignments_lhses[namespace].append(state_assignment.lhs)
+
+
+class AliasesAreNotRecursiveDynamicsValidator(
+        AliasesAreNotRecursiveComponentValidator):
 
     """Check that aliases are not self-referential"""
 
@@ -50,7 +115,8 @@ class AliasesAreNotRecursiveComponentValidator(PerNamespaceValidator):
                 raise NineMLRuntimeError(errmsg)
 
 
-class NoUnresolvedSymbolsComponentValidator(PerNamespaceValidator):
+class NoUnresolvedSymbolsDynamicsValidator(
+        NoUnresolvedSymbolsComponentValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
@@ -130,7 +196,8 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceValidator):
         self.state_assignments[namespace].append(state_assignment)
 
 
-class PortConnectionsComponentValidator(PerNamespaceValidator):
+class PortConnectionsDynamicsValidator(
+        PortConnectionsComponentValidator):
 
     """Check that all the port connections point to a port, and that
     each send & recv port only has a single connection.
@@ -217,7 +284,48 @@ class PortConnectionsComponentValidator(PerNamespaceValidator):
             self.portconnections.append((full_src, full_sink))
 
 
-class NoDuplicatedObjectsComponentValidator(PerNamespaceValidator):
+class RegimeGraphDynamicsValidator(PerNamespaceValidator):
+
+    def __init__(self, componentclass):
+        PerNamespaceValidator.__init__(
+            self, require_explicit_overrides=False)
+
+        self.connected_regimes_from_regime = defaultdict(set)
+        self.regimes_in_namespace = defaultdict(set)
+
+        self.visit(componentclass)
+
+        def add_connected_regimes_recursive(regime, connected):
+            connected.add(regime)
+            for r in self.connected_regimes_from_regime[regime]:
+                if r not in connected:
+                    add_connected_regimes_recursive(r, connected)
+
+        for namespace, regimes in self.regimes_in_namespace.iteritems():
+
+            # Perhaps we have no transition graph; this is OK:
+            if len(regimes) == 0:
+                continue
+
+            connected = set()
+            add_connected_regimes_recursive(regimes[0], connected)
+            if len(connected) != len(self.regimes_in_namespace[namespace]):
+                raise NineMLRuntimeError('Transition graph is contains '
+                                         'islands')
+
+    def action_componentclass(self, component, namespace):
+        self.regimes_in_namespace[namespace] = list(component.regimes)
+
+    def action_regime(self, regime, namespace):  # @UnusedVariable
+        for transition in regime.transitions:
+            self.connected_regimes_from_regime[regime].add(
+                transition.target_regime)
+            self.connected_regimes_from_regime[transition.target_regime].add(
+                regime)
+
+
+class NoDuplicatedObjectsDynamicsValidator(
+        NoDuplicatedObjectsComponentValidator):
 
     def __init__(self, componentclass):
         PerNamespaceValidator.__init__(
@@ -278,8 +386,21 @@ class NoDuplicatedObjectsComponentValidator(PerNamespaceValidator):
         self.all_objects.append(on_event)
 
 
-class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
-        PerNamespaceValidator):
+class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(PerNamespaceValidator):
+
+    def __init__(self, componentclass):
+        PerNamespaceValidator.__init__(
+            self, require_explicit_overrides=False)
+        self.visit(componentclass)
+
+    def action_regime(self, regime, namespace, **kwargs):  # @UnusedVariable
+        event_triggers = [on_event.src_port_name
+                          for on_event in regime.on_events]
+        assert_no_duplicates(event_triggers)
+
+
+class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
+        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)

@@ -66,22 +66,22 @@ class RenameSymbol(ComponentClassActionVisitor):
     StateVariables, Aliases, Ports
     """
 
-    def __init__(self, component, old_symbol_name, new_symbol_name):
+    def __init__(self, componentclass, old_symbol_name, new_symbol_name):
         ComponentClassActionVisitor.__init__(
             self, require_explicit_overrides=True)
         self.old_symbol_name = old_symbol_name
         self.new_symbol_name = new_symbol_name
         self.namemap = {old_symbol_name: new_symbol_name}
 
-        if not component.is_flat():
+        if not componentclass.is_flat():
             raise NineMLRuntimeError('Rename Symbol called on non-flat model')
 
         self.lhs_changes = []
         self.rhs_changes = []
         self.port_changes = []
 
-        self.visit(component)
-        component._validate_self()
+        self.visit(componentclass)
+        componentclass._validate_self()
 
     def note_lhs_changed(self, what):
         self.lhs_changes.append(what)

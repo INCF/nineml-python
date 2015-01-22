@@ -336,7 +336,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
                  aliases=None, state_variables=None):
         """Constructs a DynamicsClass
 
-        :param name: The name of the component.
+        :param name: The name of the componentclass.
         :param parameters: A list containing either |Parameter| objects
             or strings representing the parameter names. If ``None``, then the
             parameters are automatically inferred from the |Dynamics| block.
@@ -346,17 +346,17 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
         :param dynamics: A |Dynamics| object, defining the local dynamics of
-                         the component.
-        :param subnodes: A dictionary mapping namespace-names to sub-component.
+                         the componentclass.
+        :param subnodes: A dictionary mapping namespace-names to sub-componentclass.
             [Type: ``{string:|DynamicsClass|, string:|DynamicsClass|,
             string:|DynamicsClass|}`` ] describing the namespace of
-            subcomponents for this component.
+            subcomponents for this componentclass.
         :param portconnections: A list of pairs, specifying the connections
-            between the ports of the subcomponents in this component. These can
+            between the ports of the subcomponents in this componentclass. These can
             be `(|NamespaceAddress|, |NamespaceAddress|)' or ``(string,
             string)``.
         :param interface: A shorthand way of specifying the **interface** for
-            this component; |Parameters|, |AnalogPorts| and |EventPorts|.
+            this componentclass; |Parameters|, |AnalogPorts| and |EventPorts|.
             ``interface`` takes a list of these objects, and automatically
             resolves them by type into the correct types.
 
@@ -470,7 +470,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         # Store flattening Information:
         self._flattener = None
 
-        # Is the finished component valid?:
+        # Is the finished componentclass valid?:
         self._validate_self()
 
     @property
@@ -496,7 +496,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         return self.flattener is not None
 
     def _validate_self(self):
-        ComponentValidator.validate_componentclass(self)
+        DynamicsValidator.validate_componentclass(self)
 
     @property
     def query(self):
@@ -625,5 +625,5 @@ def inf_check(l1, l2, desc):
     check_list_contain_same_items(l1, l2, desc1='Declared',
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
-from .validators import ComponentValidator
+from .validators import DynamicsValidator
 from .utils import DynamicsClassInterfaceInferer

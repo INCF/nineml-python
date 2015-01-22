@@ -122,7 +122,7 @@ class PositionList(BaseULObject):
 
         `positions` should be a list of (x,y,z) tuples or a 3xN (Nx3?) numpy
                     array.
-        `structure` should be a Structure component.
+        `structure` should be a Structure componentclass.
         """
         super(PositionList, self).__init__()
         if positions and structure:

@@ -39,10 +39,10 @@ class Reference(BaseReference):
         """
         docstring needed
 
-        `name`     -- a name of an existing component to refer to
+        `name`     -- a name of an existing componentclass to refer to
         `document` -- a Document object containing the top-level
                       objects in the current file
-        `url`      -- a url of the file containing the exiting component
+        `url`      -- a url of the file containing the exiting componentclass
         """
         super(Reference, self).__init__(name, document, url)
         if not isinstance(self._referred_to, BaseULObject):
@@ -115,8 +115,8 @@ class Component(BaseULObject):
     # library such as SEDML
     def __init__(self, name, definition, properties={}, initial_values={}):
         """
-        Create a new component with the given name, definition and properties,
-        or create a prototype to another component that will be resolved later.
+        Create a new componentclass with the given name, definition and properties,
+        or create a prototype to another componentclass that will be resolved later.
         """
         super(Component, self).__init__()
         self.name = name

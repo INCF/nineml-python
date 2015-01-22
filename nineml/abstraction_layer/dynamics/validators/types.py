@@ -5,18 +5,18 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ..utils import ComponentClassActionVisitor
-from ...dynamics.regimes import Regime, StateVariable, TimeDerivative
-from ...dynamics.transitions import (EventOut, StateAssignment, Trigger,
+from ...componentclass.validators.types import TypesComponentValidator
+from ..regimes import Regime, StateVariable, TimeDerivative
+from ..transitions import (EventOut, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
 from ..base import ComponentClass, Parameter
 from ...expressions import Alias
 from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                       EventSendPort, EventReceivePort)
-from ...dynamics.base import Dynamics
+from ..base import Dynamics
 
 
-class TypesComponentValidator(ComponentClassActionVisitor):
+class TypesDynamicsValidator(TypesComponentValidator):
 
     def __init__(self, componentclass):
         super(TypesComponentValidator, self).__init__()

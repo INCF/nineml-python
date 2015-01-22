@@ -1,1 +1,1 @@
-from .base import ComponentValidator
+from .base import DynamicsValidator

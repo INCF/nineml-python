@@ -19,9 +19,9 @@ class ComponentClassQueryer(object):
     ComponentClass object, without polluting the class
     """
 
-    def __init__(self, component):
+    def __init__(self, componentclass):
         """Constructor for the ComponentClassQueryer"""
-        self.component = component
+        self.component = componentclass
 
     @property
     def ports(self):
