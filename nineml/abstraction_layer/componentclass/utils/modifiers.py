@@ -10,10 +10,9 @@ from .cloner import ComponentExpandPortDefinition
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utility import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
-from ... import BaseALObject
 
 
-class ComponentModifier(BaseALObject):
+class ComponentModifier(object):
 
     """Utility classes for modifying components"""
 

@@ -4,16 +4,16 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import (is_builtin_symbol, MathUtil)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
-    ComponentRenameSymbol, ComponentClonerVisitor,
-    ComponentClonerVisitorPrefixNamespace)
+    ComponentRenameSymbol, ComponentClonerVisitor)
+from .visitors import DynamicsActionVisitor
 
 
-class DynamicsExpandPortDefinition(ComponentExpandPortDefinition):
+class DynamicsExpandPortDefinition(DynamicsActionVisitor,
+                                   ComponentExpandPortDefinition):
 
 #     def __init__(self, originalname, targetname):
 # 
@@ -36,7 +36,8 @@ class DynamicsExpandPortDefinition(ComponentExpandPortDefinition):
         trigger.rhs_name_transform_inplace(self.namemap)
 
 
-class DynamicsExpandAliasDefinition(ComponentExpandAliasDefinition):
+class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
+                                    ComponentExpandAliasDefinition):
 
     """ An action-class that walks over a component, and expands an alias in
     Assignments, Aliases, TimeDerivatives and Conditions
@@ -63,7 +64,8 @@ class DynamicsExpandAliasDefinition(ComponentExpandAliasDefinition):
         trigger.rhs_name_transform_inplace(self.namemap)
 
 
-class DynamicsRenameSymbol(ComponentRenameSymbol):
+class DynamicsRenameSymbol(DynamicsActionVisitor,
+                           ComponentRenameSymbol):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
@@ -313,8 +315,7 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
         )
 
 
-class DynamicsClonerVisitorPrefixNamespace(
-        ComponentClonerVisitorPrefixNamespace):
+class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
 
     """ A visitor that walks over a hierarchical component, and prefixes every
     variable with the namespace that that variable is in. This is preparation
