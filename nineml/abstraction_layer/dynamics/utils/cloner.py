@@ -15,19 +15,8 @@ from .visitors import DynamicsActionVisitor
 class DynamicsExpandPortDefinition(DynamicsActionVisitor,
                                    ComponentExpandPortDefinition):
 
-#     def __init__(self, originalname, targetname):
-# 
-#         super(DynamicsExpandPortDefinition, self).__init__(
-#             require_explicit_overrides=False)
-#         self.originalname = originalname
-#         self.targetname = targetname
-#         self.namemap = {originalname: targetname}
-
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        alias.name_transform_inplace(self.namemap)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         time_derivative.name_transform_inplace(self.namemap)
@@ -43,19 +32,8 @@ class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
     Assignments, Aliases, TimeDerivatives and Conditions
     """
 
-#     def __init__(self, originalname, targetname):
-# 
-#         super(DynamicsExpandAliasDefinition, self).__init__(
-#             require_explicit_overrides=False)
-#         self.originalname = originalname
-#         self.targetname = targetname
-#         self.namemap = {originalname: targetname}
-
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        alias.rhs_name_transform_inplace(self.namemap)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         time_derivative.name_transform_inplace(self.namemap)
@@ -71,35 +49,6 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
     StateVariables, Aliases, Ports
     """
 
-#     def __init__(self, componentclass, old_symbol_name, new_symbol_name):
-#         super(DynamicsRenameSymbol, self).__init__(
-#             require_explicit_overrides=True)
-#         self.old_symbol_name = old_symbol_name
-#         self.new_symbol_name = new_symbol_name
-#         self.namemap = {old_symbol_name: new_symbol_name}
-# 
-#         if not componentclass.is_flat():
-#             raise NineMLRuntimeError('Rename Symbol called on non-flat model')
-# 
-#         self.lhs_changes = []
-#         self.rhs_changes = []
-#         self.port_changes = []
-# 
-#         self.visit(componentclass)
-#         componentclass._validate_self()
-
-    def note_lhs_changed(self, what):
-        self.lhs_changes.append(what)
-
-    def note_rhs_changed(self, what):
-        self.rhs_changes.append(what)
-
-    def note_port_changed(self, what):
-        self.port_changes.append(what)
-
-    def action_componentclass(self, component, **kwargs):
-        pass
-
     def action_dynamics(self, dynamics, **kwargs):
         pass
 
@@ -110,16 +59,6 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
         if state_variable.name == self.old_symbol_name:
             state_variable._name = self.new_symbol_name
             self.note_lhs_changed(state_variable)
-
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        if parameter.name == self.old_symbol_name:
-            parameter._name = self.new_symbol_name
-            self.note_lhs_changed(parameter)
-
-    def _action_port(self, port, **kwargs):  # @UnusedVariable
-        if port.name == self.old_symbol_name:
-            port._name = self.new_symbol_name
-            self.note_port_changed(port)
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         self._action_port(port, **kwargs)
@@ -146,14 +85,6 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
             self.note_rhs_changed(assignment)
             assignment.name_transform_inplace(self.namemap)
 
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        if alias.lhs == self.old_symbol_name:
-            self.note_lhs_changed(alias)
-            alias.name_transform_inplace(self.namemap)
-        elif self.old_symbol_name in alias.atoms:
-            self.note_rhs_changed(alias)
-            alias.name_transform_inplace(self.namemap)
-
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         if timederivative.dependent_variable == self.old_symbol_name:
             self.note_lhs_changed(timederivative)
@@ -178,18 +109,6 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
 
 
 class DynamicsClonerVisitor(ComponentClonerVisitor):
-
-    def prefix_variable(self, variable, **kwargs):
-        prefix = kwargs.get('prefix', '')
-        prefix_excludes = kwargs.get('prefix_excludes', [])
-        if variable in prefix_excludes:
-            return variable
-
-        if is_builtin_symbol(variable):
-            return variable
-
-        else:
-            return prefix + variable
 
     def visit_componentclass(self, component, **kwargs):
         ccn = component.__class__(
@@ -229,11 +148,6 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
             name=self.prefix_variable(state_variable.name, **kwargs),
             dimension=state_variable.dimension)
 
-    def visit_parameter(self, parameter, **kwargs):
-        return parameter.__class__(
-            name=self.prefix_variable(parameter.name, **kwargs),
-            dimension=parameter.dimension)
-
     def visit_analogreceiveport(self, port, **kwargs):
         return port.__class__(
             name=self.prefix_variable(port.name, **kwargs))
@@ -267,13 +181,6 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
             expr_obj=assignment, prefix=prefix, exclude=prefix_excludes)
 
         return assignment.__class__(lhs=lhs, rhs=rhs)
-
-    def visit_alias(self, alias, **kwargs):
-        new_alias = alias.__class__(lhs=alias.lhs, rhs=alias.rhs)
-        name_map = dict([(a, self.prefix_variable(a, **kwargs))
-                         for a in new_alias.atoms])
-        new_alias.name_transform_inplace(name_map=name_map)
-        return new_alias
 
     def visit_timederivative(self, time_derivative, **kwargs):
         prefix = kwargs.get('prefix', '')
