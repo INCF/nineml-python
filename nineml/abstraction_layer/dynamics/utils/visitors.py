@@ -7,10 +7,10 @@ docstring needed
 
 
 from itertools import chain
-from ...componentclass.utils import ComponentClassActionVisitor
+from ...componentclass.utils import ComponentActionVisitor
 
 
-class DynamicsClassActionVisitor(ComponentClassActionVisitor):
+class DynamicsClassActionVisitor(ComponentActionVisitor):
 
     def visit_componentclass(self, component, **kwargs):
         self.action_componentclass(component, **kwargs)

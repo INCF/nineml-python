@@ -18,7 +18,7 @@ class DynamicsQueryer(ComponentQueryer):
     """
 
     def __init__(self, componentclass):
-        """Constructor for the ComponentQueryer"""
+        """Constructor for the DynamicsQueryer"""
         self.component = componentclass
 
     @property

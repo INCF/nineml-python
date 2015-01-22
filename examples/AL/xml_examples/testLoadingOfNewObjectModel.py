@@ -22,21 +22,24 @@ tenml_dir = Join(LocationMgr.getCatalogDir(), "sample_xml_files/10ml/")
 def t1():
     print 'Loading First XML File'
     print '----------------------'
-    component = readers.XMLReader.read_component(Join(sample_xml_dir, 'PostTF_izhikevich.xml'))
+    component = readers.XMLReader.read_component(Join(sample_xml_dir,
+                                                      'PostTF_izhikevich.xml'))
     writers.XMLWriter.write(component, '/tmp/nineml_toxml1.xml')
 
 
 def t2():
     print 'Loading Second XML File (IAF-Component'
     print '--------------------------------------'
-    component = readers.XMLReader.read_component(Join(tenml_dir, 'comp_iaf.9ml'))
+    component = readers.XMLReader.read_component(Join(tenml_dir,
+                                                      'comp_iaf.9ml'))
     writers.XMLWriter.write(component, '/tmp/nineml_toxml2.xml')
 
 
 def t3():
     print 'Loading Third XML File (COBA-Component)'
     print '---------------------------------------'
-    component = readers.XMLReader.read_component(Join(tenml_dir, 'comp_coba.9ml'))
+    component = readers.XMLReader.read_component(Join(tenml_dir,
+                                                      'comp_coba.9ml'))
     writers.XMLWriter.write(component, '/tmp/nineml_toxml3.xml')
 
 
@@ -49,10 +52,12 @@ def t4():
     model = readers.XMLReader.read_component(Join(tenml_dir, 'iaf_2coba.10ml'))
 
     from nineml.abstraction_layer.flattening import flatten
-    from nineml.abstraction_layer.component_modifiers import ComponentModifier
+    from nineml.abstraction_layer.dynamics.utils.modifiers import (
+        DynamicsModifier)
 
     flatcomponent = flatten(model, componentname='iaf_2coba')
-    ComponentModifier.close_analog_port(component=flatcomponent, port_name='iaf_iSyn', value='0')
+    DynamicsModifier.close_analog_port(component=flatcomponent,
+                                       port_name='iaf_iSyn', value='0')
 
     writers.XMLWriter.write(flatcomponent, '/tmp/nineml_out_iaf_2coba.9ml')
 
@@ -67,8 +72,8 @@ def t4():
         name="iaf_2coba",
         nineml_model=flatcomponent,
         synapse_components=[
-            pyNNml.CoBaSyn(namespace='cobaExcit',  weight_connector='q'),
-            pyNNml.CoBaSyn(namespace='cobaInhib',  weight_connector='q'),
+            pyNNml.CoBaSyn(namespace='cobaExcit', weight_connector='q'),
+            pyNNml.CoBaSyn(namespace='cobaInhib', weight_connector='q'),
         ]
     )
 

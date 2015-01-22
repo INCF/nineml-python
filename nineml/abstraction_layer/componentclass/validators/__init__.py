@@ -1,4 +1,3 @@
-from nineml.abstraction_layer.componentclass.utils.equality_checker import ComponentEqualityChecker
 from .base import PerNamespaceValidator
 from .general import (
     AliasesAreNotRecursiveComponentValidator,

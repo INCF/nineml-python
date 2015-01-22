@@ -7,7 +7,6 @@ docstring needed
 from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import (is_builtin_symbol, MathUtil)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
-from ...componentclass.utils.visitors import ComponentClassActionVisitor
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
     ComponentRenameSymbol, ComponentClonerVisitor,
@@ -71,8 +70,8 @@ class DynamicsRenameSymbol(ComponentRenameSymbol):
     """
 
     def __init__(self, componentclass, old_symbol_name, new_symbol_name):
-        ComponentClassActionVisitor.__init__(
-            self, require_explicit_overrides=True)
+        super(DynamicsRenameSymbol, self).__init__(
+            require_explicit_overrides=True)
         self.old_symbol_name = old_symbol_name
         self.new_symbol_name = new_symbol_name
         self.namemap = {old_symbol_name: new_symbol_name}

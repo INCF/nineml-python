@@ -10,7 +10,7 @@ from nineml.abstraction_layer.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ..expressions.utils import MathUtil, str_to_npfunc_map
 from ...exceptions import NineMLRuntimeError
-from ..componentclass.utils.cloner import ComponentClonerVisitor
+from ..cloner import DynamicsClonerVisitor
 from ..expressions import parse
 
 
@@ -265,7 +265,7 @@ class OnCondition(Transition):
             parameters.
         """
         if isinstance(trigger, Trigger):
-            self._trigger = ComponentClonerVisitor().visit(trigger)
+            self._trigger = DynamicsClonerVisitor().visit(trigger)
         elif isinstance(trigger, basestring):
             self._trigger = Trigger(rhs=trigger)
         else:

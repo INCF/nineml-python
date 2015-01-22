@@ -8,8 +8,9 @@ docstring needed
 import itertools
 from collections import defaultdict
 from nineml.utility import flatten_first_level
-from ...componentclass.utils.cloner import (
-    ComponentClonerVisitor, ComponentClonerVisitorPrefixNamespace, ComponentExpandPortDefinition)
+from .cloner import (
+    DynamicsClonerVisitor, DynamicsClonerVisitorPrefixNamespace,
+    DynamicsExpandPortDefinition)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.dynamics.regimes import Regime
@@ -28,7 +29,7 @@ class TransitionResolver(object):
         self.dst_regime_tuple = tuple(regime_tuple)
 
         # Clone the old Node
-        oldtransition = ComponentClonerVisitor().visit(oldtransition)
+        oldtransition = DynamicsClonerVisitor().visit(oldtransition)
 
         # Store a pointer to the flattener:
         self.flattener = flattener
@@ -82,9 +83,9 @@ class TransitionResolver(object):
             oldtransition=transition)
 
         for ev_out in transition.event_outputs:
-            self.event_outputs.append(ComponentClonerVisitor().visit(ev_out))
+            self.event_outputs.append(DynamicsClonerVisitor().visit(ev_out))
         for state_ass in transition.state_assignments:
-            self.state_assignments.append(ComponentClonerVisitor().visit(state_ass))
+            self.state_assignments.append(DynamicsClonerVisitor().visit(state_ass))
 
         # Are we recursing? Or will the simulation engine take care
         # off this for us??
@@ -197,7 +198,7 @@ class ComponentFlattener(object):
 
         # Is our componentclass already flat??
         if componentclass.is_flat():
-            self.reducedcomponent = ComponentClonerVisitor().visit(componentclass)
+            self.reducedcomponent = DynamicsClonerVisitor().visit(componentclass)
             if componentclass.was_flattened():
                 self.reducedcomponent.set_flattener(componentclass.flattener)
             return
@@ -207,7 +208,7 @@ class ComponentFlattener(object):
 
         # Make a clone of the componentclass; in which all hierachical components
         # have their internal symbols prefixed:
-        cloned_comp = ComponentClonerVisitorPrefixNamespace().visit(componentclass)
+        cloned_comp = DynamicsClonerVisitorPrefixNamespace().visit(componentclass)
 
         # Make a list of all components, and those components with regimes:
         self.all_components = list(cloned_comp.query.recurse_all_components)
@@ -254,7 +255,7 @@ class ComponentFlattener(object):
         # We need to clone the time_derivatives:
         time_derivs = flatten_first_level(
             [r.time_derivatives for r in regimetuple])
-        time_derivs = [ComponentClonerVisitor().visit(td) for td in time_derivs]
+        time_derivs = [DynamicsClonerVisitor().visit(td) for td in time_derivs]
 
         return Regime(name=name, time_derivatives=time_derivs)
 
@@ -329,7 +330,7 @@ class ComponentFlattener(object):
             dstport = new_analog_ports[dst_addr.get_local_name()]
             if dstport.mode == 'recv':
 
-                ComponentExpandPortDefinition(
+                DynamicsExpandPortDefinition(
                     originalname=dstport.name, targetname=srcport.name).visit(
                         self.reducedcomponent)
 
@@ -359,7 +360,7 @@ class ComponentFlattener(object):
             reduce_expr = dstport.reduce_op.join(terms)
 
             # globalRemapPort( dstport.name, reduce_expr )
-            ComponentExpandPortDefinition(
+            DynamicsExpandPortDefinition(
                 originalname=dstport.name, targetname=reduce_expr).visit(
                     self.reducedcomponent)
 

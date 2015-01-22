@@ -9,7 +9,7 @@ from urllib2 import urlopen
 from lxml import etree
 from itertools import chain
 from nineml.xmlns import E
-from . import ComponentClassVisitor
+from . import ComponentVisitor
 from ...ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
                       IndexReceivePort)
 from ...expressions import Alias
@@ -138,7 +138,7 @@ class ComponentClassXMLLoader(object):
     }
 
 
-class ComponentClassXMLWriter(ComponentClassVisitor):
+class ComponentClassXMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_parameter(self, parameter):

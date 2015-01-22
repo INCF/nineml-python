@@ -6,27 +6,30 @@ This file contains utility classes for modifying components.
 """
 
 from ..base import Parameter
-from .cloner import ComponentExpandPortDefinition
+from .cloner import DynamicsExpandPortDefinition
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utility import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
-from ... import BaseALObject
+from ...componentclass.utils.modifiers import ComponentModifier
 
 
-class ComponentModifier(BaseALObject):
+class DynamicsModifier(ComponentModifier):
 
     """Utility classes for modifying components"""
 
-    _ExpandPortDefinition = ComponentExpandPortDefinition
+    _ExpandPortDefinition = DynamicsExpandPortDefinition
 
     @classmethod
     def close_analog_port(cls, component, port_name, value="0"):
         """Closes an incoming analog port by assigning its value to 0"""
+
         if not component.is_flat():
             raise NineMLRuntimeError('close_analog_port() on non-flat '
                                      'component')
+
         # Subsitute the value in:
         component.accept_visitor(cls._ExpandPortDefinition(port_name, value))
+
         # Remove it from the list of ports:
         port = filter_expect_single(component.analog_ports,
                                     lambda ap: ap.name == port_name)

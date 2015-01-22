@@ -7,10 +7,10 @@ docstring needed
 from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import (is_builtin_symbol, MathUtil)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
-from .visitors import ComponentClassActionVisitor, ComponentClassVisitor
+from .visitors import ComponentActionVisitor, ComponentVisitor
 
 
-class ComponentExpandPortDefinition(ComponentClassActionVisitor):
+class ComponentExpandPortDefinition(ComponentActionVisitor):
 
     def __init__(self, originalname, targetname):
 
@@ -33,7 +33,7 @@ class ComponentExpandPortDefinition(ComponentClassActionVisitor):
         trigger.rhs_name_transform_inplace(self.namemap)
 
 
-class ComponentExpandAliasDefinition(ComponentClassActionVisitor):
+class ComponentExpandAliasDefinition(ComponentActionVisitor):
 
     """ An action-class that walks over a component, and expands an alias in
     Assignments, Aliases, TimeDerivatives and Conditions
@@ -60,14 +60,14 @@ class ComponentExpandAliasDefinition(ComponentClassActionVisitor):
         trigger.rhs_name_transform_inplace(self.namemap)
 
 
-class ComponentRenameSymbol(ComponentClassActionVisitor):
+class ComponentRenameSymbol(ComponentActionVisitor):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
     """
 
     def __init__(self, componentclass, old_symbol_name, new_symbol_name):
-        ComponentClassActionVisitor.__init__(
+        ComponentActionVisitor.__init__(
             self, require_explicit_overrides=True)
         self.old_symbol_name = old_symbol_name
         self.new_symbol_name = new_symbol_name
@@ -172,7 +172,7 @@ class ComponentRenameSymbol(ComponentClassActionVisitor):
             self.note_rhs_changed(on_event)
 
 
-class ComponentClonerVisitor(ComponentClassVisitor):
+class ComponentClonerVisitor(ComponentVisitor):
 
     def prefix_variable(self, variable, **kwargs):
         prefix = kwargs.get('prefix', '')

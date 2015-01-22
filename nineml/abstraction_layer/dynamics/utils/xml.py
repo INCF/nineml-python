@@ -5,7 +5,6 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from itertools import chain
-from .flattener import ComponentFlattener
 from nineml.annotations import annotate_xml
 from nineml.utility import expect_single
 from nineml.xmlns import E

@@ -1,9 +1,9 @@
-from .visitors import ComponentClassActionVisitor
+from .visitors import ComponentActionVisitor
 from ...expressions.utils import get_reserved_and_builtin_symbols
 from itertools import chain
 
 
-class ComponentClassInterfaceInferer(ComponentClassActionVisitor):
+class ComponentClassInterfaceInferer(ComponentActionVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 

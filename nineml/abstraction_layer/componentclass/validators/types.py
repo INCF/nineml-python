@@ -5,12 +5,12 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ..utils import ComponentClassActionVisitor
+from ..utils import ComponentActionVisitor
 from ..base import ComponentClass, Parameter
 from ...expressions import Alias
 
 
-class TypesComponentValidator(ComponentClassActionVisitor):
+class TypesComponentValidator(ComponentActionVisitor):
 
     def __init__(self, componentclass):
         super(TypesComponentValidator, self).__init__()
