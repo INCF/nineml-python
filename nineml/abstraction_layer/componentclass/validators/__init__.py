@@ -1,4 +1,4 @@
-from .base import PerNamespaceValidator
+from .base import PerNamespaceComponentValidator
 from .general import (
     AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,

@@ -7,23 +7,23 @@ docstring needed
 from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
 from nineml.utility import assert_no_duplicates
-from ...expressions.utils import (get_reserved_and_builtin_symbols,
-                                  is_valid_lhs_target)
 from ...componentclass.validators import (
-    PerNamespaceValidator, AliasesAreNotRecursiveComponentValidator,
+    AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
+from . import PerNamespaceDynamicsValidator
 
 
-class TimeDerivativesAreDeclaredDynamicsValidator(PerNamespaceValidator):
+class TimeDerivativesAreDeclaredDynamicsValidator(
+        PerNamespaceDynamicsValidator):
 
     """ Check all variables used in TimeDerivative blocks are defined
         as  StateVariables.
     """
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.sv_declared = defaultdict(list)
         self.time_derivatives_used = defaultdict(list)
@@ -46,13 +46,13 @@ class TimeDerivativesAreDeclaredDynamicsValidator(PerNamespaceValidator):
 
 
 class StateAssignmentsAreOnStateVariablesDynamicsValidator(
-        PerNamespaceValidator):
+        PerNamespaceDynamicsValidator):
 
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.sv_declared = defaultdict(list)
         self.state_assignments_lhses = defaultdict(list)
@@ -75,6 +75,7 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
 
 
 class AliasesAreNotRecursiveDynamicsValidator(
+        PerNamespaceDynamicsValidator,
         AliasesAreNotRecursiveComponentValidator):
 
     """Check that aliases are not self-referential"""
@@ -105,10 +106,10 @@ class NoUnresolvedSymbolsDynamicsValidator(
         self.state_assignments[namespace].append(state_assignment)
 
 
-class RegimeGraphDynamicsValidator(PerNamespaceValidator):
+class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
 
         self.connected_regimes_from_regime = defaultdict(set)
@@ -191,10 +192,11 @@ class NoDuplicatedObjectsDynamicsValidator(
         self.all_objects.append(on_event)
 
 
-class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(PerNamespaceValidator):
+class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
+        PerNamespaceDynamicsValidator):
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.visit(componentclass)
 

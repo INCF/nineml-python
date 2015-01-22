@@ -7,13 +7,12 @@ docstring needed
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from ...componentclass.validators import PerNamespaceValidator
-from ...componentclass.namespace import NamespaceAddress
+from . import PerNamespaceDynamicsValidator
 from ...componentclass.validators.ports import (
     PortConnectionsComponentValidator)
 
 
-class EventPortsDynamicsValidator(PerNamespaceValidator):
+class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
 
     """
     Check that each OutputEvent and OnEvent has a corresponding EventPort
@@ -21,8 +20,8 @@ class EventPortsDynamicsValidator(PerNamespaceValidator):
     """
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
-            self, require_explicit_overrides=False)
+        super(EventPortsDynamicsValidator, self).__init__(
+            require_explicit_overrides=False)
 
         # Mapping componentclass to list of events/eventports at that
         # componentclass
@@ -83,7 +82,7 @@ class EventPortsDynamicsValidator(PerNamespaceValidator):
 
 # Check that the sub-components stored are all of the
 # right types:
-class OutputAnalogPortsDynamicsValidator(PerNamespaceValidator):
+class OutputAnalogPortsDynamicsValidator(PerNamespaceDynamicsValidator):
 
     """
     Check that all output AnalogPorts reference a local symbol, either an alias
@@ -91,8 +90,8 @@ class OutputAnalogPortsDynamicsValidator(PerNamespaceValidator):
     """
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
-            self, require_explicit_overrides=False)
+        super(OutputAnalogPortsDynamicsValidator, self).__init__(
+            require_explicit_overrides=False)
 
         self.output_analogports = defaultdict(list)
         self.available_symbols = defaultdict(list)

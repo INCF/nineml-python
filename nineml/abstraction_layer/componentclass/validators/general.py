@@ -5,19 +5,19 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from collections import defaultdict
-from . import PerNamespaceValidator
+from . import PerNamespaceComponentValidator
 from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import (get_reserved_and_builtin_symbols,
                                   is_valid_lhs_target)
 from nineml.utility import assert_no_duplicates
 
 
-class AliasesAreNotRecursiveComponentValidator(PerNamespaceValidator):
+class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
 
     """Check that aliases are not self-referential"""
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
         self.visit(componentclass)
 
@@ -49,14 +49,14 @@ class AliasesAreNotRecursiveComponentValidator(PerNamespaceValidator):
                 raise NineMLRuntimeError(errmsg)
 
 
-class NoUnresolvedSymbolsComponentValidator(PerNamespaceValidator):
+class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
 
         self.available_symbols = defaultdict(list)
@@ -114,10 +114,10 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceValidator):
         self.add_symbol(namespace=namespace, symbol=parameter.name)
 
 
-class NoDuplicatedObjectsComponentValidator(PerNamespaceValidator):
+class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=True)
         self.all_objects = list()
         self.visit(componentclass)
@@ -134,7 +134,7 @@ class NoDuplicatedObjectsComponentValidator(PerNamespaceValidator):
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
-        PerNamespaceValidator):
+        PerNamespaceComponentValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -142,7 +142,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     """
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
 
         self.visit(componentclass)

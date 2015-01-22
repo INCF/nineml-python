@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ..utils import ComponentActionVisitor
+from ..utils.visitors import ComponentActionVisitor
 
 
 class BaseValidator(object):
@@ -14,16 +14,17 @@ class BaseValidator(object):
         raise NotImplementedError()
 
 
-class PerNamespaceValidator(ComponentActionVisitor, BaseValidator):
+class PerNamespaceComponentValidator(BaseValidator,
+                                     ComponentActionVisitor):
 
     def __init__(self, require_explicit_overrides=True):
+        BaseValidator.__init__(self)
         ComponentActionVisitor.__init__(
             self, require_explicit_overrides=require_explicit_overrides)
-        super(PerNamespaceValidator).__init__()
 
     # Override this function, so we can extract out the
     # namespace, then propogate this as a parameter.
     def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
         namespace = component.get_node_addr()
-        ComponentActionVisitor.visit_componentclass(self, component,
-                                                         namespace=namespace)
+        super(PerNamespaceComponentValidator, self).visit_componentclass(
+            component, namespace=namespace)

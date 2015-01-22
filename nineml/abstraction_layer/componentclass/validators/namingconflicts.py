@@ -7,12 +7,12 @@ docstring needed
 
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from base import PerNamespaceValidator
+from base import PerNamespaceComponentValidator
 
 
 # Check that the sub-components stored are all of the
 # right types:
-class LocalNameConflictsComponentValidator(PerNamespaceValidator):
+class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
 
     """
     Check for conflicts between Aliases, StateVariables, Parameters, and
@@ -23,7 +23,7 @@ class LocalNameConflictsComponentValidator(PerNamespaceValidator):
     """
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
         self.symbols = defaultdict(list)
         self.visit(componentclass)
@@ -42,10 +42,10 @@ class LocalNameConflictsComponentValidator(PerNamespaceValidator):
         self.check_conflicting_symbol(namespace=namespace, symbol=alias.lhs)
 
 
-class DimensionNameConflictsComponentValidator(PerNamespaceValidator):
+class DimensionNameConflictsComponentValidator(PerNamespaceComponentValidator):
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
+        PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
         self.dimensions = {}
         self.visit(componentclass)

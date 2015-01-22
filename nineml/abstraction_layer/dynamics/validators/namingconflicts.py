@@ -7,8 +7,9 @@ docstring needed
 from nineml.utility import assert_no_duplicates
 from nineml.exceptions import NineMLRuntimeError
 from ...componentclass.validators import (
-    PerNamespaceValidator, LocalNameConflictsComponentValidator,
+    LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
+from . import PerNamespaceDynamicsValidator
 
 
 # Check that the sub-components stored are all of the
@@ -71,11 +72,11 @@ class DimensionNameConflictsDynamicsValidator(
         self.check_conflicting_dimension(port.dimension)
 
 
-class DuplicateRegimeNamesDynamicsValidator(PerNamespaceValidator):
+class DuplicateRegimeNamesDynamicsValidator(PerNamespaceDynamicsValidator):
 
     def __init__(self, componentclass):
-        PerNamespaceValidator.__init__(
-            self, require_explicit_overrides=False)
+        super(DuplicateRegimeNamesDynamicsValidator, self).__init__(
+            require_explicit_overrides=False)
         self.visit(componentclass)
 
     def action_componentclass(self, componentclass, namespace):  # @UnusedVariable @IgnorePep8

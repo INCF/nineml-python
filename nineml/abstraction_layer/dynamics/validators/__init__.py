@@ -1,14 +1,14 @@
 from .base import DynamicsValidator
-from ...componentclass.validators.base import BaseValidator
+from ...componentclass.validators.base import PerNamespaceComponentValidator
 from ..utils.visitors import DynamicsActionVisitor
 
 
-class PerNamespaceValidator(DynamicsActionVisitor, BaseValidator):
+class PerNamespaceDynamicsValidator(PerNamespaceComponentValidator,
+                                    DynamicsActionVisitor):
 
     def __init__(self, require_explicit_overrides=True):
-        DynamicsActionVisitor.__init__(
+        PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=require_explicit_overrides)
-        BaseValidator.__init__(self)
 
     # Override this function, so we can extract out the
     # namespace, then propogate this as a parameter.
