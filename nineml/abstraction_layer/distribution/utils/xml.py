@@ -1,5 +1,5 @@
 from lxml.builder import E
-from nineml.utility import expect_single
+from nineml.utils import expect_single
 from nineml.abstraction_layer.componentclass.base import Parameter
 from nineml.abstraction_layer.ports import PropertySendPort
 from ..base import DistributionClass, Distribution

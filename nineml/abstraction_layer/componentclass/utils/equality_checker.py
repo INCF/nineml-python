@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.utility import safe_dict
+from nineml.utils import safe_dict
 import types
 
 

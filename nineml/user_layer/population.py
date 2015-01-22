@@ -2,7 +2,7 @@ from itertools import chain
 from . import BaseULObject
 from .component import resolve_reference, write_reference, Component
 from nineml.xmlns import NINEML, E
-from nineml.utility import expect_single, check_tag
+from nineml.utils import expect_single, check_tag
 from nineml.annotations import annotate_xml, read_annotations
 
 

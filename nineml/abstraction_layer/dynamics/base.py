@@ -8,7 +8,7 @@ components definitions of interface and dynamics
 """
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
-from nineml.utility import normalise_parameter_as_list, filter_discrete_types
+from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from ..expressions import Alias
 from nineml.abstraction_layer.componentclass import ComponentClass, Parameter
@@ -16,7 +16,7 @@ from .regimes import StateVariable
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
-from nineml.utility import (check_list_contain_same_items, invert_dictionary,
+from nineml.utils import (check_list_contain_same_items, invert_dictionary,
                             assert_no_duplicates)
 from .utils import DynamicsQueryer
 from .utils.cloner import (

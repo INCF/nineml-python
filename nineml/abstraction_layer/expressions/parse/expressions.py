@@ -22,7 +22,7 @@ import re
 import ply.lex as lex
 import ply.yacc as yacc
 
-from nineml.utility import LocationMgr
+from nineml.utils import LocationMgr
 from nineml.exceptions import NineMLMathParseError
 from ..utils import get_builtin_symbols
 

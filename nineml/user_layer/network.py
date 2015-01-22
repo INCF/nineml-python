@@ -7,7 +7,7 @@ from . import BaseULObject
 from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.xmlns import E, NINEML
-from nineml.utility import check_tag
+from nineml.utils import check_tag
 
 
 class Network(BaseULObject):

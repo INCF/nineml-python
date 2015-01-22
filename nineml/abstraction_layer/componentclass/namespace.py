@@ -1,4 +1,4 @@
-from nineml.utility import flatten_first_level
+from nineml.utils import flatten_first_level
 from nineml.exceptions import NineMLRuntimeError
 
 

@@ -7,7 +7,7 @@ docstring needed
 
 import itertools
 from collections import defaultdict
-from nineml.utility import flatten_first_level
+from nineml.utils import flatten_first_level
 from .cloner import (
     DynamicsClonerVisitor, DynamicsClonerVisitorPrefixNamespace,
     DynamicsExpandPortDefinition)

@@ -7,7 +7,7 @@ docstring needed
 
 # from ..utils import xml
 # from ..utils import flattener as flattening2
-# from nineml.utility import file_sha1_hexdigest
+# from nineml.utils import file_sha1_hexdigest
 # from ...validators.equality_checker import DynamicsEqualityChecker
 #
 #

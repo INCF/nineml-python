@@ -8,7 +8,7 @@ from nineml.user_layer.component import Component
 from itertools import chain
 import nineml.user_layer
 from ..abstraction_layer import units as un
-from ..utility import expect_single, expect_none_or_single, check_tag
+from nineml.utils import expect_single, expect_none_or_single, check_tag
 from ..exceptions import NineMLRuntimeError
 from .values import SingleValue
 from .component import Quantity

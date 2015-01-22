@@ -15,7 +15,7 @@ from ...ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
 from ...expressions import Alias
 from nineml.abstraction_layer.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.utility import expect_single, filter_expect_single
+from nineml.utils import expect_single, filter_expect_single
 from nineml.xmlns import NINEML, MATHML, nineml_namespace
 from nineml.exceptions import NineMLRuntimeError
 

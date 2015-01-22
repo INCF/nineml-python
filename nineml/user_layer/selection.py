@@ -3,7 +3,7 @@ from . import BaseULObject
 from .component import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
-from ..utility import expect_single, check_tag
+from nineml.utils import expect_single, check_tag
 
 
 def find_difference(this, that):

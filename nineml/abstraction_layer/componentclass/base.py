@@ -11,7 +11,7 @@ from abc import ABCMeta
 from .. import BaseALObject
 import nineml
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.utility import filter_discrete_types, ensure_valid_identifier
+from nineml.utils import filter_discrete_types, ensure_valid_identifier
 from ..units import dimensionless, Dimension
 
 

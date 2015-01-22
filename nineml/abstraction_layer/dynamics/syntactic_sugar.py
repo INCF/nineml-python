@@ -1,4 +1,4 @@
-from nineml.utility import filter_discrete_types
+from nineml.utils import filter_discrete_types
 from nineml.exceptions import NineMLRuntimeError
 from ..expressions.utils import MathUtil
 from .transitions import (EventOut, Trigger, StateAssignment, OnEvent,

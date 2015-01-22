@@ -9,7 +9,7 @@ from . import PerNamespaceComponentValidator
 from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import (get_reserved_and_builtin_symbols,
                                   is_valid_lhs_target)
-from nineml.utility import assert_no_duplicates
+from nineml.utils import assert_no_duplicates
 
 
 class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):

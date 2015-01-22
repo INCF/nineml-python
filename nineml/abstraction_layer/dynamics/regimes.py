@@ -6,7 +6,7 @@ This file contains the main classes for defining dynamics
 """
 from itertools import chain
 import re
-from nineml.utility import (filter_discrete_types, ensure_valid_identifier,
+from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
                             normalise_parameter_as_list, assert_no_duplicates)
 from nineml.exceptions import NineMLRuntimeError
 from ..expressions import ODE

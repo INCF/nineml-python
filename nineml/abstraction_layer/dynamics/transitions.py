@@ -5,7 +5,7 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
-from ...utility import ensure_valid_identifier, filter_discrete_types
+from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction_layer.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ..expressions.utils import MathUtil, str_to_npfunc_map

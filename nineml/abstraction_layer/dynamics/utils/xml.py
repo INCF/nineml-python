@@ -6,7 +6,7 @@ docstring needed
 """
 from itertools import chain
 from nineml.annotations import annotate_xml
-from nineml.utility import expect_single
+from nineml.utils import expect_single
 from nineml.xmlns import E
 from ..base import DynamicsClass, Dynamics
 from nineml.annotations import read_annotations

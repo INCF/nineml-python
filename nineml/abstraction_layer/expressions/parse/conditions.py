@@ -26,7 +26,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 import os
 from .expressions import call_expr_func
-from nineml.utility import LocationMgr
+from nineml.utils import LocationMgr
 from nineml.exceptions import NineMLMathParseError
 from ..utils import is_builtin_math_function, get_builtin_symbols
 

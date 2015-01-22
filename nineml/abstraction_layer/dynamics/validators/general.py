@@ -6,7 +6,7 @@ docstring needed
 """
 from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
-from nineml.utility import assert_no_duplicates
+from nineml.utils import assert_no_duplicates
 from ...componentclass.validators import (
     AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,

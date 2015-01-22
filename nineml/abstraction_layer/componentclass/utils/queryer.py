@@ -6,7 +6,7 @@ Definitions for the ComponentQuery Class
 """
 
 from itertools import chain
-from nineml.utility import filter_expect_single
+from nineml.utils import filter_expect_single
 
 __all__ = ['ComponentQueryer']
 

@@ -60,4 +60,4 @@ def annotate_xml(to_xml):
         return elem
     return annotate_to_xml
 
-from .utility import expect_none_or_single
+from nineml.utils import expect_none_or_single

@@ -6,11 +6,11 @@ import types
 import numbers
 import sys
 
-from nineml.utility import (check_list_contain_same_items, expect_single,
-                            flatten_first_level, invert_dictionary,
-                            assert_no_duplicates, restore_sys_path, safe_dict,
-                            safe_dictionary_merge, filter_expect_single,
-                            filter_by_type, filter_discrete_types)
+from nineml.utils import (check_list_contain_same_items, expect_single,
+                          flatten_first_level, invert_dictionary,
+                          assert_no_duplicates, restore_sys_path, safe_dict,
+                          safe_dictionary_merge, filter_expect_single,
+                          filter_by_type, filter_discrete_types)
 from nineml.exceptions import NineMLRuntimeError
 
 

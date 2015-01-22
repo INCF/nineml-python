@@ -9,7 +9,7 @@ from ..exceptions import NineMLRuntimeError
 from operator import and_
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
-from ..utility import expect_single, check_tag, check_units
+from nineml.utils import expect_single, check_tag, check_units
 from ..abstraction_layer.units import Unit
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject

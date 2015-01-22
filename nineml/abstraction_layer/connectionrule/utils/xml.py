@@ -2,7 +2,7 @@ from nineml.xmlns import E
 from ...componentclass.utils import (
     ComponentClassXMLLoader, ComponentClassXMLReader, ComponentClassXMLWriter)
 from ..base import ConnectionRuleClass, ConnectionRule
-from nineml.utility import expect_single
+from nineml.utils import expect_single
 
 
 class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
