@@ -20,9 +20,9 @@ class DynamicsActionVisitor(ComponentActionVisitor):
             p.accept_visitor(self, **kwargs)
 
         if component.dynamics:
-            component.dynamics.accept_visitor(self, **kwargs)
+            componentclass.dynamics.accept_visitor(self, **kwargs)
 
-        for subnode in component.subnodes.values():
+        for subnode in componentclass.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 
     def visit_dynamics(self, dynamics, **kwargs):

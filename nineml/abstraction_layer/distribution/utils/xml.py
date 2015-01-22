@@ -55,7 +55,7 @@ class DistributionClassXMLWriter(ComponentClassXMLWriter):
 
     def visit_componentclass(self, component):
         elements = ([p.accept_visitor(self) for p in component.parameters] +
-                    [component.distribution.accept_visitor(self)])
+                    [componentclass.distribution.accept_visitor(self)])
         return E('ComponentClass', *elements, name=component.name)
 
     def visit_distribution(self, distribution):

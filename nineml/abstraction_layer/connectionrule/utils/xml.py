@@ -41,7 +41,7 @@ class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
 
     def visit_componentclass(self, component):
         elements = ([p.accept_visitor(self) for p in component.parameters] +
-                    [component.connection_rule.accept_visitor(self)])
+                    [componentclass.connection_rule.accept_visitor(self)])
         return E('ComponentClass', *elements, name=component.name)
 
     def visit_connectionrule(self, connection_rule):

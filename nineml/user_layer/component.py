@@ -86,23 +86,23 @@ class Component(BaseULObject):
     A :class:`Component` may be regarded as a parameterized instance of a
     :class:`~nineml.abstraction_layer.ComponentClass`.
 
-    A component may be created either from a
+    A componentclass may be created either from a
     :class:`~nineml.abstraction_layer.ComponentClass`  together with a set
     of properties (parameter values), or by cloning then modifying an
-    existing component (the prototype).
+    existing componentclass (the prototype).
 
     *Arguments*:
         `name`:
-             a name for the component.
+             a name for the componentclass.
         `definition`:
-             the URL of an abstraction layer component class definition,
+             the URL of an abstraction layer componentclass class definition,
              a :class:`Definition` or a :class:`Prototype` instance.
         `properties`:
              a dictionary containing (value,units) pairs or a
-             :class:`PropertySet` for the component's properties.
+             :class:`PropertySet` for the componentclass's properties.
         `initial_values`:
             a dictionary containing (value,units) pairs or a
-            :class:`PropertySet` for the component's state variables.
+            :class:`PropertySet` for the componentclass's state variables.
 
     """
     __metaclass__ = ABCMeta  # Abstract base class
@@ -151,38 +151,38 @@ class Component(BaseULObject):
     @property
     def component_class(self):
         """
-        Returns the component class from the definition object or the
+        Returns the componentclass class from the definition object or the
         prototype's definition, or the prototype's prototype's definition, etc.
-        depending on how the component is defined.
+        depending on how the componentclass is defined.
         """
         defn = self._definition
         while not isinstance(defn, Definition):
-            defn = defn.component._definition
+            defn = defn.componentclass._definition
         return defn.component_class
 
     @property
     def properties(self):
         """
-        The set of component properties (parameter values).
+        The set of componentclass properties (parameter values).
         """
         # Recursively retrieves properties defined in prototypes and updates
         # them with properties defined locally
         props = PropertySet()
         if isinstance(self._definition, Prototype):
-            props.update(self._definition.component.properties)
+            props.update(self._definition.componentclass.properties)
         props.update(self._properties)
         return props
 
     @property
     def initial_values(self):
         """
-        The set of initial values for the state variables of the component.
+        The set of initial values for the state variables of the componentclass.
         """
         # Recursively retrieves initial values defined in prototypes and
         # updates them with properties defined locally
         vals = InitialValueSet()
         if isinstance(self._definition, Prototype):
-            vals.update(self._definition.component.initial_values)
+            vals.update(self._definition.componentclass.initial_values)
         vals.update(self._initial_values)
         return vals
 
@@ -212,9 +212,9 @@ class Component(BaseULObject):
         return "\n".join(d)
 
     def get_definition(self):
-        if not self.definition.component:
+        if not self.definition.componentclass:
             self.definition.retrieve()
-        return self.definition.component
+        return self.definition.componentclass
 
     def check_properties(self):
         # First check the names
@@ -240,8 +240,8 @@ class Component(BaseULObject):
             prop_dimension = prop_units.dimension
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
-                err = ("Dimensions for '{}' parameter don't match, component "
-                       "class '{}', component '{}'."
+                err = ("Dimensions for '{}' parameter don't match, componentclass "
+                       "class '{}', componentclass '{}'."
                        .format(param.name, param_dimension.name,
                                prop_dimension.name))
                 raise NineMLUnitMismatchError(err)
@@ -282,7 +282,7 @@ class Component(BaseULObject):
         else:
             prototype_element = element.find(NINEML + "Prototype")
             if prototype_element is None:
-                raise Exception("A component must contain either a defintion "
+                raise Exception("A componentclass must contain either a defintion "
                                 "or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
         return cls(name, definition, properties,
@@ -340,7 +340,7 @@ class Prototype(BaseReference):
     element_name = "Prototype"
 
     @property
-    def component(self):
+    def componentclass(self):
         return self._referred_to
 
 
@@ -352,7 +352,7 @@ class Quantity(BaseULObject):
     A numerical parameter is a (name, value, units) triplet, a string parameter
     is a (name, value) pair.
 
-    Numerical values may either be numbers, or a component that generates
+    Numerical values may either be numbers, or a componentclass that generates
     numbers, e.g. a RandomDistribution instance.
     """
     __metaclass__ = ABCMeta  # Abstract base class
@@ -392,7 +392,7 @@ class Quantity(BaseULObject):
         if self.is_single():
             return self._value.value
         else:
-            raise Exception("Cannot access single value for array or component"
+            raise Exception("Cannot access single value for array or componentclass"
                             " type")
 
     @property
@@ -405,15 +405,15 @@ class Quantity(BaseULObject):
         if self.is_array():
             raise NotImplementedError
         else:
-            raise Exception("Cannot access value array for component or single"
+            raise Exception("Cannot access value array for componentclass or single"
                             " value types")
 
     @property
     def random_distribution(self):
         if self.is_random():
-            return self._value.component
+            return self._value.componentclass
         else:
-            raise Exception("Cannot access random distribution for component "
+            raise Exception("Cannot access random distribution for componentclass "
                             "or single value types")
 
     def set_units(self, units):
@@ -484,7 +484,7 @@ class Property(Quantity):
     A numerical parameter is a (name, value, units) triplet, a string parameter
     is a (name, value) pair.
 
-    Numerical values may either be numbers, or a component that generates
+    Numerical values may either be numbers, or a componentclass that generates
     numbers, e.g. a RandomDistribution instance.
     """
     element_name = "Property"
@@ -536,7 +536,7 @@ class InitialValue(Property):
 class PropertySet(dict):
 
     """
-    Container for the set of properties for a component.
+    Container for the set of properties for a componentclass.
     """
 
     def __init__(self, *properties, **kwproperties):
@@ -608,7 +608,7 @@ class InitialValueSet(PropertySet):
 class DynamicsComponent(Component):
 
     def check_initial_values(self):
-        for var in self.definition.component.state_variables:
+        for var in self.definition.componentclass.state_variables:
             try:
                 initial_value = self.initial_values[var.name]
             except KeyError:

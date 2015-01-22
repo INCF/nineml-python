@@ -28,7 +28,7 @@ class DynamicsExpandPortDefinition(DynamicsActionVisitor,
 class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
                                     ComponentExpandAliasDefinition):
 
-    """ An action-class that walks over a component, and expands an alias in
+    """ An action-class that walks over a componentclass, and expands an alias in
     Assignments, Aliases, TimeDerivatives and Conditions
     """
 
@@ -119,10 +119,10 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
                           for p in component.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in component.event_ports],
-            dynamics=(component.dynamics.accept_visitor(self, **kwargs)
+            dynamics=(componentclass.dynamics.accept_visitor(self, **kwargs)
                       if component.dynamics else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
-                           for (k, v) in component.subnodes.iteritems()]),
+                           for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=component.portconnections[:])
         return ccn
 
@@ -224,13 +224,13 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
 
 class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
 
-    """ A visitor that walks over a hierarchical component, and prefixes every
+    """ A visitor that walks over a hierarchical componentclass, and prefixes every
     variable with the namespace that that variable is in. This is preparation
     for flattening
     """
 
     def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
-        prefix = component.get_node_addr().get_str_prefix()
+        prefix = componentclass.get_node_addr().get_str_prefix()
         if prefix == '_':
             prefix = ''
         prefix_excludes = ['t']
@@ -244,12 +244,12 @@ class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
             src_new = NamespaceAddress.concat(
                 src.get_parent_addr(),
                 NamespaceAddress.concat(
-                    component.get_node_addr(),
+                    componentclass.get_node_addr(),
                     src.get_parent_addr()).get_str_prefix() +
                 self.prefix_variable(src.get_local_name()))
             sink_new = NamespaceAddress.concat(
                 sink.get_parent_addr(), NamespaceAddress.concat(
-                    component.get_node_addr(),
+                    componentclass.get_node_addr(),
                     sink.get_parent_addr()).get_str_prefix() +
                 self.prefix_variable(sink.get_local_name()))
             # self.prefix_variable(sink.get_local_name(), **kwargs) )
@@ -270,8 +270,8 @@ class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
                           for p in component.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in component.event_ports],
-            dynamics=(component.dynamics.accept_visitor(self, **kwargs)
+            dynamics=(componentclass.dynamics.accept_visitor(self, **kwargs)
                       if component.dynamics else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
-                           for (k, v) in component.subnodes.iteritems()]),
+                           for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=port_connections)
