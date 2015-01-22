@@ -11,4 +11,4 @@ from .regimes import (Regime, TimeDerivative,
 from .transitions import (EventOut, OnCondition, Trigger, OnEvent,
                           StateAssignment)
 from .syntactic_sugar import On, DoOnEvent, DoOnCondition
-from .utils import DynamicsClassXMLLoader, DynamicsClassXMLWriter
+from .utils.xml import DynamicsClassXMLLoader, DynamicsClassXMLWriter

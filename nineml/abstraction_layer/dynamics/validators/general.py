@@ -75,8 +75,8 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
 
 
 class AliasesAreNotRecursiveDynamicsValidator(
-        PerNamespaceDynamicsValidator,
-        AliasesAreNotRecursiveComponentValidator):
+        AliasesAreNotRecursiveComponentValidator,
+        PerNamespaceDynamicsValidator):
 
     """Check that aliases are not self-referential"""
 
@@ -84,7 +84,8 @@ class AliasesAreNotRecursiveDynamicsValidator(
 
 
 class NoUnresolvedSymbolsDynamicsValidator(
-        NoUnresolvedSymbolsComponentValidator):
+        NoUnresolvedSymbolsComponentValidator,
+        PerNamespaceDynamicsValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
@@ -147,7 +148,8 @@ class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
 
 
 class NoDuplicatedObjectsDynamicsValidator(
-        NoDuplicatedObjectsComponentValidator):
+        NoDuplicatedObjectsComponentValidator,
+        PerNamespaceDynamicsValidator):
 
     def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
         self.all_objects.append(dynamics)
@@ -207,7 +209,8 @@ class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
-        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator):
+        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
+        PerNamespaceDynamicsValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)

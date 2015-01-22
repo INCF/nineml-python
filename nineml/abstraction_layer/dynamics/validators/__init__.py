@@ -1,4 +1,3 @@
-from .base import DynamicsValidator
 from ...componentclass.validators.base import PerNamespaceComponentValidator
 from ..utils.visitors import DynamicsActionVisitor
 
@@ -16,3 +15,6 @@ class PerNamespaceDynamicsValidator(PerNamespaceComponentValidator,
         namespace = component.get_node_addr()
         DynamicsActionVisitor.visit_componentclass(
             self, component, namespace=namespace)
+
+from .base import DynamicsValidator
+

@@ -40,7 +40,8 @@ class LocalNameConflictsDynamicsValidator(
 
 
 class DimensionNameConflictsDynamicsValidator(
-        DimensionNameConflictsComponentValidator):
+        DimensionNameConflictsComponentValidator,
+        PerNamespaceDynamicsValidator):
 
     def __init__(self, componentclass):
         super(DimensionNameConflictsDynamicsValidator, self).__init__(

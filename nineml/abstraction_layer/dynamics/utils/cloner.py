@@ -15,13 +15,13 @@ from ...componentclass.utils.cloner import (
 
 class DynamicsExpandPortDefinition(ComponentExpandPortDefinition):
 
-    def __init__(self, originalname, targetname):
-
-        super(DynamicsExpandPortDefinition, self).__init__(
-            require_explicit_overrides=False)
-        self.originalname = originalname
-        self.targetname = targetname
-        self.namemap = {originalname: targetname}
+#     def __init__(self, originalname, targetname):
+# 
+#         super(DynamicsExpandPortDefinition, self).__init__(
+#             require_explicit_overrides=False)
+#         self.originalname = originalname
+#         self.targetname = targetname
+#         self.namemap = {originalname: targetname}
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
@@ -42,13 +42,13 @@ class DynamicsExpandAliasDefinition(ComponentExpandAliasDefinition):
     Assignments, Aliases, TimeDerivatives and Conditions
     """
 
-    def __init__(self, originalname, targetname):
-
-        super(DynamicsExpandAliasDefinition, self).__init__(
-            require_explicit_overrides=False)
-        self.originalname = originalname
-        self.targetname = targetname
-        self.namemap = {originalname: targetname}
+#     def __init__(self, originalname, targetname):
+# 
+#         super(DynamicsExpandAliasDefinition, self).__init__(
+#             require_explicit_overrides=False)
+#         self.originalname = originalname
+#         self.targetname = targetname
+#         self.namemap = {originalname: targetname}
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
@@ -69,22 +69,22 @@ class DynamicsRenameSymbol(ComponentRenameSymbol):
     StateVariables, Aliases, Ports
     """
 
-    def __init__(self, componentclass, old_symbol_name, new_symbol_name):
-        super(DynamicsRenameSymbol, self).__init__(
-            require_explicit_overrides=True)
-        self.old_symbol_name = old_symbol_name
-        self.new_symbol_name = new_symbol_name
-        self.namemap = {old_symbol_name: new_symbol_name}
-
-        if not componentclass.is_flat():
-            raise NineMLRuntimeError('Rename Symbol called on non-flat model')
-
-        self.lhs_changes = []
-        self.rhs_changes = []
-        self.port_changes = []
-
-        self.visit(componentclass)
-        componentclass._validate_self()
+#     def __init__(self, componentclass, old_symbol_name, new_symbol_name):
+#         super(DynamicsRenameSymbol, self).__init__(
+#             require_explicit_overrides=True)
+#         self.old_symbol_name = old_symbol_name
+#         self.new_symbol_name = new_symbol_name
+#         self.namemap = {old_symbol_name: new_symbol_name}
+# 
+#         if not componentclass.is_flat():
+#             raise NineMLRuntimeError('Rename Symbol called on non-flat model')
+# 
+#         self.lhs_changes = []
+#         self.rhs_changes = []
+#         self.port_changes = []
+# 
+#         self.visit(componentclass)
+#         componentclass._validate_self()
 
     def note_lhs_changed(self, what):
         self.lhs_changes.append(what)
