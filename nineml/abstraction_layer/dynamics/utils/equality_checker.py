@@ -14,11 +14,6 @@ from ...componentclass.utils.equality_checker import (
 class DynamicsEqualityChecker(ComponentEqualityChecker):
 
     @classmethod
-    def check_equal(cls, comp1, comp2, strict_aliases=True):
-        """Forwarding Function :Easier Interface"""
-        cls.check_equal_component(comp1, comp2, strict_aliases=strict_aliases)
-
-    @classmethod
     def check_equal_component(cls, comp1, comp2, strict_aliases):
 
         # Check the component names are equal:

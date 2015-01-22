@@ -10,25 +10,6 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
     def __init__(self, componentclass):
         super(ComponentClassInterfaceInferer, self).__init__(
             require_explicit_overrides=False)
-        # State Variables:
-#         state_variable_names = set()
-#         for regime in componentclass.regimes:
-#             for time_deriv in regime.time_derivatives:
-#                 state_variable_names.add(time_deriv.dependent_variable)
-#             for transition in regime.transitions:
-#                 for state_assignment in transition.state_assignments:
-#                     state_variable_names.add(state_assignment.lhs)
-# 
-#         # Which symbols can we account for:
-#         self.accounted_for_symbols = set(chain(
-#             state_variable_names,
-#             componentclass.aliases_map.keys(),
-#             # dynamics.constants_map.keys(),  # TODO: Need to add this
-#             # dynamics.random_variables_map.keys(),
-#             incoming_ports,
-#             get_reserved_and_builtin_symbols()
-#         ))
-
         # Parameters:
         # Use visitation to collect all atoms that are not aliases and not
         # state variables
@@ -48,23 +29,3 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.declared_symbols.add(alias.lhs)
         self.atoms.update(alias.rhs_atoms)
-
-
-        # State Variables:
-#         self.state_variable_names = set()
-#         for regime in dynamicsclass.regimes:
-#             for time_deriv in regime.time_derivatives:
-#                 self.state_variable_names.add(time_deriv.dependent_variable)
-#             for transition in regime.transitions:
-#                 for state_assignment in transition.state_assignments:
-#                     self.state_variable_names.add(state_assignment.lhs)
-#
-#         # Which symbols can we account for:
-#         self.accounted_for_symbols = set(itertools.chain(
-#             self.state_variable_names,
-#             dynamicsclass.aliases_map.keys(),
-#             # dynamics.constants_map.keys(),  # TODO: Need to add this
-#             # dynamics.random_variables_map.keys(),
-#             incoming_port_names,
-#             get_reserved_and_builtin_symbols()
-#         ))
