@@ -110,20 +110,20 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
 
 class DynamicsClonerVisitor(ComponentClonerVisitor):
 
-    def visit_componentclass(self, component, **kwargs):
-        ccn = component.__class__(
-            name=component.name,
+    def visit_componentclass(self, componentclass, **kwargs):
+        ccn = componentclass.__class__(
+            name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
-                        for p in component.parameters],
+                        for p in componentclass.parameters],
             analog_ports=[p.accept_visitor(self, **kwargs)
-                          for p in component.analog_ports],
+                          for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
-                         for p in component.event_ports],
+                         for p in componentclass.event_ports],
             dynamics=(componentclass.dynamics.accept_visitor(self, **kwargs)
-                      if component.dynamics else None),
+                      if componentclass.dynamics else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
-            portconnections=component.portconnections[:])
+            portconnections=componentclass.portconnections[:])
         return ccn
 
     def visit_dynamics(self, dynamics, **kwargs):

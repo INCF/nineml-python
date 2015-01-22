@@ -53,10 +53,11 @@ class DistributionClassXMLWriter(ComponentClassXMLWriter):
         assert isinstance(component, DistributionClass)
         super(DistributionClassXMLWriter, self).to_xml(component)
 
-    def visit_componentclass(self, component):
-        elements = ([p.accept_visitor(self) for p in component.parameters] +
+    def visit_componentclass(self, componentclass):
+        elements = ([p.accept_visitor(self)
+                     for p in componentclass.parameters] +
                     [componentclass.distribution.accept_visitor(self)])
-        return E('ComponentClass', *elements, name=component.name)
+        return E('ComponentClass', *elements, name=componentclass.name)
 
     def visit_distribution(self, distribution):
         return E('Distribution', E.Distribution())

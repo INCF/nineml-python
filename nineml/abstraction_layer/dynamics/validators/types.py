@@ -12,9 +12,11 @@ from ..transitions import (EventOut, StateAssignment, Trigger,
 from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                       EventSendPort, EventReceivePort)
 from ..base import Dynamics
+from ..utils.visitors import DynamicsActionVisitor
 
 
-class TypesDynamicsValidator(TypesComponentValidator):
+class TypesDynamicsValidator(DynamicsActionVisitor,
+                             TypesComponentValidator):
 
     def action_dynamics(self, dynamics):
         assert isinstance(dynamics, Dynamics)

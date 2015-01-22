@@ -10,6 +10,7 @@ from collections import defaultdict
 from . import PerNamespaceDynamicsValidator
 from ...componentclass.validators.ports import (
     PortConnectionsComponentValidator)
+from ..utils.visitors import DynamicsActionVisitor
 
 
 class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
@@ -120,6 +121,7 @@ class OutputAnalogPortsDynamicsValidator(PerNamespaceDynamicsValidator):
 
 
 class PortConnectionsDynamicsValidator(
+        DynamicsActionVisitor,
         PortConnectionsComponentValidator):
 
     """Check that all the port connections point to a port, and that

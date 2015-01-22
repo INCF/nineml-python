@@ -12,16 +12,11 @@ from ...componentclass.utils import ComponentActionVisitor
 
 class DynamicsActionVisitor(ComponentActionVisitor):
 
-    def visit_componentclass(self, component, **kwargs):
-        self.action_componentclass(component, **kwargs)
-
-        nodes = chain(component.parameters, component.ports)
-        for p in nodes:
-            p.accept_visitor(self, **kwargs)
-
-        if component.dynamics:
+    def visit_componentclass(self, componentclass, **kwargs):
+        super(DynamicsActionVisitor, self).visit_componentclass(
+            componentclass, **kwargs)
+        if componentclass.dynamics:
             componentclass.dynamics.accept_visitor(self, **kwargs)
-
         for subnode in componentclass.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 
