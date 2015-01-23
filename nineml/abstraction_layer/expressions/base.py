@@ -4,8 +4,6 @@ This file defines mathematical classes and derived classes
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
-import re
 import itertools
 import quantities as pq
 

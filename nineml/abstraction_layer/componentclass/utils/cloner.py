@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.exceptions import NineMLRuntimeError
-from ...expressions.utils import (is_builtin_symbol, MathUtil)
+from ...expressions.utils import is_builtin_symbol
 from .visitors import ComponentActionVisitor, ComponentVisitor
 
 
@@ -127,7 +127,7 @@ class ComponentClonerVisitor(ComponentVisitor):
         # FIXME:? TGC 1/15 Doesn't the LHS need updating too?
         return new_alias
 
-    def visit_constant(self, constant, **kwargs):
+    def visit_constant(self, constant, **kwargs):  # @UnusedVariable
         # FIXME: This would be handled better by a copy constructor?? TGC 1/15
         new_constant = constant.__class__(name=constant.name,
                                           value=constant.value,

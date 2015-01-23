@@ -52,4 +52,3 @@ class ComponentActionVisitor(ComponentVisitor):
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.check_pass()
-
