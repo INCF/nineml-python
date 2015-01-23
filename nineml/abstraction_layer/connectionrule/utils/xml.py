@@ -25,19 +25,20 @@ class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
 
     @read_annotations
     def load_componentclass(self, element):
-        subblocks = ('Parameter', 'ConnectionRule', 'PropertySendPort')
+        subblocks = ('Parameter', 'ConnectionRule')
         children = self._load_blocks(element, blocks=subblocks)
         connectionrule = expect_single(children["ConnectionRule"])
         return ConnectionRuleClass(name=element.get('name'),
-                                 parameters=children["Parameter"],
-                                 connectionrule=connectionrule)
+                                   parameters=children["Parameter"],
+                                   connectionrule=connectionrule)
 
     @read_annotations
     def load_connectionrule(self, element):
         subblocks = ('Alias',)
         children = self._load_blocks(element, blocks=subblocks)
-        return ConnectionRule(standard_library=element.attrib['standardLibrary'],
-                            aliases=children["Alias"])
+        return ConnectionRule(
+            standard_library=element.attrib['standardLibrary'],
+            aliases=children["Alias"])
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
