@@ -29,18 +29,40 @@ class Document(dict, BaseNineMLObject):
     top_level_user = ['Component', 'PositionList',
                       'Population', 'Selection', 'Projection']
 
+    @classmethod
+    def top_level_types(cls):
+        return chain(cls.top_level_abstraction, cls.top_level_user)
+
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *elements, **kwargs):
         self.url = kwargs.pop('_url', None)
         # FIXME: should be able to take NineMLObjects read their names and
         #        populate the dictionary. Then kwargs could be reserved for
         #        other items.
-        super(Document, self).__init__(*args, **kwargs)
+        dict.__init__(self, **kwargs)
+        for element in elements:
+            self.add(element)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
+
+    def add(self, element):
+        try:
+            if element.element_name not in self.top_level_types():
+                raise NineMLRuntimeError(
+                    "Could not add {} as it is not a document level NineML "
+                    "object ('{}') ".format(element.element_name,
+                                            "', '".join(self.top_level_types)))
+        except AttributeError:
+            raise NineMLRuntimeError("Could not add {} as it is not a NineML "
+                                     "object".format(element))
+        if element.name in self:
+            raise NineMLRuntimeError(
+                "Could not add element '{}' as an element with that name "
+                "already exists in the document".format(element.name))
+        self[element.name] = element
 
     def __eq__(self, other):
         # Ensure all objects are loaded
@@ -62,10 +84,10 @@ class Document(dict, BaseNineMLObject):
         try:
             elem = super(Document, self).__getitem__(name)
         except KeyError:
-            raise KeyError("'{}' was not found in the NineML document {} ("
-                           "elements in the document were '{}')."
-                           .format(name, self.url or '',
-                                   "', '".join(self.iterkeys())))
+            raise KeyError(
+                "'{}' was not found in the NineML document {} (elements in the"
+                " document were '{}')."
+                .format(name, self.url or '', "', '".join(self.iterkeys())))
         # Load (lazily) the element from the xml description
         if isinstance(elem, self._Unloaded):
             elem = self._load_elem_from_xml(elem)
@@ -328,4 +350,7 @@ def write(document, filename):
     Provided for symmetry with read method, takes a nineml.document.Document
     object and writes it to the specified file
     """
+    # Encapsulate the NineML element in a document if it is not already
+    if not isinstance(document, Document):
+        document = Document(document)
     document.write(filename)

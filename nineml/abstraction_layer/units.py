@@ -64,8 +64,7 @@ class Dimension(BaseALObject):
     def to_xml(self):
         kwargs = {'name': self.name}
         kwargs.update(dict((k, str(v)) for k, v in self._dims.items()))
-        return E(self.element_name,
-                 **kwargs)
+        return E(self.element_name, **kwargs)
 
     @classmethod
     @read_annotations
