@@ -24,8 +24,8 @@ class Reference(BaseReference):
         *name*
             The name of a NineML object which already exists, or which is
             defined in a separate XML file.
-        *context*
-            A dictionary or :class:`Context` object containing the object
+        *document*
+            A dictionary or :class:`Document` object containing the object
             being referred to, if the object already exists.
         *url*
             If the object is defined in a separate XML file, the URL
