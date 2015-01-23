@@ -319,3 +319,9 @@ class Constant(BaseALObject):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_constant(self, **kwargs)
+
+    def name_transform_inplace(self, name_map):
+        try:
+            self.name = name_map[self.name]
+        except KeyError:
+            assert False, "'{}' was not found in name_map".format(self.name)

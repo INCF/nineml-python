@@ -29,3 +29,6 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.declared_symbols.add(alias.lhs)
         self.atoms.update(alias.rhs_atoms)
+
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable
+        self.declared_symbols.add(constant.name)
