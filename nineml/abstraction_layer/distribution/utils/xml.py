@@ -25,9 +25,9 @@ class DistributionClassXMLLoader(ComponentClassXMLLoader):
 
     @read_annotations
     def load_componentclass(self, element):
-        subblocks = ('Parameter', 'Distribution', 'PropertySendPort')
+        subblocks = ('Parameter', 'RandomDistribution', 'PropertySendPort')
         children = self._load_blocks(element, blocks=subblocks)
-        distribution = expect_single(children["Distribution"])
+        distribution = expect_single(children["RandomDistribution"])
         return DistributionClass(name=element.get('name'),
                                  parameters=children["Parameter"],
                                  distribution=distribution)
@@ -41,7 +41,7 @@ class DistributionClassXMLLoader(ComponentClassXMLLoader):
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
-        "Distribution": load_distribution
+        "RandomDistribution": load_distribution
     }
 
 
@@ -57,5 +57,5 @@ class DistributionClassXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_distribution(self, distribution):
         elements = [b.accept_visitor(self) for b in distribution.aliases]
-        return E('Distribution',
+        return E('RandomDistribution',
                  *elements, standardLibrary=distribution.standard_library)

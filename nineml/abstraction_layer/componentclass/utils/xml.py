@@ -30,7 +30,7 @@ class ComponentClassXMLLoader(object):
 
     """
 
-    class_types = ('Dynamics', 'Distribution', 'ConnectionRule')
+    class_types = ('Dynamics', 'RandomDistribution', 'ConnectionRule')
 
     def __init__(self, document=None):
         self.document = document
@@ -120,12 +120,15 @@ class ComponentClassXMLLoader(object):
         """
         Returns the name of the tag that defines the type of the ComponentClass
         """
-        assert (element.tag == 'ComponentClass',
-                "Not a component class ('{}')".format(element.tag))
+        assert element.tag == 'ComponentClass', \
+            "Not a component class ('{}')".format(element.tag)
         class_type = expect_single(chain(*(element.findall(NINEML + t)
                                            for t in cls.class_types))).tag
         if class_type.startswith(NINEML):
             class_type = class_type[len(NINEML):]
+        # TGC 1/15 Temporary hack until name is reverted (pending approval)
+        if class_type == "RandomDistribution":
+            class_type = "Distribution"
         return class_type
 
     base_tag_to_loader = {
@@ -163,12 +166,6 @@ class ComponentClassXMLWriter(ComponentVisitor):
     @annotate_xml
     def visit_indexreceiveport(self, port):
         return E('IndexReceivePort', name=port.name)
-
-#     @annotate_xml
-#     def visit_dimension(self, dimension):
-#         kwargs = {'name': dimension.name}
-#         kwargs.update(dict((k, str(v)) for k, v in dimension._dims.items()))
-#         return E('Dimension')
 
     @annotate_xml
     def visit_alias(self, alias):
