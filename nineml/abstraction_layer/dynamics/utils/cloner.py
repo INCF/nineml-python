@@ -4,7 +4,7 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...expressions.utils import (is_builtin_symbol, MathUtil)
+from ...expressions.utils import MathUtil
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,

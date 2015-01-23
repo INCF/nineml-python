@@ -1,63 +1,56 @@
-from lxml.builder import E
+"""
+docstring needed
+
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
+"""
+from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
-from nineml.abstraction_layer.componentclass.base import Parameter
-from nineml.abstraction_layer.ports import PropertySendPort
-from ..base import DistributionClass, Distribution
+from nineml.xmlns import E
+from ..base import DistributionClass
+from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
-    ComponentClassXMLWriter, ComponentClassXMLLoader)
+    ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
 class DistributionClassXMLLoader(ComponentClassXMLLoader):
 
+    """This class is used by XMLReader interny.
+
+    This class loads a NineML XML tree, and stores
+    the components in ``components``. It o records which file each XML node
+    was loaded in from, and stores this in ``component_srcs``.
+
+    """
+
+    @read_annotations
     def load_componentclass(self, element):
 
-        blocks = ('Parameter', 'PropertySendPort', 'Distribution')
+        blocks = ('Parameter', 'Distribution')
 
         subnodes = self._load_blocks(element, blocks=blocks)
 
         distribution = expect_single(subnodes["Distribution"])
-        return DistributionClass(name=element.get('name'),
-                                 distribution=distribution,
-                                 parameters=subnodes["Parameter"])
-
-    def load_parameter(self, element):
-        return Parameter(name=element.get('name'),
-                         dimension=self.document[element.get('dimension')])
-
-    def load_propertysendport(self, element):
-        return PropertySendPort(name=element.get('name'),
-                                dimension=self.document[
-                                    element.get('dimension')])
-
-    def load_randomvariable(self, element):
-        return Distribution()
-
-    def load_distribution(self, element):
-        blocks = ('RandomVariable',)
-        subnodes = self._load_blocks(element, blocks=blocks)
-        return expect_single(subnodes['RandomVariable'])
+        return DistributionClass(
+            name=element.get('name'),
+            parameters=subnodes["Parameter"],
+            distribution=distribution)
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
-        "Distribution": load_distribution,
-        "Parameter": load_parameter,
-        "PropertySendPort": load_propertysendport,
-        "RandomVariable": load_randomvariable
     }
 
 
 class DistributionClassXMLWriter(ComponentClassXMLWriter):
 
-    @classmethod
-    def to_xml(cls, component):
-        assert isinstance(component, DistributionClass)
-        super(DistributionClassXMLWriter, self).to_xml(component)
-
+    @annotate_xml
     def visit_componentclass(self, componentclass):
         elements = ([p.accept_visitor(self)
                      for p in componentclass.parameters] +
                     [componentclass.distribution.accept_visitor(self)])
         return E('ComponentClass', *elements, name=componentclass.name)
 
+    @annotate_xml
     def visit_distribution(self, distribution):
-        return E('Distribution', E.Distribution())
+        elements = [b.accept_visitor(self) for b in distribution.aliases]
+        return E('Distribution', *elements)

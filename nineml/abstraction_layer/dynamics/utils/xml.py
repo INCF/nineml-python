@@ -169,12 +169,15 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
-    def visit_componentclass(self, component):
-        elements = ([p.accept_visitor(self) for p in component.analog_ports] +
-                    [p.accept_visitor(self) for p in component.event_ports] +
-                    [p.accept_visitor(self) for p in component.parameters] +
+    def visit_componentclass(self, componentclass):
+        elements = ([p.accept_visitor(self)
+                     for p in componentclass.analog_ports] +
+                    [p.accept_visitor(self)
+                     for p in componentclass.event_ports] +
+                    [p.accept_visitor(self)
+                     for p in componentclass.parameters] +
                     [componentclass.dynamics.accept_visitor(self)])
-        return E('ComponentClass', *elements, name=component.name)
+        return E('ComponentClass', *elements, name=componentclass.name)
 
     @annotate_xml
     def visit_dynamics(self, dynamics):

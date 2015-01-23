@@ -1,1 +1,2 @@
-from .xml import DistributionClassXMLLoader, DistributionClassXMLWriter
+from .interface_inferer import DistributionClassInterfaceInferer
+from .queryer import DistributionQueryer

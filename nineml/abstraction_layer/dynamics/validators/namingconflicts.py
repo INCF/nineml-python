@@ -5,7 +5,6 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.utils import assert_no_duplicates
-from nineml.exceptions import NineMLRuntimeError
 from ...componentclass.validators import (
     LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
@@ -44,23 +43,6 @@ class LocalNameConflictsDynamicsValidator(
 class DimensionNameConflictsDynamicsValidator(
         DimensionNameConflictsComponentValidator,
         PerNamespaceDynamicsValidator):
-
-    def __init__(self, componentclass):
-        super(DimensionNameConflictsDynamicsValidator, self).__init__(
-            componentclass)
-        self.dimensions = {}
-        self.visit(componentclass)
-
-    def check_conflicting_dimension(self, dimension):
-        try:
-            if dimension != self.dimensions[dimension.name]:
-                err = ("Duplication of dimension name '{}' for differing "
-                       "dimensions ('{}', '{}')"
-                       .format(dimension.name, dimension,
-                               self.dimensions[dimension.name]))
-                raise NineMLRuntimeError(err)
-        except KeyError:
-            self.dimensions[dimension.name] = dimension
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(state_variable.dimension)

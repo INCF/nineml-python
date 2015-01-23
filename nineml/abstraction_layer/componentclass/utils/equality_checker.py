@@ -48,3 +48,36 @@ class ComponentEqualityChecker(object):
     def check_equal(cls, comp1, comp2, strict_aliases=True):
         """Forwarding Function :Easier Interface"""
         cls.check_equal_component(comp1, comp2, strict_aliases=strict_aliases)
+
+    @classmethod
+    def check_equal_component(cls, comp1, comp2, strict_aliases):
+
+        # Check the component names are equal:
+        assert_equal(comp1.name, comp2.name, 'Component Names')
+
+        # CHECK THE INTERFACE:
+        # -------------------#
+        # Parameters:
+        p1Names = sorted([p.name for p in comp1.parameters])
+        p2Names = sorted([p.name for p in comp2.parameters])
+        assert_equal_list(p1Names, p2Names)
+
+        # Port Connections:
+        # Tuples are comparable, so lets make 2 lists of tuples and compare
+        # them:
+        pc1 = [(src.loctuple, sink.loctuple)
+               for (src, sink) in comp1.portconnections]
+        pc2 = [(src.loctuple, sink.loctuple)
+               for (src, sink) in comp2.portconnections]
+        assert_equal_list(pc1, pc2)
+
+        # CHECK THE DISTRIBUTION
+        # ------------------- #
+        d1 = comp1.distribution
+        d2 = comp2.distribution
+
+        # Check Aliases:
+        assert strict_aliases
+        a1 = [(a.lhs, a.rhs) for a in d1.aliases]
+        a2 = [(a.lhs, a.rhs) for a in d2.aliases]
+        assert_equal_list(a1, a2)

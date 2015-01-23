@@ -16,15 +16,8 @@ class DynamicsEqualityChecker(ComponentEqualityChecker):
     @classmethod
     def check_equal_component(cls, comp1, comp2, strict_aliases):
 
-        # Check the component names are equal:
-        assert_equal(comp1.name, comp2.name, 'Component Names')
-
-        # CHECK THE INTERFACE:
-        # -------------------#
-        # Parameters:
-        p1Names = sorted([p.name for p in comp1.parameters])
-        p2Names = sorted([p.name for p in comp2.parameters])
-        assert_equal_list(p1Names, p2Names)
+        super(DynamicsEqualityChecker, cls).check_equal_component(
+            comp1, comp2, strict_aliases)
 
         # Analog Ports: Check Modes & reduce ops:
         ap1Dict = safe_dict([(ap.name, ap) for ap in comp1.analog_ports])
@@ -53,25 +46,10 @@ class DynamicsEqualityChecker(ComponentEqualityChecker):
             subcomp2 = comp2.subnodes[subnamespace]
             cls.check_equal_component(subcomp1, subcomp2)
 
-        # Port Connections:
-        # Tuples are comparable, so lets make 2 lists of tuples and compare
-        # them:
-        pc1 = [(src.loctuple, sink.loctuple)
-               for (src, sink) in comp1.portconnections]
-        pc2 = [(src.loctuple, sink.loctuple)
-               for (src, sink) in comp2.portconnections]
-        assert_equal_list(pc1, pc2)
-
         # CHECK THE DYNAMICS
         # ------------------- #
         d1 = comp1.dynamics
         d2 = comp2.dynamics
-
-        # Check Aliases:
-        assert strict_aliases
-        a1 = [(a.lhs, a.rhs) for a in d1.aliases]
-        a2 = [(a.lhs, a.rhs) for a in d2.aliases]
-        assert_equal_list(a1, a2)
 
         # State Variables:
         sv1Names = sorted([sv.name for sv in d1.state_variables])

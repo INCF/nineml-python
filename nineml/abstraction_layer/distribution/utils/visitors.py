@@ -6,7 +6,22 @@ docstring needed
 """
 
 
-class ComponentVisitor(object):
+from ...componentclass.utils import ComponentActionVisitor
 
-    def visit(self, obj, **kwargs):
-        return obj.accept_visitor(self, **kwargs)
+
+class DistributionActionVisitor(ComponentActionVisitor):
+
+    def visit_componentclass(self, componentclass, **kwargs):
+        super(DistributionActionVisitor, self).visit_componentclass(
+            componentclass, **kwargs)
+        if componentclass.distribution:
+            componentclass.distribution.accept_visitor(self, **kwargs)
+
+    def visit_distribution(self, distribution, **kwargs):
+        self.action_distribution(distribution, **kwargs)
+        nodes = distribution.aliases
+        for p in nodes:
+            p.accept_visitor(self, **kwargs)
+
+    def action_distribution(self, distribution, **kwargs):  # @UnusedVariable
+        self.check_pass()
