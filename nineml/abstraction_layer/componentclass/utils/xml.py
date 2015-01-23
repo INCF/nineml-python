@@ -10,8 +10,6 @@ from lxml import etree
 from itertools import chain
 from nineml.xmlns import E
 from . import ComponentVisitor
-from ...ports import (PropertySendPort, PropertyReceivePort, IndexSendPort,
-                      IndexReceivePort)
 from ...expressions import Alias
 from nineml.abstraction_layer.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
@@ -42,26 +40,6 @@ class ComponentClassXMLLoader(object):
     def load_parameter(self, element):
         return Parameter(name=element.get('name'),
                          dimension=self.document[element.get('dimension')])
-
-    @read_annotations
-    def load_propertysendport(self, element):
-        return PropertySendPort(
-            name=element.get("name"),
-            dimension=self.document[element.get('dimension')])
-
-    @read_annotations
-    def load_propertyreceiveport(self, element):
-        return PropertyReceivePort(
-            name=element.get("name"),
-            dimension=self.document[element.get('dimension')])
-
-    @read_annotations
-    def load_indexsendport(self, element):
-        return IndexSendPort(name=element.get('name'))
-
-    @read_annotations
-    def load_indexreceiveport(self, element):
-        return IndexReceivePort(name=element.get('name'))
 
     @read_annotations
     def load_alias(self, element):
@@ -133,10 +111,6 @@ class ComponentClassXMLLoader(object):
 
     base_tag_to_loader = {
         "Parameter": load_parameter,
-        "PropertySendPort": load_propertysendport,
-        "PropertyReceivePort": load_propertyreceiveport,
-        "IndexSendPort": load_indexsendport,
-        "IndexReceivePort": load_indexreceiveport,
         "Alias": load_alias,
     }
 
@@ -148,24 +122,6 @@ class ComponentClassXMLWriter(ComponentVisitor):
         return E('Parameter',
                  name=parameter.name,
                  dimension=parameter.dimension.name)
-
-    @annotate_xml
-    def visit_propertyreceiveport(self, port):
-        return E('PropertyReceivePort', name=port.name,
-                 dimension=port.dimension.name)
-
-    @annotate_xml
-    def visit_propertysendport(self, port):
-        return E('PropertySendPort', name=port.name,
-                 dimension=port.dimension.name)
-
-    @annotate_xml
-    def visit_indexsendport(self, port):
-        return E('IndexSendPort', name=port.name)
-
-    @annotate_xml
-    def visit_indexreceiveport(self, port):
-        return E('IndexReceivePort', name=port.name)
 
     @annotate_xml
     def visit_alias(self, alias):

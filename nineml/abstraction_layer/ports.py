@@ -14,8 +14,8 @@ from nineml.exceptions import NineMLRuntimeError
 class Port(BaseALObject):
 
     """
-    Base class for |PropertySendPorts|, |PropertyReceivePorts|,
-    |IndexSendPorts|, |IndexReceivePorts| and |PropertyReducePorts|.
+    Base class for |AnalogSendPorts|, |AnalogReceivePorts|,
+    |EventSendPorts|, |EventReceivePorts| and |AnalogReducePorts|.
 
     In general, a port has a ``name``, which can be used to reference it,
     and a ``mode``, which specifies whether it sends or receives information.
@@ -23,10 +23,10 @@ class Port(BaseALObject):
     Generally, a send port can be connected to receive port to allow different
     components to communicate.
 
-    |PropertySendPorts| and |IndexSendPorts| can be connected to any number of
-    |PropertyReceivePorts| and |IndexReceivePorts| respectively, but each
-    |PropertyReceivePort| and |IndexReceivePort| can only be connected to a
-    single |PropertySendPort| and |IndexSendPort| respectively.
+    |AnalogSendPorts| and |EventSendPorts| can be connected to any number of
+    |AnalogReceivePorts| and |EventReceivePorts| respectively, but each
+    |AnalogReceivePort| and |EventReceivePort| can only be connected to a
+    single |AnalogSendPort| and |EventSendPort| respectively.
 
     """
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
@@ -134,29 +134,6 @@ class EventPort(Port):
         return isinstance(port, AnalogPort)
 
 
-class PropertyPort(DimensionedPort):
-    """PropertyPort
-
-    An |PropertyPort| represents a input or output to/from a property of a
-    Component. For example, this could be the source cell x-coordinate to be
-    passed to a connection rule.
-    """
-
-    def type_matches(self, port):
-        return isinstance(port, PropertyPort)
-
-
-class IndexPort(Port):
-    """IndexPort
-
-    An |IndexPort| is a port that receives indices from the container or
-    generates a dendritic tree.
-    """
-
-    def type_matches(self, port):
-        return isinstance(port, IndexPort)
-
-
 class AnalogSendPort(AnalogPort, SendPort):
     """AnalogSendPort
 
@@ -248,57 +225,3 @@ class AnalogReducePort(AnalogPort, ReceivePort):
         return ("{}('{}', dimension='{}', op='{}')"
                 .format(classstring, self.name, self.dimension,
                         self.reduce_op))
-
-
-class PropertySendPort(PropertyPort, SendPort):
-    """PropertySendPort
-
-    An |PropertySendPort| represents an output from a distribution class used
-    to derive properties across a container (i.e. |Population|, |Projection| or
-    |MultiCompartmental|)
-
-    """
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogsendport(self, **kwargs)
-
-
-class PropertyReceivePort(PropertyPort, ReceivePort):
-    """PropertyReceivePort
-
-    An |PropertyReceivePort| represents port to a property of a Component. For
-    example, this could be the source cell x-coordinate to be passed to a
-    connection rule.
-
-    """
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogreceiveport(self, **kwargs)
-
-
-class IndexSendPort(IndexPort, SendPort):
-    """IndexSendPort
-
-    An |IndexSendPort| is a port that can be used to generate arrays of indices
-    from |DistribtutionClass|es. This can be useful in mapping dendritic trees
-    to dynamic domains in |Multicompartmental| models.
-    """
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_eventsendport(self, **kwargs)
-
-
-class IndexReceivePort(IndexPort, ReceivePort):
-    """IndexReceivePort
-
-    An |IndexReceivePort| is a port that receives indices from the container,
-    such as the index of a source cell in a Projection to be used in a
-    connection rule
-    """
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_eventreceiveport(self, **kwargs)
