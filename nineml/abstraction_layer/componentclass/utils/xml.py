@@ -120,7 +120,7 @@ class ComponentClassXMLLoader(object):
         """
         Returns the name of the tag that defines the type of the ComponentClass
         """
-        assert element.tag == 'ComponentClass', \
+        assert element.tag == NINEML + 'ComponentClass', \
             "Not a component class ('{}')".format(element.tag)
         class_type = expect_single(chain(*(element.findall(NINEML + t)
                                            for t in cls.class_types))).tag
