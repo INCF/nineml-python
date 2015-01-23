@@ -7,7 +7,7 @@ docstring needed
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import DistributionClass
+from ..base import DistributionClass, Distribution
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
@@ -25,19 +25,23 @@ class DistributionClassXMLLoader(ComponentClassXMLLoader):
 
     @read_annotations
     def load_componentclass(self, element):
+        subblocks = ('Parameter', 'Distribution', 'PropertySendPort')
+        children = self._load_blocks(element, blocks=subblocks)
+        distribution = expect_single(children["Distribution"])
+        return DistributionClass(name=element.get('name'),
+                                 parameters=children["Parameter"],
+                                 distribution=distribution)
 
-        blocks = ('Parameter', 'Distribution')
-
-        subnodes = self._load_blocks(element, blocks=blocks)
-
-        distribution = expect_single(subnodes["Distribution"])
-        return DistributionClass(
-            name=element.get('name'),
-            parameters=subnodes["Parameter"],
-            distribution=distribution)
+    @read_annotations
+    def load_distribution(self, element):
+        subblocks = ('Alias',)
+        children = self._load_blocks(element, blocks=subblocks)
+        return Distribution(standard_library=element.attrib['standardLibrary'],
+                            aliases=children["Alias"])
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
+        "Distribution": load_distribution
     }
 
 
@@ -53,4 +57,5 @@ class DistributionClassXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_distribution(self, distribution):
         elements = [b.accept_visitor(self) for b in distribution.aliases]
-        return E('Distribution', *elements)
+        return E('Distribution',
+                 *elements, standardLibrary=distribution.standard_library)
