@@ -1,48 +1,61 @@
-from nineml.xmlns import E
-from ...componentclass.utils import (
-    ComponentClassXMLLoader, ComponentClassXMLReader, ComponentClassXMLWriter)
-from ..base import ConnectionRuleClass, ConnectionRule
+"""
+docstring needed
+
+:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:license: BSD-3, see LICENSE for details.
+"""
+from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
+from nineml.xmlns import E
+from ..base import ConnectionRuleClass, ConnectionRule
+from nineml.annotations import read_annotations
+from ...componentclass.utils.xml import (
+    ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
 class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
 
-    def __init__(self, document=None):
-        self.document = document
+    """This class is used by XMLReader interny.
 
+    This class loads a NineML XML tree, and stores
+    the components in ``components``. It o records which file each XML node
+    was loaded in from, and stores this in ``component_srcs``.
+
+    """
+
+    @read_annotations
     def load_componentclass(self, element):
-
-        blocks = ('Parameter', 'ConnectionRule')
-        subnodes = self._load_blocks(element, blocks=blocks)
-        connection_rule = expect_single(subnodes["ConnectionRule"])
+        subblocks = ('Parameter', 'ConnectionRule', 'PropertySendPort')
+        children = self._load_blocks(element, blocks=subblocks)
+        connectionrule = expect_single(children["ConnectionRule"])
         return ConnectionRuleClass(name=element.get('name'),
-                                   parameters=subnodes["Parameter"],
-                                   connection_rule=connection_rule)
+                                 parameters=children["Parameter"],
+                                 connectionrule=connectionrule)
 
+    @read_annotations
     def load_connectionrule(self, element):
-        return ConnectionRule()
+        subblocks = ('Alias',)
+        children = self._load_blocks(element, blocks=subblocks)
+        return ConnectionRule(standard_library=element.attrib['standardLibrary'],
+                            aliases=children["Alias"])
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
-        "ConnectionRule": load_connectionrule,
+        "ConnectionRule": load_connectionrule
     }
-
-
-class ConnectionRuleClassXMLReader(ComponentClassXMLReader):
-    loader = ConnectionRuleClassXMLLoader
 
 
 class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
 
-    @classmethod
-    def to_xml(cls, component, flatten=True):
-        assert isinstance(component, ConnectionRuleClass)
-        super(ConnectionRuleClassXMLWriter, self).to_xml(component, flatten)
+    @annotate_xml
+    def visit_componentclass(self, componentclass):
+        elements = ([p.accept_visitor(self)
+                     for p in componentclass.parameters] +
+                    [componentclass.connectionrule.accept_visitor(self)])
+        return E('ComponentClass', *elements, name=componentclass.name)
 
-    def visit_componentclass(self, component):
-        elements = ([p.accept_visitor(self) for p in component.parameters] +
-                    [componentclass.connection_rule.accept_visitor(self)])
-        return E('ComponentClass', *elements, name=component.name)
-
-    def visit_connectionrule(self, connection_rule):
-        raise NotImplementedError
+    @annotate_xml
+    def visit_connectionrule(self, connectionrule):
+        elements = [b.accept_visitor(self) for b in connectionrule.aliases]
+        return E('ConnectionRule',
+                 *elements, standardLibrary=connectionrule.standard_library)
