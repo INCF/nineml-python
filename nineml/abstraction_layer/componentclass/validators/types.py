@@ -20,8 +20,8 @@ class TypesComponentValidator(ComponentActionVisitor):
         assert isinstance(component, ComponentClass)
 
     def action_parameter(self, parameter):
-        assert (isinstance(parameter, Parameter),
-                "{} != {}".format(type(parameter), Parameter))
+        assert isinstance(parameter, Parameter), \
+            "{} != {}".format(type(parameter), Parameter)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         assert isinstance(alias, Alias)
