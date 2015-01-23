@@ -48,8 +48,6 @@ class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
                 try:
                     assert input_event in self.event_receive_ports[ns]
                 except AssertionError:
-                    print input_event
-                    print self.event_receive_ports[ns]
                     raise
 
         # Check that each Event port emits/recieves at least one

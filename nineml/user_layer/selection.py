@@ -14,7 +14,6 @@ def find_difference(this, that):
                 a = getattr(this, attr)
                 b = getattr(that, attr)
                 if a != b:
-                    print this, attr, this.children
                     if attr in this.children:
                         find_difference(a, b)
                     else:

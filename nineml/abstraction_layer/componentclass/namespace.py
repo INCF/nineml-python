@@ -53,7 +53,6 @@ class NamespaceAddress(object):
         elif isinstance(loc, NamespaceAddress):
             self.loctuple = loc.loctuple
         else:
-            print loc, type(loc)
             assert False
 
     # Since we often store Namespace addresses in dictionaries:
@@ -69,7 +68,6 @@ class NamespaceAddress(object):
         return self.loctuple == rhs.loctuple
 
     def __str__(self):
-        print self.loctuple
         return "<NameSpaceAddress: '" + "/" + "/".join(self.loctuple) + "/'>"
 
     def is_root_namespace(self):

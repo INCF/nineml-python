@@ -277,8 +277,6 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
         self.assertEqual(set(b2_clone.query.parameters_map.keys()),   set([]))
         self.assertEqual(set(b2_clone.state_variables_map.keys()),    set([]))
 
-        print 'Found Port Connections:', b1_clone.portconnections
-
         # Port Connections
         self.assertEqual(
             set(b1_clone.portconnections),

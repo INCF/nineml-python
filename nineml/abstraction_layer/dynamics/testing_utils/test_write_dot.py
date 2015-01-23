@@ -13,7 +13,7 @@ class TestWriteDot(object):
 
     @classmethod
     def test(cls, testable_component, build_dir):  # @UnusedVariable
-        print "Remove Dot writer"
+        print "Removed Dot writer"
 #         component = testable_component()
 #         print '  -- Writing Component to .dot'
 #         dotfile = build_dir + component.name + '.dot'
