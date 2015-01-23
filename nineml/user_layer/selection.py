@@ -71,8 +71,8 @@ class Selection(BaseULObject):
         return cls(element.attrib['name'], op)
 
     def evaluate(self):
-        assert (isinstance(self.operation, Concatenate),
-                "Only concatenation is currently supported")
+        assert isinstance(self.operation, Concatenate), \
+            "Only concatenation is currently supported"
         return (item.user_layer_object for item in self.operation.items)
 
 

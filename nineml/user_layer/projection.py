@@ -191,22 +191,25 @@ class Projection(BaseULObject):
             e, document).user_layer_object
         # Get Response
         e = element.find(NINEML + 'Response')
-        response = Component.from_xml(e.find(NINEML + 'Component') or
-                                      e.find(NINEML + 'Reference'),
-                                      document)
+        component = e.find(NINEML + 'Component')
+        if component is None:
+            component = e.find(NINEML + 'Reference')
+        response = Component.from_xml(component, document)
         # Get Plasticity
         e = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
         if e is not None:
-            plasticity = Component.from_xml(e.find(NINEML + 'Component') or
-                                            e.find(NINEML + 'Reference'),
-                                            document)
+            component = e.find(NINEML + 'Component')
+            if component is None:
+                component = e.find(NINEML + 'Reference')
+            plasticity = Component.from_xml(component, document)
         else:
             plasticity = None
         # Get Connectivity
         e = element.find(NINEML + 'Connectivity')
-        connectivity = Component.from_xml(e.find(NINEML + 'Component') or
-                                          e.find(NINEML + 'Reference'),
-                                          document)
+        component = e.find(NINEML + 'Component')
+        if component is None:
+            component = e.find(NINEML + 'Reference')
+        connectivity = Component.from_xml(component, document)
         # Get Delay
         delay = Delay.from_xml(
             expect_single(element.findall(NINEML + 'Delay')), document)
