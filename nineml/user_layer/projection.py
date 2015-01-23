@@ -37,12 +37,11 @@ class Projection(BaseULObject):
         *delay*
             a :class:`Delay` object specifying the delay of the connections.
         *port_connections*
-            a list of :class:`PortConnection` tuples
-            `(sender, receiver, send_port, receive_port)` that
-            define the connections between the 4 components
-            of the projection, 'source', 'destination', 'response', 'plasticity'.
-            'sender' and 'receiver' must be one of these 4 names and
-            'send_port' and 'receive_port' must each be the name of
+            a list of :class:`PortConnection` tuples `(sender, receiver,
+            send_port, receive_port)` that define the connections between the 4
+            components of the projection, 'source', 'destination', 'response',
+            'plasticity'. 'sender' and 'receiver' must be one of these 4 names
+            and 'send_port' and 'receive_port' must each be the name of
             one of the ports in the corresponding components.
 
     **Attributes**:

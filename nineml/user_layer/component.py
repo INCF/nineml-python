@@ -3,9 +3,8 @@ from itertools import chain
 from lxml import etree
 from abc import ABCMeta
 from ..document import BaseReference
-from nineml.exceptions import NineMLUnitMismatchError
+from nineml.exceptions import NineMLUnitMismatchError, NineMLRuntimeError
 from nineml.xmlns import nineml_namespace
-from ..exceptions import NineMLRuntimeError
 from operator import and_
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
@@ -115,8 +114,9 @@ class Component(BaseULObject):
     # library such as SEDML
     def __init__(self, name, definition, properties={}, initial_values={}):
         """
-        Create a new componentclass with the given name, definition and properties,
-        or create a prototype to another componentclass that will be resolved later.
+        Create a new componentclass with the given name, definition and
+        properties, or create a prototype to another componentclass that will
+        be resolved later.
         """
         super(Component, self).__init__()
         self.name = name
@@ -176,7 +176,8 @@ class Component(BaseULObject):
     @property
     def initial_values(self):
         """
-        The set of initial values for the state variables of the componentclass.
+        The set of initial values for the state variables of the
+        componentclass.
         """
         # Recursively retrieves initial values defined in prototypes and
         # updates them with properties defined locally
@@ -240,8 +241,8 @@ class Component(BaseULObject):
             prop_dimension = prop_units.dimension
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
-                err = ("Dimensions for '{}' parameter don't match, componentclass "
-                       "class '{}', componentclass '{}'."
+                err = ("Dimensions for '{}' parameter don't match, "
+                       "componentclass class '{}', componentclass '{}'."
                        .format(param.name, param_dimension.name,
                                prop_dimension.name))
                 raise NineMLUnitMismatchError(err)
@@ -282,8 +283,8 @@ class Component(BaseULObject):
         else:
             prototype_element = element.find(NINEML + "Prototype")
             if prototype_element is None:
-                raise Exception("A componentclass must contain either a defintion "
-                                "or a prototype")
+                raise Exception("A componentclass must contain either a "
+                                "defintion or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
         return cls(name, definition, properties,
                        initial_values=initial_values)
@@ -392,8 +393,8 @@ class Quantity(BaseULObject):
         if self.is_single():
             return self._value.value
         else:
-            raise Exception("Cannot access single value for array or componentclass"
-                            " type")
+            raise NineMLRuntimeError("Cannot access single value for array or "
+                                     "componentclass type")
 
     @property
     def quantity(self):
@@ -405,16 +406,16 @@ class Quantity(BaseULObject):
         if self.is_array():
             raise NotImplementedError
         else:
-            raise Exception("Cannot access value array for componentclass or single"
-                            " value types")
+            raise NineMLRuntimeError("Cannot access value array for "
+                                     "componentclass or single value types")
 
     @property
     def random_distribution(self):
         if self.is_random():
             return self._value.componentclass
         else:
-            raise Exception("Cannot access random distribution for componentclass "
-                            "or single value types")
+            raise NineMLRuntimeError("Cannot access random distribution for "
+                                     "componentclass or single value types")
 
     def set_units(self, units):
         if units.dimension != self.units.dimension:
