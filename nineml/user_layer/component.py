@@ -13,6 +13,7 @@ from ..abstraction_layer.units import Unit
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
+from nineml import TopLevelObject
 
 
 class Reference(BaseReference):
@@ -78,7 +79,7 @@ def write_reference(to_xml):
     return unresolving_to_xml
 
 
-class Component(BaseULObject):
+class Component(BaseULObject, TopLevelObject):
     """
     Base class for model components.
 

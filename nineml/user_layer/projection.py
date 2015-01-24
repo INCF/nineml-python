@@ -12,9 +12,10 @@ from nineml.utils import expect_single, expect_none_or_single, check_tag
 from ..exceptions import NineMLRuntimeError
 from .values import SingleValue
 from .component import Quantity
+from nineml import TopLevelObject
 
 
-class Projection(BaseULObject):
+class Projection(BaseULObject, TopLevelObject):
     """
     A collection of connections between two :class:`Population`\s.
 

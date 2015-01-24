@@ -1,12 +1,13 @@
 from itertools import chain
 from . import BaseULObject
 from .component import resolve_reference, write_reference, Component
+from nineml import TopLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single, check_tag
 from nineml.annotations import annotate_xml, read_annotations
 
 
-class Population(BaseULObject):
+class Population(BaseULObject, TopLevelObject):
     """
     A collection of spiking neurons all of the same type.
 
@@ -95,7 +96,7 @@ class Population(BaseULObject):
                                            document), **kwargs)
 
 
-class PositionList(BaseULObject):
+class PositionList(BaseULObject, TopLevelObject):
     """
     Represents a list of network node positions. May contain either an explicit
     list of positions or a :class:`Structure` instance that can be used to

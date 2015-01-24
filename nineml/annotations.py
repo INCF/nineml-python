@@ -1,8 +1,9 @@
 from copy import copy
 from nineml.xmlns import E, NINEML
+from nineml import TopLevelObject
 
 
-class Annotations(dict):
+class Annotations(dict, TopLevelObject):
     """
     Defines the dimension used for quantity units
     """

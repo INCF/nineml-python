@@ -13,9 +13,10 @@ import nineml
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import filter_discrete_types, ensure_valid_identifier
 from ..units import dimensionless, Dimension
+from nineml import TopLevelObject
 
 
-class ComponentClass(BaseALObject):
+class ComponentClass(BaseALObject, TopLevelObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     __metaclass__ = ABCMeta  # Abstract base class

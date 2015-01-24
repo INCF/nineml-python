@@ -36,6 +36,12 @@ class BaseNineMLObject(object):
         visitor.visit(self)
 
 
+class TopLevelObject(object):
+
+    def write(self, fname):
+        write(self, fname)
+
+
 import abstraction_layer
 import user_layer
 import exceptions

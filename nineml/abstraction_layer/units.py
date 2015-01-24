@@ -1,10 +1,10 @@
 from nineml.xmlns import E
 from . import BaseALObject
+from nineml import TopLevelObject
 from nineml.annotations import annotate_xml, read_annotations
-from numpy.core.test_rational import numerator
 
 
-class Dimension(BaseALObject):
+class Dimension(BaseALObject, TopLevelObject):
     """
     Defines the dimension used for quantity units
     """
@@ -75,7 +75,7 @@ class Dimension(BaseALObject):
         return cls(name, **kwargs)
 
 
-class Unit(BaseALObject):
+class Unit(BaseALObject, TopLevelObject):
     """
     Defines the units of a quantity
     """

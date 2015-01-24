@@ -262,16 +262,6 @@ class _FlatMixin(object):
                 originalname=alias.lhs, targetname=("(%s)" % alias.rhs))
             alias_expander.visit(self)
 
-#     def write(self, file, flatten=True):  # @ReservedAssignment
-#         """Export this model to an XML file.
-# 
-#         :params file: A filename or fileobject
-#         :params flatten: Boolean specifying whether the component should be
-#             flattened before saving
-# 
-#         """
-#         return Document(self).write(file=file)
-
 
 class _NamespaceMixin(object):
 

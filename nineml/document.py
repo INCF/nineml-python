@@ -3,7 +3,6 @@ from itertools import chain
 from urllib import urlopen
 from lxml import etree
 from operator import and_
-import itertools
 import collections
 from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations, Annotations
@@ -11,6 +10,7 @@ import nineml.user_layer
 import nineml.abstraction_layer
 from . import BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError
+from nineml import TopLevelObject
 
 
 class Document(dict, BaseNineMLObject):
@@ -22,16 +22,6 @@ class Document(dict, BaseNineMLObject):
     """
 
     element_name = 'NineML'
-
-    # Valid top-level NineML element names
-    top_level_abstraction = ['Dimension', 'Unit', 'ComponentClass',
-                             'Annotations']
-    top_level_user = ['Component', 'PositionList',
-                      'Population', 'Selection', 'Projection']
-
-    @classmethod
-    def top_level_types(cls):
-        return chain(cls.top_level_abstraction, cls.top_level_user)
 
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
@@ -50,7 +40,7 @@ class Document(dict, BaseNineMLObject):
 
     def add(self, element):
         try:
-            if element.element_name not in self.top_level_types():
+            if not isinstance(element, TopLevelObject):
                 raise NineMLRuntimeError(
                     "Could not add {} as it is not a document level NineML "
                     "object ('{}') ".format(element.element_name,
@@ -204,11 +194,11 @@ class Document(dict, BaseNineMLObject):
 
     def to_xml(self):
         self._standardize_units_and_dimensions()
-        return E(self.element_name,
-                 *[c.to_xml(as_reference=False)
-                   if isinstance(c, nineml.user_layer.component.BaseULObject)
-                   else c.to_xml()
-                   for c in self.itervalues()])
+        return E(
+            self.element_name,
+            *[c.to_xml(as_reference=False)
+              if isinstance(c, nineml.user_layer.BaseULObject) else c.to_xml()
+              for c in self.itervalues()])
 
     def write(self, filename):
         doc = self.to_xml()
@@ -227,31 +217,39 @@ class Document(dict, BaseNineMLObject):
         # them and add them to the dictionary
         annotations = None
         for child in element.getchildren():
-            if child.tag == NINEML + Annotations.element_name:
-                assert annotations is None, "Multiple annotations tags found"
-                annotations = Annotations.from_xml(child)
-                continue
-            elif child.tag in (NINEML + e for e in cls.top_level_user):
-                child_cls = getattr(nineml.user_layer, child.tag[len(NINEML):])
-            elif child.tag in (NINEML + e for e in cls.top_level_abstraction):
-                child_cls = getattr(nineml.abstraction_layer,
-                                    child.tag[len(NINEML):])
+            if child.tag.startswith(NINEML):
+                element_name = child.tag[len(NINEML):]
+                if element_name == Annotations.element_name:
+                    assert annotations is None, \
+                        "Multiple annotations tags found"
+                    annotations = Annotations.from_xml(child)
+                    continue
+                try:
+                    child_cls = getattr(nineml.user_layer, element_name)
+                except AttributeError:
+                    try:
+                        child_cls = getattr(nineml.abstraction_layer,
+                                            element_name)
+                    except AttributeError:
+                        raise NineMLRuntimeError(
+                            "Did not find matching NineML class for '{}' "
+                            "element".format(element_name))
+                if not issubclass(child_cls, TopLevelObject):
+                    raise NineMLRuntimeError(
+                        "'{}' is not a valid top-level NineML element"
+                        .format(element_name))
             else:
-                top_level = itertools.chain(cls.top_level_abstraction,
-                                            cls.top_level_user)
-                raise Exception("Invalid top-level element '{}' found in "
-                                "NineML document (valid elements are '{}')."
-                                .format(child.tag, "', '".join(top_level)))
+                raise NotImplementedError(
+                    "Cannot load '{}' element (extensions not implemented)"
+                    .format(child.tag))
             # Units use 'symbol' as their unique identifier (from LEMS) all
             # other elements use 'name'
             name = child.attrib.get('name', child.attrib.get('symbol'))
             if name in elements:
-                raise Exception("Duplicate identifier '{ob1}:{name}'in NineML "
-                                "file '{url}'"
-                                .format(name=name,
-                                        ob1=elements[name].cls.element_name,
-                                        ob2=child_cls.element_name,
-                                        url=url or ''))
+                raise NineMLRuntimeError(
+                    "Duplicate identifier '{ob1}:{name}'in NineML file '{url}'"
+                    .format(name=name, ob1=elements[name].cls.element_name,
+                            ob2=child_cls.element_name, url=url or ''))
             elements[name] = cls._Unloaded(name, child, child_cls)
         document = cls(**elements)
         document.annotations = annotations
