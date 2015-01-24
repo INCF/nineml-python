@@ -118,6 +118,7 @@ class ComponentClassXMLLoader(object):
     base_tag_to_loader = {
         "Parameter": load_parameter,
         "Alias": load_alias,
+        "Constant": load_constant
     }
 
 

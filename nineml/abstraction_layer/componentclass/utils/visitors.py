@@ -31,7 +31,7 @@ class ComponentActionVisitor(ComponentVisitor):
         self.action_alias(alias, **kwargs)
 
     def visit_constant(self, constant, **kwargs):
-        self.action_alias(constant, **kwargs)
+        self.action_constant(constant, **kwargs)
 
     def check_pass(self):
         if self.require_explicit_overrides:

@@ -50,6 +50,7 @@ class DynamicsBlock(BaseALObject):
         aliases = normalise_parameter_as_list(aliases)
         regimes = normalise_parameter_as_list(regimes)
         state_variables = normalise_parameter_as_list(state_variables)
+        constants = normalise_parameter_as_list(constants)
 
         # Load the aliases as objects or strings:
         alias_td = filter_discrete_types(aliases, (basestring, Alias))
@@ -102,6 +103,14 @@ class DynamicsBlock(BaseALObject):
     @property
     def aliases_map(self):
         return self._aliases
+
+    @property
+    def constants(self):
+        return self._constants.itervalues()
+
+    @property
+    def constants_map(self):
+        return self._constants
 
     @property
     def state_variables(self):
