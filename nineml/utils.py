@@ -387,7 +387,7 @@ class LocationMgr(object):
     def getComponentDir(cls):
         # localDir = realpath ( dirname( __file__ ) )
         return join_norm(cls.getPythonPackageRootDir(), '..', 'test',
-                         'data', 'sample_components')
+                         'unit', 'data', 'sample_components')
 
     @classmethod
     def getTmpDir(cls):
