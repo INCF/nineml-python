@@ -108,161 +108,6 @@ class Dynamics(BaseALObject):
         return self._state_variables
 
 
-class _FlatMixin(object):
-
-    """Mixin Class that provides the infrastructure for *local* component
-    definitions - i.e. the dynamics
-    """
-
-    @property
-    def ports(self):
-        return chain(self.analog_send_ports, self.analog_receive_ports,
-                     self.analog_reduce_ports, self.event_send_ports,
-                     self.event_receive_ports)
-
-    @property
-    def analog_send_ports(self):
-        """Returns an iterator over the local |AnalogSendPort| objects"""
-        return self._analog_send_ports.itervalues()
-
-    @property
-    def analog_receive_ports(self):
-        """Returns an iterator over the local |AnalogReceivePort| objects"""
-        return self._analog_receive_ports.itervalues()
-
-    @property
-    def analog_reduce_ports(self):
-        """Returns an iterator over the local |AnalogReducePort| objects"""
-        return self._analog_reduce_ports.itervalues()
-
-    @property
-    def analog_ports(self):
-        """Returns an iterator over the local analog port objects"""
-        return chain(self.analog_send_ports, self.analog_receive_ports,
-                     self.analog_reduce_ports)
-
-    @property
-    def event_send_ports(self):
-        """Returns an iterator over the local |EventSendPort| objects"""
-        return self._event_send_ports.itervalues()
-
-    @property
-    def event_receive_ports(self):
-        """Returns an iterator over the local |EventReceivePort| objects"""
-        return self._event_receive_ports.itervalues()
-
-    @property
-    def event_ports(self):
-        return chain(self.event_send_ports, self.event_receive_ports)
-
-    @property
-    def dynamics(self):
-        """Returns the local |Dynamics| object"""
-        return self._dynamics
-    # -------------------------- #
-
-    def __repr__(self):
-        return "<dynamics.DynamicsClass %s>" % self.name
-
-    # Forwarding functions to the dynamics #
-
-    @property
-    def aliases(self):
-        """Forwarding function to self.dynamics.aliases"""
-        return self._dynamics.aliases
-
-    @property
-    def regimes(self):
-        """Forwarding function to self.dynamics.regimes"""
-        return self._dynamics.regimes
-
-    @property
-    def regimes_map(self):
-        """Forwarding function to self.dynamics.regimes_map"""
-        return self._dynamics.regimes_map
-
-    @property
-    def transitions(self):
-        """Forwarding function to self.dynamics.transitions"""
-        return self._dynamics.transitions
-
-    @property
-    def state_variables(self):
-        """Forwarding function to self.dynamics.state_variables"""
-        return self._dynamics.state_variables
-
-    @property
-    def analog_send_ports_map(self):
-        """
-        Returns the underlying dictionary containing the AnalogSendPort
-        objects
-        """
-        return self._analog_send_ports
-
-    @property
-    def analog_receive_ports_map(self):
-        """
-        Returns the underlying dictionary containing the AnalogReceivePort
-        objects
-        """
-        return self._analog_receive_ports
-
-    @property
-    def analog_reduce_ports_map(self):
-        """
-        Returns the underlying dictionary containing the AnalogReducePort
-        objects
-        """
-        return self._analog_reduce_ports
-
-    @property
-    def event_send_ports_map(self):
-        """
-        Returns the underlying dictionary containing the EventSendPort
-        objects
-        """
-        return self._event_send_ports
-
-    @property
-    def event_receive_ports_map(self):
-        """
-        Returns the underlying dictionary containing the EventReceivePort
-        objects
-        """
-        return self._event_receive_ports
-
-    @property
-    def aliases_map(self):
-        """Forwarding function to self.dynamics.alias_map"""
-        return self._dynamics.aliases_map
-
-    @property
-    def state_variables_map(self):
-        """Forwarding function to self.dynamics.state_variables_map"""
-        return self._dynamics.state_variables_map
-
-    @property
-    def _attributes_with_dimension(self):
-        return chain(self.analog_ports, self.parameters, self.state_variables)
-
-    # -------------------------- #
-
-    def backsub_all(self):
-        """Expand all alias definitions in local equations.
-
-        This function finds |Aliases|, |TimeDerivatives|, *send* |AnalogPorts|,
-        |StateAssignments| and |Conditions| which are defined in terms of other
-        |Aliases|, and expands them, such that each only has |Parameters|,
-        |StateVariables| and recv/reduce |AnalogPorts| on the RHS.
-
-        """
-
-        for alias in self.aliases:
-            alias_expander = DynamicsExpandAliasDefinition(
-                originalname=alias.lhs, targetname=("(%s)" % alias.rhs))
-            alias_expander.visit(self)
-
-
 class _NamespaceMixin(object):
 
     """ A mixin class that provides the hierarchical structure for
@@ -388,7 +233,7 @@ class _NamespaceMixin(object):
         return self._portconnections
 
 
-class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
+class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     """A DynamicsClass object represents a *component* in NineML.
 
@@ -444,7 +289,6 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
             For examples
 
         """
-        ComponentClass.__init__(self, name, parameters)
         # We can specify in the componentclass, and they will get forwarded to
         # the dynamics class. We check that we do not specify half-and-half:
         if dynamics is not None:
@@ -455,6 +299,7 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
         else:
             dynamics = Dynamics(regimes=regimes, aliases=aliases,
                                 state_variables=state_variables)
+        ComponentClass.__init__(self, name, parameters, main_block=dynamics)
         self._query = DynamicsQueryer(self)
 
         # Ensure analog_ports is a list not an iterator
@@ -466,7 +311,6 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
                              for p in chain(parameters if parameters else [],
                                             analog_ports, event_ports))
 
-        self._dynamics = dynamics
         self._analog_send_ports = dict(
             (p.name, p) for p in analog_ports if isinstance(p, AnalogSendPort))
         self._analog_receive_ports = dict(
@@ -493,15 +337,15 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
                                     for n in inferred_struct.parameter_names)
 
         # Check any supplied state_variables match:
-        if dynamics._state_variables:
-            state_var_names = [p.name for p in dynamics.state_variables]
+        if self.dynamics._state_variables:
+            state_var_names = [p.name for p in self.dynamics.state_variables]
             inf_check(state_var_names,
                       inferred_struct.state_variable_names,
                       'StateVariables')
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
-            dynamics._state_variables = state_vars
+            self.dynamics._state_variables = state_vars
 
         # Set and check event receive ports match inferred
         self._event_receive_ports = dict(
@@ -545,6 +389,11 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
 
         # Is the finished componentclass valid?:
         self._validate_self()
+
+    # -------------------------- #
+
+    def __repr__(self):
+        return "<dynamics.DynamicsClass %s>" % self.name
 
     @property
     def flattener(self):
@@ -607,7 +456,143 @@ class DynamicsClass(ComponentClass, _FlatMixin, _NamespaceMixin):
 
     @property
     def _attributes_with_dimension(self):
-        return chain(self.parameters, self.analog_ports, self.state_variables)
+        return chain(super(DynamicsClass, self)._attributes_with_dimension,
+                     self.analog_ports, self.state_variables)
+
+    @property
+    def dynamics(self):
+        return self._main_block
+
+    @property
+    def ports(self):
+        return chain(super(DynamicsClass, self).ports,
+                     self.analog_send_ports, self.analog_receive_ports,
+                     self.analog_reduce_ports, self.event_send_ports,
+                     self.event_receive_ports)
+
+    @property
+    def analog_send_ports(self):
+        """Returns an iterator over the local |AnalogSendPort| objects"""
+        return self._analog_send_ports.itervalues()
+
+    @property
+    def analog_receive_ports(self):
+        """Returns an iterator over the local |AnalogReceivePort| objects"""
+        return self._analog_receive_ports.itervalues()
+
+    @property
+    def analog_reduce_ports(self):
+        """Returns an iterator over the local |AnalogReducePort| objects"""
+        return self._analog_reduce_ports.itervalues()
+
+    @property
+    def analog_ports(self):
+        """Returns an iterator over the local analog port objects"""
+        return chain(self.analog_send_ports, self.analog_receive_ports,
+                     self.analog_reduce_ports)
+
+    @property
+    def event_send_ports(self):
+        """Returns an iterator over the local |EventSendPort| objects"""
+        return self._event_send_ports.itervalues()
+
+    @property
+    def event_receive_ports(self):
+        """Returns an iterator over the local |EventReceivePort| objects"""
+        return self._event_receive_ports.itervalues()
+
+    @property
+    def event_ports(self):
+        return chain(self.event_send_ports, self.event_receive_ports)
+
+    # Forwarding functions to the dynamics #
+
+    @property
+    def aliases(self):
+        """Forwarding function to self.dynamics.aliases"""
+        return self.dynamics.aliases
+
+    @property
+    def regimes(self):
+        """Forwarding function to self.dynamics.regimes"""
+        return self.dynamics.regimes
+
+    @property
+    def regimes_map(self):
+        """Forwarding function to self.dynamics.regimes_map"""
+        return self.dynamics.regimes_map
+
+    @property
+    def transitions(self):
+        """Forwarding function to self.dynamics.transitions"""
+        return self.dynamics.transitions
+
+    @property
+    def state_variables(self):
+        """Forwarding function to self.dynamics.state_variables"""
+        return self.dynamics.state_variables
+
+    @property
+    def analog_send_ports_map(self):
+        """
+        Returns the underlying dictionary containing the AnalogSendPort
+        objects
+        """
+        return self._analog_send_ports
+
+    @property
+    def analog_receive_ports_map(self):
+        """
+        Returns the underlying dictionary containing the AnalogReceivePort
+        objects
+        """
+        return self._analog_receive_ports
+
+    @property
+    def analog_reduce_ports_map(self):
+        """
+        Returns the underlying dictionary containing the AnalogReducePort
+        objects
+        """
+        return self._analog_reduce_ports
+
+    @property
+    def event_send_ports_map(self):
+        """
+        Returns the underlying dictionary containing the EventSendPort
+        objects
+        """
+        return self._event_send_ports
+
+    @property
+    def event_receive_ports_map(self):
+        """
+        Returns the underlying dictionary containing the EventReceivePort
+        objects
+        """
+        return self._event_receive_ports
+
+    @property
+    def state_variables_map(self):
+        """Forwarding function to self.dynamics.state_variables_map"""
+        return self.dynamics.state_variables_map
+
+    # -------------------------- #
+
+    def backsub_all(self):
+        """Expand all alias definitions in local equations.
+
+        This function finds |Aliases|, |TimeDerivatives|, *send* |AnalogPorts|,
+        |StateAssignments| and |Conditions| which are defined in terms of other
+        |Aliases|, and expands them, such that each only has |Parameters|,
+        |StateVariables| and recv/reduce |AnalogPorts| on the RHS.
+
+        """
+
+        for alias in self.aliases:
+            alias_expander = DynamicsExpandAliasDefinition(
+                originalname=alias.lhs, targetname=("(%s)" % alias.rhs))
+            alias_expander.visit(self)
 
 
 def inf_check(l1, l2, desc):

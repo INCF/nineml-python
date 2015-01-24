@@ -33,9 +33,13 @@ class ConnectionRuleClass(ComponentClass):
 
     defining_attributes = ('name', '_parameters', 'connectionrule')
 
-    def __init__(self, name, parameters=None, connectionrule=None):
-        super(ConnectionRuleClass, self).__init__(name, parameters)
-        self.connectionrule = connectionrule
+    def __init__(self, name, connectionrule, parameters=None):
+        super(ConnectionRuleClass, self).__init__(
+            name, parameters, main_block=connectionrule)
+
+    @property
+    def connectionrule(self):
+        return self._main_block
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

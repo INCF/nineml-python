@@ -20,8 +20,12 @@ class DistributionClass(ComponentClass):
     defining_attributes = ('name', '_parameters', 'distribution')
 
     def __init__(self, name, distribution, parameters=None):
-        super(DistributionClass, self).__init__(name, parameters)
-        self.distribution = distribution
+        super(DistributionClass, self).__init__(
+            name, parameters, main_block=distribution)
+
+    @property
+    def distribution(self):
+        return self._main_block
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

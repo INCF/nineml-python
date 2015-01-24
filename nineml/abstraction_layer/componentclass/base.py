@@ -23,25 +23,11 @@ class ComponentClass(BaseALObject, TopLevelObject):
 
     element_name = 'ComponentClass'
 
-    @annotate_xml
-    def to_xml(self):
-        self.standardize_unit_dimensions()
-        XMLWriter = getattr(nineml.abstraction_layer,
-                            self.__class__.__name__ + 'XMLWriter')
-        return XMLWriter().visit(self)
-
-    @classmethod
-    @read_annotations
-    def from_xml(cls, element, document):  # @UnusedVariable
-        XMLLoader = getattr(nineml.abstraction_layer,
-                            ComponentClassXMLLoader.read_class_type(element) +
-                            'ClassXMLLoader')
-        return XMLLoader(document).load_componentclass(element)
-
-    def __init__(self, name, parameters=None):
+    def __init__(self, name, parameters, main_block):
         ensure_valid_identifier(name)
         BaseALObject.__init__(self)
         self._name = name
+        self._main_block = main_block
         # Turn any strings in the parameter list into Parameters:
         if parameters is None:
             parameters = []
@@ -56,6 +42,10 @@ class ComponentClass(BaseALObject, TopLevelObject):
     def name(self):
         """Returns the name of the component"""
         return self._name
+
+    @property
+    def ports(self):
+        return []  # Any generic ports to be added here
 
     @property
     def parameters(self):
@@ -74,6 +64,14 @@ class ComponentClass(BaseALObject, TopLevelObject):
 
     def parameter(self, name):
         return self._parameters[name]
+
+    @property
+    def aliases(self):
+        return self._main_block.aliases
+
+    @property
+    def aliases_map(self):
+        return self._main_block.aliases_map
 
     @property
     def dimensions(self):
@@ -96,6 +94,21 @@ class ComponentClass(BaseALObject, TopLevelObject):
             except StopIteration:
                 continue
             a.set_dimension(std_dim)
+
+    @annotate_xml
+    def to_xml(self):
+        self.standardize_unit_dimensions()
+        XMLWriter = getattr(nineml.abstraction_layer,
+                            self.__class__.__name__ + 'XMLWriter')
+        return XMLWriter().visit(self)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):  # @UnusedVariable
+        XMLLoader = getattr(nineml.abstraction_layer,
+                            ComponentClassXMLLoader.read_class_type(element) +
+                            'ClassXMLLoader')
+        return XMLLoader(document).load_componentclass(element)
 
 
 class Parameter(BaseALObject):
