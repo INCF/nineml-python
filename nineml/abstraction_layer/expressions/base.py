@@ -323,3 +323,8 @@ class Constant(BaseALObject):
             self.name = name_map[self.name]
         except KeyError:
             assert False, "'{}' was not found in name_map".format(self.name)
+
+    def set_units(self, units):
+        assert self.units == units, \
+            "Renaming units with ones that do not match"
+        self.units = units
