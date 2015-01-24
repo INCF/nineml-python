@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<NineML xmlns="http://nineml.incf.org/9ML/0.3">
+  <ComponentClass name="SynapticConnectionWithFixedWeightAndDelay">
+    <AnalogPort mode="send" name="weight"/>
+    <EventPort mode="send" name="spikeOutput"/>
+    <EventPort mode="recv" name="spike"/>
+    <Parameter dimension="" name="delay"/>
+    <Dynamics>
+      <Regime name="default">
+        <TimeDerivative variable="weight">
+          <MathInline>0</MathInline>
+        </TimeDerivative>
+        <OnEvent target_regime="default" src_port="spike">
+          <StateAssignment variable="t_next">
+            <MathInline>t + delay</MathInline>
+          </StateAssignment>
+        </OnEvent>
+        <OnCondition target_regime="default">
+          <EventOut port="spikeOutput"/>
+          <Trigger>
+            <MathInline>t &gt; t_next</MathInline>
+          </Trigger>
+        </OnCondition>
+      </Regime>
+      <StateVariable dimension="current" name="weight"/>
+      <StateVariable dimension="time" name="t_next"/>
+    </Dynamics>
+  </ComponentClass>
+</NineML>

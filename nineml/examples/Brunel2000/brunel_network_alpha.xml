@@ -1,0 +1,299 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<nineml:nineml xmlns:nineml="http://nineml.incf.org/9ML/0.3" xmlns="http://nineml.incf.org/9ML/0.3" name="Brunel (2000) network with alpha synapses">
+  <nineml:component name="E">
+    <nineml:definition language="NineML">
+      <nineml:link>BrunelIAF.xml</nineml:link>
+    </nineml:definition>
+    <nineml:property name="R">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1.5</nineml:scalar>
+          <nineml:unit>dimensionless</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="Vreset">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>10.0</nineml:scalar>
+          <nineml:unit>mV</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="tau">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>20.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="tau_rp">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>2.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="theta">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>20.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="t_rpend">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+    <nineml:initial name="V">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.0</nineml:scalar>
+          <nineml:unit>mV</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+  </nineml:component>
+  <nineml:component name="ExcitatoryPlasticity">
+    <nineml:definition language="NineML">
+      <nineml:link>StaticConnection.xml</nineml:link>
+    </nineml:definition>
+    <nineml:property name="delay">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1.5</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="weight">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.1</nineml:scalar>
+          <nineml:unit>nA</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+  </nineml:component>
+  <nineml:component name="ExternalPlasticity">
+    <nineml:definition language="NineML">
+      <nineml:link>StaticConnection.xml</nineml:link>
+    </nineml:definition>
+    <nineml:property name="delay">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1.5</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="weight">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.1</nineml:scalar>
+          <nineml:unit>nA</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+  </nineml:component>
+  <nineml:component name="I">
+    <nineml:definition language="NineML">
+      <nineml:link>BrunelIAF.xml</nineml:link>
+    </nineml:definition>
+    <nineml:property name="R">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1.5</nineml:scalar>
+          <nineml:unit>dimensionless</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="Vreset">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>10.0</nineml:scalar>
+          <nineml:unit>mV</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="tau">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>20.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="tau_rp">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>2.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:property name="theta">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>20.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="t_rpend">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.0</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+    <nineml:initial name="V">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.0</nineml:scalar>
+          <nineml:unit>mV</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+  </nineml:component>
+  <nineml:component name="Syn">
+    <nineml:definition language="NineML">
+      <nineml:link>AlphaPSR.xml</nineml:link>
+    </nineml:definition>
+    <nineml:property name="tau_syn">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.5</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+  </nineml:component>
+  <nineml:component name="Ext">
+    <nineml:definition language="NineML">
+      <nineml:link>Poisson.xml</nineml:link>
+    </nineml:definition>
+    <nineml:property name="rate">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1471.5177646857694</nineml:scalar>
+          <nineml:unit>Hz</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+  </nineml:component>
+  <nineml:component name="RandomUniform">
+    <nineml:definition language="NineML">
+      <nineml:link>RandomUniformConnection.xml</nineml:link>
+    </nineml:definition>
+    <nineml:property name="epsilon">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>0.1</nineml:scalar>
+          <nineml:unit>dimensionless</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+  </nineml:component>
+  <nineml:component name="AllToAll">
+    <nineml:definition language="NineML">
+      <nineml:link>AllToAllConnection.xml</nineml:link>
+    </nineml:definition>
+  </nineml:component>
+  <nineml:component name="InhibitoryPlasticity">
+    <nineml:definition language="NineML">
+      <nineml:link>StaticConnection.xml</nineml:link>
+    </nineml:definition>
+    <nineml:property name="delay">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>1.5</nineml:scalar>
+          <nineml:unit>ms</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:property>
+    <nineml:initial name="weight">
+      <nineml:quantity>
+        <nineml:value>
+          <nineml:scalar>-0.5</nineml:scalar>
+          <nineml:unit>nA</nineml:unit>
+        </nineml:value>
+      </nineml:quantity>
+    </nineml:initial>
+  </nineml:component>
+  <nineml:group name="BrunelCaseC">
+    <nineml:population name="Ext">
+      <nineml:number>10</nineml:number>
+      <nineml:prototype>Ext</nineml:prototype>
+    </nineml:population>
+    <nineml:population name="Inh">
+      <nineml:number>25</nineml:number>
+      <nineml:prototype>I</nineml:prototype>
+    </nineml:population>
+    <nineml:population name="Exc">
+      <nineml:number>100</nineml:number>
+      <nineml:prototype>E</nineml:prototype>
+    </nineml:population>
+    <nineml:set name="All neurons">
+      <nineml:select>
+        <nineml:any>
+          <nineml:equal>
+            <nineml:value>population[@name]</nineml:value>
+            <nineml:value>Exc</nineml:value>
+          </nineml:equal>
+          <nineml:equal>
+            <nineml:value>population[@name]</nineml:value>
+            <nineml:value>Inh</nineml:value>
+          </nineml:equal>
+        </nineml:any>
+      </nineml:select>
+    </nineml:set>
+    <nineml:projection name="Inhibition">
+      <nineml:source>Inh</nineml:source>
+      <nineml:target>All neurons</nineml:target>
+      <nineml:rule>RandomUniform</nineml:rule>
+      <nineml:response>Syn</nineml:response>
+      <nineml:plasticity>InhibitoryPlasticity</nineml:plasticity>
+      <nineml:response_ports>
+        <nineml:port_connection port2="Isyn" port1="Isyn"/>
+      </nineml:response_ports>
+      <nineml:connection_ports>
+        <nineml:port_connection port2="q" port1="weight"/>
+      </nineml:connection_ports>
+    </nineml:projection>
+    <nineml:projection name="External">
+      <nineml:source>Ext</nineml:source>
+      <nineml:target>All neurons</nineml:target>
+      <nineml:rule>AllToAll</nineml:rule>
+      <nineml:response>Syn</nineml:response>
+      <nineml:plasticity>ExternalPlasticity</nineml:plasticity>
+      <nineml:response_ports>
+        <nineml:port_connection port2="Isyn" port1="Isyn"/>
+      </nineml:response_ports>
+      <nineml:connection_ports>
+        <nineml:port_connection port2="q" port1="weight"/>
+      </nineml:connection_ports>
+    </nineml:projection>
+    <nineml:projection name="Excitation">
+      <nineml:source>Exc</nineml:source>
+      <nineml:target>All neurons</nineml:target>
+      <nineml:rule>RandomUniform</nineml:rule>
+      <nineml:response>Syn</nineml:response>
+      <nineml:plasticity>ExcitatoryPlasticity</nineml:plasticity>
+      <nineml:response_ports>
+        <nineml:port_connection port2="Isyn" port1="Isyn"/>
+      </nineml:response_ports>
+      <nineml:connection_ports>
+        <nineml:port_connection port2="q" port1="weight"/>
+      </nineml:connection_ports>
+    </nineml:projection>
+  </nineml:group>
+</nineml:nineml>
