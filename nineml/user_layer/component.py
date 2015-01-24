@@ -294,27 +294,6 @@ class Component(BaseULObject, TopLevelObject):
     def used_units(self):
         return set(p.units for p in self.properties.itervalues())
 
-    def standardize_units(self, reference_units=None,
-                          reference_dimensions=None):
-        """Standardized the units used to avoid naming conflicts writing to
-        """
-        if reference_units is None:
-            reference_units = self.used_units
-        if reference_dimensions is None:
-            reference_dimensions = set(u.dimension for u in reference_units)
-        else:
-            # Ensure that the units reference the same set of dimensions
-            for u in reference_units:
-                if u.dimension not in reference_dimensions:
-                    u.set_dimension(next(d for d in reference_units
-                                         if d == u.dimension))
-        for p in self.properties.itervalues():
-            try:
-                std_unit = next(u for u in reference_units if u == p.units)
-            except StopIteration:
-                continue
-            p.set_units(std_unit)
-
     def write(self, file):  # @ReservedAssignment
         self.standardize_units()
         xml = [self.to_xml()]

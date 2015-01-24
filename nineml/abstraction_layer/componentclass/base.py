@@ -81,6 +81,10 @@ class ComponentClass(BaseALObject, TopLevelObject):
     def _attributes_with_dimension(self):
         return self.parameters
 
+    @property
+    def _attributes_with_units(self):
+        return self.constants
+
     def standardize_unit_dimensions(self, reference_set=None):
         """
         Replaces dimension objects with ones from a reference set so that their
