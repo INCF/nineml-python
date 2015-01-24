@@ -189,9 +189,9 @@ class Component(BaseULObject, TopLevelObject):
         return vals
 
     @property
-    def units(self):
-        return set(p.units for p in chain(self.properties.values(),
-                                          self.initial_values.values())
+    def attributes_with_units(self):
+        return set(p for p in chain(self.properties.values(),
+                                    self.initial_values.values())
                    if p.units is not None)
 
     def __hash__(self):
@@ -255,7 +255,6 @@ class Component(BaseULObject, TopLevelObject):
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
         """
-        self.standardize_units()
         props_and_initial_values = (self._properties.to_xml() +
                                     [iv.to_xml()
                                      for iv in self.initial_values.values()])

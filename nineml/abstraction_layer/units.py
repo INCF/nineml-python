@@ -3,6 +3,17 @@ from . import BaseALObject
 from nineml import TopLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 
+# Might be an idea to subclass namedtuple to prevent dimensions being redefined
+# and therefore protect the hash
+#
+# class D(namedtuple('Base', 'name m l t i n k j'), A):
+#     def __new__(self, name, m=0, l=0, t=0, n=0, k=0, j=0):
+#         return super(D, self).__new__(self, name, t, k, m, l, n, j)
+#     def __init__(self, name, m=0, l=0, t=0, n=0, k=0, j=0):
+#         pass
+#
+# NB: Not sure this works
+
 
 class Dimension(BaseALObject, TopLevelObject):
     """
@@ -123,6 +134,12 @@ class Unit(BaseALObject, TopLevelObject):
         return self._dimension
 
     def set_dimension(self, dimension):
+        """
+        Used to standardize dimension names across a NineML document. The
+        actual dimension (in terms of fundamental dimension powers) should
+        not change.
+        """
+        assert self.dimension == dimension, "dimensions do not match"
         self._dimension = dimension
 
     @property

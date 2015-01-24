@@ -75,15 +75,11 @@ class ComponentClass(BaseALObject, TopLevelObject):
 
     @property
     def dimensions(self):
-        return set(a.dimension for a in self._attributes_with_dimension)
+        return set(a.dimension for a in self.attributes_with_dimension)
 
     @property
-    def _attributes_with_dimension(self):
+    def attributes_with_dimension(self):
         return self.parameters
-
-    @property
-    def _attributes_with_units(self):
-        return self.constants
 
     def standardize_unit_dimensions(self, reference_set=None):
         """
@@ -92,7 +88,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
         """
         if reference_set is None:
             reference_set = self.dimensions
-        for a in self._attributes_with_dimension:
+        for a in self.attributes_with_dimension:
             try:
                 std_dim = next(d for d in reference_set if d == a.dimension)
             except StopIteration:

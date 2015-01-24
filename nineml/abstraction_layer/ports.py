@@ -73,6 +73,8 @@ class DimensionedPort(Port):
         return self._dimension
 
     def set_dimension(self, dimension):
+        assert self.dimension == dimension,\
+            "Dimensions should not change, only change of names is permitted"
         self._dimension = dimension
 
     def __repr__(self):

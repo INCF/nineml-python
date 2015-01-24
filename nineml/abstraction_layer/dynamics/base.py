@@ -455,8 +455,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
             trans.set_target_regime(regime_map[trans.target_regime_name])
 
     @property
-    def _attributes_with_dimension(self):
-        return chain(super(DynamicsClass, self)._attributes_with_dimension,
+    def attributes_with_dimension(self):
+        return chain(super(DynamicsClass, self).attributes_with_dimension,
                      self.analog_ports, self.state_variables)
 
     @property

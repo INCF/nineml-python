@@ -39,43 +39,25 @@ class BaseNineMLObject(object):
 class TopLevelObject(object):
 
     @property
-    def _attributes_with_dimension(self):
+    def attributes_with_dimension(self):
         return []  # To be overridden in derived classes
 
     @property
-    def _attributes_with_units(self):
+    def attributes_with_units(self):
         return []  # To be overridden in derived classes
 
     @property
     def all_units(self):
-        return [a.units for a in self._attributes_with_units]
+        return [a.units for a in self.attributes_with_units]
 
     @property
     def all_dimensions(self):
-        return [a.dimension for a in self._attributes_with_dimension]
-
-    def standardize_units(self, reference_units=None,
-                          reference_dimensions=None):
-        """Standardized the units used to avoid naming conflicts writing to
-        """
-        if reference_units is None:
-            reference_units = self.all_units
-        if reference_dimensions is None:
-            reference_dimensions = set(u.dimension for u in reference_units)
-        else:
-            # Ensure that the units reference the same set of dimensions
-            for u in reference_units:
-                if u.dimension not in reference_dimensions:
-                    u.set_dimension(next(d for d in reference_units
-                                         if d == u.dimension))
-        for a in self._attributes_with_dimension:
-            try:
-                std_unit = next(u for u in reference_units if u == a.units)
-            except StopIteration:
-                continue
-            a.set_units(std_unit)
+        return [a.dimension for a in self.attributes_with_dimension]
 
     def write(self, fname):
+        """
+        Writes the top-level NineML object to file in XML.
+        """
         write(self, fname)  # Calls nineml.document.Document.write
 
 

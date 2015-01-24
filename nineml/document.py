@@ -149,26 +149,28 @@ class Document(dict, BaseNineMLObject):
         self[unloaded.name] = elem
         return elem
 
-    def _standardize_units_and_dimensions(self):
+    def standardize_units(self):
         """
-        Updates the units and dimensions to match the ones currently used
-        in the components/class and network structures
+        Standardized the units into a single set (no duplicates). Used to avoid
+        naming conflicts when writing to file.
         """
-        # Get complete set of units and dimensions across each item in the
-        # document
-        units = set(chain(*[c.units for c in self.components]))
-        units.update(chain(*[p.units for p in self.populations]))
-        units.update(chain(*[p.units for p in self.projections]))
-        dimensions = set(chain(*[c.dimensions for c in self.componentclasses]))
-        dimensions.update(u.dimension for u in units)
-        # Delete unused units and dimensions from the document
+        # Get the set of all units and dimensions that are used in the document
+        # Note that Dimension & Unit objects are equal even if they have
+        # different names so when this set is traversed the dimension/unit will
+        # be substituted for the first equivalent dimension/unit.
+        all_units = set(chain(*[o.all_units for o in self.itervalues()]))
+        all_dimensions = set(chain(
+            [u.dimension for u in all_units],
+            *[o.all_dimensions for o in self.itervalues()]))
+        # Delete unused units from the document
         for k, o in self.items():
-            if (isinstance(o, (nineml.abstraction_layer.Unit,
-                               nineml.abstraction_layer.Dimension))
-                    and o not in units and o not in dimensions):
+            if ((isinstance(o, nineml.abstraction_layer.Unit) and
+                 o not in all_units) or
+                (isinstance(o, nineml.abstraction_layer.Dimension) and
+                 o not in all_dimensions)):
                 del self[k]
         # Add missing units and dimensions to the document
-        for unit in units:
+        for unit in all_units:
             if unit.name in self:
                 if unit != self[unit.name]:
                     raise NineMLRuntimeError(
@@ -176,7 +178,7 @@ class Document(dict, BaseNineMLObject):
                         "differring value or type '{}' and '{}'"
                         .format(unit.name, unit, self[unit.name]))
             self[unit.name] = unit
-        for dimension in dimensions:
+        for dimension in all_dimensions:
             if dimension.name in self:
                 if dimension != self[dimension.name]:
                     raise NineMLRuntimeError(
@@ -184,16 +186,29 @@ class Document(dict, BaseNineMLObject):
                         " of differring value or type '{}' and '{}'"
                         .format(dimension.name, dimension, self[unit.name]))
             self[dimension.name] = dimension
-        # Standardize the units and dimensions used by the items in the
-        # document, i.e. ensure that equal dimensions use the same name
-        for compclass in self.componentclasses:
-            compclass.standardize_unit_dimensions(reference_set=dimensions)
-        for o in chain(self.components, self.populations, self.projections):
-            o.standardize_units(reference_units=units,
-                                reference_dimensions=dimensions)
+        # Replace units and dimensions with those in the superset
+        for obj in self.itervalues():
+            for a in obj.attributes_with_dimension:
+                try:
+                    std_dim = next(d for d in all_dimensions
+                                   if d == a.dimension)
+                except StopIteration:
+                    assert False, \
+                        ("Did not find matching dimension in supposed superset"
+                         " of dimensions")
+                a.set_dimension(std_dim)
+            for a in obj.attributes_with_units:
+                try:
+                    std_units = next(u for u in all_units
+                                     if u == a.units)
+                except StopIteration:
+                    assert False, \
+                        ("Did not find matching unit in supposed superset"
+                         " of units")
+                a.set_units(std_units)
 
     def to_xml(self):
-        self._standardize_units_and_dimensions()
+        self.standardize_units()
         return E(
             self.element_name,
             *[c.to_xml(as_reference=False)

@@ -139,21 +139,9 @@ class Projection(BaseULObject, TopLevelObject):
         return components
 
     @property
-    def units(self):
-        return chain([self.delay.units],
-                     *[c.units for c in self.get_components()])
-
-    def standardize_units(self, reference_units=None,
-                          reference_dimensions=None):
-        for c in self.get_components():
-            c.standardize_units(reference_units=reference_units,
-                                reference_dimensions=reference_dimensions)
-        try:
-            std_unit = next(u for u in reference_units
-                            if u == self.delay.units)
-            self.delay.set_units(std_unit)
-        except StopIteration:
-            pass
+    def attributes_with_units(self):
+        return chain([self.delay],
+                     *[c.attributes_with_units for c in self.get_components()])
 
     @write_reference
     @annotate_xml
