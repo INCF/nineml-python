@@ -33,7 +33,9 @@ class BaseNineMLObject(object):
         return chain(getattr(self, attr) for attr in self.children)
 
     def accept_visitor(self, visitor):
-        visitor.visit(self)
+        raise NotImplementedError(
+            "Derived class '{}' has not overriden accept_visitor method."
+            .format(self.__class__.__name__))
 
 
 class TopLevelObject(object):
