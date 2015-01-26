@@ -2,7 +2,7 @@
 from itertools import chain
 from lxml import etree
 from abc import ABCMeta
-from ..document import BaseReference
+from nineml.reference import BaseReference
 from nineml.exceptions import NineMLUnitMismatchError, NineMLRuntimeError
 from nineml.xmlns import nineml_namespace
 from operator import and_
