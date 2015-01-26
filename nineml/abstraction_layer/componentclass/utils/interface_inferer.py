@@ -20,7 +20,6 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
         self.visit(self.componentclass)
         # Visit class and populate declared_symbols and atoms sets
         self.parameter_names = self.atoms - self.declared_symbols
-        print self.parameter_names
 
     def _notify_atom(self, atom):
         self.free_atoms.add(atom)
