@@ -14,7 +14,7 @@ from ...exceptions import NineMLMathParseError
 
 _constants = set(['pi'])
 
-_functions = set(['exp', 'sin', 'cos', 'log', 'log10', 'pow',
+_functions = set(['exp', 'sin', 'cos', 'log', 'log10', 'pow', 'abs',
                   'sinh', 'cosh', 'tanh', 'sqrt', 'mod', 'sum',
                   'atan', 'asin', 'acos', 'asinh', 'acosh', 'atanh', 'atan2',
                   'uniform', 'binomial', 'poisson', 'exponential'])

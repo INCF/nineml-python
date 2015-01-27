@@ -21,11 +21,11 @@ docstring needed
 
 # This is a conditional parser
 
-
+import re
 import ply.lex as lex
 import ply.yacc as yacc
 import os
-from .expressions import call_expr_func
+from .expressions import call_expr_func, escape_carets
 from nineml.utils import LocationMgr
 from nineml.exceptions import NineMLMathParseError
 from ..utils import is_builtin_math_function, get_builtin_symbols
@@ -77,6 +77,7 @@ class CondParser(object):
         self.names.difference_update(get_builtin_symbols())
 
         return self.names, set(self.funcs)
+
 
 
 class CalcCond(CondParser):
@@ -213,6 +214,14 @@ def cond_parse(conditional):
     and returns var names and func names as sets """
 
     calc = CalcCond()
+    # Remove endlines
+    conditional = conditional.replace('\n', ' ')
+    conditional = conditional.replace('\r', ' ')
+    # Expand scientific notation, 1e-10 to 1 * pow(10, -10)
+    conditional = re.sub(r'([0-9])e(\-?[0-9\.]+)', r'\1 * pow(10, \2)',
+                         conditional)
+    # Convert '^' to pow()
+    conditional = escape_carets(conditional)
     return calc.parse(conditional)
 
 # if __name__ == '__main__':
