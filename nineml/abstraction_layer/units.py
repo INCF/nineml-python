@@ -172,6 +172,7 @@ class Unit(BaseALObject, TopLevelObject):
         offset = float(element.attrib.get('name', 0.0))
         return cls(name, dimension, power, offset)
 
+# Common units and dimensions
 
 time = Dimension(name="time", t=1)
 per_time = Dimension(name="per_time", t=-1)
@@ -274,3 +275,4 @@ J_per_K = Unit(name="J_per_K", dimension=energy_per_temperature, power=0)
 mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s",
                              dimension=rho_factor, power=0)
 unitless = Unit(name="unitless", dimension=dimensionless, power=0)
+coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)
