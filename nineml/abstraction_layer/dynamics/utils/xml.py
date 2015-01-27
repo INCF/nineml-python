@@ -181,9 +181,10 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_dynamics(self, dynamics):
-        elements = ([r.accept_visitor(self) for r in dynamics.regimes] +
-                    [b.accept_visitor(self) for b in dynamics.aliases] +
-                    [b.accept_visitor(self) for b in dynamics.state_variables])
+        elements = ([b.accept_visitor(self)
+                     for b in dynamics.state_variables] +
+                    [r.accept_visitor(self) for r in dynamics.regimes] +
+                    [b.accept_visitor(self) for b in dynamics.aliases])
         return E('Dynamics', *elements)
 
     @annotate_xml
