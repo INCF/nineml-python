@@ -450,8 +450,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         # care of for us by the Regime objects they are attached to.
         for trans in self.transitions:
             if trans.target_regime_name not in regime_map:
-                errmsg = "Can't find regime: %s" % trans.target_regime_name
-                raise NineMLRuntimeError(errmsg)
+                raise NineMLRuntimeError(
+                    "Can't find regime '{}'".format(trans.target_regime_name))
             trans.set_target_regime(regime_map[trans.target_regime_name])
 
     @property

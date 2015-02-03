@@ -112,7 +112,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     def load_oncondition(self, element):
         subblocks = ('Trigger', 'StateAssignment', 'EventOut')
         subnodes = self._load_blocks(element, blocks=subblocks)
-        target_regime = element.get('target_regime', None)
+        target_regime = element.get('target_regime')
         trigger = expect_single(subnodes["Trigger"])
 
         return OnCondition(trigger=trigger,
@@ -124,7 +124,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     def load_onevent(self, element):
         subblocks = ('StateAssignment', 'EventOut')
         subnodes = self._load_blocks(element, blocks=subblocks)
-        target_regime_name = element.get('target_regime', None)
+        target_regime_name = element.get('target_regime')
 
         return OnEvent(src_port_name=element.get('port'),
                        state_assignments=subnodes["StateAssignment"],
