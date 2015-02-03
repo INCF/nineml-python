@@ -56,18 +56,18 @@ class DynamicsModifier(ComponentModifier):
         for arp in componentclass.query.analog_reduce_ports:
             if exclude and arp.name in exclude:
                 continue
-            cls.close_analog_port(component=componentclass, port_name=arp.name,
+            cls.close_analog_port(componentclass=componentclass, port_name=arp.name,
                                   value='0')
 
     @classmethod
-    def rename_port(cls, component, old_port_name, new_port_name):
+    def rename_port(cls, componentclass, old_port_name, new_port_name):
         """ Renames a port in a componentclass """
-        if not component.is_flat():
+        if not componentclass.is_flat():
             raise NineMLRuntimeError('rename_port() on non-flat '
                                      'componentclass')
 
         # Find the old port:
-        port = filter_expect_single(component.analog_ports,
+        port = filter_expect_single(componentclass.analog_ports,
                                     lambda ap: ap.name == old_port_name)
         port._name = new_port_name
 

@@ -8,6 +8,7 @@ from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.xmlns import E, NINEML
 from nineml.utils import check_tag
+import nineml
 
 
 class Network(BaseULObject):
@@ -54,21 +55,6 @@ class Network(BaseULObject):
                 raise Exception("Networks may only contain Populations, "
                                 "Projections, or Selections")
 
-    # def _resolve_population_references(self):
-    #     for prj in self.projections.values():
-    #         for name in ('source', 'target'):
-    #             if prj.references[name] in self.populations:
-    #                 obj = self.populations[prj.references[name]]
-    #             elif prj.references[name] in self.selections:
-    #                 obj = self.selections[prj.references[name]]
-    #             elif prj.references[name] == self.name:
-    #                 obj = self
-    #             else:
-    #                 raise Exception("Unable to resolve population/selection "
-    #                                 "reference ('%s') for %s of %s" %
-    #                                 (prj.references[name], name, prj))
-    #             setattr(prj, name, obj)
-
     def get_components(self):
         components = []
         for p in chain(self.populations.values(), self.projections.values()):
@@ -109,15 +95,13 @@ class Network(BaseULObject):
         document = Document(*chain(
             self.populations.itervalues(), self.projections.itervalues(),
             self.selections.itervalues()))
-#         units = set()
-#         for name, obj in chain(self.populations.items(),
-#                                self.projections.items()):
-#             document[name] = obj
-#             for c in obj.get_components():
-#                 units = units.union(c.all_units)
-#         for name, obj in self.selections.items():
-#             document[name] = obj
-#         for u in units:
-#             document[u.dimension.name] = u.dimension
-#             document[u.name] = u
         document.write(filename)
+
+    @classmethod
+    def read(self, filename):
+        document = nineml.read(filename)
+        return Network(
+            name='root',
+            populations=dict((p.name, p) for p in document.populations),
+            projections=dict((p.name, p) for p in document.projections),
+            selections=dict((s.name, s) for s in document.selections))

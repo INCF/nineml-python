@@ -25,9 +25,6 @@ class Document(dict, BaseNineMLObject):
 
     def __init__(self, *elements, **kwargs):
         self.url = kwargs.pop('_url', None)
-        # FIXME: should be able to take NineMLObjects read their names and
-        #        populate the dictionary. Then kwargs could be reserved for
-        #        other items.
         dict.__init__(self, **kwargs)
         for element in elements:
             self.add(element)
@@ -63,10 +60,10 @@ class Document(dict, BaseNineMLObject):
         """
         Returns the element referenced by the given name
         """
-        # This simplifies code in a few places where an optional
-        # attribute refers to a name of an object which
-        # should be resolved if present but be set to None if not.
         if name is None:
+            # This simplifies code in a few places where an optional
+            # attribute refers to a name of an object which
+            # should be resolved if present but be set to None if not.
             return None
         try:
             elem = super(Document, self).__getitem__(name)
