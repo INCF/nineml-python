@@ -106,16 +106,18 @@ class Network(BaseULObject):
         return network
 
     def write(self, filename):
-        document = Document()
-        units = set()
-        for name, obj in chain(self.populations.items(),
-                               self.projections.items()):
-            document[name] = obj
-            for c in obj.get_components():
-                units = units.union(c.units)
-        for name, obj in self.selections.items():
-            document[name] = obj
-        for u in units:
-            document[u.dimension.name] = u.dimension
-            document[u.name] = u
+        document = Document(*chain(
+            self.populations.itervalues(), self.projections.itervalues(),
+            self.selections.itervalues()))
+#         units = set()
+#         for name, obj in chain(self.populations.items(),
+#                                self.projections.items()):
+#             document[name] = obj
+#             for c in obj.get_components():
+#                 units = units.union(c.all_units)
+#         for name, obj in self.selections.items():
+#             document[name] = obj
+#         for u in units:
+#             document[u.dimension.name] = u.dimension
+#             document[u.name] = u
         document.write(filename)
