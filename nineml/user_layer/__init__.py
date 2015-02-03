@@ -69,3 +69,6 @@ from .component import (PropertySet, Property, Component, Definition,
                         DistributionComponent, resolve_reference,
                         write_reference, Reference, InitialValue,
                         InitialValueSet)
+from .syntactic_sugar import (
+    SpikingNodeType, IonDynamicsType, SynapseType, CurrentSourceType,
+    ConnectionType)
