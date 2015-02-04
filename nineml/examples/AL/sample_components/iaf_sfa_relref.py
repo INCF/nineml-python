@@ -15,7 +15,7 @@ Name: iaf_cond_exp_sfa_rr - Simple conductance based leaky integrate-and-fire ne
 
 Description:
 iaf_cond_exp_sfa_rr is an iaf_cond_exp_sfa_rr i.e. an implementation of a
-spiking neuron using IAF dynamics with conductance-based synapses,
+spiking neuron using IAF dynamicsblock with conductance-based synapses,
 with additional spike-frequency adaptation and relative refractory
 mechanisms as described in Dayan+Abbott, 2001, page 166.
 

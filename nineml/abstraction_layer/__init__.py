@@ -26,7 +26,7 @@ from .componentclass import Parameter, ComponentClass, NamespaceAddress
 from .expressions import Alias, Expression
 from .dynamics import (DynamicsClass, Regime,
                        OutputEvent, StateAssignment, TimeDerivative,
-                       Dynamics, OnCondition,
+                       DynamicsBlock, OnCondition,
                        Trigger, StateVariable, OnEvent, On,
                        OutputEvent as OutputEvent)  # For old tests
 from .ports import (AnalogSendPort, AnalogReceivePort,

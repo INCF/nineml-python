@@ -15,7 +15,7 @@ r2 = al.Regime(name="refractory-regime",
                )
 
 leaky_iaf = al.ComponentClass("LeakyIAF",
-                              dynamics=al.Dynamics(
+                              dynamicsblock=al.DynamicsBlock(
                               regimes=[r1, r2],
                               state_variables=['V', 'tspike'],
 

@@ -24,7 +24,7 @@ from .utils.cloner import (
 from .. import BaseALObject
 
 
-class Dynamics(BaseALObject):
+class DynamicsBlock(BaseALObject):
 
     """
     An object, which encapsulates a component's regimes, transitions,
@@ -34,7 +34,7 @@ class Dynamics(BaseALObject):
     defining_attributes = ('_regimes', '_aliases', '_state_variables')
 
     def __init__(self, regimes=None, aliases=None, state_variables=None):
-        """Dynamics object constructor
+        """DynamicsBlock object constructor
 
            :param aliases: A list of aliases, which must be either |Alias|
                objects or ``string``s.
@@ -72,10 +72,10 @@ class Dynamics(BaseALObject):
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
-        return visitor.visit_dynamics(self, **kwargs)
+        return visitor.visit_dynamicsblock(self, **kwargs)
 
     def __repr__(self):
-        return ('Dynamics({} regimes, {} aliases, {} state-variables)'
+        return ('DynamicsBlock({} regimes, {} aliases, {} state-variables)'
                 .format(len(list(self.regimes)), len(list(self.aliases)),
                         len(list(self.state_variables))))
 
@@ -245,11 +245,11 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     defining_attributes = ('name', '_parameters', '_analog_send_ports',
                            '_analog_receive_ports', '_analog_reduce_ports',
                            '_event_send_ports', '_event_receive_ports',
-                           'dynamics')
+                           'dynamicsblock')
 
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[],
-                 dynamics=None, subnodes=None,
+                 dynamicsblock=None, subnodes=None,
                  portconnections=None, regimes=None,
                  aliases=None, state_variables=None):
         """Constructs a DynamicsClass
@@ -263,7 +263,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         :param event_ports: A list of |EventPorts| objects, which will be the
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
-        :param dynamics: A |Dynamics| object, defining the local dynamics of
+        :param dynamicsblock: A |DynamicsBlock| object, defining the local dynamicsblock of
                          the componentclass.
         :param subnodes: A dictionary mapping namespace-names to sub-
             componentclass. [Type: ``{string:|DynamicsClass|,
@@ -291,15 +291,15 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         """
         # We can specify in the componentclass, and they will get forwarded to
         # the dynamics class. We check that we do not specify half-and-half:
-        if dynamics is not None:
+        if dynamicsblock is not None:
             if regimes or aliases or state_variables:
-                err = "Either specify a 'dynamics' parameter, or "
+                err = "Either specify a 'dynamicsblock' parameter, or "
                 err += "state_variables /regimes/aliases, but not both!"
                 raise NineMLRuntimeError(err)
         else:
-            dynamics = Dynamics(regimes=regimes, aliases=aliases,
+            dynamicsblock = DynamicsBlock(regimes=regimes, aliases=aliases,
                                 state_variables=state_variables)
-        ComponentClass.__init__(self, name, parameters, main_block=dynamics)
+        ComponentClass.__init__(self, name, parameters, main_block=dynamicsblock)
         self._query = DynamicsQueryer(self)
 
         # Ensure analog_ports is a list not an iterator
@@ -337,15 +337,15 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                                     for n in inferred_struct.parameter_names)
 
         # Check any supplied state_variables match:
-        if self.dynamics._state_variables:
-            state_var_names = [p.name for p in self.dynamics.state_variables]
+        if self.dynamicsblock._state_variables:
+            state_var_names = [p.name for p in self.dynamicsblock.state_variables]
             inf_check(state_var_names,
                       inferred_struct.state_variable_names,
                       'StateVariables')
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
-            self.dynamics._state_variables = state_vars
+            self.dynamicsblock._state_variables = state_vars
 
         # Set and check event receive ports match inferred
         self._event_receive_ports = dict(
@@ -460,7 +460,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                      self.analog_ports, self.state_variables)
 
     @property
-    def dynamics(self):
+    def dynamicsblock(self):
         return self._main_block
 
     @property
@@ -505,32 +505,32 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def event_ports(self):
         return chain(self.event_send_ports, self.event_receive_ports)
 
-    # Forwarding functions to the dynamics #
+    # Forwarding functions to the dynamicsblock #
 
     @property
     def aliases(self):
-        """Forwarding function to self.dynamics.aliases"""
-        return self.dynamics.aliases
+        """Forwarding function to self.dynamicsblock.aliases"""
+        return self.dynamicsblock.aliases
 
     @property
     def regimes(self):
-        """Forwarding function to self.dynamics.regimes"""
-        return self.dynamics.regimes
+        """Forwarding function to self.dynamicsblock.regimes"""
+        return self.dynamicsblock.regimes
 
     @property
     def regimes_map(self):
-        """Forwarding function to self.dynamics.regimes_map"""
-        return self.dynamics.regimes_map
+        """Forwarding function to self.dynamicsblock.regimes_map"""
+        return self.dynamicsblock.regimes_map
 
     @property
     def transitions(self):
-        """Forwarding function to self.dynamics.transitions"""
-        return self.dynamics.transitions
+        """Forwarding function to self.dynamicsblock.transitions"""
+        return self.dynamicsblock.transitions
 
     @property
     def state_variables(self):
-        """Forwarding function to self.dynamics.state_variables"""
-        return self.dynamics.state_variables
+        """Forwarding function to self.dynamicsblock.state_variables"""
+        return self.dynamicsblock.state_variables
 
     @property
     def analog_send_ports_map(self):
@@ -574,8 +574,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def state_variables_map(self):
-        """Forwarding function to self.dynamics.state_variables_map"""
-        return self.dynamics.state_variables_map
+        """Forwarding function to self.dynamicsblock.state_variables_map"""
+        return self.dynamicsblock.state_variables_map
 
     # -------------------------- #
 

@@ -81,7 +81,7 @@ def expect_single(lst, error_func=None):
     >>> expect_single( [None,None] ) #doctest: +SKIP
     NineMLRuntimeError: expect_single() recieved an iterable of length: 2
 
-    >>> expect_single( [], lambda: raise_exception( RuntimeError('Aggh') ) #doctest: +SKIP
+    >>> expect_single( [], lambda: raise_exception( RuntimeError('Aggh') ) #doctest: +SKIP  # @IgnorePep8
     RuntimeError: Aggh
 
     >>> #Slightly more tersly:

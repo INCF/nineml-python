@@ -5,7 +5,7 @@ import unittest
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.dynamics.testing_utils import TestableComponent
 from nineml.abstraction_layer import (
-    DynamicsClass as ComponentClass, Dynamics, AnalogSendPort, Alias,
+    DynamicsClass as ComponentClass, DynamicsBlock, AnalogSendPort, Alias,
     AnalogReceivePort, AnalogReducePort, Regime, On, NamespaceAddress,
     OutputEvent, EventReceivePort)
 
@@ -59,14 +59,14 @@ class ComponentClass_test(unittest.TestCase):
             set(C.aliases_map.keys()), set(['G', 'H', 'I'])
         )
 
-        # Using Dynamics Parameter:
-        C = ComponentClass(name='C1', dynamics=Dynamics(aliases=['G:= 0', 'H:=1']))
+        # Using DynamicsBlock Parameter:
+        C = ComponentClass(name='C1', dynamicsblock=DynamicsBlock(aliases=['G:= 0', 'H:=1']))
         self.assertEqual(len(list((C.aliases))), 2)
         self.assertEqual(
             set(C.aliases_map.keys()), set(['G', 'H'])
         )
 
-        C = ComponentClass(name='C1', dynamics=Dynamics(
+        C = ComponentClass(name='C1', dynamicsblock=DynamicsBlock(
             aliases=['G:= 0', 'H:=1', Alias('I', '3')]))
         self.assertEqual(len(list((C.aliases))), 3)
         self.assertEqual(
@@ -98,7 +98,7 @@ class ComponentClass_test(unittest.TestCase):
             ComponentClass,
             name='C1',
             aliases=['H:=0'],
-            dynamics=Dynamics(aliases=['G:=1']),
+            dynamicsblock=DynamicsBlock(aliases=['G:=1']),
         )
 
         self.assertRaises(
@@ -106,7 +106,7 @@ class ComponentClass_test(unittest.TestCase):
             ComponentClass,
             name='C1',
             aliases=[Alias('H', '0')],
-            dynamics=Dynamics(aliases=[Alias('G', '1')]),
+            dynamicsblock=DynamicsBlock(aliases=[Alias('G', '1')]),
         )
 
         # Self referential aliases:
@@ -178,7 +178,7 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEqual(c2.aliases_map['B'].rhs_as_python_func()(), 5)
         self.assertEqual(len(c2.aliases_map), 2)
 
-        c3 = ComponentClass(name='C1', dynamics=Dynamics(aliases=['C:=13', 'Z:=15']))
+        c3 = ComponentClass(name='C1', dynamicsblock=DynamicsBlock(aliases=['C:=13', 'Z:=15']))
         self.assertEqual(c3.aliases_map['C'].rhs_as_python_func()(), 13)
         self.assertEqual(c3.aliases_map['Z'].rhs_as_python_func()(), 15)
 
@@ -375,7 +375,7 @@ class ComponentClass_test(unittest.TestCase):
             NineMLRuntimeError,
             c.connect_ports, 'coba.I', 'iaf.ISyn')
 
-    def test_dynamics(self):
+    def test_dynamicsblock(self):
         pass
 
     def test_event_ports(self):
@@ -661,7 +661,7 @@ class ComponentClass_test(unittest.TestCase):
         )
 
         c = ComponentClass(name='cl',
-                           dynamics=Dynamics(
+                           dynamicsblock=DynamicsBlock(
                                 regimes=[
                                     Regime('dX/dt=0',
                                            name='r1',
@@ -746,7 +746,7 @@ class ComponentClass_test(unittest.TestCase):
             state_variables=['X', 'V', 'Vt'])
 
         c = ComponentClass(name='cl',
-                           dynamics=Dynamics(
+                           dynamicsblock=DynamicsBlock(
                                 regimes=[
                                     Regime('dX1/dt=0',
                                            name='r1',
@@ -772,7 +772,7 @@ class ComponentClass_test(unittest.TestCase):
     def test_transitions(self):
 
         c = ComponentClass(name='cl',
-                           dynamics=Dynamics(
+                           dynamicsblock=DynamicsBlock(
                                 regimes=[
                                     Regime('dX1/dt=0',
                                            name='r1',

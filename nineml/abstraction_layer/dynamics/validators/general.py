@@ -151,8 +151,8 @@ class NoDuplicatedObjectsDynamicsValidator(
         NoDuplicatedObjectsComponentValidator,
         PerNamespaceDynamicsValidator):
 
-    def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
-        self.all_objects.append(dynamics)
+    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
+        self.all_objects.append(dynamicsblock)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         self.all_objects.append(regime)

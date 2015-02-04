@@ -8,7 +8,7 @@ from itertools import chain
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import DynamicsClass, Dynamics
+from ..base import DynamicsClass, DynamicsBlock
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
                       AnalogReceivePort, AnalogReducePort)
@@ -37,7 +37,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
         subnodes = self._load_blocks(element, blocks=blocks)
 
-        dynamics = expect_single(subnodes["Dynamics"])
+        dynamicsblock = expect_single(subnodes["Dynamics"])
         return DynamicsClass(
             name=element.get('name'),
             parameters=subnodes["Parameter"],
@@ -46,7 +46,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
                                subnodes["AnalogReducePort"]),
             event_ports=chain(subnodes["EventSendPort"],
                               subnodes["EventReceivePort"]),
-            dynamics=dynamics,
+            dynamicsblock=dynamicsblock,
             subnodes=dict(subnodes['Subnode']),
             portconnections=subnodes["ConnectPorts"])
 
@@ -78,11 +78,11 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
             reduce_op=element.get("operator"))
 
     @read_annotations
-    def load_dynamics(self, element):
+    def load_dynamicsblock(self, element):
         subblocks = ('Regime', 'Alias', 'StateVariable')
         subnodes = self._load_blocks(element, blocks=subblocks)
 
-        return Dynamics(regimes=subnodes["Regime"],
+        return DynamicsBlock(regimes=subnodes["Regime"],
                         aliases=subnodes["Alias"],
                         state_variables=subnodes["StateVariable"])
 
@@ -156,7 +156,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         "EventReceivePort": load_eventreceiveport,
         "AnalogReceivePort": load_analogreceiveport,
         "AnalogReducePort": load_analogreduceport,
-        "Dynamics": load_dynamics,
+        "Dynamics": load_dynamicsblock,
         "OnCondition": load_oncondition,
         "OnEvent": load_onevent,
         "TimeDerivative": load_timederivative,
@@ -176,15 +176,15 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
                      for p in componentclass.event_ports] +
                     [p.accept_visitor(self)
                      for p in componentclass.parameters] +
-                    [componentclass.dynamics.accept_visitor(self)])
+                    [componentclass.dynamicsblock.accept_visitor(self)])
         return E('ComponentClass', *elements, name=componentclass.name)
 
     @annotate_xml
-    def visit_dynamics(self, dynamics):
+    def visit_dynamicsblock(self, dynamicsblock):
         elements = ([b.accept_visitor(self)
-                     for b in dynamics.state_variables] +
-                    [r.accept_visitor(self) for r in dynamics.regimes] +
-                    [b.accept_visitor(self) for b in dynamics.aliases])
+                     for b in dynamicsblock.state_variables] +
+                    [r.accept_visitor(self) for r in dynamicsblock.regimes] +
+                    [b.accept_visitor(self) for b in dynamicsblock.aliases])
         return E('Dynamics', *elements)
 
     @annotate_xml

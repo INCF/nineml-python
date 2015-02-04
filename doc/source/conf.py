@@ -312,7 +312,7 @@ rst_prolog = """
 .. |EventPort| replace:: :class:`~nineml.abstraction_layer.EventPort`
 .. |Parameter| replace:: :class:`~nineml.abstraction_layer.Parameter`
 .. |NamespaceAddress| replace:: :class:`~nineml.abstraction_layer.NamespaceAddress`
-.. |Dynamics| replace:: :class:`~nineml.abstraction_layer.Dynamics`
+.. |DynamicsBlock| replace:: :class:`~nineml.abstraction_layer.DynamicsBlock`
 .. |Transition| replace:: :class:`~nineml.abstraction_layer.Transition`
 .. |AnalogReceivePort| replace:: :class:`~nineml.abstraction_layer.AnalogReceivePort`
 .. |AnalogSendPort| replace:: :class:`~nineml.abstraction_layer.AnalogSendPort`

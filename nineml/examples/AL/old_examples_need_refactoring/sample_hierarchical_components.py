@@ -15,7 +15,7 @@ from nineml.abstraction_layer import * \
 def get_hh_na():
     hh_na = al.ComponentClass(
         name="Hodgkin-Huxley-Na",
-        dynamics=Dynamics(
+        dynamicsblock=DynamicsBlock(
             regimes=[
                 al.Regime(
                     name="hh_regime_na",

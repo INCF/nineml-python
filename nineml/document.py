@@ -98,27 +98,27 @@ class Document(dict, BaseNineMLObject):
     @property
     def components(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user_layer.Component))
+                if isinstance(o, nineml.user_layer.Component))  # @UndefinedVariable @IgnorePep8
 
     @property
     def componentclasses(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.abstraction_layer.ComponentClass))
+                if isinstance(o, nineml.abstraction_layer.ComponentClass))  # @UndefinedVariable @IgnorePep8
 
     @property
     def populations(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user_layer.Population))
+                if isinstance(o, nineml.user_layer.Population))  # @UndefinedVariable @IgnorePep8
 
     @property
     def projections(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user_layer.Projection))
+                if isinstance(o, nineml.user_layer.Projection))  # @UndefinedVariable @IgnorePep8
 
     @property
     def selections(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user_layer.Selection))
+                if isinstance(o, nineml.user_layer.Selection))  # @UndefinedVariable @IgnorePep8
 
     @property
     def network_structures(self):

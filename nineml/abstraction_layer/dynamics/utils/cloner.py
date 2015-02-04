@@ -49,7 +49,7 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
     StateVariables, Aliases, Ports
     """
 
-    def action_dynamics(self, dynamics, **kwargs):
+    def action_dynamicsblock(self, dynamicsblock, **kwargs):
         pass
 
     def action_regime(self, regime, **kwargs):
@@ -119,21 +119,21 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
                           for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
-            dynamics=(componentclass.dynamics.accept_visitor(self, **kwargs)
-                      if componentclass.dynamics else None),
+            dynamicsblock=(componentclass.dynamicsblock.accept_visitor(self, **kwargs)
+                      if componentclass.dynamicsblock else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=componentclass.portconnections[:])
         return ccn
 
-    def visit_dynamics(self, dynamics, **kwargs):
-        return dynamics.__class__(
+    def visit_dynamicsblock(self, dynamicsblock, **kwargs):
+        return dynamicsblock.__class__(
             regimes=[r.accept_visitor(self, **kwargs)
-                     for r in dynamics.regimes],
+                     for r in dynamicsblock.regimes],
             aliases=[
-                a.accept_visitor(self, **kwargs) for a in dynamics.aliases],
+                a.accept_visitor(self, **kwargs) for a in dynamicsblock.aliases],
             state_variables=[s.accept_visitor(self, **kwargs)
-                             for s in dynamics.state_variables])
+                             for s in dynamicsblock.state_variables])
 
     def visit_regime(self, regime, **kwargs):
         return regime.__class__(
@@ -270,8 +270,8 @@ class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
                           for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
-            dynamics=(componentclass.dynamics.accept_visitor(self, **kwargs)
-                      if componentclass.dynamics else None),
+            dynamicsblock=(componentclass.dynamicsblock.accept_visitor(self, **kwargs)
+                      if componentclass.dynamicsblock else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=port_connections)

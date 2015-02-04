@@ -66,7 +66,7 @@ class TestOn(unittest.TestCase):
 #    def test_accept_visitor(self):
 # Signature: name(self, visitor, **kwargs)
 # |VISITATION|
-# from nineml.abstraction_layer.component.dynamics import Dynamics
+# from nineml.abstraction_layer.component.dynamics import DynamicsBlock
 #        warnings.warn('Tests not implemented')
 # raise NotImplementedError()
 #
@@ -74,7 +74,7 @@ class TestOn(unittest.TestCase):
 #    def test_aliases(self):
 # Signature: name
 # No Docstring
-# from nineml.abstraction_layer.component.dynamics import Dynamics
+# from nineml.abstraction_layer.component.dynamics import DynamicsBlock
 #        warnings.warn('Tests not implemented')
 # raise NotImplementedError()
 #
@@ -82,7 +82,7 @@ class TestOn(unittest.TestCase):
 #    def test_aliases_map(self):
 # Signature: name
 # No Docstring
-# from nineml.abstraction_layer.component.dynamics import Dynamics
+# from nineml.abstraction_layer.component.dynamics import DynamicsBlock
 #        warnings.warn('Tests not implemented')
 # raise NotImplementedError()
 #
@@ -90,7 +90,7 @@ class TestOn(unittest.TestCase):
 #    def test_regime_map(self):
 # Signature: name
 # No Docstring
-# from nineml.abstraction_layer.component.dynamics import Dynamics
+# from nineml.abstraction_layer.component.dynamics import DynamicsBlock
 #        warnings.warn('Tests not implemented')
 # raise NotImplementedError()
 #
@@ -98,7 +98,7 @@ class TestOn(unittest.TestCase):
 #    def test_regimes(self):
 # Signature: name
 # No Docstring
-# from nineml.abstraction_layer.component.dynamics import Dynamics
+# from nineml.abstraction_layer.component.dynamics import DynamicsBlock
 #        warnings.warn('Tests not implemented')
 # raise NotImplementedError()
 #
@@ -106,7 +106,7 @@ class TestOn(unittest.TestCase):
 #    def test_state_variables(self):
 # Signature: name
 # No Docstring
-# from nineml.abstraction_layer.component.dynamics import Dynamics
+# from nineml.abstraction_layer.component.dynamics import DynamicsBlock
 #        warnings.warn('Tests not implemented')
 # raise NotImplementedError()
 #
@@ -114,7 +114,7 @@ class TestOn(unittest.TestCase):
 #    def test_transitions(self):
 # Signature: name
 # No Docstring
-# from nineml.abstraction_layer.component.dynamics import Dynamics
+# from nineml.abstraction_layer.component.dynamics import DynamicsBlock
 #        warnings.warn('Tests not implemented')
 # raise NotImplementedError()
 # Testing Skeleton for class: OnCondition

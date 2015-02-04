@@ -22,6 +22,6 @@ iz = al.ComponentClass(
                   al.AnalogPort('V', mode='send')],
     event_ports=[al.EventPort('spikeoutput', mode='send')],
 
-    dynamics=al.Dynamics(regimes=[regime],
+    dynamicsblock=al.DynamicsBlock(regimes=[regime],
                          state_variables=['V', 'U'])
 )

@@ -15,15 +15,15 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_componentclass(self, componentclass, **kwargs):
         super(DynamicsActionVisitor, self).visit_componentclass(
             componentclass, **kwargs)
-        if componentclass.dynamics:
-            componentclass.dynamics.accept_visitor(self, **kwargs)
+        if componentclass.dynamicsblock:
+            componentclass.dynamicsblock.accept_visitor(self, **kwargs)
         for subnode in componentclass.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 
-    def visit_dynamics(self, dynamics, **kwargs):
-        self.action_dynamics(dynamics, **kwargs)
-        nodes = chain(dynamics.regimes, dynamics.aliases,
-                      dynamics.state_variables)
+    def visit_dynamicsblock(self, dynamicsblock, **kwargs):
+        self.action_dynamicsblock(dynamicsblock, **kwargs)
+        nodes = chain(dynamicsblock.regimes, dynamicsblock.aliases,
+                      dynamicsblock.state_variables)
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
@@ -80,7 +80,7 @@ class DynamicsActionVisitor(ComponentActionVisitor):
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
-    def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
+    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
         self.check_pass()
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable

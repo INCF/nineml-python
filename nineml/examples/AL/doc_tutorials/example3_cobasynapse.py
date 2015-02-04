@@ -8,7 +8,7 @@ cond_decay = al.Regime(name='default',
 
 coba_syn = al.ComponentClass(
     name="CoBaSynapse",
-    dynamics=al.Dynamics(
+    dynamics=al.DynamicsBlock(
         regimes=[cond_decay],
         aliases=["I := g*(E-V)"],
     ),
