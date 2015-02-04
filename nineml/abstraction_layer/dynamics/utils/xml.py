@@ -12,7 +12,7 @@ from ..base import DynamicsClass, Dynamics
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
                       AnalogReceivePort, AnalogReducePort)
-from ..transitions import OnEvent, OnCondition, StateAssignment, EventOut
+from ..transitions import OnEvent, OnCondition, StateAssignment, OutputEvent
 from ..regimes import Regime, StateVariable, TimeDerivative
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
@@ -110,25 +110,25 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
     @read_annotations
     def load_oncondition(self, element):
-        subblocks = ('Trigger', 'StateAssignment', 'EventOut')
+        subblocks = ('Trigger', 'StateAssignment', 'OutputEvent')
         subnodes = self._load_blocks(element, blocks=subblocks)
         target_regime = element.get('target_regime')
         trigger = expect_single(subnodes["Trigger"])
 
         return OnCondition(trigger=trigger,
                            state_assignments=subnodes["StateAssignment"],
-                           event_outputs=subnodes["EventOut"],
+                           event_outputs=subnodes["OutputEvent"],
                            target_regime_name=target_regime)
 
     @read_annotations
     def load_onevent(self, element):
-        subblocks = ('StateAssignment', 'EventOut')
+        subblocks = ('StateAssignment', 'OutputEvent')
         subnodes = self._load_blocks(element, blocks=subblocks)
         target_regime_name = element.get('target_regime')
 
         return OnEvent(src_port_name=element.get('port'),
                        state_assignments=subnodes["StateAssignment"],
-                       event_outputs=subnodes["EventOut"],
+                       event_outputs=subnodes["OutputEvent"],
                        target_regime_name=target_regime_name)
 
     # FIXME: This should return a Trigger element not just an internal
@@ -145,7 +145,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     @read_annotations
     def load_eventout(self, element):
         port_name = element.get('port')
-        return EventOut(port_name=port_name)
+        return OutputEvent(port_name=port_name)
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
@@ -162,7 +162,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         "TimeDerivative": load_timederivative,
         "Trigger": load_trigger,
         "StateAssignment": load_stateassignment,
-        "EventOut": load_eventout,
+        "OutputEvent": load_eventout,
     }
 
 
@@ -203,7 +203,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_eventout(self, event_out):
-        return E('EventOut',
+        return E('OutputEvent',
                  port=event_out.port_name)
 
     @annotate_xml

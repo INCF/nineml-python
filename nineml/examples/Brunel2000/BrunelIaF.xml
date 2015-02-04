@@ -23,7 +23,7 @@
           <StateAssignment variable="V">
             <MathInline>Vreset</MathInline>
           </StateAssignment>
-          <EventOut port="spikeOutput"/>
+          <OutputEvent port="spikeOutput"/>
           <Trigger>
             <MathInline>V &gt; theta</MathInline>
           </Trigger>
@@ -34,7 +34,7 @@
           <MathInline>0</MathInline>
         </TimeDerivative>
         <OnCondition target_regime="subthresholdRegime">
-          <EventOut port="refractoryEnd"/>
+          <OutputEvent port="refractoryEnd"/>
           <Trigger>
             <MathInline>t &gt; t_rpend</MathInline>
           </Trigger>

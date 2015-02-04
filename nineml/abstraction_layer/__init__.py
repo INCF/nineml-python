@@ -25,10 +25,10 @@ import ports
 from .componentclass import Parameter, ComponentClass, NamespaceAddress
 from .expressions import Alias, Expression
 from .dynamics import (DynamicsClass, Regime,
-                       EventOut, StateAssignment, TimeDerivative,
+                       OutputEvent, StateAssignment, TimeDerivative,
                        Dynamics, OnCondition,
                        Trigger, StateVariable, OnEvent, On,
-                       EventOut as OutputEvent)  # For old tests
+                       OutputEvent as OutputEvent)  # For old tests
 from .ports import (AnalogSendPort, AnalogReceivePort,
                     AnalogReducePort, EventSendPort,
                     EventReceivePort, AnalogPort, EventPort, Port)

@@ -16,7 +16,7 @@
           </StateAssignment>
         </OnEvent>
         <OnCondition target_regime="default">
-          <EventOut port="spikeOutput"/>
+          <OutputEvent port="spikeOutput"/>
           <Trigger>
             <MathInline>t &gt; t_next</MathInline>
           </Trigger>

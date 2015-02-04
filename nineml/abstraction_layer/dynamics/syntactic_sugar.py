@@ -1,12 +1,12 @@
 from nineml.utils import filter_discrete_types
 from nineml.exceptions import NineMLRuntimeError
 from ..expressions.utils import MathUtil
-from .transitions import (EventOut, Trigger, StateAssignment, OnEvent,
+from .transitions import (OutputEvent, Trigger, StateAssignment, OnEvent,
                           OnCondition)
 
 
 def SpikeOutputEvent():
-    return EventOut('spikeoutput')
+    return OutputEvent('spikeoutput')
 
 
 def cond_to_obj(cond_str):
@@ -23,18 +23,18 @@ def do_to_assignments_and_events(doList):
     if not doList:
         return [], []
     # 'doList' is a list of strings, OutputEvents, and StateAssignments.
-    do_type_list = (EventOut, basestring, StateAssignment)
+    do_type_list = (OutputEvent, basestring, StateAssignment)
     do_types = filter_discrete_types(doList, do_type_list)
     # Convert strings to StateAssignments:
     sa_from_strs = [StateAssignment.from_str(s)
                     for s in do_types[basestring]]
-    return do_types[StateAssignment] + sa_from_strs, do_types[EventOut]
+    return do_types[StateAssignment] + sa_from_strs, do_types[OutputEvent]
 
 
 # Forwarding Function:
 def On(trigger, do=None, to=None):
 
-    if isinstance(do, (EventOut, basestring)):
+    if isinstance(do, (OutputEvent, basestring)):
         do = [do]
     elif do is None:
         do = []

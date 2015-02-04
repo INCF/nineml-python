@@ -7,7 +7,7 @@ docstring needed
 
 from ...componentclass.validators.types import TypesComponentValidator
 from ..regimes import Regime, StateVariable, TimeDerivative
-from ..transitions import (EventOut, StateAssignment, Trigger,
+from ..transitions import (OutputEvent, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
 from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                       EventSendPort, EventReceivePort)
@@ -43,7 +43,7 @@ class TypesDynamicsValidator(DynamicsActionVisitor,
         assert isinstance(port, EventReceivePort)
 
     def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
-        assert isinstance(event_out, EventOut)
+        assert isinstance(event_out, OutputEvent)
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
         assert isinstance(assignment, StateAssignment)

@@ -9,7 +9,7 @@
           <StateAssignment variable="t_next">
             <MathInline>t + random.exponential(1000/rate)</MathInline>
           </StateAssignment>
-          <EventOut port="spikeOutput"/>
+          <OutputEvent port="spikeOutput"/>
           <Trigger>
             <MathInline>t &gt; t_next</MathInline>
           </Trigger>

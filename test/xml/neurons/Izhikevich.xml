@@ -41,7 +41,7 @@
             <StateAssignment variable="U" >
               <MathInline>U+d</MathInline>
             </StateAssignment>
-            <EventOut port="spikeOutput" />
+            <OutputEvent port="spikeOutput" />
           </OnCondition>
         </Regime>
     </Dynamics>

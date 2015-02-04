@@ -22,7 +22,7 @@
           <StateAssignment variable="V">
             <MathInline>V_reset</MathInline>
           </StateAssignment>
-          <EventOut port="spikeoutput"/>
+          <OutputEvent port="spikeoutput"/>
           <Trigger>
             <MathInline>V&gt; theta</MathInline>
           </Trigger>

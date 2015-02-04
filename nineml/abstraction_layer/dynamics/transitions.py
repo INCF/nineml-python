@@ -71,7 +71,7 @@ class Transition(BaseALObject):
         :param state_assignments: A list of the state-assignments performed
             when this transition occurs. Objects in this list are either
             `string` (e.g A = A+13) or |StateAssignment| objects.
-        :param event_outputs: A list of |EventOut| objects emitted when
+        :param event_outputs: A list of |OutputEvent| objects emitted when
             this transition occurs.
         :param target_regime_name: The name of the regime to go into after this
             transition.  ``None`` implies staying in the same regime. This has
@@ -337,9 +337,9 @@ class Trigger(Expression):
         return "Trigger('%s')" % (self.rhs)
 
 
-class EventOut(BaseALObject):
+class OutputEvent(BaseALObject):
 
-    """EventOut
+    """OutputEvent
 
     OutputEvents can occur during transitions, and correspond to
     an event being generated on the relevant EventPort port in
@@ -353,7 +353,7 @@ class EventOut(BaseALObject):
         return visitor.visit_eventout(self, **kwargs)
 
     def __init__(self, port_name):
-        """EventOut Constructor
+        """OutputEvent Constructor
 
         :param port: The name of the output EventPort that should
             transmit an event. An `EventPort` with a mode of 'send' must exist
@@ -370,10 +370,10 @@ class EventOut(BaseALObject):
         return self._port_name
 
     def __str__(self):
-        return 'EventOut( port: %s )' % self.port_name
+        return 'OutputEvent( port: %s )' % self.port_name
 
     def __repr__(self):
-        return "EventOut('%s')" % self.port_name
+        return "OutputEvent('%s')" % self.port_name
 
 
 from .regimes import Regime
