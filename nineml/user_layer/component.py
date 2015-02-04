@@ -585,7 +585,7 @@ class InitialValueSet(PropertySet):
         return cls(*initial_values)
 
 
-class DynamicsComponent(Component):
+class Dynamics(Component):
 
     def check_initial_values(self):
         for var in self.definition.componentclass.state_variables:
@@ -597,14 +597,14 @@ class DynamicsComponent(Component):
             check_units(initial_value.units, var.dimension)
 
 
-class ConnectionRuleComponent(Component):
+class ConnectionRule(Component):
     """
     docstring needed
     """
     pass
 
 
-class DistributionComponent(Component):
+class Distribution(Component):
     """
     Component representing a random number distribution, e.g. normal, gamma,
     binomial.

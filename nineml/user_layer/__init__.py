@@ -65,8 +65,8 @@ from .population import Population, PositionList, Structure
 from .selection import Selection, Concatenate
 from .projection import Projection, PortConnection, Delay
 from .component import (PropertySet, Property, Component, Definition,
-                        Prototype, DynamicsComponent, ConnectionRuleComponent,
-                        DistributionComponent, resolve_reference,
+                        Prototype, Dynamics, ConnectionRule,
+                        Distribution, resolve_reference,
                         write_reference, Reference, InitialValue,
                         InitialValueSet)
 from .syntactic_sugar import (
