@@ -14,14 +14,13 @@ class ConnectionRuleActionVisitor(ComponentActionVisitor):
     def visit_componentclass(self, componentclass, **kwargs):
         super(ConnectionRuleActionVisitor, self).visit_componentclass(
             componentclass, **kwargs)
-        if componentclass.connectionrule:
-            componentclass.connectionrule.accept_visitor(self, **kwargs)
+        componentclass.connectionruleblock.accept_visitor(self, **kwargs)
 
-    def visit_connectionrule(self, connectionrule, **kwargs):
-        self.action_connectionrule(connectionrule, **kwargs)
-        nodes = connectionrule.aliases
+    def visit_connectionruleblock(self, connectionruleblock, **kwargs):
+        self.action_connectionruleblock(connectionruleblock, **kwargs)
+        nodes = connectionruleblock.aliases
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
-    def action_connectionrule(self, connectionrule, **kwargs):  # @UnusedVariable
+    def action_connectionruleblock(self, connectionrule, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_pass()

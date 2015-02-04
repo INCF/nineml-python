@@ -6,12 +6,12 @@ docstring needed
 """
 
 from ...componentclass.validators.types import TypesComponentValidator
-from ..base import ConnectionRule
+from ..base import ConnectionRuleBlock
 from ..utils.visitors import ConnectionRuleActionVisitor
 
 
 class TypesConnectionRuleValidator(ConnectionRuleActionVisitor,
-                                 TypesComponentValidator):
+                                   TypesComponentValidator):
 
-    def action_connectionrule(self, connectionrule):
-        assert isinstance(connectionrule, ConnectionRule)
+    def action_connectionruleblock(self, connectionruleblock):
+        assert isinstance(connectionruleblock, ConnectionRuleBlock)

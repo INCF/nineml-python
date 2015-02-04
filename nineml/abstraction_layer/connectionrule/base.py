@@ -16,30 +16,26 @@ from .. import BaseALObject
 from ..componentclass import ComponentClass
 
 
-class ConnectionRule(BaseALObject):
+class ConnectionRuleBlock(BaseALObject):
 
-    defining_attributes = ()
+    element_name = 'ConnectionRule'
+    defining_attributes = ('standard_library',)
 
-    def __init__(self, standard_library, aliases=[]):
+    def __init__(self, standard_library):
         self.standard_library = standard_library
-        self.aliases = aliases
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
-        return visitor.visit_connectionrule(self, **kwargs)
+        return visitor.visit_connectionruleblock(self, **kwargs)
 
 
 class ConnectionRuleClass(ComponentClass):
 
-    defining_attributes = ('name', '_parameters', 'connectionrule')
+    defining_attributes = ('name', '_parameters', '_main_block')
 
-    def __init__(self, name, connectionrule, parameters=None):
+    def __init__(self, name, connectionruleblock, parameters=None):
         super(ConnectionRuleClass, self).__init__(
-            name, parameters, main_block=connectionrule)
-
-    @property
-    def connectionrule(self):
-        return self._main_block
+            name, parameters, main_block=connectionruleblock)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
