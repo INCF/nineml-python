@@ -7,7 +7,7 @@ docstring needed
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import DistributionClass, Distribution
+from ..base import DistributionClass, DistributionBlock
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
@@ -27,21 +27,21 @@ class DistributionClassXMLLoader(ComponentClassXMLLoader):
     def load_componentclass(self, element):
         subblocks = ('Parameter', 'RandomDistribution')
         children = self._load_blocks(element, blocks=subblocks)
-        distribution = expect_single(children["RandomDistribution"])
+        distributionblock = expect_single(children["RandomDistribution"])
         return DistributionClass(name=element.get('name'),
                                  parameters=children["Parameter"],
-                                 distribution=distribution)
+                                 distributionblock=distributionblock)
 
     @read_annotations
-    def load_distribution(self, element):
-        subblocks = ('Alias',)
-        children = self._load_blocks(element, blocks=subblocks)
-        return Distribution(standard_library=element.attrib['standardLibrary'],
-                            aliases=children["Alias"])
+    def load_distributionblock(self, element):
+        subblocks = ()
+        children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8
+        return DistributionBlock(
+            standard_library=element.attrib['standardLibrary'])
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
-        "RandomDistribution": load_distribution
+        "RandomDistribution": load_distributionblock
     }
 
 
@@ -51,11 +51,10 @@ class DistributionClassXMLWriter(ComponentClassXMLWriter):
     def visit_componentclass(self, componentclass):
         elements = ([p.accept_visitor(self)
                      for p in componentclass.parameters] +
-                    [componentclass.distribution.accept_visitor(self)])
+                    [componentclass._main_block.accept_visitor(self)])
         return E('ComponentClass', *elements, name=componentclass.name)
 
     @annotate_xml
-    def visit_distribution(self, distribution):
-        elements = [b.accept_visitor(self) for b in distribution.aliases]
+    def visit_distributionblock(self, distributionblock):
         return E('RandomDistribution',
-                 *elements, standardLibrary=distribution.standard_library)
+                 standardLibrary=distributionblock.standard_library)

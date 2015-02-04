@@ -35,8 +35,8 @@ class NoDuplicatedObjectsDistributionValidator(
         NoDuplicatedObjectsComponentValidator,
         BaseDistributionValidator):
 
-    def action_distribution(self, distribution, **kwargs):  # @UnusedVariable
-        self.all_objects.append(distribution)
+    def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable
+        self.all_objects.append(distributionblock)
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceDistributionValidator(

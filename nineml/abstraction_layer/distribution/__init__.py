@@ -1,2 +1,2 @@
-from .base import DistributionClass, Distribution
+from .base import DistributionClass, DistributionBlock
 from .utils import DistributionClassXMLLoader, DistributionClassXMLWriter

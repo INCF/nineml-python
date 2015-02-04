@@ -17,11 +17,11 @@ class DistributionActionVisitor(ComponentActionVisitor):
         if componentclass.distribution:
             componentclass.distribution.accept_visitor(self, **kwargs)
 
-    def visit_distribution(self, distribution, **kwargs):
-        self.action_distribution(distribution, **kwargs)
-        nodes = distribution.aliases
+    def visit_distributionblock(self, distributionblock, **kwargs):
+        self.action_distributionblock(distributionblock, **kwargs)
+        nodes = distributionblock.aliases
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
-    def action_distribution(self, distribution, **kwargs):  # @UnusedVariable
+    def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable
         self.check_pass()

@@ -43,13 +43,13 @@ class DistributionClonerVisitor(ComponentClonerVisitor):
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
                         for p in componentclass.parameters],
-            distribution=(
+            distributionblock=(
                 componentclass.distribution.accept_visitor(self, **kwargs)
                 if componentclass.distribution else None))
         return ccn
 
-    def visit_distribution(self, distribution, **kwargs):
-        return distribution.__class__(
+    def visit_distributionblock(self, distributionblock, **kwargs):
+        return distributionblock.__class__(
             aliases=[
                 a.accept_visitor(self, **kwargs)
-                for a in distribution.aliases])
+                for a in distributionblock.aliases])
