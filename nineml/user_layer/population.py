@@ -83,11 +83,12 @@ class Population(BaseULObject, TopLevelObject):
         if layout_elem:
             kwargs['positions'] = Component.from_xml(layout_elem, document)
         cell = expect_single(element.findall(NINEML + 'Cell'))
+        cell_component = cell.find(NINEML + 'Component')
+        if cell_component is None:
+            cell_component = cell.find(NINEML + 'Reference')
         return cls(name=element.attrib['name'],
                    number=int(element.find(NINEML + 'Number').text),
-                   cell=Component.from_xml(cell.find(NINEML + 'Component') or
-                                           cell.find(NINEML + 'Reference'),
-                                           document), **kwargs)
+                   cell=Component.from_xml(cell_component, document), **kwargs)
 
 
 class PositionList(BaseULObject, TopLevelObject):

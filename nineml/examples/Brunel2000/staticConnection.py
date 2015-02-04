@@ -1,27 +1,19 @@
 import nineml.abstraction_layer as al
+from nineml.abstraction_layer.units import current
 
-
-model = al.ComponentClass(
-    name="SynapticConnectionWithFixedWeightAndDelay",
+model = al.DynamicsClass(
+    name="StaticConnection",
     regimes=[
         al.Regime(
             name="default",
             time_derivatives=[
                 "dweight/dt = 0"],
-            transitions=[al.On('spike',
-                               do=["t_next = t + delay"]),
-                         al.On('t > t_next',
-                               do=al.OutputEvent('spikeOutput'))]
         )
     ],
     state_variables=[
-        al.StateVariable('weight', dimension="current"),  # would be nice to make this dimensionless
-        al.StateVariable('t_next', dimension="time")
+        al.StateVariable('weight', dimension=current),  # would be nice to make this dimensionless
     ],
-    analog_ports=[al.SendPort("weight")],
-    event_ports=[al.SendEventPort('spikeOutput'),
-                 al.RecvEventPort('spike')],
-    parameters=["delay"]
+    analog_ports=[al.AnalogSendPort("weight", dimension=current)],
 )
 
 

@@ -22,9 +22,11 @@ class BaseNineMLObject(object):
         self.annotations = None
 
     def __eq__(self, other):
-        return reduce(and_, [isinstance(other, self.__class__)] +
-                            [getattr(self, name) == getattr(other, name)
-                             for name in self.__class__.defining_attributes])
+        return reduce(
+            and_, [isinstance(other, self.__class__) or
+                   isinstance(self, other.__class__)] +
+            [getattr(self, name) == getattr(other, name)
+             for name in self.__class__.defining_attributes])
 
     def __ne__(self, other):
         return not self == other

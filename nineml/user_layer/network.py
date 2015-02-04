@@ -26,7 +26,7 @@ class Network(BaseULObject):
             a dict containing the selections contained in the network.
     """
     element_name = "Network"
-    defining_attributes = ("name", "populations", "projections", "selections")
+    defining_attributes = ("populations", "projections", "selections")
     children = ("populations", "projections", "selections")
 
     def __init__(self, name="anonymous", populations={}, projections={},

@@ -1,8 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<NineML xmlns="http://nineml.incf.org/9ML/0.3">
+<NineML xmlns="http://nineml.net/9ML/1.0">
+  <Dimension name="time" t="1"/>
+  <Dimension name="per_time" t="-1"/>
   <ComponentClass name="Poisson">
-    <EventPort mode="send" name="spikeOutput"/>
-    <Parameter dimension="" name="rate"/>
+    <EventSendPort name="spikeOutput"/>
+    <Parameter dimension="per_time" name="rate"/>
     <Dynamics>
       <Regime name="default">
         <OnCondition target_regime="default">

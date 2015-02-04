@@ -3,8 +3,9 @@
 """
 
 import nineml.abstraction_layer as al
+from nineml.abstraction_layer.units import voltage, time, resistance, current
 
-model = al.ComponentClass(
+model = al.DynamicsClass(
     name="BrunelIaF",
     regimes=[
         al.Regime(
@@ -20,21 +21,26 @@ model = al.ComponentClass(
             name="refractoryRegime",
             time_derivatives=["dV/dt = 0"],
             transitions=[al.On("t > t_rpend",
-                               do=[al.OutputEvent('refractoryEnd')],
+                               #do=[al.OutputEvent('refractoryEnd')],
                                to="subthresholdRegime")],
         )
     ],
     state_variables=[
-        al.StateVariable('V', dimension="voltage"),
-        al.StateVariable('t_rpend', dimension="time")],
+        al.StateVariable('V', dimension=voltage),
+        al.StateVariable('t_rpend', dimension=time)],
     analog_ports=[
-        al.SendPort("V"),
-        al.SendPort("t_rpend"),
-        al.ReducePort("Isyn", reduce_op="+")],
+        al.AnalogSendPort("V", dimension=voltage),
+        al.AnalogSendPort("t_rpend", dimension=time),
+        al.AnalogReducePort("Isyn", reduce_op="+", dimension=current)],
     event_ports=[
-        al.SendEventPort('spikeOutput'),
-        al.SendEventPort('refractoryEnd')],
-    parameters=['tau', 'theta', 'tau_rp', 'Vreset', 'R']
+        al.EventSendPort('spikeOutput'),
+        ],
+    parameters=[
+        al.Parameter('tau', time),
+        al.Parameter('theta', voltage),
+        al.Parameter('tau_rp', time),
+        al.Parameter('Vreset', voltage),
+        al.Parameter('R', resistance)]
 )
 
 

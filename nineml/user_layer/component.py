@@ -14,6 +14,7 @@ from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
 from nineml import TopLevelObject
+from os import path
 
 
 class Reference(BaseReference):
@@ -122,9 +123,10 @@ class Component(BaseULObject, TopLevelObject):
         super(Component, self).__init__()
         self.name = name
         if isinstance(definition, basestring):
-            definition = Definition(name=definition.replace(".xml", ""),
-                                    document=Document(_url=definition),
-                                    url=definition)
+            definition = Definition(
+                name=path.basename(definition).replace(".xml", ""),
+                document=Document(_url=definition),
+                url=definition)
         elif not (isinstance(definition, Definition) or
                   isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "

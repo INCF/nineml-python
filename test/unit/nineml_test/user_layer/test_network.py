@@ -10,15 +10,23 @@ backend.
 
 """
 from __future__ import division
+import os.path
 import unittest
 import nineml.user_layer as nineml
 from nineml.abstraction_layer.units import ms, mV, nA, Hz, Mohm
+from os import path
+
+src_dir = os.path.dirname(__file__)
 
 
 class TestNetwork(unittest.TestCase):
     """
     Loads Brunel 2000 network and reads and writes it from XML
     """
+
+    tmp_xml_file = path.join(src_dir, 'network_tmp.xml')
+    xml_dir = path.normpath(path.join(src_dir, '..', '..', '..', '..',
+                                      'nineml', 'examples', 'Brunel2000'))
 
     def test_xml_roundtrip(self):
 
@@ -44,27 +52,37 @@ class TestNetwork(unittest.TestCase):
                                  "t_rpend": (0.0, ms)}
         synapse_initial_values = {"A": (0.0, nA), "B": (0.0, nA)}
 
-        celltype = nineml.SpikingNodeType("nrn", "BrunelIaF.xml",
+        celltype = nineml.SpikingNodeType("nrn",
+                                          path.join(self.xml_dir,
+                                                    'BrunelIaF.xml'),
                                           neuron_parameters,
                                           initial_values=neuron_initial_values)
-        ext_stim = nineml.SpikingNodeType("stim", "Poisson.xml",
+        ext_stim = nineml.SpikingNodeType("stim",
+                                          path.join(self.xml_dir,
+                                                    "Poisson.xml"),
                                           nineml.PropertySet(rate=(input_rate,
                                                                    Hz)),
                                           initial_values={"t_next": (0.5, ms)})
-        psr = nineml.SynapseType("syn", "AlphaPSR.xml", psr_parameters,
+        psr = nineml.SynapseType("syn",
+                                 path.join(self.xml_dir, "AlphaPSR.xml"),
+                                 psr_parameters,
                                  initial_values=synapse_initial_values)
 
         p1 = nineml.Population("Exc", 1, celltype, positions=None)
         p2 = nineml.Population("Inh", 1, celltype, positions=None)
         inpt = nineml.Population("Ext", 1, ext_stim, positions=None)
 
-        all_to_all = nineml.ConnectionRule("AllToAll", "AllToAll.xml")
+        all_to_all = nineml.ConnectionRule("AllToAll",
+                                           path.join(self.xml_dir,
+                                                     "AllToAll.xml"))
 
         static_exc = nineml.ConnectionType("ExcitatoryPlasticity",
-                                           "StaticConnection.xml",
+                                           path.join(self.xml_dir,
+                                                     "StaticConnection.xml"),
                                            initial_values={"weight": (Je, nA)})
         static_inh = nineml.ConnectionType("InhibitoryPlasticity",
-                                           "StaticConnection.xml",
+                                           path.join(self.xml_dir,
+                                                     "StaticConnection.xml"),
                                            initial_values={"weight": (Ji, nA)})
 
         exc_prj = nineml.Projection("Excitation", inpt, p1,
@@ -96,10 +114,8 @@ class TestNetwork(unittest.TestCase):
                                     delay=(delay, ms))
 
         model = nineml.Network("Three-neuron network with alpha synapses")
-        model.add(input, p1, p2)
+        model.add(inpt, p1, p2)
         model.add(exc_prj, inh_prj)
-
-        with open() as f:
-            self.model.write(f)
-        loaded_model = nineml.Network.load(f)
-        self.assertEqual(loaded_model, self.model)
+        model.write(self.tmp_xml_file)
+        loaded_model = nineml.Network.read(self.tmp_xml_file)
+        self.assertEqual(loaded_model, model)
