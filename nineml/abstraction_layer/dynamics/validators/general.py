@@ -175,7 +175,7 @@ class NoDuplicatedObjectsDynamicsValidator(
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self.all_objects.append(port)
 
-    def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
+    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         self.all_objects.append(event_out)
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable

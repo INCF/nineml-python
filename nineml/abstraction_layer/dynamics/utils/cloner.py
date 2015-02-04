@@ -75,7 +75,7 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self._action_port(port, **kwargs)
 
-    def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
+    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         if event_out.port_name == self.old_symbol_name:
             event_out._port_name = self.new_symbol_name
             self.note_rhs_changed(event_out)
@@ -168,7 +168,7 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
         return port.__class__(
             name=self.prefix_variable(port.name, **kwargs))
 
-    def visit_eventout(self, event_out, **kwargs):
+    def visit_outputevent(self, event_out, **kwargs):
         return event_out.__class__(
             port_name=self.prefix_variable(event_out.port_name, **kwargs))
 

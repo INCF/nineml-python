@@ -52,8 +52,8 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_eventreceiveport(self, port, **kwargs):
         self.action_eventreceiveport(port, **kwargs)
 
-    def visit_eventout(self, event_out, **kwargs):
-        self.action_eventout(event_out, **kwargs)
+    def visit_outputevent(self, event_out, **kwargs):
+        self.action_outputevent(event_out, **kwargs)
 
     def visit_assignment(self, assignment, **kwargs):
         self.action_assignment(assignment, **kwargs)
@@ -104,7 +104,7 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
+    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         self.check_pass()
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable

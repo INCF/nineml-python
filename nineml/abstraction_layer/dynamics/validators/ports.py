@@ -72,7 +72,7 @@ class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
         assert port.name not in self.event_receive_ports[namespace]
         self.event_receive_ports[namespace][port.name] = port
 
-    def action_eventout(self, event_out, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_outputevent(self, event_out, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.event_outs[namespace].append(event_out.port_name)
 
     def action_onevent(self, on_event, namespace, **kwargs):  # @UnusedVariable

@@ -42,7 +42,7 @@ class TypesDynamicsValidator(DynamicsActionVisitor,
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         assert isinstance(port, EventReceivePort)
 
-    def action_eventout(self, event_out, **kwargs):  # @UnusedVariable
+    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         assert isinstance(event_out, OutputEvent)
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable

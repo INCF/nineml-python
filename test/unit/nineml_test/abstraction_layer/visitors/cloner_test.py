@@ -404,7 +404,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_eventout(self):
+    def test_action_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
@@ -540,7 +540,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_visit_eventout(self):
+    def test_visit_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
@@ -683,7 +683,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_eventout(self):
+    def test_action_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
@@ -819,7 +819,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_visit_eventout(self):
+    def test_visit_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
@@ -962,7 +962,7 @@ class RenameSymbol_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_eventout(self):
+    def test_action_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
@@ -1122,7 +1122,7 @@ class RenameSymbol_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_visit_eventout(self):
+    def test_visit_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol

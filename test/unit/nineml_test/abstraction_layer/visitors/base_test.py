@@ -107,7 +107,7 @@ class ActionVisitor_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_eventout(self):
+    def test_action_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.base import ActionVisitor
@@ -243,7 +243,7 @@ class ActionVisitor_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_visit_eventout(self):
+    def test_visit_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.base import ActionVisitor

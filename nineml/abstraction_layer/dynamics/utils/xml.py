@@ -143,7 +143,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         return StateAssignment(lhs=lhs, rhs=rhs)
 
     @read_annotations
-    def load_eventout(self, element):
+    def load_outputevent(self, element):
         port_name = element.get('port')
         return OutputEvent(port_name=port_name)
 
@@ -162,7 +162,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         "TimeDerivative": load_timederivative,
         "Trigger": load_trigger,
         "StateAssignment": load_stateassignment,
-        "OutputEvent": load_eventout,
+        "OutputEvent": load_outputevent,
     }
 
 
@@ -202,7 +202,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
                  dimension=state_variable.dimension.name)
 
     @annotate_xml
-    def visit_eventout(self, event_out):
+    def visit_outputevent(self, event_out):
         return E('OutputEvent',
                  port=event_out.port_name)
 

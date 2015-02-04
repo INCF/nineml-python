@@ -14,7 +14,7 @@ class DynamicsClassInterfaceInferer(ComponentClassInterfaceInferer,
     def action_statevariable(self, state_variable):
         self.declared_symbols.add(state_variable.name)
 
-    def action_eventout(self, event_out):
+    def action_outputevent(self, event_out):
         self.event_out_port_names.add(event_out.port_name)
 
     def action_onevent(self, on_event):
