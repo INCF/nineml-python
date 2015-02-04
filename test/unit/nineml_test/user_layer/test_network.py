@@ -119,3 +119,4 @@ class TestNetwork(unittest.TestCase):
         model.write(self.tmp_xml_file)
         loaded_model = nineml.Network.read(self.tmp_xml_file)
         self.assertEqual(loaded_model, model)
+        os.remove(self.tmp_xml_file)
