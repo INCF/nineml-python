@@ -174,6 +174,10 @@ class Regime(BaseALObject):
         return self._time_derivatives.itervalues()
 
     @property
+    def time_derivatives_map(self):
+        return self._time_derivatives
+
+    @property
     def transitions(self):
         """Returns all the transitions leaving this regime.
 
