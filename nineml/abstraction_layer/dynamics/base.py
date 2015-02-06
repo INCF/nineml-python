@@ -263,8 +263,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         :param event_ports: A list of |EventPorts| objects, which will be the
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
-        :param dynamicsblock: A |DynamicsBlock| object, defining the local dynamicsblock of
-                         the componentclass.
+        :param dynamicsblock: A |DynamicsBlock| object, defining the local
+                              dynamicsblock of the componentclass.
         :param subnodes: A dictionary mapping namespace-names to sub-
             componentclass. [Type: ``{string:|DynamicsClass|,
             string:|DynamicsClass|, string:|DynamicsClass|}`` ] describing the
@@ -298,8 +298,9 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                 raise NineMLRuntimeError(err)
         else:
             dynamicsblock = DynamicsBlock(regimes=regimes, aliases=aliases,
-                                state_variables=state_variables)
-        ComponentClass.__init__(self, name, parameters, main_block=dynamicsblock)
+                                          state_variables=state_variables)
+        ComponentClass.__init__(self, name, parameters,
+                                main_block=dynamicsblock)
         self._query = DynamicsQueryer(self)
 
         # Ensure analog_ports is a list not an iterator
@@ -338,7 +339,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
         # Check any supplied state_variables match:
         if self.dynamicsblock._state_variables:
-            state_var_names = [p.name for p in self.dynamicsblock.state_variables]
+            state_var_names = [p.name
+                               for p in self.dynamicsblock.state_variables]
             inf_check(state_var_names,
                       inferred_struct.state_variable_names,
                       'StateVariables')
