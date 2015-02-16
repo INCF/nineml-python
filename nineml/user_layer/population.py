@@ -87,7 +87,7 @@ class Population(BaseULObject, TopLevelObject):
         if cell_component is None:
             cell_component = cell.find(NINEML + 'Reference')
         return cls(name=element.attrib['name'],
-                   number=int(element.find(NINEML + 'Size').text),
+                   size=int(element.find(NINEML + 'Size').text),
                    cell=Component.from_xml(cell_component, document), **kwargs)
 
 
