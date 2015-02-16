@@ -14,7 +14,7 @@ from .. import BaseALObject
 import nineml
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import filter_discrete_types, ensure_valid_identifier
-from ..expressions.utils import get_reserved_and_builtin_symbols
+
 from ..units import dimensionless, Dimension
 from nineml import TopLevelObject
 from ..expressions import ExpressionSymbol
@@ -155,63 +155,6 @@ class ComponentClass(BaseALObject, TopLevelObject):
                             ComponentClassXMLLoader.read_class_type(element) +
                             'ClassXMLLoader')
         return XMLLoader(document).load_componentclass(element)
-
-    # TODO: This should be implemented as a visitor class I think.
-    def get_dependencies(self, expression):
-        """
-        Gets lists of required parameters, states, ports, random variables,
-        constants and expressions (in resolved order of execution).
-        """
-        # Expression can either be a single expression or an iterable of
-        # expressions
-        try:
-            required_atoms = set(expression.rhs_atoms)
-        except AttributeError:
-            try:
-                required_atoms = set(chain(*(e.rhs_atoms for e in expression)))
-            except TypeError:
-                raise TypeError(
-                    "Unrecognised expression type {}".format(type(expression)))
-        # Strip builtin symbols from required atoms
-        required_atoms.difference_update(get_reserved_and_builtin_symbols())
-        # Strip symbols which are assumed predefined for the current
-        # componentclass type (i.e. state variables in DynamicsClass')
-        required_atoms.difference_update(self._assumed_defined)
-        # Initialise dependency container
-        dp = Dependencies(parameters=set(), ports=set(), constants=set(),
-                          randomvariables=set(), expressions=list())
-        # Add corresponding param, port, constant, random variable or
-        # expression for each atom and atom dependencies
-        for atom in required_atoms:
-            if atom in self.parameters_map:
-                dp.parameters.add(self.parameters_map[atom])
-            elif atom in self.analog_receive_ports_map:
-                dp.ports.add(self.analog_receive_ports_map[atom])
-            elif atom in self.analog_reduce_ports_map:
-                dp.ports.add(self.analog_reduce_ports_map[atom])
-            elif atom in self.constants_map:
-                dp.constants.add(self.constants_map[atom])
-            elif atom in self.randomvariables_map:
-                dp.randomvariables.add(self.randomvariables_map[atom])
-            else:
-                try:
-                    expr = self.aliases_map[atom]
-                except KeyError:
-                    expr = self.piecewises_map[atom]
-                expr_dp = self.get_dependencies(expr)
-                dp.parameters.update(expr_dp.parameters)
-                dp.ports.update(expr_dp.ports)
-                dp.constants.update(expr_dp.constants)
-                dp.randomvariables.update(expr_dp.randomvariables)
-                # Add expression dependencies in order of execution
-                dp.expressions.extend(e for e in expr_dp.expressions
-                                      if e not in dp.expressions)
-                dp.expressions.append(expr)
-        return dp
-
-    @property
-    def _assumed_defined(self):
-        return []
 
 
 class Parameter(BaseALObject, ExpressionSymbol):

@@ -7,6 +7,7 @@ docstring needed
 
 
 from ...componentclass.utils import ComponentActionVisitor
+from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 
 class DistributionActionVisitor(ComponentActionVisitor):
@@ -25,3 +26,13 @@ class DistributionActionVisitor(ComponentActionVisitor):
 
     def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable
         self.check_pass()
+
+
+class DistributionRequiredDefinitions(ComponentRequiredDefinitions,
+                                      DistributionActionVisitor):
+
+    def __init__(self, componentclass, expressions):
+        DistributionActionVisitor.__init__(self,
+                                           require_explicit_overrides=False)
+        ComponentRequiredDefinitions.__init__(self, componentclass,
+                                              expressions)

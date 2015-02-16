@@ -73,11 +73,6 @@ class DynamicsBlock(BaseALObject):
         self._aliases = dict((a.lhs, a) for a in aliases)
         self._state_variables = dict((s.name, s) for s in state_variables)
         self._constants = dict((c.name, c) for c in constants)
-<<<<<<< HEAD
-=======
-        self._randomvariables = dict((c.name, c) for c in randomvariables)
-        self._piecewises = dict((c.name, c) for c in piecewises)
->>>>>>> 556e6c9... fixed up circular import errors
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -420,6 +415,9 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def rename(self, old_symbol, new_symbol):
         DynamicsRenameSymbol(self, old_symbol, new_symbol)
 
+    def required_for(self, expressions):
+        return DynamicsRequiredDefinitions(self, expressions)
+
     def __repr__(self):
         return "<dynamics.DynamicsClass %s>" % self.name
 
@@ -560,6 +558,12 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         """Forwarding function to self.dynamicsblock.state_variables"""
         return self.dynamicsblock.state_variables
 
+    def all_time_derivatives(self, state_variable=None):
+        return chain(*((td for td in r.time_derivatives
+                        if (state_variable is None or
+                            td.dependent_variable == state_variable.name))
+                        for r in self.dynamicsblock.regimes))
+
     @property
     def analog_send_ports_map(self):
         """
@@ -657,3 +661,4 @@ def inf_check(l1, l2, desc):
 
 from .validators import DynamicsValidator
 from .utils import DynamicsClassInterfaceInferer
+from .utils.visitors import DynamicsRequiredDefinitions

@@ -96,11 +96,20 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
     StateVariables, Aliases, Ports
     """
 
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):
-        pass
 
-    def action_regime(self, regime, **kwargs):
-        pass
+    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
+        super(DynamicsRenameSymbol, self).action_componentclass(componentclass)
+        self._update_dicts(componentclass._analog_receive_ports,
+                           componentclass._analog_reduce_ports,
+                           componentclass._analog_send_ports,
+                           componentclass._event_send_ports,
+                           componentclass._event_receive_ports)
+
+    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._update_dicts(dynamicsblock._state_variables)
+
+    def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._update_dicts(regime._time_derivatives)
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         if state_variable.name == self.old_symbol_name:
@@ -145,8 +154,7 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
             self.note_rhs_changed(trigger)
             trigger.rhs_name_transform_inplace(self.namemap)
 
-    def action_oncondition(self, on_condition, **kwargs):
-        """ Handled in action_condition """
+    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         pass
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable

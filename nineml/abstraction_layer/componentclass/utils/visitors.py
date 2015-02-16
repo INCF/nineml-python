@@ -52,3 +52,112 @@ class ComponentActionVisitor(ComponentVisitor):
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.check_pass()
+
+
+class ComponentRequiredDefinitions(object):
+    """
+    Gets lists of required parameters, states, ports, random variables,
+    constants and expressions (in resolved order of execution).
+    """
+
+    def __init__(self, componentclass, expressions):
+        # Expression can either be a single expression or an iterable of
+        # expressions
+        self.parameters = set()
+        self.ports = set()
+        self.constants = set()
+        self.random_variables = set()
+        self.expressions = list()
+        self._required_stack = []
+        self._push_required_symbols(expressions)
+        self._componentclass = componentclass
+        self.visit(componentclass)
+
+    def __repr__(self):
+        return ("Parameters: {}\nPorts: {}\nConstants: {}\n"
+                "Random-variables: {}\nPiecewises: {}\nAliases:\n{}"
+                .format(', '.join(self.parameter_names),
+                        ', '.join(self.port_names),
+                        ', '.join(self.constant_names),
+                        ', '.join(self.random_variable_names),
+                        ', '.join(e.name for e in self.expressions
+                                  if hasattr(e, 'pieces')),
+                        '\n'.join('{} = {}'.format(e.name, e.rhs)
+                                  for e in self.expressions
+                                  if not hasattr(e, 'pieces'))))
+
+    def _push_required_symbols(self, expression):
+        required_atoms = set()
+        try:
+            for expr in expression:
+                required_atoms.update(expr.rhs_atoms)
+        except TypeError:
+            required_atoms.update(expression.rhs_atoms)
+        # Strip builtin symbols from required atoms
+        required_atoms.difference_update(get_reserved_and_builtin_symbols())
+        self._required_stack.append(required_atoms)
+
+    def _is_required(self, element):
+        return element.name in self._required_stack[-1]
+
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
+        if self._is_required(parameter):
+            self.parameters.add(parameter)
+
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
+        if self._is_required(port):
+            self.ports.add(port)
+
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
+        if self._is_required(port):
+            self.ports.add(port)
+
+    def action_constants(self, constant, **kwargs):  # @UnusedVariable
+        if self._is_required(constant):
+            self.constants.add(constant)
+
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
+        if self._is_required(randomvariable):
+            self.random_variables.add(randomvariable)
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        if (self._is_required(alias) and
+                alias.name not in (e.name for e in self.expressions)):
+            # Since aliases may be dependent on other aliases/piecewises the
+            # order they are executed is important so we make sure their
+            # dependencies are added first
+            self._push_required_symbols(alias)
+            self.visit(self._componentclass)
+            self._required_stack.pop()
+            self.expressions.append(alias)
+
+    def action_piecewise(self, piecewise, **kwargs):  # @UnusedVariable
+        if (self._is_required(piecewise) and
+                piecewise.name not in self.expressions):
+            # Since piecewises may be dependent on other aliases/piecewises the
+            # order they are executed is important so we make sure their
+            # dependencies are added first
+            self._push_required_symbols(piecewise)
+            self.visit(self._componentclass)
+            self._required_stack.pop()
+            self.expressions.append(piecewise)
+
+    @property
+    def parameter_names(self):
+        return (p.name for p in self.parameters)
+
+    @property
+    def port_names(self):
+        return (p.name for p in self.ports)
+
+    @property
+    def constant_names(self):
+        return (c.name for c in self.constants)
+
+    @property
+    def random_variable_names(self):
+        return (r.name for r in self.random_variables)
+
+    @property
+    def expression_names(self):
+        return (e.name for e in self.expressions)

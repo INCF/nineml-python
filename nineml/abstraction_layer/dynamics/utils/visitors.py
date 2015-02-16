@@ -8,6 +8,7 @@ docstring needed
 
 from itertools import chain
 from ...componentclass.utils import ComponentActionVisitor
+from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 
 class DynamicsActionVisitor(ComponentActionVisitor):
@@ -122,3 +123,26 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.check_pass()
+
+
+class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
+                                  DynamicsActionVisitor):
+
+    def __init__(self, componentclass, expressions):
+        DynamicsActionVisitor.__init__(self, require_explicit_overrides=False)
+        self.state_variables = set()
+        ComponentRequiredDefinitions.__init__(self, componentclass,
+                                              expressions)
+
+    def __repr__(self):
+        return ("State-variables: {}\n"
+                .format(', '.join(self.state_variable_names)) +
+                super(DynamicsRequiredDefinitions, self).__repr__())
+
+    def action_statevariable(self, statevariable, **kwargs):  # @UnusedVariable
+        if self._is_required(statevariable):
+            self.state_variables.add(statevariable)
+
+    @property
+    def state_variable_names(self):
+        return (r.name for r in self.state_variables)

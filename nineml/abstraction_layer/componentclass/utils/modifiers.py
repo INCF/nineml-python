@@ -47,18 +47,25 @@ class ComponentRenameSymbol(ComponentActionVisitor):
     def note_port_changed(self, what):
         self.port_changes.append(what)
 
-    def action_componentclass(self, component, **kwargs):
-        pass
-
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        if parameter.name == self.old_symbol_name:
-            parameter._name = self.new_symbol_name
-            self.note_lhs_changed(parameter)
+    def _update_dicts(self, *dicts):
+        for d in dicts:
+            try:
+                d[self.new_symbol_name] = d.pop(self.old_symbol_name)
+            except KeyError:
+                pass
 
     def _action_port(self, port, **kwargs):  # @UnusedVariable
         if port.name == self.old_symbol_name:
             port._name = self.new_symbol_name
             self.note_port_changed(port)
+
+    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._update_dicts(componentclass._parameters)
+
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
+        if parameter.name == self.old_symbol_name:
+            parameter._name = self.new_symbol_name
+            self.note_lhs_changed(parameter)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if alias.lhs == self.old_symbol_name:
@@ -68,10 +75,10 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             self.note_rhs_changed(alias)
             alias.name_transform_inplace(self.namemap)
 
-    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
-        if randomvariable.name == self.old_symbol_name:
-            self.note_lhs_changed(randomvariable)
-            randomvariable.name_transform_inplace(self.namemap)
+    def action_randomvariable(self, random_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        if random_variable.name == self.old_symbol_name:
+            self.note_lhs_changed(random_variable)
+            random_variable.name_transform_inplace(self.namemap)
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         if constant.name == self.old_symbol_name:
