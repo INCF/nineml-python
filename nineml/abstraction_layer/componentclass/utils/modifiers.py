@@ -24,9 +24,9 @@ class ComponentRenameIdentiferModifier(ComponentActionVisitor):
         self.from_name = from_name
         self.to_name = to_name
         self._regex = re.compile(r'(?<!\w){}(?!\w)'.format(from_name))
-        self._found_lhs = False
+        self._found_definition = False
         self.visit(componentclass)
-        if not self._found_lhs:
+        if not self._found_definition:
             raise NineMLRuntimeError(
                 "Did not find identifier '{}' definition in component class"
                 .format(self.from_name))
@@ -36,8 +36,8 @@ class ComponentRenameIdentiferModifier(ComponentActionVisitor):
 
     def _rename_lhs(self, obj):
         if obj.name == self.from_name:
-            obj.name = self.to_name
-            self._found_lhs = True
+            obj._name = self.to_name
+            self._found_definition = True
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self._rename_lhs(parameter)

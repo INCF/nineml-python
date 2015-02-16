@@ -369,7 +369,7 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
     That is, a single symbol, for example 's = t+1'
     """
 
-    defining_attributes = ('_lhs', '_rhs')
+    defining_attributes = ('_name', '_rhs')
 
     def __init__(self, lhs, rhs):
         ExpressionWithLHS.__init__(self, rhs)
@@ -381,7 +381,11 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
             err = 'Invalid LHS target: %s' % lhs
             raise NineMLRuntimeError(err)
 
-        self._lhs = lhs.strip()
+        self._name = lhs.strip()
+
+    @property
+    def name(self):
+        return self._name
 
     def __str__(self):
         return '{} := {}'.format(self.lhs, self.rhs_str)
@@ -392,14 +396,14 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
 
     @property
     def lhs(self):
-        return self._lhs
+        return self._name
 
     @property
     def lhs_atoms(self):
         return [self.lhs]
 
     def lhs_name_transform_inplace(self, name_map):
-        self._lhs = name_map.get(self.lhs, self.lhs)
+        self._name = name_map.get(self.lhs, self.lhs)
 
     def _sympy_(self):
         return sympy.Symbol(self.lhs)
