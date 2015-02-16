@@ -7,7 +7,6 @@ docstring needed
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import ConnectionRuleClass, ConnectionRuleBlock
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
@@ -58,3 +57,5 @@ class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
     def visit_connectionruleblock(self, connectionrule):
         return E('ConnectionRule',
                  standardLibrary=connectionrule.standard_library)
+
+from ..base import ConnectionRuleClass, ConnectionRuleBlock

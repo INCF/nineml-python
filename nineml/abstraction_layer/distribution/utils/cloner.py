@@ -6,7 +6,7 @@ docstring needed
 """
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
-    ComponentRenameSymbol, ComponentClonerVisitor)
+    ComponentCloner)
 from .visitors import DistributionActionVisitor
 
 
@@ -27,16 +27,7 @@ class DistributionExpandAliasDefinition(DistributionActionVisitor,
     pass
 
 
-class DistributionRenameSymbol(DistributionActionVisitor,
-                               ComponentRenameSymbol):
-
-    """ Can be used for:
-    Aliases
-    """
-    pass
-
-
-class DistributionClonerVisitor(ComponentClonerVisitor):
+class DistributionCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
         ccn = componentclass.__class__(

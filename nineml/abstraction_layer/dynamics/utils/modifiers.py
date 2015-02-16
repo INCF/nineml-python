@@ -11,7 +11,8 @@ from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utils import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
 from ...componentclass.utils.modifiers import (
-    ComponentModifier, ComponentRenameIdentiferModifier)
+    ComponentModifier, ComponentRenameSymbol)
+from .visitors import DynamicsActionVisitor
 
 
 class DynamicPortModifier(ComponentModifier):
@@ -88,38 +89,67 @@ class DynamicPortModifier(ComponentModifier):
         componentclass._parameters[port_name] = Parameter(port_name)
 
 
-class DynamicsRenameIdentiferModifier(ComponentRenameIdentiferModifier):
+class DynamicsRenameSymbol(DynamicsActionVisitor,
+                           ComponentRenameSymbol):
 
-    def action_statevariable(self, statevariable, **kwargs):  # @UnusedVariable
-        if self.old_name == statevariable.name:
-            self._found_lhs = True
-            statevariable.name = self.new_name
+    """ Can be used for:
+    StateVariables, Aliases, Ports
+    """
 
-    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        timederivative.rhs = self._sub_into_rhs(timederivative.rhs)
+    def action_dynamicsblock(self, dynamicsblock, **kwargs):
+        pass
+
+    def action_regime(self, regime, **kwargs):
+        pass
+
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        if state_variable.name == self.old_symbol_name:
+            state_variable._name = self.new_symbol_name
+            self.note_lhs_changed(state_variable)
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        self._rename_lhs(port)
+        self._action_port(port, **kwargs)
 
     def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self._rename_lhs(port)
+        self._action_port(port, **kwargs)
 
     def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        self._rename_lhs(port)
+        self._action_port(port, **kwargs)
 
     def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        self._rename_lhs(port)
+        self._action_port(port, **kwargs)
 
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self._rename_lhs(port)
+        self._action_port(port, **kwargs)
+
+    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
+        if event_out.port_name == self.old_symbol_name:
+            event_out._port_name = self.new_symbol_name
+            self.note_rhs_changed(event_out)
 
     def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
-        self._rename_lhs(assignment)
-        assignment.rhs = self._sub_into_rhs(assignment.rhs)
+        if self.old_symbol_name in assignment.atoms:
+            self.note_rhs_changed(assignment)
+            assignment.name_transform_inplace(self.namemap)
+
+    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        if timederivative.dependent_variable == self.old_symbol_name:
+            self.note_lhs_changed(timederivative)
+            timederivative.name_transform_inplace(self.namemap)
+        elif self.old_symbol_name in timederivative.atoms:
+            self.note_rhs_changed(timederivative)
+            timederivative.name_transform_inplace(self.namemap)
 
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        trigger.rhs = self._sub_into_rhs(trigger.rhs)
+        if self.old_symbol_name in trigger.rhs_atoms:
+            self.note_rhs_changed(trigger)
+            trigger.rhs_name_transform_inplace(self.namemap)
 
-    def action_onevent(self, onevent, **kwargs):  # @UnusedVariable
-        if onevent.src_port_name == self.from_name:
-            onevent.src_port_name = self.to_name
+    def action_oncondition(self, on_condition, **kwargs):
+        """ Handled in action_condition """
+        pass
+
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
+        if on_event.src_port_name == self.old_symbol_name:
+            on_event._port_name = self.new_symbol_name
+            self.note_rhs_changed(on_event)

@@ -100,7 +100,7 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             constant.name_transform_inplace(self.namemap)
 
 
-class ComponentClonerVisitor(ComponentVisitor):
+class ComponentCloner(ComponentVisitor):
 
     def prefix_variable(self, variable, **kwargs):
         prefix = kwargs.get('prefix', '')

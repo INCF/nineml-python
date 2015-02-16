@@ -40,3 +40,12 @@ class ConnectionRuleClass(ComponentClass):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
+
+    def __copy__(self):
+        return ConnectionRuleCloner().visit(self)
+
+    def rename(self, old_symbol, new_symbol):
+        ConnectionRuleRenameSymbol(self, old_symbol, new_symbol)
+
+from .utils.cloner import ConnectionRuleCloner
+from .utils.modifiers import ConnectionRuleRenameSymbol

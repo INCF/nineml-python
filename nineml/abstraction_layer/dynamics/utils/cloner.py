@@ -7,7 +7,7 @@ docstring needed
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
-    ComponentRenameSymbol, ComponentClonerVisitor)
+    ComponentCloner)
 from .visitors import DynamicsActionVisitor
 
 
@@ -41,73 +41,7 @@ class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
         trigger.rhs_name_transform_inplace(self.namemap)
 
 
-class DynamicsRenameSymbol(DynamicsActionVisitor,
-                           ComponentRenameSymbol):
-
-    """ Can be used for:
-    StateVariables, Aliases, Ports
-    """
-
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):
-        pass
-
-    def action_regime(self, regime, **kwargs):
-        pass
-
-    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        if state_variable.name == self.old_symbol_name:
-            state_variable._name = self.new_symbol_name
-            self.note_lhs_changed(state_variable)
-
-    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
-        if event_out.port_name == self.old_symbol_name:
-            event_out._port_name = self.new_symbol_name
-            self.note_rhs_changed(event_out)
-
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
-        if self.old_symbol_name in assignment.atoms:
-            self.note_rhs_changed(assignment)
-            assignment.name_transform_inplace(self.namemap)
-
-    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        if timederivative.dependent_variable == self.old_symbol_name:
-            self.note_lhs_changed(timederivative)
-            timederivative.name_transform_inplace(self.namemap)
-        elif self.old_symbol_name in timederivative.atoms:
-            self.note_rhs_changed(timederivative)
-            timederivative.name_transform_inplace(self.namemap)
-
-    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        if self.old_symbol_name in trigger.rhs_atoms:
-            self.note_rhs_changed(trigger)
-            trigger.rhs_name_transform_inplace(self.namemap)
-
-    def action_oncondition(self, on_condition, **kwargs):
-        """ Handled in action_condition """
-        pass
-
-    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        if on_event.src_port_name == self.old_symbol_name:
-            on_event._port_name = self.new_symbol_name
-            self.note_rhs_changed(on_event)
-
-
-class DynamicsClonerVisitor(ComponentClonerVisitor):
+class DynamicsCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
         ccn = componentclass.__class__(
@@ -222,7 +156,7 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
         )
 
 
-class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
+class DynamicsClonerPrefixNamespace(DynamicsCloner):
 
     """
     A visitor that walks over a hierarchical componentclass, and prefixes every

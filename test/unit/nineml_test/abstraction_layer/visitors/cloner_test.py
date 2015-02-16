@@ -9,13 +9,13 @@ from nineml.abstraction_layer import (
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
     NamespaceAddress)
 from nineml.abstraction_layer.dynamics.utils.cloner import (
-    DynamicsClonerVisitorPrefixNamespace)
+    DynamicsClonerPrefixNamespace)
 
 NSA = NamespaceAddress
 
 
-# Testing Skeleton for class: DynamicsClonerVisitorPrefixNamespace
-class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
+# Testing Skeleton for class: DynamicsClonerPrefixNamespace
+class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
     def test_Constructor(self):
 
@@ -46,7 +46,7 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
 
         # Test Cloner, no hierachy
         # Everything should be as before:
-        c_clone = DynamicsClonerVisitorPrefixNamespace().visit(c)
+        c_clone = DynamicsClonerPrefixNamespace().visit(c)
 
         self.assertEqual(c_clone.name, 'C')
         self.assertEqual(set(c_clone.aliases_map.keys()), set(['C1', 'C2', 'C3']))
@@ -74,7 +74,7 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
                            subnodes={'c1': c, 'c2': c},
                            portconnections=[('c1.C1', 'c2.cIn1'), ('c2.emit', 'c1.spikein'), ])
 
-        b_clone = DynamicsClonerVisitorPrefixNamespace().visit(b)
+        b_clone = DynamicsClonerPrefixNamespace().visit(b)
         c1_clone = b_clone.get_subnode('c1')
         c2_clone = b_clone.get_subnode('c2')
 
@@ -143,7 +143,7 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
                            ('c3.C2', 'b1.c2.cIn2')
                            ]
                            )
-        a_clone = DynamicsClonerVisitorPrefixNamespace().visit(a)
+        a_clone = DynamicsClonerPrefixNamespace().visit(a)
 
         b1_clone = a_clone.get_subnode('b1')
         b2_clone = a_clone.get_subnode('b2')

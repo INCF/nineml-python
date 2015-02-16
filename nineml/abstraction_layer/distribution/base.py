@@ -25,3 +25,12 @@ class DistributionClass(ComponentClass):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
+
+    def __copy__(self):
+        return DistributionCloner().visit(self)
+
+    def rename(self, old_symbol, new_symbol):
+        DistributionRenameSymbol(self, old_symbol, new_symbol)
+
+from .utils.cloner import DistributionCloner
+from .utils.modifiers import DistributionRenameSymbol

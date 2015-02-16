@@ -20,8 +20,9 @@ from nineml.utils import (check_list_contain_same_items, invert_dictionary,
                             assert_no_duplicates)
 from .utils import DynamicsQueryer
 from .utils.cloner import (
-    DynamicsExpandAliasDefinition, DynamicsClonerVisitor)
+    DynamicsExpandAliasDefinition, DynamicsCloner)
 from .. import BaseALObject
+from .utils.modifiers import DynamicsRenameSymbol
 
 
 class DynamicsBlock(BaseALObject):
@@ -72,6 +73,11 @@ class DynamicsBlock(BaseALObject):
         self._aliases = dict((a.lhs, a) for a in aliases)
         self._state_variables = dict((s.name, s) for s in state_variables)
         self._constants = dict((c.name, c) for c in constants)
+<<<<<<< HEAD
+=======
+        self._randomvariables = dict((c.name, c) for c in randomvariables)
+        self._piecewises = dict((c.name, c) for c in piecewises)
+>>>>>>> 556e6c9... fixed up circular import errors
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -216,7 +222,7 @@ class _NamespaceMixin(object):
         if namespace in self.subnodes:
             err = 'Key already exists in namespace: %s' % namespace
             raise NineMLRuntimeError(err)
-        self.subnodes[namespace] = DynamicsClonerVisitor().visit(subnode)
+        self.subnodes[namespace] = DynamicsCloner().visit(subnode)
         self.subnodes[namespace].set_parent_model(self)
 
         self.validate()
@@ -407,6 +413,12 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         self.validate()
 
     # -------------------------- #
+
+    def __copy__(self):
+        return DynamicsCloner().visit(self)
+
+    def rename(self, old_symbol, new_symbol):
+        DynamicsRenameSymbol(self, old_symbol, new_symbol)
 
     def __repr__(self):
         return "<dynamics.DynamicsClass %s>" % self.name

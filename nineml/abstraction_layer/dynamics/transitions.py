@@ -11,7 +11,7 @@ from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction_layer.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ...exceptions import NineMLRuntimeError
-from .utils.cloner import DynamicsClonerVisitor
+from .utils.cloner import DynamicsCloner
 
 
 class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
@@ -265,7 +265,7 @@ class OnCondition(Transition):
             parameters.
         """
         if isinstance(trigger, Trigger):
-            self._trigger = DynamicsClonerVisitor().visit(trigger)
+            self._trigger = DynamicsCloner().visit(trigger)
         elif isinstance(trigger, basestring):
             self._trigger = Trigger(rhs=trigger)
         else:

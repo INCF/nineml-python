@@ -6,7 +6,6 @@ This file contains utility classes for modifying components.
 """
 from nineml.exceptions import NineMLRuntimeError
 from .visitors import ComponentActionVisitor
-import re
 
 
 class ComponentModifier(object):
@@ -16,44 +15,73 @@ class ComponentModifier(object):
     pass
 
 
-class ComponentRenameIdentiferModifier(ComponentActionVisitor):
+class ComponentRenameSymbol(ComponentActionVisitor):
 
-    def __init__(self, componentclass, from_name, to_name):
-        super(ComponentRenameIdentiferModifier, self).__init__(
-            self, require_explicit_overrides=False)
-        self.from_name = from_name
-        self.to_name = to_name
-        self._regex = re.compile(r'(?<!\w){}(?!\w)'.format(from_name))
-        self._found_definition = False
+    """ Can be used for:
+    StateVariables, Aliases, Ports
+    """
+
+    def __init__(self, componentclass, old_symbol_name, new_symbol_name):
+        ComponentActionVisitor.__init__(
+            self, require_explicit_overrides=True)
+        self.old_symbol_name = old_symbol_name
+        self.new_symbol_name = new_symbol_name
+        self.namemap = {old_symbol_name: new_symbol_name}
+
+        if not componentclass.is_flat():
+            raise NineMLRuntimeError('Rename Symbol called on non-flat model')
+
+        self.lhs_changes = []
+        self.rhs_changes = []
+        self.port_changes = []
+
         self.visit(componentclass)
-        if not self._found_definition:
-            raise NineMLRuntimeError(
-                "Did not find identifier '{}' definition in component class"
-                .format(self.from_name))
+        componentclass._validate_self()
 
-    def _sub_into_rhs(self, rhs):
-        return self._regex.sub(self.to_name, rhs)
+    def note_lhs_changed(self, what):
+        self.lhs_changes.append(what)
 
-    def _rename_lhs(self, obj):
-        if obj.name == self.from_name:
-            obj._name = self.to_name
-            self._found_definition = True
+    def note_rhs_changed(self, what):
+        self.rhs_changes.append(what)
+
+    def note_port_changed(self, what):
+        self.port_changes.append(what)
+
+    def action_componentclass(self, component, **kwargs):
+        pass
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        self._rename_lhs(parameter)
+        if parameter.name == self.old_symbol_name:
+            parameter._name = self.new_symbol_name
+            self.note_lhs_changed(parameter)
+
+    def _action_port(self, port, **kwargs):  # @UnusedVariable
+        if port.name == self.old_symbol_name:
+            port._name = self.new_symbol_name
+            self.note_port_changed(port)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self._rename_lhs(alias)
-        alias._rhs = self._sub_into_rhs(alias._rhs)
-
-    def action_constant(self, constant, **kwargs):  # @UnusedVariable
-        self._rename_lhs(constant)
+        if alias.lhs == self.old_symbol_name:
+            self.note_lhs_changed(alias)
+            alias.name_transform_inplace(self.namemap)
+        elif self.old_symbol_name in alias.atoms:
+            self.note_rhs_changed(alias)
+            alias.name_transform_inplace(self.namemap)
 
     def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._rename_lhs(randomvariable)
+        if randomvariable.name == self.old_symbol_name:
+            self.note_lhs_changed(randomvariable)
+            randomvariable.name_transform_inplace(self.namemap)
+
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable
+        if constant.name == self.old_symbol_name:
+            self.note_lhs_changed(constant)
+            constant.name_transform_inplace(self.namemap)
 
     def action_piecewise(self, piecewise, **kwargs):  # @UnusedVariable
-        self._rename_lhs(piecewise)
-        for piece in piecewise.pieces:
-            piece._rhs = self._sub_into_rhs(piece._rhs)
-        piecewise.otherwise._rhs = self._sub_into_rhs(piecewise.otherwise._rhs)
+        if piecewise.name == self.old_symbol_name:
+            self.note_lhs_changed(piecewise)
+            piecewise.name_transform_inplace(self.namemap)
+        elif self.old_symbol_name in piecewise.atoms:
+            self.note_rhs_changed(piecewise)
+            piecewise.name_transform_inplace(self.namemap)

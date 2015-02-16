@@ -6,18 +6,18 @@ docstring needed
 """
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
-    ComponentRenameSymbol, ComponentClonerVisitor)
+    ComponentCloner)
 from .visitors import ConnectionRuleActionVisitor
 
 
 class ConnectionRuleExpandPortDefinition(ConnectionRuleActionVisitor,
-                                       ComponentExpandPortDefinition):
+                                         ComponentExpandPortDefinition):
 
     pass
 
 
 class ConnectionRuleExpandAliasDefinition(ConnectionRuleActionVisitor,
-                                        ComponentExpandAliasDefinition):
+                                          ComponentExpandAliasDefinition):
 
     """
     An action-class that walks over a componentclass, and expands an alias in
@@ -27,16 +27,7 @@ class ConnectionRuleExpandAliasDefinition(ConnectionRuleActionVisitor,
     pass
 
 
-class ConnectionRuleRenameSymbol(ConnectionRuleActionVisitor,
-                               ComponentRenameSymbol):
-
-    """ Can be used for:
-    Aliases
-    """
-    pass
-
-
-class ConnectionRuleClonerVisitor(ComponentClonerVisitor):
+class ConnectionRuleCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
         ccn = componentclass.__class__(

@@ -7,6 +7,8 @@ This file contains utility classes for modifying components.
 
 from .cloner import DistributionExpandPortDefinition
 from ...componentclass.utils.modifiers import ComponentModifier
+from .visitors import DistributionActionVisitor
+from ...componentclass.utils.modifiers import ComponentRenameSymbol
 
 
 class DistributionModifier(ComponentModifier):
@@ -14,3 +16,12 @@ class DistributionModifier(ComponentModifier):
     """Utility classes for modifying components"""
 
     _ExpandPortDefinition = DistributionExpandPortDefinition
+
+
+class DistributionRenameSymbol(DistributionActionVisitor,
+                               ComponentRenameSymbol):
+
+    """ Can be used for:
+    Aliases
+    """
+    pass

@@ -6,7 +6,9 @@ This file contains utility classes for modifying components.
 """
 
 from .cloner import ConnectionRuleExpandPortDefinition
-from ...componentclass.utils.modifiers import ComponentModifier
+from ...componentclass.utils.modifiers import (
+    ComponentModifier, ComponentRenameSymbol)
+from .visitors import ConnectionRuleActionVisitor
 
 
 class ConnectionRuleModifier(ComponentModifier):
@@ -14,3 +16,12 @@ class ConnectionRuleModifier(ComponentModifier):
     """Utility classes for modifying components"""
 
     _ExpandPortDefinition = ConnectionRuleExpandPortDefinition
+
+
+class ConnectionRuleRenameSymbol(ConnectionRuleActionVisitor,
+                                 ComponentRenameSymbol):
+
+    """ Can be used for:
+    Aliases
+    """
+    pass
