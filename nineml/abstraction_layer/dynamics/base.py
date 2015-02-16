@@ -634,6 +634,10 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                 originalname=alias.lhs, targetname=("(%s)" % alias.rhs))
             alias_expander.visit(self)
 
+    @property
+    def _assumed_defined(self):
+        return self.dynamicsblock._state_variables.keys()
+
 
 def inf_check(l1, l2, desc):
     check_list_contain_same_items(l1, l2, desc1='Declared',
