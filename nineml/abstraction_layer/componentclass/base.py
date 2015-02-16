@@ -156,6 +156,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
                             'ClassXMLLoader')
         return XMLLoader(document).load_componentclass(element)
 
+    # TODO: This should be implemented as a visitor class I think.
     def get_dependencies(self, expression):
         """
         Gets lists of required parameters, states, ports, random variables,

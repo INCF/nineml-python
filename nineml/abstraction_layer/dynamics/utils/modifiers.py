@@ -10,10 +10,11 @@ from .cloner import DynamicsExpandPortDefinition
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utils import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
-from ...componentclass.utils.modifiers import ComponentModifier
+from ...componentclass.utils.modifiers import (
+    ComponentModifier, ComponentRenameIdentiferModifier)
 
 
-class DynamicsModifier(ComponentModifier):
+class DynamicPortModifier(ComponentModifier):
 
     """Utility classes for modifying components"""
 
@@ -56,8 +57,8 @@ class DynamicsModifier(ComponentModifier):
         for arp in componentclass.query.analog_reduce_ports:
             if exclude and arp.name in exclude:
                 continue
-            cls.close_analog_port(componentclass=componentclass, port_name=arp.name,
-                                  value='0')
+            cls.close_analog_port(componentclass=componentclass,
+                                  port_name=arp.name, value='0')
 
     @classmethod
     def rename_port(cls, componentclass, old_port_name, new_port_name):
@@ -85,3 +86,40 @@ class DynamicsModifier(ComponentModifier):
 
         # Add a new parameter:
         componentclass._parameters[port_name] = Parameter(port_name)
+
+
+class DynamicsRenameIdentiferModifier(ComponentRenameIdentiferModifier):
+
+    def action_statevariable(self, statevariable, **kwargs):  # @UnusedVariable
+        if self.old_name == statevariable.name:
+            self._found_lhs = True
+            statevariable.name = self.new_name
+
+    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        timederivative.rhs = self._sub_into_rhs(timederivative.rhs)
+
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
+        self._rename_lhs(port)
+
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
+        self._rename_lhs(port)
+
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
+        self._rename_lhs(port)
+
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
+        self._rename_lhs(port)
+
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
+        self._rename_lhs(port)
+
+    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+        self._rename_lhs(assignment)
+        assignment.rhs = self._sub_into_rhs(assignment.rhs)
+
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        trigger.rhs = self._sub_into_rhs(trigger.rhs)
+
+    def action_onevent(self, onevent, **kwargs):  # @UnusedVariable
+        if onevent.src_port_name == self.from_name:
+            onevent.src_port_name = self.to_name
