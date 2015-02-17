@@ -83,9 +83,17 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         subnodes = self._load_blocks(element, blocks=subblocks)
 
         return DynamicsBlock(regimes=subnodes["Regime"],
+<<<<<<< HEAD
                         aliases=subnodes["Alias"],
                         state_variables=subnodes["StateVariable"],
                         constants=subnodes["Constant"])
+=======
+                             aliases=subnodes["Alias"],
+                             state_variables=subnodes["StateVariable"],
+                             constants=subnodes["Constant"],
+                             random_variables=subnodes["RandomVariable"],
+                             piecewises=subnodes["Piecewise"])
+>>>>>>> be46886... added main_block 'update_dicts' action to rename symbol and renamed
 
     @read_annotations
     def load_regime(self, element):
@@ -186,7 +194,13 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
                      for b in dynamicsblock.state_variables] +
                     [r.accept_visitor(self) for r in dynamicsblock.regimes] +
                     [b.accept_visitor(self) for b in dynamicsblock.aliases] +
+<<<<<<< HEAD
                     [c.accept_visitor(self) for c in dynamicsblock.constants])
+=======
+                    [c.accept_visitor(self) for c in dynamicsblock.constants] +
+                    [c.accept_visitor(self) for c in dynamics.random_variables] +
+                    [c.accept_visitor(self) for c in dynamicsblock.piecewises])
+>>>>>>> be46886... added main_block 'update_dicts' action to rename symbol and renamed
         return E('Dynamics', *elements)
 
     @annotate_xml

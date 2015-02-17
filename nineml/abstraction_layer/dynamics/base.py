@@ -412,7 +412,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def __copy__(self):
         return DynamicsCloner().visit(self)
 
-    def rename(self, old_symbol, new_symbol):
+    def rename_symbol(self, old_symbol, new_symbol):
         DynamicsRenameSymbol(self, old_symbol, new_symbol)
 
     def required_for(self, expressions):

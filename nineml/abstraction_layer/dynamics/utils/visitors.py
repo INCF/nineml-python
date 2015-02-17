@@ -25,7 +25,13 @@ class DynamicsActionVisitor(ComponentActionVisitor):
         self.action_dynamicsblock(dynamicsblock, **kwargs)
         nodes = chain(dynamicsblock.state_variables,
                       dynamicsblock.regimes, dynamicsblock.aliases,
+<<<<<<< HEAD
                       dynamicsblock.constants)
+=======
+                      dynamicsblock.constants,
+                      dynamicsblock.random_variables,
+                      dynamicsblock.piecewises)
+>>>>>>> be46886... added main_block 'update_dicts' action to rename symbol and renamed
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 

@@ -44,7 +44,7 @@ class ConnectionRuleClass(ComponentClass):
     def __copy__(self):
         return ConnectionRuleCloner().visit(self)
 
-    def rename(self, old_symbol, new_symbol):
+    def rename_symbol(self, old_symbol, new_symbol):
         ConnectionRuleRenameSymbol(self, old_symbol, new_symbol)
 
     def required_for(self, expressions):

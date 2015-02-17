@@ -35,3 +35,6 @@ class ConnectionRuleRequiredDefinitions(ComponentRequiredDefinitions,
                                              require_explicit_overrides=False)
         ComponentRequiredDefinitions.__init__(self, componentclass,
                                               expressions)
+
+    def action_connectionruleblock(self, connectionruleblock, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.action_mainblock(connectionruleblock, **kwargs)

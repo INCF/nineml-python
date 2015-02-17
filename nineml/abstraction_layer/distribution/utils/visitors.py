@@ -36,3 +36,6 @@ class DistributionRequiredDefinitions(ComponentRequiredDefinitions,
                                            require_explicit_overrides=False)
         ComponentRequiredDefinitions.__init__(self, componentclass,
                                               expressions)
+
+    def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.action_mainblock(distributionblock, **kwargs)

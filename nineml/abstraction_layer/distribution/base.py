@@ -29,7 +29,7 @@ class DistributionClass(ComponentClass):
     def __copy__(self):
         return DistributionCloner().visit(self)
 
-    def rename(self, old_symbol, new_symbol):
+    def rename_symbol(self, old_symbol, new_symbol):
         DistributionRenameSymbol(self, old_symbol, new_symbol)
 
     def required_for(self, expressions):

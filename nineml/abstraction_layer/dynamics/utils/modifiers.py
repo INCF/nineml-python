@@ -106,7 +106,9 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
                            componentclass._event_receive_ports)
 
     def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._update_dicts(dynamicsblock._state_variables)
+        self.action_mainblock(dynamicsblock, **kwargs)
+        self._update_dicts(dynamicsblock._state_variables,
+                           dynamicsblock._regimes)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         if regime.name == self.old_symbol_name:
