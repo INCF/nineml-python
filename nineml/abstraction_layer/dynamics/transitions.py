@@ -41,6 +41,14 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         BaseALObject.__init__(self)
         ExpressionWithSimpleLHS.__init__(self, lhs=lhs, rhs=rhs)
 
+    @property
+    def name(self):
+        """
+        This is included to allow State-assignments to be polymorphic with
+        other named structures
+        """
+        return self.lhs
+
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_assignment(self, **kwargs)
@@ -243,6 +251,14 @@ class OnEvent(Transition):
     def __repr__(self):
         return """OnEvent( %s )""" % self.src_port_name
 
+    @property
+    def _name(self):
+        """
+        This is included to allow OnEvents to be polymorphic with
+        other named structures
+        """
+        return self.src_port_name
+
 
 class OnCondition(Transition):
 
@@ -281,6 +297,14 @@ class OnCondition(Transition):
     @property
     def trigger(self):
         return self._trigger
+
+    @property
+    def _name(self):
+        """
+        This is included to allow OnConditions to be polymorphic with
+        other named structures
+        """
+        return self.trigger.rhs
 
 
 class Trigger(Expression):
@@ -340,5 +364,12 @@ class OutputEvent(BaseALObject):
     def __repr__(self):
         return "OutputEvent('%s')" % self.port_name
 
+    @property
+    def _name(self):
+        """
+        This is included to allow State-assignments to be polymorphic with
+        other named structures
+        """
+        return self.port_name
 
 from .regimes import Regime

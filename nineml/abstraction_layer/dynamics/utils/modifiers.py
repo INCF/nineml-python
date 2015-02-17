@@ -89,8 +89,8 @@ class DynamicPortModifier(ComponentModifier):
         componentclass._parameters[port_name] = Parameter(port_name)
 
 
-class DynamicsRenameSymbol(DynamicsActionVisitor,
-                           ComponentRenameSymbol):
+class DynamicsRenameSymbol(ComponentRenameSymbol,
+                           DynamicsActionVisitor):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
@@ -109,6 +109,8 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
         self._update_dicts(dynamicsblock._state_variables)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
+        if regime.name == self.old_symbol_name:
+            regime._name = self.new_symbol_name
         self._update_dicts(regime._time_derivatives)
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -155,9 +157,12 @@ class DynamicsRenameSymbol(DynamicsActionVisitor,
             trigger.rhs_name_transform_inplace(self.namemap)
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
-        pass
+        if on_condition._target_regime_name == self.old_symbol_name:
+            on_condition._target_regime_name = self.new_symbol_name
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         if on_event.src_port_name == self.old_symbol_name:
-            on_event._port_name = self.new_symbol_name
+            on_event._src_port_name = self.new_symbol_name
             self.note_rhs_changed(on_event)
+        if on_event._target_regime_name == self.old_symbol_name:
+            on_event._target_regime_name = self.new_symbol_name

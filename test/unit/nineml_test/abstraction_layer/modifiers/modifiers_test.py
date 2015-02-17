@@ -37,8 +37,3 @@ class ComponentModifier_test(unittest.TestCase):
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
-
-
-class RenameSymbol_test(unittest.TestCase):
-
-    pass

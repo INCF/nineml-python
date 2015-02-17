@@ -285,6 +285,14 @@ class TimeDerivative(ODE):
                      independent_variable='t',
                      rhs=rhs)
 
+    @property
+    def _name(self):
+        """
+        This is included to allow Time-derivatives to be polymorphic with other
+        named structures
+        """
+        return self.dependent_variable
+
     def __repr__(self):
         return "TimeDerivative( d%s/dt = %s )" % \
             (self.dependent_variable, self.rhs)

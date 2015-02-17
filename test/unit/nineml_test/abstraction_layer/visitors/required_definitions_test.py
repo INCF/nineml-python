@@ -45,7 +45,6 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
 
     def _test_expression_requirements(self, expression):
         required = self.a.required_for(expression)
-        print "\n{}:\n{}".format(expression, repr(required))
         # Check for duplicates in expression names
         self.assertEqual(len(list(required.expression_names)),
                          len(set(required.expression_names)),
