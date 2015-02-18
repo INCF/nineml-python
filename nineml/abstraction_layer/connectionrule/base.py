@@ -41,7 +41,7 @@ class ConnectionRuleClass(ComponentClass):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
 
-    def __copy__(self):
+    def __deepcopy__(self, memo=None):  # @UnusedVariable
         return ConnectionRuleCloner().visit(self)
 
     def rename_symbol(self, old_symbol, new_symbol):
