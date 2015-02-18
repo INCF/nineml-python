@@ -6,6 +6,7 @@ import unittest
 from nineml.abstraction_layer.dynamics import StateAssignment, TimeDerivative
 from nineml.abstraction_layer.expressions import Alias
 from nineml.abstraction_layer.expressions.utils import MathUtil
+import sympy
 
 # Testing Skeleton for function:
 
@@ -50,10 +51,10 @@ class MathUtil_test(unittest.TestCase):
 
         e = Alias.from_str('a := b*c + d/(e*sin(f+g/e)) + b1 + e_ / exp(12*g)')
 
-        rhs_sub = MathUtil.get_rhs_substituted(e, {'b': 'B', 'e': 'E'})
+        rhs_sub = e.rhs_substituted({'b': 'B', 'e': 'E'})
         self.assertEqual(
             rhs_sub,
-            'B*c + d/(E*sin(f+g/E)) + b1 + e_ / exp(12*g)'
+            sympy.sympify('B*c + d/(E*sin(f+g/E)) + b1 + e_ / exp(12*g)')
         )
 
     def test_str_expr_replacement(self):
@@ -81,10 +82,11 @@ class MathUtil_test(unittest.TestCase):
 
         e = Alias.from_str('a := b*c + d/(e_*sin(f+g/e_)) + b1 + e_ / exp(12*g)')
 
-        rhs_sub = MathUtil.get_prefixed_rhs_string(e, prefix='U_', exclude=['c', 'e_'])
+        rhs_sub = e.suffixed_rhs(suffix='', prefix='U_', excludes=['c', 'e_'])
         self.assertEqual(
             rhs_sub,
-            'U_b*c + U_d/(e_*sin(U_f+U_g/e_)) + U_b1 + e_ / exp(12*U_g)'
+            sympy.sympify('U_b*c + U_d/(e_*sin(U_f+U_g/e_)) + U_b1 +'
+                          ' e_ / exp(12*U_g)')
         )
 
 
@@ -149,4 +151,4 @@ class StrToExpr_test(unittest.TestCase):
 
             self.assertEquals(td.dependent_variable, exp_dep)
             self.assertEquals(td.independent_variable, exp_indep)
-            self.assertEquals(td.rhs, exp_rhs)
+            self.assertEquals(td.rhs, sympy.sympify(exp_rhs))

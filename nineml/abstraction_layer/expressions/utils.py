@@ -226,16 +226,16 @@ class MathUtil(object):
         """
 
         expr = expr_obj.rhs
-        for name in expr_obj.rhs_names:
+        for name in expr_obj.rhs_symbol_names:
             if exclude and name in exclude:
                 continue
             expr = MathUtil.str_expr_replacement(name, prefix + name, expr)
-        for func in expr_obj.rhs_funcs:
-            if not is_builtin_symbol(func):
-                expr = MathUtil.str_expr_replacement(func,
-                                                     prefix + func,
-                                                     expr,
-                                                     func_ok=True)
+#         for func in expr_obj.rhs_funcs:
+#             if not is_builtin_symbol(func):
+#                 expr = MathUtil.str_expr_replacement(func,
+#                                                      prefix + func,
+#                                                      expr,
+#                                                      func_ok=True)
         return expr
 
     @classmethod

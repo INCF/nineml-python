@@ -99,7 +99,7 @@ class Testcond_to_obj(unittest.TestCase):
 # raise NotImplementedError()
 #
 #
-#    def test_rhs_names(self):
+#    def test_rhs_symbol_names(self):
 # Signature: name
 # No Docstring
 # from nineml.abstraction_layer.component.conditions import Condition

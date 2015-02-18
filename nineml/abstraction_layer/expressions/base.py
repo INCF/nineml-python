@@ -4,15 +4,15 @@ This file defines mathematical classes and derived classes
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-import itertools
-import quantities as pq
+from itertools import chain
+from copy import deepcopy
+import sympy.printing
+import re
 
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-from .utils import (MathUtil, str_to_npfunc_map, func_namespace_split,
-                    is_valid_lhs_target)
+from .utils import MathUtil, is_valid_lhs_target
 from .. import BaseALObject
-from . import parse
 
 
 class Expression(object):
@@ -23,55 +23,38 @@ class Expression(object):
 
     defining_attributes = ('_rhs',)
 
-    def __init__(self, rhs):
-        self._rhs = None
-        self._rhs_names = None
-        self._rhs_funcs = None
+    _func_re = re.compile(r'(\w+)\(')
 
-        self._set_rhs(rhs)
+    def __init__(self, rhs):
+        self.rhs = rhs
 
     def __eq__(self, other):
         return self._rhs == other._rhs
 
-    # Subclasses can over-ride this, if need be.
-    def _parse_rhs(self, rhs):
-        # A temporary measure, this is until the parser is
-        # generalised to handle conditionals
-        # return parse.expr_parse(rhs)
-        if isinstance(rhs, str):
-            parsed = parse.expr(rhs)
-        elif not isinstance(rhs, pq.quantity):
-            raise NotImplementedError
-        return parsed
-
-    # If we assign to rhs, then we need to update the
-    # cached names and funcs:
-    def _set_rhs(self, rhs):
-        rhs = rhs.strip()
-        self._rhs = rhs
-        if isinstance(rhs, str):
-            self._rhs_names, self._rhs_funcs = self._parse_rhs(rhs)
-            for name in self._rhs_names:
-                assert name not in self._rhs_funcs
-            for func in self._rhs_funcs:
-                assert func not in self._rhs_names
-        elif isinstance(rhs, pq.Quantity):  # FIXME: This should be in Constant
-            self._rhs_names = []
-            self._rhs_funcs = []
-        else:
-            raise NotImplementedError
-
-    def _get_rhs(self):
+    @property
+    def rhs(self):
         return self._rhs
-    rhs = property(_get_rhs, _set_rhs)
+
+    @rhs.setter
+    def rhs(self, rhs):
+        try:
+            self._rhs = sympy.sympify(rhs)
+        except sympy.SympifyError:
+            raise NineMLRuntimeError(
+                "Could not parse math-inline expression: {}"
+                .format(rhs))
 
     @property
-    def rhs_names(self):
-        return self._rhs_names
+    def rhs_symbols(self):
+        return self._rhs.free_symbols
+
+    @property
+    def rhs_symbol_names(self):
+        return (str(s) for s in self.rhs_symbols)
 
     @property
     def rhs_funcs(self):
-        return self._rhs_funcs
+        return self._func_re.findall(str(self._rhs))
 
     @property
     def rhs_atoms(self):
@@ -80,31 +63,37 @@ class Expression(object):
         mathematical symbols such as ``pi`` and ``e``, but does include
         functions such as ``sin`` and ``log`` """
 
-        return itertools.chain(self.rhs_names, self.rhs_funcs)
+        return chain(self.rhs_symbol_names, self.rhs_funcs)
 
-    def rhs_as_python_func(self, namespace=None):
+    def rhs_suffix(self, suffix, prefix='', excludes=[]):
+        expr = deepcopy(self._rhs)
+        for symbol in self.rhs_symbol_names:
+            if symbol not in excludes:
+                expr = expr.subs(symbol, prefix + symbol + suffix)
+        return expr
+
+    def rhs_as_python_func(self):
         """ Returns a python callable which evaluates the expression in
         namespace and returns the result """
-        namespace = namespace or {}
-
-        return eval("lambda %s: %s" % (','.join(self.rhs_names), self.rhs),
-                    str_to_npfunc_map, namespace)
+        return eval('lambda {}: {}'
+                    .format(', '.join(self.rhs_symbol_names),
+                            sympy.printing.python(self.rhs)[4:]))
 
     def rhs_name_transform_inplace(self, name_map):
         """Replace atoms on the RHS with values in the name_map"""
+        self._rhs = self.rhs_substituted(name_map)
 
-        for name in name_map:
-            replacment = name_map[name]
-            self.rhs = MathUtil.str_expr_replacement(name, replacment,
-                                                     self.rhs)
+    def rhs_substituted(self, name_map):
+        expr = self.rhs
+        for old, new in name_map.iteritems():
+            expr = self.rhs.subs(old, new)
+        return expr
 
-    def rhs_atoms_in_namespace(self, namespace):
-        atoms = set()
-        for a in self.rhs_atoms:
-            ns, func = func_namespace_split(a)
-            if ns == namespace:
-                atoms.add(func)
-        return atoms
+    def rhs_str_with_renamed_functions(self, name_map):
+        expr_str = str(self.rhs)
+        for old, new in name_map:
+            expr_str = re.sub(r'(?<!\w)({})\('.format(old), new, expr_str)
+        return expr_str
 
 
 class ExpressionWithLHS(Expression):
@@ -123,7 +112,7 @@ class ExpressionWithLHS(Expression):
     @property
     def atoms(self):
         """Returns a list of the atoms in the LHS and RHS of this expression"""
-        return itertools.chain(self.rhs_atoms, self.lhs_atoms)
+        return chain(self.rhs_atoms, self.lhs_atoms)
 
     def lhs_name_transform_inplace(self, name_map):
         raise NotImplementedError()

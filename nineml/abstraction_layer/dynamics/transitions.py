@@ -309,7 +309,7 @@ class Trigger(Expression):
     #    """ Returns a python callable which evaluates the expression in
     #    namespace and returns the result """
     #    namespace = namespace or {}
-    #    return eval("lambda %s: %s" % (','.join(self.rhs_names), self.rhs), \
+    #    return eval("lambda %s: %s" % (','.join(self.rhs_symbol_names), self.rhs), \
     #                str_to_npfunc_map, namespace)
     # math_namespace.namespace, namespace)
 
@@ -330,7 +330,7 @@ class Trigger(Expression):
         for frm, to in name_map.iteritems():
             rhs = MathUtil.str_expr_replacement(frm, to, rhs)
 
-        lmda_str = "lambda %s: %s" % (','.join(self.rhs_names), rhs)
+        lmda_str = "lambda %s: %s" % (','.join(self.rhs_symbol_names), rhs)
         return eval(lmda_str, str_to_npfunc_map, namespace)
 
     def __repr__(self):
