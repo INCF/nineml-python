@@ -7,8 +7,8 @@ docstring needed
 from collections import defaultdict
 from . import PerNamespaceComponentValidator
 from nineml.exceptions import NineMLRuntimeError
-from ...expressions.utils import (get_reserved_and_builtin_symbols,
-                                  is_valid_lhs_target)
+from ...expressions.utils import is_valid_lhs_target
+from ...expressions import Expression
 from nineml.utils import assert_no_duplicates
 
 
@@ -66,7 +66,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
 
         self.visit(componentclass)
 
-        excludes = get_reserved_and_builtin_symbols()
+        excludes = set(Expression.reserved_identifiers())
 
         # Check Aliases:
         for ns, aliases in self.aliases.iteritems():

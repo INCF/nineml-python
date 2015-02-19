@@ -234,13 +234,13 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_assignment(self, assignment):
         return E('StateAssignment',
-                 E("MathInline", assignment.rhs),
+                 E("MathInline", assignment.rhs_str),
                  variable=assignment.lhs)
 
     @annotate_xml
     def visit_timederivative(self, time_derivative):
         return E('TimeDerivative',
-                 E("MathInline", time_derivative.rhs),
+                 E("MathInline", time_derivative.rhs_str),
                  variable=time_derivative.dependent_variable)
 
     @annotate_xml
@@ -253,7 +253,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_trigger(self, trigger):
-        return E('Trigger', E("MathInline", trigger.rhs))
+        return E('Trigger', E("MathInline", trigger.rhs_str))
 
     @annotate_xml
     def visit_onevent(self, on_event):

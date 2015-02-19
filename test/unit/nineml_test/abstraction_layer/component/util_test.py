@@ -49,13 +49,11 @@ class MathUtil_test(unittest.TestCase):
                 # No Docstring
         # from nineml.abstraction_layer.component.util import MathUtil
 
-        e = Alias.from_str('a := b*c + d/(e*sin(f+g/e)) + b1 + e_ / exp(12*g)')
+        e = Alias.from_str('a := b*c + b1 + e_*exp(-12*g) + d/(e*sin(f + g/e))')
 
         rhs_sub = e.rhs_substituted({'b': 'B', 'e': 'E'})
         self.assertEqual(
-            rhs_sub,
-            sympy.sympify('B*c + d/(E*sin(f+g/E)) + b1 + e_ / exp(12*g)')
-        )
+            str(rhs_sub), 'B*c + b1 + e_*exp(-12*g) + d/(E*sin(f + g/E))')
 
     def test_str_expr_replacement(self):
         # Signature: name(cls, frm, to, expr_string, func_ok=False)
@@ -82,7 +80,7 @@ class MathUtil_test(unittest.TestCase):
 
         e = Alias.from_str('a := b*c + d/(e_*sin(f+g/e_)) + b1 + e_ / exp(12*g)')
 
-        rhs_sub = e.suffixed_rhs(suffix='', prefix='U_', excludes=['c', 'e_'])
+        rhs_sub = e.rhs_suffixed(suffix='', prefix='U_', excludes=['c', 'e_'])
         self.assertEqual(
             rhs_sub,
             sympy.sympify('U_b*c + U_d/(e_*sin(U_f+U_g/e_)) + U_b1 +'
@@ -91,18 +89,18 @@ class MathUtil_test(unittest.TestCase):
 
 
 Aliases = [
-    ("gB := 1/(1 + mg_conc*eta*exp(-1*gamma*V))",
-     ("gB", "1/(1 + mg_conc*eta*exp(-1*gamma*V))")),
-    ("g := gB*gmax*(B-A)", ("g", "gB*gmax*(B-A)")),
+    ("gB := 1/(eta*mg_conc*exp(-V*gamma) + 1)",
+     ("gB", "1/(eta*mg_conc*exp(-V*gamma) + 1)")),
+    ("g := gB*gmax*(-A + B)", ("g", "gB*gmax*(-A + B)")),
     (" dA := dt", ("dA", "dt")),
     (" h := dA/dx", ("h", "dA/dx"))
 ]
 
 
 Assignments = [
-    ("gB = 1/(1 + mg_conc*eta*exp(-1*gamma*V))",
-     ("gB", "1/(1 + mg_conc*eta*exp(-1*gamma*V))")),
-    ("g = gB*gmax*(B-A)", ("g", "gB*gmax*(B-A)")),
+    ("gB = 1/(eta*mg_conc*exp(-V*gamma) + 1)",
+     ("gB", "1/(eta*mg_conc*exp(-V*gamma) + 1)")),
+    ("g = gB*gmax*(-A + B)", ("g", "gB*gmax*(-A + B)")),
     (" dA = dt", ("dA", "dt")),
     (" h = dA/dx", ("h", "dA/dx"))]
 
@@ -132,7 +130,7 @@ class StrToExpr_test(unittest.TestCase):
             alias = Alias.from_str(expr_str)
 
             self.assertEqual(alias.lhs, exp_lhs)
-            self.assertEqual(alias.rhs, exp_rhs)
+            self.assertEqual(str(alias.rhs), exp_rhs)
 
     def test_state_assignment(self):
         # Signature: name(cls, state_assignment_string)
@@ -141,7 +139,7 @@ class StrToExpr_test(unittest.TestCase):
             ass = StateAssignment.from_str(expr_str)
 
             self.assertEqual(ass.lhs, exp_lhs)
-            self.assertEqual(ass.rhs, exp_rhs)
+            self.assertEqual(str(ass.rhs), exp_rhs)
 
     def test_time_derivative(self):
         # Signature: name(cls, time_derivative_string)
@@ -151,4 +149,4 @@ class StrToExpr_test(unittest.TestCase):
 
             self.assertEquals(td.dependent_variable, exp_dep)
             self.assertEquals(td.independent_variable, exp_indep)
-            self.assertEquals(td.rhs, sympy.sympify(exp_rhs))
+            self.assertEquals(str(td.rhs), str(exp_rhs))

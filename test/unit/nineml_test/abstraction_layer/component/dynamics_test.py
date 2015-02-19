@@ -16,7 +16,7 @@ class TestOn(unittest.TestCase):
 
         self.assertEquals(type(On('V>0')), OnCondition)
         self.assertEquals(type(On('V<0')), OnCondition)
-        self.assertEquals(type(On('V<0 & K>0')), OnCondition)
+        self.assertEquals(type(On('(V<0) & (K>0)')), OnCondition)
         self.assertEquals(type(On('V==0')), OnCondition)
 
         self.assertEquals(
@@ -153,6 +153,7 @@ class OnCondition_test(unittest.TestCase):
         # Test Come Conditions:
         namespace = {
             "A": 10,
+            "B": 5,
             "tau_r": 5,
             "V": 20,
             "Vth": -50.0,
@@ -163,17 +164,17 @@ class OnCondition_test(unittest.TestCase):
         }
 
         cond_exprs = [
-            ["A > -A/tau_r", ("A", "tau_r"), ()],
-            ["V > 1.0 & !(V<10.0)", ("V",), ()],
+            ["A > -B/tau_r", ("A", "B", "tau_r"), ()],
+            ["(V > 1.0) & !(V<10.0)", ("V",), ()],
             ["!!(V>10)", ("V"), ()],
             ["!!(V>10)", ("V"), ()],
             ["V>exp(Vth)", ("V", "Vth"), ('exp',)],
             ["!(V>Vth)", ("V", "Vth"), ()],
-            ["!V>Vth", ("V", "Vth"), ()],
+            ["!(V>Vth)", ("V", "Vth"), ()],
             ["exp(V)>Vth", ("V", "Vth"), ("exp",)],
             ["true", (), ()],
             ["(V < (Vth+q)) & (t > t_spike)", ("t_spike", "t", "q", "Vth", "V"), ()],
-            ["V < (Vth+q) | t > t_spike", ("t_spike", "Vth", "q", "V", "t"), ()],
+            ["(V < (Vth+q)) | (t > t_spike)", ("t_spike", "Vth", "q", "V", "t"), ()],
             ["(true)", (), ()],
             ["!true", (), ()],
             ["!false", (), ()],
@@ -205,9 +206,8 @@ class OnCondition_test(unittest.TestCase):
             self.assertEqual(set(c.trigger.rhs_symbol_names), set(expt_vars))
             self.assertEqual(set(c.trigger.rhs_funcs), set(expt_funcs))
 
-            python_func = c.trigger.rhs_as_python_func(namespace=namespace)
+            python_func = c.trigger.rhs_as_python_func
             param_dict = dict([(v, namespace[v]) for v in expt_vars])
-
             self.assertEquals(return_values[i], python_func(**param_dict))
 
 

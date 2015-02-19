@@ -179,7 +179,7 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
         lhs = self.prefix_variable(assignment.lhs, **kwargs)
-        rhs = assignment.suffixed_rhs(suffix='', prefix=prefix,
+        rhs = assignment.rhs_suffixed(suffix='', prefix=prefix,
                                       excludes=prefix_excludes)
         return assignment.__class__(lhs=lhs, rhs=rhs)
 
@@ -190,14 +190,14 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
         dep = self.prefix_variable(time_derivative.dependent_variable,
                                    **kwargs)
 
-        rhs = time_derivative.suffixed_rhs(suffix='', prefix=prefix,
+        rhs = time_derivative.rhs_suffixed(suffix='', prefix=prefix,
                                            excludes=prefix_excludes)
         return time_derivative.__class__(dependent_variable=dep, rhs=rhs)
 
     def visit_trigger(self, trigger, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
-        rhs = trigger.suffixed_rhs(suffix='', prefix=prefix,
+        rhs = trigger.rhs_suffixed(suffix='', prefix=prefix,
                                    excludes=prefix_excludes)
         return trigger.__class__(rhs=rhs)
 

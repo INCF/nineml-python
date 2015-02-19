@@ -31,6 +31,8 @@ class ComponentClassXMLLoader(object):
     class_types = ('Dynamics', 'RandomDistribution', 'ConnectionRule')
 
     def __init__(self, document=None):
+        if document is None:
+            document = Document()
         self.document = document
 
     def load_connectports(self, element):
@@ -57,8 +59,9 @@ class ComponentClassXMLLoader(object):
         if checkOnlyBlock:
             elements = list(element.iterchildren(tag=etree.Element))
             if len(elements) != 1:
-                print elements
-                assert 0, 'Unexpected tags found'
+                raise NineMLRuntimeError(
+                    "Unexpected tags found '{}'"
+                    .format("', '".join(e.tag for e in elements)))
         assert (len(element.findall(MATHML + "MathML")) +
                 len(element.findall(NINEML + "MathInline"))) == 1
         if element.find(NINEML + "MathInline") is not None:
@@ -90,11 +93,13 @@ class ComponentClassXMLLoader(object):
         return loaded_objects
 
     def _get_loader(self, tag):
+        # Try class specific loaders (better to ask for forgiveness philosophy)
         try:
             loader = self.tag_to_loader[tag]
         except KeyError:
+            # Otherwise try base class loaders for generic elements
             try:
-                loader = self.base_tag_to_loader[tag]
+                loader = ComponentClassXMLLoader.tag_to_loader[tag]
             except KeyError:
                 assert False, "Did not finder loader for '{}' tag".format(tag)
         return loader
@@ -126,13 +131,15 @@ class ComponentClassXMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_parameter(self, parameter):
-        return E('Parameter',
+        return E(Parameter.element_name,
                  name=parameter.name,
                  dimension=parameter.dimension.name)
 
     @annotate_xml
     def visit_alias(self, alias):
-        return E('Alias', E("MathInline", alias.rhs), name=alias.lhs)
+        return E(Alias.element_name,
+                 E("MathInline", alias.rhs_str),
+                 name=alias.lhs)
 
     @annotate_xml
     def visit_constant(self, constant):
@@ -262,3 +269,5 @@ class ComponentClassXMLReader(object):
         loader.load_componentclasses(
             xmlroot=root, xml_node_filename_map=xml_node_filename_map)
         return loader.components
+
+from nineml.document import Document

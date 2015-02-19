@@ -292,9 +292,9 @@ class Trigger(Expression):
     def __init__(self, rhs):
         Expression.__init__(self, rhs)
 
-    def _parse_rhs(self, rhs):
-
-        return parse.cond(rhs)
+#     def _parse_rhs(self, rhs):
+#
+#         return parse.cond(rhs)
 
     # def is_bool(self):
     #    """ Checks if conditions is pure bool: True, False"""
@@ -313,25 +313,25 @@ class Trigger(Expression):
     #                str_to_npfunc_map, namespace)
     # math_namespace.namespace, namespace)
 
-    def rhs_as_python_func(self, namespace={}):
-        """ Returns a python callable which evaluates the expression in
-        namespace and returns the result """
-        rhs = self.rhs
-
-        rhs = rhs.replace('!', ' not ')
-        rhs = rhs.replace('&', ' and ')
-        rhs = rhs.replace('|', ' or ')
-
-        name_map = {
-            'true': 'True',
-            'false': 'False'
-        }
-
-        for frm, to in name_map.iteritems():
-            rhs = MathUtil.str_expr_replacement(frm, to, rhs)
-
-        lmda_str = "lambda %s: %s" % (','.join(self.rhs_symbol_names), rhs)
-        return eval(lmda_str, str_to_npfunc_map, namespace)
+#     def rhs_as_python_func(self, namespace={}):
+#         """ Returns a python callable which evaluates the expression in
+#         namespace and returns the result """
+#         rhs = self.rhs
+# 
+#         rhs = rhs.replace('!', ' not ')
+#         rhs = rhs.replace('&', ' and ')
+#         rhs = rhs.replace('|', ' or ')
+# 
+#         name_map = {
+#             'true': 'True',
+#             'false': 'False'
+#         }
+# 
+#         for frm, to in name_map.iteritems():
+#             rhs = MathUtil.str_expr_replacement(frm, to, rhs)
+# 
+#         lmda_str = "lambda %s: %s" % (','.join(self.rhs_symbol_names), rhs)
+#         return eval(lmda_str, str_to_npfunc_map, namespace)
 
     def __repr__(self):
         return "Trigger('%s')" % (self.rhs)
