@@ -5,7 +5,8 @@ import unittest
 
 from nineml.abstraction_layer.dynamics import StateAssignment, TimeDerivative
 from nineml.abstraction_layer.expressions import Alias
-from nineml.abstraction_layer.expressions.utils import MathUtil
+from nineml.abstraction_layer.expressions.utils import (
+    is_single_symbol, str_expr_replacement)
 import sympy
 
 # Testing Skeleton for function:
@@ -35,14 +36,14 @@ class MathUtil_test(unittest.TestCase):
                 # >>> is_single_symbol('hello * world')
                 # False
 
-        self.assertTrue(MathUtil.is_single_symbol('t'))
-        self.assertTrue(MathUtil.is_single_symbol('var_1'))
-        self.assertTrue(MathUtil.is_single_symbol('var_long_name'))
-        self.assertTrue(MathUtil.is_single_symbol('_myName'))
+        self.assertTrue(is_single_symbol('t'))
+        self.assertTrue(is_single_symbol('var_1'))
+        self.assertTrue(is_single_symbol('var_long_name'))
+        self.assertTrue(is_single_symbol('_myName'))
 
-        self.assertFalse(MathUtil.is_single_symbol('r + y'))
-        self.assertFalse(MathUtil.is_single_symbol('r+y'))
-        self.assertFalse(MathUtil.is_single_symbol('sin(y)'))
+        self.assertFalse(is_single_symbol('r + y'))
+        self.assertFalse(is_single_symbol('r+y'))
+        self.assertFalse(is_single_symbol('sin(y)'))
 
     def test_get_rhs_substituted(self):
         # Signature: name(cls, expr_obj, namemap)
@@ -66,11 +67,11 @@ class MathUtil_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.util import MathUtil
         t = 'b*c + d/(e*sin(f+g/e)) + b1 + e_ / exp(12*g)'
 
-        t = MathUtil.str_expr_replacement('b', 'B', t)
+        t = str_expr_replacement('b', 'B', t)
         self.assertEqual(t, 'B*c + d/(e*sin(f+g/e)) + b1 + e_ / exp(12*g)')
 
         # 'e' is a builtin, so this function doesn't care.
-        t = MathUtil.str_expr_replacement(frm='e', to='E', expr_string=t)
+        t = str_expr_replacement(frm='e', to='E', expr_string=t)
         self.assertEqual(t, 'B*c + d/(E*sin(f+g/E)) + b1 + e_ / exp(12*g)')
 
     def test_get_prefixed_rhs_string(self):

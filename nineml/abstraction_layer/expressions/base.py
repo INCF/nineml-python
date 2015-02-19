@@ -13,11 +13,10 @@ from sympy.parsing.sympy_parser import (
 from sympy.parsing.sympy_tokenize import NAME, OP
 from sympy.printing import print_ccode
 import re
-from .utils import str_to_npfunc_map
+
 
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError, NineMLMathParseError
-from .utils import MathUtil, is_valid_lhs_target
 from .. import BaseALObject
 
 builtin_constants = set(['pi', 'true', 'false', 'True', 'False'])
@@ -318,7 +317,7 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS):
     def __init__(self, lhs, rhs):
         ExpressionWithLHS.__init__(self, rhs)
 
-        if not MathUtil.is_single_symbol(lhs):
+        if not is_single_symbol(lhs):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
             raise NineMLRuntimeError(err)
         if not is_valid_lhs_target(lhs):
@@ -498,3 +497,5 @@ class Constant(BaseALObject):
         assert self.units == units, \
             "Renaming units with ones that do not match"
         self.units = units
+
+from .utils import str_to_npfunc_map, is_single_symbol, is_valid_lhs_target
