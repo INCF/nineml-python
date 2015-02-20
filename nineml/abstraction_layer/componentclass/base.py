@@ -7,6 +7,7 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from itertools import chain
 from abc import ABCMeta
 from .. import BaseALObject
 import nineml
@@ -131,6 +132,7 @@ class Parameter(BaseALObject):
     future, wrapping in into its own object may make the transition easier
     """
 
+    element_name = 'Parameter'
     defining_attributes = ('name', 'dimension')
 
     def __init__(self, name, dimension=None):
@@ -145,6 +147,7 @@ class Parameter(BaseALObject):
         self._dimension = dimension if dimension is not None else dimensionless
         assert isinstance(self._dimension, Dimension), (
             "dimension must be None or a nineml.Dimension instance")
+        self.constraints = []  # TODO: constraints can be added in the future.
 
     def __eq__(self, other):
         return self.name == other.name and self.dimension == other.dimension
