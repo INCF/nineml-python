@@ -62,7 +62,7 @@ class ComponentRenameSymbol(ComponentActionVisitor):
         self.port_changes = []
 
         self.visit(componentclass)
-        componentclass._validate_self()
+        componentclass.validate()
 
     def note_lhs_changed(self, what):
         self.lhs_changes.append(what)
