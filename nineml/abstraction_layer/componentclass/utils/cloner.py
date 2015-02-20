@@ -114,6 +114,9 @@ class ComponentCloner(ComponentVisitor):
         else:
             return prefix + variable
 
+    def visit_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
+        componentclass.assign_indices()
+
     def visit_parameter(self, parameter, **kwargs):
         return parameter.__class__(
             name=self.prefix_variable(parameter.name, **kwargs),
@@ -128,8 +131,6 @@ class ComponentCloner(ComponentVisitor):
         return new_alias
 
     def visit_constant(self, constant, **kwargs):  # @UnusedVariable
-        # FIXME: This would be handled better by a copy constructor?? TGC 1/15
-        new_constant = constant.__class__(name=constant.name,
-                                          value=constant.value,
-                                          units=constant.units)
+        new_constant = constant.__class__(
+            name=constant.name, value=constant.value, units=constant.units)
         return new_constant

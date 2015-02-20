@@ -11,7 +11,7 @@ from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utils import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
 from ...componentclass.utils.modifiers import (
-    ComponentModifier, ComponentRenameSymbol)
+    ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
 from .visitors import DynamicsActionVisitor
 
 
@@ -168,3 +168,34 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
             self.note_rhs_changed(on_event)
         if on_event._target_regime_name == self.old_symbol_name:
             on_event._target_regime_name = self.new_symbol_name
+
+
+class DynamicsAssignIndices(ComponentAssignIndices,
+                               DynamicsActionVisitor):
+
+    def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.componentclass.index_of(regime)
+        for transition in regime.transitions:
+            self.componentclass.index_of(
+                transition, key=(transition.__class__.__name__, regime.name))
+
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(port)
+
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(port)
+
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(port)
+
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(port)
+
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(port)
+
+    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(on_condition)
+
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(on_event)

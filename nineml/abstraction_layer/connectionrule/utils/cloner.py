@@ -30,6 +30,7 @@ class ConnectionRuleExpandAliasDefinition(ConnectionRuleActionVisitor,
 class ConnectionRuleCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
+        super(ConnectionRuleCloner, self).visit_componentclass(componentclass)
         ccn = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)

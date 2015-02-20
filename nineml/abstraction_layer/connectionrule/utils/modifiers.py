@@ -7,7 +7,7 @@ This file contains utility classes for modifying components.
 
 from .cloner import ConnectionRuleExpandPortDefinition
 from ...componentclass.utils.modifiers import (
-    ComponentModifier, ComponentRenameSymbol)
+    ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
 from .visitors import ConnectionRuleActionVisitor
 
 
@@ -24,4 +24,9 @@ class ConnectionRuleRenameSymbol(ConnectionRuleActionVisitor,
     """ Can be used for:
     Aliases
     """
+    pass
+
+
+class ConnectionRuleAssignIndices(ComponentAssignIndices,
+                                     ConnectionRuleActionVisitor):
     pass

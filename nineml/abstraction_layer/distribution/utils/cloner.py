@@ -30,6 +30,7 @@ class DistributionExpandAliasDefinition(DistributionActionVisitor,
 class DistributionCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
+        super(DistributionCloner, self).visit_componentclass(componentclass)
         ccn = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)

@@ -4,6 +4,7 @@ This file contains utility classes for modifying components.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from .visitors import ComponentActionVisitor
 
@@ -35,6 +36,7 @@ class ComponentRenameSymbol(ComponentActionVisitor):
         self.rhs_changes = []
         self.port_changes = []
 
+        componentclass.assign_indices()
         self.visit(componentclass)
         componentclass._validate_self()
 
@@ -49,10 +51,10 @@ class ComponentRenameSymbol(ComponentActionVisitor):
 
     def _update_dicts(self, *dicts):
         for d in dicts:
-            try:
+            # Can't use "pythonic" try/except because I want it to work for
+            # defaultdicts (i.e. '_indices' dicts) as well
+            if self.old_symbol_name in d:
                 d[self.new_symbol_name] = d.pop(self.old_symbol_name)
-            except KeyError:
-                pass
 
     def _action_port(self, port, **kwargs):  # @UnusedVariable
         if port.name == self.old_symbol_name:
@@ -60,7 +62,8 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             self.note_port_changed(port)
 
     def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._update_dicts(componentclass._parameters)
+        self._update_dicts(*chain([componentclass._parameters],
+                                  componentclass._indices.itervalues()))
 
     def action_mainblock(self, main_block, **kwargs):  # @UnusedVariable
         self._update_dicts(main_block._aliases, main_block._piecewises,
@@ -96,3 +99,32 @@ class ComponentRenameSymbol(ComponentActionVisitor):
         elif self.old_symbol_name in piecewise.atoms:
             self.note_rhs_changed(piecewise)
             piecewise.name_transform_inplace(self.namemap)
+
+
+class ComponentAssignIndices(ComponentActionVisitor):
+
+    """
+    Forces the generation of indices for all commonly index elements of the
+    component class
+    """
+
+    def __init__(self, componentclass):
+        ComponentActionVisitor.__init__(
+            self, require_explicit_overrides=False)
+        self.componentclass = componentclass
+        self.visit(componentclass)
+
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(parameter)
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(alias)
+
+    def action_randomvariable(self, random_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.componentclass.index_of(random_variable)
+
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(constant)
+
+    def action_piecewise(self, piecewise, **kwargs):  # @UnusedVariable
+        self.componentclass.index_of(piecewise)

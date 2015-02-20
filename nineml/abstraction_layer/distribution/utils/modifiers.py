@@ -6,9 +6,9 @@ This file contains utility classes for modifying components.
 """
 
 from .cloner import DistributionExpandPortDefinition
-from ...componentclass.utils.modifiers import ComponentModifier
 from .visitors import DistributionActionVisitor
-from ...componentclass.utils.modifiers import ComponentRenameSymbol
+from ...componentclass.utils.modifiers import (
+    ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
 
 
 class DistributionModifier(ComponentModifier):
@@ -24,4 +24,9 @@ class DistributionRenameSymbol(DistributionActionVisitor,
     """ Can be used for:
     Aliases
     """
+    pass
+
+
+class DistributionAssignIndices(ComponentAssignIndices,
+                                   DistributionActionVisitor):
     pass

@@ -44,6 +44,7 @@ class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
 class DynamicsCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
+        super(DynamicsCloner, self).visit_componentclass(componentclass)
         ccn = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
@@ -205,8 +206,9 @@ class DynamicsClonerPrefixNamespace(DynamicsCloner):
                           for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
-            dynamicsblock=(componentclass.dynamicsblock.accept_visitor(self, **kwargs)
-                      if componentclass.dynamicsblock else None),
+            dynamicsblock=(
+                componentclass.dynamicsblock.accept_visitor(self, **kwargs)
+                if componentclass.dynamicsblock else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=port_connections)

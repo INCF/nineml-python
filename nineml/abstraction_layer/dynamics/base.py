@@ -22,7 +22,6 @@ from .utils import DynamicsQueryer
 from .utils.cloner import (
     DynamicsExpandAliasDefinition, DynamicsCloner)
 from .. import BaseALObject
-from .utils.modifiers import DynamicsRenameSymbol
 
 
 class DynamicsBlock(BaseALObject):
@@ -415,6 +414,9 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def rename_symbol(self, old_symbol, new_symbol):
         DynamicsRenameSymbol(self, old_symbol, new_symbol)
 
+    def assign_indices(self):
+        DynamicsAssignIndices(self)
+
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
@@ -662,3 +664,5 @@ def inf_check(l1, l2, desc):
 from .validators import DynamicsValidator
 from .utils import DynamicsClassInterfaceInferer
 from .utils.visitors import DynamicsRequiredDefinitions
+from .utils.modifiers import (
+    DynamicsRenameSymbol, DynamicsAssignIndices)

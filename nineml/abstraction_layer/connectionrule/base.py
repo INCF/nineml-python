@@ -47,9 +47,13 @@ class ConnectionRuleClass(ComponentClass):
     def rename_symbol(self, old_symbol, new_symbol):
         ConnectionRuleRenameSymbol(self, old_symbol, new_symbol)
 
+    def assign_indices(self):
+        ConnectionRuleAssignIndices(self)
+
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
 from .utils.cloner import ConnectionRuleCloner
-from .utils.modifiers import ConnectionRuleRenameSymbol
+from .utils.modifiers import (
+    ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
 from .utils.visitors import ConnectionRuleRequiredDefinitions
