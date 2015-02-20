@@ -6,6 +6,7 @@ This file contains the main classes for defining dynamics
 """
 from itertools import chain
 import re
+import sympy
 from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
                             normalise_parameter_as_list, assert_no_duplicates)
 from nineml.exceptions import NineMLRuntimeError
@@ -241,6 +242,9 @@ class StateVariable(BaseALObject):
         return ("StateVariable({}{})"
                 .format(self.name,
                         ', dimension={}'.format(self.dimension.name)))
+
+    def _sympy_(self):
+        return sympy.Symbol(self.name)
 
 
 class TimeDerivative(ODE):

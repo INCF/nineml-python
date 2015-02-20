@@ -30,7 +30,7 @@ class Expression(object):
     the basic interface for parsing, yielding of python functions,
     C equivalents, name substitution """
 
-    defining_attributes = ('_rhs',)
+    defining_attributes = ('rhs',)
 
     # Regular expression for extracting function names from strings (i.e. a
     # chain of valid identifiers follwed by an open parenthesis.
@@ -272,6 +272,37 @@ class Expression(object):
         expr_str = expr_str.replace('**', '^')
         return expr_str
 
+    def __iadd__(self, expr):
+        "self += expr"
+        self.rhs = self.rhs + expr
+
+    def __isub__(self, expr):
+        "self -= expr"
+        self.rhs = self.rhs - expr
+
+    def __imul__(self, expr):
+        "self *= expr"
+        self.rhs = self.rhs * expr
+
+    def __itruediv__(self, expr):
+        "self /= expr"
+        self.rhs = self.rhs / expr
+
+    def __ipow__(self, expr):
+        "self **= expr"
+        self.rhs = self.rhs ** expr
+
+    def __iand__(self, expr):
+        "self &= expr"
+        self.rhs = sympy.And(self.rhs, expr)
+
+    def __ior__(self, expr):
+        "self |= expr"
+        self.rhs = sympy.Or(self.rhs, expr)
+
+    def negate(self):
+        self.rhs = sympy.Not(self.rhs)
+
 
 class ExpressionWithLHS(Expression):
     # Sub-classes should override this, to allow
@@ -333,6 +364,9 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS):
 
     def lhs_name_transform_inplace(self, name_map):
         self._lhs = name_map.get(self.lhs, self.lhs)
+
+    def _sympy_(self):
+        return sympy.Symbol(self.lhs)
 
 
 class ODE(ExpressionWithLHS):

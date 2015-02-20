@@ -1,4 +1,5 @@
 # import math_namespace
+import sympy
 from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
 from .base import ExpressionWithSimpleLHS
@@ -133,3 +134,6 @@ class Constant(BaseALObject):
         assert self.units == units, \
             "Renaming units with ones that do not match"
         self.units = units
+
+    def _sympy_(self):
+        return sympy.Symbol(self.name)
