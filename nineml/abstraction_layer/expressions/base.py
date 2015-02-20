@@ -275,33 +275,41 @@ class Expression(object):
     def __iadd__(self, expr):
         "self += expr"
         self.rhs = self.rhs + expr
+        return self
 
     def __isub__(self, expr):
         "self -= expr"
         self.rhs = self.rhs - expr
+        return self
 
     def __imul__(self, expr):
         "self *= expr"
         self.rhs = self.rhs * expr
+        return self
 
     def __itruediv__(self, expr):
         "self /= expr"
         self.rhs = self.rhs / expr
+        return self
 
     def __ipow__(self, expr):
         "self **= expr"
         self.rhs = self.rhs ** expr
+        return self
 
     def __iand__(self, expr):
         "self &= expr"
         self.rhs = sympy.And(self.rhs, expr)
+        return self
 
     def __ior__(self, expr):
         "self |= expr"
         self.rhs = sympy.Or(self.rhs, expr)
+        return self
 
     def negate(self):
         self.rhs = sympy.Not(self.rhs)
+        return self
 
 
 class ExpressionWithLHS(Expression):
