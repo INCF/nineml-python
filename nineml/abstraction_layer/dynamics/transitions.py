@@ -5,6 +5,8 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
+from copy import deepcopy
+import sympy
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction_layer.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
@@ -292,6 +294,12 @@ class Trigger(Expression):
 
     def __repr__(self):
         return "Trigger('%s')" % (self.rhs)
+
+    @property
+    def reactivate_condition(self):
+        negated = deepcopy(self)
+        negated.negate()
+        return negated
 
 
 class OutputEvent(BaseALObject):
