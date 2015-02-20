@@ -46,7 +46,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
     """
     element_name = 'Alias'
-    defining_attributes = ('_lhs', '_rhs')
+    defining_attributes = ('name', 'rhs')
 
     def __init__(self, lhs=None, rhs=None):
         """ Constructor for an Alias
@@ -63,6 +63,15 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
     def __repr__(self):
         return "<Alias: %s := %s>" % (self.lhs, self.rhs)
+
+    @property
+    def name(self):
+        return self._lhs
+
+    @property
+    def _name(self):
+        "Used in polymorphic sorting of NineML objects"
+        return self._lhs
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -90,9 +99,21 @@ class Constant(BaseALObject):
     defining_attributes = ('name', 'value', 'units')
 
     def __init__(self, name, value, units):
-        self.name = name
-        self.value = value
-        self.units = units
+        self._name = name
+        self._value = value
+        self._units = units
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def units(self):
+        return self._units
 
     def __repr__(self):
         return ("Constant(name={}, value={}, units={})"
