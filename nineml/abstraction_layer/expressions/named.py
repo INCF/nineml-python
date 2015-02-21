@@ -1,8 +1,7 @@
 # import math_namespace
-import sympy
 from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
-from .base import ExpressionWithSimpleLHS
+from .base import ExpressionWithSimpleLHS, ExpressionSymbol
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -94,7 +93,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         return ':=' in alias_str
 
 
-class Constant(BaseALObject):
+class Constant(BaseALObject, ExpressionSymbol):
 
     element_name = 'Constant'
     defining_attributes = ('name', 'value', 'units')
@@ -134,6 +133,3 @@ class Constant(BaseALObject):
         assert self.units == units, \
             "Renaming units with ones that do not match"
         self.units = units
-
-    def _sympy_(self):
-        return sympy.Symbol(self.name)

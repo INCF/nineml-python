@@ -312,6 +312,39 @@ class Expression(object):
         return self
 
 
+class ExpressionSymbol(object):
+    """
+    Base class for all NineML objects that can be treated like Sympy symbols
+    """
+
+    def _sympy_(self):
+        return sympy.Symbol(self.name)
+
+    def __add__(self, other):
+        return sympy.sympify(self) + other
+
+    def __sub__(self, other):
+        return sympy.sympify(self) - other
+
+    def __mul__(self, other):
+        return sympy.sympify(self) * other
+
+    def __truediv__(self, other):
+        return sympy.sympify(self) / other
+
+    def __mod__(self, other):
+        return sympy.sympify(self) % other
+
+    def __pow__(self, other):
+        return sympy.sympify(self) ** other
+
+    def __and__(self, other):
+        return sympy.sympify(self) & other
+
+    def __or__(self, other):
+        return sympy.sympify(self) | other
+
+
 class ExpressionWithLHS(Expression):
     # Sub-classes should override this, to allow
     # proper-prefixing:
@@ -342,7 +375,7 @@ class ExpressionWithLHS(Expression):
                 self.lhs == other.lhs)
 
 
-class ExpressionWithSimpleLHS(ExpressionWithLHS):
+class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
 
     """Represents a an equation with a simple left-hand-side.
     That is, a single symbol, for example 's = t+1'
