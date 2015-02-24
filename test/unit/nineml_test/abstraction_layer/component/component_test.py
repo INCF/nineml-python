@@ -790,7 +790,7 @@ class ComponentClass_test(unittest.TestCase):
                            )
                            )
 
-        self.assertEquals(len(list(c.transitions)), 6)
+        self.assertEquals(len(list(c.all_transitions())), 6)
 
         r1 = c.regime('r1')
         r2 = c.regime('r2')

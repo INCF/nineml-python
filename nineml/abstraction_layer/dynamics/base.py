@@ -450,20 +450,9 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         return self._main_block.regimes.itervalues()
 
     @property
-    def transitions(self):
-        """Forwarding function to self._main_block.transitions"""
-        return self._main_block.transitions
-
-    @property
     def state_variables(self):
         """Forwarding function to self._main_block.state_variables"""
         return self._main_block.state_variables.itervalues()
-
-    def all_time_derivatives(self, state_variable=None):
-        return chain(*((td for td in r.time_derivatives
-                        if (state_variable is None or
-                            td.dependent_variable == state_variable.name))
-                        for r in self.regimes))
 
     def regime(self, name):
         return self._main_block.regimes[name]
@@ -526,6 +515,21 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         """Returns an iterator over the local |EventReceivePort| names"""
         return self._event_receive_ports.iterkeys()
 
+    def all_transitions(self):
+        return chain(*(r.transitions for r in self.regimes))
+
+    def all_on_conditions(self):
+        return chain(*(r.on_conditions for r in self.regimes))
+
+    def all_on_events(self):
+        return chain(*(r.on_events for r in self.regimes))
+
+    def all_time_derivatives(self, state_variable=None):
+        return chain(*((td for td in r.time_derivatives
+                        if (state_variable is None or
+                            td.dependent_variable == state_variable.name))
+                        for r in self.regimes))
+
     @property
     def flattener(self):
         """
@@ -578,7 +582,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         assert_no_duplicates([r.name for r in self.regimes])
         # We only worry about 'target' regimes, since source regimes are taken
         # care of for us by the Regime objects they are attached to.
-        for trans in self.transitions:
+        for trans in self.all_transitions():
             if trans.target_regime_name not in self._main_block.regimes:
                 raise NineMLRuntimeError(
                     "Can't find regime '{}'".format(trans.target_regime_name))
