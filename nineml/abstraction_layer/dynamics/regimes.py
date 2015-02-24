@@ -198,9 +198,12 @@ class Regime(BaseALObject):
         """
         return self._time_derivatives.itervalues()
 
+    def time_derivative(self, variable):
+        return self._time_derivatives[variable]
+
     @property
-    def time_derivatives_map(self):
-        return self._time_derivatives
+    def time_derivative_variables(self):
+        return self._time_derivatives.iterkeys()
 
     @property
     def transitions(self):

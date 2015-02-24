@@ -161,9 +161,14 @@ class Transition(BaseALObject):
 
     @property
     def state_assignments(self):
-        """An ordered list of |StateAssignments| that happen when this
-        transitions occurs"""
-        return self._state_assignments
+        return self._state_assignments.itervalues()
+
+    def state_assignment(self, variable):
+        return self._state_assignments[variable]
+
+    @property
+    def state_assignment_variables(self):
+        return self._state_assignments.iterkeys()
 
     @property
     def event_outputs(self):
