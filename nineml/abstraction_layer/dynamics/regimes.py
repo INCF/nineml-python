@@ -130,7 +130,7 @@ class Regime(BaseALObject):
             self._on_condition[element.name] = element
         raise NineMLInvalidElementTypeException(
             "Could not add element of type '{}' to {} class"
-            .format(element.element_name, self.__class__.__name__))
+            .format(element.__class__.__name__, self.__class__.__name__))
 
     def remove(self, element):
         if isinstance(element, TimeDerivative):
@@ -141,7 +141,7 @@ class Regime(BaseALObject):
             self._on_condition.pop(element.name)
         raise NineMLInvalidElementTypeException(
             "Could not remove element of type '{}' to {} class"
-            .format(element.element_name, self.__class__.__name__))
+            .format(element.__class__.__name__, self.__class__.__name__))
 
     def add_on_event(self, on_event):
         """Add an |OnEvent| transition which leaves this regime

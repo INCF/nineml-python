@@ -95,7 +95,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
         else:
             raise NineMLInvalidElementTypeException(
                 "Could not add element of type '{}' to {} class"
-                .format(element.element_name, self.__class__.__name__))
+                .format(element.__class__.__name__, self.__class__.__name__))
 
     def remove(self, element):
         if isinstance(element, Parameter):
@@ -111,7 +111,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
         else:
             raise NineMLInvalidElementTypeException(
                 "Could not remove element of type '{}' to {} class"
-                .format(element.element_name, self.__class__.__name__))
+                .format(element.__class__.__name__, self.__class__.__name__))
 
     @property
     def parameters(self):

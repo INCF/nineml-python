@@ -177,7 +177,7 @@ class Transition(BaseALObject):
             self._output_events[element.name] = element
         raise NineMLInvalidElementTypeException(
             "Could not add element of type '{}' to {} class"
-            .format(element.element_name, self.__class__.__name__))
+            .format(element.__class__.__name__, self.__class__.__name__))
 
     def remove(self, element):
         if isinstance(element, StateAssignment):
@@ -186,7 +186,7 @@ class Transition(BaseALObject):
             self._output_events.pop(element.name)
         raise NineMLInvalidElementTypeException(
             "Could not remove element of type '{}' to {} class"
-            .format(element.element_name, self.__class__.__name__))
+            .format(element.__class__.__name__, self.__class__.__name__))
 
 
 class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
