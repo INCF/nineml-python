@@ -311,6 +311,9 @@ class Expression(object):
         self.rhs = sympy.Not(self.rhs)
         return self
 
+    def simplify(self):
+        self.rhs = sympy.simplify(self.rhs)
+
 
 class ExpressionSymbol(object):
     """
