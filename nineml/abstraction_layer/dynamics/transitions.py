@@ -57,7 +57,8 @@ class Transition(BaseALObject):
         sa_type_dict = filter_discrete_types(state_assignments, sa_types)
         sa_from_str = [StateAssignment.from_str(o)
                        for o in sa_type_dict[basestring]]
-        self._state_assignments = sa_type_dict[StateAssignment] + sa_from_str
+        self._state_assignments = dict(
+            (sa.lhs, sa) for sa in sa_type_dict[StateAssignment] + sa_from_str)
 
         self._event_outputs = event_outputs or []
 
