@@ -54,8 +54,8 @@ class DynamicsCloner(ComponentCloner):
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
             dynamicsblock=(
-                componentclass.dynamicsblock.accept_visitor(self, **kwargs)
-                if componentclass.dynamicsblock else None),
+                componentclass._main_block.accept_visitor(self, **kwargs)
+                if componentclass._main_block else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=componentclass.portconnections[:])
@@ -64,12 +64,13 @@ class DynamicsCloner(ComponentCloner):
     def visit_dynamicsblock(self, dynamicsblock, **kwargs):
         return dynamicsblock.__class__(
             regimes=[r.accept_visitor(self, **kwargs)
-                     for r in dynamicsblock.regimes],
+                     for r in dynamicsblock.regimes.itervalues()],
             aliases=[
                 a.accept_visitor(self, **kwargs)
-                for a in dynamicsblock.aliases],
-            state_variables=[s.accept_visitor(self, **kwargs)
-                             for s in dynamicsblock.state_variables])
+                for a in dynamicsblock.aliases.itervalues()],
+            state_variables=[
+                s.accept_visitor(self, **kwargs)
+                for s in dynamicsblock.state_variables.itervalues()])
 
     def visit_regime(self, regime, **kwargs):
         return regime.__class__(
@@ -207,8 +208,8 @@ class DynamicsClonerPrefixNamespace(DynamicsCloner):
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
             dynamicsblock=(
-                componentclass.dynamicsblock.accept_visitor(self, **kwargs)
-                if componentclass.dynamicsblock else None),
+                componentclass._main_block.accept_visitor(self, **kwargs)
+                if componentclass._main_block else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=port_connections)

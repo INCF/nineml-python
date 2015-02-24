@@ -16,22 +16,19 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_componentclass(self, componentclass, **kwargs):
         super(DynamicsActionVisitor, self).visit_componentclass(
             componentclass, **kwargs)
-        if componentclass.dynamicsblock:
-            componentclass.dynamicsblock.accept_visitor(self, **kwargs)
+        if componentclass._main_block:
+            componentclass._main_block.accept_visitor(self, **kwargs)
         for subnode in componentclass.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 
     def visit_dynamicsblock(self, dynamicsblock, **kwargs):
         self.action_dynamicsblock(dynamicsblock, **kwargs)
-        nodes = chain(dynamicsblock.state_variables,
-                      dynamicsblock.regimes, dynamicsblock.aliases,
-<<<<<<< HEAD
-                      dynamicsblock.constants)
-=======
-                      dynamicsblock.constants,
-                      dynamicsblock.random_variables,
-                      dynamicsblock.piecewises)
->>>>>>> be46886... added main_block 'update_dicts' action to rename symbol and renamed
+        nodes = chain(dynamicsblock.state_variables.itervalues(),
+                      dynamicsblock.regimes.itervalues(),
+                      dynamicsblock.aliases.itervalues(),
+                      dynamicsblock.constants.itervalues(),
+                      dynamicsblock.random_variables.itervalues(),
+                      dynamicsblock.piecewises.itervalues())
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 

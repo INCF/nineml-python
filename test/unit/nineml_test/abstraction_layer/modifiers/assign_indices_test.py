@@ -33,17 +33,15 @@ class DynamicsAssignIndices_test(unittest.TestCase):
         for symbol in ('A1', 'A2', 'A3', 'SV1', 'SV2', 'ARP1', 'ARP2', 'P1',
                        'P2', 'R1', 'R2'):
             if symbol.startswith('A'):
-                dname = 'aliases_map'
+                dname = 'alias'
             elif symbol.startswith('P'):
-                dname = 'parameters_map'
+                dname = 'parameter'
             elif symbol.startswith('R'):
-                dname = 'regimes_map'
+                dname = 'regime'
             elif symbol.startswith('SV1'):
-                dname = 'state_variables_map'
-            a_elem = getattr(a, dname)[symbol]
-            b_elem = getattr(b, dname)[symbol]
-            print a.index_of(a_elem)
-            print b.index_of(b_elem)
+                dname = 'state_variable'
+            a_elem = getattr(a, dname)(symbol)
+            b_elem = getattr(b, dname)(symbol)
             self.assertEqual(a.index_of(a_elem), b.index_of(b_elem),
                              "Index of '{}' {} was not preserved after cloning"
                              "({} before, {} after)"
