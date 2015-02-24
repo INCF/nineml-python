@@ -9,7 +9,8 @@ import re
 import sympy
 from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
                             normalise_parameter_as_list, assert_no_duplicates)
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import (NineMLRuntimeError,
+                               NineMLInvalidElementTypeException)
 from ..expressions import ODE
 from .. import BaseALObject
 from ..units import dimensionless
@@ -119,6 +120,28 @@ class Regime(BaseALObject):
 
         assert not transition._source_regime_name
         transition.set_source_regime(self)
+
+    def add(self, element):
+        if isinstance(element, TimeDerivative):
+            self._time_derivatives[element.name] = element
+        elif isinstance(element, OnEvent):
+            self._on_events[element.name] = element
+        elif isinstance(element, OnCondition):
+            self._on_condition[element.name] = element
+        raise NineMLInvalidElementTypeException(
+            "Could not add element of type '{}' to {} class"
+            .format(element.element_name, self.__class__.__name__))
+
+    def remove(self, element):
+        if isinstance(element, TimeDerivative):
+            self._time_derivatives.pop(element.name)
+        elif isinstance(element, OnEvent):
+            self._on_events.pop(element.name)
+        elif isinstance(element, OnCondition):
+            self._on_condition.pop(element.name)
+        raise NineMLInvalidElementTypeException(
+            "Could not remove element of type '{}' to {} class"
+            .format(element.element_name, self.__class__.__name__))
 
     def add_on_event(self, on_event):
         """Add an |OnEvent| transition which leaves this regime

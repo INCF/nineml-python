@@ -9,7 +9,8 @@ This module provides the base class for these.
 """
 from itertools import chain
 from abc import ABCMeta
-from collections import namedtuple, defaultdict
+from itertools import chain
+from collections import defaultdict
 from .. import BaseALObject
 import nineml
 from nineml.annotations import read_annotations, annotate_xml
@@ -21,11 +22,7 @@ from ..expressions import Alias
 from ..units import dimensionless, Dimension
 from nineml import TopLevelObject
 from ..expressions import ExpressionSymbol
-
-
-Dependencies = namedtuple('Dependencies',
-                          ('parameters', 'ports', 'constants',
-                           'randomvariables', 'expressions'))
+from nineml.exceptions import NineMLInvalidElementTypeException
 
 
 class ComponentClass(BaseALObject, TopLevelObject):
@@ -83,6 +80,38 @@ class ComponentClass(BaseALObject, TopLevelObject):
             # type.
             self._indices[key] = defaultdict(lambda: len(self._indices[key]))
         return self._indices[key][element]
+
+    def add(self, element):
+        if isinstance(element, Parameter):
+            self._parameters[element.name] = element
+        elif isinstance(element, Alias):
+            self._main_block.aliases[element.name] = element
+        elif isinstance(element, Constant):
+            self._main_block.constants[element.name] = element
+        elif isinstance(element, RandomVariable):
+            self._main_block.aliases[element.name] = element
+        elif isinstance(element, Piecewise):
+            self._main_block.aliases[element.name] = element
+        else:
+            raise NineMLInvalidElementTypeException(
+                "Could not add element of type '{}' to {} class"
+                .format(element.element_name, self.__class__.__name__))
+
+    def remove(self, element):
+        if isinstance(element, Parameter):
+            self._parameters.pop(element.name)
+        elif isinstance(element, Alias):
+            self._main_block.aliases.pop(element.name)
+        elif isinstance(element, Constant):
+            self._main_block.constants.pop(element.name)
+        elif isinstance(element, RandomVariable):
+            self._main_block.aliases.pop(element.name)
+        elif isinstance(element, Piecewise):
+            self._main_block.aliases.pop(element.name)
+        else:
+            raise NineMLInvalidElementTypeException(
+                "Could not remove element of type '{}' to {} class"
+                .format(element.element_name, self.__class__.__name__))
 
     @property
     def parameters(self):

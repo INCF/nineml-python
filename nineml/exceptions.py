@@ -22,6 +22,10 @@ class NineMLMissingElementError(KeyError):
     pass
 
 
+class NineMLInvalidElementTypeException(TypeError):
+    pass
+
+
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 
