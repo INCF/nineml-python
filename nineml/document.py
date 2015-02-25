@@ -19,7 +19,7 @@ class Document(dict, BaseNineMLObject):
     demand so it doesn't matter which order they appear in the NineML file.
     """
 
-    defining_attributes = ('_elements',)
+    defining_attributes = ('elements',)
     element_name = 'NineML'
 
     # A tuple to hold the unresolved elements
@@ -80,9 +80,8 @@ class Document(dict, BaseNineMLObject):
         return elem
 
     @property
-    def _elements(self):
-        self.itervalues()  # Ensure all elements are loaded
-        return dict(self)
+    def elements(self):
+        return dict(self.iteritems())  # Ensures all elements are loaded
 
     def itervalues(self):
         for v in super(Document, self).itervalues():
@@ -320,12 +319,12 @@ def read(url, relative_to=None):
                     f = urlopen(url)
                     xml = etree.parse(f)
             except IOError, e:
-                raise NineMLRuntimeError("Could not read URL '{}': \n{}"
+                raise NineMLRuntimeError("Could not read 9ML URL '{}': \n{}"
                                          .format(url, e))
         else:
             xml = etree.parse(url)
     except etree.LxmlError, e:
-        raise NineMLRuntimeError("Could not parse XML file '{}': \n {}"
+        raise NineMLRuntimeError("Could not parse XML of 9ML file '{}': \n {}"
                                  .format(url, e))
     root = xml.getroot()
     return load(root, url)
