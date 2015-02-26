@@ -17,8 +17,8 @@ from .utils.cloner import DynamicsCloner
 
 class Transition(BaseALObject):
 
-    defining_attributes = ('state_assignments', 'event_outputs',
-                           'target_regime_name')
+    defining_attributes = ('_state_assignments', '_event_outputs',
+                           '_target_regime_name')
 
     def __init__(self, state_assignments=None, event_outputs=None,
                  target_regime_name=None):
@@ -246,8 +246,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
 
 class OnEvent(Transition):
 
-    defining_attributes = ('src_port_name', 'state_assignments',
-                           'event_outputs', 'target_regime_name')
+    defining_attributes = (Transition.defining_attributes + ('src_port_name',))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -287,8 +286,7 @@ class OnEvent(Transition):
 
 class OnCondition(Transition):
 
-    defining_attributes = ('trigger', 'state_assignments',
-                           'event_outputs', 'target_regime_name')
+    defining_attributes = (Transition.defining_attributes + ('trigger',))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

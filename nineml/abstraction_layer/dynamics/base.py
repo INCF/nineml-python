@@ -485,6 +485,13 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                             td.dependent_variable == state_variable.name))
                         for r in self.regimes))
 
+    def all_output_analogs(self):
+        """
+        Returns an iterator over all aliases that are required for analog
+        send ports
+        """
+        return (a for a in self.aliases if a.name in self.analog_send_ports)
+
     @property
     def flattener(self):
         """

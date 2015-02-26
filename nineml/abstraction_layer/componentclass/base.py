@@ -135,7 +135,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
             return self._indices[key][element]
         except KeyError:
             if self._indices[key]:
-                index = max(self._indices.itervalues())
+                index = max(self._indices[key].itervalues()) + 1
             else:
                 index = 0
             self._indices[key][element] = index
