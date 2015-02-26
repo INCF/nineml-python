@@ -87,9 +87,10 @@ class ComponentClass(BaseALObject, TopLevelObject):
     _class_to_member = {Parameter: '_parameters'}
     element_name = 'ComponentClass'
 
-    def __init__(self, name, parameters, main_block):
+    def __init__(self, name, parameters, main_block, url=None):
         ensure_valid_identifier(name)
         BaseALObject.__init__(self)
+        TopLevelObject.__init__(self, url)
         self._name = name
         self._main_block = main_block
         # Turn any strings in the parameter list into Parameters:

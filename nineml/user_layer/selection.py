@@ -46,8 +46,9 @@ class Selection(BaseULObject, TopLevelObject):
     element_name = "Selection"
     defining_attributes = ('name', 'operation')
 
-    def __init__(self, name, operation):
-        super(Selection, self).__init__()
+    def __init__(self, name, operation, url=None):
+        BaseULObject.__init__(self)
+        TopLevelObject.__init__(self, url)
         self.name = name
         self.operation = operation
 
@@ -69,7 +70,7 @@ class Selection(BaseULObject, TopLevelObject):
         # The only supported op at this stage
         op = Concatenate.from_xml(
             expect_single(element.findall(NINEML + 'Concatenate')), document)
-        return cls(element.attrib['name'], op)
+        return cls(element.attrib['name'], op, url=document.url)
 
     def evaluate(self):
         assert isinstance(self.operation, Concatenate), \

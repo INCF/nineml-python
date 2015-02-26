@@ -27,7 +27,8 @@ class Population(BaseULObject, TopLevelObject):
     defining_attributes = ("name", "size", "cell", "positions")
 
     def __init__(self, name, size, cell, positions=None):
-        super(Population, self).__init__()
+        BaseULObject.__init__(self)
+        TopLevelObject.__init__(self, url)
         self.name = name
         self.size = size
         self.cell = cell
@@ -82,6 +83,7 @@ class Population(BaseULObject, TopLevelObject):
         kwargs = {}
         if layout_elem:
             kwargs['positions'] = Component.from_xml(layout_elem, document)
+            kwargs['url'] = document.url
         cell = expect_single(element.findall(NINEML + 'Cell'))
         cell_component = cell.find(NINEML + 'Component')
         if cell_component is None:
@@ -109,7 +111,7 @@ class PositionList(BaseULObject, TopLevelObject):
     element_name = "Layout"
     defining_attributes = []
 
-    def __init__(self, positions=[], structure=None):
+    def __init__(self, positions=[], structure=None, url=None):
         """
         Create a new PositionList.
 
@@ -121,6 +123,7 @@ class PositionList(BaseULObject, TopLevelObject):
         `structure` should be a Structure componentclass.
         """
         super(PositionList, self).__init__()
+        TopLevelObject.__init__(self, url=url)
         if positions and structure:
             raise Exception("Please provide either positions or structure, "
                             "not both.")
@@ -194,7 +197,7 @@ class PositionList(BaseULObject, TopLevelObject):
                 positions = [(float(p.attrib['x']), float(p.attrib['y']),
                               float(p.attrib['z']))
                              for p in element.findall(NINEML + 'position')]
-                return cls(positions=positions)
+                return cls(positions=positions, url=document.url)
 
 
 def qstr(obj):

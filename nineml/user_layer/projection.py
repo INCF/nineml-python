@@ -59,11 +59,12 @@ class Projection(BaseULObject, TopLevelObject):
     _component_roles = set(['source', 'destination', 'plasticity', 'response'])
 
     def __init__(self, name, source, destination, response,
-                 plasticity, connectivity, delay, port_connections):
+                 plasticity, connectivity, delay, port_connections, url=None):
         """
         Create a new projection.
         """
-        super(Projection, self).__init__()
+        BaseULObject.__init__(self)
+        TopLevelObject.__init__(self, url)
         self.name = name
         self.source = source
         # When exporting to XML we use the reference instead of the object
@@ -236,7 +237,8 @@ class Projection(BaseULObject, TopLevelObject):
                    plasticity=plasticity,
                    connectivity=connectivity,
                    delay=delay,
-                   port_connections=port_connections)
+                   port_connections=port_connections,
+                   url=document.url)
 
 
 class Delay(Quantity):

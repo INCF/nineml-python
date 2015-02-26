@@ -94,6 +94,13 @@ class BaseNineMLObject(object):
 
 class TopLevelObject(object):
 
+    def __init__(self, url):
+        self._url = url
+
+    @property
+    def url(self):
+        return self._url
+
     @property
     def attributes_with_dimension(self):
         return []  # To be overridden in derived classes

@@ -55,7 +55,7 @@ class TestNetwork(unittest.TestCase):
         celltype = nineml.SpikingNodeType("nrn",
                                           path.join(self.xml_dir,
                                                     'BrunelIaF.xml'),
-                                          neuron_parameters,
+                                          properties=neuron_parameters,
                                           initial_values=neuron_initial_values)
         ext_stim = nineml.SpikingNodeType("stim",
                                           path.join(self.xml_dir,
@@ -65,7 +65,7 @@ class TestNetwork(unittest.TestCase):
                                           initial_values={"t_next": (0.5, ms)})
         psr = nineml.SynapseType("syn",
                                  path.join(self.xml_dir, "AlphaPSR.xml"),
-                                 psr_parameters,
+                                 properties=psr_parameters,
                                  initial_values=synapse_initial_values)
 
         p1 = nineml.Population("Exc", 1, celltype, positions=None)
@@ -74,13 +74,14 @@ class TestNetwork(unittest.TestCase):
 
         all_to_all = nineml.ConnectionRule("AllToAll",
                                            path.join(self.xml_dir,
-                                                     "AllToAll.xml"))
+                                                     "AllToAll.xml"), {})
 
-        static_exc = nineml.ConnectionType("ExcitatoryPlasticity",
+        static_exc = nineml.ConnectionRule("ExcitatoryPlasticity",
                                            path.join(self.xml_dir,
                                                      "StaticConnection.xml"),
+                                           {},
                                            initial_values={"weight": (Je, nA)})
-        static_inh = nineml.ConnectionType("InhibitoryPlasticity",
+        static_inh = nineml.ConnectionRule("InhibitoryPlasticity",
                                            path.join(self.xml_dir,
                                                      "StaticConnection.xml"),
                                            initial_values={"weight": (Ji, nA)})
