@@ -23,12 +23,12 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_dynamicsblock(self, dynamicsblock, **kwargs):
         self.action_dynamicsblock(dynamicsblock, **kwargs)
-        nodes = chain(dynamicsblock.state_variables.itervalues(),
-                      dynamicsblock.regimes.itervalues(),
-                      dynamicsblock.aliases.itervalues(),
-                      dynamicsblock.constants.itervalues(),
-                      dynamicsblock.random_variables.itervalues(),
-                      dynamicsblock.piecewises.itervalues())
+        nodes = chain(dynamicsblock.state_variables,
+                      dynamicsblock.regimes,
+                      dynamicsblock.aliases,
+                      dynamicsblock.constants,
+                      dynamicsblock.random_variables,
+                      dynamicsblock.piecewises)
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 

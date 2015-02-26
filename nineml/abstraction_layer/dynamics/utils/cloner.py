@@ -64,13 +64,13 @@ class DynamicsCloner(ComponentCloner):
     def visit_dynamicsblock(self, dynamicsblock, **kwargs):
         return dynamicsblock.__class__(
             regimes=[r.accept_visitor(self, **kwargs)
-                     for r in dynamicsblock.regimes.itervalues()],
+                     for r in dynamicsblock.regimes],
             aliases=[
                 a.accept_visitor(self, **kwargs)
-                for a in dynamicsblock.aliases.itervalues()],
+                for a in dynamicsblock.aliases],
             state_variables=[
                 s.accept_visitor(self, **kwargs)
-                for s in dynamicsblock.state_variables.itervalues()])
+                for s in dynamicsblock.state_variables])
 
     def visit_regime(self, regime, **kwargs):
         return regime.__class__(

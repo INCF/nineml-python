@@ -159,10 +159,17 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
          For more information, see
 
     """
-    defining_attributes = ('name', '_parameters', '_analog_send_ports',
-                           '_analog_receive_ports', '_analog_reduce_ports',
-                           '_event_send_ports', '_event_receive_ports',
-                           '_main_block')
+    defining_attributes = (ComponentClass.defining_attributes +
+                           ('_analog_send_ports', '_analog_receive_ports',
+                            '_analog_reduce_ports', '_event_send_ports',
+                            '_event_receive_ports'))
+    _class_to_member = dict(
+        tuple(ComponentClass._class_to_member.iteritems()) +
+        ((AnalogSendPort, '_analog_send_ports'),
+         (AnalogReceivePort, '_analog_receive_ports'),
+         (AnalogReducePort, '_analog_reduce_ports'),
+         (EventSendPort, '_event_send_ports'),
+         (EventReceivePort, '_event_receive_ports')))
 
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[],
@@ -257,14 +264,14 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                                     for n in inferred_struct.parameter_names)
 
         # Check any supplied state_variables match:
-        if list(self.state_variables):
+        if self.num_state_variables:
             state_var_names = [p.name for p in self.state_variables]
             inf_check(state_var_names, inferred_struct.state_variable_names,
                       'StateVariables')
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
-            self._main_block.state_variables = state_vars
+            self._main_block._state_variables = state_vars
 
         # Set and check event receive ports match inferred
         self._event_receive_ports = dict(
@@ -328,54 +335,6 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def validate(self):
         DynamicsValidator.validate_componentclass(self)
 
-    def add(self, element):
-        try:
-            super(DynamicsClass, self).add(element)
-        except NineMLInvalidElementTypeException:
-            if isinstance(element, StateVariable):
-                self._main_block.state_variables[element.name] = element
-            elif isinstance(element, Regime):
-                self._main_block.regimes[element.name] = element
-            elif isinstance(element, AnalogSendPort):
-                self._analog_send_ports[element.name] = element
-            elif isinstance(element, AnalogReceivePort):
-                self._analog_receive_ports[element.name] = element
-            elif isinstance(element, AnalogReducePort):
-                self._analog_reduce_ports[element.name] = element
-            elif isinstance(element, EventSendPort):
-                self._event_send_ports[element.name] = element
-            elif isinstance(element, EventReceivePort):
-                self._event_receive_ports[element.name] = element
-            else:
-                raise NineMLInvalidElementTypeException(
-                    "Could not add element of type '{}' to {} class"
-                    .format(element.__class__.__name__,
-                            self.__class__.__name__))
-
-    def remove(self, element):
-        try:
-            super(DynamicsClass, self).remove(element)
-        except NineMLInvalidElementTypeException:
-            if isinstance(element, StateVariable):
-                self._main_block.state_variables.pop(element.name)
-            elif isinstance(element, Regime):
-                self._main_block.regimes.pop(element.name)
-            elif isinstance(element, AnalogSendPort):
-                self._analog_send_ports.pop(element.name)
-            elif isinstance(element, AnalogReceivePort):
-                self._analog_receive_ports.pop(element.name)
-            elif isinstance(element, AnalogReducePort):
-                self._analog_reduce_ports.pop(element.name)
-            elif isinstance(element, EventSendPort):
-                self._event_send_ports.pop(element.name)
-            elif isinstance(element, EventReceivePort):
-                self._event_receive_ports.pop(element.name)
-            else:
-                raise NineMLInvalidElementTypeException(
-                    "Could not remove element of type '{}' to {} class"
-                    .format(element.__class__.__name__,
-                            self.__class__.__name__))
-
     @property
     def query(self):
         """ Returns the ``ComponentQuery`` object associated with this class"""
@@ -386,28 +345,17 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         return visitor.visit_componentclass(self, **kwargs)
 
     @property
-    def num_states(self):
-        return len(list(self.dynamics.state_variables))
+    def num_state_variables(self):
+        return len(list(self._main_block._state_variables))
 
     @property
     def num_regimes(self):
-        return len(list(self.dynamics.regimes))
+        return len(list(self._main_block._regimes))
 
     @property
     def attributes_with_dimension(self):
         return chain(super(DynamicsClass, self).attributes_with_dimension,
                      self.analog_ports, self.state_variables)
-
-    @property
-    def dynamicsblock(self):
-        return self._main_block
-
-    @property
-    def ports(self):
-        return chain(super(DynamicsClass, self).ports,
-                     self.analog_send_ports, self.analog_receive_ports,
-                     self.analog_reduce_ports, self.event_send_ports,
-                     self.event_receive_ports)
 
     @property
     def analog_send_ports(self):
@@ -425,12 +373,6 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         return self._analog_reduce_ports.itervalues()
 
     @property
-    def analog_ports(self):
-        """Returns an iterator over the local analog port objects"""
-        return chain(self.analog_send_ports, self.analog_receive_ports,
-                     self.analog_reduce_ports)
-
-    @property
     def event_send_ports(self):
         """Returns an iterator over the local |EventSendPort| objects"""
         return self._event_send_ports.itervalues()
@@ -441,24 +383,37 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         return self._event_receive_ports.itervalues()
 
     @property
+    def ports(self):
+        return chain(super(DynamicsClass, self).ports,
+                     self.analog_send_ports, self.analog_receive_ports,
+                     self.analog_reduce_ports, self.event_send_ports,
+                     self.event_receive_ports)
+
+    @property
+    def analog_ports(self):
+        """Returns an iterator over the local analog port objects"""
+        return chain(self.analog_send_ports, self.analog_receive_ports,
+                     self.analog_reduce_ports)
+
+    @property
     def event_ports(self):
         return chain(self.event_send_ports, self.event_receive_ports)
 
     @property
     def regimes(self):
-        """Forwarding function to self._main_block.regimes"""
-        return self._main_block.regimes.itervalues()
+        """Forwarding function to self._main_block._regimes"""
+        return self._main_block._regimes.itervalues()
 
     @property
     def state_variables(self):
-        """Forwarding function to self._main_block.state_variables"""
-        return self._main_block.state_variables.itervalues()
+        """Forwarding function to self._main_block._state_variables"""
+        return self._main_block._state_variables.itervalues()
 
     def regime(self, name):
-        return self._main_block.regimes[name]
+        return self._main_block._regimes[name]
 
     def state_variable(self, name):
-        return self._main_block.state_variables[name]
+        return self._main_block._state_variables[name]
 
     def analog_send_port(self, name):
         return self._analog_send_ports[name]
@@ -477,11 +432,11 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def regime_names(self):
-        return self._main_block.regimes.iterkeys()
+        return self._main_block._regimes.iterkeys()
 
     @property
     def state_variable_names(self):
-        return self._main_block.state_variables.iterkeys()
+        return self._main_block._state_variables.iterkeys()
 
     @property
     def analog_port_names(self):

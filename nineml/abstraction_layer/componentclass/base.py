@@ -25,11 +25,66 @@ from ..expressions import ExpressionSymbol
 from nineml.exceptions import NineMLInvalidElementTypeException
 
 
+class Parameter(BaseALObject):
+
+    """A class representing a state-variable in a ``ComponentClass``.
+
+    This was originally a string, but if we intend to support units in the
+    future, wrapping in into its own object may make the transition easier
+    """
+
+    element_name = 'Parameter'
+    defining_attributes = ('_name', '_dimension')
+
+    def __init__(self, name, dimension=None):
+        """Parameter Constructor
+
+        `name` -- The name of the parameter.
+        """
+        name = name.strip()
+        ensure_valid_identifier(name)
+
+        self._name = name
+        self._dimension = dimension if dimension is not None else dimensionless
+        assert isinstance(self._dimension, Dimension), (
+            "dimension must be None or a nineml.Dimension instance")
+        self.constraints = []  # TODO: constraints can be added in the future.
+
+    def __eq__(self, other):
+        if not isinstance(other, Parameter):
+            return False
+        return self.name == other.name and self.dimension == other.dimension
+
+    @property
+    def name(self):
+        """Returns the name of the parameter"""
+        return self._name
+
+    @property
+    def dimension(self):
+        """Returns the dimensions of the parameter"""
+        return self._dimension
+
+    def set_dimension(self, dimension):
+        self._dimension = dimension
+
+    def __repr__(self):
+        return ("Parameter({}{})"
+                .format(self.name,
+                        ', dimension={}'.format(self.dimension.name)))
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_parameter(self, **kwargs)
+
+
 class ComponentClass(BaseALObject, TopLevelObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     __metaclass__ = ABCMeta  # Abstract base class
 
+    defining_attributes = ('_name', '_parameters', '_main_block')
+    _class_to_member = {Parameter: '_parameters'}
     element_name = 'ComponentClass'
 
     def __init__(self, name, parameters, main_block):
@@ -46,7 +101,8 @@ class ComponentClass(BaseALObject, TopLevelObject):
             params_from_strings = [Parameter(s) for s in param_td[basestring]]
             parameters = param_td[Parameter] + params_from_strings
         self._parameters = dict((p.name, p) for p in parameters)
-        self._indices = {}
+        # Dictionary to store element->index mappings
+        self._indices = defaultdict(dict)
 
     @property
     def name(self):
@@ -67,51 +123,42 @@ class ComponentClass(BaseALObject, TopLevelObject):
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
 
-        WARNING! It is assumed but not checked that the element is part of the
-        component class.
+        The element would typically be part of the component class, but this
+        is not checked for.
         """
         if key is None:
             try:
                 key = element.__class__.index_key
             except AttributeError:
                 key = element.__class__.__name__
-        if key not in self._indices:
-            # Create a new defaultdict to generate new indices for the given
-            # type.
-            self._indices[key] = defaultdict(lambda: len(self._indices[key]))
-        return self._indices[key][element]
+        try:
+            return self._indices[key][element]
+        except KeyError:
+            if self._indices[key]:
+                index = max(self._indices.itervalues())
+            else:
+                index = 0
+            self._indices[key][element] = index
+            return index
 
     def add(self, element):
-        if isinstance(element, Parameter):
-            self._parameters[element.name] = element
-        elif isinstance(element, Alias):
-            self._main_block.aliases[element.name] = element
-        elif isinstance(element, Constant):
-            self._main_block.constants[element.name] = element
-        elif isinstance(element, RandomVariable):
-            self._main_block.aliases[element.name] = element
-        elif isinstance(element, Piecewise):
-            self._main_block.aliases[element.name] = element
-        else:
-            raise NineMLInvalidElementTypeException(
-                "Could not add element of type '{}' to {} class"
-                .format(element.__class__.__name__, self.__class__.__name__))
+        dct = self._get_member_dict(element)
+        if element.name in dct:
+            raise NineMLRuntimeError(
+                "Could not add '{}' {} to component class as it clashes with "
+                "an existing element of the same name"
+                .format(element.name, type(element).__name__))
+        dct[element.name] = element
 
-    def remove(self, element):
-        if isinstance(element, Parameter):
-            self._parameters.pop(element.name)
-        elif isinstance(element, Alias):
-            self._main_block.aliases.pop(element.name)
-        elif isinstance(element, Constant):
-            self._main_block.constants.pop(element.name)
-        elif isinstance(element, RandomVariable):
-            self._main_block.aliases.pop(element.name)
-        elif isinstance(element, Piecewise):
-            self._main_block.aliases.pop(element.name)
-        else:
-            raise NineMLInvalidElementTypeException(
-                "Could not remove element of type '{}' to {} class"
-                .format(element.__class__.__name__, self.__class__.__name__))
+    def remove(self, element, ignore_missing=False):
+        dct = self._get_member_dict(element)
+        try:
+            del dct[element.name]
+        except KeyError:
+            if not ignore_missing:
+                raise NineMLRuntimeError(
+                    "Could not remove '{}' from component class as it was not "
+                    "found in member dictionary".format(element.name))
 
     @property
     def parameters(self):
@@ -120,20 +167,20 @@ class ComponentClass(BaseALObject, TopLevelObject):
 
     @property
     def aliases(self):
-        return self._main_block.aliases.itervalues()
+        return self._main_block._aliases.itervalues()
 
     @property
     def constants(self):
-        return self._main_block.constants.itervalues()
+        return self._main_block._constants.itervalues()
 
     def parameter(self, name):
         return self._parameters[name]
 
     def alias(self, name):
-        return self._main_block.aliases[name]
+        return self._main_block._aliases[name]
 
     def constant(self, name):
-        return self._main_block.constants[name]
+        return self._main_block._constants[name]
 
     @property
     def parameter_names(self):
@@ -141,11 +188,11 @@ class ComponentClass(BaseALObject, TopLevelObject):
 
     @property
     def alias_names(self):
-        return self._main_block.aliases.iterkeys()
+        return self._main_block._aliases.iterkeys()
 
     @property
     def constant_names(self):
-        return self._main_block.constants.iterkeys()
+        return self._main_block._constants.iterkeys()
 
     @property
     def dimensions(self):
@@ -188,6 +235,41 @@ class ComponentClass(BaseALObject, TopLevelObject):
                             'ClassXMLLoader')
         return XMLLoader(document).load_componentclass(element)
 
+    def _get_member_dict(self, element):
+        # Try quick lookup by class type
+        name = None
+        inblock_name = None
+        try:
+            name = self._class_to_member[type(element)]
+        except KeyError:
+            try:
+                inblock_name = self._main_block._class_to_member[type(element)]
+            except KeyError:
+                pass
+        # Iterate through all options and check whether it is a subclass
+        if name is None and inblock_name is None:
+            try:
+                name = next(
+                    d for cls, d in self._class_to_member.iteritems()
+                    if isinstance(element, cls))
+            except StopIteration:
+                try:
+                    inblock_name = next(
+                        d for cls, d in
+                        self._class_to_main_block_member.iteritems()
+                        if isinstance(element, cls))
+                except StopIteration:
+                    raise NineMLInvalidElementTypeException(
+                        "Could not get member dict for element of type "
+                        "'{}' to '{}' class"
+                        .format(element.__class__.__name__,
+                                self.__class__.__name__))
+        if name is not None:
+            dct = getattr(self, name)
+        else:
+            dct = getattr(self._main_block, inblock_name)
+        return dct
+
 
 class MainBlock(BaseALObject):
 
@@ -198,8 +280,11 @@ class MainBlock(BaseALObject):
 
     __metaclass__ = ABCMeta  # Abstract base class
 
-    def __init__(self, aliases=None, constants=None, random_variables=None,
-                 piecewises=None):
+    defining_attributes = ('_aliases', '_constants')
+    _class_to_member = {Alias: '_aliases',
+                        Constant: '_constants'}
+
+    def __init__(self, aliases=None, constants=None):
         """DynamicsBlock object constructor
 
            :param aliases: A list of aliases, which must be either |Alias|
@@ -216,59 +301,16 @@ class MainBlock(BaseALObject):
 
         assert_no_duplicates(a.lhs for a in aliases)
 
-        self.aliases = dict((a.lhs, a) for a in aliases)
-        self.constants = dict((c.name, c) for c in constants)
-
-
-class Parameter(BaseALObject, ExpressionSymbol):
-
-    """A class representing a state-variable in a ``ComponentClass``.
-
-    This was originally a string, but if we intend to support units in the
-    future, wrapping in into its own object may make the transition easier
-    """
-
-    element_name = 'Parameter'
-    defining_attributes = ('name', 'dimension')
-
-    def __init__(self, name, dimension=None):
-        """Parameter Constructor
-
-        `name` -- The name of the parameter.
-        """
-        name = name.strip()
-        ensure_valid_identifier(name)
-
-        self._name = name
-        self._dimension = dimension if dimension is not None else dimensionless
-        assert isinstance(self._dimension, Dimension), (
-            "dimension must be None or a nineml.Dimension instance")
-        self.constraints = []  # TODO: constraints can be added in the future.
-
-    def __eq__(self, other):
-        return self.name == other.name and self.dimension == other.dimension
+        self._aliases = dict((a.lhs, a) for a in aliases)
+        self._constants = dict((c.name, c) for c in constants)
 
     @property
-    def name(self):
-        """Returns the name of the parameter"""
-        return self._name
+    def aliases(self):
+        return self._aliases.itervalues()
 
     @property
-    def dimension(self):
-        """Returns the dimensions of the parameter"""
-        return self._dimension
-
-    def set_dimension(self, dimension):
-        self._dimension = dimension
-
-    def __repr__(self):
-        return ("Parameter({}{})"
-                .format(self.name,
-                        ', dimension={}'.format(self.dimension.name)))
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_parameter(self, **kwargs)
+    def constants(self):
+        return self._constants.itervalues()
 
 
 from .utils.xml import ComponentClassXMLLoader

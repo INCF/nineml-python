@@ -130,7 +130,7 @@ class ComponentFlattener_test(unittest.TestCase):
             set(['c1_C1', 'c1_C2', 'c1_C3', 'c2_C1', 'c2_C2', 'c2_C3', 'd_D1', 'd_D2', 'd_D3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(b_flat._main_block.regimes), 8)
+        self.assertEqual(len(b_flat._main_block._regimes), 8)
         r_c1_1_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r1 ')
         r_c1_1_c2_2_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r2 ')
         r_c1_2_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r2 c2:r1')
@@ -265,7 +265,7 @@ class ComponentFlattener_test(unittest.TestCase):
             set(['b_c1_C1', 'b_c1_C2', 'b_c1_C3', 'b_c2_C1', 'b_c2_C2', 'b_c2_C3', 'b_d_D1', 'b_d_D2', 'b_d_D3', 'c_C1', 'c_C2', 'c_C3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(a_flat._main_block.regimes), 16)
+        self.assertEqual(len(a_flat._main_block._regimes), 16)
         r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
         r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
         r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
@@ -471,7 +471,7 @@ class ComponentFlattener_test(unittest.TestCase):
                  'c_C1', 'c_C2', 'c_C3', 'c_C4']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(a_flat._main_block.regimes), 16)
+        self.assertEqual(len(a_flat._main_block._regimes), 16)
         r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
         r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
         r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')

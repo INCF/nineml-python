@@ -38,7 +38,7 @@ class ComponentRenameSymbol(ComponentActionVisitor):
 
         componentclass.assign_indices()
         self.visit(componentclass)
-        componentclass._validate_self()
+        componentclass.validate()
 
     def note_lhs_changed(self, what):
         self.lhs_changes.append(what)
@@ -66,8 +66,8 @@ class ComponentRenameSymbol(ComponentActionVisitor):
                                   componentclass._indices.itervalues()))
 
     def action_mainblock(self, main_block, **kwargs):  # @UnusedVariable
-        self._update_dicts(main_block.aliases, main_block.piecewises,
-                           main_block.constants, main_block.random_variables)
+        self._update_dicts(main_block._aliases, main_block._piecewises,
+                           main_block._constants, main_block._random_variables)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         if parameter.name == self.old_symbol_name:
