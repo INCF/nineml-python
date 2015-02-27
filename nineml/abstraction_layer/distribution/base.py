@@ -38,7 +38,11 @@ class DistributionClass(ComponentClass):
     def required_for(self, expressions):
         return DistributionRequiredDefinitions(self, expressions)
 
+    def _find_element(self, element):
+        return DistributionElementFinder(element).found_in(self)
+
 from .utils.cloner import DistributionCloner
 from .utils.modifiers import(
     DistributionRenameSymbol, DistributionAssignIndices)
-from .utils.visitors import DistributionRequiredDefinitions
+from .utils.visitors import (DistributionRequiredDefinitions,
+                             DistributionElementFinder)

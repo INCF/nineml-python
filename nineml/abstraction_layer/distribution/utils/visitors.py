@@ -6,7 +6,8 @@ docstring needed
 """
 
 
-from ...componentclass.utils import ComponentActionVisitor
+from ...componentclass.utils import (
+    ComponentActionVisitor, ComponentElementFinder)
 from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 
@@ -39,3 +40,15 @@ class DistributionRequiredDefinitions(ComponentRequiredDefinitions,
 
     def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable @IgnorePep8
         self.action_mainblock(distributionblock, **kwargs)
+
+
+class DistributionElementFinder(ComponentElementFinder,
+                                DistributionActionVisitor):
+
+    def __init__(self, element):
+        DistributionActionVisitor.__init__(self,
+                                           require_explicit_overrides=True)
+        ComponentElementFinder.__init__(self, element)
+
+    def action_distributionblock(self, dynamicsblock, **kwargs):
+        pass

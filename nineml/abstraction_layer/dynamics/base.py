@@ -329,6 +329,9 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
+    def _find_element(self, element):
+        return DynamicsElementFinder(element).found_in(self)
+
     def __repr__(self):
         return "<dynamics.DynamicsClass %s>" % self.name
 
@@ -523,6 +526,14 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         """
         return len(self.subnodes) == 0
 
+    @property
+    def alias_names(self):
+        return self._main_block._aliases.iterkeys()
+
+    @property
+    def num_aliases(self):
+        return len(self._main_block._aliases)
+
     # -------------------------- #
 
     def backsub_all(self):
@@ -546,15 +557,11 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         # We only worry about 'target' regimes, since source regimes are taken
         # care of for us by the Regime objects they are attached to.
         for trans in self.all_transitions():
-            if trans.target_regime_name not in self._main_block.regimes:
+            if trans.target_regime_name not in self._main_block._regimes:
                 raise NineMLRuntimeError(
                     "Can't find regime '{}'".format(trans.target_regime_name))
             trans.set_target_regime(
-                self._main_block.regimes[trans.target_regime_name])
-
-    @property
-    def _assumed_defined(self):
-        return self._main_block.state_variables.keys()
+                self._main_block._regimes[trans.target_regime_name])
 
 
 class DynamicsBlock(MainBlock):

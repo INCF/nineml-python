@@ -15,4 +15,5 @@ import exceptions
 from abstraction_layer import (
     Unit, Dimension, DynamicsClass, ConnectionRuleClass, DistributionClass)
 from user_layer import (
-    Dynamics, ConnectionRule, Distribution)
+    Dynamics, ConnectionRule, Distribution, Selection, Population,
+    Projection, Property, Definition)

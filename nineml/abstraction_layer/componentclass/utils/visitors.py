@@ -161,3 +161,42 @@ class ComponentRequiredDefinitions(object):
     @property
     def expression_names(self):
         return (e.name for e in self.expressions)
+
+
+class ComponentElementFinder(ComponentActionVisitor):
+
+    def __init__(self, element):
+        super(ComponentElementFinder, self).__init__(
+            require_explicit_overrides=True)
+        self.element = element
+
+    def found_in(self, componentclass):
+        self.found = False
+        self.visit(componentclass)
+        return self.found
+
+    def _found(self):
+        self.found = True
+
+    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
+        pass
+
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
+        if self.element == parameter:
+            self._found()
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        if self.element == alias:
+            self._found()
+
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
+        if self.element == randomvariable:
+            self._found()
+
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable
+        if self.element == constant:
+            self._found()
+
+    def action_piecewise(self, piecewise, **kwargs):  # @UnusedVariable
+        if self.element == piecewise:
+            self._found()

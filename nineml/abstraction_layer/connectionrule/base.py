@@ -53,7 +53,11 @@ class ConnectionRuleClass(ComponentClass):
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
+    def _find_element(self, element):
+        return ConnectionRuleElementFinder(element).found_in(self)
+
 from .utils.cloner import ConnectionRuleCloner
 from .utils.modifiers import (
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
-from .utils.visitors import ConnectionRuleRequiredDefinitions
+from .utils.visitors import (
+    ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder)

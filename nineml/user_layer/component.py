@@ -11,6 +11,7 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from ..abstraction_layer.units import Unit, unitless
+from ..abstraction_layer import ComponentClass
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
@@ -107,7 +108,6 @@ class Component(BaseULObject, TopLevelObject):
             :class:`PropertySet` for the componentclass's state variables.
 
     """
-    __metaclass__ = ABCMeta  # Abstract base class
 
     element_name = "Component"
     defining_attributes = ('name', 'component_class', 'properties')
@@ -130,6 +130,8 @@ class Component(BaseULObject, TopLevelObject):
                 name=path.basename(definition).replace(".xml", ""),
                 document=Document(url=definition),
                 url=definition)
+        elif isinstance(definition, ComponentClass):
+            definition = Definition(definition.name, Document(definition))
         elif not (isinstance(definition, Definition) or
                   isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
@@ -163,7 +165,7 @@ class Component(BaseULObject, TopLevelObject):
         """
         defn = self._definition
         while not isinstance(defn, Definition):
-            defn = defn.componentclass._definition
+            defn = defn.component_class._definition
         return defn.component_class
 
     @property
@@ -175,9 +177,16 @@ class Component(BaseULObject, TopLevelObject):
         # them with properties defined locally
         props = PropertySet()
         if isinstance(self._definition, Prototype):
-            props.update(self._definition.componentclass.properties)
+            props.update(self._definition.properties)
         props.update(self._properties)
         return props
+
+    def set(self, prop):
+        if prop.name not in self.component_class.parameter_names:
+            raise NineMLRuntimeError(
+                "'{}' is not a parameter of components of class '{}'"
+                .format(prop.name, self.component_class.name))
+        self._properties[prop.name] = prop
 
     @property
     def initial_values(self):
@@ -219,9 +228,9 @@ class Component(BaseULObject, TopLevelObject):
         return "\n".join(d)
 
     def get_definition(self):
-        if not self._definition.componentclass:
+        if not self._definition.component_class:
             self._definition.retrieve()
-        return self._definition.componentclass
+        return self._definition.component_class
 
     def check_properties(self):
         # First check the names
@@ -306,6 +315,9 @@ class Component(BaseULObject, TopLevelObject):
         doc = E.NineML(*xml, xmlns=nineml_namespace)
         etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
                                      xml_declaration=True)
+
+    def property(self, name):
+        return self.properties[name]
 
 
 class Definition(BaseReference):
