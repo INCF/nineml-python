@@ -9,7 +9,6 @@ This module provides the base class for these.
 """
 from itertools import chain
 from abc import ABCMeta
-from itertools import chain
 from collections import defaultdict
 from .. import BaseALObject
 import nineml
@@ -226,6 +225,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
         self.standardize_unit_dimensions()
         XMLWriter = getattr(nineml.abstraction_layer,
                             self.__class__.__name__ + 'XMLWriter')
+        self.validate()
         return XMLWriter().visit(self)
 
     @classmethod

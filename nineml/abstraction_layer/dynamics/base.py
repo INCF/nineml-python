@@ -490,7 +490,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         Returns an iterator over all aliases that are required for analog
         send ports
         """
-        return (a for a in self.aliases if a.name in self.analog_send_ports)
+        return (a for a in self.aliases
+                if a.name in self.analog_send_port_names)
 
     @property
     def flattener(self):
