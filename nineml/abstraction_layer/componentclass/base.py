@@ -160,6 +160,30 @@ class ComponentClass(BaseALObject, TopLevelObject):
                     "Could not remove '{}' from component class as it was not "
                     "found in member dictionary".format(element.name))
 
+    def __getitem__(self, name):
+        for dct in chain(*([m.itervalues() for m in self._class_to_member] +
+                           [m.itervalues()
+                            for m in self._main_block._class_to_member])):
+            if name in dct:
+                return dct[name]
+        raise KeyError("'{}' was not found in '{}' component class"
+                       .format(name, self.name))
+
+    def __contains__(self, element):
+        if isinstance(element, basestring):
+            try:
+                self[element]
+            except KeyError:
+                return False
+        else:
+            dct = self._get_member_dict(element)
+            try:
+                found = dct[element.name]
+                assert(found == element)
+                return True
+            except KeyError:
+                return False
+
     @property
     def parameters(self):
         """Returns an iterator over the local |Parameter| objects"""
