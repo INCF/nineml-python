@@ -2,6 +2,7 @@
 from itertools import chain
 from lxml import etree
 from abc import ABCMeta
+import collections
 from nineml.reference import BaseReference
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError)
@@ -110,7 +111,7 @@ class Component(BaseULObject, TopLevelObject):
     """
 
     element_name = "Component"
-    defining_attributes = ('name', 'component_class', 'properties')
+    defining_attributes = ('name', 'component_class', 'property_set')
     children = ("Property", "Definition", 'Prototype')
 
     # initial_values is temporary, the idea longer-term is to use a separate
@@ -132,6 +133,8 @@ class Component(BaseULObject, TopLevelObject):
                 url=definition)
         elif isinstance(definition, ComponentClass):
             definition = Definition(definition.name, Document(definition))
+        elif isinstance(definition, Component):
+            definition = Prototype(definition.name, Document(definition))
         elif not (isinstance(definition, Definition) or
                   isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
@@ -141,8 +144,12 @@ class Component(BaseULObject, TopLevelObject):
             self._properties = properties
         elif isinstance(properties, dict):
             self._properties = PropertySet(**properties)
+        elif isinstance(properties, collections.Iterable):
+            self._properties = PropertySet(*properties)
         else:
-            raise TypeError("properties must be a PropertySet or a dict")
+            raise TypeError(
+                "properties must be a PropertySet, dict of properties or an "
+                "iterable of properties (not '{}')".format(properties))
         if isinstance(initial_values, InitialValueSet):
             self._initial_values = initial_values
         elif isinstance(initial_values, dict):
@@ -163,10 +170,27 @@ class Component(BaseULObject, TopLevelObject):
         prototype's definition, or the prototype's prototype's definition, etc.
         depending on how the componentclass is defined.
         """
-        defn = self._definition
+        defn = self.definition
         while not isinstance(defn, Definition):
-            defn = defn.component_class._definition
+            defn = defn.component.definition
         return defn.component_class
+
+    @property
+    def definition(self):
+        return self._definition
+
+    @property
+    def property_set(self):
+        """
+        The set of componentclass properties (parameter values).
+        """
+        # Recursively retrieves properties defined in prototypes and updates
+        # them with properties defined locally
+        props = PropertySet()
+        if isinstance(self.definition, Prototype):
+            props.update(self.definition.component.property_set)
+        props.update(self._properties)
+        return props
 
     @property
     def properties(self):
@@ -175,17 +199,25 @@ class Component(BaseULObject, TopLevelObject):
         """
         # Recursively retrieves properties defined in prototypes and updates
         # them with properties defined locally
-        props = PropertySet()
-        if isinstance(self._definition, Prototype):
-            props.update(self._definition.properties)
-        props.update(self._properties)
-        return props
+        return self.property_set.itervalues()
+
+    @property
+    def property_names(self):
+        return self.property_set.iterkeys()
 
     def set(self, prop):
-        if prop.name not in self.component_class.parameter_names:
+        try:
+            param = self.component_class.parameter(prop.name)
+        except KeyError:
             raise NineMLRuntimeError(
                 "'{}' is not a parameter of components of class '{}'"
                 .format(prop.name, self.component_class.name))
+        if prop.units.dimension != param.dimension:
+            raise NineMLUnitMismatchError(
+                "Dimensions for '{}' property ('{}') don't match that of "
+                "componentclass class ('{}')."
+                .format(prop.name, prop.units.dimension.name,
+                        param.dimension.name))
         self._properties[prop.name] = prop
 
     @property
@@ -197,14 +229,14 @@ class Component(BaseULObject, TopLevelObject):
         # Recursively retrieves initial values defined in prototypes and
         # updates them with properties defined locally
         vals = InitialValueSet()
-        if isinstance(self._definition, Prototype):
-            vals.update(self._definition.componentclass.initial_values)
+        if isinstance(self.definition, Prototype):
+            vals.update(self.definition.component.initial_values)
         vals.update(self._initial_values)
         return vals
 
     @property
     def attributes_with_units(self):
-        return set(p for p in chain(self.properties.values(),
+        return set(p for p in chain(self.properties,
                                     self.initial_values.values())
                    if p.units is not None)
 
@@ -227,15 +259,10 @@ class Component(BaseULObject, TopLevelObject):
             d += ["properties: %s != %s" % (self.properties, other.properties)]
         return "\n".join(d)
 
-    def get_definition(self):
-        if not self._definition.component_class:
-            self._definition.retrieve()
-        return self._definition.component_class
-
     def check_properties(self):
         # First check the names
-        properties = set(self.properties.iterkeys())
-        parameters = set(p.name for p in self.component_class.parameters)
+        properties = set(self.property_names)
+        parameters = set(self.component_class.parameter_names)
         msg = []
         diff_a = properties.difference(parameters)
         diff_b = parameters.difference(properties)
@@ -252,15 +279,15 @@ class Component(BaseULObject, TopLevelObject):
             raise Exception(". ".join(msg))
         # Check dimensions match
         for param in self.component_class.parameters:
-            prop_units = self.properties[param.name].units
+            prop_units = self.property(param.name).units
             prop_dimension = prop_units.dimension
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
-                err = ("Dimensions for '{}' parameter don't match, "
-                       "componentclass class '{}', componentclass '{}'."
-                       .format(param.name, param_dimension.name,
-                               prop_dimension.name))
-                raise NineMLUnitMismatchError(err)
+                raise NineMLUnitMismatchError(
+                    "Dimensions for '{}' property ('{}') don't match that of "
+                    "componentclass class ('{}')."
+                    .format(param.name, prop_dimension.name,
+                            param_dimension.name))
 
     @write_reference
     @annotate_xml
@@ -317,7 +344,7 @@ class Component(BaseULObject, TopLevelObject):
                                      xml_declaration=True)
 
     def property(self, name):
-        return self.properties[name]
+        return self.property_set[name]
 
 
 class Definition(BaseReference):
@@ -337,7 +364,7 @@ class Prototype(BaseReference):
     element_name = "Prototype"
 
     @property
-    def componentclass(self):
+    def component(self):
         return self._referred_to
 
 

@@ -38,7 +38,7 @@ def read_annotations(from_xml):
             element = copy(element)
             element.remove(element.find(NINEML + Annotations.element_name))
         else:
-            annotations = None
+            annotations = Annotations()
         nineml_object = from_xml(cls, element, *args, **kwargs)
         try:
             nineml_object.annotations = annotations
@@ -52,11 +52,11 @@ def annotate_xml(to_xml):
     def annotate_to_xml(self, *args, **kwargs):
         elem = to_xml(self, *args, **kwargs)
         # If User Layer class
-        if hasattr(self, 'annotations') and self.annotations is not None:
+        if hasattr(self, 'annotations') and self.annotations:
             elem.append(self.annotations.to_xml())
         # If Abstraction Layer class
         elif (len(args) and hasattr(args[0], 'annotations') and
-              args[0].annotations is not None):
+              args[0].annotations):
             elem.append(args[0].annotations.to_xml())
         return elem
     return annotate_to_xml

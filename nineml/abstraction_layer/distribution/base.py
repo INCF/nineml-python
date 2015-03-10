@@ -1,12 +1,12 @@
-from .. import BaseALObject
-from ..componentclass import ComponentClass
+from ..componentclass import ComponentClass, MainBlock
 
 
-class DistributionBlock(BaseALObject):
+class DistributionBlock(MainBlock):
 
     defining_attributes = ('standard_library',)
 
     def __init__(self, standard_library):
+        super(DistributionBlock, self).__init__()
         self.standard_library = standard_library
 
     def accept_visitor(self, visitor, **kwargs):
@@ -26,7 +26,7 @@ class DistributionClass(ComponentClass):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
 
-    def __deepcopy__(self, memo=None):  # @UnusedVariable
+    def __copy__(self, memo=None):  # @UnusedVariable
         return DistributionCloner().visit(self)
 
     def rename_symbol(self, old_symbol, new_symbol):
@@ -41,8 +41,12 @@ class DistributionClass(ComponentClass):
     def _find_element(self, element):
         return DistributionElementFinder(element).found_in(self)
 
+    def validate(self):
+        DistributionValidator.validate_componentclass(self)
+
 from .utils.cloner import DistributionCloner
 from .utils.modifiers import(
     DistributionRenameSymbol, DistributionAssignIndices)
 from .utils.visitors import (DistributionRequiredDefinitions,
                              DistributionElementFinder)
+from .validators import DistributionValidator

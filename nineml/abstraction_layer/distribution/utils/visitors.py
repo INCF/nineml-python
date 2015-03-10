@@ -16,8 +16,7 @@ class DistributionActionVisitor(ComponentActionVisitor):
     def visit_componentclass(self, componentclass, **kwargs):
         super(DistributionActionVisitor, self).visit_componentclass(
             componentclass, **kwargs)
-        if componentclass.distribution:
-            componentclass.distribution.accept_visitor(self, **kwargs)
+        componentclass._main_block.accept_visitor(self, **kwargs)
 
     def visit_distributionblock(self, distributionblock, **kwargs):
         self.action_distributionblock(distributionblock, **kwargs)
@@ -25,7 +24,7 @@ class DistributionActionVisitor(ComponentActionVisitor):
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
-    def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable
+    def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_pass()
 
 

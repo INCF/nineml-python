@@ -12,4 +12,5 @@ class TestProjection(unittest.TestCase):
         document1 = read(self.test_file)
         xml = document1.to_xml()
         document2 = load(xml, read_from=self.test_file)
+        print document1.find_mismatch(document2)
         self.assertEquals(document1, document2)

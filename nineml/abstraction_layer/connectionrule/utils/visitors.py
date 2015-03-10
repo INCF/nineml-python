@@ -16,7 +16,7 @@ class ConnectionRuleActionVisitor(ComponentActionVisitor):
     def visit_componentclass(self, componentclass, **kwargs):
         super(ConnectionRuleActionVisitor, self).visit_componentclass(
             componentclass, **kwargs)
-        componentclass.connectionruleblock.accept_visitor(self, **kwargs)
+        componentclass._main_block.accept_visitor(self, **kwargs)
 
     def visit_connectionruleblock(self, connectionruleblock, **kwargs):
         self.action_connectionruleblock(connectionruleblock, **kwargs)

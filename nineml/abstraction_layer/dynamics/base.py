@@ -317,7 +317,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     # -------------------------- #
 
-    def __deepcopy__(self, memo=None):  # @UnusedVariable
+    def __copy__(self, memo=None):  # @UnusedVariable
         return DynamicsCloner().visit(self)
 
     def rename_symbol(self, old_symbol, new_symbol):

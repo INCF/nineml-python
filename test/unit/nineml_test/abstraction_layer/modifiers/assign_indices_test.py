@@ -32,7 +32,9 @@ class DynamicsAssignIndices_test(unittest.TestCase):
         b = deepcopy(a)
         for symbol in ('A1', 'A2', 'A3', 'SV1', 'SV2', 'ARP1', 'ARP2', 'P1',
                        'P2', 'R1', 'R2'):
-            if symbol.startswith('A'):
+            if symbol.startswith('ARP'):
+                dname = 'analog_receive_port'
+            elif symbol.startswith('A'):
                 dname = 'alias'
             elif symbol.startswith('P'):
                 dname = 'parameter'

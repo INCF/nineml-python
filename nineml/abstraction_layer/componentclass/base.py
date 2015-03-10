@@ -131,8 +131,8 @@ class ComponentClass(BaseALObject, TopLevelObject):
         try:
             return self._indices[key][element]
         except KeyError:
-            assert element in self, ("Element '{}' does not belong to "
-                                     "component".format(element.name))
+#             assert element in self, ("Element '{}' does not belong to "
+#                                      "component".format(element.name))
             if self._indices[key]:
                 index = max(self._indices[key].itervalues()) + 1
             else:

@@ -12,16 +12,16 @@ docstring goes here
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from .. import BaseALObject
-from ..componentclass import ComponentClass
+from ..componentclass import ComponentClass, MainBlock
 
 
-class ConnectionRuleBlock(BaseALObject):
+class ConnectionRuleBlock(MainBlock):
 
     element_name = 'ConnectionRule'
     defining_attributes = ('standard_library',)
 
     def __init__(self, standard_library):
+        super(ConnectionRuleBlock, self).__init__()
         self.standard_library = standard_library
 
     def accept_visitor(self, visitor, **kwargs):
@@ -41,7 +41,7 @@ class ConnectionRuleClass(ComponentClass):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
 
-    def __deepcopy__(self, memo=None):  # @UnusedVariable
+    def __copy__(self, memo=None):  # @UnusedVariable
         return ConnectionRuleCloner().visit(self)
 
     def rename_symbol(self, old_symbol, new_symbol):
@@ -56,8 +56,12 @@ class ConnectionRuleClass(ComponentClass):
     def _find_element(self, element):
         return ConnectionRuleElementFinder(element).found_in(self)
 
+    def validate(self):
+        ConnectionRuleValidator.validate_componentclass(self)
+
 from .utils.cloner import ConnectionRuleCloner
 from .utils.modifiers import (
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
 from .utils.visitors import (
     ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder)
+from .validators import ConnectionRuleValidator

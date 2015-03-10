@@ -9,7 +9,7 @@ class BaseNineMLObject(object):
     children = []
 
     def __init__(self):
-        self.annotations = None
+        self.annotations = nineml.annotations.Annotations()
 
     def __eq__(self, other):
         if not (isinstance(other, self.__class__) or
@@ -51,16 +51,20 @@ class BaseNineMLObject(object):
                       .format(self.__class__.__name__))
         else:
             result = ''
-        if not (isinstance(other, self.__class__) or
-                isinstance(self, other.__class__)):
-            result += "mismatch in type"
-        for attr_name in self.__class__.defining_attributes:
-            self_attr = getattr(self, attr_name)
-            other_attr = getattr(other, attr_name)
-            if self_attr != other_attr:
-                result += "\n{}Attribute '{}': ".format(indent, attr_name)
-                result += self._unwrap_mismatch(self_attr, other_attr,
-                                                indent + '  ')
+        if type(self) != type(other):
+            result += "mismatch in type ({} and {})".format(type(self),
+                                                            type(other))
+        else:
+            for attr_name in self.__class__.defining_attributes:
+                try:
+                    self_attr = getattr(self, attr_name)
+                    other_attr = getattr(other, attr_name)
+                except:
+                    raise
+                if self_attr != other_attr:
+                    result += "\n{}Attribute '{}': ".format(indent, attr_name)
+                    result += self._unwrap_mismatch(self_attr, other_attr,
+                                                    indent + '  ')
         return result
 
     @classmethod

@@ -31,11 +31,11 @@ class DistributionValidator(object):
         """
         # Check class structure:
         TypesDistributionValidator(componentclass)
-        NoDuplicatedObjectsDistributionValidator(componentclass)
-        LocalNameConflictsDistributionValidator(componentclass)
-        DimensionNameConflictsDistributionValidator(componentclass)
-        AliasesAreNotRecursiveDistributionValidator(componentclass)
-        NoUnresolvedSymbolsDistributionValidator(componentclass)
-        PortConnectionsDistributionValidator(componentclass)
-        CheckNoLHSAssignmentsToMathsNamespaceDistributionValidator(
-            componentclass)
+#         NoDuplicatedObjectsDistributionValidator(componentclass)  # Commented out until perNamespaceValidator is removed @IgnorePep8
+#         LocalNameConflictsDistributionValidator(componentclass)
+#         DimensionNameConflictsDistributionValidator(componentclass)
+#         AliasesAreNotRecursiveDistributionValidator(componentclass)
+#         NoUnresolvedSymbolsDistributionValidator(componentclass)
+#         PortConnectionsDistributionValidator(componentclass)
+#         CheckNoLHSAssignmentsToMathsNamespaceDistributionValidator(
+#             componentclass)
