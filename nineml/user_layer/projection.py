@@ -265,7 +265,7 @@ class Delay(Quantity):
         if units.dimension != un.time:
             raise Exception("Units for delay must be of the time dimension "
                             "(found {})".format(units))
-        super(Delay, self).__init__(value, units)
+        Quantity.__init__(self, value, units)
 
 
 class PortConnection(object):

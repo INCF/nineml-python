@@ -6,12 +6,10 @@ components definitions of interface and dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from nineml.exceptions import (
-    NineMLRuntimeError, NineMLInvalidElementTypeException)
+from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
-from ..expressions import Alias
 from nineml.abstraction_layer.componentclass import (
     ComponentClass, Parameter, MainBlock)
 from .regimes import StateVariable, Regime
@@ -574,7 +572,7 @@ class DynamicsBlock(MainBlock):
     defining_attributes = ('regimes', 'aliases', 'state_variables')
 
     def __init__(self, regimes=None, aliases=None, state_variables=None,
-                 constants=None, random_variables=None, piecewises=None):
+                 constants=None):
         """DynamicsBlock object constructor
 
            :param aliases: A list of aliases, which must be either |Alias|
@@ -587,8 +585,7 @@ class DynamicsBlock(MainBlock):
                 automatically.
         """
         super(DynamicsBlock, self).__init__(
-            aliases=aliases, constants=constants,
-            random_variables=random_variables, piecewises=piecewises)
+            aliases=aliases, constants=constants)
         regimes = normalise_parameter_as_list(regimes)
         state_variables = normalise_parameter_as_list(state_variables)
 
@@ -602,8 +599,8 @@ class DynamicsBlock(MainBlock):
         assert_no_duplicates(r.name for r in regimes)
         assert_no_duplicates(s.name for s in state_variables)
 
-        self.regimes = dict((r.name, r) for r in regimes)
-        self.state_variables = dict((s.name, s) for s in state_variables)
+        self._regimes = dict((r.name, r) for r in regimes)
+        self._state_variables = dict((s.name, s) for s in state_variables)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -619,6 +616,14 @@ class DynamicsBlock(MainBlock):
     @property
     def transitions(self):
         return chain(*(r.transitions for r in self.regimes.itervalues()))
+
+    @property
+    def regimes(self):
+        return self._regimes.itervalues()
+
+    @property
+    def state_variables(self):
+        return self._state_variables.itervalues()
 
 
 def inf_check(l1, l2, desc):

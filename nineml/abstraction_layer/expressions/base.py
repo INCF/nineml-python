@@ -369,18 +369,16 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
     That is, a single symbol, for example 's = t+1'
     """
 
-    defining_attributes = ('_name', '_rhs')
+    defining_attributes = ('name', 'rhs')
 
     def __init__(self, lhs, rhs):
         ExpressionWithLHS.__init__(self, rhs)
-
         if not is_single_symbol(lhs):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
             raise NineMLRuntimeError(err)
         if not is_valid_lhs_target(lhs):
             err = 'Invalid LHS target: %s' % lhs
             raise NineMLRuntimeError(err)
-
         self._name = lhs.strip()
 
     @property
@@ -458,5 +456,6 @@ class ODE(ExpressionWithLHS):
     @property
     def lhs_atoms(self):
         return [self.independent_variable, self.dependent_variable]
+
 
 from .utils import str_to_npfunc_map, is_single_symbol, is_valid_lhs_target

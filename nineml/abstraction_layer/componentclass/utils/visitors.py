@@ -5,6 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from itertools import chain
+from ...expressions import Expression
 
 
 class ComponentVisitor(object):
@@ -94,7 +95,7 @@ class ComponentRequiredDefinitions(object):
         except TypeError:
             required_atoms.update(expression.rhs_atoms)
         # Strip builtin symbols from required atoms
-        required_atoms.difference_update(get_reserved_and_builtin_symbols())
+        required_atoms.difference_update(Expression.reserved_identifiers())
         self._required_stack.append(required_atoms)
 
     def _is_required(self, element):
@@ -116,10 +117,6 @@ class ComponentRequiredDefinitions(object):
         if self._is_required(constant):
             self.constants.add(constant)
 
-    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
-        if self._is_required(randomvariable):
-            self.random_variables.add(randomvariable)
-
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if (self._is_required(alias) and
                 alias.name not in (e.name for e in self.expressions)):
@@ -130,17 +127,6 @@ class ComponentRequiredDefinitions(object):
             self.visit(self._componentclass)
             self._required_stack.pop()
             self.expressions.append(alias)
-
-    def action_piecewise(self, piecewise, **kwargs):  # @UnusedVariable
-        if (self._is_required(piecewise) and
-                piecewise.name not in self.expressions):
-            # Since piecewises may be dependent on other aliases/piecewises the
-            # order they are executed is important so we make sure their
-            # dependencies are added first
-            self._push_required_symbols(piecewise)
-            self.visit(self._componentclass)
-            self._required_stack.pop()
-            self.expressions.append(piecewise)
 
     @property
     def parameter_names(self):
@@ -153,10 +139,6 @@ class ComponentRequiredDefinitions(object):
     @property
     def constant_names(self):
         return (c.name for c in self.constants)
-
-    @property
-    def random_variable_names(self):
-        return (r.name for r in self.random_variables)
 
     @property
     def expression_names(self):
@@ -189,14 +171,6 @@ class ComponentElementFinder(ComponentActionVisitor):
         if self.element == alias:
             self._found()
 
-    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
-        if self.element == randomvariable:
-            self._found()
-
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         if self.element == constant:
-            self._found()
-
-    def action_piecewise(self, piecewise, **kwargs):  # @UnusedVariable
-        if self.element == piecewise:
             self._found()

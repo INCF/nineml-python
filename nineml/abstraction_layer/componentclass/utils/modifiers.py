@@ -53,6 +53,7 @@ class ComponentRenameSymbol(ComponentActionVisitor):
         for d in dicts:
             # Can't use "pythonic" try/except because I want it to work for
             # defaultdicts (i.e. '_indices' dicts) as well
+            assert isinstance(d, dict)
             if self.old_symbol_name in d:
                 d[self.new_symbol_name] = d.pop(self.old_symbol_name)
 
@@ -66,8 +67,7 @@ class ComponentRenameSymbol(ComponentActionVisitor):
                                   componentclass._indices.itervalues()))
 
     def action_mainblock(self, main_block, **kwargs):  # @UnusedVariable
-        self._update_dicts(main_block._aliases, main_block._piecewises,
-                           main_block._constants, main_block._random_variables)
+        self._update_dicts(main_block._aliases, main_block._constants)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         if parameter.name == self.old_symbol_name:
@@ -82,23 +82,10 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             self.note_rhs_changed(alias)
             alias.name_transform_inplace(self.namemap)
 
-    def action_randomvariable(self, random_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        if random_variable.name == self.old_symbol_name:
-            self.note_lhs_changed(random_variable)
-            random_variable.name_transform_inplace(self.namemap)
-
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         if constant.name == self.old_symbol_name:
             self.note_lhs_changed(constant)
             constant.name_transform_inplace(self.namemap)
-
-    def action_piecewise(self, piecewise, **kwargs):  # @UnusedVariable
-        if piecewise.name == self.old_symbol_name:
-            self.note_lhs_changed(piecewise)
-            piecewise.name_transform_inplace(self.namemap)
-        elif self.old_symbol_name in piecewise.atoms:
-            self.note_rhs_changed(piecewise)
-            piecewise.name_transform_inplace(self.namemap)
 
 
 class ComponentAssignIndices(ComponentActionVisitor):
@@ -120,11 +107,5 @@ class ComponentAssignIndices(ComponentActionVisitor):
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.componentclass.index_of(alias)
 
-    def action_randomvariable(self, random_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.componentclass.index_of(random_variable)
-
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.componentclass.index_of(constant)
-
-    def action_piecewise(self, piecewise, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(piecewise)

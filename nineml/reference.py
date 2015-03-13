@@ -13,6 +13,7 @@ class BaseReference(BaseNineMLObject):
     """
 
     def __init__(self, name, document, url=None):
+        super(BaseReference, self).__init__()
         self.url = url
         if self.url:
             if document.url is None:

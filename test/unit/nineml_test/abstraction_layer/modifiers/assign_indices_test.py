@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy
 import unittest
 from nineml.abstraction_layer.dynamics import (
     DynamicsClass, Regime, On, OutputEvent)
@@ -29,7 +29,7 @@ class DynamicsAssignIndices_test(unittest.TestCase):
             parameters=['P1', 'P2']
         )
 
-        b = deepcopy(a)
+        b = copy(a)
         for symbol in ('A1', 'A2', 'A3', 'SV1', 'SV2', 'ARP1', 'ARP2', 'P1',
                        'P2', 'R1', 'R2'):
             if symbol.startswith('ARP'):

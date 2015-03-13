@@ -26,7 +26,7 @@ class Population(BaseULObject, TopLevelObject):
     element_name = "Population"
     defining_attributes = ("name", "size", "cell", "positions")
 
-    def __init__(self, name, size, cell, positions=None):
+    def __init__(self, name, size, cell, positions=None, url=None):
         BaseULObject.__init__(self)
         TopLevelObject.__init__(self, url)
         self.name = name
@@ -124,6 +124,7 @@ class PositionList(BaseULObject, TopLevelObject):
         `structure` should be a Structure componentclass.
         """
         super(PositionList, self).__init__()
+        BaseULObject.__init__(self)
         TopLevelObject.__init__(self, url=url)
         if positions and structure:
             raise Exception("Please provide either positions or structure, "

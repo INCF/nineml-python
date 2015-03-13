@@ -59,6 +59,7 @@ class Regime(BaseALObject):
 
 
         """
+        super(Regime, self).__init__()
         valid_kwargs = ('name', 'transitions', 'time_derivatives')
         for arg in kwargs:
             if arg not in valid_kwargs:
@@ -251,6 +252,7 @@ class StateVariable(BaseALObject):
 
         :param name:  The name of the state variable.
         """
+        super(StateVariable, self).__init__()
         self._name = name.strip()
         self._dimension = dimension if dimension is not None else dimensionless
         ensure_valid_identifier(self._name)
@@ -275,7 +277,7 @@ class StateVariable(BaseALObject):
         return sympy.Symbol(self.name)
 
 
-class TimeDerivative(ODE):
+class TimeDerivative(ODE, BaseALObject):
 
     """Represents a first-order, ordinary differential equation with respect to
     time.
@@ -312,6 +314,7 @@ class TimeDerivative(ODE):
                      dependent_variable=dependent_variable,
                      independent_variable='t',
                      rhs=rhs)
+        BaseALObject.__init__(self)
 
     @property
     def _name(self):

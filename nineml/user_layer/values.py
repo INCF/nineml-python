@@ -24,6 +24,7 @@ class SingleValue(BaseValue):
     defining_attributes = ("value",)
 
     def __init__(self, value):
+        super(SingleValue, self).__init__()
         self.value = value
 
     def __repr__(self):
@@ -52,6 +53,7 @@ class ArrayValue(BaseValue):
     defining_attributes = ("rows",)
 
     def __init__(self, rows):
+        super(ArrayValue, self).__init__()
         self.rows = rows
 
     def __repr__(self):
@@ -89,6 +91,7 @@ class ArrayValueRow(BaseValue):
     defining_attributes = ("index", "value")
 
     def __init__(self, index, value):
+        super(ArrayValueRow, self).__init__()
         self.index = index
         self.value = value
 
@@ -116,6 +119,7 @@ class ExternalArrayValue(BaseValue):
     defining_attributes = ("url", "mimetype", "columnName")
 
     def __init__(self, url, mimetype, columnName):
+        super(ExternalArrayValue, self).__init__()
         self.url = url
         self.mimetype = mimetype
         self.columnName = columnName

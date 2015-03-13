@@ -49,10 +49,7 @@ def read_annotations(from_xml):
         else:
             annotations = Annotations()
         nineml_object = from_xml(cls, element, *args, **kwargs)
-        try:
-            nineml_object.annotations = annotations
-        except AttributeError:
-            raise
+        nineml_object.annotations.update(annotations.iteritems())
         return nineml_object
     return annotate_from_xml
 

@@ -8,8 +8,16 @@ class BaseNineMLObject(object):
     """
     children = []
 
-    def __init__(self):
-        self.annotations = nineml.annotations.Annotations()
+    def __init__(self, annotations=None):
+        if annotations is None:
+            annotations = nineml.annotations.Annotations()
+        else:
+            assert isinstance(annotations, nineml.annotations.Annotations)
+        self._annotations = annotations
+
+    @property
+    def annotations(self):
+        return self._annotations
 
     def __eq__(self, other):
         if not (isinstance(other, self.__class__) or

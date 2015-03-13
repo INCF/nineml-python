@@ -16,12 +16,11 @@ from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import (
     filter_discrete_types, ensure_valid_identifier,
     normalise_parameter_as_list, assert_no_duplicates)
-from ..expressions import Alias
-
+from ..expressions import Alias, Constant
 from ..units import dimensionless, Dimension
 from nineml import TopLevelObject
-from ..expressions import ExpressionSymbol
-from nineml.exceptions import NineMLInvalidElementTypeException
+from nineml.exceptions import (
+    NineMLRuntimeError, NineMLInvalidElementTypeException)
 
 
 class Parameter(BaseALObject):
@@ -40,6 +39,7 @@ class Parameter(BaseALObject):
 
         `name` -- The name of the parameter.
         """
+        super(Parameter, self).__init__()
         name = name.strip()
         ensure_valid_identifier(name)
 
@@ -331,7 +331,7 @@ class MainBlock(BaseALObject):
            :param aliases: A list of aliases, which must be either |Alias|
                objects or ``string``s.
         """
-
+        super(MainBlock, self).__init__()
         aliases = normalise_parameter_as_list(aliases)
         constants = normalise_parameter_as_list(constants)
 

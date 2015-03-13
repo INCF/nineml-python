@@ -47,6 +47,7 @@ class Transition(BaseALObject):
             here: XXXXXXX
 
         """
+        super(Transition, self).__init__()
         if target_regime_name:
             assert isinstance(target_regime_name, basestring)
 
@@ -195,55 +196,6 @@ class Transition(BaseALObject):
             .format(element.__class__.__name__, self.__class__.__name__))
 
 
-class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
-
-    """Assignments represent a change that happens to the value of a
-    ``StateVariable`` during a transition between regimes.
-
-    For example, in an integrate-and-fire neuron, we may want to reset the
-    voltage back to zero, after it has reached a certain threshold. In this
-    case, we would have an ``OnCondition`` object, that is triggered when
-    ``v>vthres``. Attached to this OnCondition transition, we would attach an
-    StateAssignment which sets ``v=vreset``.
-
-    The left-hand-side symbol must be a state-variable of the component.
-
-    """
-
-    def __init__(self, lhs, rhs):
-        """StateAssignment Constructor
-
-        `lhs` -- A `string`, which must be a state-variable of the
-                 componentclass.
-        `rhs` -- A `string`, representing the new value of the state after
-                 this assignment.
-
-        """
-        BaseALObject.__init__(self)
-        ExpressionWithSimpleLHS.__init__(self, lhs=lhs, rhs=rhs)
-
-    @property
-    def name(self):
-        """
-        This is included to allow State-assignments to be polymorphic with
-        other named structures
-        """
-        return self.lhs
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_assignment(self, **kwargs)
-
-    def __repr__(self):
-        return "StateAssignment('%s', '%s')" % (self.lhs, self.rhs)
-
-    @classmethod
-    def from_str(cls, state_assignment_string):
-        """Creates an StateAssignment object from a string"""
-        lhs, rhs = state_assignment_string.split('=')
-        return StateAssignment(lhs=lhs, rhs=rhs)
-
-
 class OnEvent(Transition):
 
     defining_attributes = (Transition.defining_attributes + ('src_port_name',))
@@ -330,13 +282,14 @@ class OnCondition(Transition):
         return self.trigger.rhs
 
 
-class Trigger(Expression):
+class Trigger(BaseALObject, Expression):
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_trigger(self, **kwargs)
 
     def __init__(self, rhs):
+        BaseALObject.__init__(self)
         Expression.__init__(self, rhs)
 
     def __repr__(self):
@@ -347,6 +300,56 @@ class Trigger(Expression):
         negated = copy(self)
         negated.negate()
         return negated
+
+
+class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
+
+    """Assignments represent a change that happens to the value of a
+    ``StateVariable`` during a transition between regimes.
+
+    For example, in an integrate-and-fire neuron, we may want to reset the
+    voltage back to zero, after it has reached a certain threshold. In this
+    case, we would have an ``OnCondition`` object, that is triggered when
+    ``v>vthres``. Attached to this OnCondition transition, we would attach an
+    StateAssignment which sets ``v=vreset``.
+
+    The left-hand-side symbol must be a state-variable of the component.
+
+    """
+
+    def __init__(self, lhs, rhs):
+        """StateAssignment Constructor
+
+        `lhs` -- A `string`, which must be a state-variable of the
+                 componentclass.
+        `rhs` -- A `string`, representing the new value of the state after
+                 this assignment.
+
+        """
+        BaseALObject.__init__(self)
+        ExpressionWithSimpleLHS.__init__(self, lhs=lhs, rhs=rhs)
+
+    @property
+    def name(self):
+        """
+        This is included to allow State-assignments to be polymorphic with
+        other named structures
+        """
+        return self.lhs
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_assignment(self, **kwargs)
+
+    def __repr__(self):
+        return "StateAssignment('%s', '%s')" % (self.lhs, self.rhs)
+
+    @classmethod
+    def from_str(cls, state_assignment_string):
+        """Creates an StateAssignment object from a string"""
+        lhs, rhs = state_assignment_string.split('=')
+        return StateAssignment(lhs=lhs, rhs=rhs)
+
 
 
 class OutputEvent(BaseALObject):
@@ -373,6 +376,7 @@ class OutputEvent(BaseALObject):
             ``NineMLRuntimeException`` will be raised.
 
         """
+        super(OutputEvent, self).__init__()
         self._port_name = port_name.strip()
         ensure_valid_identifier(self._port_name)
 

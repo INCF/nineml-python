@@ -26,8 +26,9 @@ class Document(dict, BaseNineMLObject):
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
     def __init__(self, *elements, **kwargs):
+        BaseNineMLObject.__init__(self, annotations=kwargs.pop('annotations',
+                                                               None))
         self._url = kwargs.pop('url', None)
-        self._annotations = kwargs.pop('annotations', Annotations())
         assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
                                   .format("', '".join(kwargs.iterkeys())))
         for element in elements:
@@ -39,10 +40,6 @@ class Document(dict, BaseNineMLObject):
     @property
     def url(self):
         return self._url
-
-    @property
-    def annotations(self):
-        return self._annotations
 
     def add(self, element):
         if not isinstance(element, (TopLevelObject, self._Unloaded)):
