@@ -5,7 +5,7 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
-from copy import deepcopy
+from copy import copy
 import sympy
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction_layer.componentclass import BaseALObject
@@ -297,7 +297,7 @@ class Trigger(Expression):
 
     @property
     def reactivate_condition(self):
-        negated = deepcopy(self)
+        negated = copy(self)
         negated.negate()
         return negated
 
