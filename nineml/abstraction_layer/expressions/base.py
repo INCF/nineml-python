@@ -9,9 +9,10 @@ from itertools import chain, izip
 from copy import deepcopy
 import sympy
 from sympy.parsing.sympy_parser import (
-    parse_expr, standard_transformations, convert_xor)
+    parse_expr as sympy_parse, standard_transformations, convert_xor)
 from sympy.parsing.sympy_tokenize import NAME, OP
 from sympy.printing import print_ccode
+import operator
 import re
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError, NineMLMathParseError
@@ -22,6 +23,148 @@ builtin_functions = set([
     'sinh', 'cosh', 'tanh', 'sqrt', 'mod', 'sum',
     'atan', 'asin', 'acos', 'asinh', 'acosh', 'atanh', 'atan2'])
 reserved_symbols = set(['t'])
+
+
+class Parser(object):
+    # Escape all objects in sympy namespace that aren't defined in NineML
+    # by predefining them as symbol names to avoid naming conflicts when
+    # sympifying RHS strings.
+    _to_escape = set(s for s in dir(sympy)
+                     if s not in chain(builtin_constants,
+                                       builtin_functions))
+    _valid_funcs = set((sympy.And, sympy.Or, sympy.Not)) | builtin_functions
+    _func_to_op_map = {sympy.Function('pow'): operator.pow}
+
+    _escape_random_re = re.compile(r'(?<!\w)random\.(\w+) *\(')
+
+    # Inline randoms are deprecated in favour of RandomVariable elements,
+    # but included here to get Brunel model to work
+    _builtin_randoms = {
+        'random_uniform_': sympy.Function('random_uniform_'),
+        'random_binomial_': sympy.Function('random_binomial_'),
+        'random_poisson_': sympy.Function('random_poisson_'),
+        'random_exponential_': sympy.Function('random_exponential_')}
+
+    def __init__(self):
+        self.escaped_names = set()
+
+    def parse(self, expr):
+        if isinstance(expr, sympy.Basic):
+            self._check_valid_funcs(expr)
+        elif isinstance(expr, basestring):
+            try:
+                # Inline randoms are deprecated but included to get Brunel
+                # model to work
+                expr = str(expr)
+                expr = self._escape_random_re.sub(r'random_\1_(', expr)
+                transformations = (
+                    [self, convert_xor] + list(standard_transformations))
+                expr = sympy_parse(expr, transformations=transformations,
+                                   local_dict=self._builtin_randoms)
+                expr = self._postprocess(expr)
+            except Exception, e:
+                raise NineMLMathParseError(
+                    "Could not parse math-inline expression: {}\n\n{}"
+                    .format(expr, e))
+        else:
+            raise ValueError("Cannot convert value '{}' of type '{}' to SymPy "
+                             "expression".format(repr(expr), type(expr)))
+        return expr
+
+    def __call__(self, tokens, local_dict, global_dict):  # @UnusedVariable
+        """
+        Wrapper function so processor can be passed as a 'transformation'
+        to the Sympy parser
+        """
+        return self._preprocess(tokens)
+
+    def _preprocess(self, tokens):
+        """
+        Escapes symbols that correspond to objects in SymPy but are not
+        reserved identifiers in NineML
+        """
+        result = []
+        # Loop through single tokens
+        for toknum, tokval in tokens:
+            if toknum == NAME:
+                # Escape non-reserved identifiers in 9ML that are reserved
+                # keywords in Sympy
+                if tokval in self._to_escape:
+                    self.escaped_names.add(tokval)
+                    tokval = self._escape(tokval)
+                # Convert logical identities from ANSI to Python names
+                elif tokval == 'true':
+                    tokval = 'True'
+                elif tokval == 'false':
+                    tokval = 'False'
+            # Handle multiple negations
+            elif toknum == OP and tokval.startswith('!'):
+                # NB: Multiple !'s are grouped into the one token
+                assert all(t == '!' for t in tokval)
+                if len(tokval) % 2:
+                    tokval = '~'  # odd number of negation symbols
+                else:
+                    continue  # even number of negation symbols, cancel out
+            result.append((toknum, tokval))
+        new_result = []
+        # Loop through pairwise combinations
+        pair_iterator = izip(result[:-1], result[1:])
+        for (toknum, tokval), (next_toknum, next_tokval) in pair_iterator:
+            # Handle trivial corner cases where the logical identities
+            # (i.e. True and False) are immediately negated (damn unit-
+            # tests making things more complicated than the need to be!;),
+            # as Sympy casts True and False to the Python native objects,
+            # and then the '~' gets interpreted as a bitwise shift rather
+            # than a negation. Solution: drop the negation sign and negate
+            # manually.
+            if ((toknum == OP and tokval == '~') and
+                (next_toknum == NAME and
+                 next_tokval in ('True', 'False'))):
+                tokval = 'True' if next_tokval is 'False' else 'False'
+                toknum = NAME
+                next(pair_iterator)  # Skip the next iteration
+            # Convert the ANSI C89 standard for logical
+            # 'and' and 'or', '&&' or '||', to the Sympy format '&' and '|'
+            elif ((toknum == OP and tokval in ('&', '|') and
+                   next_toknum == OP and next_tokval == tokval)):
+                next(pair_iterator)  # Skip the next iteration
+            new_result.append((toknum, tokval))
+        return new_result
+
+    def _postprocess(self, expr):
+        # Convert symbol names that were escaped to avoid clashes with in-built
+        # Sympy functions back to their original form
+        while self.escaped_names:
+            name = self.escaped_names.pop()
+            expr = expr.xreplace(
+                {sympy.Symbol(self._escape(name)): sympy.Symbol(name)})
+        # Convert ANSI C functions to corresponding operator (i.e. 'pow')
+        expr = self._func_to_op(expr)
+        return expr
+
+    @classmethod
+    def _escape(self, s):
+        return s + '__escaped__'
+
+    @classmethod
+    def _func_to_op(self, expr):
+        if isinstance(expr, sympy.Function):
+            args = (self._func_to_op(a) for a in expr.args)
+            try:
+                expr = self._func_to_op_map[type(expr)](*args)
+            except KeyError:
+                expr = expr.__class__(*args)
+        return expr
+
+    @classmethod
+    def _check_valid_funcs(cls, expr):
+        if isinstance(expr, sympy.Function):
+            if type(expr) not in cls._valid_funcs:
+                raise NineMLMathParseError(
+                    "'{}' is a valid function in Sympy but not in 9ML"
+                    .format(type(expr)))
+            for arg in expr.args:
+                cls._check_valid_funcs(arg)
 
 
 class Expression(object):
@@ -35,72 +178,8 @@ class Expression(object):
     # Regular expression for extracting function names from strings (i.e. a
     # chain of valid identifiers follwed by an open parenthesis.
     _func_re = re.compile(r'(\w+) *\(')  # Match identifier followed by (
-    _escape_random_re = re.compile(r'(?<!\w)random\.(\w+) *\(')
-    _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_\(')
     _strip_parens_re = re.compile(r'^\(+(\w+)\)+$')  # Match if enclosed by ()
-
-    # Inline randoms are deprecated in favour of RandomVariable elements,
-    # but included here to get Brunel model to work
-    _builtin_randoms = {
-        'random_uniform_': sympy.Function('random_uniform_'),
-        'random_binomial_': sympy.Function('random_binomial_'),
-        'random_poisson_': sympy.Function('random_poisson_'),
-        'random_exponential_': sympy.Function('random_exponential_')}
-
-    class SympyEscaper(object):
-        # Escape all objects in sympy namespace that aren't defined in NineML
-        # by predefining them as symbol names to avoid naming conflicts when
-        # sympifying RHS strings.
-        _to_escape = set(s for s in dir(sympy)
-                         if s not in chain(builtin_constants,
-                                           builtin_functions))
-
-        def __init__(self):
-            self.escaped_names = set()
-
-        def __call__(self, tokens, local_dict, global_dict):  # @UnusedVariable
-            """
-            Escapes symbols that correspond to objects in SymPy but are not
-            reserved identifiers in NineML
-            """
-            result = []
-            for toknum, tokval in tokens:
-                if toknum == NAME and tokval in self._to_escape:
-                    self.escaped_names.add(tokval)
-                    tokval = self.escape(tokval)
-                elif toknum == OP and tokval.startswith('!'):
-                    # NB: Multiple !'s are grouped into the one token
-                    assert all(t == '!' for t in tokval)
-                    if len(tokval) % 2:
-                        tokval = '~'
-                    else:
-                        continue
-                elif toknum == NAME and tokval == 'true':
-                    tokval = 'True'
-                elif toknum == NAME and tokval == 'false':
-                    tokval = 'False'
-                result.append((toknum, tokval))
-            # Handle trivial corner cases where the logical identities (i.e.
-            # True and False) are immediately negated (damn unit-tests making
-            # things more complicated than the need to be!;), as Sympy casts
-            # True and False to the Python native objects, and then the '~'
-            # gets interpreted as a bitwise shift rather than a negation.
-            # Solution: drop the negation sign and negate manually.
-            new_result = []
-            pair_iterator = izip(result[:-1], result[1:])
-            for (toknum, tokval), (next_toknum, next_tokval) in pair_iterator:
-                if ((toknum == OP and tokval == '~') and
-                    (next_toknum == NAME and
-                     next_tokval in ('True', 'False'))):
-                    tokval = 'True' if next_tokval is 'False' else 'False'
-                    toknum = NAME
-                    next(pair_iterator)  # Skip the next iteration
-                new_result.append((toknum, tokval))
-            return new_result
-
-        @classmethod
-        def escape(self, s):
-            return s + '_'
+    _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_\(')
 
     def __repr__(self):
         return "{}(rhs='{}')".format(self.__class__.__name__, self.rhs_str)
@@ -108,7 +187,7 @@ class Expression(object):
     @classmethod
     def reserved_identifiers(cls):
         return chain(builtin_constants, builtin_functions,
-                     reserved_symbols, cls._builtin_randoms.iterkeys())
+                     reserved_symbols, Parser._builtin_randoms.iterkeys())
 
     def __init__(self, rhs):
         self.rhs = rhs
@@ -122,33 +201,7 @@ class Expression(object):
 
     @rhs.setter
     def rhs(self, rhs):
-        if isinstance(rhs, sympy.Basic):
-            fnames = self._func_re.findall(str(rhs))
-            assert (not fnames or
-                    all(fnames in chain(builtin_functions,
-                                        ('And', 'Or', 'Not')))), \
-                    ("Invalid functions found in Sympy expression: {}"
-                     .format(rhs))
-            self._rhs = rhs
-        else:
-            try:
-                # Inline randoms are deprecated but included to get Brunel
-                # model to work
-                rhs = str(rhs)
-                rhs = self._escape_random_re.sub(r'random_\1_(', rhs)
-                sympy_escaper = self.SympyEscaper()
-                transformations = ([sympy_escaper, convert_xor] +
-                                   list(standard_transformations))
-                self._rhs = parse_expr(rhs, transformations=transformations,
-                                       local_dict=self._builtin_randoms)
-                for n in sympy_escaper.escaped_names:
-                    self._rhs = self._rhs.xreplace(
-                        {sympy.Symbol(sympy_escaper.escape(n)):
-                            sympy.Symbol(n)})
-            except Exception, e:
-                raise NineMLMathParseError(
-                    "Could not parse math-inline expression: {}\n\n{}"
-                    .format(rhs, e))
+        self._rhs = Parser().parse(rhs)
 
     @property
     def rhs_str(self):
@@ -159,7 +212,6 @@ class Expression(object):
                 expr_str = str(self._rhs)
         except AttributeError:  # For expressions that have simplified
             expr_str = str(self._rhs)
-        expr_str = str(expr_str).replace('**', '^')
         expr_str = self._unescape_random_re.sub(r'random_\1_(', expr_str)
         return expr_str
 
@@ -197,7 +249,7 @@ class Expression(object):
     @property
     def rhs_funcs(self):
         return (f for f in self._func_re.findall(self.rhs_str)
-                if f not in self._builtin_randoms.itervalues())
+                if f not in Parser._builtin_randoms.itervalues())
 
     @property
     def rhs_atoms(self):

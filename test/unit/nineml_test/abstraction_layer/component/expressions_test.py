@@ -9,6 +9,7 @@ from nineml.abstraction_layer.units import coulomb, S_per_cm2, mV
 from nineml.abstraction_layer.componentclass.utils.xml import (
     ComponentClassXMLWriter as XMLWriter, ComponentClassXMLLoader as XMLLoader)
 from nineml import Document
+import sympy
 
 
 class Expression_test(unittest.TestCase):
@@ -16,13 +17,12 @@ class Expression_test(unittest.TestCase):
     def test_Valid(self):
         # rhs, expt_vars, expt_funcs, result, values
         valid_rhses = [
-            (('a'),                ('a'),                (), 5,            {'a': 5}, ),
-            (('b'),                ('b'),                (), 7,            {'b': 7}, ),
-            (('a+b'),              ('a', 'b'),
-             (), 13,           {'a': 12, 'b': 1}),
-            (('1./(alpha+2*beta)'),  ('alpha', 'beta'),
-             (), 0.2,          {'alpha': 1, 'beta': 2}),
-            (('pi'),                (),                  (), 3.14159265,   {}),
+            (('a'), ('a'), (), 5, {'a': 5}),
+            (('b'), ('b'), (), 7, {'b': 7}),
+            (('a+b'), ('a', 'b'), (), 13, {'a': 12, 'b': 1}),
+            (('1./(alpha+2*beta)'), ('alpha', 'beta'), (), 0.2,
+             {'alpha': 1, 'beta': 2}),
+            (('pi'), (), (), 3.14159265, {}),
         ]
 
         for rhs, exp_var, exp_func, exp_res, params in valid_rhses:
@@ -34,27 +34,27 @@ class Expression_test(unittest.TestCase):
 
         import numpy
         expr_vars = [
-                    ["-A/tau_r", ("A", "tau_r"), ()],
-                    ["V*V", ("V",), ()],
-                    ["a*(b*V - U)", ("U", "V", "b", "a"), ()],
-                    [" 0.04*V*V + 5.0*V + 1. + 140.0 - U + Isyn",
-                     ("V", "U", "Isyn"), ()],
-                    ["c", ("c"), ()],
-                    ["1", (), ()],
-                    ["atan2(sin(x),cos(y))", ("x", "y"),
-                     ("atan2", "sin", "cos")],
-                    ["1.*V", ("V"), ()],
-                    ["1.0", (), ()],
-                    [".1", (), ()],
-                    ["1/(1 + mg_conc*eta*exp(-1*gamma*V))", (
-                        "mg_conc", "eta", "gamma", "V"), ('exp',)],
-                    ["1 / ( 1 + mg_conc * eta *  exp( -1 * gamma*V))",
-                     ("mg_conc", "eta", "gamma", "V"), ('exp',)],
-                    ["1 / ( 1 + mg_conc * sin(0.5 * V) *  exp ( -1 * gamma*V))",
-                     ("mg_conc", "gamma", "V"), ('exp', "sin")],
-                    [".1 / ( 1.0 + mg_conc * sin(V) *  exp ( -1.0 * gamma*V))",
-                     ("mg_conc", "gamma", "V"), ('exp', "sin")],
-                    ["sin(w)", ("w"), ("sin",)]]
+            ["-A/tau_r", ("A", "tau_r"), ()],
+            ["V*V", ("V",), ()],
+            ["a*(b*V - U)", ("U", "V", "b", "a"), ()],
+            [" 0.04*V*V + 5.0*V + 1. + 140.0 - U + Isyn",
+             ("V", "U", "Isyn"), ()],
+            ["c", ("c"), ()],
+            ["1", (), ()],
+            ["atan2(sin(x),cos(y))", ("x", "y"),
+             ("atan2", "sin", "cos")],
+            ["1.*V", ("V"), ()],
+            ["1.0", (), ()],
+            [".1", (), ()],
+            ["1/(1 + mg_conc*eta*exp(-1*gamma*V))", (
+                "mg_conc", "eta", "gamma", "V"), ('exp',)],
+            ["1 / ( 1 + mg_conc * eta *  exp( -1 * gamma*V))",
+             ("mg_conc", "eta", "gamma", "V"), ('exp',)],
+            ["1 / ( 1 + mg_conc * sin(0.5 * V) *  exp ( -1 * gamma*V))",
+             ("mg_conc", "gamma", "V"), ('exp', "sin")],
+            [".1 / ( 1.0 + mg_conc * sin(V) *  exp ( -1.0 * gamma*V))",
+             ("mg_conc", "gamma", "V"), ('exp', "sin")],
+            ["sin(w)", ("w"), ("sin",)]]
 
         namespace = {
             "A": 10.0,
@@ -74,7 +74,8 @@ class Expression_test(unittest.TestCase):
         }
 
         return_values = [-0.909090909091, 4900.0, -156.0, 69.0, 10.0, 1,
-                         1.0, -70.0, 1.0, 0.1, 1.0, 1.0, 1.0, 0.1, numpy.sin(namespace['w'])]
+                         1.0, -70.0, 1.0, 0.1, 1.0, 1.0, 1.0, 0.1,
+                         numpy.sin(namespace['w'])]
 
         for i, (expr, expt_vars, expt_funcs) in enumerate(expr_vars):
             c = Expression(expr)
@@ -93,31 +94,21 @@ class Expression_test(unittest.TestCase):
 
         e = Expression("V*sin(V)/(eta*mg_conc*exp(-V^2*gamma) + 1)")
         e.rhs_name_transform_inplace({'V': 'VNEW'})
-        self.assertEquals(e.rhs_str,
-                          "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
+        self.assertEquals(
+            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW**2*gamma) + 1)")
 
         # Don't Change builtin function names:
         e.rhs_name_transform_inplace({'sin': 'SIN'})
-        self.assertEquals(e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
+        self.assertEquals(
+            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW**2*gamma) + 1)")
         e.rhs_name_transform_inplace({'exp': 'EXP'})
-        self.assertEquals(e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
+        self.assertEquals(
+            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW**2*gamma) + 1)")
 
         # Check the attributes:
         self.assertEquals(set(e.rhs_atoms), set(
             ['VNEW', 'mg_conc', 'eta', 'gamma', 'exp', 'sin']))
         self.assertEquals(set(e.rhs_funcs), set(['exp', 'sin']))
-
-#     def test_rhs_atoms_in_namespace(self):
-#         e = Expression("random.randn() + random.randn() + random.randint() / sin(t)")
-#         self.assertEquals(
-#             set(e.rhs_atoms),
-#             set(['t', 'random.randn', 'random.randint', 'sin'])
-#         )
-#
-#         self.assertEquals(
-#             set(e.rhs_atoms_in_namespace('random')),
-#             set(['randn', 'randint'])
-#         )
 
     def test_escape_of_carets(self):
         try:
@@ -130,35 +121,36 @@ class Expression_test(unittest.TestCase):
                       " in expression: {}".format(e))
         self.assertTrue(True)
 
-# Testing Skeleton for class: ExpressionWithLHS
-#
-# class ExpressionWithLHS_test(unittest.TestCase):
-#
-#
-#    def test_atoms(self):
-# Signature: name
-# No Docstring
-# from nineml.abstraction_layer.component.expressions import ExpressionWithLHS
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#    def test_lhs_name_transform_inplace(self):
-# Signature: name(self, name_map)
-# No Docstring
-# from nineml.abstraction_layer.component.expressions import ExpressionWithLHS
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#    def test_name_transform_inplace(self):
-# Signature: name(self, name_map)
-# No Docstring
-# from nineml.abstraction_layer.component.expressions import ExpressionWithLHS
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_lhs_atoms(self):
-#        warnings.warn('Tests not implemented')
+
+class AnsiC89ToSympy_test(unittest.TestCase):
+
+    def setUp(self):
+        self.a = sympy.Symbol('a')
+        self.b = sympy.Symbol('b')
+
+    def test_logical_and(self):
+        expr = Expression('a && b')
+        self.assertEqual(expr.rhs, sympy.And(self.a, self.b))
+
+    def test_logical_or(self):
+        expr = Expression('a || b')
+        self.assertEqual(expr.rhs, sympy.Or(self.a, self.b))
+
+    def test_pow(self):
+        expr = Expression('pow(a, b)')
+        self.assertEqual(expr.rhs, self.a ** self.b)
+
+    def test_negation(self):
+        expr = Expression('!a')
+        self.assertEqual(expr.rhs, sympy.Not(self.a))
+
+    def test_double_negation(self):
+        expr = Expression('!!a')
+        self.assertEqual(expr.rhs, self.a)
+
+    def test_triple_negation(self):
+        expr = Expression('!!!a')
+        self.assertEqual(expr.rhs, sympy.Not(self.a))
 
 
 class TestVisitor(object):
@@ -206,7 +198,7 @@ class Alias_test(unittest.TestCase):
                 # |VISITATION|
 
         class AliasTestVisitor(TestVisitor):
-            def visit_alias(self, component, **kwargs):
+            def visit_alias(self, component, **kwargs):  # @UnusedVariable
                 return kwargs
 
         c = Alias(lhs='V', rhs='0')
@@ -226,7 +218,7 @@ class StateAssignment_test(unittest.TestCase):
 
         class StateAssignmentTestVisitor(TestVisitor):
 
-            def visit_assignment(self, component, **kwargs):
+            def visit_assignment(self, component, **kwargs):  # @UnusedVariable
                 return kwargs
 
         c = StateAssignment(lhs='V', rhs='0')
@@ -247,7 +239,7 @@ class TimeDerivative_test(unittest.TestCase):
 
         class TimeDerivativeTestVisitor(TestVisitor):
 
-            def visit_timederivative(self, component, **kwargs):
+            def visit_timederivative(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
                 return kwargs
 
         c = TimeDerivative(dependent_variable='V', rhs='0')
