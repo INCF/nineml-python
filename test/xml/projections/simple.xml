@@ -35,7 +35,7 @@
     </Response>
     <Connectivity>
       <Component name="AllToAll">
-        <Definition url="../connectionrules/all_to_all.xml">AllToAll</Definition>
+        <Definition url="../connectionrules/AllToAll.xml">AllToAll</Definition>
       </Component>
     </Connectivity>
     <Delay units="ms">
