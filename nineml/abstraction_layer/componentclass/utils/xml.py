@@ -120,7 +120,7 @@ class ComponentClassXMLLoader(object):
             class_type = "Distribution"
         return class_type
 
-    base_tag_to_loader = {
+    tag_to_loader = {
         "Parameter": load_parameter,
         "Alias": load_alias,
         "Constant": load_constant
