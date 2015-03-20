@@ -138,7 +138,7 @@ class ComponentClassXMLWriter(ComponentVisitor):
     @annotate_xml
     def visit_alias(self, alias):
         return E(Alias.element_name,
-                 E("MathInline", alias.rhs_str),
+                 E("MathInline", alias.rhs_cstr),
                  name=alias.lhs)
 
     @annotate_xml
