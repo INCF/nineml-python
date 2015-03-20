@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from itertools import chain
-from ...expressions import Expression
+from ...expressions import reserved_identifiers
 
 
 class ComponentVisitor(object):
@@ -95,7 +95,7 @@ class ComponentRequiredDefinitions(object):
         except TypeError:
             required_atoms.update(expression.rhs_atoms)
         # Strip builtin symbols from required atoms
-        required_atoms.difference_update(Expression.reserved_identifiers())
+        required_atoms.difference_update(reserved_identifiers)
         self._required_stack.append(required_atoms)
 
     def _is_required(self, element):

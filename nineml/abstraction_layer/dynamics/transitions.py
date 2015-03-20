@@ -337,6 +337,10 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         """
         return self.lhs
 
+    @property
+    def variable(self):
+        return self.lhs
+
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_assignment(self, **kwargs)
@@ -349,7 +353,6 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         """Creates an StateAssignment object from a string"""
         lhs, rhs = state_assignment_string.split('=')
         return StateAssignment(lhs=lhs, rhs=rhs)
-
 
 
 class OutputEvent(BaseALObject):

@@ -76,15 +76,14 @@ class TestNetwork(unittest.TestCase):
                                            path.join(self.xml_dir,
                                                      "AllToAll.xml"), {})
 
-        static_exc = nineml.ConnectionRule("ExcitatoryPlasticity",
-                                           path.join(self.xml_dir,
-                                                     "StaticConnection.xml"),
-                                           {},
-                                           initial_values={"weight": (Je, nA)})
-        static_inh = nineml.ConnectionRule("InhibitoryPlasticity",
-                                           path.join(self.xml_dir,
-                                                     "StaticConnection.xml"),
-                                           initial_values={"weight": (Ji, nA)})
+        static_exc = nineml.Dynamics(
+            "ExcitatoryPlasticity",
+            path.join(self.xml_dir, "StaticConnection.xml"), {},
+            initial_values={"weight": (Je, nA)})
+        static_inh = nineml.Dynamics(
+            "InhibitoryPlasticity",
+            path.join(self.xml_dir, "StaticConnection.xml"),
+            initial_values={"weight": (Ji, nA)})
 
         exc_prj = nineml.Projection("Excitation", inpt, p1,
                                     connectivity=all_to_all,

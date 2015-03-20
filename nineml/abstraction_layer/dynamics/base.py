@@ -569,7 +569,11 @@ class DynamicsBlock(MainBlock):
     and state variables
     """
 
-    defining_attributes = ('regimes', 'aliases', 'state_variables')
+    defining_attributes = (MainBlock.defining_attributes +
+                           ('_regimes', '_state_variables'))
+    _class_to_member = dict(
+        tuple(MainBlock._class_to_member.iteritems()) +
+        ((Regime, '_regimes'), (StateVariable, '_state_variables')))
 
     def __init__(self, regimes=None, aliases=None, state_variables=None,
                  constants=None):
@@ -609,13 +613,9 @@ class DynamicsBlock(MainBlock):
     def __repr__(self):
         return ('DynamicsBlock({} regimes, {} aliases, {} state-variables, '
                 '{} constants)'
-                .format(len(list(self.regimes)), len(list(self.aliases)),
-                        len(list(self.state_variables)),
-                        len(list(self.constants))))
-
-    @property
-    def transitions(self):
-        return chain(*(r.transitions for r in self.regimes.itervalues()))
+                .format(len(self._regimes), len(self._aliases),
+                        len(self._state_variables),
+                        len(self._constants)))
 
     @property
     def regimes(self):
@@ -632,6 +632,7 @@ def inf_check(l1, l2, desc):
 
 from .validators import DynamicsValidator
 from .utils import DynamicsClassInterfaceInferer
-from .utils.visitors import DynamicsRequiredDefinitions
+from .utils.visitors import (DynamicsElementFinder,
+                             DynamicsRequiredDefinitions)
 from .utils.modifiers import (
     DynamicsRenameSymbol, DynamicsAssignIndices)

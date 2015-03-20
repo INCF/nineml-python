@@ -21,6 +21,6 @@ model = al.DynamicsClass(
 
 
 if __name__ == "__main__":
-    from nineml.abstraction_layer.dynamics.writers import XMLWriter
+    import nineml
     filename = __file__[0].upper() + __file__[1:].replace(".py", ".xml")
-    XMLWriter.write(model, filename)
+    nineml.write(model, filename)

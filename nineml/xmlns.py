@@ -11,5 +11,4 @@ NINEML = '{' + nineml_namespace + '}'
 MATHML = "{http://www.w3.org/1998/Math/MathML}"
 UNCERTML = "{http://www.uncertml.org/2.0}"
 
-E = ElementMaker(namespace=nineml_namespace,
-                 nsmap={"ni": nineml_namespace})
+E = ElementMaker(namespace=nineml_namespace, nsmap={None: nineml_namespace})

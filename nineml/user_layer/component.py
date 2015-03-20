@@ -334,13 +334,16 @@ class Component(BaseULObject, TopLevelObject):
 
     @classmethod
     def get_component_type(cls, definition):
-        component_class = definition.component_class
-        if isinstance(component_class, DynamicsClass):
-            comp_type = Dynamics
-        elif isinstance(component_class, DistributionClass):
-            comp_type = Distribution
-        elif isinstance(component_class, ConnectionRuleClass):
-            comp_type = ConnectionRule
+        try:
+            comp_type = type(definition.component)  # If Prototype
+        except AttributeError:
+            component_class = definition.component_class
+            if isinstance(component_class, DynamicsClass):
+                comp_type = Dynamics
+            elif isinstance(component_class, DistributionClass):
+                comp_type = Distribution
+            elif isinstance(component_class, ConnectionRuleClass):
+                comp_type = ConnectionRule
         return comp_type
 
     @property
@@ -470,12 +473,10 @@ class Quantity(BaseULObject):
                 .format(self.element_name, self.value, units))
 
     def __eq__(self, other):
-        # FIXME: obviously we should resolve the units, so 0.001 V == 1 mV,
-        #        could use python-quantities package to do this if we are
-        #        okay with the dependency
-        return isinstance(other, self.__class__) and \
-            reduce(and_, (self.value == other.value,
-                          self.units == other.units))
+        if self.units.dimension != other.units.dimension:
+            return False
+        return (self.value * 10 ** self.units.power ==
+                other.value * 10 ** other.units.power)
 
     @annotate_xml
     def to_xml(self):

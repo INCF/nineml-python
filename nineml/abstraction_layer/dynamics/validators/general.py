@@ -61,9 +61,9 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
 
         for namespace, state_assignments_lhs in self.state_assignments_lhses.\
                                                                    iteritems():
-            for td in state_assignments_lhs:
-                if td not in self.sv_declared[namespace]:
-                    err = 'Not Assigning to state-variable: {}'.format(td)
+            for sa in state_assignments_lhs:
+                if sa not in self.sv_declared[namespace]:
+                    err = 'Not Assigning to state-variable: {}'.format(sa)
                     raise NineMLRuntimeError(err)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
