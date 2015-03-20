@@ -27,7 +27,6 @@ class Expression(object):
     # chain of valid identifiers follwed by an open parenthesis.
     _func_re = re.compile(r'(\w+) *\(')  # Match identifier followed by (
     _strip_parens_re = re.compile(r'^\(+(\w+)\)+$')  # Match if enclosed by ()
-    _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_\(')
 
     def __repr__(self):
         return "{}(rhs='{}')".format(self.__class__.__name__, self.rhs_str)
@@ -53,9 +52,11 @@ class Expression(object):
                 expr_str = self._unwrap_bool(self.rhs)
             else:
                 expr_str = str(self._rhs)
-        except AttributeError:  # For expressions that have simplified
+        except AttributeError:
+            # For expressions that have simplified to Python objects (e.g.
+            # True, False,...)
             expr_str = str(self._rhs)
-        expr_str = self._unescape_random_re.sub(r'random_\1_(', expr_str)
+        expr_str = Parser.unescape_random_namespace(expr_str)
         return expr_str
 
     @classmethod
@@ -66,11 +67,11 @@ class Expression(object):
         if isinstance(expr, sympy.And):
             arg1 = cls._unwrap_bool(expr.args[0])
             arg2 = cls._unwrap_bool(expr.args[1])
-            expr_str = '({}) & ({})'.format(arg1, arg2)
+            expr_str = '({}) && ({})'.format(arg1, arg2)
         elif isinstance(expr, sympy.Or):
             arg1 = cls._unwrap_bool(expr.args[0])
             arg2 = cls._unwrap_bool(expr.args[1])
-            expr_str = '({}) | ({})'.format(arg1, arg2)
+            expr_str = '({}) || ({})'.format(arg1, arg2)
         elif isinstance(expr, sympy.Not):
             expr_str = '!({})'.format(arg1, arg2)
         else:
