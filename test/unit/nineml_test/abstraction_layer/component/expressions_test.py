@@ -95,15 +95,15 @@ class Expression_test(unittest.TestCase):
         e = Expression("V*sin(V)/(eta*mg_conc*exp(-V^2*gamma) + 1)")
         e.rhs_name_transform_inplace({'V': 'VNEW'})
         self.assertEquals(
-            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW**2*gamma) + 1)")
+            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
 
         # Don't Change builtin function names:
         e.rhs_name_transform_inplace({'sin': 'SIN'})
         self.assertEquals(
-            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW**2*gamma) + 1)")
+            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
         e.rhs_name_transform_inplace({'exp': 'EXP'})
         self.assertEquals(
-            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW**2*gamma) + 1)")
+            e.rhs_str, "VNEW*sin(VNEW)/(eta*mg_conc*exp(-VNEW^2*gamma) + 1)")
 
         # Check the attributes:
         self.assertEquals(set(e.rhs_atoms), set(
@@ -111,15 +111,11 @@ class Expression_test(unittest.TestCase):
         self.assertEquals(set(e.rhs_funcs), set(['exp', 'sin']))
 
     def test_escape_of_carets(self):
-        try:
-            expr = Expression("a^2")  # @UnusedVariable
-            expr = Expression("(a - 2)^2")  # @UnusedVariable
-            expr = Expression("(a - (a^2 - 2))^2")  # @UnusedVariable
-            expr = Expression("a^(a - 2)")  # @UnusedVariable
-        except NineMLMathParseError as e:
-            self.fail("Carets (signifying exponents) were not escaped properly"
-                      " in expression: {}".format(e))
-        self.assertTrue(True)
+        self.assertEquals(Expression("a^2").rhs_cstr, 'pow(a, 2)')
+        self.assertEquals(Expression("(a - 2)^2").rhs_cstr, 'pow(a - 2, 2)')
+        self.assertEquals(Expression("(a - (a - 2)^2)^2").rhs_cstr,
+                          'pow(a - pow(a - 2, 2), 2)')
+        self.assertEquals(Expression("a^(a - 2)").rhs_cstr, 'pow(a, a - 2)')
 
 
 class AnsiC89ToSympy_test(unittest.TestCase):

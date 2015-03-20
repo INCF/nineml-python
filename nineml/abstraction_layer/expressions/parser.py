@@ -17,11 +17,10 @@ reserved_symbols = set(['t'])
 
 # Inline randoms are deprecated in favour of RandomVariable elements,
 # but included here to get Brunel model to work
-builtin_randoms = {
-    'random_uniform_': sympy.Function('random_uniform_'),
-    'random_binomial_': sympy.Function('random_binomial_'),
-    'random_poisson_': sympy.Function('random_poisson_'),
-    'random_exponential_': sympy.Function('random_exponential_')}
+inline_random_distributions = set(('random.uniform', 'random.binomial',
+                                   'random.poisson', 'random.exponential'))
+
+_escape_random_re = re.compile(r'(?<!\w)random\.(\w+) *\(')
 
 
 class Parser(object):
@@ -34,9 +33,14 @@ class Parser(object):
     _valid_funcs = set((sympy.And, sympy.Or, sympy.Not)) | builtin_functions
     _func_to_op_map = {sympy.Function('pow'): operator.pow}
 
-    _escape_random_re = re.compile(r'(?<!\w)random\.(\w+) *\(')
+    _escape_random_re = _escape_random_re
     _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_\(')
     _sympy_transforms = list(standard_transformations) + [convert_xor]
+
+    _inline_randoms_dict = dict(
+        (escaped_r, sympy.Function(escaped_r)) for escaped_r in (
+            _escape_random_re.sub(r'random_\1_(', r)
+            for r in inline_random_distributions))
 
     def __init__(self):
         self.escaped_names = set()
@@ -46,10 +50,10 @@ class Parser(object):
             self._check_valid_funcs(expr)
         elif isinstance(expr, basestring):
             try:
-                expr = self._escape_random_namespace(expr)
+                expr = self.escape_random_namespace(expr)
                 expr = sympy_parse(
                     expr, transformations=[self] + self._sympy_transforms,
-                    local_dict=builtin_randoms)
+                    local_dict=self._inline_randoms_dict)
                 expr = self._postprocess(expr)
             except Exception, e:
                 raise NineMLMathParseError(
@@ -156,22 +160,13 @@ class Parser(object):
             cls._check_valid_funcs(arg)
 
     @classmethod
+    def reserved_identifiers(cls):
+        return chain(builtin_constants, builtin_functions, reserved_symbols)
+
+    @classmethod
     def escape_random_namespace(cls, expr):
-        """
-        Inline randoms are deprecated but included to get Brunel
-        model to work
-        """
         return cls._escape_random_re.sub(r'random_\1_(', expr)
 
     @classmethod
     def unescape_random_namespace(cls, expr):
-        """
-        Inline randoms are deprecated but included to get Brunel
-        model to work
-        """
         return cls._unescape_random_re.sub(r'random.\1(', expr)
-
-    @classmethod
-    def reserved_identifiers(cls):
-        return chain(builtin_constants, builtin_functions,
-                     reserved_symbols, builtin_randoms.iterkeys())

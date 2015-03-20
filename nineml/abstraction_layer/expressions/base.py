@@ -8,11 +8,11 @@ from __future__ import division
 from itertools import chain
 from copy import deepcopy
 import sympy
-from sympy.printing import print_ccode
+from sympy.printing import ccode
 import re
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-from .parser import Parser, builtin_randoms
+from .parser import Parser, inline_random_distributions
 
 
 class Expression(object):
@@ -25,11 +25,8 @@ class Expression(object):
 
     # Regular expression for extracting function names from strings (i.e. a
     # chain of valid identifiers follwed by an open parenthesis.
-    _func_re = re.compile(r'(\w+) *\(')  # Match identifier followed by (
+    _func_re = re.compile(r'([\w\.]+) *\(')  # Match identifier followed by (
     _strip_parens_re = re.compile(r'^\(+(\w+)\)+$')  # Match if enclosed by ()
-
-    def __repr__(self):
-        return "{}(rhs='{}')".format(self.__class__.__name__, self.rhs_str)
 
     def __init__(self, rhs):
         self.rhs = rhs
@@ -43,7 +40,13 @@ class Expression(object):
 
     @rhs.setter
     def rhs(self, rhs):
-        self._rhs = Parser().parse(rhs)
+        self._rhs = Parser().parse(rhs)  # Maybe this parser could be reused??
+
+    def __str__(self):
+        return self.rhs_str
+
+    def __repr__(self):
+        return "{}('{}')".format(self.__class__.__name__, self.rhs_str)
 
     @property
     def rhs_str(self):
@@ -57,6 +60,7 @@ class Expression(object):
             # True, False,...)
             expr_str = str(self._rhs)
         expr_str = Parser.unescape_random_namespace(expr_str)
+        expr_str = expr_str.replace('**', '^')
         return expr_str
 
     @classmethod
@@ -79,6 +83,12 @@ class Expression(object):
         return expr_str
 
     @property
+    def rhs_cstr(self):
+        cstr = ccode(self._rhs)
+        cstr = Parser.unescape_random_namespace(cstr)
+        return cstr
+
+    @property
     def rhs_symbols(self):
         try:
             return self._rhs.free_symbols
@@ -92,8 +102,9 @@ class Expression(object):
 
     @property
     def rhs_funcs(self):
+        # FIXME: There is probably a much better way of doing this
         return (f for f in self._func_re.findall(self.rhs_str)
-                if f not in builtin_randoms.itervalues())
+                if f not in inline_random_distributions)
 
     @property
     def rhs_atoms(self):
@@ -103,10 +114,6 @@ class Expression(object):
         functions such as ``sin`` and ``log`` """
 
         return (str(a) for a in chain(self.rhs_symbol_names, self.rhs_funcs))
-
-    @property
-    def rhs_cstr(self):
-        return print_ccode(self._rhs)
 
     @property
     def rhs_as_python_func(self):
@@ -149,19 +156,26 @@ class Expression(object):
         return nineml_expression
 
     def rhs_suffixed(self, suffix='', prefix='', excludes=[]):
+        """
+        Return copy of expression with all free symols suffixed (or prefixed)
+        """
         return self.rhs.xreplace(dict(
             (s, sympy.Symbol(prefix + str(s) + suffix))
             for s in self.rhs_symbols if str(s) not in excludes))
 
     def rhs_name_transform_inplace(self, name_map):
-        """Replace atoms on the RHS with values in the name_map"""
+        """Replace atoms on the RHS with values in the name_map in place"""
         self._rhs = self.rhs_substituted(name_map)
 
     def rhs_substituted(self, name_map):
+        """Replace atoms on the RHS with values in the name_map"""
         return self.rhs.xreplace(dict((sympy.Symbol(old), sympy.Symbol(new))
                                       for old, new in name_map.iteritems()))
 
     def rhs_str_substituted(self, name_map={}, funcname_map={}):
+        """
+        Replaces names and function names. Deprecated
+        """
         expr_str = str(self.rhs_substituted(name_map))
         for old, new in funcname_map:
             expr_str = re.sub(r'(?<!\w)({})\('.format(old), new, expr_str)
@@ -297,6 +311,13 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
             raise NineMLRuntimeError(err)
 
         self._lhs = lhs.strip()
+
+    def __str__(self):
+        return '{} := {}'.format(self.lhs, self.rhs_str)
+
+    def __repr__(self):
+        return "{}(lhs='{}', rhs=({}))".format(self.__class__.__name__,
+                                               self.lhs, self.rhs_str)
 
     @property
     def lhs(self):
