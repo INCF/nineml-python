@@ -60,7 +60,6 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
             elif atom in chain(required.parameter_names,
                                required.port_names,
                                required.constant_names,
-                               required.random_variable_names,
                                required.state_variable_names):
                 atoms_found.add(atom)
             elif atom in required.expression_names:

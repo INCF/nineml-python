@@ -344,7 +344,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_assignment(self):
+    def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
@@ -623,7 +623,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_assignment(self):
+    def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
@@ -902,7 +902,7 @@ class RenameSymbol_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_assignment(self):
+    def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol

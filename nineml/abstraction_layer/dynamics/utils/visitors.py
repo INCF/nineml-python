@@ -60,7 +60,7 @@ class DynamicsActionVisitor(ComponentActionVisitor):
         self.action_outputevent(event_out, **kwargs)
 
     def visit_assignment(self, assignment, **kwargs):
-        self.action_assignment(assignment, **kwargs)
+        self.action_stateassignment(assignment, **kwargs)
 
     def visit_timederivative(self, time_derivative, **kwargs):
         self.action_timederivative(time_derivative, **kwargs)
@@ -111,7 +111,7 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         self.check_pass()
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -191,7 +191,7 @@ class DynamicsElementFinder(ComponentElementFinder, DynamicsActionVisitor):
         if self.element == event_out:
             self._found()
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         if self.element == assignment:
             self._found()
 

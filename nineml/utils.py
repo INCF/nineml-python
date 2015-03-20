@@ -412,23 +412,19 @@ def check_list_contain_same_items(lst1, lst2, desc1="", desc2="", ignore=[],
                                   desc=""):
     set1 = set(lst1)
     set2 = set(lst2)
-
     for i in ignore:
         set1.discard(i)
         set2.discard(i)
-
     # Are the lists subsets of each other.
-    if set1.issubset(set2) and set2.issubset(set1):
-        return
-
-    errmsg = "Lists were suppose to contain the same elements, but don't!!"
-    if desc:
-        errmsg += '\n' + desc
-    errmsg += "\n1: [%s]: %s" % (desc1, sorted(set1))
-    errmsg += "\n2: [%s]: %s" % (desc2, sorted(set2))
-    errmsg += "\nElements in : 1 (not 2): %s" % (sorted(set1 - set2))
-    errmsg += "\nElements in : 2 (not 1): %s" % (sorted(set2 - set1))
-    raise NineMLRuntimeError(errmsg)
+    if not set1.issubset(set2) or not set2.issubset(set1):
+        errmsg = "Lists were suppose to contain the same elements, but don't!!"
+        if desc:
+            errmsg += '\n' + desc
+        errmsg += "\n1: [%s]: %s" % (desc1, sorted(set1))
+        errmsg += "\n2: [%s]: %s" % (desc2, sorted(set2))
+        errmsg += "\nElements in : 1 (not 2): %s" % (sorted(set1 - set2))
+        errmsg += "\nElements in : 2 (not 1): %s" % (sorted(set2 - set1))
+        raise NineMLRuntimeError(errmsg)
 
 
 def safe_dict(vals):

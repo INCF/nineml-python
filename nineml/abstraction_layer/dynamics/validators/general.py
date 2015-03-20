@@ -70,7 +70,6 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
         self.sv_declared[namespace].append(state_variable.name)
 
     def action_stateassignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        assert False
         self.state_assignments_lhses[namespace].append(state_assignment.lhs)
 
 
@@ -103,7 +102,7 @@ class NoUnresolvedSymbolsDynamicsValidator(
     def action_timederivative(self, time_derivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.time_derivatives[namespace].append(time_derivative)
 
-    def action_assignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_stateassignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.state_assignments[namespace].append(state_assignment)
 
 
@@ -178,7 +177,7 @@ class NoDuplicatedObjectsDynamicsValidator(
     def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         self.all_objects.append(event_out)
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         self.all_objects.append(assignment)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -220,7 +219,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_lhssymbol_is_valid(state_variable.name)
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(assignment.lhs)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8

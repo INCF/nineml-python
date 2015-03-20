@@ -608,7 +608,7 @@ class DynamicsBlock(MainBlock):
 
     def __repr__(self):
         return ('DynamicsBlock({} regimes, {} aliases, {} state-variables, '
-                '{} constants, {} random-variables, {} piecewises)'
+                '{} constants)'
                 .format(len(list(self.regimes)), len(list(self.aliases)),
                         len(list(self.state_variables)),
                         len(list(self.constants))))

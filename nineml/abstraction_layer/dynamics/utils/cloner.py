@@ -14,7 +14,7 @@ from .visitors import DynamicsActionVisitor
 class DynamicsExpandPortDefinition(DynamicsActionVisitor,
                                    ComponentExpandPortDefinition):
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -31,7 +31,7 @@ class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
     Assignments, Aliases, TimeDerivatives and Conditions
     """
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8

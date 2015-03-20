@@ -140,7 +140,7 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
             event_out._port_name = self.new_symbol_name
             self.note_rhs_changed(event_out)
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         if self.old_symbol_name in assignment.atoms:
             self.note_rhs_changed(assignment)
             assignment.name_transform_inplace(self.namemap)
