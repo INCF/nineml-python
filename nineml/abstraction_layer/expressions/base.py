@@ -246,7 +246,30 @@ class Expression(object):
         repl = zip(integer_pows,
                    (sympy.Mul(*[b] * e, evaluate=False)
                     for b, e in (i.as_base_exp() for i in integer_pows)))
-        return expr.subs(repl)
+        return cls._non_eval_xreplace(expr, dict(repl))
+
+    @classmethod
+    def _non_eval_xreplace(cls, expr, rule):
+        """
+        Duplicate of sympy's xreplace but with non-evaluate statement included
+        """
+        if expr in rule:
+            return rule[expr]
+        elif rule:
+            args = []
+            altered = False
+            for a in expr.args:
+                try:
+                    new_a = cls._non_eval_xreplace(a, rule)
+                except AttributeError:
+                    new_a = a
+                if new_a != a:
+                    altered = True
+                args.append(new_a)
+            args = tuple(args)
+            if altered:
+                return expr.func(*args, evaluate=False)
+        return expr
 
 
 class ExpressionSymbol(object):
