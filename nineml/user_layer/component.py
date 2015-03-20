@@ -12,7 +12,8 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from ..abstraction_layer.units import Unit, unitless
-from ..abstraction_layer import ComponentClass
+from ..abstraction_layer import (
+    ComponentClass, DynamicsClass, ConnectionRuleClass, DistributionClass)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
@@ -327,8 +328,20 @@ class Component(BaseULObject, TopLevelObject):
                 raise Exception("A componentclass must contain either a "
                                 "defintion or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
-        return cls(name, definition, properties=properties,
-                   initial_values=initial_values, url=document.url)
+        ComponentType = cls.get_component_type(definition)
+        return ComponentType(name, definition, properties=properties,
+                             initial_values=initial_values, url=document.url)
+
+    @classmethod
+    def get_component_type(cls, definition):
+        component_class = definition.component_class
+        if isinstance(component_class, DynamicsClass):
+            comp_type = Dynamics
+        elif isinstance(component_class, DistributionClass):
+            comp_type = Distribution
+        elif isinstance(component_class, ConnectionRuleClass):
+            comp_type = ConnectionRule
+        return comp_type
 
     @property
     def used_units(self):
@@ -498,8 +511,8 @@ class Quantity(BaseULObject):
             units = document[units_str]
         except KeyError:
             raise NineMLMissingElementError(
-                "Did not find definition of '{}' units in the current document."
-                .format(units_str))
+                "Did not find definition of '{}' units in the current "
+                "document.".format(units_str))
         return cls(value=value, units=units)
 
 
