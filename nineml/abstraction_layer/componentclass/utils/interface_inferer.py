@@ -1,5 +1,6 @@
+from copy import copy
 from .visitors import ComponentActionVisitor
-from ...expressions import Expression
+from ...expressions import Expression, reserved_identifiers
 
 
 class ComponentClassInterfaceInferer(ComponentActionVisitor):
@@ -13,7 +14,7 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
         # Use visitation to collect all atoms that are not aliases and not
         # state variables
         self.componentclass = componentclass
-        self.declared_symbols = set(Expression.reserved_identifiers())
+        self.declared_symbols = copy(reserved_identifiers)
         self.atoms = set()
         self.input_event_port_names = set()
         self.event_out_port_names = set()

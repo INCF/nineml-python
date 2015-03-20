@@ -204,7 +204,8 @@ class OnCondition_test(unittest.TestCase):
         for i, (expr, expt_vars, expt_funcs) in enumerate(cond_exprs):
             c = OnCondition(trigger=expr)
             self.assertEqual(set(c.trigger.rhs_symbol_names), set(expt_vars))
-            self.assertEqual(set(c.trigger.rhs_funcs), set(expt_funcs))
+            self.assertEqual(set(str(f) for f in c.trigger.rhs_funcs),
+                             set(expt_funcs))
 
             python_func = c.trigger.rhs_as_python_func
             param_dict = dict([(v, namespace[v]) for v in expt_vars])

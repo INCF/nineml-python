@@ -8,7 +8,7 @@ expressions.
 
 import re
 import numpy
-from .base import Expression
+from .base import reserved_identifiers
 
 
 def is_single_symbol(expr):
@@ -69,8 +69,8 @@ def str_expr_replacement(frm, to, expr_string, func_ok=False):
 
 
 def is_builtin_symbol(sym):
-    return sym in Expression.reserved_identifiers()
+    return sym in reserved_identifiers
 
 
 def is_valid_lhs_target(sym):
-    return sym not in Expression.reserved_identifiers()
+    return sym not in reserved_identifiers

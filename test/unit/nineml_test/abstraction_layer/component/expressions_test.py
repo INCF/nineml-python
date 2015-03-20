@@ -28,7 +28,7 @@ class Expression_test(unittest.TestCase):
         for rhs, exp_var, exp_func, exp_res, params in valid_rhses:
             e = Expression(rhs)
             self.assertEquals(set(e.rhs_symbol_names), set(exp_var))
-            self.assertEquals(set(e.rhs_funcs), set(exp_func))
+            self.assertEquals(set(str(f) for f in e.rhs_funcs), set(exp_func))
             self.assertAlmostEqual(e.rhs_as_python_func(**params), exp_res,
                                    places=4)
 
@@ -80,7 +80,7 @@ class Expression_test(unittest.TestCase):
         for i, (expr, expt_vars, expt_funcs) in enumerate(expr_vars):
             c = Expression(expr)
             self.assertEqual(set(c.rhs_symbol_names), set(expt_vars))
-            self.assertEqual(set(c.rhs_funcs), set(expt_funcs))
+            self.assertEqual(set(str(f) for f in c.rhs_funcs), set(expt_funcs))
 
             python_func = c.rhs_as_python_func
             param_dict = dict([(v, namespace[v]) for v in expt_vars])
@@ -108,13 +108,15 @@ class Expression_test(unittest.TestCase):
         # Check the attributes:
         self.assertEquals(set(e.rhs_atoms), set(
             ['VNEW', 'mg_conc', 'eta', 'gamma', 'exp', 'sin']))
-        self.assertEquals(set(e.rhs_funcs), set(['exp', 'sin']))
+        self.assertEquals(set(str(f) for f in e.rhs_funcs),
+                          set(['exp', 'sin']))
 
     def test_escape_of_carets(self):
-        self.assertEquals(Expression("a^2").rhs_cstr, 'pow(a, 2)')
-        self.assertEquals(Expression("(a - 2)^2").rhs_cstr, 'pow(a - 2, 2)')
-        self.assertEquals(Expression("(a - (a - 2)^2)^2").rhs_cstr,
-                          'pow(a - pow(a - 2, 2), 2)')
+        self.assertEquals(Expression("a^2").rhs_cstr, 'a*a')
+        self.assertEquals(Expression("(a - 2)^2").rhs_cstr,
+                          '(a - 2)*(a - 2)')
+        self.assertEquals(Expression("(a - (a - 2)^2.5)^2.5").rhs_cstr,
+                          'pow(a - pow(a - 2, 2.5), 2.5)')
         self.assertEquals(Expression("a^(a - 2)").rhs_cstr, 'pow(a, a - 2)')
 
 

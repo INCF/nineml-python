@@ -12,7 +12,16 @@ from sympy.printing import ccode
 import re
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-from .parser import Parser, inline_random_distributions
+
+builtin_constants = set(['pi', 'true', 'false', 'True', 'False'])
+builtin_functions = set([
+    'exp', 'sin', 'cos', 'log', 'log10', 'pow', 'abs',
+    'sinh', 'cosh', 'tanh', 'sqrt', 'mod', 'sum',
+    'atan', 'asin', 'acos', 'asinh', 'acosh', 'atanh', 'atan2'])
+reserved_symbols = set(['t'])
+reserved_identifiers = set(chain(builtin_constants, builtin_functions,
+                                 reserved_symbols))
+from .parser import Parser
 
 
 class Expression(object):
@@ -84,7 +93,8 @@ class Expression(object):
 
     @property
     def rhs_cstr(self):
-        cstr = ccode(self._rhs)
+        rhs = self._unwrap_integer_powers(self._rhs)
+        cstr = ccode(rhs)
         cstr = Parser.unescape_random_namespace(cstr)
         return cstr
 
@@ -97,14 +107,17 @@ class Expression(object):
 
     @property
     def rhs_symbol_names(self):
+        # FIXME: Might be a better way to ensure there are no parentheses
         return (self._strip_parens_re.sub(r'\1', str(s))
                 for s in self.rhs_symbols)
 
     @property
     def rhs_funcs(self):
-        # FIXME: There is probably a much better way of doing this
-        return (f for f in self._func_re.findall(self.rhs_str)
-                if f not in inline_random_distributions)
+        try:
+            return (type(f) for f in self._rhs.atoms(sympy.Function)
+                    if type(f) not in Parser.inline_random_distributions())
+        except AttributeError:  # For expressions that have been simplified
+            return []
 
     @property
     def rhs_atoms(self):
@@ -112,7 +125,6 @@ class Expression(object):
         functions on the RHS function. This does not include defined
         mathematical symbols such as ``pi`` and ``e``, but does include
         functions such as ``sin`` and ``log`` """
-
         return (str(a) for a in chain(self.rhs_symbol_names, self.rhs_funcs))
 
     @property
@@ -225,8 +237,16 @@ class Expression(object):
         self.rhs = sympy.simplify(self.rhs)
 
     @classmethod
-    def reserved_identifiers(cls):
-        return Parser.reserved_identifiers()
+    def _unwrap_integer_powers(cls, expr):
+        """
+        Convert integer powers in an expression to Muls, like a**2 => a*a.
+        """
+        integer_pows = list(p for p in expr.atoms(sympy.Pow)
+                            if p.as_base_exp()[1].is_Integer)
+        repl = zip(integer_pows,
+                   (sympy.Mul(*[b] * e, evaluate=False)
+                    for b, e in (i.as_base_exp() for i in integer_pows)))
+        return expr.subs(repl)
 
 
 class ExpressionSymbol(object):

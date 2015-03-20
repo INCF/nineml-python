@@ -7,20 +7,12 @@ from sympy.parsing.sympy_tokenize import NAME, OP
 import operator
 import re
 from nineml.exceptions import NineMLMathParseError
+from .base import builtin_constants, builtin_functions
 
-builtin_constants = set(['pi', 'true', 'false', 'True', 'False'])
-builtin_functions = set([
-    'exp', 'sin', 'cos', 'log', 'log10', 'pow', 'abs',
-    'sinh', 'cosh', 'tanh', 'sqrt', 'mod', 'sum',
-    'atan', 'asin', 'acos', 'asinh', 'acosh', 'atanh', 'atan2'])
-reserved_symbols = set(['t'])
-
-# Inline randoms are deprecated in favour of RandomVariable elements,
-# but included here to get Brunel model to work
-inline_random_distributions = set(('random.uniform', 'random.binomial',
-                                   'random.poisson', 'random.exponential'))
-
-_escape_random_re = re.compile(r'(?<!\w)random\.(\w+) *\(')
+# # Inline randoms are deprecated in favour of RandomVariable elements,
+# # but included here to get Brunel model to work
+# inline_random_distributions = set(('random.uniform', 'random.binomial',
+#                                    'random.poisson', 'random.exponential'))
 
 
 class Parser(object):
@@ -28,19 +20,17 @@ class Parser(object):
     # by predefining them as symbol names to avoid naming conflicts when
     # sympifying RHS strings.
     _to_escape = set(s for s in dir(sympy)
-                     if s not in chain(builtin_constants,
-                                       builtin_functions))
+                     if s not in chain(builtin_constants, builtin_functions))
     _valid_funcs = set((sympy.And, sympy.Or, sympy.Not)) | builtin_functions
     _func_to_op_map = {sympy.Function('pow'): operator.pow}
-
-    _escape_random_re = _escape_random_re
+    _escape_random_re = re.compile(r'(?<!\w)random\.(\w+) *\(')
     _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_\(')
     _sympy_transforms = list(standard_transformations) + [convert_xor]
-
-    _inline_randoms_dict = dict(
-        (escaped_r, sympy.Function(escaped_r)) for escaped_r in (
-            _escape_random_re.sub(r'random_\1_(', r)
-            for r in inline_random_distributions))
+    _inline_randoms_dict = {
+        'random_uniform_': sympy.Function('random_uniform_'),
+        'random_binomial_': sympy.Function('random_binomial_'),
+        'random_poisson_': sympy.Function('random_poisson_'),
+        'random_exponential_': sympy.Function('random_exponential_')}
 
     def __init__(self):
         self.escaped_names = set()
@@ -97,18 +87,21 @@ class Parser(object):
         pair_iterator = izip(result[:-1], result[1:])
         for (toknum, tokval), (next_toknum, next_tokval) in pair_iterator:
             # Handle trivial corner cases where the logical identities
-            # (i.e. True and False) are immediately negated (damn unit-
-            # tests making things more complicated than the need to be!;),
+            # (i.e. True and False) are immediately negated
             # as Sympy casts True and False to the Python native objects,
             # and then the '~' gets interpreted as a bitwise shift rather
-            # than a negation. Solution: drop the negation sign and negate
-            # manually.
-            if ((toknum == OP and tokval == '~') and
-                (next_toknum == NAME and
-                 next_tokval in ('True', 'False'))):
-                tokval = 'True' if next_tokval is 'False' else 'False'
-                toknum = NAME
-                next(pair_iterator)  # Skip the next iteration
+            # than a negation.
+            if toknum == OP and tokval == '~':
+                if next_toknum == OP and next_tokval == '~':
+                    # Skip this and the next iteration as the double negation
+                    # cancels itself out
+                    next(pair_iterator)
+                    continue
+                elif next_toknum == NAME and next_tokval in ('True', 'False'):
+                    # Manually drop the negation sign and negate
+                    tokval = 'True' if next_tokval is 'False' else 'False'
+                    toknum = NAME
+                    next(pair_iterator)  # Skip the next iteration
             # Convert the ANSI C89 standard for logical
             # 'and' and 'or', '&&' or '||', to the Sympy format '&' and '|'
             elif ((toknum == OP and tokval in ('&', '|') and
@@ -160,13 +153,13 @@ class Parser(object):
             cls._check_valid_funcs(arg)
 
     @classmethod
-    def reserved_identifiers(cls):
-        return chain(builtin_constants, builtin_functions, reserved_symbols)
-
-    @classmethod
     def escape_random_namespace(cls, expr):
         return cls._escape_random_re.sub(r'random_\1_(', expr)
 
     @classmethod
     def unescape_random_namespace(cls, expr):
         return cls._unescape_random_re.sub(r'random.\1(', expr)
+
+    @classmethod
+    def inline_random_distributions(cls):
+        return cls._inline_randoms_dict.itervalues()

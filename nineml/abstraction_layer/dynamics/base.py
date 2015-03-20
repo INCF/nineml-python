@@ -345,8 +345,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
         # Check any supplied parameters match:
         if parameters is not None:
-            inf_check(self._parameters.keys(),
-                      inferred_struct.parameter_names,
+            inf_check(self._parameters.keys(), inferred_struct.parameter_names,
                       'Parameters')
         else:
             self._parameters = dict((n, Parameter(n))
