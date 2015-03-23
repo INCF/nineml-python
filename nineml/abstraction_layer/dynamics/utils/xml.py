@@ -176,7 +176,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
                      for p in componentclass.event_ports] +
                     [p.accept_visitor(self)
                      for p in componentclass.parameters] +
-                    [componentclass.dynamicsblock.accept_visitor(self)])
+                    [componentclass._main_block.accept_visitor(self)])
         return E('ComponentClass', *elements, name=componentclass.name)
 
     @annotate_xml

@@ -1,4 +1,2 @@
 lxml
-ply
-numpy
-quantities
+sympy
