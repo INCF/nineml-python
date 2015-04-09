@@ -120,6 +120,14 @@ class Expression(object):
             return []
 
     @property
+    def rhs_random_distributions(self):
+        try:
+            return (type(f) for f in self._rhs.atoms(sympy.Function)
+                    if type(f) in Parser.inline_random_distributions())
+        except AttributeError:  # For expressions that have been simplified
+            return []
+
+    @property
     def rhs_atoms(self):
         """Returns an iterator over all the variable names and mathematical
         functions on the RHS function. This does not include defined
@@ -131,15 +139,18 @@ class Expression(object):
         """
         Deprecated: Should be able to remove once random namespace is removed
         """
-        atoms = set()
-        for a in self.rhs_atoms:
-            try:
-                ns, func = a.split('.')
-            except ValueError:
-                ns = ''
-                func = a
-            if ns == namespace:
-                atoms.add(func)
+        if namespace == 'random':
+            atoms = set(str(r)[7:-1] for r in self.rhs_random_distributions)
+        else:
+            atoms = set()
+            for a in chain(self.rhs_atoms, ):
+                try:
+                    ns, func = a.split('.')
+                except ValueError:
+                    ns = ''
+                    func = a
+                if ns == namespace:
+                    atoms.add(func)
         return atoms
 
     @property
@@ -204,7 +215,7 @@ class Expression(object):
         Replaces names and function names. Deprecated
         """
         expr_str = str(self.rhs_substituted(name_map))
-        for old, new in funcname_map:
+        for old, new in funcname_map.iteritems():
             expr_str = re.sub(r'(?<!\w)({})\('.format(old), new, expr_str)
         expr_str = expr_str.replace('**', '^')
         return expr_str
