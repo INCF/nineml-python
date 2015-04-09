@@ -145,7 +145,8 @@ class Parser(object):
     @classmethod
     def _check_valid_funcs(cls, expr):
         if (isinstance(expr, sympy.Function) and
-                type(expr) not in cls._valid_funcs):
+                str(type(expr)) not in chain(
+                    cls._valid_funcs, cls._inline_randoms_dict.iterkeys())):
             raise NineMLMathParseError(
                 "'{}' is a valid function in Sympy but not in 9ML"
                 .format(type(expr)))
