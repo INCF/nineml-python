@@ -127,6 +127,21 @@ class Expression(object):
         functions such as ``sin`` and ``log`` """
         return (str(a) for a in chain(self.rhs_symbol_names, self.rhs_funcs))
 
+    def rhs_atoms_in_namespace(self, namespace):
+        """
+        Deprecated: Should be able to remove once random namespace is removed
+        """
+        atoms = set()
+        for a in self.rhs_atoms:
+            try:
+                ns, func = a.split('.')
+            except ValueError:
+                ns = ''
+                func = a
+            if ns == namespace:
+                atoms.add(func)
+        return atoms
+
     @property
     def rhs_as_python_func(self):
         """ Returns a python callable which evaluates the expression in
