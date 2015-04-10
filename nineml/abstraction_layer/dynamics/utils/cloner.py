@@ -44,8 +44,7 @@ class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
 class DynamicsCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
-        super(DynamicsCloner, self).visit_componentclass(componentclass)
-        ccn = componentclass.__class__(
+        cc = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
                         for p in componentclass.parameters],
@@ -59,7 +58,8 @@ class DynamicsCloner(ComponentCloner):
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=componentclass.portconnections[:])
-        return ccn
+        self.copy_indices(componentclass, cc)
+        return cc
 
     def visit_dynamicsblock(self, dynamicsblock, **kwargs):
         return dynamicsblock.__class__(
@@ -73,12 +73,14 @@ class DynamicsCloner(ComponentCloner):
                 for s in dynamicsblock.state_variables])
 
     def visit_regime(self, regime, **kwargs):
-        return regime.__class__(
+        r = regime.__class__(
             name=regime.name,
             time_derivatives=[t.accept_visitor(self, **kwargs)
                               for t in regime.time_derivatives],
             transitions=[t.accept_visitor(self, **kwargs)
                          for t in regime.transitions])
+        self.copy_indices(regime, r)
+        return r
 
     def visit_statevariable(self, state_variable, **kwargs):
         return state_variable.__class__(
@@ -137,25 +139,29 @@ class DynamicsCloner(ComponentCloner):
         return trigger.__class__(rhs=rhs)
 
     def visit_oncondition(self, on_condition, **kwargs):
-        return on_condition.__class__(
+        oc = on_condition.__class__(
             trigger=on_condition.trigger.accept_visitor(self, **kwargs),
-            event_outputs=[e.accept_visitor(self, **kwargs)
-                           for e in on_condition.event_outputs],
+            output_events=[e.accept_visitor(self, **kwargs)
+                           for e in on_condition.output_events],
             state_assignments=[s.accept_visitor(self, **kwargs)
                                for s in on_condition.state_assignments],
             target_regime_name=on_condition.target_regime_name
         )
+        self.copy_indices(on_condition, oc)
+        return oc
 
     def visit_onevent(self, on_event, **kwargs):
-        return on_event.__class__(
+        oe = on_event.__class__(
             src_port_name=self.prefix_variable(on_event.src_port_name,
                                                **kwargs),
-            event_outputs=[e.accept_visitor(self, **kwargs)
-                           for e in on_event.event_outputs],
+            output_events=[e.accept_visitor(self, **kwargs)
+                           for e in on_event.output_events],
             state_assignments=[s.accept_visitor(self, **kwargs)
                                for s in on_event.state_assignments],
             target_regime_name=on_event.target_regime_name
         )
+        self.copy_indices(on_event, oe, **kwargs)
+        return oe
 
 
 class DynamicsClonerPrefixNamespace(DynamicsCloner):

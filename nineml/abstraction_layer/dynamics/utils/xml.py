@@ -117,7 +117,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
         return OnCondition(trigger=trigger,
                            state_assignments=subnodes["StateAssignment"],
-                           event_outputs=subnodes["OutputEvent"],
+                           output_events=subnodes["OutputEvent"],
                            target_regime_name=target_regime)
 
     @read_annotations
@@ -128,7 +128,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
         return OnEvent(src_port_name=element.get('port'),
                        state_assignments=subnodes["StateAssignment"],
-                       event_outputs=subnodes["OutputEvent"],
+                       output_events=subnodes["OutputEvent"],
                        target_regime_name=target_regime_name)
 
     # FIXME: This should return a Trigger element not just an internal
@@ -245,7 +245,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_oncondition(self, on_condition):
         nodes = chain(on_condition.state_assignments,
-                      on_condition.event_outputs, [on_condition.trigger])
+                      on_condition.output_events, [on_condition.trigger])
         newNodes = [n.accept_visitor(self) for n in nodes]
         return E('OnCondition', *newNodes,
                  target_regime=on_condition._target_regime.name)
@@ -258,6 +258,6 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
     def visit_onevent(self, on_event):
         elements = ([p.accept_visitor(self)
                      for p in on_event.state_assignments] +
-                    [p.accept_visitor(self) for p in on_event.event_outputs])
+                    [p.accept_visitor(self) for p in on_event.output_events])
         return E('OnEvent', *elements, port=on_event.src_port_name,
                  target_regime=on_event.target_regime.name)

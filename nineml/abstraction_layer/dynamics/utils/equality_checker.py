@@ -115,6 +115,6 @@ class DynamicsEqualityChecker(ComponentEqualityChecker):
         assert_equal_list(sa1, sa2)
 
         # Output Events:
-        op1 = [op.port_name for op in trans1.event_outputs]
-        op2 = [op.port_name for op in trans2.event_outputs]
+        op1 = [op.port_name for op in trans1.output_events]
+        op2 = [op.port_name for op in trans2.output_events]
         assert_equal_list(sa1, sa2)

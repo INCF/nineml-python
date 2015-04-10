@@ -171,31 +171,18 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
 
 
 class DynamicsAssignIndices(ComponentAssignIndices,
-                               DynamicsActionVisitor):
+                            DynamicsActionVisitor):
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.componentclass.index_of(regime)
-        for transition in regime.transitions:
-            self.componentclass.index_of(
-                transition, key=(transition.__class__.__name__, regime.name))
-
-    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(port)
-
-    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(port)
-
-    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(port)
-
-    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(port)
-
-    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(port)
+        for elem in regime:
+            regime.index_of(elem)
+        for trans in regime.transitions:
+            self.componentclass.index_of(trans, 'Transition')
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(on_condition)
+        for elem in on_condition:
+            on_condition.index_of(elem)
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(on_event)
+        for elem in on_event:
+            on_event.index_of(elem)

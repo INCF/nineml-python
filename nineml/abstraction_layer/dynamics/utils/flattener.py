@@ -41,7 +41,7 @@ class TransitionResolver(object):
         # Store the StateAssignments and OutputEvents for this
         # newly mapped transitions
         self.state_assignments = []
-        self.event_outputs = []
+        self.output_events = []
 
         # Construct a map of { send ports -> [recv ports] }.
         # This makes it easy to iterate over send events:
@@ -86,8 +86,8 @@ class TransitionResolver(object):
             regime_index=transition_regime_tuple_index,
             oldtransition=transition)
 
-        for ev_out in transition.event_outputs:
-            self.event_outputs.append(DynamicsCloner().visit(ev_out))
+        for ev_out in transition.output_events:
+            self.output_events.append(DynamicsCloner().visit(ev_out))
         for state_ass in transition.state_assignments:
             self.state_assignments.append(DynamicsCloner().visit(state_ass))
 
@@ -98,7 +98,7 @@ class TransitionResolver(object):
 
         # Are any of the output events connected to other event_ports?
         # print self.send_rev_map.keys()
-        for ev_out in transition.event_outputs:
+        for ev_out in transition.output_events:
             # print ' -- Checking for port connections from:', ev_out
             if ev_out.port_name not in self.send_rev_map:
                 continue
@@ -293,7 +293,7 @@ class ComponentFlattener(object):
                     new_oncondition = OnCondition(
                         oldtransition.trigger,
                         state_assignments=tr.state_assignments,
-                        event_outputs=tr.event_outputs,
+                        output_events=tr.output_events,
                         target_regime_name=tr.target_regime.name)
 
                     regime_new.add_on_condition(new_oncondition)
@@ -308,7 +308,7 @@ class ComponentFlattener(object):
                     new_onevent = OnEvent(
                         oldtransition.src_port_name,
                         state_assignments=tr.state_assignments,
-                        event_outputs=tr.event_outputs,
+                        output_events=tr.output_events,
                         target_regime_name=tr.target_regime.name)
                     regime_new.add_on_event(new_onevent)
 

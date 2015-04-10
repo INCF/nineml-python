@@ -71,14 +71,14 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_oncondition(self, on_condition, **kwargs):
         self.action_oncondition(on_condition, **kwargs)
         nodes = chain([on_condition.trigger],
-                      on_condition.event_outputs,
+                      on_condition.output_events,
                       on_condition.state_assignments)
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
     def visit_onevent(self, on_event, **kwargs):
         self.action_onevent(on_event, **kwargs)
-        nodes = chain(on_event.event_outputs, on_event.state_assignments)
+        nodes = chain(on_event.output_events, on_event.state_assignments)
         nodes = list(nodes)
         # print nodes
         for p in nodes:

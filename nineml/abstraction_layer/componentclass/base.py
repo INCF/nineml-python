@@ -9,8 +9,10 @@ This module provides the base class for these.
 """
 from abc import ABCMeta
 import sympy
+from itertools import chain
 from .. import BaseALObject
 import nineml
+from nineml.base import MemberContainerObject
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import (
     filter_discrete_types, ensure_valid_identifier,
@@ -78,19 +80,20 @@ class Parameter(BaseALObject):
         return sympy.Symbol(self.name)
 
 
-class ComponentClass(BaseALObject, TopLevelObject):
+class ComponentClass(BaseALObject, TopLevelObject, MemberContainerObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     __metaclass__ = ABCMeta  # Abstract base class
 
     defining_attributes = ('_name', '_parameters', '_main_block')
-    _class_to_member = {Parameter: '_parameters'}
+    class_to_member_dict = {Parameter: '_parameters'}
     element_name = 'ComponentClass'
 
     def __init__(self, name, parameters, main_block, url=None):
         ensure_valid_identifier(name)
         BaseALObject.__init__(self)
         TopLevelObject.__init__(self, url)
+        MemberContainerObject.__init__(self)
         self._name = name
         self._main_block = main_block
         # Turn any strings in the parameter list into Parameters:
@@ -188,9 +191,28 @@ class ComponentClass(BaseALObject, TopLevelObject):
                             'ClassXMLLoader')
         return XMLLoader(document).load_componentclass(element)
 
+    def lookup_member_dict_name(self, element):
+        try:
+            return super(ComponentClass, self).lookup_member_dict_name(element)
+        except NineMLInvalidElementTypeException:
+            return self._main_block.lookup_member_dict_name(element)
+
+    def lookup_member_dict(self, element):
+        try:
+            return super(ComponentClass, self).lookup_member_dict(element)
+        except AttributeError:
+            return self._main_block.lookup_member_dict(element)
+
+    @property
+    def _all_member_dicts(self):
+        return chain(*(
+            (getattr(self, n)
+             for n in self.class_to_member_dict.itervalues()),
+            (getattr(self._main_block, n)
+             for n in self._main_block.class_to_member_dict.itervalues())))
 
 
-class MainBlock(BaseALObject):
+class MainBlock(BaseALObject, MemberContainerObject):
 
     """
     An object, which encapsulates a component's regimes, transitions,
@@ -200,7 +222,7 @@ class MainBlock(BaseALObject):
     __metaclass__ = ABCMeta  # Abstract base class
 
     defining_attributes = ('_aliases', '_constants')
-    _class_to_member = {Alias: '_aliases',
+    class_to_member_dict = {Alias: '_aliases',
                         Constant: '_constants'}
 
     def __init__(self, aliases=None, constants=None):
@@ -209,7 +231,8 @@ class MainBlock(BaseALObject):
            :param aliases: A list of aliases, which must be either |Alias|
                objects or ``string``s.
         """
-        super(MainBlock, self).__init__()
+        BaseALObject.__init__(self)
+        MemberContainerObject.__init__(self)
         aliases = normalise_parameter_as_list(aliases)
         constants = normalise_parameter_as_list(constants)
 

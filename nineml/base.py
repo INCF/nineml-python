@@ -144,18 +144,18 @@ class MemberContainerObject(object):
     An abstract base class for handling the manipulation of member objects
     (which are stored in dictionaries that can be detected by member type).
 
-    Deriving classes are expected to have the '_class_to_member' class
+    Deriving classes are expected to have the 'class_to_member_dict' class
     attribute
     """
 
     def __init__(self):
         self._indices = defaultdict(dict)
 
-    def elements(self):
+    def __iter__(self):
         return chain(*(d.itervalues() for d in self._all_member_dicts))
 
     def add(self, element):
-        dct = self._member_dict(element)
+        dct = self.lookup_member_dict(element)
         if element.name in dct:
             raise NineMLRuntimeError(
                 "Could not add '{}' {} to component class as it clashes with "
@@ -164,19 +164,25 @@ class MemberContainerObject(object):
         dct[element.name] = element
 
     def remove(self, element, ignore_missing=False):
-        dct = self._member_dict(element)
+        dct = self.lookup_member_dict(element)
         try:
             del dct[element.name]
         except KeyError:
             if not ignore_missing:
                 raise NineMLRuntimeError(
                     "Could not remove '{}' from component class as it was not "
-                    "found in member dictionary".format(element.name))
+                    "found in member dictionary (use 'ignore_missing' option "
+                    "to ignore)".format(element.name))
 
     def __getitem__(self, name):
+        """
+        Looks a member item by "name" (identifying characteristic)
+        """
         for dct in self._all_member_dicts:
             try:
-                return dct[name]
+                elem = dct[name]
+                if isinstance(elem, SendPortBase):
+                    continue
             except KeyError:
                 pass
         raise KeyError("'{}' was not found in '{}' component class"
@@ -194,10 +200,10 @@ class MemberContainerObject(object):
                 return False
         else:
             try:
-                dct = self._member_dict(element)
+                dct = self.lookup_member_dict(element)
                 try:
                     found = dct[element.name]
-                    assert(found == element)
+                    assert(found is element)
                     return True
                 except KeyError:
                     return False
@@ -206,13 +212,12 @@ class MemberContainerObject(object):
 
     @property
     def _all_member_dicts(self):
-        return chain(*([m.itervalues() for m in self._class_to_member] +
-                       [m.itervalues()
-                        for m in self._main_block._class_to_member]))
+        return (getattr(self, n)
+                for n in self.class_to_member_dict.itervalues())
 
     @property
     def elements(self):
-        return chain(*(d.itervalues() for d in self._all_member_dicts))
+        return iter(self)
 
     def index_of(self, element, key=None):
         """
@@ -225,7 +230,7 @@ class MemberContainerObject(object):
         referenced elsewhere in the code).
         """
         if key is None:
-            key = self._member_dict_name(element)
+            key = self.default_index_key(element)
         dct = self._indices[key]
         try:
             index = dct[element]
@@ -233,48 +238,52 @@ class MemberContainerObject(object):
             # Get the first index ascending from 0 not in the set
             try:
                 index = next(iter(sorted(
-                    set(xrange(len(dct)).difference(dct.itervalues())))))
-            except:
+                    set(xrange(len(dct))).difference(dct.itervalues()))))
+            except StopIteration:
                 index = len(dct)
             dct[element] = index
         return index
 
-    def _member_dict_name(self, element):
+    def lookup_member_dict(self, element):
+        """
+        Looks up the appropriate member dictionary for objects of type element
+        """
+        return getattr(self, self.lookup_member_dict_name(element))
+
+    def lookup_member_dict_name(self, element):
+        """
+        Looks up the appropriate member dictionary name for objects of type
+        element
+        """
         # Try quick lookup by class type
         try:
-            return self._class_to_member[type(element)]
+            return self.class_to_member_dict[type(element)]
         except KeyError:
-            # For component classes with "main blocks" (to be removed in
-            # version 2.0)
+            # Iterate through and find by isinstance lookup
             try:
-                return self._main_block._class_to_member[type(element)]
-            except (AttributeError, KeyError):
-                pass
-        try:
-            return next(
-                d for cls, d in self._class_to_member.iteritems()
-                if isinstance(element, cls))
-        except StopIteration:
-            # For component classes with "main blocks" (to be removed in
-            # version 2.0)
-            try:
-                return next(
-                    d for cls, d in
-                    self._main_block._class_to_member.iteritems()
-                    if isinstance(element, cls))
-            except (AttributeError, StopIteration):
+                l = [d for clss, d in self.class_to_member_dict.iteritems()
+                     if isinstance(element, clss)]
+                assert len(l) < 2, ("Multiple base classes found for '{}' type"
+                                    .format(type(element)))
+                return l[0]
+            except IndexError:
                 raise NineMLInvalidElementTypeException(
                     "Could not get member dict for element of type "
-                    "'{}' to '{}' class"
-                    .format(element.__class__.__name__,
-                            self.__class__.__name__))
+                    "'{}' from '{}' class" .format(type(element).__name__,
+                                                   type(self).__name__))
 
-    def _member_dict(self, element):
-        name = self._member_dict_name(element)
+    def default_index_key(self, element):
         try:
-            return getattr(self, name)
+            return type(element).index_key
         except AttributeError:
-            return getattr(self._main_block, name)
+            return self.lookup_member_dict_name(element)
+
+
+class SendPortBase(object):
+    """
+    Dummy class to allow look up via inheritence of SendPort in this module
+    without causing circular import problems
+    """
 
 
 import nineml

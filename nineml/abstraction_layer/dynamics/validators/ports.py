@@ -28,15 +28,15 @@ class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
         # componentclass
         self.event_send_ports = defaultdict(dict)
         self.event_receive_ports = defaultdict(dict)
-        self.event_outs = defaultdict(list)
+        self.output_events = defaultdict(list)
         self.input_events = defaultdict(list)
 
         self.visit(componentclass)
 
         # Check that each output event has a corresponding event_port with a
         # send mode:
-        for ns, event_outs in self.event_outs.iteritems():
-            for event_out in event_outs:
+        for ns, output_events in self.output_events.iteritems():
+            for event_out in output_events:
                 assert event_out in self.event_send_ports[ns], \
                     ("Can't find port definition matching OP-Event: {}"
                      .format(event_out))
@@ -55,7 +55,7 @@ class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
                                      self.event_receive_ports.iteritems()):
             for evt_port_name in event_ports.keys():
 
-                op_evts_on_port = [ev for ev in self.event_outs[ns]
+                op_evts_on_port = [ev for ev in self.output_events[ns]
                                    if ev == evt_port_name]
                 ip_evts_on_port = [ev for ev in self.input_events[ns]
                                    if ev == evt_port_name]
@@ -73,7 +73,7 @@ class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
         self.event_receive_ports[namespace][port.name] = port
 
     def action_outputevent(self, event_out, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.event_outs[namespace].append(event_out.port_name)
+        self.output_events[namespace].append(event_out.port_name)
 
     def action_onevent(self, on_event, namespace, **kwargs):  # @UnusedVariable
         self.input_events[namespace].append(on_event.src_port_name)

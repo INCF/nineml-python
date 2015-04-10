@@ -161,8 +161,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                            ('_analog_send_ports', '_analog_receive_ports',
                             '_analog_reduce_ports', '_event_send_ports',
                             '_event_receive_ports'))
-    _class_to_member = dict(
-        tuple(ComponentClass._class_to_member.iteritems()) +
+    class_to_member_dict = dict(
+        tuple(ComponentClass.class_to_member_dict.iteritems()) +
         ((AnalogSendPort, '_analog_send_ports'),
          (AnalogReceivePort, '_analog_receive_ports'),
          (AnalogReducePort, '_analog_reduce_ports'),
@@ -571,8 +571,8 @@ class DynamicsBlock(MainBlock):
 
     defining_attributes = (MainBlock.defining_attributes +
                            ('_regimes', '_state_variables'))
-    _class_to_member = dict(
-        tuple(MainBlock._class_to_member.iteritems()) +
+    class_to_member_dict = dict(
+        tuple(MainBlock.class_to_member_dict.iteritems()) +
         ((Regime, '_regimes'), (StateVariable, '_state_variables')))
 
     def __init__(self, regimes=None, aliases=None, state_variables=None,

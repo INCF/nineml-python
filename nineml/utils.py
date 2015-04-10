@@ -16,6 +16,7 @@ import hashlib
 from .exceptions import internal_error
 from .exceptions import NineMLRuntimeError
 from .xmlns import NINEML
+from nineml.base import MemberContainerObject
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
@@ -471,7 +472,10 @@ def none_to_empty_list(obj):
 
 
 def normalise_parameter_as_list(param):
-    return ensure_iterable(none_to_empty_list(param))
+    if isinstance(param, MemberContainerObject):
+        return [param]
+    else:
+        return ensure_iterable(none_to_empty_list(param))
 
 
 def restore_sys_path(func):

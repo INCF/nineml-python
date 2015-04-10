@@ -6,6 +6,7 @@ docstring needed
 """
 from ...expressions.utils import is_builtin_symbol
 from .visitors import ComponentActionVisitor, ComponentVisitor
+from nineml.base import MemberContainerObject
 
 
 class ComponentExpandPortDefinition(ComponentActionVisitor):
@@ -54,9 +55,6 @@ class ComponentCloner(ComponentVisitor):
         else:
             return prefix + variable
 
-    def visit_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
-        componentclass.assign_indices()
-
     def visit_parameter(self, parameter, **kwargs):
         return parameter.__class__(
             name=self.prefix_variable(parameter.name, **kwargs),
@@ -74,3 +72,12 @@ class ComponentCloner(ComponentVisitor):
         new_constant = constant.__class__(
             name=constant.name, value=constant.value, units=constant.units)
         return new_constant
+
+    def copy_indices(self, source, destination, **kwargs):
+        if source == destination:  # a work around until I remove NSs
+            assert isinstance(source, MemberContainerObject)
+            for s in source:
+                d = destination.lookup_member_dict(s)[s._name]
+                key = source.default_index_key(s)
+                index = source.index_of(s)
+                destination._indices[key][d] = index

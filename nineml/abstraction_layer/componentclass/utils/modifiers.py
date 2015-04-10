@@ -101,11 +101,6 @@ class ComponentAssignIndices(ComponentActionVisitor):
         self.componentclass = componentclass
         self.visit(componentclass)
 
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(parameter)
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(alias)
-
-    def action_constant(self, constant, **kwargs):  # @UnusedVariable
-        self.componentclass.index_of(constant)
+    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
+        for elem in componentclass:
+            componentclass.index_of(elem)
