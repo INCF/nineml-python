@@ -5,12 +5,12 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
-from .cloner import DistributionExpandPortDefinition
+from .cloner import RandomDistributionExpandPortDefinition
 from ...componentclass.utils.modifiers import ComponentModifier
 
 
-class DistributionModifier(ComponentModifier):
+class RandomDistributionModifier(ComponentModifier):
 
     """Utility classes for modifying components"""
 
-    _ExpandPortDefinition = DistributionExpandPortDefinition
+    _ExpandPortDefinition = RandomDistributionExpandPortDefinition

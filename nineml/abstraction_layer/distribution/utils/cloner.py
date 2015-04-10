@@ -7,16 +7,16 @@ docstring needed
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
     ComponentRenameSymbol, ComponentClonerVisitor)
-from .visitors import DistributionActionVisitor
+from .visitors import RandomDistributionActionVisitor
 
 
-class DistributionExpandPortDefinition(DistributionActionVisitor,
+class RandomDistributionExpandPortDefinition(RandomDistributionActionVisitor,
                                        ComponentExpandPortDefinition):
 
     pass
 
 
-class DistributionExpandAliasDefinition(DistributionActionVisitor,
+class RandomDistributionExpandAliasDefinition(RandomDistributionActionVisitor,
                                         ComponentExpandAliasDefinition):
 
     """
@@ -27,7 +27,7 @@ class DistributionExpandAliasDefinition(DistributionActionVisitor,
     pass
 
 
-class DistributionRenameSymbol(DistributionActionVisitor,
+class RandomDistributionRenameSymbol(RandomDistributionActionVisitor,
                                ComponentRenameSymbol):
 
     """ Can be used for:
@@ -36,7 +36,7 @@ class DistributionRenameSymbol(DistributionActionVisitor,
     pass
 
 
-class DistributionClonerVisitor(ComponentClonerVisitor):
+class RandomDistributionClonerVisitor(ComponentClonerVisitor):
 
     def visit_componentclass(self, componentclass, **kwargs):
         ccn = componentclass.__class__(

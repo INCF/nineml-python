@@ -9,10 +9,10 @@ docstring needed
 from ...componentclass.utils import ComponentActionVisitor
 
 
-class DistributionActionVisitor(ComponentActionVisitor):
+class RandomDistributionActionVisitor(ComponentActionVisitor):
 
     def visit_componentclass(self, componentclass, **kwargs):
-        super(DistributionActionVisitor, self).visit_componentclass(
+        super(RandomDistributionActionVisitor, self).visit_componentclass(
             componentclass, **kwargs)
         if componentclass.distribution:
             componentclass.distribution.accept_visitor(self, **kwargs)

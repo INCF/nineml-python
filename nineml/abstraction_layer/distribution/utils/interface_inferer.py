@@ -1,9 +1,9 @@
 from ...componentclass.utils import ComponentClassInterfaceInferer
-from .visitors import DistributionActionVisitor
+from .visitors import RandomDistributionActionVisitor
 
 
-class DistributionClassInterfaceInferer(ComponentClassInterfaceInferer,
-                                        DistributionActionVisitor):
+class RandomDistributionClassInterfaceInferer(ComponentClassInterfaceInferer,
+                                              RandomDistributionActionVisitor):
 
     """
     Not extended from base classes currently, just mixes in the distribution-

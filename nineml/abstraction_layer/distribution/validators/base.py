@@ -1,25 +1,25 @@
 """
-This file contains the DistributionValidator class for validating component
+This file contains the RandomDistributionValidator class for validating component
 
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
 
 from .general import (
-    AliasesAreNotRecursiveDistributionValidator,
-    NoUnresolvedSymbolsDistributionValidator,
-    NoDuplicatedObjectsDistributionValidator,
-    CheckNoLHSAssignmentsToMathsNamespaceDistributionValidator)
+    AliasesAreNotRecursiveRandomDistributionValidator,
+    NoUnresolvedSymbolsRandomDistributionValidator,
+    NoDuplicatedObjectsRandomDistributionValidator,
+    CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator)
 from .namingconflicts import (
-    LocalNameConflictsDistributionValidator,
-    DimensionNameConflictsDistributionValidator)
+    LocalNameConflictsRandomDistributionValidator,
+    DimensionNameConflictsRandomDistributionValidator)
 from .ports import (
-    PortConnectionsDistributionValidator)
+    PortConnectionsRandomDistributionValidator)
 from .types import (
-    TypesDistributionValidator)
+    TypesRandomDistributionValidator)
 
 
-class DistributionValidator(object):
+class RandomDistributionValidator(object):
 
     """Class for grouping all the component-validations tests together"""
 
@@ -30,12 +30,12 @@ class DistributionValidator(object):
         internal structure
         """
         # Check class structure:
-        TypesDistributionValidator(componentclass)
-        NoDuplicatedObjectsDistributionValidator(componentclass)
-        LocalNameConflictsDistributionValidator(componentclass)
-        DimensionNameConflictsDistributionValidator(componentclass)
-        AliasesAreNotRecursiveDistributionValidator(componentclass)
-        NoUnresolvedSymbolsDistributionValidator(componentclass)
-        PortConnectionsDistributionValidator(componentclass)
-        CheckNoLHSAssignmentsToMathsNamespaceDistributionValidator(
+        TypesRandomDistributionValidator(componentclass)
+        NoDuplicatedObjectsRandomDistributionValidator(componentclass)
+        LocalNameConflictsRandomDistributionValidator(componentclass)
+        DimensionNameConflictsRandomDistributionValidator(componentclass)
+        AliasesAreNotRecursiveRandomDistributionValidator(componentclass)
+        NoUnresolvedSymbolsRandomDistributionValidator(componentclass)
+        PortConnectionsRandomDistributionValidator(componentclass)
+        CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(
             componentclass)

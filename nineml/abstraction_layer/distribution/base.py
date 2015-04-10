@@ -2,7 +2,7 @@ from .. import BaseALObject
 from ..componentclass import ComponentClass
 
 
-class DistributionBlock(BaseALObject):
+class RandomDistributionBlock(BaseALObject):
 
     defining_attributes = ('standard_library',)
 
@@ -14,12 +14,12 @@ class DistributionBlock(BaseALObject):
         return visitor.visit_distributionblock(self, **kwargs)
 
 
-class DistributionClass(ComponentClass):
+class RandomDistributionClass(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_main_block')
 
     def __init__(self, name, distributionblock, parameters=None):
-        super(DistributionClass, self).__init__(
+        super(RandomDistributionClass, self).__init__(
             name, parameters, main_block=distributionblock)
 
     def accept_visitor(self, visitor, **kwargs):

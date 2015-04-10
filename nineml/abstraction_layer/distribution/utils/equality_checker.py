@@ -9,17 +9,17 @@ from ...componentclass.utils.equality_checker import (ComponentEqualityChecker,
                                                       assert_equal)
 
 
-class DistributionEqualityChecker(ComponentEqualityChecker):
+class RandomDistributionEqualityChecker(ComponentEqualityChecker):
     """
     Currently not extended from base class but created for future checks
     """
     @classmethod
     def check_equal_component(cls, comp1, comp2, strict_aliases):
 
-        super(DistributionEqualityChecker, cls).check_equal_component(
+        super(RandomDistributionEqualityChecker, cls).check_equal_component(
             comp1, comp2, strict_aliases)
 
-        # Check the Distribution
+        # Check the RandomDistribution
         # --------------------- #
         d1 = comp1.distribution
         d2 = comp2.distribution

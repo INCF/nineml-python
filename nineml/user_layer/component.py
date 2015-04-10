@@ -610,7 +610,7 @@ class ConnectionRule(Component):
     pass
 
 
-class Distribution(Component):
+class RandomDistribution(Component):
     """
     Component representing a random number distribution, e.g. normal, gamma,
     binomial.

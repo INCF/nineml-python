@@ -9,21 +9,21 @@ from ...componentclass.validators import (
     NoUnresolvedSymbolsComponentValidator,
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
-from . import BaseDistributionValidator
+from . import BaseRandomDistributionValidator
 
 
-class AliasesAreNotRecursiveDistributionValidator(
+class AliasesAreNotRecursiveRandomDistributionValidator(
         AliasesAreNotRecursiveComponentValidator,
-        BaseDistributionValidator):
+        BaseRandomDistributionValidator):
 
     """Check that aliases are not self-referential"""
 
     pass
 
 
-class NoUnresolvedSymbolsDistributionValidator(
+class NoUnresolvedSymbolsRandomDistributionValidator(
         NoUnresolvedSymbolsComponentValidator,
-        BaseDistributionValidator):
+        BaseRandomDistributionValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
@@ -31,17 +31,17 @@ class NoUnresolvedSymbolsDistributionValidator(
     pass
 
 
-class NoDuplicatedObjectsDistributionValidator(
+class NoDuplicatedObjectsRandomDistributionValidator(
         NoDuplicatedObjectsComponentValidator,
-        BaseDistributionValidator):
+        BaseRandomDistributionValidator):
 
     def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable
         self.all_objects.append(distributionblock)
 
 
-class CheckNoLHSAssignmentsToMathsNamespaceDistributionValidator(
+class CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(
         CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
-        BaseDistributionValidator):
+        BaseRandomDistributionValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
