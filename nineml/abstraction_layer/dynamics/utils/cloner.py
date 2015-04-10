@@ -4,7 +4,6 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...expressions.utils import MathUtil
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
@@ -119,8 +118,9 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
                           for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
-            dynamicsblock=(componentclass.dynamicsblock.accept_visitor(self, **kwargs)
-                      if componentclass.dynamicsblock else None),
+            dynamicsblock=(
+                componentclass.dynamicsblock.accept_visitor(self, **kwargs)
+                if componentclass.dynamicsblock else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=componentclass.portconnections[:])
@@ -131,7 +131,8 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
             regimes=[r.accept_visitor(self, **kwargs)
                      for r in dynamicsblock.regimes],
             aliases=[
-                a.accept_visitor(self, **kwargs) for a in dynamicsblock.aliases],
+                a.accept_visitor(self, **kwargs)
+                for a in dynamicsblock.aliases],
             state_variables=[s.accept_visitor(self, **kwargs)
                              for s in dynamicsblock.state_variables])
 
@@ -177,9 +178,8 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
         lhs = self.prefix_variable(assignment.lhs, **kwargs)
-        rhs = MathUtil.get_prefixed_rhs_string(
-            expr_obj=assignment, prefix=prefix, exclude=prefix_excludes)
-
+        rhs = assignment.rhs_suffixed(suffix='', prefix=prefix,
+                                      excludes=prefix_excludes)
         return assignment.__class__(lhs=lhs, rhs=rhs)
 
     def visit_timederivative(self, time_derivative, **kwargs):
@@ -189,15 +189,15 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
         dep = self.prefix_variable(time_derivative.dependent_variable,
                                    **kwargs)
 
-        rhs = MathUtil.get_prefixed_rhs_string(
-            expr_obj=time_derivative, prefix=prefix, exclude=prefix_excludes)
+        rhs = time_derivative.rhs_suffixed(suffix='', prefix=prefix,
+                                           excludes=prefix_excludes)
         return time_derivative.__class__(dependent_variable=dep, rhs=rhs)
 
     def visit_trigger(self, trigger, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
-        rhs = MathUtil.get_prefixed_rhs_string(
-            expr_obj=trigger, prefix=prefix, exclude=prefix_excludes)
+        rhs = trigger.rhs_suffixed(suffix='', prefix=prefix,
+                                   excludes=prefix_excludes)
         return trigger.__class__(rhs=rhs)
 
     def visit_oncondition(self, on_condition, **kwargs):
@@ -224,12 +224,13 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
 
 class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
 
-    """ A visitor that walks over a hierarchical componentclass, and prefixes every
+    """
+    A visitor that walks over a hierarchical componentclass, and prefixes every
     variable with the namespace that that variable is in. This is preparation
     for flattening
     """
 
-    def visit_componentclass(self, componentclass, **kwargs):  # @UnusedVariable
+    def visit_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
         prefix = componentclass.get_node_addr().get_str_prefix()
         if prefix == '_':
             prefix = ''

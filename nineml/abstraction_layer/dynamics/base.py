@@ -158,7 +158,7 @@ class _NamespaceMixin(object):
         """Gets the parent component for this component"""
         return self._parentmodel
 
-    def _validate_self(self):
+    def validate(self):
         """ Over-ridden in mix'ed class"""
         raise NotImplementedError()
 
@@ -219,7 +219,7 @@ class _NamespaceMixin(object):
         self.subnodes[namespace] = DynamicsClonerVisitor().visit(subnode)
         self.subnodes[namespace].set_parent_model(self)
 
-        self._validate_self()
+        self.validate()
 
     def connect_ports(self, src, sink):
         """Connects the ports of 2 subcomponents.
@@ -239,7 +239,7 @@ class _NamespaceMixin(object):
         connection = (NamespaceAddress(src), NamespaceAddress(sink))
         self._portconnections.append(connection)
 
-        self._validate_self()
+        self.validate()
 
     @property
     def portconnections(self):
@@ -345,8 +345,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
         # Check any supplied parameters match:
         if parameters is not None:
-            inf_check(self._parameters.keys(),
-                      inferred_struct.parameter_names,
+            inf_check(self._parameters.keys(), inferred_struct.parameter_names,
                       'Parameters')
         else:
             self._parameters = dict((n, Parameter(n))
@@ -405,7 +404,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         self._flattener = None
 
         # Is the finished componentclass valid?:
-        self._validate_self()
+        self.validate()
 
     # -------------------------- #
 
@@ -434,7 +433,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         component"""
         return self.flattener is not None
 
-    def _validate_self(self):
+    def validate(self):
         DynamicsValidator.validate_componentclass(self)
 
     @property

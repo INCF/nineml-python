@@ -7,6 +7,7 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from itertools import chain
 from abc import ABCMeta
 from .. import BaseALObject
 import nineml
@@ -14,6 +15,7 @@ from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import filter_discrete_types, ensure_valid_identifier
 from ..units import dimensionless, Dimension
 from nineml import TopLevelObject
+from ..expressions import ExpressionSymbol
 
 
 class ComponentClass(BaseALObject, TopLevelObject):
@@ -123,7 +125,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
         return XMLLoader(document).load_componentclass(element)
 
 
-class Parameter(BaseALObject):
+class Parameter(BaseALObject, ExpressionSymbol):
 
     """A class representing a state-variable in a ``ComponentClass``.
 
@@ -131,6 +133,7 @@ class Parameter(BaseALObject):
     future, wrapping in into its own object may make the transition easier
     """
 
+    element_name = 'Parameter'
     defining_attributes = ('name', 'dimension')
 
     def __init__(self, name, dimension=None):
@@ -145,6 +148,7 @@ class Parameter(BaseALObject):
         self._dimension = dimension if dimension is not None else dimensionless
         assert isinstance(self._dimension, Dimension), (
             "dimension must be None or a nineml.Dimension instance")
+        self.constraints = []  # TODO: constraints can be added in the future.
 
     def __eq__(self, other):
         return self.name == other.name and self.dimension == other.dimension
@@ -170,5 +174,6 @@ class Parameter(BaseALObject):
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_parameter(self, **kwargs)
+
 
 from .utils.xml import ComponentClassXMLLoader

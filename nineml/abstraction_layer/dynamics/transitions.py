@@ -5,13 +5,13 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
+from copy import copy
+import sympy
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction_layer.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
-from ..expressions.utils import MathUtil, str_to_npfunc_map
 from ...exceptions import NineMLRuntimeError
 from .utils.cloner import DynamicsClonerVisitor
-from ..expressions import parse
 
 
 class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
@@ -292,49 +292,14 @@ class Trigger(Expression):
     def __init__(self, rhs):
         Expression.__init__(self, rhs)
 
-    def _parse_rhs(self, rhs):
-
-        return parse.cond(rhs)
-
-    # def is_bool(self):
-    #    """ Checks if conditions is pure bool: True, False"""
-    #    if self.names==set() and self.funcs==set():
-    #        val = self.rhs_as_python_func()()
-    #        if val==False:
-    #            return True
-    #        else:
-    #            assert val==True
-    #            return True
-    # def rhs_as_python_func(self, namespace=None):
-    #    """ Returns a python callable which evaluates the expression in
-    #    namespace and returns the result """
-    #    namespace = namespace or {}
-    #    return eval("lambda %s: %s" % (','.join(self.rhs_names), self.rhs), \
-    #                str_to_npfunc_map, namespace)
-    # math_namespace.namespace, namespace)
-
-    def rhs_as_python_func(self, namespace={}):
-        """ Returns a python callable which evaluates the expression in
-        namespace and returns the result """
-        rhs = self.rhs
-
-        rhs = rhs.replace('!', ' not ')
-        rhs = rhs.replace('&', ' and ')
-        rhs = rhs.replace('|', ' or ')
-
-        name_map = {
-            'true': 'True',
-            'false': 'False'
-        }
-
-        for frm, to in name_map.iteritems():
-            rhs = MathUtil.str_expr_replacement(frm, to, rhs)
-
-        lmda_str = "lambda %s: %s" % (','.join(self.rhs_names), rhs)
-        return eval(lmda_str, str_to_npfunc_map, namespace)
-
     def __repr__(self):
         return "Trigger('%s')" % (self.rhs)
+
+    @property
+    def reactivate_condition(self):
+        negated = copy(self)
+        negated.negate()
+        return negated
 
 
 class OutputEvent(BaseALObject):

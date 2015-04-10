@@ -9,6 +9,7 @@ from . import BaseALObject
 from nineml.abstraction_layer.units import dimensionless
 from nineml.utils import ensure_valid_identifier
 from nineml.exceptions import NineMLRuntimeError
+from .expressions import ExpressionSymbol
 
 
 class Port(BaseALObject):
@@ -54,7 +55,7 @@ class Port(BaseALObject):
         return "{}('{}')".format(classstring, self.name)
 
 
-class DimensionedPort(Port):
+class DimensionedPort(Port, ExpressionSymbol):
     """DimensionedPort
 
     A |DimensionedPort| is the base class for ports with dimensions (e.g.
