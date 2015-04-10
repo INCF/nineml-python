@@ -7,16 +7,16 @@ docstring needed
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
     ComponentRenameSymbol, ComponentClonerVisitor)
-from .visitors import DistributionActionVisitor
+from .visitors import RandomDistributionActionVisitor
 
 
-class DistributionExpandPortDefinition(DistributionActionVisitor,
+class RandomDistributionExpandPortDefinition(RandomDistributionActionVisitor,
                                        ComponentExpandPortDefinition):
 
     pass
 
 
-class DistributionExpandAliasDefinition(DistributionActionVisitor,
+class RandomDistributionExpandAliasDefinition(RandomDistributionActionVisitor,
                                         ComponentExpandAliasDefinition):
 
     """
@@ -27,7 +27,7 @@ class DistributionExpandAliasDefinition(DistributionActionVisitor,
     pass
 
 
-class DistributionRenameSymbol(DistributionActionVisitor,
+class RandomDistributionRenameSymbol(RandomDistributionActionVisitor,
                                ComponentRenameSymbol):
 
     """ Can be used for:
@@ -36,20 +36,20 @@ class DistributionRenameSymbol(DistributionActionVisitor,
     pass
 
 
-class DistributionClonerVisitor(ComponentClonerVisitor):
+class RandomDistributionClonerVisitor(ComponentClonerVisitor):
 
     def visit_componentclass(self, componentclass, **kwargs):
         ccn = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
                         for p in componentclass.parameters],
-            distributionblock=(
-                componentclass.distribution.accept_visitor(self, **kwargs)
-                if componentclass.distribution else None))
+            randomdistributionblock=(
+                componentclass.randomdistribution.accept_visitor(self, **kwargs)
+                if componentclass.randomdistribution else None))
         return ccn
 
-    def visit_distributionblock(self, distributionblock, **kwargs):
-        return distributionblock.__class__(
+    def visit_randomdistributionblock(self, randomdistributionblock, **kwargs):
+        return randomdistributionblock.__class__(
             aliases=[
                 a.accept_visitor(self, **kwargs)
-                for a in distributionblock.aliases])
+                for a in randomdistributionblock.aliases])

@@ -9,20 +9,20 @@ from itertools import chain
 from ...componentclass.utils.queryer import ComponentQueryer
 
 
-class DistributionQueryer(ComponentQueryer):
+class RandomDistributionQueryer(ComponentQueryer):
 
     """
-    DistributionQueryer provides a way of adding methods to query a
+    RandomDistributionQueryer provides a way of adding methods to query a
     ComponentClass object, without polluting the class
     """
 
     def __init__(self, componentclass):
-        """Constructor for the DistributionQueryer"""
+        """Constructor for the RandomDistributionQueryer"""
         self.componentclass = componentclass
 
     @property
     def ports(self):
         """Return an iterator over all the port (Event & Analog) in the
         componentclass"""
-        # TODO: Distribution-specific ports to go here
-        return chain(super(DistributionQueryer, self).ports, [])
+        # TODO: RandomDistribution-specific ports to go here
+        return chain(super(RandomDistributionQueryer, self).ports, [])
