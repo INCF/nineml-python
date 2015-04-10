@@ -7,9 +7,7 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from itertools import chain
 from abc import ABCMeta
-from collections import defaultdict
 import sympy
 from .. import BaseALObject
 import nineml
@@ -20,8 +18,7 @@ from nineml.utils import (
 from ..expressions import Alias, Constant
 from ..units import dimensionless, Dimension
 from nineml import TopLevelObject
-from nineml.exceptions import (
-    NineMLRuntimeError, NineMLInvalidElementTypeException)
+from nineml.exceptions import NineMLInvalidElementTypeException
 
 
 class Parameter(BaseALObject):
@@ -105,8 +102,6 @@ class ComponentClass(BaseALObject, TopLevelObject):
             params_from_strings = [Parameter(s) for s in param_td[basestring]]
             parameters = param_td[Parameter] + params_from_strings
         self._parameters = dict((p.name, p) for p in parameters)
-        # Dictionary to store element->index mappings
-        self._indices = defaultdict(dict)
 
     @property
     def name(self):
@@ -116,93 +111,6 @@ class ComponentClass(BaseALObject, TopLevelObject):
     @property
     def ports(self):
         return []
-
-    def index_of(self, element, key=None):
-        """
-        Returns the index of an element amongst others of its type. The indices
-        are generated on demand but then remembered to allow them to be
-        referred to again.
-
-        This function is meant to be useful during code-generation, where an
-        name of an element can be replaced with a unique integer value (and
-        referenced elsewhere in the code).
-        """
-        if key is None:
-            try:
-                key = element.__class__.index_key
-            except AttributeError:
-                key = element.__class__.__name__
-        try:
-            return self._indices[key][element]
-        except KeyError:
-#             assert element in self, ("Element '{}' does not belong to "
-#                                      "component".format(element.name))
-            if self._indices[key]:
-                index = max(self._indices[key].itervalues()) + 1
-            else:
-                index = 0
-            self._indices[key][element] = index
-            return index
-
-    def add(self, element):
-        dct = self._get_member_dict(element)
-        if element.name in dct:
-            raise NineMLRuntimeError(
-                "Could not add '{}' {} to component class as it clashes with "
-                "an existing element of the same name"
-                .format(element.name, type(element).__name__))
-        dct[element.name] = element
-
-    def remove(self, element, ignore_missing=False):
-        dct = self._get_member_dict(element)
-        try:
-            del dct[element.name]
-        except KeyError:
-            if not ignore_missing:
-                raise NineMLRuntimeError(
-                    "Could not remove '{}' from component class as it was not "
-                    "found in member dictionary".format(element.name))
-
-    def __getitem__(self, name):
-        for dct in self._all_member_dicts:
-            try:
-                return dct[name]
-            except KeyError:
-                pass
-        raise KeyError("'{}' was not found in '{}' component class"
-                       .format(name, self.name))
-
-    def __contains__(self, element):
-        """
-        Comprehensively checks whether the element belongs to this component
-        class or not. Useful for asserts and unit tests.
-        """
-        if isinstance(element, basestring):
-            try:
-                self[element]
-            except KeyError:
-                return False
-        else:
-            try:
-                dct = self._get_member_dict(element)
-                try:
-                    found = dct[element.name]
-                    assert(found == element)
-                    return True
-                except KeyError:
-                    return False
-            except NineMLInvalidElementTypeException:
-                return self._find_element(element)
-
-    @property
-    def _all_member_dicts(self):
-        return chain(*([m.itervalues() for m in self._class_to_member] +
-                       [m.itervalues()
-                        for m in self._main_block._class_to_member]))
-
-    @property
-    def elements(self):
-        return chain(*(d.itervalues() for d in self._all_member_dicts))
 
     @property
     def parameters(self):
@@ -280,40 +188,6 @@ class ComponentClass(BaseALObject, TopLevelObject):
                             'ClassXMLLoader')
         return XMLLoader(document).load_componentclass(element)
 
-    def _get_member_dict(self, element):
-        # Try quick lookup by class type
-        name = None
-        inblock_name = None
-        try:
-            name = self._class_to_member[type(element)]
-        except KeyError:
-            try:
-                inblock_name = self._main_block._class_to_member[type(element)]
-            except KeyError:
-                pass
-        # Iterate through all options and check whether it is a subclass
-        if name is None and inblock_name is None:
-            try:
-                name = next(
-                    d for cls, d in self._class_to_member.iteritems()
-                    if isinstance(element, cls))
-            except StopIteration:
-                try:
-                    inblock_name = next(
-                        d for cls, d in
-                        self._main_block._class_to_member.iteritems()
-                        if isinstance(element, cls))
-                except StopIteration:
-                    raise NineMLInvalidElementTypeException(
-                        "Could not get member dict for element of type "
-                        "'{}' to '{}' class"
-                        .format(element.__class__.__name__,
-                                self.__class__.__name__))
-        if name is not None:
-            dct = getattr(self, name)
-        else:
-            dct = getattr(self._main_block, inblock_name)
-        return dct
 
 
 class MainBlock(BaseALObject):
