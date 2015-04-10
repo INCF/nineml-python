@@ -1,23 +1,25 @@
-import os.path
+from os import path
 import unittest
 from lxml.etree import _Element, ElementTree
 from nineml import read
 from nineml.abstraction_layer.distribution import DistributionClass
 import tempfile
 
-examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
-                            '..', '..', '..', 'catalog', 'randomdistributions')
+
+examples_dir = path.abspath(path.join(
+    path.dirname(__file__), '..', '..', '..', '..', 'xml',
+    'randomdistributions'))
 
 
 class TestDistribution(unittest.TestCase):
 
     def test_load(self):
-        document = read(os.path.join(examples_dir, 'Normal.xml'))
+        document = read(path.join(examples_dir, 'Normal.xml'))
         self.assertEquals(type(document['NormalDistribution']),
                           DistributionClass)
 
     def test_to_xml(self):
-        document = read(os.path.join(examples_dir, 'Normal.xml'))
+        document = read(path.join(examples_dir, 'Normal.xml'))
         comp_class = document['NormalDistribution']
         xml = comp_class.to_xml()
         self.assertEquals(_Element, type(xml))

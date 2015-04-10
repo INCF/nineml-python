@@ -1,4 +1,4 @@
-import os.path
+from os import path
 import unittest
 from lxml.etree import _Element, ElementTree
 from nineml import read
@@ -6,19 +6,20 @@ from nineml.abstraction_layer.connectionrule import (
     ConnectionRuleClass)
 import tempfile
 
-examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..',
-                            '..', '..', '..', 'catalog', 'connectionrules')
+examples_dir = path.abspath(path.join(
+    path.dirname(__file__), '..', '..', '..', '..', 'xml',
+    'connectionrules'))
 
 
 class TestConnectionRule(unittest.TestCase):
 
     def test_load(self):
-        document = read(os.path.join(examples_dir, 'AllToAll.xml'))
+        document = read(path.join(examples_dir, 'AllToAll.xml'))
         self.assertEquals(type(document['AllToAll']),
                           ConnectionRuleClass)
 
     def test_to_xml(self):
-        document = read(os.path.join(examples_dir, 'AllToAll.xml'))
+        document = read(path.join(examples_dir, 'AllToAll.xml'))
         comp_class = document['AllToAll']
         xml = comp_class.to_xml()
         self.assertEquals(_Element, type(xml))
