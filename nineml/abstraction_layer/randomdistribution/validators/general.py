@@ -35,8 +35,8 @@ class NoDuplicatedObjectsRandomDistributionValidator(
         NoDuplicatedObjectsComponentValidator,
         BaseRandomDistributionValidator):
 
-    def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable
-        self.all_objects.append(distributionblock)
+    def action_randomdistributionblock(self, randomdistributionblock, **kwargs):  # @UnusedVariable
+        self.all_objects.append(randomdistributionblock)
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(

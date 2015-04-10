@@ -43,13 +43,13 @@ class RandomDistributionClonerVisitor(ComponentClonerVisitor):
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
                         for p in componentclass.parameters],
-            distributionblock=(
-                componentclass.distribution.accept_visitor(self, **kwargs)
-                if componentclass.distribution else None))
+            randomdistributionblock=(
+                componentclass.randomdistribution.accept_visitor(self, **kwargs)
+                if componentclass.randomdistribution else None))
         return ccn
 
-    def visit_distributionblock(self, distributionblock, **kwargs):
-        return distributionblock.__class__(
+    def visit_randomdistributionblock(self, randomdistributionblock, **kwargs):
+        return randomdistributionblock.__class__(
             aliases=[
                 a.accept_visitor(self, **kwargs)
-                for a in distributionblock.aliases])
+                for a in randomdistributionblock.aliases])

@@ -14,14 +14,14 @@ class RandomDistributionActionVisitor(ComponentActionVisitor):
     def visit_componentclass(self, componentclass, **kwargs):
         super(RandomDistributionActionVisitor, self).visit_componentclass(
             componentclass, **kwargs)
-        if componentclass.distribution:
-            componentclass.distribution.accept_visitor(self, **kwargs)
+        if componentclass.randomdistribution:
+            componentclass.randomdistribution.accept_visitor(self, **kwargs)
 
-    def visit_distributionblock(self, distributionblock, **kwargs):
-        self.action_distributionblock(distributionblock, **kwargs)
-        nodes = distributionblock.aliases
+    def visit_randomdistributionblock(self, randomdistributionblock, **kwargs):
+        self.action_randomdistributionblock(randomdistributionblock, **kwargs)
+        nodes = randomdistributionblock.aliases
         for p in nodes:
             p.accept_visitor(self, **kwargs)
 
-    def action_distributionblock(self, distributionblock, **kwargs):  # @UnusedVariable
+    def action_randomdistributionblock(self, randomdistributionblock, **kwargs):  # @UnusedVariable
         self.check_pass()

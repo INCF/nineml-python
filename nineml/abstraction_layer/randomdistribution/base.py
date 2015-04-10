@@ -11,16 +11,16 @@ class RandomDistributionBlock(BaseALObject):
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
-        return visitor.visit_distributionblock(self, **kwargs)
+        return visitor.visit_randomdistributionblock(self, **kwargs)
 
 
 class RandomDistributionClass(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_main_block')
 
-    def __init__(self, name, distributionblock, parameters=None):
+    def __init__(self, name, randomdistributionblock, parameters=None):
         super(RandomDistributionClass, self).__init__(
-            name, parameters, main_block=distributionblock)
+            name, parameters, main_block=randomdistributionblock)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

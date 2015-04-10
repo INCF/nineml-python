@@ -21,7 +21,7 @@ class RandomDistributionEqualityChecker(ComponentEqualityChecker):
 
         # Check the RandomDistribution
         # --------------------- #
-        d1 = comp1.distribution
-        d2 = comp2.distribution
+        d1 = comp1.randomdistribution
+        d2 = comp2.randomdistribution
 
         assert_equal(d1.standard_library, d2.standard_library)

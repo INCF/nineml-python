@@ -11,7 +11,7 @@ from ..utils.visitors import RandomDistributionActionVisitor
 
 
 class TypesRandomDistributionValidator(RandomDistributionActionVisitor,
-                                 TypesComponentValidator):
+                                       TypesComponentValidator):
 
-    def action_distributionblock(self, distributionblock):
-        assert isinstance(distributionblock, RandomDistributionBlock)
+    def action_randomdistributionblock(self, randomdistributionblock):
+        assert isinstance(randomdistributionblock, RandomDistributionBlock)

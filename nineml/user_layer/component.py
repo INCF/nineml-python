@@ -586,8 +586,7 @@ class InitialValueSet(PropertySet):
     def from_xml(cls, elements, document):
         initial_values = []
         for iv_element in elements:
-            initial_values.append(InitialValue.from_xml(iv_element,
-                                                        document))
+            initial_values.append(InitialValue.from_xml(iv_element, document))
         return cls(*initial_values)
 
 

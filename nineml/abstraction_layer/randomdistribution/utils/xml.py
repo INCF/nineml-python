@@ -27,13 +27,13 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
     def load_componentclass(self, element):
         subblocks = ('Parameter', 'RandomDistribution')
         children = self._load_blocks(element, blocks=subblocks)
-        distributionblock = expect_single(children["RandomDistribution"])
+        randomdistributionblock = expect_single(children["RandomDistribution"])
         return RandomDistributionClass(name=element.get('name'),
                                        parameters=children["Parameter"],
-                                       distributionblock=distributionblock)
+                                       randomdistributionblock=randomdistributionblock)
 
     @read_annotations
-    def load_distributionblock(self, element):
+    def load_randomdistributionblock(self, element):
         subblocks = ()
         children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8
         return RandomDistributionBlock(
@@ -41,7 +41,7 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
-        "RandomDistribution": load_distributionblock
+        "RandomDistribution": load_randomdistributionblock
     }
 
 
@@ -55,6 +55,6 @@ class RandomDistributionClassXMLWriter(ComponentClassXMLWriter):
         return E('ComponentClass', *elements, name=componentclass.name)
 
     @annotate_xml
-    def visit_distributionblock(self, distributionblock):
+    def visit_randomdistributionblock(self, randomdistributionblock):
         return E('RandomDistribution',
-                 standardLibrary=distributionblock.standard_library)
+                 standardLibrary=randomdistributionblock.standard_library)
