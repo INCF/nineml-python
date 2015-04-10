@@ -213,7 +213,7 @@ class Structure(Component):
 
     """
     Component representing the structure of a network, e.g. 2D grid, random
-    distribution within a sphere, etc.
+    randomdistribution within a sphere, etc.
     """
     abstraction_layer_module = 'Structure'
 

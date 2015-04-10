@@ -13,7 +13,7 @@ import abstraction_layer
 import user_layer
 import exceptions
 from abstraction_layer import (
-    Unit, Dimension, DynamicsClass, ConnectionRuleClass, DistributionClass)
+    Unit, Dimension, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
 from user_layer import (
-    Dynamics, ConnectionRule, Distribution, Selection, Population,
+    Dynamics, ConnectionRule, RandomDistribution, Selection, Population,
     Projection, Property, Definition)

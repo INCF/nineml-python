@@ -5,20 +5,20 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
-from .cloner import DistributionExpandPortDefinition
-from .visitors import DistributionActionVisitor
+from .cloner import RandomDistributionExpandPortDefinition
+from .visitors import RandomDistributionActionVisitor
 from ...componentclass.utils.modifiers import (
     ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
 
 
-class DistributionModifier(ComponentModifier):
+class RandomDistributionModifier(ComponentModifier):
 
     """Utility classes for modifying components"""
 
-    _ExpandPortDefinition = DistributionExpandPortDefinition
+    _ExpandPortDefinition = RandomDistributionExpandPortDefinition
 
 
-class DistributionRenameSymbol(DistributionActionVisitor,
+class RandomDistributionRenameSymbol(RandomDistributionActionVisitor,
                                ComponentRenameSymbol):
 
     """ Can be used for:
@@ -27,6 +27,6 @@ class DistributionRenameSymbol(DistributionActionVisitor,
     pass
 
 
-class DistributionAssignIndices(ComponentAssignIndices,
-                                   DistributionActionVisitor):
+class RandomDistributionAssignIndices(ComponentAssignIndices,
+                                   RandomDistributionActionVisitor):
     pass

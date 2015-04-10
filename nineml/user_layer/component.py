@@ -13,7 +13,7 @@ from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from ..abstraction_layer.units import Unit, unitless
 from ..abstraction_layer import (
-    ComponentClass, DynamicsClass, ConnectionRuleClass, DistributionClass)
+    ComponentClass, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
@@ -340,8 +340,8 @@ class Component(BaseULObject, TopLevelObject):
             component_class = definition.component_class
             if isinstance(component_class, DynamicsClass):
                 comp_type = Dynamics
-            elif isinstance(component_class, DistributionClass):
-                comp_type = Distribution
+            elif isinstance(component_class, RandomDistributionClass):
+                comp_type = RandomDistribution
             elif isinstance(component_class, ConnectionRuleClass):
                 comp_type = ConnectionRule
         return comp_type
@@ -455,7 +455,7 @@ class Quantity(BaseULObject):
         if self.is_random():
             return self._value.componentclass
         else:
-            raise NineMLRuntimeError("Cannot access random distribution for "
+            raise NineMLRuntimeError("Cannot access random randomdistribution for "
                                      "componentclass or single value types")
 
     def set_units(self, units):
@@ -665,9 +665,9 @@ class ConnectionRule(Component):
     pass
 
 
-class Distribution(Component):
+class RandomDistribution(Component):
     """
-    Component representing a random number distribution, e.g. normal, gamma,
+    Component representing a random number randomdistribution, e.g. normal, gamma,
     binomial.
 
     *Example*::

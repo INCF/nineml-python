@@ -19,8 +19,8 @@ class BaseALObject(BaseNineMLObject):
 import dynamics
 import expressions
 import connectionrule
-import distribution
-import distribution as randomdistribution
+import randomdistribution
+import randomdistribution as randomdistribution
 import units
 import ports
 from .componentclass import Parameter, ComponentClass, NamespaceAddress
@@ -34,13 +34,13 @@ from .ports import (AnalogSendPort, AnalogReceivePort,
                     EventReceivePort, AnalogPort, EventPort, Port)
 from nineml.abstraction_layer.dynamics.utils import flattener as flattening
 from .connectionrule import ConnectionRuleClass
-from .distribution import (DistributionClass,
-                           DistributionClass as RandomDistributionClass)
+from .randomdistribution import (RandomDistributionClass,
+                           RandomDistributionClass as RandomDistributionClass)
 from .units import Unit, Dimension
 from .dynamics import DynamicsClassXMLLoader, DynamicsClassXMLWriter
-from .distribution import (
-    DistributionClassXMLLoader, DistributionClassXMLWriter,
-    DistributionClassXMLLoader as RandomDistributionClassXMLLoader,
-    DistributionClassXMLWriter as RandomDistributionClassXMLWriter)
+from .randomdistribution import (
+    RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter,
+    RandomDistributionClassXMLLoader as RandomDistributionClassXMLLoader,
+    RandomDistributionClassXMLWriter as RandomDistributionClassXMLWriter)
 from .connectionrule import (ConnectionRuleClassXMLLoader,
                              ConnectionRuleClassXMLWriter)

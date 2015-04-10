@@ -117,7 +117,7 @@ class ComponentClassXMLLoader(object):
             class_type = class_type[len(NINEML):]
         # TGC 1/15 Temporary fix until name is reverted (pending approval)
         if class_type == "RandomDistribution":
-            class_type = "Distribution"
+            class_type = "RandomDistribution"
         return class_type
 
     tag_to_loader = {

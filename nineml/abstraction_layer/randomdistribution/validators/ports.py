@@ -6,11 +6,11 @@ docstring needed
 """
 from ...componentclass.validators.ports import (
     PortConnectionsComponentValidator)
-from ..utils.visitors import DistributionActionVisitor
+from ..utils.visitors import RandomDistributionActionVisitor
 
 
-class PortConnectionsDistributionValidator(
-        DistributionActionVisitor,
+class PortConnectionsRandomDistributionValidator(
+        RandomDistributionActionVisitor,
         PortConnectionsComponentValidator):
 
     """Check that all the port connections point to a port, and that

@@ -49,5 +49,5 @@ class ConnectionRuleElementFinder(ComponentElementFinder,
                                              require_explicit_overrides=True)
         ComponentElementFinder.__init__(self, element)
 
-    def action_distributionblock(self, dynamicsblock, **kwargs):
+    def action_randomdistributionblock(self, dynamicsblock, **kwargs):
         pass

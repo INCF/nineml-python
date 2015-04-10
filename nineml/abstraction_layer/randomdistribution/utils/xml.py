@@ -7,13 +7,13 @@ docstring needed
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import DistributionClass, DistributionBlock
+from ..base import RandomDistributionClass, RandomDistributionBlock
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
-class DistributionClassXMLLoader(ComponentClassXMLLoader):
+class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -27,25 +27,25 @@ class DistributionClassXMLLoader(ComponentClassXMLLoader):
     def load_componentclass(self, element):
         subblocks = ('Parameter', 'RandomDistribution')
         children = self._load_blocks(element, blocks=subblocks)
-        distributionblock = expect_single(children["RandomDistribution"])
-        return DistributionClass(name=element.get('name'),
+        randomdistributionblock = expect_single(children["RandomDistribution"])
+        return RandomDistributionClass(name=element.get('name'),
                                  parameters=children["Parameter"],
-                                 distributionblock=distributionblock)
+                                 randomdistributionblock=randomdistributionblock)
 
     @read_annotations
-    def load_distributionblock(self, element):
+    def load_randomdistributionblock(self, element):
         subblocks = ()
         children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8
-        return DistributionBlock(
+        return RandomDistributionBlock(
             standard_library=element.attrib['standardLibrary'])
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
-        "RandomDistribution": load_distributionblock
+        "RandomDistribution": load_randomdistributionblock
     }
 
 
-class DistributionClassXMLWriter(ComponentClassXMLWriter):
+class RandomDistributionClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, componentclass):
@@ -55,6 +55,6 @@ class DistributionClassXMLWriter(ComponentClassXMLWriter):
         return E('ComponentClass', *elements, name=componentclass.name)
 
     @annotate_xml
-    def visit_distributionblock(self, distributionblock):
+    def visit_randomdistributionblock(self, randomdistributionblock):
         return E('RandomDistribution',
-                 standardLibrary=distributionblock.standard_library)
+                 standardLibrary=randomdistributionblock.standard_library)
