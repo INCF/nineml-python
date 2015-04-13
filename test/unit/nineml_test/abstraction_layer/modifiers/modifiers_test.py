@@ -98,3 +98,11 @@ class Modifiers_test(unittest.TestCase):
         self.assertTrue(self.a.regime('R2').name in self.b)
         self.assertTrue(self.b.parameter('P3') in self.b)
         self.assertTrue('A1' in self.a)
+
+    def test_getitem(self):
+        self.assertIs(self.a.alias('A1'), self.a['A1'])
+        self.assertIs(self.a.parameter('P2'), self.a['P2'])
+        self.assertIs(self.b.state_variable('SV2'), self.b['SV2'])
+        self.assertIsNot(self.a.state_variable('SV2'), self.b['SV2'])
+        self.assertIsNot(self.a.analog_send_port('A1'), self.a['A1'])
+        self.assertIs(self.b.regime('R2'), self.b['R2'])

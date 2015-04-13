@@ -173,26 +173,40 @@ class MemberContainerObject(object):
                 "found in member dictionary (use 'ignore_missing' option "
                 "to ignore)".format(element._name))
 
+    def __getitem__(self, name):
+        """
+        Looks a member item by "name" (identifying characteristic)
+        """
+        for dct in self.all_member_dicts:
+            try:
+                elem = dct[name]
+                if not isinstance(elem, SendPortBase):  # Ignore send ports
+                    return elem
+            except KeyError:
+                pass
+        raise KeyError("'{}' was not found in '{}' {} object"
+                       .format(name, self._name, type(self).__name__))
+
     def __contains__(self, element):
         """
         Comprehensively checks whether the element belongs to this component
         class or not. Useful for asserts and unit tests.
         """
         if isinstance(element, basestring):
-            for dct in self.all_member_dicts:
+            for dct in self.all_member_dicts:  # Lookup via name
                 if element in dct:
                     return True
             return False
         else:
             try:
-                dct = self.lookup_member_dict(element)
+                dct = self.lookup_member_dict(element)  # Quick search via dict
                 try:
                     found = dct[element._name]
                     return found is element
                 except KeyError:
                     return False
             except NineMLInvalidElementTypeException:
-                return self._find_element(element)
+                return self._find_element(element)  # Lookup via full-search
 
     def index_of(self, element, key=None):
         """
@@ -210,6 +224,8 @@ class MemberContainerObject(object):
         try:
             index = dct[element]
         except KeyError:
+            assert element in self, ("'{}' is not a member of '{}'"
+                                     .format(element._name, self._name))
             # Get the first index ascending from 0 not in the set
             try:
                 index = next(iter(sorted(
