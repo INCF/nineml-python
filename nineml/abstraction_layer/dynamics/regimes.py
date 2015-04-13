@@ -9,12 +9,12 @@ import re
 import sympy
 from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
                             normalise_parameter_as_list, assert_no_duplicates)
-from nineml.exceptions import (NineMLRuntimeError,
-                               NineMLInvalidElementTypeException)
+from nineml.exceptions import NineMLRuntimeError
 from ..expressions import ODE
 from .. import BaseALObject
-from ..units import dimensionless
+from ..units import dimensionless, Dimension
 from nineml.base import MemberContainerObject
+from .transitions import OnEvent, OnCondition, Trigger
 
 
 class StateVariable(BaseALObject):
@@ -39,6 +39,7 @@ class StateVariable(BaseALObject):
         super(StateVariable, self).__init__()
         self._name = name.strip()
         self._dimension = dimension if dimension is not None else dimensionless
+        assert isinstance(self._dimension, Dimension)
         ensure_valid_identifier(self._name)
 
     @property
@@ -143,7 +144,9 @@ class Regime(BaseALObject, MemberContainerObject):
 
     defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
                            'name')
-    class_to_member_dict = {TimeDerivative: '_time_derivatives'}
+    class_to_member_dict = {TimeDerivative: '_time_derivatives',
+                            OnEvent: '_on_events',
+                            OnCondition: '_on_conditions'}
 
     _n = 0
 
@@ -218,88 +221,21 @@ class Regime(BaseALObject, MemberContainerObject):
         # appropriately:
         transitions = normalise_parameter_as_list(transitions)
         f_dict = filter_discrete_types(transitions, (OnEvent, OnCondition))
-        self._on_events = []
-        self._on_conditions = []
+        self._on_events = {}
+        self._on_conditions = {}
 
         # Add all the OnEvents and OnConditions:
-        for event in f_dict[OnEvent]:
-            self.add_on_event(event)
-        for condition in f_dict[OnCondition]:
-            self.add_on_condition(condition)
+        for elem in chain(f_dict[OnEvent], f_dict[OnCondition]):
+            self.add(elem)
 
-        # Sort for equality checking
-        self._on_events = sorted(self._on_events,
-                                 key=lambda x: x.src_port_name)
-        self._on_conditions = sorted(self._on_conditions,
-                                     key=lambda x: x.trigger)
+    def add(self, elem):
+        """Add an element to the regime
 
-    def _resolve_references_on_transition(self, transition):
-        if transition.target_regime_name is None:
-            transition.set_target_regime(self)
-
-        assert not transition._source_regime_name
-        transition.set_source_regime(self)
-
-    def add(self, element):
-        if isinstance(element, TimeDerivative):
-            self._time_derivatives[element.dependent_variable] = element
-        elif isinstance(element, OnEvent):
-            self._on_events[element.name] = element
-        elif isinstance(element, OnCondition):
-            self._on_condition[element.name] = element
-        else:
-            raise NineMLInvalidElementTypeException(
-                "Could not add element of type '{}' to {} class"
-                .format(element.__class__.__name__, self.__class__.__name__))
-
-    def remove(self, element):
-        if isinstance(element, TimeDerivative):
-            self._time_derivatives.pop(element.dependent_variable)
-        elif isinstance(element, OnEvent):
-            self._on_events.pop(element.name)
-        elif isinstance(element, OnCondition):
-            self._on_condition.pop(element.name)
-        else:
-            raise NineMLInvalidElementTypeException(
-                "Could not remove element of type '{}' to {} class"
-                .format(element.__class__.__name__, self.__class__.__name__))
-
-    def add_on_event(self, on_event):
-        """Add an |OnEvent| transition which leaves this regime
-
-        If the on_event object has not had its target regime name
-        set in the constructor, or by calling its ``set_target_regime_name()``,
-        then the target is assumed to be this regime, and will be set
-        appropriately.
-
-        The source regime for this transition will be set as this regime.
-
+        If the element is a transistion resolve references to target regime
         """
-
-        if not isinstance(on_event, OnEvent):
-            err = "Expected 'OnEvent' Obj, but got %s" % (type(on_event))
-            raise NineMLRuntimeError(err)
-
-        self._resolve_references_on_transition(on_event)
-        self._on_events.append(on_event)
-
-    def add_on_condition(self, on_condition):
-        """Add an |OnCondition| transition which leaves this regime
-
-        If the on_condition object has not had its target regime name
-        set in the constructor, or by calling its ``set_target_regime_name()``,
-        then the target is assumed to be this regime, and will be set
-        appropriately.
-
-        The source regime for this transition will be set as this regime.
-
-        """
-        if not isinstance(on_condition, OnCondition):
-            err = ("Expected 'OnCondition' Obj, but got %s" %
-                   (type(on_condition)))
-            raise NineMLRuntimeError(err)
-        self._resolve_references_on_transition(on_condition)
-        self._on_conditions.append(on_condition)
+        if isinstance(elem, (OnEvent, OnCondition)):
+            elem.set_source_regime(self)
+        super(Regime, self).add(elem)
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, self.name)
@@ -319,12 +255,39 @@ class Regime(BaseALObject, MemberContainerObject):
         """
         return self._time_derivatives.itervalues()
 
+    @property
+    def on_events(self):
+        """Returns all the transitions out of this regime trigger by events"""
+        return self._on_events.itervalues()
+
+    @property
+    def on_conditions(self):
+        """Returns all the transitions out of this regime trigger by
+        conditions"""
+        return self._on_conditions.itervalues()
+
     def time_derivative(self, variable):
         return self._time_derivatives[variable]
+
+    def on_event(self, port_name):
+        return self._on_events[port_name]
+
+    def on_condition(self, condition):
+        if not isinstance(condition, Trigger):
+            condition = Trigger(condition)
+        return self._on_conditions[condition.rhs]
 
     @property
     def time_derivative_variables(self):
         return self._time_derivatives.iterkeys()
+
+    @property
+    def on_event_port_names(self):
+        return self._on_events.iterkeys()
+
+    @property
+    def on_condition_triggers(self):
+        return self._on_conditions.iterkeys()
 
     @property
     def transitions(self):
@@ -333,22 +296,8 @@ class Regime(BaseALObject, MemberContainerObject):
         Returns an iterator over both the on_events and on_conditions of this
         regime"""
 
-        return chain(self._on_events, self._on_conditions)
-
-    @property
-    def on_events(self):
-        """Returns all the transitions out of this regime trigger by events"""
-        return iter(self._on_events)
-
-    @property
-    def on_conditions(self):
-        """Returns all the transitions out of this regime trigger by
-        conditions"""
-        return iter(self._on_conditions)
+        return chain(self.on_events, self.on_conditions)
 
     @property
     def name(self):
         return self._name
-
-
-from .transitions import OnEvent, OnCondition

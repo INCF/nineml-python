@@ -145,7 +145,7 @@ class DynamicsCloner(ComponentCloner):
                            for e in on_condition.output_events],
             state_assignments=[s.accept_visitor(self, **kwargs)
                                for s in on_condition.state_assignments],
-            target_regime_name=on_condition.target_regime_name
+            target_regime=on_condition.target_regime
         )
         self.copy_indices(on_condition, oc)
         return oc
@@ -158,7 +158,7 @@ class DynamicsCloner(ComponentCloner):
                            for e in on_event.output_events],
             state_assignments=[s.accept_visitor(self, **kwargs)
                                for s in on_event.state_assignments],
-            target_regime_name=on_event.target_regime_name
+            target_regime=on_event.target_regime
         )
         self.copy_indices(on_event, oe, **kwargs)
         return oe

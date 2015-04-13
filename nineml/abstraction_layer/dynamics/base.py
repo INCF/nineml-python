@@ -304,9 +304,6 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         _NamespaceMixin.__init__(
             self, subnodes=subnodes, portconnections=portconnections)
 
-        # Finalise initiation:
-        self._resolve_transition_regime_names()
-
         # Store flattening Information:
         self._flattener = None
 
@@ -334,6 +331,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         return "<dynamics.DynamicsClass %s>" % self.name
 
     def validate(self):
+        self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self)
 
     @property
@@ -549,17 +547,28 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                 originalname=alias.lhs, targetname=("(%s)" % alias.rhs))
             alias_expander.visit(self)
 
-    def _resolve_transition_regime_names(self):
+    def _resolve_transition_regimes(self):
         # Check that the names of the regimes are unique:
         assert_no_duplicates([r.name for r in self.regimes])
         # We only worry about 'target' regimes, since source regimes are taken
         # care of for us by the Regime objects they are attached to.
-        for trans in self.all_transitions():
-            if trans.target_regime_name not in self._main_block._regimes:
-                raise NineMLRuntimeError(
-                    "Can't find regime '{}'".format(trans.target_regime_name))
-            trans.set_target_regime(
-                self._main_block._regimes[trans.target_regime_name])
+        for regime in self.regimes:
+            for trans in regime.transitions:
+                trans.set_source_regime(regime)
+                target = trans._target_regime
+                if not isinstance(target, Regime):
+                    if target is None:
+                        target = regime  # to same regime
+                    else:
+                        try:
+                            target = self.regime(target)  # Lookup by name
+                        except KeyError:
+                            raise NineMLRuntimeError(
+                                "Can't find regime '{}' referenced from '{}' "
+                                "transition"
+                                .format(trans.target_regime_name,
+                                        trans._name))
+                    trans.set_target_regime(target)
 
 
 class DynamicsBlock(MainBlock):

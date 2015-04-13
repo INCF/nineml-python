@@ -36,22 +36,24 @@ class Parser(object):
         self.escaped_names = set()
 
     def parse(self, expr):
-        if isinstance(expr, sympy.Basic):
-            self._check_valid_funcs(expr)
-        elif isinstance(expr, basestring):
-            try:
-                expr = self.escape_random_namespace(expr)
-                expr = sympy_parse(
-                    expr, transformations=[self] + self._sympy_transforms,
-                    local_dict=self._inline_randoms_dict)
-                expr = self._postprocess(expr)
-            except Exception, e:
-                raise NineMLMathParseError(
-                    "Could not parse math-inline expression: {}\n\n{}"
-                    .format(expr, e))
-        else:
-            raise TypeError("Cannot convert value '{}' of type '{}' to SymPy "
-                            "expression".format(repr(expr), type(expr)))
+        if not isinstance(expr, (int, float)):
+            if isinstance(expr, sympy.Basic):
+                self._check_valid_funcs(expr)
+            elif isinstance(expr, basestring):
+                try:
+                    expr = self.escape_random_namespace(expr)
+                    expr = sympy_parse(
+                        expr, transformations=[self] + self._sympy_transforms,
+                        local_dict=self._inline_randoms_dict)
+                    expr = self._postprocess(expr)
+                except Exception, e:
+                    raise NineMLMathParseError(
+                        "Could not parse math-inline expression: {}\n\n{}"
+                        .format(expr, e))
+            else:
+                raise TypeError("Cannot convert value '{}' of type '{}' to "
+                                " SymPy expression".format(repr(expr),
+                                                           type(expr)))
         return expr
 
     def _preprocess(self, tokens):

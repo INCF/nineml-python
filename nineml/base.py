@@ -154,39 +154,28 @@ class MemberContainerObject(object):
     def __iter__(self):
         return chain(*(d.itervalues() for d in self._all_member_dicts))
 
+#     @property
+#     def elements(self):
+#         return iter(self)
+
     def add(self, element):
         dct = self.lookup_member_dict(element)
-        if element.name in dct:
+        if element._name in dct:
             raise NineMLRuntimeError(
                 "Could not add '{}' {} to component class as it clashes with "
                 "an existing element of the same name"
                 .format(element.name, type(element).__name__))
-        dct[element.name] = element
+        dct[element._name] = element
 
-    def remove(self, element, ignore_missing=False):
+    def remove(self, element):
         dct = self.lookup_member_dict(element)
         try:
-            del dct[element.name]
+            del dct[element._name]
         except KeyError:
-            if not ignore_missing:
-                raise NineMLRuntimeError(
-                    "Could not remove '{}' from component class as it was not "
-                    "found in member dictionary (use 'ignore_missing' option "
-                    "to ignore)".format(element.name))
-
-    def __getitem__(self, name):
-        """
-        Looks a member item by "name" (identifying characteristic)
-        """
-        for dct in self._all_member_dicts:
-            try:
-                elem = dct[name]
-                if isinstance(elem, SendPortBase):
-                    continue
-            except KeyError:
-                pass
-        raise KeyError("'{}' was not found in '{}' component class"
-                       .format(name, self.name))
+            raise NineMLRuntimeError(
+                "Could not remove '{}' from component class as it was not "
+                "found in member dictionary (use 'ignore_missing' option "
+                "to ignore)".format(element._name))
 
     def __contains__(self, element):
         """
@@ -194,30 +183,21 @@ class MemberContainerObject(object):
         class or not. Useful for asserts and unit tests.
         """
         if isinstance(element, basestring):
-            try:
-                self[element]
-            except KeyError:
-                return False
+            for dct in self._all_member_dicts:
+                if element in dct:
+                    return True
+            return False
         else:
             try:
                 dct = self.lookup_member_dict(element)
                 try:
-                    found = dct[element.name]
+                    found = dct[element._name]
                     assert(found is element)
                     return True
                 except KeyError:
                     return False
             except NineMLInvalidElementTypeException:
                 return self._find_element(element)
-
-    @property
-    def _all_member_dicts(self):
-        return (getattr(self, n)
-                for n in self.class_to_member_dict.itervalues())
-
-    @property
-    def elements(self):
-        return iter(self)
 
     def index_of(self, element, key=None):
         """
@@ -277,6 +257,11 @@ class MemberContainerObject(object):
             return type(element).index_key
         except AttributeError:
             return self.lookup_member_dict_name(element)
+
+    @property
+    def _all_member_dicts(self):
+        return (getattr(self, n)
+                for n in self.class_to_member_dict.itervalues())
 
 
 class SendPortBase(object):

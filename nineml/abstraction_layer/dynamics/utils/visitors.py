@@ -24,18 +24,18 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_dynamicsblock(self, dynamicsblock, **kwargs):
         self.action_dynamicsblock(dynamicsblock, **kwargs)
-        nodes = chain(dynamicsblock.state_variables,
-                      dynamicsblock.regimes,
-                      dynamicsblock.aliases,
-                      dynamicsblock.constants)
-        for p in nodes:
+#         nodes = chain(dynamicsblock.state_variables,
+#                       dynamicsblock.regimes,
+#                       dynamicsblock.aliases,
+#                       dynamicsblock.constants)
+        for p in dynamicsblock:
             p.accept_visitor(self, **kwargs)
 
     def visit_regime(self, regime, **kwargs):
         self.action_regime(regime, **kwargs)
-        nodes = chain(regime.time_derivatives, regime.on_events,
-                      regime.on_conditions)
-        for p in nodes:
+#         nodes = chain(regime.time_derivatives, regime.on_events,
+#                       regime.on_conditions)
+        for p in regime:
             p.accept_visitor(self, **kwargs)
 
     def visit_statevariable(self, state_variable, **kwargs):
@@ -70,18 +70,18 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_oncondition(self, on_condition, **kwargs):
         self.action_oncondition(on_condition, **kwargs)
-        nodes = chain([on_condition.trigger],
-                      on_condition.output_events,
-                      on_condition.state_assignments)
-        for p in nodes:
+#         nodes = chain([on_condition.trigger],
+#                       on_condition.output_events,
+#                       on_condition.state_assignments)
+        for p in on_condition:
             p.accept_visitor(self, **kwargs)
 
     def visit_onevent(self, on_event, **kwargs):
         self.action_onevent(on_event, **kwargs)
-        nodes = chain(on_event.output_events, on_event.state_assignments)
-        nodes = list(nodes)
+#         nodes = chain(on_event.output_events, on_event.state_assignments)
+#         nodes = list(nodes)
         # print nodes
-        for p in nodes:
+        for p in on_event:
             p.accept_visitor(self, **kwargs)
 
     def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable

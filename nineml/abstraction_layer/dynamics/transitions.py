@@ -125,7 +125,7 @@ class Transition(BaseALObject, MemberContainerObject):
                             OutputEvent: '_output_events'}
 
     def __init__(self, state_assignments=None, output_events=None,
-                 target_regime_name=None):
+                 target_regime=None):
         """Abstract class representing a transition from one |Regime| to
         another.
 
@@ -153,8 +153,6 @@ class Transition(BaseALObject, MemberContainerObject):
         """
         BaseALObject.__init__(self)
         MemberContainerObject.__init__(self)
-        if target_regime_name:
-            assert isinstance(target_regime_name, basestring)
 
         # Load state-assignment objects as strings or StateAssignment objects
         state_assignments = state_assignments or []
@@ -170,76 +168,8 @@ class Transition(BaseALObject, MemberContainerObject):
             (oe.port_name, oe)
             for oe in normalise_parameter_as_list(output_events))
 
-        self._target_regime_name = target_regime_name
-        self._source_regime_name = None
-
-        # Set later, once attached to a regime:
-        self._target_regime = None
-        self._source_regime = None
-
-    def set_source_regime(self, source_regime):
-        """ Internal method, used during component construction.
-
-        Used internally by the DynamicsClass objects after all objects have be
-        constructed, in the ``_ResolveTransitionRegimeNames()`` method. This is
-        because when we build Transitions, the Regimes that they refer to
-        generally are not build yet, so are referred to by strings. This method
-        is used to set the source ``Regime`` object. We check that the name of
-        the object set is the same as that previously expected.
-        """
-
-        assert isinstance(source_regime, Regime)
-        assert not self._source_regime
-        if self._source_regime_name:
-            assert self._source_regime_name == source_regime.name
-        else:
-            self._source_regime_name = source_regime.name
-        self._source_regime = source_regime
-
-    # MH: I am pretty sure we don't need this, but its possible,
-    # so I won't delete it yet - since there might be a reason we do :)
-    # def set_target_regime_name(self, target_regime_name):
-    #    assert False
-    #    assert isinstance( target_regime_name, basestring)
-    #    assert not self._target_regime
-    #    assert not self._target_regime_name
-    #    self._target_regime_name = target_regime_name
-
-    def set_target_regime(self, target_regime):
-        """ Internal method, used during component construction.
-
-            See ``set_source_regime``
-        """
-        assert isinstance(target_regime, Regime)
-        if self._target_regime:
-            assert id(self.target_regime) == id(target_regime)
-            return
-
-        # Did we already set the target_regime_name
-        if self._target_regime_name:
-            assert self._target_regime_name == target_regime.name
-        else:
-            self._target_regime_name = target_regime.name
         self._target_regime = target_regime
-
-    @property
-    def target_regime_name(self):
-        """DO NOT USE: Internal function. Use `target_regime.name` instead.
-        """
-        if self._target_regime_name:
-            assert isinstance(self._target_regime_name, basestring)
-        return self._target_regime_name
-
-    @property
-    def source_regime_name(self):
-        """DO NOT USE: Internal function. Use `source_regime.name` instead.
-        """
-        if self._source_regime:
-            err = ("Should not be called by users.Use source_regime.name "
-                   "instead")
-            raise NineMLRuntimeError(err)
-        assert self._source_regime_name
-        return self._source_regime_name
+        self._source_regime = None
 
     @property
     def target_regime(self):
@@ -251,8 +181,11 @@ class Transition(BaseALObject, MemberContainerObject):
             containing this transition has been built. See
             ``set_source_regime``
         """
-
-        assert self._target_regime
+        if type(self._target_regime).__name__ != 'Regime':
+            raise NineMLRuntimeError(
+                "Target regime ({}) has not been set (use 'validate()' "
+                "of DynamicsClass first)."
+                .format(self._target_regime))
         return self._target_regime
 
     @property
@@ -265,8 +198,35 @@ class Transition(BaseALObject, MemberContainerObject):
             containing this transition has been built. See
             ``set_source_regime``
         """
-        assert self._source_regime
+        if type(self._target_regime).__name__ != 'Regime':
+            raise NineMLRuntimeError(
+                "Source regime has not been set for transition. It needs "
+                "to be added to a regime first.")
         return self._source_regime
+
+    def set_target_regime(self, regime):
+        """Returns the target regime of this transition.
+
+        .. note::
+
+            This method will only be available after the DynamicsClass
+            containing this transition has been built. See
+            ``set_source_regime``
+        """
+        assert type(regime).__name__ == 'Regime'
+        self._target_regime = regime
+
+    def set_source_regime(self, regime):
+        """Returns the target regime of this transition.
+
+        .. note::
+
+            This method will only be available after the DynamicsClass
+            containing this transition has been built. See
+            ``set_source_regime``
+        """
+        assert type(regime).__name__ == 'Regime'
+        self._source_regime = regime
 
     @property
     def state_assignments(self):
@@ -315,7 +275,7 @@ class OnEvent(Transition):
         return visitor.visit_onevent(self, **kwargs)
 
     def __init__(self, src_port_name, state_assignments=None,
-                 output_events=None, target_regime_name=None):
+                 output_events=None, target_regime=None):
         """Constructor for ``OnEvent``
 
             :param src_port_name: The name of the |EventPort| that triggers
@@ -326,7 +286,7 @@ class OnEvent(Transition):
         """
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
-                            target_regime_name=target_regime_name)
+                            target_regime=target_regime)
         self._src_port_name = src_port_name.strip()
         ensure_valid_identifier(self._src_port_name)
 
@@ -355,7 +315,7 @@ class OnCondition(Transition):
         return visitor.visit_oncondition(self, **kwargs)
 
     def __init__(self, trigger, state_assignments=None,
-                 output_events=None, target_regime_name=None):
+                 output_events=None, target_regime=None):
         """Constructor for ``OnEvent``
 
             :param trigger: Either a |Trigger| object or a ``string`` object
@@ -374,7 +334,7 @@ class OnCondition(Transition):
 
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
-                            target_regime_name=target_regime_name)
+                            target_regime=target_regime)
 
     def __repr__(self):
         return 'OnCondition( %s )' % self.trigger.rhs
@@ -410,6 +370,3 @@ class Trigger(BaseALObject, Expression):
         negated = copy(self)
         negated.negate()
         return negated
-
-
-from .regimes import Regime

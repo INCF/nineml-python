@@ -101,8 +101,11 @@ class OutputAnalogPortsDynamicsValidator(PerNamespaceDynamicsValidator):
             for ap in analogports:
                 if ap not in self.available_symbols[namespace]:
                     raise NineMLRuntimeError(
-                        'Unable to find an Alias or State variable for '
-                        'analog-port: %s' % ap)
+                        "Unable to find an Alias or State variable for "
+                        "analog-port '{}' (available '{}')"
+                        .format(
+                            ap,
+                            "', '".join(self.available_symbols[namespace])))
 
     def add_symbol(self, namespace, symbol):
         assert symbol not in self.available_symbols[namespace]

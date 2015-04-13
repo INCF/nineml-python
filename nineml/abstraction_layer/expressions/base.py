@@ -197,9 +197,13 @@ class Expression(object):
         """
         Return copy of expression with all free symols suffixed (or prefixed)
         """
-        return self.rhs.xreplace(dict(
-            (s, sympy.Symbol(prefix + str(s) + suffix))
-            for s in self.rhs_symbols if str(s) not in excludes))
+        try:
+            return self.rhs.xreplace(dict(
+                (s, sympy.Symbol(prefix + str(s) + suffix))
+                for s in self.rhs_symbols if str(s) not in excludes))
+        except AttributeError:  # For rhs that have been simplified to floats
+            assert float(self.rhs)
+            return self.rhs
 
     def rhs_name_transform_inplace(self, name_map):
         """Replace atoms on the RHS with values in the name_map in place"""
