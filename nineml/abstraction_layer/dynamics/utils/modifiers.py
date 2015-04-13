@@ -60,7 +60,7 @@ class DynamicPortModifier(ComponentModifier):
             if exclude and arp.name in exclude:
                 continue
             cls.close_analog_port(componentclass=componentclass,
-                                  port_name=arp.name, value='0')
+                                  port_name=arp.name, value=0)
 
     @classmethod
     def rename_port(cls, componentclass, old_port_name, new_port_name):

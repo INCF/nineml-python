@@ -469,6 +469,10 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         """Returns an iterator over the local |EventReceivePort| names"""
         return self._event_receive_ports.iterkeys()
 
+    @property
+    def transitions(self):
+        return self.all_transitions()
+
     def all_transitions(self):
         return chain(*(r.transitions for r in self.regimes))
 

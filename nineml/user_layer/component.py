@@ -222,7 +222,7 @@ class Component(BaseULObject, TopLevelObject):
         self._properties[prop.name] = prop
 
     @property
-    def initial_values(self):
+    def initial_value_set(self):
         """
         The set of initial values for the state variables of the
         componentclass.
@@ -236,9 +236,12 @@ class Component(BaseULObject, TopLevelObject):
         return vals
 
     @property
+    def initial_values(self):
+        return self.initial_value_set.itervalues()
+
+    @property
     def attributes_with_units(self):
-        return set(p for p in chain(self.properties,
-                                    self.initial_values.values())
+        return set(p for p in chain(self.properties, self.initial_values)
                    if p.units is not None)
 
     def __hash__(self):
@@ -299,7 +302,7 @@ class Component(BaseULObject, TopLevelObject):
         """
         props_and_initial_values = (self._properties.to_xml() +
                                     [iv.to_xml()
-                                     for iv in self.initial_values.values()])
+                                     for iv in self.initial_values])
         element = E(self.element_name,
                     self._definition.to_xml(),
                     *props_and_initial_values,

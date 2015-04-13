@@ -57,7 +57,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
-        return visitor.visit_assignment(self, **kwargs)
+        return visitor.visit_stateassignment(self, **kwargs)
 
     def __repr__(self):
         return "StateAssignment('%s', '%s')" % (self.lhs, self.rhs)

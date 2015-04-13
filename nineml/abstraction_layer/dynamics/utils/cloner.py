@@ -111,7 +111,7 @@ class DynamicsCloner(ComponentCloner):
         return event_out.__class__(
             port_name=self.prefix_variable(event_out.port_name, **kwargs))
 
-    def visit_assignment(self, assignment, **kwargs):
+    def visit_stateassignment(self, assignment, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
 

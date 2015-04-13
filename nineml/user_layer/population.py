@@ -56,7 +56,7 @@ class Population(BaseULObject, TopLevelObject):
             components.extend(
                 self.cell.property_set.get_random_distributions())
             components.extend(
-                self.cell.initial_values.get_random_distributions())
+                self.cell.initial_value_set.get_random_distributions())
         if self.positions is not None:
             components.extend(self.positions.get_components())
         return components

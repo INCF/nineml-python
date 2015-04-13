@@ -179,12 +179,12 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_dynamicsblock(self, dynamicsblock):
-        return E('Dynamics', *(e.accept_visitor for e in dynamicsblock))
+        return E('Dynamics', *[e.accept_visitor(self) for e in dynamicsblock])
 
     @annotate_xml
     def visit_regime(self, regime):
         return E('Regime', name=regime.name,
-                 *(e.accept_visitor for e in regime))
+                 *[e.accept_visitor(self) for e in regime])
 
     @annotate_xml
     def visit_statevariable(self, state_variable):
@@ -221,7 +221,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
         return E('EventReceivePort', name=port.name)
 
     @annotate_xml
-    def visit_assignment(self, assignment):
+    def visit_stateassignment(self, assignment):
         return E('StateAssignment',
                  E("MathInline", assignment.rhs_cstr),
                  variable=assignment.lhs)
@@ -236,7 +236,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
     def visit_oncondition(self, on_condition):
         return E('OnCondition', on_condition.trigger.accept_visitor(self),
                  target_regime=on_condition._target_regime.name,
-                 *(e.accept_visitor for e in on_condition))
+                 *[e.accept_visitor(self) for e in on_condition])
 
     @annotate_xml
     def visit_trigger(self, trigger):
@@ -246,4 +246,4 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
     def visit_onevent(self, on_event):
         return E('OnEvent', port=on_event.src_port_name,
                  target_regime=on_event.target_regime.name,
-                 *(e.accept_visitor for e in on_event))
+                 *[e.accept_visitor(self) for e in on_event])

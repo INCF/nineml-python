@@ -53,7 +53,7 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_outputevent(self, event_out, **kwargs):
         self.action_outputevent(event_out, **kwargs)
 
-    def visit_assignment(self, assignment, **kwargs):
+    def visit_stateassignment(self, assignment, **kwargs):
         self.action_stateassignment(assignment, **kwargs)
 
     def visit_timederivative(self, time_derivative, **kwargs):

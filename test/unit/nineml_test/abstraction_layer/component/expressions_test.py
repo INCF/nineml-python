@@ -216,7 +216,7 @@ class StateAssignment_test(unittest.TestCase):
 
         class StateAssignmentTestVisitor(TestVisitor):
 
-            def visit_assignment(self, component, **kwargs):  # @UnusedVariable
+            def visit_stateassignment(self, component, **kwargs):  # @UnusedVariable
                 return kwargs
 
         c = StateAssignment(lhs='V', rhs='0')
