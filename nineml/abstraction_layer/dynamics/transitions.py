@@ -14,6 +14,7 @@ from ...exceptions import (NineMLRuntimeError,
 from .utils.cloner import DynamicsCloner
 from nineml.base import MemberContainerObject
 from nineml.utils import normalise_parameter_as_list
+from .utils.visitors import DynamicsElementFinder
 
 
 class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
@@ -170,6 +171,9 @@ class Transition(BaseALObject, MemberContainerObject):
 
         self._target_regime = target_regime
         self._source_regime = None
+
+    def _find_element(self, element):
+        return DynamicsElementFinder(element).found_in(self)
 
     @property
     def target_regime(self):

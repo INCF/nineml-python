@@ -15,6 +15,7 @@ from .. import BaseALObject
 from ..units import dimensionless, Dimension
 from nineml.base import MemberContainerObject
 from .transitions import OnEvent, OnCondition, Trigger
+from .utils.visitors import DynamicsElementFinder
 
 
 class StateVariable(BaseALObject):
@@ -237,6 +238,9 @@ class Regime(BaseALObject, MemberContainerObject):
             elem.set_source_regime(self)
         super(Regime, self).add(elem)
 
+    def _find_element(self, element):
+        return DynamicsElementFinder(element).found_in(self)
+
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, self.name)
 
@@ -273,9 +277,9 @@ class Regime(BaseALObject, MemberContainerObject):
         return self._on_events[port_name]
 
     def on_condition(self, condition):
-        if not isinstance(condition, Trigger):
-            condition = Trigger(condition)
-        return self._on_conditions[condition.rhs]
+        if not isinstance(condition, sympy.Basic):
+            condition = Trigger(condition).rhs
+        return self._on_conditions[condition]
 
     @property
     def time_derivative_variables(self):
