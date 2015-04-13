@@ -132,8 +132,7 @@ class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
             connected = set()
             add_connected_regimes_recursive(regimes[0], connected)
             if len(connected) != len(self.regimes_in_namespace[namespace]):
-                raise NineMLRuntimeError('Transition graph is contains '
-                                         'islands')
+                raise NineMLRuntimeError("Transition graph contains islands")
 
     def action_componentclass(self, componentclass, namespace):
         self.regimes_in_namespace[namespace] = list(componentclass.regimes)

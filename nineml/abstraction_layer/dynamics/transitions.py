@@ -120,7 +120,7 @@ class OutputEvent(BaseALObject):
 class Transition(BaseALObject, MemberContainerObject):
 
     defining_attributes = ('_state_assignments', '_output_events',
-                           '_target_regime_name')
+                           'target_regime_name')
     class_to_member_dict = {StateAssignment: '_state_assignments',
                             OutputEvent: '_output_events'}
 
@@ -187,6 +187,14 @@ class Transition(BaseALObject, MemberContainerObject):
                 "of DynamicsClass first)."
                 .format(self._target_regime))
         return self._target_regime
+
+    @property
+    def target_regime_name(self):
+        if isinstance(self._target_regime, basestring):
+            name = self._target_regime
+        else:
+            name = self.target_regime.name
+        return name
 
     @property
     def source_regime(self):

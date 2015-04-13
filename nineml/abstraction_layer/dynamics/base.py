@@ -566,8 +566,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                             raise NineMLRuntimeError(
                                 "Can't find regime '{}' referenced from '{}' "
                                 "transition"
-                                .format(trans.target_regime_name,
-                                        trans._name))
+                                .format(trans.target_regime, trans._name))
                     trans.set_target_regime(target)
 
 

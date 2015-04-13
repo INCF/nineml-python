@@ -65,7 +65,7 @@ class Modifiers_test(unittest.TestCase):
         a.add(StateVariable('SV3'))
         a.regime('R1').add(TimeDerivative('SV3', '-SV3 + P3'))
         a.regime('R2').add(OnCondition(
-            'SV3 < 0.001', target_regime_name='R2',
+            'SV3 < 0.001', target_regime='R2',
             state_assignments=[StateAssignment('SV3', 1)]))
         a.add(Parameter('P3'))
         a.add(AnalogSendPort('SV3'))
@@ -89,3 +89,5 @@ class Modifiers_test(unittest.TestCase):
         self.assertEqual(a, b,
                          "Did not transform 'b' into 'a':\n {}"
                          .format(a.find_mismatch(b)))
+        b.add(Alias('A5', 'P1 + P2'))
+        self.assertNotEqual(a, b, "Added Alias was not detected")

@@ -118,18 +118,18 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         return OnCondition(trigger=trigger,
                            state_assignments=subnodes["StateAssignment"],
                            output_events=subnodes["OutputEvent"],
-                           target_regime_name=target_regime)
+                           target_regime=target_regime)
 
     @read_annotations
     def load_onevent(self, element):
         subblocks = ('StateAssignment', 'OutputEvent')
         subnodes = self._load_blocks(element, blocks=subblocks)
-        target_regime_name = element.get('target_regime')
+        target_regime = element.get('target_regime')
 
         return OnEvent(src_port_name=element.get('port'),
                        state_assignments=subnodes["StateAssignment"],
                        output_events=subnodes["OutputEvent"],
-                       target_regime_name=target_regime_name)
+                       target_regime=target_regime)
 
     # FIXME: This should return a Trigger element not just an internal
     #        maths block (TGC 1/15)
