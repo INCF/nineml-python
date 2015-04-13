@@ -6,7 +6,7 @@ docstring needed
 """
 
 
-from itertools import chain
+# from itertools import chain
 from ...componentclass.utils import (
     ComponentActionVisitor, ComponentElementFinder)
 from ...componentclass.utils.visitors import ComponentRequiredDefinitions
@@ -73,6 +73,7 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 #         nodes = chain([on_condition.trigger],
 #                       on_condition.output_events,
 #                       on_condition.state_assignments)
+        on_condition.trigger.accept_visitor(self, **kwargs)
         for p in on_condition:
             p.accept_visitor(self, **kwargs)
 

@@ -122,7 +122,7 @@ class TransitionResolver(object):
         # Make a list from the old tuple, so its mutable:
         dst_regime_tuple = list(current_regime_tuple)
 
-        name = oldtransition.target_regime.name
+        name = oldtransition._target_regime
         dst_regime_old = self.flattener.componentswithregimes[
             regime_index].query.regime(name=name)
         dst_regime_tuple[regime_index] = dst_regime_old
@@ -296,7 +296,7 @@ class ComponentFlattener(object):
                         output_events=tr.output_events,
                         target_regime=tr.target_regime.name)
 
-                    regime_new.add_on_condition(new_oncondition)
+                    regime_new.add(new_oncondition)
 
                 for oldtransition in regime.on_events:
                     tr = TransitionResolver(
@@ -310,7 +310,7 @@ class ComponentFlattener(object):
                         state_assignments=tr.state_assignments,
                         output_events=tr.output_events,
                         target_regime=tr.target_regime.name)
-                    regime_new.add_on_event(new_onevent)
+                    regime_new.add(new_onevent)
 
     def remap_analog_ports(self):
         new_analog_ports = flatten_first_level(

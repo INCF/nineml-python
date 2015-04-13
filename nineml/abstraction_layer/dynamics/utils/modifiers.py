@@ -5,6 +5,7 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
+import sympy
 from ..base import Parameter
 from .cloner import DynamicsExpandPortDefinition
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
@@ -99,21 +100,24 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
 
     def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
         super(DynamicsRenameSymbol, self).action_componentclass(componentclass)
-        self._update_dicts(componentclass._analog_receive_ports,
-                           componentclass._analog_reduce_ports,
-                           componentclass._analog_send_ports,
-                           componentclass._event_send_ports,
-                           componentclass._event_receive_ports)
+        self._update_dicts(*componentclass.all_member_dicts)
 
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.action_mainblock(dynamicsblock, **kwargs)
-        self._update_dicts(dynamicsblock._state_variables,
-                           dynamicsblock._regimes)
+    def action_dynamicsblock(self, dynamicsblock, **kwargs):
+        pass
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         if regime.name == self.old_symbol_name:
             regime._name = self.new_symbol_name
-        self._update_dicts(regime._time_derivatives)
+        self._update_dicts(*regime.all_member_dicts)
+        # Update the on condition trigger keys, which can't be updated via
+        # the _update_dicts method
+        for trigger in regime.on_condition_triggers:
+            if sympy.Symbol(self.old_symbol_name) in trigger.free_symbols:
+                new_trigger = trigger.xreplace(
+                    {sympy.Symbol(self.old_symbol_name):
+                     sympy.Symbol(self.new_symbol_name)})
+                regime._on_conditions[new_trigger] = (regime._on_conditions.
+                                                      pop(trigger))
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         if state_variable.name == self.old_symbol_name:
@@ -161,6 +165,7 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         if on_condition._target_regime == self.old_symbol_name:
             on_condition._target_regime = self.new_symbol_name
+        self._update_dicts(*on_condition.all_member_dicts)
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         if on_event.src_port_name == self.old_symbol_name:
@@ -168,6 +173,7 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
             self.note_rhs_changed(on_event)
         if on_event._target_regime == self.old_symbol_name:
             on_event._target_regime = self.new_symbol_name
+        self._update_dicts(*on_event.all_member_dicts)
 
 
 class DynamicsAssignIndices(ComponentAssignIndices,

@@ -204,7 +204,7 @@ class ComponentClass(BaseALObject, TopLevelObject, MemberContainerObject):
             return self._main_block.lookup_member_dict(element)
 
     @property
-    def _all_member_dicts(self):
+    def all_member_dicts(self):
         return chain(*(
             (getattr(self, n)
              for n in self.class_to_member_dict.itervalues()),

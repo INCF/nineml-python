@@ -371,8 +371,8 @@ class Regime_test(unittest.TestCase):
 
         r = Regime(name='R1')
         self.assertEquals(set(r.on_conditions), set())
-        self.assertRaises(NineMLRuntimeError, r.add_on_condition, OnEvent('sp1'))
-        r.add_on_condition(OnCondition('sp1>0'))
+#         self.assertRaises(NineMLRuntimeError, r.add_on_condition, OnEvent('sp1'))
+        r.add(OnCondition('sp1>0'))
         self.assertEquals(len(set(r.on_conditions)), 1)
         self.assertEquals(len(set(r.on_events)), 0)
         self.assertEquals(len(set(r.transitions)), 1)
@@ -390,8 +390,8 @@ class Regime_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.dynamics import Regime
         r = Regime(name='R1')
         self.assertEquals(set(r.on_events), set())
-        self.assertRaises(NineMLRuntimeError, r.add_on_event, OnCondition('sp1>1'))
-        r.add_on_event(OnEvent('sp'))
+#         self.assertRaises(NineMLRuntimeError, r.add_on_event, OnCondition('sp1>1'))
+        r.add(OnEvent('sp'))
         self.assertEquals(len(set(r.on_events)), 1)
         self.assertEquals(len(set(r.on_conditions)), 0)
         self.assertEquals(len(set(r.transitions)), 1)

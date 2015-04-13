@@ -152,7 +152,7 @@ class MemberContainerObject(object):
         self._indices = defaultdict(dict)
 
     def __iter__(self):
-        return chain(*(d.itervalues() for d in self._all_member_dicts))
+        return chain(*(d.itervalues() for d in self.all_member_dicts))
 
 #     @property
 #     def elements(self):
@@ -183,7 +183,7 @@ class MemberContainerObject(object):
         class or not. Useful for asserts and unit tests.
         """
         if isinstance(element, basestring):
-            for dct in self._all_member_dicts:
+            for dct in self.all_member_dicts:
                 if element in dct:
                     return True
             return False
@@ -258,7 +258,7 @@ class MemberContainerObject(object):
             return self.lookup_member_dict_name(element)
 
     @property
-    def _all_member_dicts(self):
+    def all_member_dicts(self):
         return (getattr(self, n)
                 for n in self.class_to_member_dict.itervalues())
 

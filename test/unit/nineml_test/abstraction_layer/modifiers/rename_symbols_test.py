@@ -50,6 +50,7 @@ class DynamicsRenameSymbols_test(unittest.TestCase):
         for symbol in ('A1', 'A2', 'A3', 'SV1', 'SV2', 'ARP1', 'ARP2', 'P1',
                        'P2', 'R1', 'R2'):
             a.rename_symbol(symbol + '_a', symbol + '_b')
-        print a.find_mismatch(b)
+        a == b
         self.assertEqual(a, b,
-                         "Symbols were not renamed properly between classes")
+                         "Symbols were not renamed properly between classes:\n"
+                         "{}".format(a.find_mismatch(b)))
