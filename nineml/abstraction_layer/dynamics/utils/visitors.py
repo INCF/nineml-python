@@ -149,53 +149,53 @@ class DynamicsElementFinder(ComponentElementFinder, DynamicsActionVisitor):
         pass
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
-        if self.element == regime:
+        if self.element is regime:
             self._found()
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        if self.element == state_variable:
+        if self.element is state_variable:
             self._found()
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
+        if self.element is port:
             self._found()
 
     def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
+        if self.element is port:
             self._found()
 
     def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
+        if self.element is port:
             self._found()
 
     def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
+        if self.element is port:
             self._found()
 
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
+        if self.element is port:
             self._found()
 
     def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
-        if self.element == event_out:
+        if self.element is event_out:
             self._found()
 
     def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
-        if self.element == assignment:
+        if self.element is assignment:
             self._found()
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        if self.element == time_derivative:
+        if self.element is time_derivative:
             self._found()
 
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        if self.element == trigger:
+        if self.element is trigger:
             self._found()
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
-        if self.element == on_condition:
+        if self.element is on_condition:
             self._found()
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        if self.element == on_event:
+        if self.element is on_event:
             self._found()

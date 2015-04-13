@@ -164,13 +164,13 @@ class ComponentElementFinder(ComponentActionVisitor):
         pass
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        if self.element == parameter:
+        if self.element is parameter:
             self._found()
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        if self.element == alias:
+        if self.element is alias:
             self._found()
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
-        if self.element == constant:
+        if self.element is constant:
             self._found()
