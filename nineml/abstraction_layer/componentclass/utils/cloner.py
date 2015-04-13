@@ -73,11 +73,11 @@ class ComponentCloner(ComponentVisitor):
             name=constant.name, value=constant.value, units=constant.units)
         return new_constant
 
-    def copy_indices(self, source, destination, **kwargs):
+    def copy_indices(self, source, destination, **kwargs):  # @UnusedVariable
         if source == destination:  # a work around until I remove NSs
             assert isinstance(source, MemberContainerObject)
             for s in source:
                 d = destination.lookup_member_dict(s)[s._name]
-                key = source.default_index_key(s)
+                key = source.lookup_member_dict_name(s)
                 index = source.index_of(s)
                 destination._indices[key][d] = index

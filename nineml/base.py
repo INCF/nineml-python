@@ -154,10 +154,6 @@ class MemberContainerObject(object):
     def __iter__(self):
         return chain(*(d.itervalues() for d in self.all_member_dicts))
 
-#     @property
-#     def elements(self):
-#         return iter(self)
-
     def add(self, element):
         dct = self.lookup_member_dict(element)
         if element._name in dct:
@@ -209,7 +205,7 @@ class MemberContainerObject(object):
         referenced elsewhere in the code).
         """
         if key is None:
-            key = self.default_index_key(element)
+            key = self.lookup_member_dict_name(element)
         dct = self._indices[key]
         try:
             index = dct[element]
@@ -250,12 +246,6 @@ class MemberContainerObject(object):
                     "Could not get member dict for element of type "
                     "'{}' from '{}' class" .format(type(element).__name__,
                                                    type(self).__name__))
-
-    def default_index_key(self, element):
-        try:
-            return type(element).index_key
-        except AttributeError:
-            return self.lookup_member_dict_name(element)
 
     @property
     def all_member_dicts(self):
