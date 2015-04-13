@@ -7,7 +7,7 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import Annotations
 from . import BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 import contextlib
 
 
@@ -42,7 +42,7 @@ class Document(dict, BaseNineMLObject):
         return self._url
 
     def add(self, element):
-        if not isinstance(element, (TopLevelObject, self._Unloaded)):
+        if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
             raise NineMLRuntimeError(
                 "Could not add {} as it is not a document level NineML "
                 "object ('{}') ".format(element.element_name,
@@ -54,7 +54,7 @@ class Document(dict, BaseNineMLObject):
         self[element.name] = element
 
     def remove(self, element):
-        if not isinstance(element, TopLevelObject):
+        if not isinstance(element, DocumentLevelObject):
             raise NineMLRuntimeError(
                 "Could not remove {} as it is not a document level NineML "
                 "object ('{}') ".format(element.element_name,
@@ -271,7 +271,7 @@ class Document(dict, BaseNineMLObject):
                         raise NineMLRuntimeError(
                             "Did not find matching NineML class for '{}' "
                             "element".format(element_name))
-                if not issubclass(child_cls, TopLevelObject):
+                if not issubclass(child_cls, DocumentLevelObject):
                     raise NineMLRuntimeError(
                         "'{}' is not a valid top-level NineML element"
                         .format(element_name))

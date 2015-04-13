@@ -19,7 +19,7 @@ from nineml.utils import (
     normalise_parameter_as_list, assert_no_duplicates)
 from ..expressions import Alias, Constant
 from ..units import dimensionless, Dimension
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 from nineml.exceptions import NineMLInvalidElementTypeException
 
 
@@ -80,7 +80,7 @@ class Parameter(BaseALObject):
         return sympy.Symbol(self.name)
 
 
-class ComponentClass(BaseALObject, TopLevelObject, MemberContainerObject):
+class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     __metaclass__ = ABCMeta  # Abstract base class
@@ -92,7 +92,7 @@ class ComponentClass(BaseALObject, TopLevelObject, MemberContainerObject):
     def __init__(self, name, parameters, main_block, url=None):
         ensure_valid_identifier(name)
         BaseALObject.__init__(self)
-        TopLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, url)
         MemberContainerObject.__init__(self)
         self._name = name
         self._main_block = main_block

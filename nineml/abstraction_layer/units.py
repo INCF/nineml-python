@@ -1,6 +1,6 @@
 from nineml.xmlns import E
 from . import BaseALObject
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 
 # Might be an idea to subclass namedtuple to prevent dimensions being redefined
@@ -15,7 +15,7 @@ from nineml.annotations import annotate_xml, read_annotations
 # NB: Not sure this works
 
 
-class Dimension(BaseALObject, TopLevelObject):
+class Dimension(BaseALObject, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
@@ -27,7 +27,7 @@ class Dimension(BaseALObject, TopLevelObject):
 
     def __init__(self, name, **kwargs):
         BaseALObject.__init__(self)
-        TopLevelObject.__init__(self, kwargs.pop('url', None))
+        DocumentLevelObject.__init__(self, kwargs.pop('url', None))
         self._name = name
         for k in kwargs:
             if k not in self.valid_dims:
@@ -145,7 +145,7 @@ class Dimension(BaseALObject, TopLevelObject):
         return self.i
 
 
-class Unit(BaseALObject, TopLevelObject):
+class Unit(BaseALObject, DocumentLevelObject):
     """
     Defines the units of a quantity
     """
@@ -155,7 +155,7 @@ class Unit(BaseALObject, TopLevelObject):
 
     def __init__(self, name, dimension, power, offset=0.0, url=None):
         BaseALObject.__init__(self)
-        TopLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, url)
         self._name = name
         self._dimension = dimension
         self._power = power

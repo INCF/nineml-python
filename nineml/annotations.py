@@ -1,10 +1,10 @@
 from copy import copy
 from collections import defaultdict
 from nineml.xmlns import E, NINEML
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 
 
-class Annotations(defaultdict, TopLevelObject):
+class Annotations(defaultdict, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """

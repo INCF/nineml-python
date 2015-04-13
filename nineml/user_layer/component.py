@@ -17,7 +17,7 @@ from ..abstraction_layer import (
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 from os import path
 
 
@@ -84,7 +84,7 @@ def write_reference(to_xml):
     return unresolving_to_xml
 
 
-class Component(BaseULObject, TopLevelObject):
+class Component(BaseULObject, DocumentLevelObject):
     """
     Base class for model components.
 
@@ -125,7 +125,7 @@ class Component(BaseULObject, TopLevelObject):
         be resolved later.
         """
         BaseULObject.__init__(self)
-        TopLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, url)
         self.name = name
         if isinstance(definition, basestring):
             definition = Definition(

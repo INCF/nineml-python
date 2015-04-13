@@ -107,7 +107,7 @@ class BaseNineMLObject(object):
         return result
 
 
-class TopLevelObject(object):
+class DocumentLevelObject(object):
 
     def __init__(self, url):
         self._url = url

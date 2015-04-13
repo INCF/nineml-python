@@ -4,7 +4,7 @@ from .component import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.utils import expect_single, check_tag
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 
 
 def find_difference(this, that):
@@ -32,7 +32,7 @@ def find_difference(this, that):
                 find_difference(this[key], that[key])
 
 
-class Selection(BaseULObject, TopLevelObject):
+class Selection(BaseULObject, DocumentLevelObject):
     """
     Container for combining multiple populations or subsets thereof.
 
@@ -48,7 +48,7 @@ class Selection(BaseULObject, TopLevelObject):
 
     def __init__(self, name, operation, url=None):
         BaseULObject.__init__(self)
-        TopLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, url)
         self.name = name
         self.operation = operation
 

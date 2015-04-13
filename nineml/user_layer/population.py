@@ -1,13 +1,13 @@
 from itertools import chain
 from . import BaseULObject
 from .component import resolve_reference, write_reference, Component
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single, check_tag
 from nineml.annotations import annotate_xml, read_annotations
 
 
-class Population(BaseULObject, TopLevelObject):
+class Population(BaseULObject, DocumentLevelObject):
     """
     A collection of spiking neurons all of the same type.
 
@@ -28,7 +28,7 @@ class Population(BaseULObject, TopLevelObject):
 
     def __init__(self, name, size, cell, positions=None, url=None):
         BaseULObject.__init__(self)
-        TopLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, url)
         self.name = name
         self.size = size
         self.cell = cell
@@ -94,7 +94,7 @@ class Population(BaseULObject, TopLevelObject):
                    cell=Component.from_xml(cell_component, document), **kwargs)
 
 
-class PositionList(BaseULObject, TopLevelObject):
+class PositionList(BaseULObject, DocumentLevelObject):
     """
     Represents a list of network node positions. May contain either an explicit
     list of positions or a :class:`Structure` instance that can be used to
@@ -125,7 +125,7 @@ class PositionList(BaseULObject, TopLevelObject):
         """
         super(PositionList, self).__init__()
         BaseULObject.__init__(self)
-        TopLevelObject.__init__(self, url=url)
+        DocumentLevelObject.__init__(self, url=url)
         if positions and structure:
             raise Exception("Please provide either positions or structure, "
                             "not both.")

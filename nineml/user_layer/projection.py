@@ -12,10 +12,10 @@ from nineml.utils import expect_single, expect_none_or_single, check_tag
 from ..exceptions import NineMLRuntimeError
 from .values import SingleValue
 from .component import Quantity
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 
 
-class Projection(BaseULObject, TopLevelObject):
+class Projection(BaseULObject, DocumentLevelObject):
     """
     A collection of connections between two :class:`Population`\s.
 
@@ -64,7 +64,7 @@ class Projection(BaseULObject, TopLevelObject):
         Create a new projection.
         """
         BaseULObject.__init__(self)
-        TopLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, url)
         self.name = name
         self.source = source
         # When exporting to XML we use the reference instead of the object

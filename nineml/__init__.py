@@ -7,7 +7,7 @@ A Python library for working with 9ML model descriptions.
 
 __version__ = "0.2dev"
 
-from .base import BaseNineMLObject, TopLevelObject
+from .base import BaseNineMLObject, DocumentLevelObject
 from document import read, write, load, Document
 import abstraction_layer
 import user_layer
