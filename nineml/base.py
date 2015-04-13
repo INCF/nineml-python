@@ -192,8 +192,7 @@ class MemberContainerObject(object):
                 dct = self.lookup_member_dict(element)
                 try:
                     found = dct[element._name]
-                    assert(found is element)
-                    return True
+                    return found is element
                 except KeyError:
                     return False
             except NineMLInvalidElementTypeException:

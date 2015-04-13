@@ -91,3 +91,10 @@ class Modifiers_test(unittest.TestCase):
                          .format(a.find_mismatch(b)))
         b.add(Alias('A5', 'P1 + P2'))
         self.assertNotEqual(a, b, "Added Alias was not detected")
+
+    def test_contains(self):
+        self.assertTrue(self.a.regime('R2') in self.a)
+        self.assertFalse(self.a.regime('R2') in self.b)
+        self.assertTrue(self.a.regime('R2').name in self.b)
+        self.assertTrue(self.b.parameter('P3') in self.b)
+        self.assertTrue('A1' in self.a)
