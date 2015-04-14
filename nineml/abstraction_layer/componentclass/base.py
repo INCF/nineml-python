@@ -18,7 +18,7 @@ from nineml.utils import (
     filter_discrete_types, ensure_valid_identifier,
     normalise_parameter_as_list, assert_no_duplicates)
 from ..expressions import Alias, Constant
-from ..units import dimensionless, Dimension
+from ...units import dimensionless, Dimension
 from nineml import DocumentLevelObject
 from nineml.exceptions import NineMLInvalidElementTypeException
 

@@ -7,7 +7,7 @@ from collections import defaultdict
 from nineml.user_layer.component import Component
 from itertools import chain
 import nineml.user_layer
-from ..abstraction_layer import units as un
+from .. import units as un
 from nineml.utils import expect_single, expect_none_or_single, check_tag
 from ..exceptions import NineMLRuntimeError
 from .values import SingleValue

@@ -22,7 +22,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
             assert len(dimensions) == 7, "Incorrect dimension length"
             self._dims = tuple(dimensions)
         else:
-            self._dims = (kwargs.pop(d, 0) for d in self.valid_dims)
+            self._dims = tuple(kwargs.pop(d, 0) for d in self.dimension_names)
         assert not len(kwargs), "Unrecognised kwargs ({})".format(kwargs)
 
     def __eq__(self, other):
@@ -126,7 +126,8 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     @annotate_xml
     def to_xml(self):
         kwargs = {'name': self.name}
-        kwargs.update(dict((k, str(v)) for k, v in self._dims.items()))
+        kwargs.update(dict((n, str(p))
+                           for n, p in zip(self.dimension_names, self._dims)))
         return E(self.element_name, **kwargs)
 
     @classmethod

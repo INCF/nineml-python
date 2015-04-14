@@ -20,7 +20,6 @@ import dynamics
 import expressions
 import connectionrule
 import randomdistribution
-import units
 import ports
 from .componentclass import Parameter, ComponentClass, NamespaceAddress
 from .expressions import Alias, Expression, Constant
@@ -34,7 +33,6 @@ from .ports import (AnalogSendPort, AnalogReceivePort,
 from nineml.abstraction_layer.dynamics.utils import flattener as flattening
 from .connectionrule import ConnectionRuleClass
 from .randomdistribution import RandomDistributionClass
-from .units import Unit, Dimension
 from .dynamics import DynamicsClassXMLLoader, DynamicsClassXMLWriter
 from .randomdistribution import (
     RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter)

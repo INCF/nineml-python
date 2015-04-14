@@ -11,7 +11,7 @@ from operator import and_
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
-from ..abstraction_layer.units import Unit, unitless
+from nineml.units import Unit, unitless
 from ..abstraction_layer import (
     ComponentClass, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
