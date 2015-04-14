@@ -4,7 +4,7 @@ from nineml.abstraction_layer.dynamics.testing_utils import TestableComponent
 from nineml.abstraction_layer import (
     DynamicsClass as ComponentClass, DynamicsBlock, AnalogSendPort, Alias,
     AnalogReceivePort, AnalogReducePort, Regime, On, NamespaceAddress,
-    OutputEvent, EventReceivePort)
+    OutputEvent, EventReceivePort, Constant)
 
 
 class ComponentClass_test(unittest.TestCase):
@@ -592,7 +592,8 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEqual(list(c.parameters)[0].name, 'a')
 
         # More complex inference:
-        c = ComponentClass(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'])
+        c = ComponentClass(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'],
+                           constants=[Constant('pi', 3.141592653589793)])
         self.assertEqual(len(list(c.parameters)), 3)
         self.assertEqual(sorted([p.name for p in c.parameters]), ['a', 'b', 'e'])
 

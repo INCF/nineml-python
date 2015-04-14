@@ -205,7 +205,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
 
     def _check_dimesions_are_consistent(self, dims_expr, element):
         if not isinstance(dims_expr, (sympy.Mul, sympy.Pow, sympy.Symbol,
-                                      sympy.Integer)):
+                                      sympy.Integer, sympy.Float)):
             raise NineMLRuntimeError(
                 "Dimensions do not match for {} '{}': {} -> {} ({})"
                 .format(type(element).__name__, element._name,
@@ -218,8 +218,8 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
     def _compare_dimensionality(self, dimension, element, reference):
         if dimension - reference.dimension != 0:
             raise NineMLRuntimeError(
-                "Dimension of expression '{}' ('{}') does not"
-                " match that declared for '{}' reference '{}' ('{}')"
+                "Dimension of expression, {} ({}), does not"
+                " match that declared for '{}', {} ('{}')"
                 .format(dimension, element.rhs, element._name,
                         sympy.sympify(reference.dimension),
                         reference.dimension.name))
@@ -242,8 +242,9 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
                     " '{}'".format(port.dimension.name,
                                    element.dimension.name))
         except AttributeError:  # If element doesn't have explicit dimension
-            self._compare_dimensionality(self._get_dimensions(element), element,
-                                         port)
+            self._compare_dimensionality(self._get_dimensions(element),
+                                         element, port)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self._check_dimesions_are_consistent(self._get_dimensions(alias), alias)
+        self._check_dimesions_are_consistent(self._get_dimensions(alias),
+                                             alias)

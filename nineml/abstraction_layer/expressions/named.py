@@ -2,6 +2,7 @@
 from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
 from .base import ExpressionWithSimpleLHS, ExpressionSymbol
+from nineml.units import unitless
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -94,11 +95,11 @@ class Constant(BaseALObject, ExpressionSymbol):
     element_name = 'Constant'
     defining_attributes = ('name', 'value', 'units')
 
-    def __init__(self, name, value, units):
+    def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)
         self._name = name
         self._value = value
-        self._units = units
+        self._units = units if units is not None else unitless
 
     @property
     def name(self):
