@@ -145,12 +145,12 @@ class Document(dict, BaseNineMLObject):
     @property
     def units(self):
         return (o for o in self.itervalues()
-                if isinstance(nineml.abstraction_layer.units.Unit))  # @UndefinedVariable @IgnorePep8
+                if isinstance(nineml.units.Unit))  # @UndefinedVariable @IgnorePep8
 
     @property
     def dimensions(self):
         return (o for o in self.itervalues()
-                if isinstance(nineml.abstraction_layer.units.Dimension))  # @UndefinedVariable @IgnorePep8
+                if isinstance(nineml.units.Dimension))  # @UndefinedVariable @IgnorePep8
 
     def _load_elem_from_xml(self, unloaded):
         """
