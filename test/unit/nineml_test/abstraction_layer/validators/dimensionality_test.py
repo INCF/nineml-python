@@ -1,3 +1,4 @@
+from __future__ import division
 import unittest
 from nineml.abstraction_layer import (
     Parameter, Constant, DynamicsClass, Regime, On, OutputEvent, StateVariable)
@@ -26,7 +27,9 @@ class Dimensionality_test(unittest.TestCase):
                 Regime(name='R2', transitions=On('SV1 > C1', to='R1'))
             ],
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
-                          AnalogReceivePort('ARP2', dimension=un.resistance),
+                          AnalogReceivePort('ARP2',
+                                            dimension=(un.resistance *
+                                                       un.time)),
                           AnalogSendPort('A1',
                                          dimension=un.voltage * un.current),
                           AnalogSendPort('A2', dimension=un.current)],

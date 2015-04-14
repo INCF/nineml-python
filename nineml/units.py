@@ -3,6 +3,9 @@ import sympy
 from nineml.xmlns import E
 from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
+import re
+
+trail_nums_re = re.compile(r'(.*)(\d+)$')
 
 
 class Dimension(BaseNineMLObject, DocumentLevelObject):
@@ -36,9 +39,9 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     def __repr__(self):
         return ("Dimension(name='{}'{})".format(
-            self.name, ", ".join(
-                '{}={}'.format(n, p)
-                for n, p in zip(self.dimension_names, self._dims))))
+            self.name, ''.join(' {}={}'.format(n, p) if p != 0 else ''
+                               for n, p in zip(self.dimension_names,
+                                               self._dims))))
 
     def __iter__(self):
         return iter(self._dims)
@@ -141,18 +144,61 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     def __mul__(self, other):
         "self * other"
-        return Dimension(self.name + '_' + other.name,
+        return Dimension(self.make_name([self.name, other.name]),
                          dimensions=tuple(s + o for s, o in zip(self, other)))
 
     def __truediv__(self, other):
         "self / expr"
-        return Dimension(self.name + '_per_' + other.name,
+        return Dimension(self.make_name([self.name], [other.name]),
                          dimensions=tuple(s - o for s, o in zip(self, other)))
 
     def __pow__(self, power):
         "self ** expr"
-        return Dimension(self.name + str(power),
+        return Dimension(self.make_name([self.name], power=power),
                          dimensions=tuple(s * power for s in self))
+
+    @classmethod
+    def make_name(cls, products=[], divisors=[], power=None):
+        """
+        Generates a sensible name from the combination of dimensions. E.g.
+
+        voltage * current -> voltage_current
+        voltage / current -> voltage_per_current
+        voltage ** 2 -> voltage2
+        """
+        numerator = []
+        denominator = []
+        for p in products:
+            p_split = p.split('_per_')
+            numerator.extend(p_split[0].split('_'))
+            if len(p_split) > 1:
+                denominator.extend(p_split[1].split('_'))
+        for d in divisors:
+            d_split = d.split('_per_')
+            denominator.extend(d_split[0].split('_'))
+            if len(d_split) > 1:
+                numerator.extend(d_split[1].split('_'))
+        if power is not None:
+            assert isinstance(power, int)
+            num_denoms = []
+            for lst in (numerator, denominator):
+                new_lst = []
+                for name_pw in lst:
+                    match = trail_nums_re.match(name_pw)
+                    if match:
+                        name = match.group(1)
+                        pw = int(match.group(2)) * power
+                    else:
+                        name = name_pw
+                        pw = power
+                    pstr = str(pw) if pw > 0 else 'neg' + str(-pw)
+                    new_lst.append(name + pstr)
+                num_denoms.append(new_lst)
+            numerator, denominator = num_denoms
+        name = '_'.join(sorted(numerator))
+        if len(denominator):
+            name += '_per_' + '_'.join(sorted(denominator))
+        return name
 
 
 class Unit(BaseNineMLObject, DocumentLevelObject):
@@ -254,7 +300,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         "self * other"
         assert (self.offset == 0 and
                 other.offset == 0), "Can't multiply units with nonzero offsets"
-        return Unit(self.name + '_' + other.name,
+        return Unit(Dimension.make_name([self.name, other.name]),
                     dimension=self.dimension * other.dimension,
                     power=(self.power + other.power))
 
@@ -262,15 +308,15 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         "self / expr"
         assert (self.offset == 0 and
                 other.offset == 0), "Can't divide units with nonzero offsets"
-        return Unit(self.name + '_per_' + other.name,
+        return Unit(Dimension.make_name([self.name], [other.name]),
                     dimension=self.dimension / other.dimension,
                     power=(self.power - other.power))
 
     def __pow__(self, power):
         "self ** expr"
         assert self.offset == 0, "Can't raise units with nonzero offsets"
-        return Unit(self.name + str(power),
-                    dimensions=(self.dimension ** power),
+        return Unit(Dimension.make_name([self.name], power=power),
+                    dimension=(self.dimension ** power),
                     power=(self.power * power))
 
 # ----------------- #
@@ -383,3 +429,6 @@ mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s",
                              dimension=rho_factor, power=0)
 unitless = Unit(name="unitless", dimension=dimensionless, power=0)
 coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)
+
+if __name__ == '__main__':
+    print ((mV * mM / ms ** 2) ** -3).name

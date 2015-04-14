@@ -231,15 +231,15 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
                                       PerNamespaceDynamicsValidator):
 
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        dimension = self._get_dimension(timederivative)
-        self._check_dimesions_are_consistent(dimension)
+        dimension = self._get_dimensions(timederivative)
+        self._check_dimesions_are_consistent(dimension, timederivative)
         self._compare_dimensionality(dimension, timederivative,
                                      self.componentclass.state_variable(
                                          timederivative.variable))
 
     def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
-        dimension = self._get_dimension(stateassignment)
-        self._check_dimesions_are_consistent(dimension)
+        dimension = self._get_dimensions(stateassignment)
+        self._check_dimesions_are_consistent(dimension, stateassignment)
         self._compare_dimensionality(dimension, stateassignment,
                                      self.componentclass.state_variable(
                                          stateassignment.variable))
