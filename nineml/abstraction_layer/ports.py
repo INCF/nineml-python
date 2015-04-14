@@ -6,7 +6,7 @@ This file defines the Port classes used in NineML
 """
 from abc import ABCMeta
 from . import BaseALObject
-from nineml.abstraction_layer.units import dimensionless
+from nineml.units import dimensionless
 from nineml.utils import ensure_valid_identifier
 from nineml.exceptions import NineMLRuntimeError
 from .expressions import ExpressionSymbol

@@ -5,7 +5,7 @@ from nineml.abstraction_layer import (Expression,
 from nineml.abstraction_layer.expressions import (
     ExpressionWithSimpleLHS, Constant)
 from nineml.exceptions import NineMLMathParseError
-from nineml.abstraction_layer.units import coulomb, S_per_cm2, mV
+from nineml.units import coulomb, S_per_cm2, mV
 from nineml.abstraction_layer.componentclass.utils.xml import (
     ComponentClassXMLWriter as XMLWriter, ComponentClassXMLLoader as XMLLoader)
 from nineml import Document
