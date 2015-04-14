@@ -1,21 +1,9 @@
 from nineml.xmlns import E
-from . import BaseALObject
-from nineml import DocumentLevelObject
+from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 
-# Might be an idea to subclass namedtuple to prevent dimensions being redefined
-# and therefore protect the hash
-#
-# class D(namedtuple('Base', 'name m l t i n k j'), A):
-#     def __new__(self, name, m=0, l=0, t=0, n=0, k=0, j=0):
-#         return super(D, self).__new__(self, name, t, k, m, l, n, j)
-#     def __init__(self, name, m=0, l=0, t=0, n=0, k=0, j=0):
-#         pass
-#
-# NB: Not sure this works
 
-
-class Dimension(BaseALObject, DocumentLevelObject):
+class Dimension(BaseNineMLObject, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
@@ -26,7 +14,7 @@ class Dimension(BaseALObject, DocumentLevelObject):
                           'k': 'K', 'j': 'cd'}
 
     def __init__(self, name, **kwargs):
-        BaseALObject.__init__(self)
+        BaseNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, kwargs.pop('url', None))
         self._name = name
         for k in kwargs:
@@ -145,7 +133,7 @@ class Dimension(BaseALObject, DocumentLevelObject):
         return self.i
 
 
-class Unit(BaseALObject, DocumentLevelObject):
+class Unit(BaseNineMLObject, DocumentLevelObject):
     """
     Defines the units of a quantity
     """
@@ -154,7 +142,7 @@ class Unit(BaseALObject, DocumentLevelObject):
     defining_attributes = ('name', 'dimension', 'power', 'offset')
 
     def __init__(self, name, dimension, power, offset=0.0, url=None):
-        BaseALObject.__init__(self)
+        BaseNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
         self._name = name
         self._dimension = dimension
