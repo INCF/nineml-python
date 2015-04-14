@@ -5,7 +5,6 @@ from nineml.abstraction_layer.dynamics import (
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
 
 
-# Testing Skeleton for class: DynamicsClonerPrefixNamespace
 class DynamicsAssignIndices_test(unittest.TestCase):
 
     def test_after_cloning(self):
