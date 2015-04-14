@@ -14,7 +14,7 @@ from ...componentclass.validators import (
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
     DimensionalityComponentValidator)
 from . import PerNamespaceDynamicsValidator
-import sympy
+from nineml import units as un
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(
@@ -232,17 +232,15 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
 
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(timederivative)
-        self._check_dimesions_are_consistent(dimension, timederivative)
-        self._compare_dimensionality(dimension, timederivative,
-                                     self.componentclass.state_variable(
-                                         timederivative.variable))
+        sv = self.componentclass.state_variable(timederivative.variable)
+        self._compare_dimensionality(dimension, sv.dimension / un.time,
+                                     timederivative, sv.name + ' time deriv.')
 
     def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(stateassignment)
-        self._check_dimesions_are_consistent(dimension, stateassignment)
-        self._compare_dimensionality(dimension, stateassignment,
-                                     self.componentclass.state_variable(
-                                         stateassignment.variable))
+        sv = self.componentclass.state_variable(stateassignment.variable)
+        self._compare_dimensionality(dimension, sv.dimension,
+                                     stateassignment, sv.name + 'state var.')
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         self._check_send_port(port)
