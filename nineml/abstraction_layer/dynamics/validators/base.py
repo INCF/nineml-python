@@ -12,7 +12,8 @@ from .general import (
     NoUnresolvedSymbolsDynamicsValidator,
     RegimeGraphDynamicsValidator, NoDuplicatedObjectsDynamicsValidator,
     RegimeOnlyHasOneHandlerPerEventDynamicsValidator,
-    CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator)
+    CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator,
+    DimensionalityDynamicsValidator)
 from .namingconflicts import (
     LocalNameConflictsDynamicsValidator,
     DimensionNameConflictsDynamicsValidator,
@@ -50,3 +51,4 @@ class DynamicsValidator(object):
         RegimeGraphDynamicsValidator(componentclass)
         RegimeOnlyHasOneHandlerPerEventDynamicsValidator(componentclass)
         CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(componentclass)
+        DimensionalityDynamicsValidator(componentclass)
