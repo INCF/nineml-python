@@ -148,6 +148,6 @@ class StrToExpr_test(unittest.TestCase):
         for expr_str, (exp_dep, exp_indep, exp_rhs) in TimeDerivatives:
             td = TimeDerivative.from_str(expr_str)
 
-            self.assertEquals(td.dependent_variable, exp_dep)
+            self.assertEquals(td.variable, exp_dep)
             self.assertEquals(td.independent_variable, exp_indep)
             self.assertEquals(str(td.rhs), str(exp_rhs))

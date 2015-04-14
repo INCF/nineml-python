@@ -240,7 +240,7 @@ class TimeDerivative_test(unittest.TestCase):
             def visit_timederivative(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
                 return kwargs
 
-        c = TimeDerivative(dependent_variable='V', rhs='0')
+        c = TimeDerivative(variable='V', rhs='0')
         v = TimeDerivativeTestVisitor()
 
         self.assertEqual(
@@ -249,7 +249,7 @@ class TimeDerivative_test(unittest.TestCase):
         )
 
     def test_atoms(self):
-        td = TimeDerivative(dependent_variable='X',
+        td = TimeDerivative(variable='X',
                             rhs=' y * f - sin(q*q) + 4 * a * exp(Y)')
         self.assertEquals(sorted(td.atoms), sorted(
             ['X', 'y', 'f', 'sin', 'exp', 'q', 'a', 'Y', 't']))
@@ -259,14 +259,14 @@ class TimeDerivative_test(unittest.TestCase):
 
 #   def test_dependent_variable(self):
     def test_independent_variable(self):
-        td = TimeDerivative(dependent_variable='X',
+        td = TimeDerivative(variable='X',
                             rhs=' y*f - sin(q*q) + 4*a*exp(Y)')
         self.assertEquals(td.independent_variable, 't')
-        self.assertEquals(td.dependent_variable, 'X')
+        self.assertEquals(td.variable, 'X')
 
         # Check substitutions to the LHS:
         td.lhs_name_transform_inplace({'X': 'x'})
-        self.assertEquals(td.dependent_variable, 'x')
+        self.assertEquals(td.variable, 'x')
 
         # Since this is always time, we should not be changing the
         # independent_variable (dt)
@@ -276,7 +276,7 @@ class TimeDerivative_test(unittest.TestCase):
         # Aand change them again using 'name_transform_inplace'
         # Check substitutions to the LHS:
         td.name_transform_inplace({'x': 'X1'})
-        self.assertEquals(td.dependent_variable, 'X1')
+        self.assertEquals(td.variable, 'X1')
 
         # Since this is always time, we should not be changing the
         # independent_variable (dt)

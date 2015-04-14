@@ -485,7 +485,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def all_time_derivatives(self, state_variable=None):
         return chain(*((td for td in r.time_derivatives
                         if (state_variable is None or
-                            td.dependent_variable == state_variable.name))
+                            td.variable == state_variable.name))
                         for r in self.regimes))
 
     def all_output_analogs(self):
