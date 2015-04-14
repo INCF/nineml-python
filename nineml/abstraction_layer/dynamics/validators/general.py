@@ -11,8 +11,10 @@ from ...componentclass.validators import (
     AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,
     NoDuplicatedObjectsComponentValidator,
-    CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
+    CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
+    DimensionalityComponentValidator)
 from . import PerNamespaceDynamicsValidator
+import sympy
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(
@@ -223,3 +225,26 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_lhssymbol_is_valid(time_derivative.dependent_variable)
+
+
+class DimensionalityDynamicsValidator(DimensionalityComponentValidator):
+
+    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        dimension = self._get_dimension(timederivative)
+        self._check_dimesions_are_consistent(dimension)
+        self._compare_dimensionality(dimension, timederivative,
+                                     self.componentclass.state_variable(
+                                         timederivative.variable))
+
+    def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
+        dimension = self._get_dimension(stateassignment)
+        self._check_dimesions_are_consistent(dimension)
+        self._compare_dimensionality(dimension, stateassignment,
+                                     self.componentclass.state_variable(
+                                         stateassignment.variable))
+
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
+        self._check_send_port(port)
+
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        self._check_boolean_expr(trigger.rhs)
