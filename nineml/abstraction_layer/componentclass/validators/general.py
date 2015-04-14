@@ -10,8 +10,7 @@ from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import is_valid_lhs_target
 from ...expressions import reserved_identifiers
 from nineml.utils import assert_no_duplicates
-from nineml.abstraction_layer.expressions import reserved_symbols
-import sympy
+import sympy.core.numbers
 
 
 class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
@@ -185,8 +184,6 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         self.visit(componentclass)
 
     def _get_dimensions(self, element):
-        if isinstance(element, sympy.Symbol):
-            element = self.componentclass[str(element)]
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions
@@ -194,35 +191,75 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         try:
             return self._dimensions[element.name]
         except (KeyError, AttributeError):  # for derived dimensions
-            dims = expr.xreplace(dict((s, self._get_dimensions(s))
-                                      for s in expr.free_symbols
-                                      if s not in reserved_symbols)).powsimp()
-            try:
-                self._dimensions[element.name] = dims
-            except AttributeError:
-                pass
-            return dims
+            dims = self._flatten_dims(expr, element)
+        try:
+            self._dimensions[element.name] = dims
+        except AttributeError:
+            pass
+        return dims
 
-    def _check_dimesions_are_consistent(self, dims_expr, element):
-        if not isinstance(dims_expr, (sympy.Mul, sympy.Pow, sympy.Symbol,
-                                      sympy.Integer, sympy.Float)):
-            raise NineMLRuntimeError(
-                "Dimensions do not match for {} '{}': {} -> {} ({})"
-                .format(type(element).__name__, element._name,
-                        element.rhs, dims_expr,
-                        ', '.join('{}={}'.format(a, self._dimensions[str(a)])
-                                  for a in element.rhs_symbols)))
-        for arg in dims_expr.args:
-            self._check_dimesions_are_consistent(arg, element)
+    def _flatten_dims(self, expr, element):
+        if isinstance(expr, (sympy.Integer, sympy.Float)):
+            dims = 1
+        elif isinstance(expr, sympy.Symbol):
+            if expr == sympy.Symbol('t'):  # Reserved symbol
+                dims = sympy.Symbol('t')
+            else:
+                dims = self._get_dimensions(self.componentclass[str(expr)])
+        elif isinstance(expr, sympy.Mul):
+            dims = (self._flatten_dims(expr.args[0], element) *
+                    self._flatten_dims(expr.args[1], element))
+            if isinstance(dims, sympy.Basic):
+                dims = dims.powsimp()
+        elif isinstance(expr, sympy.Pow):
+            exp_dims = self._flatten_dims(expr.args[1], element)
+            if exp_dims != 1:
+                raise NineMLRuntimeError(
+                    "Exponents are required to be dimensionless arguments, "
+                    "found {} ({}) in {} element : {}"
+                    .format(exp_dims, expr.args[1], type(expr), expr))
+            # FIXME: Probably should check that if the exponent is not an
+            # integer that the base is dimensionless
+            dims = (self._flatten_dims(expr.args[0], element) ** expr.args[1])
+        elif isinstance(expr, sympy.Add):
+            arg1_dims = self._flatten_dims(expr.args[0], element)
+            arg2_dims = self._flatten_dims(expr.args[1], element)
+            if arg1_dims - arg2_dims == 0:
+                dims = arg1_dims
+            else:
+                symbol_dims = ', '.join(
+                    '{}={}'.format(a, self._dimensions[str(a)])
+                    for a in element.rhs_symbols)
+                if element is None:
+                    err_msg = ("Dimensions do not match in expression {} ({})"
+                               .format(expr, symbol_dims))
+                else:
+                    err_msg = ("Dimensions do not match for {} '{}': {} -> "
+                               "{} + {} ({})".format(
+                                   element.__class__.__name__, element._name,
+                                   element.rhs, arg1_dims, arg2_dims,
+                                   symbol_dims))
+                raise NineMLRuntimeError(err_msg)
+        elif isinstance(type(expr), sympy.FunctionClass):
+            arg_dims = self._flatten_dims(expr.args[0], element)
+            if arg_dims != 1:
+                raise NineMLRuntimeError(
+                    "Function '{}' requires dimensionless arguments, found {} "
+                    " ({})".format(type(expr), arg_dims, expr))
+            dims = 1
+        elif type(expr).__name__ in ('Pi',):
+            dims = 1
+        else:
+            raise NotImplementedError
+        return dims
 
-    def _compare_dimensionality(self, dimension, element, reference):
-        if dimension - reference.dimension != 0:
+    def _compare_dimensionality(self, dimension, reference, element, ref_name):
+        if dimension - sympy.sympify(reference) != 0:
             raise NineMLRuntimeError(
-                "Dimension of expression, {} ({}), does not"
+                "Dimension of '{}', {} (from {}), does not"
                 " match that declared for '{}', {} ('{}')"
-                .format(dimension, element.rhs, element._name,
-                        sympy.sympify(reference.dimension),
-                        reference.dimension.name))
+                .format(element._name, dimension, element.rhs, ref_name,
+                        sympy.sympify(reference), reference.name))
 
     def _check_boolean_expr(self, expr):
         lhs, rhs = expr.args
@@ -243,8 +280,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
                                    element.dimension.name))
         except AttributeError:  # If element doesn't have explicit dimension
             self._compare_dimensionality(self._get_dimensions(element),
-                                         element, port)
+                                         port.dimension, element, port.name)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self._check_dimesions_are_consistent(self._get_dimensions(alias),
-                                             alias)
+        self._get_dimensions(alias)  # Check if dimensions can be resolved
