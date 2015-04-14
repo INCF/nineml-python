@@ -176,42 +176,43 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
         self.componentclass = componentclass
-        self._dimension = {}
+        self._dimensions = {}
         # Insert declared dimensions into dimensionality database
         for a in componentclass.attributes_with_dimension:
-            self._dimension[a.name] = sympy.sympify(a.dimension)
+            self._dimensions[a.name] = sympy.sympify(a.dimension)
         for a in componentclass.attributes_with_units:
-            self._dimension[a.name] = sympy.sympify(a.units.dimension)
+            self._dimensions[a.name] = sympy.sympify(a.units.dimension)
         self.visit(componentclass)
 
     def _get_dimensions(self, element):
+        if isinstance(element, sympy.Symbol):
+            element = self.componentclass[str(element)]
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions
             expr = element
         try:
-            name = element.name
-        except AttributeError:  # for anonymous expressions
-            name = str(element) if isinstance(element, sympy.Symbol) else None
-        try:
-            return self._dimension[name]
-        except KeyError:  # for derived dimensions
+            return self._dimensions[element.name]
+        except (KeyError, AttributeError):  # for derived dimensions
             dims = expr.xreplace(dict((s, self._get_dimensions(s))
                                       for s in expr.free_symbols
                                       if s not in reserved_symbols)).powsimp()
-            if name is not None:
-                self._dimension[name] = dims
+            try:
+                self._dimensions[element.name] = dims
+            except AttributeError:
+                pass
             return dims
 
-    def _check_dimesions_are_consistent(self, expr, element):
-        if not isinstance(expr, (sympy.Mul, sympy.Pow, sympy.Symbol,
-                                 sympy.Integer)):
+    def _check_dimesions_are_consistent(self, dims_expr, element):
+        if not isinstance(dims_expr, (sympy.Mul, sympy.Pow, sympy.Symbol,
+                                      sympy.Integer)):
             raise NineMLRuntimeError(
-                "Dimensions do not match for '{}' {}: {} ({})"
-                .format(element._name, type(element).__name__, element.rhs,
-                        ', '.join('{}={}'.format(a, self._dimension[str(a)])
-                                  for a in element.atoms)))
-        for arg in expr.args:
+                "Dimensions do not match for {} '{}': {} -> {} ({})"
+                .format(type(element).__name__, element._name,
+                        element.rhs, dims_expr,
+                        ', '.join('{}={}'.format(a, self._dimensions[str(a)])
+                                  for a in element.rhs_symbols)))
+        for arg in dims_expr.args:
             self._check_dimesions_are_consistent(arg, element)
 
     def _compare_dimensionality(self, dimension, element, reference):
