@@ -51,4 +51,4 @@ class DynamicsValidator(object):
         RegimeGraphDynamicsValidator(componentclass)
         RegimeOnlyHasOneHandlerPerEventDynamicsValidator(componentclass)
         CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(componentclass)
-        DimensionalityDynamicsValidator(componentclass)
+#         DimensionalityDynamicsValidator(componentclass)

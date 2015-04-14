@@ -227,7 +227,8 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
         self.check_lhssymbol_is_valid(time_derivative.dependent_variable)
 
 
-class DimensionalityDynamicsValidator(DimensionalityComponentValidator):
+class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
+                                      PerNamespaceDynamicsValidator):
 
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimension(timederivative)
