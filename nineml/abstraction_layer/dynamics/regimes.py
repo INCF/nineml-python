@@ -12,7 +12,7 @@ from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
 from nineml.exceptions import NineMLRuntimeError
 from ..expressions import ODE
 from .. import BaseALObject
-from ..units import dimensionless, Dimension
+from nineml.units import dimensionless, Dimension
 from nineml.base import MemberContainerObject
 from .transitions import OnEvent, OnCondition, Trigger
 from .utils.visitors import DynamicsElementFinder
