@@ -157,6 +157,9 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return Dimension(self.make_name([self.name], power=power),
                          dimensions=tuple(s * power for s in self))
 
+    def __div__(self, other):
+        return self.__truediv__(other)
+
     @classmethod
     def make_name(cls, products=[], divisors=[], power=None):
         """
@@ -318,6 +321,9 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         return Unit(Dimension.make_name([self.name], power=power),
                     dimension=(self.dimension ** power),
                     power=(self.power * power))
+
+    def __div__(self, other):
+        return self.__truediv__(other)
 
 # ----------------- #
 # Common dimensions #

@@ -13,7 +13,7 @@ import re
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
 
-builtin_constants = set(['pi', 'true', 'false', 'True', 'False'])
+builtin_constants = set(['true', 'false', 'True', 'False'])
 builtin_functions = set([
     'exp', 'sin', 'cos', 'log', 'log10', 'pow', 'abs',
     'sinh', 'cosh', 'tanh', 'sqrt', 'mod', 'sum',
