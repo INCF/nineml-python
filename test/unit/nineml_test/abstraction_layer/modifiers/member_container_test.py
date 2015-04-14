@@ -5,9 +5,10 @@ from nineml.abstraction_layer.dynamics import (
     OnCondition, TimeDerivative)
 from nineml.abstraction_layer import Alias, Parameter
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
+from nineml.exceptions import NineMLInvalidElementTypeException
 
 
-class Modifiers_test(unittest.TestCase):
+class MemberContainer_test(unittest.TestCase):
 
     def setUp(self):
 
@@ -109,3 +110,20 @@ class Modifiers_test(unittest.TestCase):
         self.assertIsNot(self.a.analog_send_port('A1'), self.a['A1'])
         self.assertIs(self.b.regime('R2'), self.b['R2'])
         self.assertIs(self.b['R1'].time_derivative('SV3'), self.b['R1']['SV3'])
+
+    def test_indexof(self):
+        self.assertEqual(self.a.index_of(self.a['A1']),
+                         self.a.index_of(self.a['A1']))
+        self.assertNotEqual(self.a.index_of(self.a['A1']),
+                            self.a.index_of(self.a['A2']))
+        r1 = self.a.regime('R1')
+        self.assertEqual(r1.index_of(r1.time_derivative('SV2')),
+                         r1.index_of(r1.time_derivative('SV2')))
+        sa = (self.b.regime('R2').on_condition('SV3 < 0.001')
+              .state_assignment('SV3'))
+        self.assertEqual(self.b.index_of(sa, key='StateAssignments'),
+                         self.b.index_of(sa, key='StateAssignments'))
+        self.assertRaises(NineMLInvalidElementTypeException,
+                          self.b.index_of, sa)
+        self.assertRaises(AssertionError,
+                          self.a.index_of, sa, key='StateAssignments')
