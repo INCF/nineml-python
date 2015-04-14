@@ -150,7 +150,7 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
             assignment.name_transform_inplace(self.namemap)
 
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        if timederivative.dependent_variable == self.old_symbol_name:
+        if timederivative.variable == self.old_symbol_name:
             self.note_lhs_changed(timederivative)
             timederivative.name_transform_inplace(self.namemap)
         elif self.old_symbol_name in timederivative.atoms:

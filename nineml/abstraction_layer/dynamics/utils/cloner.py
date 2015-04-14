@@ -124,12 +124,12 @@ class DynamicsCloner(ComponentCloner):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
-        dep = self.prefix_variable(time_derivative.dependent_variable,
+        dep = self.prefix_variable(time_derivative.variable,
                                    **kwargs)
 
         rhs = time_derivative.rhs_suffixed(suffix='', prefix=prefix,
                                            excludes=prefix_excludes)
-        return time_derivative.__class__(dependent_variable=dep, rhs=rhs)
+        return time_derivative.__class__(variable=dep, rhs=rhs)
 
     def visit_trigger(self, trigger, **kwargs):
         prefix = kwargs.get('prefix', '')

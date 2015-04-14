@@ -44,7 +44,7 @@ class TimeDerivativesAreDeclaredDynamicsValidator(
 
     def action_timederivative(self, timederivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.time_derivatives_used[namespace].append(
-            timederivative.dependent_variable)
+            timederivative.variable)
 
 
 class StateAssignmentsAreOnStateVariablesDynamicsValidator(
@@ -224,7 +224,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
         self.check_lhssymbol_is_valid(assignment.lhs)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_lhssymbol_is_valid(time_derivative.dependent_variable)
+        self.check_lhssymbol_is_valid(time_derivative.variable)
 
 
 class DimensionalityDynamicsValidator(DimensionalityComponentValidator,

@@ -443,7 +443,7 @@ class Regime_test(unittest.TestCase):
                    name='r1')
 
         self.assertEquals(
-            set([td.dependent_variable for td in r.time_derivatives]),
+            set([td.variable for td in r.time_derivatives]),
             set(['X1', 'X2']))
 
         # Defining a time derivative twice:
