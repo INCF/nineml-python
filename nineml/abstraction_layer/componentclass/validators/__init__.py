@@ -3,7 +3,8 @@ from .general import (
     AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,
     NoDuplicatedObjectsComponentValidator,
-    CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
+    CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
+    DimensionalityComponentValidator)
 from .namingconflicts import (LocalNameConflictsComponentValidator,
                               DimensionNameConflictsComponentValidator)
 from .types import TypesComponentValidator
