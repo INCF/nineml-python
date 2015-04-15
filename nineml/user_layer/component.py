@@ -290,8 +290,7 @@ class Component(BaseULObject, DocumentLevelObject):
                 raise NineMLRuntimeError(
                     "Dimensions for '{}' property ('{}') don't match that of "
                     "componentclass class ('{}')."
-                    .format(param.name, prop_dimension.name,
-                            param_dimension.name))
+                    .format(param.name, prop_dimension, param_dimension))
 
     @write_reference
     @annotate_xml

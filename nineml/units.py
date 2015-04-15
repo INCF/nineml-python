@@ -17,6 +17,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     element_name = 'Dimension'
     dimension_names = ('m', 'l', 't', 'i', 'n', 'k', 'j')
     SI_units = ('Kg', 'm', 's', 'A', 'mol', 'K', 'cd')
+    defining_attributes = ('_dims',)
 
     def __init__(self, name, dimensions=None, **kwargs):
         BaseNineMLObject.__init__(self)
@@ -28,11 +29,6 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         else:
             self._dims = tuple(kwargs.pop(d, 0) for d in self.dimension_names)
         assert not len(kwargs), "Unrecognised kwargs ({})".format(kwargs)
-
-    def __eq__(self, other):
-        if not isinstance(other, Dimension):
-            return False
-        return self._dims == other._dims
 
     def __hash__(self):
         return hash(self._dims)
@@ -132,8 +128,9 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     @annotate_xml
     def to_xml(self):
         kwargs = {'name': self.name}
-        kwargs.update(dict((n, str(p))
-                           for n, p in zip(self.dimension_names, self._dims)))
+        kwargs.update(dict(
+            (n, str(p))
+            for n, p in zip(self.dimension_names, self._dims) if abs(p) > 0))
         return E(self.element_name, **kwargs)
 
     @classmethod
@@ -238,7 +235,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     """
 
     element_name = 'Unit'
-    defining_attributes = ('name', 'dimension', 'power', 'offset')
+    defining_attributes = ('_dimension', '_power', '_offset')
 
     def __init__(self, name, dimension, power, offset=0.0, url=None):
         BaseNineMLObject.__init__(self)
@@ -247,12 +244,6 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         self._dimension = dimension
         self._power = power
         self._offset = offset
-
-    def __eq__(self, other):
-        if not isinstance(other, Unit):
-            return False
-        return (self.power == other.power and self.offset == other.offset and
-                self.dimension == other.dimension)
 
     def __hash__(self):
         return hash((self.power, self.offset, self.dimension))
