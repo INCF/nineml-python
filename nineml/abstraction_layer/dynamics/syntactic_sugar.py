@@ -1,8 +1,8 @@
 from nineml.utils import filter_discrete_types
 from nineml.exceptions import NineMLRuntimeError
-from ..expressions.utils import MathUtil
 from .transitions import (OutputEvent, Trigger, StateAssignment, OnEvent,
                           OnCondition)
+from nineml.abstraction_layer.expressions.utils import is_single_symbol
 
 
 def SpikeOutputEvent():
@@ -39,7 +39,7 @@ def On(trigger, do=None, to=None):
     elif do is None:
         do = []
     if isinstance(trigger, basestring):
-        if MathUtil.is_single_symbol(trigger):
+        if is_single_symbol(trigger):
             return DoOnEvent(input_event=trigger, do=do, to=to)
         else:
             return DoOnCondition(condition=trigger, do=do, to=to)

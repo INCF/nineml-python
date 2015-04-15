@@ -102,9 +102,11 @@ class Unit(BaseALObject, TopLevelObject):
         self._offset = offset
 
     def __eq__(self, other):
-        assert isinstance(other, Unit)
-        return (self.power == other.power and self.offset == other.offset and
-                self.dimension == other.dimension)
+        if not isinstance(other, Unit):
+            return False
+        else:
+            return (self.power == other.power and self.offset == other.offset
+                    and self.dimension == other.dimension)
 
     def __hash__(self):
         return hash((self.power, self.offset, self.dimension))
@@ -172,6 +174,7 @@ class Unit(BaseALObject, TopLevelObject):
         offset = float(element.attrib.get('name', 0.0))
         return cls(name, dimension, power, offset)
 
+# Common units and dimensions
 
 time = Dimension(name="time", t=1)
 per_time = Dimension(name="per_time", t=-1)
@@ -205,6 +208,8 @@ idealGasConstantDims = Dimension(name="idealGasConstantDims", m=1, l=2, t=-2,
                                  k=-1, n=-1)
 rho_factor = Dimension(name="rho_factor", l=-1, n=1, i=-1, t=-1)
 dimensionless = Dimension(name="dimensionless")
+energy_per_temperature = Dimension(name="energy_per_temperature", m=1, l=2,
+                                   t=-2, k=-1)
 
 s = Unit(name="s", dimension=time, power=0)
 per_s = Unit(name="per_s", dimension=per_time, power=0)
@@ -268,6 +273,8 @@ degC = Unit(name="degC", dimension=temperature, power=0, offset=273.15)
 K = Unit(name="K", dimension=temperature, power=0)
 J_per_K_per_mol = Unit(name="J_per_K_per_mol", dimension=idealGasConstantDims,
                        power=0)
+J_per_K = Unit(name="J_per_K", dimension=energy_per_temperature, power=0)
 mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s",
                              dimension=rho_factor, power=0)
 unitless = Unit(name="unitless", dimension=dimensionless, power=0)
+coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)

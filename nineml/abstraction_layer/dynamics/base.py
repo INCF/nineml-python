@@ -33,7 +33,8 @@ class DynamicsBlock(BaseALObject):
 
     defining_attributes = ('_regimes', '_aliases', '_state_variables')
 
-    def __init__(self, regimes=None, aliases=None, state_variables=None):
+    def __init__(self, regimes=None, aliases=None, state_variables=None,
+                 constants=None):
         """DynamicsBlock object constructor
 
            :param aliases: A list of aliases, which must be either |Alias|
@@ -49,6 +50,7 @@ class DynamicsBlock(BaseALObject):
         aliases = normalise_parameter_as_list(aliases)
         regimes = normalise_parameter_as_list(regimes)
         state_variables = normalise_parameter_as_list(state_variables)
+        constants = normalise_parameter_as_list(constants)
 
         # Load the aliases as objects or strings:
         alias_td = filter_discrete_types(aliases, (basestring, Alias))
@@ -69,15 +71,18 @@ class DynamicsBlock(BaseALObject):
         self._regimes = dict((r.name, r) for r in regimes)
         self._aliases = dict((a.lhs, a) for a in aliases)
         self._state_variables = dict((s.name, s) for s in state_variables)
+        self._constants = dict((c.name, c) for c in constants)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_dynamicsblock(self, **kwargs)
 
     def __repr__(self):
-        return ('DynamicsBlock({} regimes, {} aliases, {} state-variables)'
+        return ('DynamicsBlock({} regimes, {} aliases, {} state-variables, '
+                '{} constants)'
                 .format(len(list(self.regimes)), len(list(self.aliases)),
-                        len(list(self.state_variables))))
+                        len(list(self.state_variables)),
+                        len(list(self.constants))))
 
     @property
     def regimes(self):
@@ -98,6 +103,14 @@ class DynamicsBlock(BaseALObject):
     @property
     def aliases_map(self):
         return self._aliases
+
+    @property
+    def constants(self):
+        return self._constants.itervalues()
+
+    @property
+    def constants_map(self):
+        return self._constants
 
     @property
     def state_variables(self):
@@ -145,7 +158,7 @@ class _NamespaceMixin(object):
         """Gets the parent component for this component"""
         return self._parentmodel
 
-    def _validate_self(self):
+    def validate(self):
         """ Over-ridden in mix'ed class"""
         raise NotImplementedError()
 
@@ -206,7 +219,7 @@ class _NamespaceMixin(object):
         self.subnodes[namespace] = DynamicsClonerVisitor().visit(subnode)
         self.subnodes[namespace].set_parent_model(self)
 
-        self._validate_self()
+        self.validate()
 
     def connect_ports(self, src, sink):
         """Connects the ports of 2 subcomponents.
@@ -226,7 +239,7 @@ class _NamespaceMixin(object):
         connection = (NamespaceAddress(src), NamespaceAddress(sink))
         self._portconnections.append(connection)
 
-        self._validate_self()
+        self.validate()
 
     @property
     def portconnections(self):
@@ -251,7 +264,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                  event_ports=[],
                  dynamicsblock=None, subnodes=None,
                  portconnections=None, regimes=None,
-                 aliases=None, state_variables=None):
+                 aliases=None, state_variables=None,
+                 constants=None):
         """Constructs a DynamicsClass
 
         :param name: The name of the componentclass.
@@ -292,13 +306,14 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         # We can specify in the componentclass, and they will get forwarded to
         # the dynamics class. We check that we do not specify half-and-half:
         if dynamicsblock is not None:
-            if regimes or aliases or state_variables:
+            if regimes or aliases or state_variables or constants:
                 err = "Either specify a 'dynamicsblock' parameter, or "
                 err += "state_variables /regimes/aliases, but not both!"
                 raise NineMLRuntimeError(err)
         else:
             dynamicsblock = DynamicsBlock(regimes=regimes, aliases=aliases,
-                                          state_variables=state_variables)
+                                          state_variables=state_variables,
+                                          constants=constants)
         ComponentClass.__init__(self, name, parameters,
                                 main_block=dynamicsblock)
         self._query = DynamicsQueryer(self)
@@ -330,8 +345,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
         # Check any supplied parameters match:
         if parameters is not None:
-            inf_check(self._parameters.keys(),
-                      inferred_struct.parameter_names,
+            inf_check(self._parameters.keys(), inferred_struct.parameter_names,
                       'Parameters')
         else:
             self._parameters = dict((n, Parameter(n))
@@ -390,7 +404,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         self._flattener = None
 
         # Is the finished componentclass valid?:
-        self._validate_self()
+        self.validate()
 
     # -------------------------- #
 
@@ -419,7 +433,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         component"""
         return self.flattener is not None
 
-    def _validate_self(self):
+    def validate(self):
         DynamicsValidator.validate_componentclass(self)
 
     @property
@@ -578,6 +592,30 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def state_variables_map(self):
         """Forwarding function to self.dynamicsblock.state_variables_map"""
         return self.dynamicsblock.state_variables_map
+
+    @property
+    def regime_names(self):
+        return self._main_block._regimes.iterkeys()
+
+    @property
+    def alias_names(self):
+        return self._main_block._aliases.iterkeys()
+
+    @property
+    def state_variable_names(self):
+        return self._main_block._state_variables.iterkeys()
+
+    @property
+    def num_regimes(self):
+        return len(self._main_block._regimes)
+
+    @property
+    def num_state_variables(self):
+        return len(self._main_block._state_variables)
+
+    @property
+    def num_aliases(self):
+        return len(self._main_block._aliases)
 
     # -------------------------- #
 

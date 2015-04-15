@@ -75,16 +75,17 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         return AnalogReducePort(
             name=element.get('name'),
             dimension=self.document[element.get('dimension')],
-            reduce_op=element.get("operator"))
+            operator=element.get("operator"))
 
     @read_annotations
     def load_dynamicsblock(self, element):
-        subblocks = ('Regime', 'Alias', 'StateVariable')
+        subblocks = ('Regime', 'Alias', 'StateVariable', 'Constant')
         subnodes = self._load_blocks(element, blocks=subblocks)
 
         return DynamicsBlock(regimes=subnodes["Regime"],
                         aliases=subnodes["Alias"],
-                        state_variables=subnodes["StateVariable"])
+                        state_variables=subnodes["StateVariable"],
+                        constants=subnodes["Constant"])
 
     @read_annotations
     def load_regime(self, element):
@@ -184,7 +185,8 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
         elements = ([b.accept_visitor(self)
                      for b in dynamicsblock.state_variables] +
                     [r.accept_visitor(self) for r in dynamicsblock.regimes] +
-                    [b.accept_visitor(self) for b in dynamicsblock.aliases])
+                    [b.accept_visitor(self) for b in dynamicsblock.aliases] +
+                    [c.accept_visitor(self) for c in dynamicsblock.constants])
         return E('Dynamics', *elements)
 
     @annotate_xml
@@ -214,7 +216,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_analogreduceport(self, port):
         return E('AnalogReducePort', name=port.name,
-                 dimension=port.dimension.name, operator=port.reduce_op)
+                 dimension=port.dimension.name, operator=port.operator)
 
     @annotate_xml
     def visit_analogsendport(self, port):
@@ -232,13 +234,13 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_assignment(self, assignment):
         return E('StateAssignment',
-                 E("MathInline", assignment.rhs),
+                 E("MathInline", assignment.rhs_cstr),
                  variable=assignment.lhs)
 
     @annotate_xml
     def visit_timederivative(self, time_derivative):
         return E('TimeDerivative',
-                 E("MathInline", time_derivative.rhs),
+                 E("MathInline", time_derivative.rhs_cstr),
                  variable=time_derivative.dependent_variable)
 
     @annotate_xml
@@ -251,7 +253,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_trigger(self, trigger):
-        return E('Trigger', E("MathInline", trigger.rhs))
+        return E('Trigger', E("MathInline", trigger.rhs_cstr))
 
     @annotate_xml
     def visit_onevent(self, on_event):

@@ -7,8 +7,8 @@ docstring needed
 from collections import defaultdict
 from . import PerNamespaceComponentValidator
 from nineml.exceptions import NineMLRuntimeError
-from ...expressions.utils import (get_reserved_and_builtin_symbols,
-                                  is_valid_lhs_target)
+from ...expressions.utils import is_valid_lhs_target
+from ...expressions import reserved_identifiers
 from nineml.utils import assert_no_duplicates
 
 
@@ -66,13 +66,11 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
 
         self.visit(componentclass)
 
-        excludes = get_reserved_and_builtin_symbols()
-
         # Check Aliases:
         for ns, aliases in self.aliases.iteritems():
             for alias in aliases:
                 for rhs_atom in alias.rhs_atoms:
-                    if rhs_atom in excludes:
+                    if rhs_atom in reserved_identifiers:
                         continue
                     if rhs_atom not in self.available_symbols[ns]:
                         err = ('Unresolved Symbol in Alias: %s [%s]' %
@@ -84,7 +82,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
             for timederivative in timederivatives:
                 for rhs_atom in timederivative.rhs_atoms:
                     if (rhs_atom not in self.available_symbols[ns] and
-                            rhs_atom not in excludes):
+                            rhs_atom not in reserved_identifiers):
                         err = ('Unresolved Symbol in Time Derivative: %s [%s]'
                                % (rhs_atom, timederivative))
                         raise NineMLRuntimeError(err)
@@ -94,7 +92,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
             for state_assignment in state_assignments:
                 for rhs_atom in state_assignment.rhs_atoms:
                     if (rhs_atom not in self.available_symbols[ns] and
-                            rhs_atom not in excludes):
+                            rhs_atom not in reserved_identifiers):
                         err = ('Unresolved Symbol in Assignment: %s [%s]' %
                                (rhs_atom, state_assignment))
                         raise NineMLRuntimeError(err)
@@ -112,6 +110,9 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
 
     def action_parameter(self, parameter, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace=namespace, symbol=parameter.name)
+
+    def action_constant(self, constant, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.add_symbol(namespace, constant.name)
 
 
 class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
@@ -131,6 +132,9 @@ class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.all_objects.append(alias)
+
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable
+        self.all_objects.append(constant)
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
@@ -159,3 +163,6 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(alias.lhs)
+
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable
+        self.check_lhssymbol_is_valid(constant.name)

@@ -2,66 +2,76 @@
 <NineML xmlns="http://nineml.net/9ML/1.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://nineml.net/9ML/1.0/schema/NineML_v0.2.xsd">
-  <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
-  <Dimension name="current" i="1"/>
-  <Dimension name="dimensionless"/>
-  <Unit symbol="mV" dimension="voltage" power="-3"/>
-  <Unit symbol="unitless" dimension="dimensionless"/>
   <ComponentClass name="IzhikevichClass">
-    <Parameter name="a" dimension="dimensionless"/>
-    <Parameter name="b" dimension="dimensionless"/>
+    <Parameter name="a" dimension="per_time"/>
+    <Parameter name="b" dimension="per_time"/>
     <Parameter name="c" dimension="voltage"/>
-    <Parameter name="d" dimension="dimensionless"/>
+    <Parameter name="d" dimension="voltage_per_time"/>
     <Parameter name="theta" dimension="voltage"/>
     <!-- AnalogPort or Exposure?? -->
     <AnalogReducePort name="iSyn" dimension="current" operator="+"/>
-    <AnalogSendPort name="U" dimension="dimensionless"/>
+    <AnalogSendPort name="U" dimension="voltage_per_time"/>
     <AnalogSendPort name="V" dimension="voltage"/>
     <EventSendPort name="spikeOutput" mode="send"/>
     <Dynamics>
-        <!-- Suggested addition Wednesday morning...-->
-        <StateVariable name="V" dimension="voltage"/>
-        <StateVariable name="U" dimension="dimensionless"/>
-        <Regime name="subthresholdRegime">
-          <!-- if "independent_variable" is missing, it should be assumed to be "t" -->
-          <!-- Should this "ODE" be called "Rate", RateODE, "RateEqn" ??-->
-          <TimeDerivative variable="U">
-            <MathInline>a*(b*V - U)</MathInline>
-          </TimeDerivative>
-          <TimeDerivative variable="V">
-            <MathInline>0.04*V*V + 5*V + 140.0 - U + iSyn</MathInline>
-          </TimeDerivative>
-          <OnCondition>
-            <Trigger>
-              <MathInline>V &gt; theta</MathInline>
-            </Trigger>
-            <StateAssignment variable="V" >
-              <MathInline>c</MathInline>
-            </StateAssignment>
-            <StateAssignment variable="U" >
-              <MathInline>U+d</MathInline>
-            </StateAssignment>
-            <OutputEvent port="spikeOutput" />
-          </OnCondition>
-        </Regime>
+      <!-- Suggested addition Wednesday morning...-->
+      <StateVariable name="V" dimension="voltage"/>
+      <StateVariable name="U" dimension="voltage_per_time"/>
+      <Regime name="subthresholdRegime">
+        <!-- if "independent_variable" is missing, it should be assumed to be "t" -->
+        <!-- Should this "ODE" be called "Rate", RateODE, "RateEqn" ??-->
+        <TimeDerivative variable="U">
+          <MathInline>a*(b*V - U)</MathInline>
+        </TimeDerivative>
+        <TimeDerivative variable="V">
+          <MathInline>const1*V*V + const2*V + const3 - U + iSyn/C</MathInline>
+        </TimeDerivative>
+        <OnCondition>
+          <Trigger>
+            <MathInline>V &gt; theta</MathInline>
+          </Trigger>
+          <StateAssignment variable="V">
+            <MathInline>c</MathInline>
+          </StateAssignment>
+          <StateAssignment variable="U">
+            <MathInline>U+d</MathInline>
+          </StateAssignment>
+          <OutputEvent port="spikeOutput"/>
+        </OnCondition>
+      </Regime>
+      <Constant name="const1" units="per_mV_ms">0.04</Constant>
+      <Constant name="const2" units="per_ms">5</Constant>
+      <Constant name="const3" units="mV_per_ms">140</Constant>
+      <Constant name="C" units="nF">1.0</Constant>
     </Dynamics>
   </ComponentClass>
   <Component name="Izhikevich">
     <Definition>IzhikevichClass</Definition>
-    <Property name="a" units="unitless">
+    <Property name="a" units="per_ms">
       <SingleValue>0.02</SingleValue>
     </Property>
-    <Property name="b" units="unitless">
+    <Property name="b" units="per_ms">
       <SingleValue>0.2</SingleValue>
     </Property>
     <Property name="c" units="mV">
       <SingleValue>-65.0</SingleValue>
     </Property>
-    <Property name="d" units="unitless">
+    <Property name="d" units="mV_per_ms">
       <SingleValue>8</SingleValue>
     </Property>
     <Property name="theta" units="mV">
       <SingleValue>-40.0</SingleValue>
     </Property>
   </Component>
+  <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
+  <Dimension name="voltage_per_time" m="1" l="2" t="-4" i="-1"/>
+  <Dimension name="per_voltage_time" m="-1" l="-2" t="2" i="1"/>
+  <Dimension name="per_time" t="-1"/>
+  <Dimension name="current" i="1"/>
+  <Dimension name="capacitance" m="-1" l="-2" t="4" i="2"/>
+  <Unit symbol="mV" dimension="voltage" power="-3"/>
+  <Unit symbol="mV_per_ms" dimension="voltage_per_time" power="3"/>
+  <Unit symbol="per_mV_ms" dimension="per_voltage_time" power="6"/>
+  <Unit symbol="per_ms" dimension="per_time" power="3"/>
+  <Unit symbol="nF" dimension="capacitance" power="-9"/>
 </NineML>

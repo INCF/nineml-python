@@ -15,6 +15,10 @@ from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.dynamics.regimes import Regime
 from ..transitions import OnCondition, OnEvent
+from operator import add, mul
+import sympy
+
+reduce_ops = {'+': add, '*': mul}
 
 
 class TransitionResolver(object):
@@ -357,7 +361,8 @@ class ComponentFlattener(object):
         for dstport, srcport_list in reduce_connections.iteritems():
             src_subs = [s.name for s in srcport_list]
             terms = [dstport.name] + src_subs
-            reduce_expr = dstport.reduce_op.join(terms)
+            reduce_expr = reduce(reduce_ops[dstport.operator],
+                                 (sympy.Symbol(s) for s in terms))
 
             # globalRemapPort( dstport.name, reduce_expr )
             DynamicsExpandPortDefinition(

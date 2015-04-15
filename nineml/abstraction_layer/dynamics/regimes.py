@@ -6,6 +6,7 @@ This file contains the main classes for defining dynamics
 """
 from itertools import chain
 import re
+import sympy
 from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
                             normalise_parameter_as_list, assert_no_duplicates)
 from nineml.exceptions import NineMLRuntimeError
@@ -24,6 +25,7 @@ class Regime(BaseALObject):
 
     defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
                            'name')
+    index_key = 'Regimes'
 
     _n = 0
 
@@ -62,16 +64,16 @@ class Regime(BaseALObject):
                 err = 'Unexpected Arg: %s' % arg
                 raise NineMLRuntimeError(err)
 
-        transitions = kwargs.get('transitions', None)
         name = kwargs.get('name', None)
+        if name is None:
+            self._name = 'default'
+        else:
+            self._name = name.strip()
+            ensure_valid_identifier(self._name)
+        transitions = kwargs.get('transitions', None)
         kw_tds = normalise_parameter_as_list(kwargs.get('time_derivatives',
                                                         None))
         time_derivatives = list(args) + kw_tds
-
-        self._name = name
-        if self.name is not None:
-            self._name = self._name.strip()
-            ensure_valid_identifier(self._name)
 
         # Un-named arguments are time_derivatives:
         time_derivatives = normalise_parameter_as_list(time_derivatives)
@@ -240,6 +242,9 @@ class StateVariable(BaseALObject):
         return ("StateVariable({}{})"
                 .format(self.name,
                         ', dimension={}'.format(self.dimension.name)))
+
+    def _sympy_(self):
+        return sympy.Symbol(self.name)
 
 
 class TimeDerivative(ODE):

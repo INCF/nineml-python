@@ -170,17 +170,17 @@ class ComponentClass_test(unittest.TestCase):
         )
 
         c1 = ComponentClass(name='C1', aliases=['A:=3'])
-        self.assertEqual(c1.aliases_map['A'].rhs_as_python_func()(), 3)
+        self.assertEqual(c1.aliases_map['A'].rhs_as_python_func(), 3)
         self.assertEqual(len(c1.aliases_map), 1)
 
         c2 = ComponentClass(name='C1', aliases=['A:=3', 'B:=5'])
-        self.assertEqual(c2.aliases_map['A'].rhs_as_python_func()(), 3)
-        self.assertEqual(c2.aliases_map['B'].rhs_as_python_func()(), 5)
+        self.assertEqual(c2.aliases_map['A'].rhs_as_python_func(), 3)
+        self.assertEqual(c2.aliases_map['B'].rhs_as_python_func(), 5)
         self.assertEqual(len(c2.aliases_map), 2)
 
         c3 = ComponentClass(name='C1', dynamicsblock=DynamicsBlock(aliases=['C:=13', 'Z:=15']))
-        self.assertEqual(c3.aliases_map['C'].rhs_as_python_func()(), 13)
-        self.assertEqual(c3.aliases_map['Z'].rhs_as_python_func()(), 15)
+        self.assertEqual(c3.aliases_map['C'].rhs_as_python_func(), 13)
+        self.assertEqual(c3.aliases_map['Z'].rhs_as_python_func(), 15)
 
         self.assertEqual(len(c3.aliases_map), 2)
 
@@ -208,10 +208,10 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEqual(len(c.query.analog_recv_ports), 1)
         self.assertEqual(len(c.query.analog_reduce_ports), 0)
 
-        c = ComponentClass(name='C1', analog_ports=[AnalogReducePort('B', reduce_op='+')])
+        c = ComponentClass(name='C1', analog_ports=[AnalogReducePort('B', operator='+')])
         self.assertEqual(len(list(c.analog_ports)), 1)
         self.assertEqual(list(c.analog_ports)[0].mode, 'reduce')
-        self.assertEqual(list(c.analog_ports)[0].reduce_op, '+')
+        self.assertEqual(list(c.analog_ports)[0].operator, '+')
         self.assertEqual(len(c.query.analog_send_ports), 0)
         self.assertEqual(len(c.query.analog_recv_ports), 0)
         self.assertEqual(len(c.query.analog_reduce_ports), 1)
@@ -222,7 +222,7 @@ class ComponentClass_test(unittest.TestCase):
             ComponentClass,
             name='C1',
             aliases=['A:=1'],
-            analog_ports=[AnalogReducePort('B', reduce_op='+'), AnalogSendPort('B')]
+            analog_ports=[AnalogReducePort('B', operator='+'), AnalogSendPort('B')]
         )
 
         self.assertRaises(
@@ -279,14 +279,14 @@ class ComponentClass_test(unittest.TestCase):
 
         # Check the aliases:
         # ====================== #
-        c2 = ComponentClass(name='C1', aliases=['A:=1+2', 'B:=5*A', 'C:=B+2'])
-        self.assertEqual(c2.aliases_map['A'].rhs_as_python_func()(), 3)
+        c2 = ComponentClass(name='C1', aliases=['A:=1.0+2.0', 'B:=5.0*A', 'C:=B+2.0'])
+        self.assertEqual(c2.aliases_map['A'].rhs_as_python_func(), 3)
 
         # This should assert, because its not yet back-subbed
         c2.backsub_all()
-        self.assertEqual(c2.aliases_map['B'].rhs_as_python_func()(), 15)
+        self.assertEqual(c2.aliases_map['B'].rhs_as_python_func(), 15)
         # Check the ordering:
-        self.assertEqual(c2.aliases_map['C'].rhs_as_python_func()(), ((5 * (3)) + 2))
+        self.assertEqual(c2.aliases_map['C'].rhs_as_python_func(), ((5 * (3)) + 2))
         # ====================== #
 
         # Check the equations:
