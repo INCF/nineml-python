@@ -3,7 +3,7 @@
 """
 
 import nineml.abstraction_layer as al
-from nineml.abstraction_layer.units import time, per_time
+from nineml.units import time, per_time
 
 model = al.DynamicsClass(
     name="Poisson",

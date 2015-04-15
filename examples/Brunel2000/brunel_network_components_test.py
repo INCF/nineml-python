@@ -12,7 +12,7 @@ June 2014
 
 from __future__ import division
 import nineml.user_layer as nineml
-from nineml.abstraction_layer.units import ms, mV, nA, dimensionless, Hz, Mohm
+from nineml.units import ms, mV, nA, dimensionless, Hz, Mohm
 
 delay = 1.5          # (ms) global delay for all neurons in the group
 J = 0.1              # (mV) EPSP size

@@ -14,7 +14,7 @@ from __future__ import division
 from math import exp
 import nineml.user_layer as nineml
 from nineml.document import Document
-from nineml.abstraction_layer.units import ms, mV, nA, unitless, Hz, Mohm
+from nineml.units import ms, mV, nA, unitless, Hz, Mohm
 
 
 def build_model(g, eta):

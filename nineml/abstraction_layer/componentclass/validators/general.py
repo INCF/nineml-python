@@ -233,7 +233,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
                 elif arg_dims - dims != 0:
                     raise NineMLRuntimeError(self._construct_error_message(
                         "Dimensions do not match within",
-                        ' + '.join(self._flatten_dims(a, element)
+                        ' + '.join(str(self._flatten_dims(a, element))
                                    for a in expr.args), expr, element))
         elif isinstance(type(expr), sympy.FunctionClass):
             arg_dims = self._flatten_dims(expr.args[0], element)
