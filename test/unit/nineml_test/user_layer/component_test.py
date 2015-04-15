@@ -1,8 +1,7 @@
 import os.path
 import unittest
 from nineml import read, load
-from lxml import etree
-from nineml.exceptions import NineMLUnitMismatchError
+from nineml.exceptions import NineMLRuntimeError
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
                             'xml', 'neurons')
@@ -25,6 +24,7 @@ class TestComponent(unittest.TestCase):
         self.assertEquals(document1, document2)
 
     def test_mismatch_dimension(self):
-        document = read(os.path.join(examples_dir, 'HodgkinHuxleyBadUnits.xml'))
-        with self.assertRaises(NineMLUnitMismatchError):
+        document = read(os.path.join(examples_dir,
+                                     'HodgkinHuxleyBadUnits.xml'))
+        with self.assertRaises(NineMLRuntimeError):
             document['HodgkinHuxleyBadUnits']
