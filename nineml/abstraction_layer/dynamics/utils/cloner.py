@@ -70,7 +70,9 @@ class DynamicsCloner(ComponentCloner):
                 for a in dynamicsblock.aliases],
             state_variables=[
                 s.accept_visitor(self, **kwargs)
-                for s in dynamicsblock.state_variables])
+                for s in dynamicsblock.state_variables],
+            constants=[c.accept_visitor(self, **kwargs)
+                       for c in dynamicsblock.constants],)
 
     def visit_regime(self, regime, **kwargs):
         r = regime.__class__(
