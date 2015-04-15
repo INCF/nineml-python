@@ -106,5 +106,8 @@
     <Property name="surfaceArea" units="um2">
       <SingleValue>100</SingleValue>
     </Property>
+    <Property name="spikeImpulse" units="mV">
+      <SingleValue>5</SingleValue>
+    </Property>
   </Component>
 </NineML>

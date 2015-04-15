@@ -40,6 +40,7 @@
     <Parameter name="vThreshold" dimension="voltage"/>
     <Parameter name="temperatureReference" dimension="temperature"/>
     <Parameter name="surfaceArea" dimension="length2"/>
+    <Parameter name="spikeImpulse" dimension="voltage"/>
     <AnalogSendPort name="v" dimension="voltage"/>
     <AnalogSendPort name="iK" dimension="currentDensity"/>
     <AnalogReceivePort name="T" dimension="temperature"/>
@@ -69,7 +70,7 @@
         <OnEvent port="incomingSpike">
           <StateAssignment variable="v">
             <Annotations><Description>Even State assignments can be annotated</Description></Annotations>
-            <MathInline>v + 5</MathInline>
+            <MathInline>v + spikeImpulse</MathInline>
           </StateAssignment>
         </OnEvent>
         <OnCondition>

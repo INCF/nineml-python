@@ -94,7 +94,7 @@ class Expression(object):
     @property
     def rhs_cstr(self):
         rhs = self._unwrap_integer_powers(self._rhs)
-        cstr = ccode(rhs)
+        cstr = ccode(rhs, user_functions={})
         cstr = Parser.unescape_random_namespace(cstr)
         return cstr
 
