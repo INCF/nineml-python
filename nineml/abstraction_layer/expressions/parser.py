@@ -23,10 +23,10 @@ class Parser(object):
                      if s not in chain(builtin_constants, builtin_functions))
     _valid_funcs = set((sympy.And, sympy.Or, sympy.Not)) | builtin_functions
     _func_to_op_map = {sympy.Function('pow'): operator.pow}
-    _escape_random_re = re.compile(r'(?<!\w)random\.(\w+) *\(')
-    _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_\(')
+    _escape_random_re = re.compile(r'(?<!\w)random\.(\w+)(?!\w)')
+    _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_(?!\w)')
     _sympy_transforms = list(standard_transformations) + [convert_xor]
-    _inline_randoms_dict = {
+    inline_randoms_dict = {
         'random_uniform_': sympy.Function('random_uniform_'),
         'random_binomial_': sympy.Function('random_binomial_'),
         'random_poisson_': sympy.Function('random_poisson_'),
@@ -44,7 +44,7 @@ class Parser(object):
                     expr = self.escape_random_namespace(expr)
                     expr = sympy_parse(
                         expr, transformations=[self] + self._sympy_transforms,
-                        local_dict=self._inline_randoms_dict)
+                        local_dict=self.inline_randoms_dict)
                     expr = self._postprocess(expr)
                 except Exception, e:
                     raise NineMLMathParseError(
@@ -148,7 +148,7 @@ class Parser(object):
     def _check_valid_funcs(cls, expr):
         if (isinstance(expr, sympy.Function) and
                 str(type(expr)) not in chain(
-                    cls._valid_funcs, cls._inline_randoms_dict.iterkeys())):
+                    cls._valid_funcs, cls.inline_randoms_dict.iterkeys())):
             raise NineMLMathParseError(
                 "'{}' is a valid function in Sympy but not in 9ML"
                 .format(type(expr)))
@@ -157,12 +157,12 @@ class Parser(object):
 
     @classmethod
     def escape_random_namespace(cls, expr):
-        return cls._escape_random_re.sub(r'random_\1_(', expr)
+        return cls._escape_random_re.sub(r'random_\1_', expr)
 
     @classmethod
     def unescape_random_namespace(cls, expr):
-        return cls._unescape_random_re.sub(r'random.\1(', expr)
+        return cls._unescape_random_re.sub(r'random.\1', expr)
 
     @classmethod
     def inline_random_distributions(cls):
-        return cls._inline_randoms_dict.itervalues()
+        return cls.inline_randoms_dict.itervalues()

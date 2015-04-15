@@ -36,6 +36,8 @@ class Expression(object):
     # chain of valid identifiers follwed by an open parenthesis.
     _func_re = re.compile(r'([\w\.]+) *\(')  # Match identifier followed by (
     _strip_parens_re = re.compile(r'^\(+(\w+)\)+$')  # Match if enclosed by ()
+    _random_ns_map = dict((str(v), Parser.unescape_random_namespace(k))
+                          for k, v in Parser.inline_randoms_dict.iteritems())
 
     def __init__(self, rhs):
         self.rhs = rhs
@@ -94,8 +96,7 @@ class Expression(object):
     @property
     def rhs_cstr(self):
         rhs = self._unwrap_integer_powers(self._rhs)
-        cstr = ccode(rhs, user_functions={})
-        cstr = Parser.unescape_random_namespace(cstr)
+        cstr = ccode(rhs, user_functions=self._random_ns_map)
         return cstr
 
     @property
