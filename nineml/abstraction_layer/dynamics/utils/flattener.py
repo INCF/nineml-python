@@ -237,6 +237,8 @@ class ComponentFlattener(object):
                 [m.aliases for m in self.all_components]),
             state_variables=flatten_first_level(
                 [m.state_variables for m in self.all_components]),
+            constants=flatten_first_level(
+                [c.constants for c in self.all_components]),
             regimes=self.old_regime_tuple_to_new_regime_map.values(),
             analog_ports=flatten_first_level(
                 [comp.analog_ports for comp in self.all_components]),
