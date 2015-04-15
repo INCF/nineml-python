@@ -70,7 +70,8 @@ class ComponentCloner(ComponentVisitor):
 
     def visit_constant(self, constant, **kwargs):  # @UnusedVariable
         new_constant = constant.__class__(
-            name=constant.name, value=constant.value, units=constant.units)
+            name=self.prefix_variable(constant.name, **kwargs),
+            value=constant.value, units=constant.units)
         return new_constant
 
     def copy_indices(self, source, destination, **kwargs):  # @UnusedVariable
