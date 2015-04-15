@@ -5,6 +5,7 @@ from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 import re
 
+
 trail_nums_re = re.compile(r'(.*)(\d+)$')
 
 
@@ -29,6 +30,8 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         assert not len(kwargs), "Unrecognised kwargs ({})".format(kwargs)
 
     def __eq__(self, other):
+        if not isinstance(other, Dimension):
+            return False
         return self._dims == other._dims
 
     def __hash__(self):
@@ -144,11 +147,15 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     def __mul__(self, other):
         "self * other"
+        if other == 1:
+            other = dimensionless
         return Dimension(self.make_name([self.name, other.name]),
                          dimensions=tuple(s + o for s, o in zip(self, other)))
 
     def __truediv__(self, other):
         "self / expr"
+        if other == 1:
+            other = dimensionless
         return Dimension(self.make_name([self.name], [other.name]),
                          dimensions=tuple(s - o for s, o in zip(self, other)))
 
@@ -157,18 +164,35 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return Dimension(self.make_name([self.name], power=power),
                          dimensions=tuple(s * power for s in self))
 
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
+        if other == 1:
+            other = dimensionless
+        return other.__truediv__(self)
+
     def __div__(self, other):
         return self.__truediv__(other)
 
+    def __rdiv__(self, other):
+        return self.__rtruediv__(other)
+
     @classmethod
-    def make_name(cls, products=[], divisors=[], power=None):
+    def make_name(cls, products=[], divisors=[], power=1):
         """
-        Generates a sensible name from the combination of dimensions. E.g.
+        Generates a sensible name from the combination of dimensions/units.
+
+        E.g.
 
         voltage * current -> voltage_current
         voltage / current -> voltage_per_current
         voltage ** 2 -> voltage2
+        dimensionless / voltage -> per_voltage
+        (voltage * current * dimensionless) ** 3 -> current3_voltage3
         """
+        if power == 0:
+            return 'dimensionless'
         numerator = []
         denominator = []
         for p in products:
@@ -181,26 +205,30 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
             denominator.extend(d_split[0].split('_'))
             if len(d_split) > 1:
                 numerator.extend(d_split[1].split('_'))
-        if power is not None:
-            assert isinstance(power, int)
-            num_denoms = []
-            for lst in (numerator, denominator):
-                new_lst = []
-                for name_pw in lst:
-                    match = trail_nums_re.match(name_pw)
-                    if match:
-                        name = match.group(1)
-                        pw = int(match.group(2)) * power
-                    else:
-                        name = name_pw
-                        pw = power
-                    pstr = str(pw) if pw > 0 else 'neg' + str(-pw)
-                    new_lst.append(name + pstr)
-                num_denoms.append(new_lst)
-            numerator, denominator = num_denoms
+        num_denoms = []
+        for lst in ((numerator, denominator)
+                    if power > 0 else (denominator, numerator)):
+            new_lst = []
+            for dim_name in lst:
+                if dim_name not in ('dimensionless', 'unitless', 'none'):
+                    if power != 1:
+                        assert isinstance(power, int)
+                        match = trail_nums_re.match(dim_name)
+                        if match:
+                            name = match.group(1)
+                            pw = int(match.group(2)) * power
+                        else:
+                            name = dim_name
+                            pw = power
+                        dim_name = name + str(abs(pw))
+                    new_lst.append(dim_name)
+            num_denoms.append(new_lst)
+        numerator, denominator = num_denoms
         name = '_'.join(sorted(numerator))
         if len(denominator):
-            name += '_per_' + '_'.join(sorted(denominator))
+            if len(numerator):
+                name += '_'
+            name += 'per_' + '_'.join(sorted(denominator))
         return name
 
 
@@ -301,6 +329,8 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
 
     def __mul__(self, other):
         "self * other"
+        if other == 1:
+            other = unitless
         assert (self.offset == 0 and
                 other.offset == 0), "Can't multiply units with nonzero offsets"
         return Unit(Dimension.make_name([self.name, other.name]),
@@ -309,6 +339,8 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
 
     def __truediv__(self, other):
         "self / expr"
+        if other == 1:
+            other = unitless
         assert (self.offset == 0 and
                 other.offset == 0), "Can't divide units with nonzero offsets"
         return Unit(Dimension.make_name([self.name], [other.name]),
@@ -322,8 +354,20 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
                     dimension=(self.dimension ** power),
                     power=(self.power * power))
 
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
+        if other == 1:
+            other = unitless
+        return other.__truediv__(self)
+
     def __div__(self, other):
         return self.__truediv__(other)
+
+    def __rdiv__(self, other):
+        return self.__rtruediv__(other)
+
 
 # ----------------- #
 # Common dimensions #
@@ -437,4 +481,5 @@ unitless = Unit(name="unitless", dimension=dimensionless, power=0)
 coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)
 
 if __name__ == '__main__':
-    print ((mV * mM / ms ** 2) ** -3).name
+    print 1 / voltage
+    print (current / voltage) ** -3
