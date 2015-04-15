@@ -183,9 +183,9 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         # Insert declared dimensions into dimensionality database
         for a in componentclass.attributes_with_dimension:
             if not isinstance(a, SendPortBase):
-                self._dimensions[a.name] = sympify(a.dimension)
+                self._dimensions[a] = sympify(a.dimension)
         for a in componentclass.attributes_with_units:
-            self._dimensions[a.name] = sympify(a.units.dimension)
+            self._dimensions[a] = sympify(a.units.dimension)
         self.visit(componentclass)
 
     def _get_dimensions(self, element):
@@ -198,17 +198,17 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         except AttributeError:  # for basic sympy expressions
             expr = element
         try:
-            return self._dimensions[element.name]
+            return self._dimensions[element]
         except (KeyError, AttributeError):  # for derived dimensions
             dims = self._flatten_dims(expr, element)
         try:
-            self._dimensions[element.name] = dims
+            self._dimensions[element] = dims
         except AttributeError:
             pass
         return dims
 
     def _flatten_dims(self, expr, element):
-        if isinstance(expr, (sympy.Integer, sympy.Float)):
+        if isinstance(expr, (sympy.Integer, sympy.Float, int, float)):
             dims = 1
         elif isinstance(expr, sympy.Symbol):
             dims = self._get_dimensions(expr)
