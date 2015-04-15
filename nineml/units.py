@@ -1,12 +1,10 @@
 from __future__ import division
-import sympy
+import re
+import operator
+from sympy import Symbol
 from nineml.xmlns import E
 from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
-import re
-
-
-trail_nums_re = re.compile(r'(.*)(\d+)$')
 
 
 class Dimension(BaseNineMLObject, DocumentLevelObject):
@@ -18,6 +16,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     dimension_names = ('m', 'l', 't', 'i', 'n', 'k', 'j')
     SI_units = ('Kg', 'm', 's', 'A', 'mol', 'K', 'cd')
     defining_attributes = ('_dims',)
+    _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
     def __init__(self, name, dimensions=None, **kwargs):
         BaseNineMLObject.__init__(self)
@@ -64,10 +63,9 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         Create a sympy expression by multiplying symbols representing each of
         the dimensions together
         """
-        expr = 1
-        for n, p in zip(self.dimension_names, self._dims):
-            expr *= sympy.Symbol(n) ** p
-        return expr
+        return reduce(
+            operator.mul,
+            (Symbol(n) ** p for n, p in zip(self.dimension_names, self._dims)))
 
     @property
     def m(self):
@@ -210,7 +208,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
                 if dim_name not in ('dimensionless', 'unitless', 'none'):
                     if power != 1:
                         assert isinstance(power, int)
-                        match = trail_nums_re.match(dim_name)
+                        match = cls._trailing_numbers_re.match(dim_name)
                         if match:
                             name = match.group(1)
                             pw = int(match.group(2)) * power
