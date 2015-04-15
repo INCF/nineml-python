@@ -188,6 +188,8 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
 
     def _get_dimensions(self, element):
         if isinstance(element, (sympy.Symbol, basestring)):
+            if element == sympy.Symbol('t'):  # Reserved symbol 't'
+                return sympy.Symbol('t')  # representation of the time dim.
             element = self.componentclass[str(element)]
         try:
             expr = element.rhs
@@ -207,10 +209,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         if isinstance(expr, (sympy.Integer, sympy.Float)):
             dims = 1
         elif isinstance(expr, sympy.Symbol):
-            if expr == sympy.Symbol('t'):  # Reserved symbol
-                dims = sympy.Symbol('t')
-            else:
-                dims = self._get_dimensions(expr)
+            dims = self._get_dimensions(expr)
         elif isinstance(expr, sympy.Mul):
             dims = reduce(operator.mul,
                           (self._flatten_dims(a, element) for a in expr.args))

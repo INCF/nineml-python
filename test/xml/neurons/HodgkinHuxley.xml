@@ -103,7 +103,7 @@
     <Property name="temperatureReference" units="K">
       <SingleValue>300</SingleValue>
     </Property>
-    <Property name="surfaceArea" unit="um2">
+    <Property name="surfaceArea" units="um2">
       <SingleValue>100</SingleValue>
     </Property>
   </Component>
