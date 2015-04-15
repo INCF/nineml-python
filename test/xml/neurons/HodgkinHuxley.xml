@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
   <Dimension name="per_time" t="-1"/>
+  <Dimension name="per_time_voltage" m="-1" l="-2" t="2" i="1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
   <Dimension name="conductanceDensity" m="-1" l="-4" t="3" i="2"/>
   <Dimension name="specificCapacitance" m="-1" l="-4" t="4" i="2"/>
   <Dimension name="temperature" k="1"/>
   <Dimension name="length2" l="2"/>
   <Unit symbol="per_ms" dimension="per_time" power="3"/>
+  <Unit symbol="per_ms_mV" dimension="per_time_voltage" power="6"/>
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="S_per_cm2" dimension="conductanceDensity" power="4"/>
   <Unit symbol="uF_per_cm2" dimension="specificCapacitance" power="-2"/>
@@ -14,7 +16,7 @@
   <Unit symbol="um2" dimension="length2"/>
   <Component name="HodgkinHuxley">
     <Definition url="./HodgkinHuxleyClass.xml">HodgkinHuxleyClass</Definition>
-    <Property name="m_alpha_A" units="per_ms">
+    <Property name="m_alpha_A" units="per_ms_mV">
       <SingleValue>0.1</SingleValue>
       <Annotations>
         <Text>This is the alpha A value for the m gate of the Sodium channel</Text>
@@ -53,7 +55,7 @@
     <Property name="h_beta_K" units="mV">
       <SingleValue>10.0</SingleValue>
     </Property>
-    <Property name="n_alpha_A" units="per_ms">
+    <Property name="n_alpha_A" units="per_ms_mV">
       <SingleValue>0.01</SingleValue>
     </Property>
     <Property name="n_alpha_V0" units="mV">

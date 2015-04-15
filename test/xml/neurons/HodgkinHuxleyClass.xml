@@ -5,6 +5,7 @@
   <Dimension name="conductanceDensity" m="-1" l="-4" t="3" i="2"/>
   <Dimension name="specificCapacitance" m="-1" l="-4" t="4" i="2"/>
   <Dimension name="current" i="1"/>
+  <Dimension name="currentDensity" i="1" l="-2"/>
   <Dimension name="length2" l="2"/>
   <Dimension name="temperature" k="1"/>
   <Dimension name="per_time_voltage" m="-1" l="-2" t="2" i="1"/>
@@ -40,7 +41,7 @@
     <Parameter name="temperatureReference" dimension="temperature"/>
     <Parameter name="surfaceArea" dimension="length2"/>
     <AnalogSendPort name="v" dimension="voltage"/>
-    <AnalogSendPort name="iK" dimension="current"/>
+    <AnalogSendPort name="iK" dimension="currentDensity"/>
     <AnalogReceivePort name="T" dimension="temperature"/>
     <AnalogReducePort name="iSynapse" dimension="current" operator="+"/>
     <EventReceivePort name="incomingSpike"/>
