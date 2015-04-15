@@ -289,6 +289,8 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
             except AttributeError:
                 expr = ''
                 symbols = []
+        else:
+            symbols = expr.free_symbols
         msg = preamble
         if element is None:
             msg += ' expression'
