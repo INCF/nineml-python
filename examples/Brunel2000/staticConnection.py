@@ -1,5 +1,5 @@
 import nineml.abstraction_layer as al
-from nineml.abstraction_layer.units import current
+from nineml.units import current, A, s
 
 model = al.DynamicsClass(
     name="StaticConnection",
@@ -7,13 +7,14 @@ model = al.DynamicsClass(
         al.Regime(
             name="default",
             time_derivatives=[
-                "dweight/dt = 0"],
+                "dweight/dt = zero"],
         )
     ],
     state_variables=[
-        al.StateVariable('weight', dimension=current),  # would be nice to make this dimensionless
+        al.StateVariable('weight', dimension=current),  # TGC 4/15 what is the point of this state variable, where is it read? @IgnorePep8
     ],
     analog_ports=[al.AnalogSendPort("weight", dimension=current)],
+    constants=[al.Constant('zero', 0.0, A / s)],
 )
 
 
