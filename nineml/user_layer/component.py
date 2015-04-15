@@ -287,7 +287,7 @@ class Component(BaseULObject, DocumentLevelObject):
             prop_dimension = prop_units.dimension
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
-                raise NineMLUnitMismatchError(
+                raise NineMLRuntimeError(
                     "Dimensions for '{}' property ('{}') don't match that of "
                     "componentclass class ('{}')."
                     .format(param.name, prop_dimension.name,

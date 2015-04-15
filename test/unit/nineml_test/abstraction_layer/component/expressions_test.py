@@ -22,7 +22,6 @@ class Expression_test(unittest.TestCase):
             (('a+b'), ('a', 'b'), (), 13, {'a': 12, 'b': 1}),
             (('1./(alpha+2*beta)'), ('alpha', 'beta'), (), 0.2,
              {'alpha': 1, 'beta': 2}),
-            (('pi'), (), (), 3.14159265, {}),
         ]
 
         for rhs, exp_var, exp_func, exp_res, params in valid_rhses:
@@ -162,7 +161,7 @@ class ExpressionWithSimpleLHS_test(unittest.TestCase):
 
     def test_lhs(self):
 
-        e = ExpressionWithSimpleLHS('a', 't+t+3 + sin(t*pi) +q')
+        e = ExpressionWithSimpleLHS('a', 't+t+3 + sin(t) +q')
 
         self.assertEqual(list(e.lhs), ['a'])
         self.assertEqual(list(e.lhs_atoms), ['a'])

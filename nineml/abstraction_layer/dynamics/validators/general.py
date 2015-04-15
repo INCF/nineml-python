@@ -231,12 +231,21 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
 class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
                                       PerNamespaceDynamicsValidator):
 
+    def __init__(self, componentclass):
+        if componentclass.subnodes:
+            warnings.warn("Skipping dimenion checking for DynamicsClass '{}' "
+                          "with subnodes".format(componentclass.name))
+        else:
+            super(DimensionalityDynamicsValidator,
+                  self).__init__(componentclass)
+
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(timederivative)
+        sv = self.componentclass.state_variable(timederivative.variable)
         try:
             self._compare_dimensionality(
                 dimension, sv.dimension / un.time, timederivative,
-                sv.name + ' time deriv.')
+                'time derivative of ' + sv.name)
         except NineMLRuntimeError:
             if (sv.dimension == un.dimensionless and
                     dimension in (1, un.dimensionless)):
@@ -244,13 +253,14 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
                     "Time derivative of dimensionless state variable '{}' is "
                     "also dimensionless instead of 1/time".format(sv.name))
             else:
-                raise)
+                raise
 
     def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(stateassignment)
         sv = self.componentclass.state_variable(stateassignment.variable)
         self._compare_dimensionality(dimension, sv.dimension,
-                                     stateassignment, sv.name + 'state var.')
+                                     stateassignment,
+                                     'state variable ' + sv.name)
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         self._check_send_port(port)
