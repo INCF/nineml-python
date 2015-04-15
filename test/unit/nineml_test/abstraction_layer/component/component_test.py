@@ -155,7 +155,7 @@ class ComponentClass_test(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             ComponentClass,
-            name='C1', aliases=['pi := 0'],
+            name='C1', aliases=['t := 0'],
         )
 
     def test_aliases_map(self):
@@ -603,7 +603,8 @@ class ComponentClass_test(unittest.TestCase):
                            regimes=Regime('dX/dt = 6 + c + sin(d)',
                                           'dV/dt = 1.0',
                                           transitions=On('V>Vt', do=['X = X + f', 'V=0'])
-                                          )
+                                          ),
+                           constants=[Constant('pi', 3.1415926535)]
                            )
         self.assertEqual(len(list(c.parameters)), 7)
         self.assertEqual(

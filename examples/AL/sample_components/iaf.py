@@ -1,4 +1,5 @@
 import nineml.abstraction_layer as al
+from nineml import units as un
 
 
 def get_component():
@@ -24,12 +25,18 @@ def get_component():
         ],
         state_variables=[
             al.StateVariable('V'),
-            al.StateVariable('tspike'),
+            al.StateVariable('tspike', dimension=un.time),
         ],
         analog_ports=[al.AnalogSendPort("V"),
                       al.AnalogReducePort("ISyn", operator="+"), ],
 
         event_ports=[al.EventSendPort('spikeoutput'), ],
-        parameters=['cm', 'taurefrac', 'gl', 'vreset', 'vrest', 'vthresh']
+        parameters=['cm',
+                    al.Parameter('taurefrac', dimension=un.time),
+                    'gl', 'vreset', 'vrest', 'vthresh']
     )
     return iaf
+
+
+if __name__ == '__main__':
+    get_component()
