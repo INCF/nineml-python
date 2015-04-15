@@ -89,15 +89,18 @@ class DynamicsCloner(ComponentCloner):
 
     def visit_analogreceiveport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_analogreduceport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_analogsendport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_eventsendport(self, port, **kwargs):
         return port.__class__(

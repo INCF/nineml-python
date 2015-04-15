@@ -22,9 +22,6 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
         # Visit class and populate declared_symbols and atoms sets
         self.parameter_names = self.atoms - self.declared_symbols
 
-    def _notify_atom(self, atom):
-        self.free_atoms.add(atom)
-
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.declared_symbols.add(alias.lhs)
         self.atoms.update(alias.rhs_atoms)
