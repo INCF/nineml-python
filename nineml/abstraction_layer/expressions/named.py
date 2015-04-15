@@ -2,7 +2,7 @@
 from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
 from .base import ExpressionWithSimpleLHS, ExpressionSymbol
-from nineml.units import unitless
+from nineml.units import unitless, Unit
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -98,8 +98,9 @@ class Constant(BaseALObject, ExpressionSymbol):
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)
         self._name = name
-        self._value = value
+        self._value = float(value)
         self._units = units if units is not None else unitless
+        assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
 
     @property
     def name(self):
@@ -130,4 +131,4 @@ class Constant(BaseALObject, ExpressionSymbol):
     def set_units(self, units):
         assert self.units == units, \
             "Renaming units with ones that do not match"
-        self.units = units
+        self._units = units

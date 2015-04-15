@@ -1,5 +1,5 @@
 import nineml.abstraction_layer as al
-from nineml.abstraction_layer.units import current, time
+from nineml.units import current, time
 
 model = al.DynamicsClass(
     name="AlphaPSR",
@@ -8,10 +8,10 @@ model = al.DynamicsClass(
         al.Regime(
             name="default",
             time_derivatives=[
-                "dA/dt = B - A/tau_syn",
-                "dB/dt = (-B)/tau_syn"],
+                "dA/dt = (B - A)/tau_syn",  # TGC 4/15 changed from "B - A/tau_syn" as dimensions didn't add up @IgnorePep8
+                "dB/dt = -B/tau_syn"],
             transitions=al.On('spike',
-                              do=["B = B + q"]),  # would be nice to allow constant quantities, so we could make q dimensionless
+                              do=["B = B + q"]),  # would be nice to allow constant quantities, so we could make q dimensionless @IgnorePep8
         )
     ],
     state_variables=[

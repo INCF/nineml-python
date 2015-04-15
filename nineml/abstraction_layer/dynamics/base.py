@@ -236,15 +236,12 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                              for p in chain(parameters if parameters else [],
                                             analog_ports, event_ports))
 
-        self._analog_send_ports = dict(
-            (p.name, p) for p in analog_ports
-            if isinstance(p, AnalogSendPort))
-        self._analog_receive_ports = dict(
-            (p.name, p) for p in analog_ports
-            if isinstance(p, AnalogReceivePort))
-        self._analog_reduce_ports = dict(
-            (p.name, p) for p in analog_ports
-            if isinstance(p, AnalogReducePort))
+        self._analog_send_ports = dict((p.name, p) for p in analog_ports
+                                       if isinstance(p, AnalogSendPort))
+        self._analog_receive_ports = dict((p.name, p) for p in analog_ports
+                                          if isinstance(p, AnalogReceivePort))
+        self._analog_reduce_ports = dict((p.name, p) for p in analog_ports
+                                         if isinstance(p, AnalogReducePort))
 
         # Create dummy event ports to keep the ActionVisitor base class of
         # the interface inferrer happy

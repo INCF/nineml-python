@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <Dimension name="conductanceDensity" m="-1" l="-4" t="3" i="2"/>
+  <Dimension name="conductance" m="-1" l="-2" t="3" i="2"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
   <Dimension name="current" i="1"/>
   <Dimension name="time" t="1"/>
   <ComponentClass name="DoubleExpCondSynapse">
-    <Parameter name="gBar" dimension="conductanceDensity"/>
+    <Parameter name="gBar" dimension="conductance"/>
     <Parameter name="tau1" dimension="time"/>
     <Parameter name="tau2" dimension="time"/>
     <Parameter name="eReversal" dimension="voltage"/>
@@ -13,8 +13,8 @@
     <AnalogSendPort name="i" dimension="current"/>
     <EventReceivePort name="spike"/>
     <Dynamics>
-      <StateVariable name="g1" dimension="conductanceDensity"/>
-      <StateVariable name="g2" dimension="conductanceDensity"/>
+      <StateVariable name="g1" dimension="conductance"/>
+      <StateVariable name="g2" dimension="conductance"/>
       <Regime>
         <TimeDerivative variable="g1">
           <MathInline>-g1 / tau1</MathInline>

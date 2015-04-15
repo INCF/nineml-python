@@ -12,4 +12,6 @@ class TestPopulation(unittest.TestCase):
         document1 = read(self.test_file)
         xml = document1.to_xml()
         document2 = load(xml, read_from=self.test_file)
-        self.assertEquals(document1.items(), document2.items())
+        self.assertEquals(document1, document2,
+                          "Documents don't match after write/read from file:\n"
+                          "{}".format(document2.find_mismatch(document1)))

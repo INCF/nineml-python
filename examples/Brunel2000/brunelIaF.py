@@ -3,7 +3,7 @@
 """
 
 import nineml.abstraction_layer as al
-from nineml.abstraction_layer.units import voltage, time, resistance, current
+from nineml.units import voltage, time, resistance, current
 
 model = al.DynamicsClass(
     name="BrunelIaF",
@@ -19,7 +19,6 @@ model = al.DynamicsClass(
         ),
         al.Regime(
             name="refractoryRegime",
-            time_derivatives=["dV/dt = 0"],
             transitions=[al.On("t > t_rpend",
                                #do=[al.OutputEvent('refractoryEnd')],
                                to="subthresholdRegime")],
