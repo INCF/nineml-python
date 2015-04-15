@@ -12,6 +12,7 @@ from ...expressions import reserved_identifiers
 from nineml.utils import assert_no_duplicates
 import operator
 import sympy
+from nineml.base import SendPortBase
 
 
 class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
@@ -179,13 +180,14 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database
         for a in componentclass.attributes_with_dimension:
-            self._dimensions[a.name] = sympy.sympify(a.dimension)
+            if not isinstance(a, SendPortBase):
+                self._dimensions[a.name] = sympy.sympify(a.dimension)
         for a in componentclass.attributes_with_units:
             self._dimensions[a.name] = sympy.sympify(a.units.dimension)
         self.visit(componentclass)
 
     def _get_dimensions(self, element):
-        if isinstance(element, sympy.Symbol):
+        if isinstance(element, (sympy.Symbol, basestring)):
             element = self.componentclass[str(element)]
         try:
             expr = element.rhs
@@ -219,7 +221,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
             if exp_dims != 1:
                 raise NineMLRuntimeError(self._construct_error_message(
                     "Exponents are required to be dimensionless arguments,"
-                    " which was not the case in", expr, element))
+                    " which was not the case in", exp_dims, expr, element))
             # FIXME: Probably should check that if the exponent is not an
             # integer that the base is dimensionless
             dims = (self._flatten_dims(expr.args[0], element) ** expr.args[1])
@@ -231,14 +233,15 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
                     dims = arg_dims
                 elif arg_dims - dims != 0:
                     raise NineMLRuntimeError(self._construct_error_message(
-                        "Dimensions do not match within", expr, element,
-                        sub_expr="{} + {}".format(dims, arg_dims)))
+                        "Dimensions do not match within",
+                        ' + '.join(self._flatten_dims(a, element)
+                                   for a in expr.args), expr, element))
         elif isinstance(type(expr), sympy.FunctionClass):
             arg_dims = self._flatten_dims(expr.args[0], element)
             if arg_dims != 1:
                 raise NineMLRuntimeError(self._construct_error_message(
                     "Dimensionless arguments required for function",
-                    element=element, expr=expr, sub_expr=arg_dims))
+                    arg_dims, element=element, expr=expr))
             dims = 1
         elif type(expr).__name__ in ('Pi',):
             dims = 1
@@ -249,9 +252,8 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
     def _compare_dimensionality(self, dimension, reference, element, ref_name):
         if dimension - sympy.sympify(reference) != 0:
             raise NineMLRuntimeError(self._construct_error_message(
-                "Dimension of", dimension, element,
+                "Dimension of", dimension, element=element,
                 postamble=(" match that declared for '{}', {} ('{}')".format(
-                    element._name, type(element).__name__, dimension,
                     ref_name, sympy.sympify(reference), reference.name))))
 
     def _check_boolean_expr(self, expr):
@@ -260,33 +262,34 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         rhs_dimension = self._get_dimensions(rhs)
         if lhs_dimension - rhs_dimension != 0:
             raise NineMLRuntimeError(self._construct_error_message(
-                "LHS/RHS dimensions of", expr, postamble="do not match"))
+                "LHS/RHS dimensions of", lhs_dimension - rhs_dimension, expr,
+                postamble="do not match"))
 
     def _check_send_port(self, port):
         element = self.componentclass[port.name]
         try:
             if element.dimension != port.dimension:
                 raise NineMLRuntimeError(self._construct_error_message(
-                    "Referenced element", element.rhs, element,
+                    "Referenced element", element.dimension, element=element,
                     postamble=("does match attached send port dimension '{}'"
                                .format(element.dimension.name))))
         except AttributeError:  # If element doesn't have explicit dimension
             self._compare_dimensionality(self._get_dimensions(element),
                                          port.dimension, element, port.name)
 
-    def _construct_error_message(self, preamble, expr, element=None,
-                                 sub_expr=None, postamble=None):
+    def _construct_error_message(self, preamble, dimension, expr=None,
+                                 element=None, postamble=None):
+        if expr is None:
+            expr = element.rhs
         msg = preamble
         if element is None:
-            msg += ' expression [{}, with '.format(expr)
+            msg += ' expression'
         else:
-            msg += " {} '{}' [{}, with ".format(element.__class__.__name__,
-                                                element._name, element.rhs)
-        msg += "{}]".format(', '.join(
-            '{}={}'.format(a, self._get_dimensions(a))
-            for a in element.rhs_symbols))
-        if sub_expr is not None:
-            msg += " due to sub expression [{}] ".format(sub_expr)
+            msg += " {} '{}'".format(element.__class__.__name__, element._name)
+        msg += ", {} [{}, with {}],".format(
+            dimension, expr, ', '.join(
+                '{}={}'.format(a, self._get_dimensions(a))
+                for a in element.rhs_symbols))
         if postamble is not None:
             msg += postamble
         return msg
