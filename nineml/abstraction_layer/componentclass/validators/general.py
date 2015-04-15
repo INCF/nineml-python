@@ -12,7 +12,9 @@ from ...expressions import reserved_identifiers
 from nineml.utils import assert_no_duplicates
 import operator
 import sympy
+from sympy import sympify
 from nineml.base import SendPortBase
+from nineml.abstraction_layer.expressions import Expression
 
 
 class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
@@ -181,16 +183,16 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         # Insert declared dimensions into dimensionality database
         for a in componentclass.attributes_with_dimension:
             if not isinstance(a, SendPortBase):
-                self._dimensions[a.name] = sympy.sympify(a.dimension)
+                self._dimensions[a.name] = sympify(a.dimension)
         for a in componentclass.attributes_with_units:
-            self._dimensions[a.name] = sympy.sympify(a.units.dimension)
+            self._dimensions[a.name] = sympify(a.units.dimension)
         self.visit(componentclass)
 
     def _get_dimensions(self, element):
         if isinstance(element, (sympy.Symbol, basestring)):
             if element == sympy.Symbol('t'):  # Reserved symbol 't'
                 return sympy.Symbol('t')  # representation of the time dim.
-            element = self.componentclass[str(element)]
+            element = self.componentclass[Expression.symbol_to_str(element)]
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions
@@ -249,11 +251,11 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         return dims
 
     def _compare_dimensionality(self, dimension, reference, element, ref_name):
-        if dimension - sympy.sympify(reference) != 0:
+        if dimension - sympify(reference) != 0:
             raise NineMLRuntimeError(self._construct_error_message(
                 "Dimension of", dimension, element=element,
                 postamble=(" match that declared for '{}', {} ('{}')".format(
-                    ref_name, sympy.sympify(reference), reference.name))))
+                    ref_name, sympify(reference), reference.name))))
 
     def _check_boolean_expr(self, expr):
         lhs, rhs = expr.args
@@ -269,9 +271,11 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         try:
             if element.dimension != port.dimension:
                 raise NineMLRuntimeError(self._construct_error_message(
-                    "Referenced element", element.dimension, element=element,
-                    postamble=("does match attached send port dimension '{}'"
-                               .format(element.dimension.name))))
+                    "Dimension of", sympify(element.dimension),
+                    element=element, postamble=(
+                        "does match attached send port dimension {} ('{}')"
+                        .format(sympify(port.dimension),
+                                port.dimension.name))))
         except AttributeError:  # If element doesn't have explicit dimension
             self._compare_dimensionality(self._get_dimensions(element),
                                          port.dimension, element, port.name)
@@ -279,16 +283,20 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
     def _construct_error_message(self, preamble, dimension, expr=None,
                                  element=None, postamble=None):
         if expr is None:
-            expr = element.rhs
+            try:
+                expr = element.rhs
+                symbols = element.rhs_symbols
+            except AttributeError:
+                expr = ''
+                symbols = []
         msg = preamble
         if element is None:
             msg += ' expression'
         else:
             msg += " {} '{}'".format(element.__class__.__name__, element._name)
-        msg += ", {} [{}, with {}],".format(
+        msg += ", {} [{}, with {}], ".format(
             dimension, expr, ', '.join(
-                '{}={}'.format(a, self._get_dimensions(a))
-                for a in element.rhs_symbols))
+                '{}={}'.format(a, self._get_dimensions(a)) for a in symbols))
         if postamble is not None:
             msg += postamble
         return msg

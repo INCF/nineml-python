@@ -107,9 +107,7 @@ class Expression(object):
 
     @property
     def rhs_symbol_names(self):
-        # FIXME: Might be a better way to ensure there are no parentheses
-        return (self._strip_parens_re.sub(r'\1', str(s))
-                for s in self.rhs_symbols)
+        return (self.symbol_to_str(s) for s in self.rhs_symbols)
 
     @property
     def rhs_funcs(self):
@@ -310,6 +308,10 @@ class Expression(object):
             if altered:
                 return expr.func(*args, evaluate=False)
         return expr
+
+    @classmethod
+    def symbol_to_str(cls, symbol):
+        return cls._strip_parens_re.sub(r'\1', str(symbol))
 
 
 class ExpressionSymbol(object):
