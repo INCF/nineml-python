@@ -15,6 +15,7 @@ from ...componentclass.validators import (
     DimensionalityComponentValidator)
 from . import PerNamespaceDynamicsValidator
 from nineml import units as un
+import warnings
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(
@@ -232,9 +233,18 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
 
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(timederivative)
-        sv = self.componentclass.state_variable(timederivative.variable)
-        self._compare_dimensionality(dimension, sv.dimension / un.time,
-                                     timederivative, sv.name + ' time deriv.')
+        try:
+            self._compare_dimensionality(
+                dimension, sv.dimension / un.time, timederivative,
+                sv.name + ' time deriv.')
+        except NineMLRuntimeError:
+            if (sv.dimension == un.dimensionless and
+                    dimension in (1, un.dimensionless)):
+                warnings.warn(
+                    "Time derivative of dimensionless state variable '{}' is "
+                    "also dimensionless instead of 1/time".format(sv.name))
+            else:
+                raise)
 
     def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(stateassignment)

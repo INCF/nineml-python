@@ -18,7 +18,7 @@ class Dimensionality_test(unittest.TestCase):
                 StateVariable('SV2', dimension=un.current)],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1 / P1',
+                    'dSV1/dt = -SV1 / P2',
                     'dSV2/dt = A3 / ARP2 + SV2 / P2',
                     transitions=[On('SV1 > P3', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],

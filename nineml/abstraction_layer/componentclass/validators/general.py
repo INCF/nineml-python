@@ -10,7 +10,8 @@ from nineml.exceptions import NineMLRuntimeError
 from ...expressions.utils import is_valid_lhs_target
 from ...expressions import reserved_identifiers
 from nineml.utils import assert_no_duplicates
-import sympy.core.numbers
+import operator
+import sympy
 
 
 class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
@@ -207,8 +208,8 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
             else:
                 dims = self._get_dimensions(self.componentclass[str(expr)])
         elif isinstance(expr, sympy.Mul):
-            dims = (self._flatten_dims(expr.args[0], element) *
-                    self._flatten_dims(expr.args[1], element))
+            dims = reduce(operator.mul,
+                          (self._flatten_dims(a, element) for a in expr.args))
             if isinstance(dims, sympy.Basic):
                 dims = dims.powsimp()
         elif isinstance(expr, sympy.Pow):
@@ -222,24 +223,25 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
             # integer that the base is dimensionless
             dims = (self._flatten_dims(expr.args[0], element) ** expr.args[1])
         elif isinstance(expr, sympy.Add):
-            arg1_dims = self._flatten_dims(expr.args[0], element)
-            arg2_dims = self._flatten_dims(expr.args[1], element)
-            if arg1_dims - arg2_dims == 0:
-                dims = arg1_dims
-            else:
-                symbol_dims = ', '.join(
-                    '{}={}'.format(a, self._dimensions[str(a)])
-                    for a in element.rhs_symbols)
-                if element is None:
-                    err_msg = ("Dimensions do not match in expression {} ({})"
-                               .format(expr, symbol_dims))
-                else:
-                    err_msg = ("Dimensions do not match for {} '{}': {} -> "
-                               "{} + {} ({})".format(
-                                   element.__class__.__name__, element._name,
-                                   element.rhs, arg1_dims, arg2_dims,
-                                   symbol_dims))
-                raise NineMLRuntimeError(err_msg)
+            dims = None
+            for arg in expr.args:
+                arg_dims = self._flatten_dims(arg, element)
+                if dims is None:
+                    dims = arg_dims
+                elif arg_dims - dims != 0:
+                    symbol_dims = ', '.join(
+                        '{}={}'.format(a, self._dimensions[str(a)])
+                        for a in element.rhs_symbols)
+                    if element is None:
+                        err_msg = ("Dimensions do not match in expression {} "
+                                   "({})".format(expr, symbol_dims))
+                    else:
+                        err_msg = ("Dimensions do not match for {} '{}': {} ->"
+                                   " {} + {} ({})".format(
+                                       element.__class__.__name__,
+                                       element._name, element.rhs, arg_dims,
+                                       dims, symbol_dims))
+                    raise NineMLRuntimeError(err_msg)
         elif isinstance(type(expr), sympy.FunctionClass):
             arg_dims = self._flatten_dims(expr.args[0], element)
             if arg_dims != 1:
