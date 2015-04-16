@@ -73,8 +73,8 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
                           .format(atom, expression, repr(required)))
 
     def test_required_definitions(self):
-        for componentclass in (self.a, self.b):
-            for regime in componentclass.regimes:
+        for component_class in (self.a, self.b):
+            for regime in component_class.regimes:
                 for td in regime.time_derivatives:
                     self._test_expression_requirements(td)
                 for oc in regime.on_conditions:

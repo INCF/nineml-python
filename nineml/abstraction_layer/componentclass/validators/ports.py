@@ -16,14 +16,14 @@ class PortConnectionsComponentValidator(PerNamespaceComponentValidator):
     each send & recv port only has a single connection.
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
 
         self.ports = defaultdict(list)
         self.portconnections = list()
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
         connected_recv_ports = set()
 
@@ -72,8 +72,8 @@ class PortConnectionsComponentValidator(PerNamespaceComponentValidator):
                 'Duplicated Name for port found: %s' % port_address)
         self.ports[port_address] = port
 
-    def action_componentclass(self, componentclass, namespace):
-        for src, sink in componentclass.portconnections:
+    def action_componentclass(self, component_class, namespace):
+        for src, sink in component_class.portconnections:
             full_src = NamespaceAddress.concat(namespace, src)
             full_sink = NamespaceAddress.concat(namespace, sink)
 

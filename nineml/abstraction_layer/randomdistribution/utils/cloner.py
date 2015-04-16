@@ -20,7 +20,7 @@ class RandomDistributionExpandAliasDefinition(RandomDistributionActionVisitor,
                                               ComponentExpandAliasDefinition):
 
     """
-    An action-class that walks over a componentclass, and expands an alias in
+    An action-class that walks over a component_class, and expands an alias in
     Aliases
     """
 
@@ -29,11 +29,11 @@ class RandomDistributionExpandAliasDefinition(RandomDistributionActionVisitor,
 
 class RandomDistributionCloner(ComponentCloner):
 
-    def visit_componentclass(self, componentclass, **kwargs):
+    def visit_componentclass(self, component_class, **kwargs):
         super(RandomDistributionCloner, self).visit_componentclass(
-            componentclass)
-        ccn = componentclass.__class__(
-            name=componentclass.name,
+            component_class)
+        ccn = component_class.__class__(
+            name=component_class.name,
             parameters=[p.accept_visitor(self, **kwargs)
-                        for p in componentclass.parameters])
+                        for p in component_class.parameters])
         return ccn

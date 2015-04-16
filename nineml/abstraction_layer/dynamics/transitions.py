@@ -36,7 +36,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         """StateAssignment Constructor
 
         `lhs` -- A `string`, which must be a state-variable of the
-                 componentclass.
+                 component_class.
         `rhs` -- A `string`, representing the new value of the state after
                  this assignment.
 
@@ -90,7 +90,7 @@ class OutputEvent(BaseALObject):
 
         :param port: The name of the output EventPort that should
             transmit an event. An `EventPort` with a mode of 'send' must exist
-            with a corresponding name in the componentclass, otherwise a
+            with a corresponding name in the component_class, otherwise a
             ``NineMLRuntimeException`` will be raised.
 
         """

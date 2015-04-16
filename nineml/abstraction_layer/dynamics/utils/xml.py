@@ -157,10 +157,10 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
-    def visit_componentclass(self, componentclass):
+    def visit_componentclass(self, component_class):
         return E('DynamicsClass',
-                 *[e.accept_visitor(self) for e in componentclass],
-                 name=componentclass.name)
+                 *[e.accept_visitor(self) for e in component_class],
+                 name=component_class.name)
 
     @annotate_xml
     def visit_regime(self, regime):

@@ -12,9 +12,9 @@ from ...expressions import Alias, Constant
 
 class TypesComponentValidator(ComponentActionVisitor):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         super(TypesComponentValidator, self).__init__()
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def action_componentclass(self, component):
         assert isinstance(component, ComponentClass)

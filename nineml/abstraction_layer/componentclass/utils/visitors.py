@@ -18,9 +18,9 @@ class ComponentActionVisitor(ComponentVisitor):
     def __init__(self, require_explicit_overrides=True):
         self.require_explicit_overrides = require_explicit_overrides
 
-    def visit_componentclass(self, componentclass, **kwargs):
-        self.action_componentclass(componentclass, **kwargs)
-        for p in componentclass:
+    def visit_componentclass(self, component_class, **kwargs):
+        self.action_componentclass(component_class, **kwargs)
+        for p in component_class:
             p.accept_visitor(self, **kwargs)
 
     def visit_parameter(self, parameter, **kwargs):
@@ -40,7 +40,7 @@ class ComponentActionVisitor(ComponentVisitor):
             pass
 
     # To be overridden:
-    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_pass()
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
@@ -59,7 +59,7 @@ class ComponentRequiredDefinitions(object):
     constants and expressions (in resolved order of execution).
     """
 
-    def __init__(self, componentclass, expressions):
+    def __init__(self, component_class, expressions):
         # Expression can either be a single expression or an iterable of
         # expressions
         self.parameters = set()
@@ -69,8 +69,8 @@ class ComponentRequiredDefinitions(object):
         self.expressions = list()
         self._required_stack = []
         self._push_required_symbols(expressions)
-        self._componentclass = componentclass
-        self.visit(componentclass)
+        self._componentclass = component_class
+        self.visit(component_class)
 
     def __repr__(self):
         return ("Parameters: {}\nPorts: {}\nConstants: {}\nAliases:\n{}"
@@ -144,15 +144,15 @@ class ComponentElementFinder(ComponentActionVisitor):
             require_explicit_overrides=True)
         self.element = element
 
-    def found_in(self, componentclass):
+    def found_in(self, component_class):
         self.found = False
-        self.visit(componentclass)
+        self.visit(component_class)
         return self.found
 
     def _found(self):
         self.found = True
 
-    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         pass
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
