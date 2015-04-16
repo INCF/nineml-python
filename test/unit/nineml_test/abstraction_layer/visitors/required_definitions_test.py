@@ -3,6 +3,7 @@ from itertools import chain
 from nineml.abstraction_layer.dynamics import (
     DynamicsClass, Regime, On, OutputEvent)
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
+from nineml.abstraction_layer.expressions import reserved_identifiers
 
 
 # Testing Skeleton for class: DynamicsClonerPrefixNamespace
@@ -14,8 +15,8 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
             name='A',
             aliases=['A1:=P1', 'A2 := ARP2', 'A3 := SV1'],
             regimes=[
-                Regime('dSV1/dt = -SV1 / P2',
-                       'dSV2/dt = A2 + A3 + ARP1',
+                Regime('dSV1/dt = -SV1 / (P2*t)',
+                       'dSV2/dt = A2/t + A3/t + ARP1/t',
                        name='R1',
                        transitions=On('input', 'SV1 = SV1 + 1'))],
             analog_ports=[AnalogReceivePort('ARP1'),
@@ -30,8 +31,8 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1 / P2',
-                    'dSV2/dt = SV1 / ARP1 + SV2 / P1',
+                    'dSV1/dt = -SV1 / (P2*t)',
+                    'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
                     transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
                     name='R1',
@@ -51,7 +52,7 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
                          "Expresions are duplicated in those required for {}: "
                          "{}".format(expression, required.expression_names))
         # Check all atoms are accounted for
-        atoms_to_find = list(expression.rhs_atoms)
+        atoms_to_find = list(set(expression.rhs_atoms) - reserved_identifiers)
         atoms_found = set()
         while atoms_to_find:
             atom = atoms_to_find.pop()

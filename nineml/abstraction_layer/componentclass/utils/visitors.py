@@ -75,17 +75,11 @@ class ComponentRequiredDefinitions(object):
         self.visit(componentclass)
 
     def __repr__(self):
-        return ("Parameters: {}\nPorts: {}\nConstants: {}\n"
-                "Random-variables: {}\nPiecewises: {}\nAliases:\n{}"
+        return ("Parameters: {}\nPorts: {}\nConstants: {}\nAliases:\n{}"
                 .format(', '.join(self.parameter_names),
                         ', '.join(self.port_names),
                         ', '.join(self.constant_names),
-                        ', '.join(self.random_variable_names),
-                        ', '.join(e.name for e in self.expressions
-                                  if hasattr(e, 'pieces')),
-                        '\n'.join('{} = {}'.format(e.name, e.rhs)
-                                  for e in self.expressions
-                                  if not hasattr(e, 'pieces'))))
+                        ', '.join(self.expression_names)))
 
     def _push_required_symbols(self, expression):
         required_atoms = set()
