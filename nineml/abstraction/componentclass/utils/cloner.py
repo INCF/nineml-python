@@ -51,7 +51,6 @@ class ComponentCloner(ComponentVisitor):
 
         if is_builtin_symbol(variable):
             return variable
-
         else:
             return prefix + variable
 

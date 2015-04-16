@@ -34,9 +34,7 @@ class NoUnresolvedSymbolsRandomDistributionValidator(
 class NoDuplicatedObjectsRandomDistributionValidator(
         NoDuplicatedObjectsComponentValidator,
         BaseRandomDistributionValidator):
-
-    def action_randomdistributionblock(self, randomdistributionblock, **kwargs):  # @UnusedVariable
-        self.all_objects.append(randomdistributionblock)
+    pass
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(

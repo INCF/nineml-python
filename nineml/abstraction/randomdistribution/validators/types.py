@@ -6,12 +6,9 @@ docstring needed
 """
 
 from ...componentclass.validators.types import TypesComponentValidator
-from ..base import RandomDistributionBlock
 from ..utils.visitors import RandomDistributionActionVisitor
 
 
 class TypesRandomDistributionValidator(RandomDistributionActionVisitor,
-                                 TypesComponentValidator):
-
-    def action_randomdistributionblock(self, randomdistributionblock):
-        assert isinstance(randomdistributionblock, RandomDistributionBlock)
+                                       TypesComponentValidator):
+    pass
