@@ -4,14 +4,14 @@ import unittest
 from nineml.abstraction_layer import (Regime, On, OutputEvent,
                                       AnalogReceivePort, AnalogSendPort,
                                       flattening)
-from nineml.abstraction_layer.dynamics import DynamicsClass as ComponentClass
+from nineml.abstraction_layer.dynamics import DynamicsClass as DynamicsClass
 
 
 class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening1(self):
 
-        c = ComponentClass(
+        c = DynamicsClass(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
@@ -28,7 +28,7 @@ class ComponentFlattener_test(unittest.TestCase):
             parameters=['cp1', 'cp2']
         )
 
-        d = ComponentClass(
+        d = DynamicsClass(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
@@ -76,7 +76,7 @@ class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening2(self):
 
-        c = ComponentClass(
+        c = DynamicsClass(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
@@ -93,7 +93,7 @@ class ComponentFlattener_test(unittest.TestCase):
             parameters=['cp1', 'cp2']
         )
 
-        d = ComponentClass(
+        d = DynamicsClass(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
@@ -114,7 +114,7 @@ class ComponentFlattener_test(unittest.TestCase):
         # ------------------------------ #
 
         # Everything should be as before:
-        b = ComponentClass(name='B',
+        b = DynamicsClass(name='B',
                            subnodes={'c1': c, 'c2': c, 'd': d},
                            # portconnections= [('c1.C1','c2.cIn1'),('c2.emit','c1.spikein'), ]
                            )
@@ -210,7 +210,7 @@ class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening3(self):
 
-        c = ComponentClass(
+        c = DynamicsClass(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
@@ -226,7 +226,7 @@ class ComponentFlattener_test(unittest.TestCase):
             parameters=['cp1', 'cp2']
         )
 
-        d = ComponentClass(
+        d = DynamicsClass(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
@@ -246,11 +246,11 @@ class ComponentFlattener_test(unittest.TestCase):
         # ------------------------------ #
 
         # Everything should be as before:
-        b = ComponentClass(name='B',
+        b = DynamicsClass(name='B',
                            subnodes={'c1': c, 'c2': c, 'd': d},
                            )
 
-        a = ComponentClass(name='A',
+        a = DynamicsClass(name='A',
                            subnodes={'b': b, 'c': c},
                            )
 
@@ -406,7 +406,7 @@ class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening4(self):
 
-        c = ComponentClass(
+        c = DynamicsClass(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1', 'C4:=cIn2'],
             regimes=[
@@ -423,7 +423,7 @@ class ComponentFlattener_test(unittest.TestCase):
             parameters=['cp1', 'cp2']
         )
 
-        d = ComponentClass(
+        d = DynamicsClass(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1 + dp2', 'D3 := SV1'],
             regimes=[
@@ -444,13 +444,13 @@ class ComponentFlattener_test(unittest.TestCase):
         # ------------------------------ #
 
         # Everything should be as before:
-        b = ComponentClass(name='B',
+        b = DynamicsClass(name='B',
                            subnodes={'c1': c, 'c2': c, 'd': d},
                            portconnections=[('c1.C1', 'c2.cIn2'),
                                             ('c2.C1', 'c1.cIn1')],
                            )
 
-        a = ComponentClass(name='A',
+        a = DynamicsClass(name='A',
                            subnodes={'b': b, 'c': c},
                            portconnections=[('b.c1.C1', 'b.c1.cIn2'),
                                             ('b.c1.C1', 'b.c2.cIn1'),
@@ -639,7 +639,7 @@ class ComponentFlattener_test(unittest.TestCase):
         # DONE IN FUNCTIONAL TESTS INSTEAD:
         #
         # Component that 'EvOut' every 20 ms
-        # c1 = ComponentClass(
+        # c1 = DynamicsClass(
         #        name = 'CC1',
         #        regimes = [ Regime(
         #                name = 'r1',
@@ -649,12 +649,12 @@ class ComponentFlattener_test(unittest.TestCase):
         #            ] )
 
         # Component that forwards events from EvIn to EvOut
-        # c2 = ComponentClass(
+        # c2 = DynamicsClass(
         #        name = 'CC2',
         #        regimes = [ Regime( name = 'r1', transitions = On('EvIn', do= OutputEvent('EvOut')) )
         #            ] )
 
-        # c3 = ComponentClass(
+        # c3 = DynamicsClass(
         #        name = 'CC3',
         #        regimes = [
         #            Regime( name = 'r1', transitions = On('EvIn', to='r2') ),
@@ -662,7 +662,7 @@ class ComponentFlattener_test(unittest.TestCase):
         #            ] )
 
         # Component that chains the components together:
-        # comp = ComponentClass(
+        # comp = DynamicsClass(
         #        name = 'C',
         #        subnodes = { 'c1':c1, 'c2':c2, 'c3':c3},
         #        portconnections= [ ('c1.EvOut','c2.EvIn'),('c2.EvOut','c3.EvIn') ]

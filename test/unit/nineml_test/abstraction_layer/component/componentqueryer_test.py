@@ -4,7 +4,7 @@ import unittest
 from nineml.abstraction_layer import (Regime, On, AnalogSendPort,
                                       AnalogReceivePort, NamespaceAddress,
                                       OutputEvent)
-from nineml.abstraction_layer.dynamics import DynamicsClass as ComponentClass
+from nineml.abstraction_layer.dynamics import DynamicsClass as DynamicsClass
 
 
 class ComponentClassQueryer_test(unittest.TestCase):
@@ -15,7 +15,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.componentqueryer import ComponentClassQueryer
 
         # Check inference of output event ports:
-        c = ComponentClass(
+        c = DynamicsClass(
             name='Comp1',
             regimes=Regime(
                 transitions=[
@@ -33,7 +33,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         self.assertEquals((list(c.query.event_send_ports)[1]).name, 'ev_port2')
 
         # Check inference of output event ports:
-        c = ComponentClass(
+        c = DynamicsClass(
             name='Comp1',
             regimes=[
                 Regime(name='r1',
@@ -61,7 +61,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         self.assertEquals((list(c.query.event_send_ports)[2]).name, 'ev_port3')
 
         # Check inference of output event ports:
-        c = ComponentClass(
+        c = DynamicsClass(
             name='Comp1',
             regimes=[
                 Regime(name='r1',
@@ -100,20 +100,20 @@ class ComponentClassQueryer_test(unittest.TestCase):
 
         # Signature: name(self)
                 # Get the namespace address of this component
-        d = ComponentClass(
+        d = DynamicsClass(
             name='D', aliases=['A:=1', 'B:=2'], analog_ports=[AnalogSendPort('A'), AnalogSendPort('B')])
-        e = ComponentClass(name='E', analog_ports=[AnalogReceivePort('C')])
-        f = ComponentClass(name='F', analog_ports=[AnalogReceivePort('D')])
-        g = ComponentClass(name='G', analog_ports=[AnalogReceivePort('E')])
-        b = ComponentClass(name='B', subnodes={
+        e = DynamicsClass(name='E', analog_ports=[AnalogReceivePort('C')])
+        f = DynamicsClass(name='F', analog_ports=[AnalogReceivePort('D')])
+        g = DynamicsClass(name='G', analog_ports=[AnalogReceivePort('E')])
+        b = DynamicsClass(name='B', subnodes={
                            'd': d, 'e': e}, portconnections=[('d.A', 'e.C')])
-        c = ComponentClass(name='C',
+        c = DynamicsClass(name='C',
                            aliases=['G:=-1'],
                            analog_ports=[AnalogSendPort('G')],
                            subnodes={'f': f, 'g': g},
                            portconnections=[('G', 'f.D')])
 
-        a = ComponentClass(name='A',
+        a = DynamicsClass(name='A',
                            subnodes={'b': b, 'c': c},
                            analog_ports=[AnalogReceivePort('F')],
                            portconnections=[('b.d.A', 'F')]
@@ -142,7 +142,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.componentqueryer import ComponentClassQueryer
 
 
-        c = ComponentClass(
+        c = DynamicsClass(
             name='Comp1',
             regimes=[
                 Regime(name='r1',
@@ -178,7 +178,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.componentqueryer import ComponentClassQueryer
 
 
-        c = ComponentClass(name='cl',
+        c = DynamicsClass(name='cl',
                            regimes=[
                                 Regime('dX/dt=1/t',
                                        name='r1',
@@ -207,20 +207,20 @@ class ComponentClassQueryer_test(unittest.TestCase):
                 # Returns an iterator over this component and all subcomponents
 
 
-        d = ComponentClass(name='D')
-        e = ComponentClass(name='E')
-        f = ComponentClass(name='F')
-        g = ComponentClass(name='G')
+        d = DynamicsClass(name='D')
+        e = DynamicsClass(name='E')
+        f = DynamicsClass(name='F')
+        g = DynamicsClass(name='G')
 
-        b = ComponentClass(name='B')
+        b = DynamicsClass(name='B')
         b.insert_subnode(namespace='d', subnode=d)
         b.insert_subnode(namespace='e', subnode=e)
 
-        c = ComponentClass(name='C')
+        c = DynamicsClass(name='C')
         c.insert_subnode(namespace='f', subnode=f)
         c.insert_subnode(namespace='g', subnode=g)
 
-        a = ComponentClass(name='A')
+        a = DynamicsClass(name='A')
         a.insert_subnode(namespace='b', subnode=b)
         a.insert_subnode(namespace='c', subnode=c)
 

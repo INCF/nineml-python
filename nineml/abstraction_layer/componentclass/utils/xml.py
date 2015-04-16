@@ -87,33 +87,8 @@ class ComponentClassXMLLoader(object):
                 err = "Unexpected block tag: %s " % tag
                 err += '\n Expected: %s' % ','.join(block_names)
                 raise NineMLRuntimeError(err)
-            loaded_objects[tag].append(self._get_loader(tag)(self, t))
+            loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
         return loaded_objects
-
-    def _get_loader(self, tag):
-        # Try class specific loaders (better to ask for forgiveness philosophy)
-        try:
-            loader = self.tag_to_loader[tag]
-        except KeyError:
-            # Otherwise try base class loaders for generic elements
-            try:
-                loader = ComponentClassXMLLoader.tag_to_loader[tag]
-            except KeyError:
-                assert False, "Did not finder loader for '{}' tag".format(tag)
-        return loader
-
-    @classmethod
-    def read_class_type(cls, element):
-        """
-        Returns the name of the tag that defines the type of the ComponentClass
-        """
-        assert element.tag == NINEML + 'ComponentClass', \
-            "Not a component class ('{}')".format(element.tag)
-        class_type = expect_single(chain(*(element.findall(NINEML + t)
-                                           for t in cls.class_types))).tag
-        if class_type.startswith(NINEML):
-            class_type = class_type[len(NINEML):]
-        return class_type
 
     tag_to_loader = {
         "Parameter": load_parameter,

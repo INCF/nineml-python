@@ -261,7 +261,14 @@ class Document(dict, BaseNineMLObject):
                     annotations = Annotations.from_xml(child)
                     continue
                 try:
+                    # Note that all `DocumentLevelObjects` need to be imported
+                    # into the root nineml package
                     child_cls = getattr(nineml, element_name)
+                    if (not issubclass(child_cls, DocumentLevelObject) or
+                            not hasattr(child_cls, 'from_xml')):
+                        raise NineMLRuntimeError(
+                            "'{}' element does not correspond to a recognised "
+                            "document-level object".format(child_cls.__name__))
                 except AttributeError:
                     raise NineMLRuntimeError(
                         "Did not find matching NineML class for '{}' "

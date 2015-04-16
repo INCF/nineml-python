@@ -16,11 +16,11 @@ from neo import AnalogSignal
 from quantities import ms, dimensionless
 import pyNN.neuron as sim
 from pyNN.nineml.read import Network
-from pyNN.utility import SimulationProgressBar
+# from pyNN.utility import SimulationProgressBar
 from pyNN.utility.plotting import Figure, Panel
 from brunel_network_alpha import build_model
 
-case = sys.argv[1]
+case = sys.argv[1] if len(sys.argv) >= 2 else 'SR'
 plot_figure = False
 
 parameters = {
@@ -62,9 +62,9 @@ else:
 
 print("Running simulation")
 t_stop = plot_limits[1]
-pb = SimulationProgressBar(t_stop/80, t_stop)
+# pb = SimulationProgressBar(t_stop/80, t_stop)
 
-sim.run(t_stop, callbacks=[pb])
+sim.run(t_stop)#, callbacks=[pb])
 
 print("Handling data")
 if plot_figure:

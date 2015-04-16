@@ -1,15 +1,15 @@
 from ..componentclass import ComponentClass
+from nineml.annotations import read_annotations, annotate_xml
 
 
 class RandomDistributionClass(ComponentClass):
 
     element_name = 'RandomDistributionClass'
-    defining_attributes = ('name', '_parameters', 'standard_library')
+    defining_attributes = ('name', '_parameters')
 
-    def __init__(self, name, standard_library, parameters=None):
+    def __init__(self, name, parameters=None):
         super(RandomDistributionClass, self).__init__(
             name, parameters)
-        self.standard_library = standard_library
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -33,9 +33,23 @@ class RandomDistributionClass(ComponentClass):
     def validate(self):
         RandomDistributionValidator.validate_componentclass(self)
 
+    @annotate_xml
+    def to_xml(self):
+        self.standardize_unit_dimensions()
+        self.validate()
+        return RandomDistributionClassXMLWriter().visit(self)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        return RandomDistributionClassXMLLoader(
+            document).load_randomdistributionclass(element)
+
 from .utils.cloner import RandomDistributionCloner
 from .utils.modifiers import(
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
 from .utils.visitors import (RandomDistributionRequiredDefinitions,
                              RandomDistributionElementFinder)
 from .validators import RandomDistributionValidator
+from .utils.xml import (
+    RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter)

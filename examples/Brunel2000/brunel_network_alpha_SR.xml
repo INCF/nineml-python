@@ -1,223 +1,223 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<nineml:NineML xmlns:nineml="http://nineml.net/9ML/1.0">
-  <nineml:Unit symbol="Hz" dimension="per_time" power="0"/>
-  <nineml:Dimension name="per_time" t="-1"/>
-  <nineml:Population name="Exc">
-    <nineml:Number>4000</nineml:Number>
-    <nineml:Cell>
-      <nineml:Component name="nrn">
-        <nineml:Definition url="BrunelIaF.xml">BrunelIaF</nineml:Definition>
-        <nineml:Property units="Mohm" name="R">
-          <nineml:SingleValue>1.5</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Property units="mV" name="Vreset">
-          <nineml:SingleValue>10.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Property units="ms" name="tau">
-          <nineml:SingleValue>20.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Property units="ms" name="tau_rp">
-          <nineml:SingleValue>2.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Property units="mV" name="theta">
-          <nineml:SingleValue>20.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Initial units="mV" name="V">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-        <nineml:Initial units="ms" name="t_rpend">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-    </nineml:Cell>
-  </nineml:Population>
-  <nineml:Projection name="Excitation">
-    <nineml:Source>
-      <nineml:Reference>Exc</nineml:Reference>
-    </nineml:Source>
-    <nineml:Destination>
-      <nineml:Reference>All neurons</nineml:Reference>
-      <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </nineml:Destination>
-    <nineml:Connectivity>
-      <nineml:Component name="RandomExc">
-        <nineml:Definition url="RandomFanIn.xml">RandomFanIn</nineml:Definition>
-        <nineml:Property units="unitless" name="number">
-          <nineml:SingleValue>400</nineml:SingleValue>
-        </nineml:Property>
-      </nineml:Component>
-    </nineml:Connectivity>
-    <nineml:Response>
-      <nineml:Component name="syn">
-        <nineml:Definition url="AlphaPSR.xml">AlphaPSR</nineml:Definition>
-        <nineml:Property units="ms" name="tau_syn">
-          <nineml:SingleValue>0.1</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Initial units="nA" name="A">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-        <nineml:Initial units="nA" name="B">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-      <nineml:FromPlasticity send_port="weight" receive_port="q"/>
-    </nineml:Response>
-    <nineml:Plasticity>
-      <nineml:Component name="ExcitatoryPlasticity">
-        <nineml:Definition url="StaticConnection.xml">StaticConnection</nineml:Definition>
-        <nineml:Initial units="nA" name="weight">
-          <nineml:SingleValue>2.4</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-    </nineml:Plasticity>
-    <nineml:Delay units="ms">
-      <nineml:SingleValue>1.5</nineml:SingleValue>
-    </nineml:Delay>
-  </nineml:Projection>
-  <nineml:Unit symbol="nA" dimension="current" power="-9"/>
-  <nineml:Selection name="All neurons">
-    <nineml:Concatenate>
-      <nineml:Item index="0">
-        <nineml:Reference>Exc</nineml:Reference>
-      </nineml:Item>
-      <nineml:Item index="1">
-        <nineml:Reference>Inh</nineml:Reference>
-      </nineml:Item>
-    </nineml:Concatenate>
-  </nineml:Selection>
-  <nineml:Unit symbol="mV" dimension="voltage" power="-3"/>
-  <nineml:Dimension i="-1" t="-3" m="1" l="2" name="voltage"/>
-  <nineml:Dimension i="-2" t="-3" m="1" l="2" name="resistance"/>
-  <nineml:Dimension i="1" name="current"/>
-  <nineml:Population name="Ext">
-    <nineml:Number>5000</nineml:Number>
-    <nineml:Cell>
-      <nineml:Component name="stim">
-        <nineml:Definition url="Poisson.xml">Poisson</nineml:Definition>
-        <nineml:Property units="Hz" name="rate">
-          <nineml:SingleValue>20000.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Initial units="ms" name="t_next">
-          <nineml:SingleValue>5.0</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-    </nineml:Cell>
-  </nineml:Population>
-  <nineml:Projection name="Inhibition">
-    <nineml:Source>
-      <nineml:Reference>Inh</nineml:Reference>
-    </nineml:Source>
-    <nineml:Destination>
-      <nineml:Reference>All neurons</nineml:Reference>
-      <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </nineml:Destination>
-    <nineml:Connectivity>
-      <nineml:Component name="RandomInh">
-        <nineml:Definition url="RandomFanIn.xml">RandomFanIn</nineml:Definition>
-        <nineml:Property units="unitless" name="number">
-          <nineml:SingleValue>100</nineml:SingleValue>
-        </nineml:Property>
-      </nineml:Component>
-    </nineml:Connectivity>
-    <nineml:Response>
-      <nineml:Component name="syn">
-        <nineml:Definition url="AlphaPSR.xml">AlphaPSR</nineml:Definition>
-        <nineml:Property units="ms" name="tau_syn">
-          <nineml:SingleValue>0.1</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Initial units="nA" name="A">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-        <nineml:Initial units="nA" name="B">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-      <nineml:FromPlasticity send_port="weight" receive_port="q"/>
-    </nineml:Response>
-    <nineml:Plasticity>
-      <nineml:Component name="InhibitoryPlasticity">
-        <nineml:Definition url="StaticConnection.xml">StaticConnection</nineml:Definition>
-        <nineml:Initial units="nA" name="weight">
-          <nineml:SingleValue>-7.2</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-    </nineml:Plasticity>
-    <nineml:Delay units="ms">
-      <nineml:SingleValue>1.5</nineml:SingleValue>
-    </nineml:Delay>
-  </nineml:Projection>
-  <nineml:Population name="Inh">
-    <nineml:Number>1000</nineml:Number>
-    <nineml:Cell>
-      <nineml:Component name="nrn">
-        <nineml:Definition url="BrunelIaF.xml">BrunelIaF</nineml:Definition>
-        <nineml:Property units="Mohm" name="R">
-          <nineml:SingleValue>1.5</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Property units="mV" name="Vreset">
-          <nineml:SingleValue>10.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Property units="ms" name="tau">
-          <nineml:SingleValue>20.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Property units="ms" name="tau_rp">
-          <nineml:SingleValue>2.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Property units="mV" name="theta">
-          <nineml:SingleValue>20.0</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Initial units="mV" name="V">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-        <nineml:Initial units="ms" name="t_rpend">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-    </nineml:Cell>
-  </nineml:Population>
-  <nineml:Projection name="External">
-    <nineml:Source>
-      <nineml:Reference>Ext</nineml:Reference>
-    </nineml:Source>
-    <nineml:Destination>
-      <nineml:Reference>All neurons</nineml:Reference>
-      <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </nineml:Destination>
-    <nineml:Connectivity>
-      <nineml:Component name="OneToOne">
-        <nineml:Definition url="OneToOne.xml">OneToOne</nineml:Definition>
-      </nineml:Component>
-    </nineml:Connectivity>
-    <nineml:Response>
-      <nineml:Component name="syn">
-        <nineml:Definition url="AlphaPSR.xml">AlphaPSR</nineml:Definition>
-        <nineml:Property units="ms" name="tau_syn">
-          <nineml:SingleValue>0.1</nineml:SingleValue>
-        </nineml:Property>
-        <nineml:Initial units="nA" name="A">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-        <nineml:Initial units="nA" name="B">
-          <nineml:SingleValue>0.0</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-      <nineml:FromPlasticity send_port="weight" receive_port="q"/>
-    </nineml:Response>
-    <nineml:Plasticity>
-      <nineml:Component name="ExternalPlasticity">
-        <nineml:Definition url="StaticConnection.xml">StaticConnection</nineml:Definition>
-        <nineml:Initial units="nA" name="weight">
-          <nineml:SingleValue>2.4</nineml:SingleValue>
-        </nineml:Initial>
-      </nineml:Component>
-    </nineml:Plasticity>
-    <nineml:Delay units="ms">
-      <nineml:SingleValue>1.5</nineml:SingleValue>
-    </nineml:Delay>
-  </nineml:Projection>
-  <nineml:Unit symbol="ms" dimension="time" power="-3"/>
-  <nineml:Dimension name="time" t="1"/>
-  <nineml:Unit symbol="Mohm" dimension="resistance" power="6"/>
-  <nineml:Dimension name="dimensionless"/>
-  <nineml:Unit symbol="unitless" dimension="dimensionless" power="0"/>
-</nineml:NineML>
+<NineML xmlns="http://nineml.net/9ML/1.0">
+  <Unit symbol="Hz" dimension="per_time" power="0"/>
+  <Dimension name="per_time" t="-1"/>
+  <Population name="Exc">
+    <Size>4000</Size>
+    <Cell>
+      <Component name="nrn">
+        <Definition url="BrunelIaF.xml">BrunelIaF</Definition>
+        <Property units="Mohm" name="R">
+          <SingleValue>1.5</SingleValue>
+        </Property>
+        <Property units="mV" name="Vreset">
+          <SingleValue>10.0</SingleValue>
+        </Property>
+        <Property units="ms" name="tau">
+          <SingleValue>20.0</SingleValue>
+        </Property>
+        <Property units="ms" name="tau_rp">
+          <SingleValue>2.0</SingleValue>
+        </Property>
+        <Property units="mV" name="theta">
+          <SingleValue>20.0</SingleValue>
+        </Property>
+        <Initial units="mV" name="V">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+        <Initial units="ms" name="t_rpend">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+      </Component>
+    </Cell>
+  </Population>
+  <Projection name="Excitation">
+    <Source>
+      <Reference>Exc</Reference>
+    </Source>
+    <Destination>
+      <Reference>All neurons</Reference>
+      <FromResponse send_port="Isyn" receive_port="Isyn"/>
+    </Destination>
+    <Connectivity>
+      <Component name="RandomExc">
+        <Definition url="RandomFanIn.xml">RandomFanIn</Definition>
+        <Property units="unitless" name="number">
+          <SingleValue>400</SingleValue>
+        </Property>
+      </Component>
+    </Connectivity>
+    <Response>
+      <Component name="syn">
+        <Definition url="AlphaPSR.xml">AlphaPSR</Definition>
+        <Property units="ms" name="tau_syn">
+          <SingleValue>0.1</SingleValue>
+        </Property>
+        <Initial units="nA" name="A">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+        <Initial units="nA" name="B">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+      </Component>
+      <FromPlasticity send_port="weight" receive_port="q"/>
+    </Response>
+    <Plasticity>
+      <Component name="ExcitatoryPlasticity">
+        <Definition url="StaticConnection.xml">StaticConnection</Definition>
+        <Initial units="nA" name="weight">
+          <SingleValue>2.4</SingleValue>
+        </Initial>
+      </Component>
+    </Plasticity>
+    <Delay units="ms">
+      <SingleValue>1.5</SingleValue>
+    </Delay>
+  </Projection>
+  <Unit symbol="nA" dimension="current" power="-9"/>
+  <Selection name="All neurons">
+    <Concatenate>
+      <Item index="0">
+        <Reference>Exc</Reference>
+      </Item>
+      <Item index="1">
+        <Reference>Inh</Reference>
+      </Item>
+    </Concatenate>
+  </Selection>
+  <Unit symbol="mV" dimension="voltage" power="-3"/>
+  <Dimension i="-1" l="2" m="1" t="-3" name="voltage"/>
+  <Dimension i="-2" l="2" m="1" t="-3" name="resistance"/>
+  <Dimension i="1" name="current"/>
+  <Population name="Ext">
+    <Size>5000</Size>
+    <Cell>
+      <Component name="stim">
+        <Definition url="Poisson.xml">Poisson</Definition>
+        <Property units="Hz" name="rate">
+          <SingleValue>20000.0</SingleValue>
+        </Property>
+        <Initial units="ms" name="t_next">
+          <SingleValue>5.0</SingleValue>
+        </Initial>
+      </Component>
+    </Cell>
+  </Population>
+  <Projection name="Inhibition">
+    <Source>
+      <Reference>Inh</Reference>
+    </Source>
+    <Destination>
+      <Reference>All neurons</Reference>
+      <FromResponse send_port="Isyn" receive_port="Isyn"/>
+    </Destination>
+    <Connectivity>
+      <Component name="RandomInh">
+        <Definition url="RandomFanIn.xml">RandomFanIn</Definition>
+        <Property units="unitless" name="number">
+          <SingleValue>100</SingleValue>
+        </Property>
+      </Component>
+    </Connectivity>
+    <Response>
+      <Component name="syn">
+        <Definition url="AlphaPSR.xml">AlphaPSR</Definition>
+        <Property units="ms" name="tau_syn">
+          <SingleValue>0.1</SingleValue>
+        </Property>
+        <Initial units="nA" name="A">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+        <Initial units="nA" name="B">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+      </Component>
+      <FromPlasticity send_port="weight" receive_port="q"/>
+    </Response>
+    <Plasticity>
+      <Component name="InhibitoryPlasticity">
+        <Definition url="StaticConnection.xml">StaticConnection</Definition>
+        <Initial units="nA" name="weight">
+          <SingleValue>-7.2</SingleValue>
+        </Initial>
+      </Component>
+    </Plasticity>
+    <Delay units="ms">
+      <SingleValue>1.5</SingleValue>
+    </Delay>
+  </Projection>
+  <Population name="Inh">
+    <Size>1000</Size>
+    <Cell>
+      <Component name="nrn">
+        <Definition url="BrunelIaF.xml">BrunelIaF</Definition>
+        <Property units="Mohm" name="R">
+          <SingleValue>1.5</SingleValue>
+        </Property>
+        <Property units="mV" name="Vreset">
+          <SingleValue>10.0</SingleValue>
+        </Property>
+        <Property units="ms" name="tau">
+          <SingleValue>20.0</SingleValue>
+        </Property>
+        <Property units="ms" name="tau_rp">
+          <SingleValue>2.0</SingleValue>
+        </Property>
+        <Property units="mV" name="theta">
+          <SingleValue>20.0</SingleValue>
+        </Property>
+        <Initial units="mV" name="V">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+        <Initial units="ms" name="t_rpend">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+      </Component>
+    </Cell>
+  </Population>
+  <Projection name="External">
+    <Source>
+      <Reference>Ext</Reference>
+    </Source>
+    <Destination>
+      <Reference>All neurons</Reference>
+      <FromResponse send_port="Isyn" receive_port="Isyn"/>
+    </Destination>
+    <Connectivity>
+      <Component name="OneToOne">
+        <Definition url="OneToOne.xml">OneToOne</Definition>
+      </Component>
+    </Connectivity>
+    <Response>
+      <Component name="syn">
+        <Definition url="AlphaPSR.xml">AlphaPSR</Definition>
+        <Property units="ms" name="tau_syn">
+          <SingleValue>0.1</SingleValue>
+        </Property>
+        <Initial units="nA" name="A">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+        <Initial units="nA" name="B">
+          <SingleValue>0.0</SingleValue>
+        </Initial>
+      </Component>
+      <FromPlasticity send_port="weight" receive_port="q"/>
+    </Response>
+    <Plasticity>
+      <Component name="ExternalPlasticity">
+        <Definition url="StaticConnection.xml">StaticConnection</Definition>
+        <Initial units="nA" name="weight">
+          <SingleValue>2.4</SingleValue>
+        </Initial>
+      </Component>
+    </Plasticity>
+    <Delay units="ms">
+      <SingleValue>1.5</SingleValue>
+    </Delay>
+  </Projection>
+  <Unit symbol="ms" dimension="time" power="-3"/>
+  <Dimension name="time" t="1"/>
+  <Unit symbol="Mohm" dimension="resistance" power="6"/>
+  <Dimension name="dimensionless"/>
+  <Unit symbol="unitless" dimension="dimensionless" power="0"/>
+</NineML>
