@@ -17,73 +17,73 @@ class DynamicsQueryer(ComponentQueryer):
     ComponentClass object, without polluting the class
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         """Constructor for the DynamicsQueryer"""
-        self.componentclass = componentclass
+        self.component_class = component_class
 
     @property
     def ports(self):
         """Return an iterator over all the port (Event & Analog) in the
-        componentclass"""
+        component_class"""
         return chain(super(DynamicsQueryer, self).ports,
-                     self.componentclass.analog_ports,
-                     self.componentclass.event_ports)
+                     self.component_class.analog_ports,
+                     self.component_class.event_ports)
 
     # Find basic properties by name
     def regime(self, name=None,):
-        """Find a regime in the componentclass by name"""
+        """Find a regime in the component_class by name"""
         assert isinstance(name, basestring)
 
-        return filter_expect_single(self.componentclass.regimes,
+        return filter_expect_single(self.component_class.regimes,
                                     lambda r: r.name == name)
 
     # Query Ports:
     @property
     def event_send_ports(self):
         """Get the ``send`` EventPorts"""
-        return sorted(self.componentclass.event_send_ports,
+        return sorted(self.component_class.event_send_ports,
                       key=lambda p: p.name)
 
     @property
     def event_recv_ports(self):
         """Get the ``recv`` EventPorts"""
-        return sorted(self.componentclass.event_receive_ports,
+        return sorted(self.component_class.event_receive_ports,
                       key=lambda p: p.name)
 
     @property
     def analog_reduce_ports(self):
         """Get the ``reduce`` AnalogPorts"""
-        return sorted(self.componentclass.analog_reduce_ports,
+        return sorted(self.component_class.analog_reduce_ports,
                       key=lambda p: p.name)
 
     @property
     def analog_send_ports(self):
         """Get the ``send`` AnalogPorts"""
-        return sorted(self.componentclass.analog_send_ports,
+        return sorted(self.component_class.analog_send_ports,
                       key=lambda p: p.name)
 
     @property
     def analog_recv_ports(self):
         """Get the ``recv`` AnalogPorts"""
-        return sorted(self.componentclass.analog_receive_ports,
+        return sorted(self.component_class.analog_receive_ports,
                       key=lambda p: p.name)
 
     @property
     def analog_ports_map(self):
         """Returns a map of names to |AnalogPort| objects"""
-        return dict([(p.name, p) for p in self.componentclass.analog_ports])
+        return dict([(p.name, p) for p in self.component_class.analog_ports])
 
     @property
     def event_ports_map(self):
         """Returns a map of names to |EventPort| objects"""
-        return dict([(p.name, p) for p in self.componentclass.event_ports])
+        return dict([(p.name, p) for p in self.component_class.event_ports])
 
     @property
     def recurse_all_components(self):
         """
-        Returns an iterator over this componentclass and all subcomponents
+        Returns an iterator over this component_class and all subcomponents
         """
-        yield self.componentclass
-        for subcomponent in self.componentclass.subnodes.values():
+        yield self.component_class
+        for subcomponent in self.component_class.subnodes.values():
             for subcomp in subcomponent.query.recurse_all_components:
                 yield subcomp

@@ -22,11 +22,11 @@ class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
     will use names.
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
         self.symbols = defaultdict(list)
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def check_conflicting_symbol(self, namespace, symbol):
         if symbol in self.symbols[namespace]:
@@ -48,11 +48,11 @@ class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
 
 class DimensionNameConflictsComponentValidator(PerNamespaceComponentValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
         self.dimensions = {}
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def check_conflicting_dimension(self, dimension):
         try:

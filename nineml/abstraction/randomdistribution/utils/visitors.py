@@ -13,20 +13,20 @@ from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 class RandomDistributionActionVisitor(ComponentActionVisitor):
 
-    def visit_componentclass(self, componentclass, **kwargs):
+    def visit_componentclass(self, component_class, **kwargs):
         super(RandomDistributionActionVisitor, self).visit_componentclass(
-            componentclass, **kwargs)
-        for e in componentclass:
+            component_class, **kwargs)
+        for e in component_class:
             e.accept_visitor(self, **kwargs)
 
 
 class RandomDistributionRequiredDefinitions(ComponentRequiredDefinitions,
                                             RandomDistributionActionVisitor):
 
-    def __init__(self, componentclass, expressions):
+    def __init__(self, component_class, expressions):
         RandomDistributionActionVisitor.__init__(
             self, require_explicit_overrides=False)
-        ComponentRequiredDefinitions.__init__(self, componentclass,
+        ComponentRequiredDefinitions.__init__(self, component_class,
                                               expressions)
 
 

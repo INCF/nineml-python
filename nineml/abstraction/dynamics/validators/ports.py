@@ -20,18 +20,18 @@ class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
     defined, and that the EventPort has the right direction.
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         super(EventPortsDynamicsValidator, self).__init__(
             require_explicit_overrides=False)
 
-        # Mapping componentclass to list of events/eventports at that
-        # componentclass
+        # Mapping component_class to list of events/eventports at that
+        # component_class
         self.event_send_ports = defaultdict(dict)
         self.event_receive_ports = defaultdict(dict)
         self.output_events = defaultdict(list)
         self.input_events = defaultdict(list)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
         # Check that each output event has a corresponding event_port with a
         # send mode:
@@ -88,14 +88,14 @@ class OutputAnalogPortsDynamicsValidator(PerNamespaceDynamicsValidator):
     or a state variable
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         super(OutputAnalogPortsDynamicsValidator, self).__init__(
             require_explicit_overrides=False)
 
         self.output_analogports = defaultdict(list)
         self.available_symbols = defaultdict(list)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
         for namespace, analogports in self.output_analogports.iteritems():
             for ap in analogports:

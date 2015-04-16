@@ -14,10 +14,10 @@ from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 class DynamicsActionVisitor(ComponentActionVisitor):
 
-    def visit_componentclass(self, componentclass, **kwargs):
-        super(DynamicsActionVisitor, self).visit_componentclass(componentclass,
+    def visit_componentclass(self, component_class, **kwargs):
+        super(DynamicsActionVisitor, self).visit_componentclass(component_class,
                                                                 **kwargs)
-        for subnode in componentclass.subnodes.values():
+        for subnode in component_class.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 
     def visit_regime(self, regime, **kwargs):
@@ -109,10 +109,10 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
                                   DynamicsActionVisitor):
 
-    def __init__(self, componentclass, expressions):
+    def __init__(self, component_class, expressions):
         DynamicsActionVisitor.__init__(self, require_explicit_overrides=False)
         self.state_variables = set()
-        ComponentRequiredDefinitions.__init__(self, componentclass,
+        ComponentRequiredDefinitions.__init__(self, component_class,
                                               expressions)
 
     def __repr__(self):

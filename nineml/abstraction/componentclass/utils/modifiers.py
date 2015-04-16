@@ -22,23 +22,23 @@ class ComponentRenameSymbol(ComponentActionVisitor):
     StateVariables, Aliases, Ports
     """
 
-    def __init__(self, componentclass, old_symbol_name, new_symbol_name):
+    def __init__(self, component_class, old_symbol_name, new_symbol_name):
         ComponentActionVisitor.__init__(
             self, require_explicit_overrides=True)
         self.old_symbol_name = old_symbol_name
         self.new_symbol_name = new_symbol_name
         self.namemap = {old_symbol_name: new_symbol_name}
 
-        if not componentclass.is_flat():
+        if not component_class.is_flat():
             raise NineMLRuntimeError('Rename Symbol called on non-flat model')
 
         self.lhs_changes = []
         self.rhs_changes = []
         self.port_changes = []
 
-        componentclass.assign_indices()
-        self.visit(componentclass)
-        componentclass.validate()
+        component_class.assign_indices()
+        self.visit(component_class)
+        component_class.validate()
 
     def note_lhs_changed(self, what):
         self.lhs_changes.append(what)
@@ -62,9 +62,9 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             port._name = self.new_symbol_name
             self.note_port_changed(port)
 
-    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._update_dicts(*chain(componentclass.all_member_dicts,
-                                  componentclass._indices.itervalues()))
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._update_dicts(*chain(component_class.all_member_dicts,
+                                  component_class._indices.itervalues()))
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         if parameter.name == self.old_symbol_name:
@@ -92,12 +92,12 @@ class ComponentAssignIndices(ComponentActionVisitor):
     component class
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         ComponentActionVisitor.__init__(
             self, require_explicit_overrides=False)
-        self.componentclass = componentclass
-        self.visit(componentclass)
+        self.component_class = component_class
+        self.visit(component_class)
 
-    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
-        for elem in componentclass:
-            componentclass.index_of(elem)
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
+        for elem in component_class:
+            component_class.index_of(elem)
