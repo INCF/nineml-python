@@ -23,7 +23,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
-                Regime('dSV1/dt = -SV1/dp2', name='r1', transitions=On('input', 'SV1=SV1+1'))],
+                Regime('dSV1/dt = -SV1/(dp2*t)', name='r1', transitions=On('input', 'SV1=SV1+1'))],
             analog_ports=[RecvPort('dIn1'), SendPort('D1'), SendPort('D2')],
             parameters=['dp1', 'dp2']
         )
@@ -33,7 +33,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
                     name='r1',

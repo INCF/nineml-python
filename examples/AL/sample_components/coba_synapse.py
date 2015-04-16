@@ -1,4 +1,5 @@
 import nineml.abstraction_layer as al
+import nineml.units as un
 
 
 def get_component():
@@ -12,8 +13,11 @@ def get_component():
                 transitions=al.On('spikeinput', do=["g=g+q"]),
             )
         ],
-        state_variables=[al.StateVariable('g')],
-        analog_ports=[al.AnalogReceivePort("V"), al.AnalogSendPort("I"), ],
-        parameters=['tau', 'q', 'vrev']
+        state_variables=[al.StateVariable('g', dimension=un.conductance)],
+        analog_ports=[al.AnalogReceivePort("V", dimension=un.voltage),
+                      al.AnalogSendPort("I", dimension=un.current)],
+        parameters=[al.Parameter('tau', dimension=un.time),
+                    al.Parameter('q', dimension=un.time),
+                    al.Parameter('vrev', dimension=un.voltage)]
     )
     return coba

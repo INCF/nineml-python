@@ -16,7 +16,7 @@ class ComponentFlattener_test(unittest.TestCase):
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('c_emit')])],
                     name='r1',
@@ -33,7 +33,7 @@ class ComponentFlattener_test(unittest.TestCase):
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/dp2',
+                    'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('d_emit')])],
                     name='r1',
@@ -81,7 +81,7 @@ class ComponentFlattener_test(unittest.TestCase):
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('c_emit')])],
                     name='r1',
@@ -98,7 +98,7 @@ class ComponentFlattener_test(unittest.TestCase):
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/dp2',
+                    'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('d_emit')])],
                     name='r1',
@@ -215,7 +215,7 @@ class ComponentFlattener_test(unittest.TestCase):
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('c_emit')])],
                     name='r1',
@@ -231,7 +231,7 @@ class ComponentFlattener_test(unittest.TestCase):
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/dp2',
+                    'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('d_emit')])],
                     name='r1',
@@ -411,7 +411,7 @@ class ComponentFlattener_test(unittest.TestCase):
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1', 'C4:=cIn2'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('c_emit')])],
                     name='r1',
@@ -428,7 +428,7 @@ class ComponentFlattener_test(unittest.TestCase):
             aliases=['D1:=dp1', 'D2 := dIn1 + dp2', 'D3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/dp2',
+                    'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('d_emit')])],
                     name='r1',
