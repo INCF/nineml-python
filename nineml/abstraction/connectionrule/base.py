@@ -13,6 +13,8 @@ docstring goes here
 :license: BSD-3, see LICENSE for details.
 """
 from ..componentclass import ComponentClass
+from ..componentclass import ComponentClass
+from nineml.annotations import annotate_xml, read_annotations
 
 
 class ConnectionRule(ComponentClass):
@@ -51,9 +53,23 @@ class ConnectionRule(ComponentClass):
     def standard_library(self):
         return self._main_block.standard_library
 
+    @annotate_xml
+    def to_xml(self):
+        self.standardize_unit_dimensions()
+        self.validate()
+        return ConnectionRuleClassXMLWriter().visit(self)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        return ConnectionRuleClassXMLLoader(document).load_connectionruleclass(
+            element)
+
 from .utils.cloner import ConnectionRuleCloner
 from .utils.modifiers import (
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
 from .utils.visitors import (
     ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder)
 from .validators import ConnectionRuleValidator
+from .utils.xml import (
+    ConnectionRuleClassXMLLoader, ConnectionRuleClassXMLWriter)

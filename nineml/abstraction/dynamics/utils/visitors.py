@@ -15,8 +15,8 @@ from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_componentclass(self, componentclass, **kwargs):
-        for e in componentclass:
-            e.accept_visitor(self, **kwargs)
+        super(DynamicsActionVisitor, self).visit_componentclass(componentclass,
+                                                                **kwargs)
         for subnode in componentclass.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 

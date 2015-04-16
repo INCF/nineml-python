@@ -35,13 +35,5 @@ class ConnectionRuleCloner(ComponentCloner):
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
                         for p in componentclass.parameters],
-            connectionrule=(
-                componentclass.connectionrule.accept_visitor(self, **kwargs)
-                if componentclass.connectionrule else None))
+            standard_libary=componentclass.standard_library)
         return ccn
-
-    def visit_connectionrule(self, connectionrule, **kwargs):
-        return connectionrule.__class__(
-            aliases=[
-                a.accept_visitor(self, **kwargs)
-                for a in connectionrule.aliases])

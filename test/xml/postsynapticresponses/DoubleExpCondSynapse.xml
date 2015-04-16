@@ -4,7 +4,7 @@
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
   <Dimension name="current" i="1"/>
   <Dimension name="time" t="1"/>
-  <ComponentClass name="DoubleExpCondSynapse">
+  <DynamicsClass name="DoubleExpCondSynapse">
     <Parameter name="gBar" dimension="conductance"/>
     <Parameter name="tau1" dimension="time"/>
     <Parameter name="tau2" dimension="time"/>
@@ -12,34 +12,32 @@
     <AnalogReceivePort name="v" dimension="voltage"/>
     <AnalogSendPort name="i" dimension="current"/>
     <EventReceivePort name="spike"/>
-    <Dynamics>
-      <StateVariable name="g1" dimension="conductance"/>
-      <StateVariable name="g2" dimension="conductance"/>
-      <Regime name="sole">
-        <TimeDerivative variable="g1">
-          <MathInline>-g1 / tau1</MathInline>
-        </TimeDerivative>
-        <TimeDerivative variable="g2">
-          <MathInline>-g2 / tau2</MathInline>
-        </TimeDerivative>
-        <OnEvent port="spike" target_regime="sole">
-          <StateAssignment variable="g1">
-            <MathInline>g1 + gBar * normalising_factor</MathInline>
-          </StateAssignment>
-          <StateAssignment variable="g2">
-            <MathInline>g2 + gBar * normalising_factor</MathInline>
-          </StateAssignment>
-        </OnEvent>
-      </Regime>
-      <Alias name="i">
-        <MathInline>(g1 - g2) * (v - eReversal)</MathInline>
-      </Alias>
-      <Alias name="tp">
-        <MathInline>(tau1*tau2)/(tau2 - tau1) * log(tau2/tau1)</MathInline>
-      </Alias>
-      <Alias name="normalising_factor">
-        <MathInline>1.0 / (-exp(-tp/tau1) + exp(-tp/tau2))</MathInline>
-      </Alias>
-    </Dynamics>
-  </ComponentClass>
+    <StateVariable name="g1" dimension="conductance"/>
+    <StateVariable name="g2" dimension="conductance"/>
+    <Regime>
+      <TimeDerivative variable="g1">
+        <MathInline>-g1 / tau1</MathInline>
+      </TimeDerivative>
+      <TimeDerivative variable="g2">
+        <MathInline>-g2 / tau2</MathInline>
+      </TimeDerivative>
+      <OnEvent port="spike">
+        <StateAssignment variable="g1">
+          <MathInline>g1 + gBar * normalising_factor</MathInline>
+        </StateAssignment>
+        <StateAssignment variable="g2">
+          <MathInline>g2 + gBar * normalising_factor</MathInline>
+        </StateAssignment>
+      </OnEvent>
+    </Regime>
+    <Alias name="i">
+      <MathInline>(g1 - g2) * (v - eReversal)</MathInline>
+    </Alias>
+    <Alias name="tp">
+      <MathInline>(tau1*tau2)/(tau2 - tau1) * log(tau2/tau1)</MathInline>
+    </Alias>
+    <Alias name="normalising_factor">
+      <MathInline>1.0 / (-exp(-tp/tau1) + exp(-tp/tau2))</MathInline>
+    </Alias>
+  </DynamicsClass>
 </NineML>

@@ -3,7 +3,7 @@
 import nineml
 from nineml.abstraction.testing_utils import (std_pynn_simulation,
                                                     RecordValue)
-from nineml.abstraction import (ComponentClass, Regime, On, SendPort,
+from nineml.abstraction_layer import (DynamicsClass, Regime, On, SendPort,
                                       OutputEvent, ReducePort, flattening)
 
 
@@ -16,7 +16,7 @@ class FuncTest_Flat2(object):
 
     def func_test(self):
 
-        emitter = ComponentClass(
+        emitter = DynamicsClass(
             name='EventEmitter',
             parameters=['cyclelength'],
             regimes=[
@@ -25,7 +25,7 @@ class FuncTest_Flat2(object):
                                           'emit'), 'tchange=t', 'random_offset=random.uniform(5,10) '])),
             ])
 
-        ev_based_cc = ComponentClass(
+        ev_based_cc = DynamicsClass(
             name='EventBasedCurrentClass',
             parameters=['dur', 'i'],
             analog_ports=[SendPort('I')],
@@ -39,12 +39,12 @@ class FuncTest_Flat2(object):
             ]
         )
 
-        pulsing_emitter = ComponentClass(name='pulsing_cc',
+        pulsing_emitter = DynamicsClass(name='pulsing_cc',
                                          subnodes={'evs': emitter, 'cc': ev_based_cc},
                                          portconnections=[('evs.emit', 'cc.inputevent')]
                                          )
 
-        nrn = ComponentClass(
+        nrn = DynamicsClass(
             name='LeakyNeuron',
             parameters=['Cm', 'gL', 'E'],
             regimes=[Regime('dV/dt = (iInj + (E-V)*gL )/Cm'), ],
@@ -53,7 +53,7 @@ class FuncTest_Flat2(object):
                           ReducePort('iInj', operator='+')],
         )
 
-        combined_comp = ComponentClass(name='Comp1',
+        combined_comp = DynamicsClass(name='Comp1',
                                        subnodes={'nrn': nrn,
                                                  'cc1': pulsing_emitter,
                                                  'cc2': pulsing_emitter},

@@ -1,7 +1,7 @@
 
 
-from nineml.abstraction import ComponentClass, SendPort, Regime, On, ReducePort
-from nineml.abstraction.testing_utils import std_pynn_simulation, RecordValue
+from nineml.abstraction_layer import DynamicsClass, SendPort, Regime, On, ReducePort
+from nineml.abstraction_layer.testing_utils import std_pynn_simulation, RecordValue
 
 
 # class FuncTest_Flat2(unittest.TestCase):
@@ -13,7 +13,7 @@ class FuncTest_Flat2(object):
 
     def functest(self):
 
-        cc = ComponentClass(
+        cc = DynamicsClass(
             name='PulsingCurrentClamp',
             parameters=['i', 'cycle_length'],
             analog_ports=[SendPort('I')],
@@ -31,7 +31,7 @@ class FuncTest_Flat2(object):
 
         )
 
-        nrn = ComponentClass(
+        nrn = DynamicsClass(
             name='LeakyNeuron',
             parameters=['Cm', 'gL', 'E'],
             regimes=[Regime('dV/dt = (iInj + (E-V)*gL )/Cm'), ],
@@ -39,7 +39,7 @@ class FuncTest_Flat2(object):
                           ReducePort('iInj', operator='+')],
         )
 
-        combined_comp = ComponentClass(name='Comp1',
+        combined_comp = DynamicsClass(name='Comp1',
                                        subnodes={'nrn': nrn, 'cc1': cc},
                                        portconnections=[('cc1.I', 'nrn.iInj')])
 

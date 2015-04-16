@@ -10,9 +10,7 @@ This module provides the base class for these.
 from abc import ABCMeta
 import sympy
 from .. import BaseALObject
-import nineml
 from nineml.base import MemberContainerObject
-from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import (
     filter_discrete_types, ensure_valid_identifier,
     normalise_parameter_as_list, assert_no_duplicates)
@@ -89,7 +87,8 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
     class_to_member_dict = {Parameter: '_parameters', Alias: '_aliases',
                             Constant: '_constants'}
 
-    def __init__(self, name, parameters, aliases, constants, url=None):
+    def __init__(self, name, parameters=None, aliases=None, constants=None,
+                 url=None):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
@@ -187,23 +186,3 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
             except StopIteration:
                 continue
             a.set_dimension(std_dim)
-
-    @annotate_xml
-    def to_xml(self):
-        self.standardize_unit_dimensions()
-        XMLWriter = getattr(nineml.abstraction,
-                            self.__class__.__name__ + 'XMLWriter')
-        self.validate()
-        return XMLWriter().visit(self)
-
-    @classmethod
-    @read_annotations
-    @handle_xml_exceptions
-    def from_xml(cls, element, document):  # @UnusedVariable
-        XMLLoader = getattr(nineml.abstraction,
-                            ComponentClassXMLLoader.read_class_type(element) +
-                            'XMLLoader')
-        return XMLLoader(document).load_componentclass(element)
-
-
-from .utils.xml import ComponentClassXMLLoader

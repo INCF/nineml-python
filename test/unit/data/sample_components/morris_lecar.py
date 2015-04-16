@@ -14,7 +14,7 @@ import nineml.abstraction_layer as al
 
 
 def get_component():
-    c1 = al.ComponentClass(
+    c1 = al.DynamicsClass(
         "MorrisLecar",
         regimes=[al.Regime(
             name="subthreshold_regime",
