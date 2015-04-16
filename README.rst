@@ -4,7 +4,7 @@ lib9ML
 `nineml` is a Python library for reading, writing, validating and manipulating
 models defined in the NineML language (http://nineml.net).
 
-* Documentation: http://readthedocs.org/nineml
+* Documentation: http://nineml.readthedocs.org
 * Mailing list: nineml-users@incf.org
 * Issue tracker: https://github.com/INCF/lib9ML/issues
 
