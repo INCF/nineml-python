@@ -9,13 +9,13 @@ from nineml.abstraction_layer import (
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
     NamespaceAddress)
 from nineml.abstraction_layer.dynamics.utils.cloner import (
-    DynamicsClonerVisitorPrefixNamespace)
+    DynamicsClonerPrefixNamespace)
 
 NSA = NamespaceAddress
 
 
-# Testing Skeleton for class: DynamicsClonerVisitorPrefixNamespace
-class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
+# Testing Skeleton for class: DynamicsClonerPrefixNamespace
+class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
     def test_Constructor(self):
 
@@ -46,25 +46,29 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
 
         # Test Cloner, no hierachy
         # Everything should be as before:
-        c_clone = DynamicsClonerVisitorPrefixNamespace().visit(c)
+        c_clone = DynamicsClonerPrefixNamespace().visit(c)
 
         self.assertEqual(c_clone.name, 'C')
-        self.assertEqual(set(c_clone.aliases_map.keys()), set(['C1', 'C2', 'C3']))
+        self.assertEqual(set(c_clone.alias_names), set(['C1', 'C2', 'C3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(set(c_clone.regimes_map.keys()), set(['r1', 'r2']))
-        self.assertEqual(len(list(c_clone.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(c_clone.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(c_clone.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(c_clone.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(c_clone.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(set(c_clone.regime_names), set(['r1', 'r2']))
+        self.assertEqual(len(list(c_clone.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(c_clone.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(c_clone.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(c_clone.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(c_clone.regime('r2').on_conditions)), 1)
 
         #  - Ports & Parameters:
         self.assertEqual(
-            set(c_clone.query.analog_ports_map.keys()),  set(['cIn2', 'cIn1', 'C1', 'C2']))
-        self.assertEqual(set(c_clone.query.event_ports_map.keys()),   set(['spikein', 'emit']))
-        self.assertEqual(set(c_clone.query.parameters_map.keys()),    set(['cp1', 'cp2']))
-        self.assertEqual(set(c_clone.state_variables_map.keys()),     set(['SV1']))
+            set(c_clone.query.analog_ports_map.keys()),
+            set(['cIn2', 'cIn1', 'C1', 'C2']))
+        self.assertEqual(set(c_clone.query.event_ports_map.keys()),
+                         set(['spikein', 'emit']))
+        self.assertEqual(set(c_clone.query.parameters_map.keys()),
+                         set(['cp1', 'cp2']))
+        self.assertEqual(set(c_clone.state_variable_names),
+                         set(['SV1']))
 
         del c_clone
 
@@ -74,29 +78,29 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
                            subnodes={'c1': c, 'c2': c},
                            portconnections=[('c1.C1', 'c2.cIn1'), ('c2.emit', 'c1.spikein'), ])
 
-        b_clone = DynamicsClonerVisitorPrefixNamespace().visit(b)
+        b_clone = DynamicsClonerPrefixNamespace().visit(b)
         c1_clone = b_clone.get_subnode('c1')
         c2_clone = b_clone.get_subnode('c2')
 
         self.assertEqual(c1_clone.name, 'C')
         self.assertEqual(c2_clone.name, 'C')
-        self.assertEqual(set(c1_clone.aliases_map.keys()), set(['c1_C1', 'c1_C2', 'c1_C3']))
-        self.assertEqual(set(c2_clone.aliases_map.keys()), set(['c2_C1', 'c2_C2', 'c2_C3']))
+        self.assertEqual(set(c1_clone.alias_names), set(['c1_C1', 'c1_C2', 'c1_C3']))
+        self.assertEqual(set(c2_clone.alias_names), set(['c2_C1', 'c2_C2', 'c2_C3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(set(c1_clone.regimes_map.keys()), set(['r1', 'r2']))
-        self.assertEqual(len(list(c1_clone.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(c1_clone.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(c1_clone.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(c1_clone.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(c1_clone.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(set(c1_clone.regime_names), set(['r1', 'r2']))
+        self.assertEqual(len(list(c1_clone.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(c1_clone.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(c1_clone.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(c1_clone.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(c1_clone.regime('r2').on_conditions)), 1)
 
-        self.assertEqual(set(c2_clone.regimes_map.keys()), set(['r1', 'r2']))
-        self.assertEqual(len(list(c2_clone.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(c2_clone.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(c2_clone.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(c2_clone.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(c2_clone.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(set(c2_clone.regime_names), set(['r1', 'r2']))
+        self.assertEqual(len(list(c2_clone.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(c2_clone.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(c2_clone.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(c2_clone.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(c2_clone.regime('r2').on_conditions)), 1)
 
         #  - Ports & Parameters:
         self.assertEqual(
@@ -118,10 +122,10 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
             set(c2_clone.query.parameters_map.keys()),
             set(['c2_cp1', 'c2_cp2']))
         self.assertEqual(
-            set(c1_clone.state_variables_map.keys()),
+            set(c1_clone.state_variable_names),
             set(['c1_SV1']))
         self.assertEqual(
-            set(c2_clone.state_variables_map.keys()),
+            set(c2_clone.state_variable_names),
             set(['c2_SV1']))
 
         # - Port Connections:
@@ -143,7 +147,7 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
                            ('c3.C2', 'b1.c2.cIn2')
                            ]
                            )
-        a_clone = DynamicsClonerVisitorPrefixNamespace().visit(a)
+        a_clone = DynamicsClonerPrefixNamespace().visit(a)
 
         b1_clone = a_clone.get_subnode('b1')
         b2_clone = a_clone.get_subnode('b2')
@@ -174,56 +178,56 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
         self.assertEqual(b2c2_clone.name, 'C')
 
         # Aliases:
-        self.assertEqual(set(b1_clone.aliases_map.keys()), set([]))
-        self.assertEqual(set(b2_clone.aliases_map.keys()), set([]))
-        self.assertEqual(set(b1c1_clone.aliases_map.keys()), set(
+        self.assertEqual(set(b1_clone.alias_names), set([]))
+        self.assertEqual(set(b2_clone.alias_names), set([]))
+        self.assertEqual(set(b1c1_clone.alias_names), set(
             ['b1_c1_C1', 'b1_c1_C2', 'b1_c1_C3']))
-        self.assertEqual(set(b1c2_clone.aliases_map.keys()), set(
+        self.assertEqual(set(b1c2_clone.alias_names), set(
             ['b1_c2_C1', 'b1_c2_C2', 'b1_c2_C3']))
-        self.assertEqual(set(b2c1_clone.aliases_map.keys()), set(
+        self.assertEqual(set(b2c1_clone.alias_names), set(
             ['b2_c1_C1', 'b2_c1_C2', 'b2_c1_C3']))
-        self.assertEqual(set(b2c2_clone.aliases_map.keys()), set(
+        self.assertEqual(set(b2c2_clone.alias_names), set(
             ['b2_c2_C1', 'b2_c2_C2', 'b2_c2_C3']))
-        self.assertEqual(set(c3_clone.aliases_map.keys()), set(['c3_C1', 'c3_C2', 'c3_C3']))
+        self.assertEqual(set(c3_clone.alias_names), set(['c3_C1', 'c3_C2', 'c3_C3']))
 
         # Regimes:
-        self.assertEqual(set(b1_clone.regimes_map.keys()), set([]))
-        self.assertEqual(set(b2_clone.regimes_map.keys()), set([]))
-        self.assertEqual(set(b1c1_clone.regimes_map.keys()), set(['r1', 'r2']))
-        self.assertEqual(set(b1c2_clone.regimes_map.keys()), set(['r1', 'r2']))
-        self.assertEqual(set(b2c1_clone.regimes_map.keys()), set(['r1', 'r2']))
-        self.assertEqual(set(b2c2_clone.regimes_map.keys()), set(['r1', 'r2']))
-        self.assertEqual(set(c3_clone.regimes_map.keys()), set(['r1', 'r2']))
+        self.assertEqual(set(b1_clone.regime_names), set([]))
+        self.assertEqual(set(b2_clone.regime_names), set([]))
+        self.assertEqual(set(b1c1_clone.regime_names), set(['r1', 'r2']))
+        self.assertEqual(set(b1c2_clone.regime_names), set(['r1', 'r2']))
+        self.assertEqual(set(b2c1_clone.regime_names), set(['r1', 'r2']))
+        self.assertEqual(set(b2c2_clone.regime_names), set(['r1', 'r2']))
+        self.assertEqual(set(c3_clone.regime_names), set(['r1', 'r2']))
 
-        self.assertEqual(len(list(b1c1_clone.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(b1c1_clone.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(b1c1_clone.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(b1c1_clone.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(b1c1_clone.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(len(list(b1c1_clone.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(b1c1_clone.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(b1c1_clone.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(b1c1_clone.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(b1c1_clone.regime('r2').on_conditions)), 1)
 
-        self.assertEqual(len(list(b1c2_clone.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(b1c2_clone.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(b1c2_clone.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(b1c2_clone.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(b1c2_clone.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(len(list(b1c2_clone.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(b1c2_clone.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(b1c2_clone.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(b1c2_clone.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(b1c2_clone.regime('r2').on_conditions)), 1)
 
-        self.assertEqual(len(list(b2c1_clone.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(b2c1_clone.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(b2c1_clone.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(b2c1_clone.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(b2c1_clone.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(len(list(b2c1_clone.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(b2c1_clone.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(b2c1_clone.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(b2c1_clone.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(b2c1_clone.regime('r2').on_conditions)), 1)
 
-        self.assertEqual(len(list(b2c2_clone.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(b2c2_clone.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(b2c2_clone.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(b2c2_clone.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(b2c2_clone.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(len(list(b2c2_clone.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(b2c2_clone.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(b2c2_clone.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(b2c2_clone.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(b2c2_clone.regime('r2').on_conditions)), 1)
 
-        self.assertEqual(len(list(c3_clone.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(c3_clone.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(c3_clone.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(c3_clone.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(c3_clone.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(len(list(c3_clone.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(c3_clone.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(c3_clone.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(c3_clone.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(c3_clone.regime('r2').on_conditions)), 1)
 
         # Ports, params and state-vars:
         # c1:
@@ -233,7 +237,7 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
             set(b1c1_clone.query.event_ports_map.keys()),  set(['b1_c1_spikein', 'b1_c1_emit']))
         self.assertEqual(
             set(b1c1_clone.query.parameters_map.keys()),   set(['b1_c1_cp1',    'b1_c1_cp2']))
-        self.assertEqual(set(b1c1_clone.state_variables_map.keys()),    set(['b1_c1_SV1']))
+        self.assertEqual(set(b1c1_clone.state_variable_names),    set(['b1_c1_SV1']))
 
         self.assertEqual(set(b1c2_clone.query.analog_ports_map.keys()), set(
             ['b1_c2_cIn1',  'b1_c2_cIn2',  'b1_c2_C1', 'b1_c2_C2']))
@@ -241,7 +245,7 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
             set(b1c2_clone.query.event_ports_map.keys()),  set(['b1_c2_spikein', 'b1_c2_emit']))
         self.assertEqual(
             set(b1c2_clone.query.parameters_map.keys()),   set(['b1_c2_cp1',    'b1_c2_cp2']))
-        self.assertEqual(set(b1c2_clone.state_variables_map.keys()),    set(['b1_c2_SV1']))
+        self.assertEqual(set(b1c2_clone.state_variable_names),    set(['b1_c2_SV1']))
 
         self.assertEqual(set(b2c1_clone.query.analog_ports_map.keys()),
                          set(['b2_c1_cIn1',  'b2_c1_cIn2',  'b2_c1_C1', 'b2_c1_C2']))
@@ -249,7 +253,7 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
             set(b2c1_clone.query.event_ports_map.keys()),  set(['b2_c1_spikein', 'b2_c1_emit']))
         self.assertEqual(
             set(b2c1_clone.query.parameters_map.keys()),   set(['b2_c1_cp1',    'b2_c1_cp2']))
-        self.assertEqual(set(b2c1_clone.state_variables_map.keys()),    set(['b2_c1_SV1']))
+        self.assertEqual(set(b2c1_clone.state_variable_names),    set(['b2_c1_SV1']))
 
         self.assertEqual(set(b2c2_clone.query.analog_ports_map.keys()), set(
             ['b2_c2_cIn1',  'b2_c2_cIn2',  'b2_c2_C1', 'b2_c2_C2']))
@@ -257,7 +261,7 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
             set(b2c2_clone.query.event_ports_map.keys()),  set(['b2_c2_spikein', 'b2_c2_emit']))
         self.assertEqual(
             set(b2c2_clone.query.parameters_map.keys()),   set(['b2_c2_cp1',    'b2_c2_cp2']))
-        self.assertEqual(set(b2c2_clone.state_variables_map.keys()),    set(['b2_c2_SV1']))
+        self.assertEqual(set(b2c2_clone.state_variable_names),    set(['b2_c2_SV1']))
 
         self.assertEqual(set(c3_clone.query.analog_ports_map.keys()), set(
             ['c3_cIn1', 'c3_cIn2', 'c3_C1', 'c3_C2']))
@@ -265,17 +269,17 @@ class DynamicsClonerVisitorPrefixNamespace_test(unittest.TestCase):
             set(c3_clone.query.event_ports_map.keys()),  set(['c3_spikein',     'c3_emit']))
         self.assertEqual(
             set(c3_clone.query.parameters_map.keys()),   set(['c3_cp1',         'c3_cp2']))
-        self.assertEqual(set(c3_clone.state_variables_map.keys()),    set(['c3_SV1']))
+        self.assertEqual(set(c3_clone.state_variable_names),    set(['c3_SV1']))
 
         self.assertEqual(set(b1_clone.query.analog_ports_map.keys()), set([]))
         self.assertEqual(set(b1_clone.query.event_ports_map.keys()),  set([]))
         self.assertEqual(set(b1_clone.query.parameters_map.keys()),   set([]))
-        self.assertEqual(set(b1_clone.state_variables_map.keys()),    set([]))
+        self.assertEqual(set(b1_clone.state_variable_names),    set([]))
 
         self.assertEqual(set(b2_clone.query.analog_ports_map.keys()), set([]))
         self.assertEqual(set(b2_clone.query.event_ports_map.keys()),  set([]))
         self.assertEqual(set(b2_clone.query.parameters_map.keys()),   set([]))
-        self.assertEqual(set(b2_clone.state_variables_map.keys()),    set([]))
+        self.assertEqual(set(b2_clone.state_variable_names),    set([]))
 
         # Port Connections
         self.assertEqual(
@@ -340,7 +344,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_assignment(self):
+    def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
@@ -476,7 +480,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_visit_assignment(self):
+    def test_visit_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
@@ -619,7 +623,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_assignment(self):
+    def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
@@ -755,7 +759,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_visit_assignment(self):
+    def test_visit_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
@@ -898,7 +902,7 @@ class RenameSymbol_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_assignment(self):
+    def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
@@ -1058,7 +1062,7 @@ class RenameSymbol_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_visit_assignment(self):
+    def test_visit_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol

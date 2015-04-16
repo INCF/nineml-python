@@ -59,7 +59,7 @@ class ParameterTest(unittest.TestCase):
         p1 = Property("tau_m", 20.0, mV)
         element = p1.to_xml()
         xml = etree.tostring(element, pretty_print=True)
-        p2 = Property.from_xml(element, Document(mV=mV))
+        p2 = Property.from_xml(element, Document(mV))
         self.assertEqual(p1, p2)
 
 

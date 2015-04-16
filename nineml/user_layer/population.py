@@ -1,13 +1,13 @@
 from itertools import chain
 from . import BaseULObject
 from .component import resolve_reference, write_reference, Component
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single, check_tag
 from nineml.annotations import annotate_xml, read_annotations
 
 
-class Population(BaseULObject, TopLevelObject):
+class Population(BaseULObject, DocumentLevelObject):
     """
     A collection of spiking neurons all of the same type.
 
@@ -26,8 +26,9 @@ class Population(BaseULObject, TopLevelObject):
     element_name = "Population"
     defining_attributes = ("name", "size", "cell", "positions")
 
-    def __init__(self, name, size, cell, positions=None):
-        super(Population, self).__init__()
+    def __init__(self, name, size, cell, positions=None, url=None):
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self, url)
         self.name = name
         self.size = size
         self.cell = cell
@@ -52,9 +53,10 @@ class Population(BaseULObject, TopLevelObject):
         components = []
         if self.cell:
             components.append(self.cell)
-            components.extend(self.cell.properties.get_random_distributions())
             components.extend(
-                self.cell.initial_values.get_random_distributions())
+                self.cell.property_set.get_random_distributions())
+            components.extend(
+                self.cell.initial_value_set.get_random_distributions())
         if self.positions is not None:
             components.extend(self.positions.get_components())
         return components
@@ -82,6 +84,7 @@ class Population(BaseULObject, TopLevelObject):
         kwargs = {}
         if layout_elem:
             kwargs['positions'] = Component.from_xml(layout_elem, document)
+            kwargs['url'] = document.url
         cell = expect_single(element.findall(NINEML + 'Cell'))
         cell_component = cell.find(NINEML + 'Component')
         if cell_component is None:
@@ -91,7 +94,7 @@ class Population(BaseULObject, TopLevelObject):
                    cell=Component.from_xml(cell_component, document), **kwargs)
 
 
-class PositionList(BaseULObject, TopLevelObject):
+class PositionList(BaseULObject, DocumentLevelObject):
     """
     Represents a list of network node positions. May contain either an explicit
     list of positions or a :class:`Structure` instance that can be used to
@@ -109,7 +112,7 @@ class PositionList(BaseULObject, TopLevelObject):
     element_name = "Layout"
     defining_attributes = []
 
-    def __init__(self, positions=[], structure=None):
+    def __init__(self, positions=[], structure=None, url=None):
         """
         Create a new PositionList.
 
@@ -121,6 +124,8 @@ class PositionList(BaseULObject, TopLevelObject):
         `structure` should be a Structure componentclass.
         """
         super(PositionList, self).__init__()
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self, url=url)
         if positions and structure:
             raise Exception("Please provide either positions or structure, "
                             "not both.")
@@ -194,7 +199,7 @@ class PositionList(BaseULObject, TopLevelObject):
                 positions = [(float(p.attrib['x']), float(p.attrib['y']),
                               float(p.attrib['z']))
                              for p in element.findall(NINEML + 'position')]
-                return cls(positions=positions)
+                return cls(positions=positions, url=document.url)
 
 
 def qstr(obj):
@@ -208,7 +213,7 @@ class Structure(Component):
 
     """
     Component representing the structure of a network, e.g. 2D grid, random
-    distribution within a sphere, etc.
+    randomdistribution within a sphere, etc.
     """
     abstraction_layer_module = 'Structure'
 

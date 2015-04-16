@@ -3,8 +3,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="9ML",
-    version="0.3dev",
+    name="lib9ML",
+    version="1.0dev",
     package_data={'nineml': ['examples/AL/demos/*.py',
                              'examples/AL/sample_components/*.py']},
     packages=find_packages(),
@@ -25,6 +25,6 @@ setup(
                  'Operating System :: OS Independent',
                  'Programming Language :: Python :: 2',
                  'Topic :: Scientific/Engineering'],
-    install_requires=['lxml', 'ply', 'numpy', 'quantities'],
+    install_requires=['lxml', 'sympy'],
     tests_require=['nose']
 )

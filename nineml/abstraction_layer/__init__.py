@@ -33,7 +33,7 @@ from .ports import (AnalogSendPort, AnalogReceivePort,
                     EventReceivePort, AnalogPort, EventPort, Port)
 from nineml.abstraction_layer.dynamics.utils import flattener as flattening
 from .connectionrule import ConnectionRuleClass
-from .randomdistribution import RandomDistributionClass
+from .randomdistribution import RandomDistributionClass                           
 from .units import Unit, Dimension
 from .dynamics import DynamicsClassXMLLoader, DynamicsClassXMLWriter
 from .randomdistribution import (

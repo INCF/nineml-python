@@ -9,7 +9,7 @@ import itertools
 from collections import defaultdict
 from nineml.utils import flatten_first_level
 from .cloner import (
-    DynamicsClonerVisitor, DynamicsClonerVisitorPrefixNamespace,
+    DynamicsCloner, DynamicsClonerPrefixNamespace,
     DynamicsExpandPortDefinition)
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from nineml.exceptions import NineMLRuntimeError
@@ -33,7 +33,7 @@ class TransitionResolver(object):
         self.dst_regime_tuple = tuple(regime_tuple)
 
         # Clone the old Node
-        oldtransition = DynamicsClonerVisitor().visit(oldtransition)
+        oldtransition = DynamicsCloner().visit(oldtransition)
 
         # Store a pointer to the flattener:
         self.flattener = flattener
@@ -41,7 +41,7 @@ class TransitionResolver(object):
         # Store the StateAssignments and OutputEvents for this
         # newly mapped transitions
         self.state_assignments = []
-        self.event_outputs = []
+        self.output_events = []
 
         # Construct a map of { send ports -> [recv ports] }.
         # This makes it easy to iterate over send events:
@@ -86,10 +86,10 @@ class TransitionResolver(object):
             regime_index=transition_regime_tuple_index,
             oldtransition=transition)
 
-        for ev_out in transition.event_outputs:
-            self.event_outputs.append(DynamicsClonerVisitor().visit(ev_out))
+        for ev_out in transition.output_events:
+            self.output_events.append(DynamicsCloner().visit(ev_out))
         for state_ass in transition.state_assignments:
-            self.state_assignments.append(DynamicsClonerVisitor().visit(state_ass))
+            self.state_assignments.append(DynamicsCloner().visit(state_ass))
 
         # Are we recursing? Or will the simulation engine take care
         # off this for us??
@@ -98,7 +98,7 @@ class TransitionResolver(object):
 
         # Are any of the output events connected to other event_ports?
         # print self.send_rev_map.keys()
-        for ev_out in transition.event_outputs:
+        for ev_out in transition.output_events:
             # print ' -- Checking for port connections from:', ev_out
             if ev_out.port_name not in self.send_rev_map:
                 continue
@@ -122,7 +122,7 @@ class TransitionResolver(object):
         # Make a list from the old tuple, so its mutable:
         dst_regime_tuple = list(current_regime_tuple)
 
-        name = oldtransition.target_regime_name
+        name = oldtransition._target_regime
         dst_regime_old = self.flattener.componentswithregimes[
             regime_index].query.regime(name=name)
         dst_regime_tuple[regime_index] = dst_regime_old
@@ -202,7 +202,7 @@ class ComponentFlattener(object):
 
         # Is our componentclass already flat??
         if componentclass.is_flat():
-            self.reducedcomponent = DynamicsClonerVisitor().visit(componentclass)
+            self.reducedcomponent = DynamicsCloner().visit(componentclass)
             if componentclass.was_flattened():
                 self.reducedcomponent.set_flattener(componentclass.flattener)
             return
@@ -212,7 +212,7 @@ class ComponentFlattener(object):
 
         # Make a clone of the componentclass; in which all hierachical components
         # have their internal symbols prefixed:
-        cloned_comp = DynamicsClonerVisitorPrefixNamespace().visit(componentclass)
+        cloned_comp = DynamicsClonerPrefixNamespace().visit(componentclass)
 
         # Make a list of all components, and those components with regimes:
         self.all_components = list(cloned_comp.query.recurse_all_components)
@@ -259,7 +259,7 @@ class ComponentFlattener(object):
         # We need to clone the time_derivatives:
         time_derivs = flatten_first_level(
             [r.time_derivatives for r in regimetuple])
-        time_derivs = [DynamicsClonerVisitor().visit(td) for td in time_derivs]
+        time_derivs = [DynamicsCloner().visit(td) for td in time_derivs]
 
         return Regime(name=name, time_derivatives=time_derivs)
 
@@ -293,10 +293,10 @@ class ComponentFlattener(object):
                     new_oncondition = OnCondition(
                         oldtransition.trigger,
                         state_assignments=tr.state_assignments,
-                        event_outputs=tr.event_outputs,
-                        target_regime_name=tr.target_regime.name)
+                        output_events=tr.output_events,
+                        target_regime=tr.target_regime.name)
 
-                    regime_new.add_on_condition(new_oncondition)
+                    regime_new.add(new_oncondition)
 
                 for oldtransition in regime.on_events:
                     tr = TransitionResolver(
@@ -308,9 +308,9 @@ class ComponentFlattener(object):
                     new_onevent = OnEvent(
                         oldtransition.src_port_name,
                         state_assignments=tr.state_assignments,
-                        event_outputs=tr.event_outputs,
-                        target_regime_name=tr.target_regime.name)
-                    regime_new.add_on_event(new_onevent)
+                        output_events=tr.output_events,
+                        target_regime=tr.target_regime.name)
+                    regime_new.add(new_onevent)
 
     def remap_analog_ports(self):
         new_analog_ports = flatten_first_level(

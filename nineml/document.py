@@ -7,7 +7,7 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import Annotations
 from . import BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 import contextlib
 
 
@@ -26,29 +26,41 @@ class Document(dict, BaseNineMLObject):
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
     def __init__(self, *elements, **kwargs):
-        self.url = kwargs.pop('_url', None)
-        dict.__init__(self, **kwargs)
+        BaseNineMLObject.__init__(self, annotations=kwargs.pop('annotations',
+                                                               None))
+        self._url = kwargs.pop('url', None)
+        assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
+                                  .format("', '".join(kwargs.iterkeys())))
         for element in elements:
             self.add(element)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
 
+    @property
+    def url(self):
+        return self._url
+
     def add(self, element):
-        try:
-            if not isinstance(element, TopLevelObject):
-                raise NineMLRuntimeError(
-                    "Could not add {} as it is not a document level NineML "
-                    "object ('{}') ".format(element.element_name,
-                                            "', '".join(self.top_level_types)))
-        except AttributeError:
-            raise NineMLRuntimeError("Could not add {} as it is not a NineML "
-                                     "object".format(element))
+        if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
+            raise NineMLRuntimeError(
+                "Could not add {} as it is not a document level NineML "
+                "object ('{}') ".format(element.element_name,
+                                        "', '".join(self.top_level_types)))
         if element.name in self:
             raise NineMLRuntimeError(
                 "Could not add element '{}' as an element with that name "
                 "already exists in the document".format(element.name))
         self[element.name] = element
+
+    def remove(self, element):
+        if not isinstance(element, DocumentLevelObject):
+            raise NineMLRuntimeError(
+                "Could not remove {} as it is not a document level NineML "
+                "object ('{}') ".format(element.element_name,
+                                        "', '".join(self.top_level_types)))
+        name = element.name
+        del self[name]
 
     def __eq__(self, other):
         # Ensure all objects are loaded
@@ -237,7 +249,7 @@ class Document(dict, BaseNineMLObject):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
         # Initialise the document
-        elements = {'_url': url}
+        elements = []
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
         annotations = None
@@ -259,7 +271,7 @@ class Document(dict, BaseNineMLObject):
                         raise NineMLRuntimeError(
                             "Did not find matching NineML class for '{}' "
                             "element".format(element_name))
-                if not issubclass(child_cls, TopLevelObject):
+                if not issubclass(child_cls, DocumentLevelObject):
                     raise NineMLRuntimeError(
                         "'{}' is not a valid top-level NineML element"
                         .format(element_name))
@@ -275,9 +287,8 @@ class Document(dict, BaseNineMLObject):
                     "Duplicate identifier '{ob1}:{name}'in NineML file '{url}'"
                     .format(name=name, ob1=elements[name].cls.element_name,
                             ob2=child_cls.element_name, url=url or ''))
-            elements[name] = cls._Unloaded(name, child, child_cls)
-        document = cls(**elements)
-        document.annotations = annotations
+            elements.append(cls._Unloaded(name, child, child_cls))
+        document = cls(*elements, url=url, annotations=annotations)
         return document
 
     def find_mismatch(self, other):

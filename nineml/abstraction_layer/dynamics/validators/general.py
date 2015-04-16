@@ -61,16 +61,15 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
 
         for namespace, state_assignments_lhs in self.state_assignments_lhses.\
                                                                    iteritems():
-            for td in state_assignments_lhs:
-                if td not in self.sv_declared[namespace]:
-                    err = 'Not Assigning to state-variable: {}'.format(td)
+            for sa in state_assignments_lhs:
+                if sa not in self.sv_declared[namespace]:
+                    err = 'Not Assigning to state-variable: {}'.format(sa)
                     raise NineMLRuntimeError(err)
 
     def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.sv_declared[namespace].append(state_variable.name)
 
     def action_stateassignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        assert False
         self.state_assignments_lhses[namespace].append(state_assignment.lhs)
 
 
@@ -103,7 +102,7 @@ class NoUnresolvedSymbolsDynamicsValidator(
     def action_timederivative(self, time_derivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.time_derivatives[namespace].append(time_derivative)
 
-    def action_assignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_stateassignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.state_assignments[namespace].append(state_assignment)
 
 
@@ -133,8 +132,7 @@ class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
             connected = set()
             add_connected_regimes_recursive(regimes[0], connected)
             if len(connected) != len(self.regimes_in_namespace[namespace]):
-                raise NineMLRuntimeError('Transition graph is contains '
-                                         'islands')
+                raise NineMLRuntimeError("Transition graph contains islands")
 
     def action_componentclass(self, componentclass, namespace):
         self.regimes_in_namespace[namespace] = list(componentclass.regimes)
@@ -178,7 +176,7 @@ class NoDuplicatedObjectsDynamicsValidator(
     def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         self.all_objects.append(event_out)
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         self.all_objects.append(assignment)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -220,7 +218,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_lhssymbol_is_valid(state_variable.name)
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(assignment.lhs)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8

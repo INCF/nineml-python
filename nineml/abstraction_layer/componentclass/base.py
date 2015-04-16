@@ -7,27 +7,93 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from itertools import chain
 from abc import ABCMeta
+import sympy
+from itertools import chain
 from .. import BaseALObject
 import nineml
+from nineml.base import MemberContainerObject
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.utils import filter_discrete_types, ensure_valid_identifier
+from nineml.utils import (
+    filter_discrete_types, ensure_valid_identifier,
+    normalise_parameter_as_list, assert_no_duplicates)
+from ..expressions import Alias, Constant
 from ..units import dimensionless, Dimension
-from nineml import TopLevelObject
-from ..expressions import ExpressionSymbol
+from nineml import DocumentLevelObject
+from nineml.exceptions import NineMLInvalidElementTypeException
 
 
-class ComponentClass(BaseALObject, TopLevelObject):
+class Parameter(BaseALObject):
+
+    """A class representing a state-variable in a ``ComponentClass``.
+
+    This was originally a string, but if we intend to support units in the
+    future, wrapping in into its own object may make the transition easier
+    """
+
+    element_name = 'Parameter'
+    defining_attributes = ('_name', '_dimension')
+
+    def __init__(self, name, dimension=None):
+        """Parameter Constructor
+
+        `name` -- The name of the parameter.
+        """
+        super(Parameter, self).__init__()
+        name = name.strip()
+        ensure_valid_identifier(name)
+
+        self._name = name
+        self._dimension = dimension if dimension is not None else dimensionless
+        assert isinstance(self._dimension, Dimension), (
+            "dimension must be None or a nineml.Dimension instance")
+        self.constraints = []  # TODO: constraints can be added in the future.
+
+    def __eq__(self, other):
+        if not isinstance(other, Parameter):
+            return False
+        return self.name == other.name and self.dimension == other.dimension
+
+    @property
+    def name(self):
+        """Returns the name of the parameter"""
+        return self._name
+
+    @property
+    def dimension(self):
+        """Returns the dimensions of the parameter"""
+        return self._dimension
+
+    def set_dimension(self, dimension):
+        self._dimension = dimension
+
+    def __repr__(self):
+        return ("Parameter({}{})"
+                .format(self.name,
+                        ', dimension={}'.format(self.dimension.name)))
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_parameter(self, **kwargs)
+
+    def _sympy_(self):
+        return sympy.Symbol(self.name)
+
+
+class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     __metaclass__ = ABCMeta  # Abstract base class
 
+    defining_attributes = ('_name', '_parameters', '_main_block')
+    class_to_member_dict = {Parameter: '_parameters'}
     element_name = 'ComponentClass'
 
-    def __init__(self, name, parameters, main_block):
+    def __init__(self, name, parameters, main_block, url=None):
         ensure_valid_identifier(name)
         BaseALObject.__init__(self)
+        DocumentLevelObject.__init__(self, url)
+        MemberContainerObject.__init__(self)
         self._name = name
         self._main_block = main_block
         # Turn any strings in the parameter list into Parameters:
@@ -47,7 +113,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
 
     @property
     def ports(self):
-        return []  # Any generic ports to be added here
+        return []
 
     @property
     def parameters(self):
@@ -55,33 +121,33 @@ class ComponentClass(BaseALObject, TopLevelObject):
         return self._parameters.itervalues()
 
     @property
-    def parameters_map(self):
-        """Returns the underlying parameters dictionary containing the local
-          |Parameter| objects"""
-        return self._parameters
+    def aliases(self):
+        return self._main_block._aliases.itervalues()
+
+    @property
+    def constants(self):
+        return self._main_block._constants.itervalues()
+
+    def parameter(self, name):
+        return self._parameters[name]
+
+    def alias(self, name):
+        return self._main_block._aliases[name]
+
+    def constant(self, name):
+        return self._main_block._constants[name]
 
     @property
     def parameter_names(self):
         return self._parameters.iterkeys()
 
-    def parameter(self, name):
-        return self._parameters[name]
+    @property
+    def alias_names(self):
+        return self._main_block._aliases.iterkeys()
 
     @property
-    def aliases(self):
-        return self._main_block.aliases
-
-    @property
-    def aliases_map(self):
-        return self._main_block.aliases_map
-
-    @property
-    def constants(self):
-        return self._main_block.constants
-
-    @property
-    def constants_map(self):
-        return self._main_block.constants_map
+    def constant_names(self):
+        return self._main_block._constants.iterkeys()
 
     @property
     def dimensions(self):
@@ -114,6 +180,7 @@ class ComponentClass(BaseALObject, TopLevelObject):
         self.standardize_unit_dimensions()
         XMLWriter = getattr(nineml.abstraction_layer,
                             self.__class__.__name__ + 'XMLWriter')
+        self.validate()
         return XMLWriter().visit(self)
 
     @classmethod
@@ -124,56 +191,68 @@ class ComponentClass(BaseALObject, TopLevelObject):
                             'ClassXMLLoader')
         return XMLLoader(document).load_componentclass(element)
 
+    def lookup_member_dict_name(self, element):
+        try:
+            return super(ComponentClass, self).lookup_member_dict_name(element)
+        except NineMLInvalidElementTypeException:
+            return self._main_block.lookup_member_dict_name(element)
 
-class Parameter(BaseALObject, ExpressionSymbol):
+    def lookup_member_dict(self, element):
+        try:
+            return super(ComponentClass, self).lookup_member_dict(element)
+        except AttributeError:
+            return self._main_block.lookup_member_dict(element)
 
-    """A class representing a state-variable in a ``ComponentClass``.
+    @property
+    def all_member_dicts(self):
+        return chain(*(
+            (getattr(self, n)
+             for n in self.class_to_member_dict.itervalues()),
+            (getattr(self._main_block, n)
+             for n in self._main_block.class_to_member_dict.itervalues())))
 
-    This was originally a string, but if we intend to support units in the
-    future, wrapping in into its own object may make the transition easier
+
+class MainBlock(BaseALObject, MemberContainerObject):
+
+    """
+    An object, which encapsulates a component's regimes, transitions,
+    and state variables
     """
 
-    element_name = 'Parameter'
-    defining_attributes = ('name', 'dimension')
+    __metaclass__ = ABCMeta  # Abstract base class
 
-    def __init__(self, name, dimension=None):
-        """Parameter Constructor
+    defining_attributes = ('_aliases', '_constants')
+    class_to_member_dict = {Alias: '_aliases',
+                        Constant: '_constants'}
 
-        `name` -- The name of the parameter.
+    def __init__(self, aliases=None, constants=None):
+        """DynamicsBlock object constructor
+
+           :param aliases: A list of aliases, which must be either |Alias|
+               objects or ``string``s.
         """
-        name = name.strip()
-        ensure_valid_identifier(name)
+        BaseALObject.__init__(self)
+        MemberContainerObject.__init__(self)
+        aliases = normalise_parameter_as_list(aliases)
+        constants = normalise_parameter_as_list(constants)
 
-        self._name = name
-        self._dimension = dimension if dimension is not None else dimensionless
-        assert isinstance(self._dimension, Dimension), (
-            "dimension must be None or a nineml.Dimension instance")
-        self.constraints = []  # TODO: constraints can be added in the future.
+        # Load the aliases as objects or strings:
+        alias_td = filter_discrete_types(aliases, (basestring, Alias))
+        aliases_from_strs = [Alias.from_str(o) for o in alias_td[basestring]]
+        aliases = alias_td[Alias] + aliases_from_strs
 
-    def __eq__(self, other):
-        return self.name == other.name and self.dimension == other.dimension
+        assert_no_duplicates(a.lhs for a in aliases)
 
-    @property
-    def name(self):
-        """Returns the name of the parameter"""
-        return self._name
+        self._aliases = dict((a.lhs, a) for a in aliases)
+        self._constants = dict((c.name, c) for c in constants)
 
     @property
-    def dimension(self):
-        """Returns the dimensions of the parameter"""
-        return self._dimension
+    def aliases(self):
+        return self._aliases.itervalues()
 
-    def set_dimension(self, dimension):
-        self._dimension = dimension
-
-    def __repr__(self):
-        return ("Parameter({}{})"
-                .format(self.name,
-                        ', dimension={}'.format(self.dimension.name)))
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_parameter(self, **kwargs)
+    @property
+    def constants(self):
+        return self._constants.itervalues()
 
 
 from .utils.xml import ComponentClassXMLLoader

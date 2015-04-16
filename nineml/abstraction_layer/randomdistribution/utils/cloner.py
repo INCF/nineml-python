@@ -6,7 +6,7 @@ docstring needed
 """
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
-    ComponentRenameSymbol, ComponentClonerVisitor)
+    ComponentCloner)
 from .visitors import RandomDistributionActionVisitor
 
 
@@ -27,18 +27,10 @@ class RandomDistributionExpandAliasDefinition(RandomDistributionActionVisitor,
     pass
 
 
-class RandomDistributionRenameSymbol(RandomDistributionActionVisitor,
-                               ComponentRenameSymbol):
-
-    """ Can be used for:
-    Aliases
-    """
-    pass
-
-
-class RandomDistributionClonerVisitor(ComponentClonerVisitor):
+class RandomDistributionCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
+        super(RandomDistributionCloner, self).visit_componentclass(componentclass)
         ccn = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)

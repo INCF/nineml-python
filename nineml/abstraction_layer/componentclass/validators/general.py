@@ -83,9 +83,9 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
                 for rhs_atom in timederivative.rhs_atoms:
                     if (rhs_atom not in self.available_symbols[ns] and
                             rhs_atom not in reserved_identifiers):
-                        err = ('Unresolved Symbol in Time Derivative: %s [%s]'
-                               % (rhs_atom, timederivative))
-                        raise NineMLRuntimeError(err)
+                        raise NineMLRuntimeError(
+                            "Unresolved Symbol in Time Derivative: {} [{}]"
+                            .format(rhs_atom, timederivative))
 
         # Check StateAssignments
         for ns, state_assignments in self.state_assignments.iteritems():
