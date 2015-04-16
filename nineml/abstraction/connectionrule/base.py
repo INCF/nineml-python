@@ -12,30 +12,18 @@ docstring goes here
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ..componentclass import ComponentClass, MainBlock
-
-
-class ConnectionRuleBlock(MainBlock):
-
-    element_name = 'ConnectionRuleComponent'
-    defining_attributes = ('standard_library',)
-
-    def __init__(self, standard_library):
-        super(ConnectionRuleBlock, self).__init__()
-        self.standard_library = standard_library
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_connectionruleblock(self, **kwargs)
+from ..componentclass import ComponentClass
 
 
 class ConnectionRule(ComponentClass):
 
-    defining_attributes = ('name', '_parameters', '_main_block')
+    element_name = 'ConnectionRuleClass'
+    defining_attributes = ('name', '_parameters', 'standard_library')
 
-    def __init__(self, name, connectionruleblock, parameters=None, url=None):
-        super(ConnectionRule, self).__init__(
-            name, parameters, main_block=connectionruleblock, url=url)
+    def __init__(self, name, standard_library, parameters=None):
+        super(ConnectionRuleClass, self).__init__(
+            name, parameters)
+        self.standard_library = standard_library
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

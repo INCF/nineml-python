@@ -67,14 +67,6 @@ class ActionVisitor_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_dynamicsblock(self):
-        # Signature: name(self, dynamicsblock, **kwargs)
-                # No Docstring
-        # from nineml.abstraction.visitors.base import ActionVisitor
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
     def test_action_eventsendport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
@@ -197,14 +189,6 @@ class ActionVisitor_test(unittest.TestCase):
 
     def test_visit_trigger(self):
         # Signature: name(self, condition, **kwargs)
-                # No Docstring
-        # from nineml.abstraction.visitors.base import ActionVisitor
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
-    def test_visit_dynamicsblock(self):
-        # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
         # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')

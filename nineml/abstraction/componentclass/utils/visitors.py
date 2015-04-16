@@ -4,7 +4,6 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from itertools import chain
 from ...expressions import reserved_identifiers
 
 
@@ -21,8 +20,7 @@ class ComponentActionVisitor(ComponentVisitor):
 
     def visit_componentclass(self, componentclass, **kwargs):
         self.action_componentclass(componentclass, **kwargs)
-        nodes = chain(componentclass.parameters, componentclass.ports)
-        for p in nodes:
+        for p in componentclass:
             p.accept_visitor(self, **kwargs)
 
     def visit_parameter(self, parameter, **kwargs):
