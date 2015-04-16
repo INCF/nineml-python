@@ -102,9 +102,6 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
         super(DynamicsRenameSymbol, self).action_componentclass(componentclass)
         self._update_dicts(*componentclass.all_member_dicts)
 
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):
-        pass
-
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         if regime.name == self.old_symbol_name:
             regime._name = self.new_symbol_name

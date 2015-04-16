@@ -64,10 +64,9 @@ class ComponentRenameSymbol(ComponentActionVisitor):
 
     def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
         self._update_dicts(*chain([componentclass._parameters],
-                                  componentclass._indices.itervalues()))
-
-    def action_mainblock(self, main_block, **kwargs):  # @UnusedVariable
-        self._update_dicts(main_block._aliases, main_block._constants)
+                                  componentclass._indices.itervalues(),
+                                  componentclass._aliases,
+                                  componentclass._constants))
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         if parameter.name == self.old_symbol_name:

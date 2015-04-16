@@ -1,26 +1,15 @@
-from ..componentclass import ComponentClass, MainBlock
-
-
-class RandomDistributionBlock(MainBlock):
-
-    defining_attributes = ('standard_library',)
-
-    def __init__(self, standard_library):
-        super(RandomDistributionBlock, self).__init__()
-        self.standard_library = standard_library
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_randomdistributionblock(self, **kwargs)
+from ..componentclass import ComponentClass
 
 
 class RandomDistributionClass(ComponentClass):
 
-    defining_attributes = ('name', '_parameters', '_main_block')
+    element_name = 'RandomDistributionClass'
+    defining_attributes = ('name', '_parameters', 'standard_library')
 
-    def __init__(self, name, randomdistributionblock, parameters=None):
+    def __init__(self, name, standard_library, parameters=None):
         super(RandomDistributionClass, self).__init__(
-            name, parameters, main_block=randomdistributionblock)
+            name, parameters)
+        self.standard_library = standard_library
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

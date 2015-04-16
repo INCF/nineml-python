@@ -11,13 +11,13 @@ from .visitors import RandomDistributionActionVisitor
 
 
 class RandomDistributionExpandPortDefinition(RandomDistributionActionVisitor,
-                                       ComponentExpandPortDefinition):
+                                             ComponentExpandPortDefinition):
 
     pass
 
 
 class RandomDistributionExpandAliasDefinition(RandomDistributionActionVisitor,
-                                        ComponentExpandAliasDefinition):
+                                              ComponentExpandAliasDefinition):
 
     """
     An action-class that walks over a componentclass, and expands an alias in
@@ -34,14 +34,5 @@ class RandomDistributionCloner(ComponentCloner):
         ccn = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
-                        for p in componentclass.parameters],
-            randomdistributionblock=(
-                componentclass.randomdistribution.accept_visitor(self, **kwargs)
-                if componentclass.randomdistribution else None))
+                        for p in componentclass.parameters])
         return ccn
-
-    def visit_randomdistributionblock(self, randomdistributionblock, **kwargs):
-        return randomdistributionblock.__class__(
-            aliases=[
-                a.accept_visitor(self, **kwargs)
-                for a in randomdistributionblock.aliases])
