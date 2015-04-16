@@ -52,27 +52,21 @@ class DynamicsCloner(ComponentCloner):
                           for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
-            dynamicsblock=(
-                componentclass._main_block.accept_visitor(self, **kwargs)
-                if componentclass._main_block else None),
+            regimes=[r.accept_visitor(self, **kwargs)
+                     for r in componentclass.regimes],
+            aliases=[
+                a.accept_visitor(self, **kwargs)
+                for a in componentclass.aliases],
+            state_variables=[
+                s.accept_visitor(self, **kwargs)
+                for s in componentclass.state_variables],
+            constants=[c.accept_visitor(self, **kwargs)
+                       for c in componentclass.constants],
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=componentclass.portconnections[:])
         self.copy_indices(componentclass, cc)
         return cc
-
-    def visit_dynamicsblock(self, dynamicsblock, **kwargs):
-        return dynamicsblock.__class__(
-            regimes=[r.accept_visitor(self, **kwargs)
-                     for r in dynamicsblock.regimes],
-            aliases=[
-                a.accept_visitor(self, **kwargs)
-                for a in dynamicsblock.aliases],
-            state_variables=[
-                s.accept_visitor(self, **kwargs)
-                for s in dynamicsblock.state_variables],
-            constants=[c.accept_visitor(self, **kwargs)
-                       for c in dynamicsblock.constants],)
 
     def visit_regime(self, regime, **kwargs):
         r = regime.__class__(
@@ -169,6 +163,7 @@ class DynamicsCloner(ComponentCloner):
         return oe
 
 
+# TODO: TGC 4/15 should just merge functionality into cloner I think.
 class DynamicsClonerPrefixNamespace(DynamicsCloner):
 
     """
@@ -200,15 +195,6 @@ class DynamicsClonerPrefixNamespace(DynamicsCloner):
                     componentclass.get_node_addr(),
                     sink.get_parent_addr()).get_str_prefix() +
                 self.prefix_variable(sink.get_local_name()))
-            # self.prefix_variable(sink.get_local_name(), **kwargs) )
-
-            # print 'Mapping Ports:', src, '->', src_new, '(%s)' %
-#                  src.get_local_name(), prefix
-            # print 'Mapping Ports:', sink, '->', sink_new
-            # src_new = NamespaceAddress.concat(
-#                 src.get_parent_addr(), src.getstr() )
-            # sink_new = NamespaceAddress.concat(
-#                 sink.get_parent_addr(), sink.getstr() )
             port_connections.append((src_new, sink_new))
         return componentclass.__class__(
             name=componentclass.name,
@@ -218,9 +204,16 @@ class DynamicsClonerPrefixNamespace(DynamicsCloner):
                           for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
-            dynamicsblock=(
-                componentclass._main_block.accept_visitor(self, **kwargs)
-                if componentclass._main_block else None),
+            regimes=[r.accept_visitor(self, **kwargs)
+                     for r in componentclass.regimes],
+            aliases=[
+                a.accept_visitor(self, **kwargs)
+                for a in componentclass.aliases],
+            state_variables=[
+                s.accept_visitor(self, **kwargs)
+                for s in componentclass.state_variables],
+            constants=[c.accept_visitor(self, **kwargs)
+                       for c in componentclass.constants],
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=port_connections)

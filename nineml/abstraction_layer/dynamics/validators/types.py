@@ -11,15 +11,11 @@ from ..transitions import (OutputEvent, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
 from ...ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                       EventSendPort, EventReceivePort)
-from ..base import DynamicsBlock
 from ..utils.visitors import DynamicsActionVisitor
 
 
 class TypesDynamicsValidator(DynamicsActionVisitor,
                              TypesComponentValidator):
-
-    def action_dynamicsblock(self, dynamicsblock):
-        assert isinstance(dynamicsblock, DynamicsBlock)
 
     def action_regime(self, regime):
         assert isinstance(regime, Regime)

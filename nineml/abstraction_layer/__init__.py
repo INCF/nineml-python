@@ -25,8 +25,8 @@ from .componentclass import Parameter, ComponentClass, NamespaceAddress
 from .expressions import Alias, Expression, Constant
 from .dynamics import (DynamicsClass, Regime,
                        OutputEvent, StateAssignment, TimeDerivative,
-                       DynamicsBlock, OnCondition,
-                       Trigger, StateVariable, OnEvent, On, SpikeOutputEvent)
+                       OnCondition, Trigger, StateVariable, OnEvent, On,
+                       SpikeOutputEvent)
 from .ports import (AnalogSendPort, AnalogReceivePort,
                     AnalogReducePort, EventSendPort,
                     EventReceivePort, AnalogPort, EventPort, Port)

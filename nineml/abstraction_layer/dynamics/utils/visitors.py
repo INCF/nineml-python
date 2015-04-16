@@ -15,22 +15,15 @@ from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_componentclass(self, componentclass, **kwargs):
-        super(DynamicsActionVisitor, self).visit_componentclass(
-            componentclass, **kwargs)
-        if componentclass._main_block:
-            componentclass._main_block.accept_visitor(self, **kwargs)
+        for e in componentclass:
+            e.accept_visitor(self, **kwargs)
         for subnode in componentclass.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 
-    def visit_dynamicsblock(self, dynamicsblock, **kwargs):
-        self.action_dynamicsblock(dynamicsblock, **kwargs)
-        for p in dynamicsblock:
-            p.accept_visitor(self, **kwargs)
-
     def visit_regime(self, regime, **kwargs):
         self.action_regime(regime, **kwargs)
-        for p in regime:
-            p.accept_visitor(self, **kwargs)
+        for e in regime:
+            e.accept_visitor(self, **kwargs)
 
     def visit_statevariable(self, state_variable, **kwargs):
         self.action_statevariable(state_variable, **kwargs)
@@ -65,16 +58,13 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_oncondition(self, on_condition, **kwargs):
         self.action_oncondition(on_condition, **kwargs)
         on_condition.trigger.accept_visitor(self, **kwargs)
-        for p in on_condition:
-            p.accept_visitor(self, **kwargs)
+        for e in on_condition:
+            e.accept_visitor(self, **kwargs)
 
     def visit_onevent(self, on_event, **kwargs):
         self.action_onevent(on_event, **kwargs)
-        for p in on_event:
-            p.accept_visitor(self, **kwargs)
-
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
-        self.check_pass()
+        for e in on_event:
+            e.accept_visitor(self, **kwargs)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         self.check_pass()
@@ -144,9 +134,6 @@ class DynamicsElementFinder(ComponentElementFinder, DynamicsActionVisitor):
     def __init__(self, element):
         DynamicsActionVisitor.__init__(self, require_explicit_overrides=True)
         ComponentElementFinder.__init__(self, element)
-
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
-        pass
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         if self.element is regime:
