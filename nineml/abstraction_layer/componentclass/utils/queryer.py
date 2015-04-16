@@ -15,25 +15,25 @@ class ComponentQueryer(object):
     ComponentClass object, without polluting the class
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         """Constructor for the ComponentQueryer"""
-        self.componentclass = componentclass
+        self.component_class = component_class
 
     @property
     def ports(self):
         """Return an iterator over all the port (Event & Analog) in the
-        componentclass"""
+        component_class"""
         return []  # TODO: Common ports to be added here.
 
     @property
     def parameters_map(self):
         """Returns a map of names to |Parameter| objects"""
-        return dict([(p.name, p) for p in self.componentclass.parameters])
+        return dict([(p.name, p) for p in self.component_class.parameters])
 
     @property
     def constants_map(self):
         """Returns a map of names to |Parameter| objects"""
-        return dict([(c.name, c) for c in self.componentclass.constants])
+        return dict([(c.name, c) for c in self.component_class.constants])
 
     # Used by the flattening code:
     def get_fully_qualified_port_connections(self):
@@ -46,9 +46,9 @@ class ComponentQueryer(object):
         but note that it is not ``string`` objects that are returned, but
         NamespaceAddress objects.
         """
-        namespace = self.componentclass.get_node_addr()
+        namespace = self.component_class.get_node_addr()
         conns = []
-        for src, sink in self.componentclass.portconnections:
+        for src, sink in self.component_class.portconnections:
             src_new = namespace.get_subns_addr(src)
             sink_new = namespace.get_subns_addr(sink)
             conns.append((src_new, sink_new))

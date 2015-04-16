@@ -7,18 +7,18 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         super(ComponentClassInterfaceInferer, self).__init__(
             require_explicit_overrides=False)
         # Parameters:
         # Use visitation to collect all atoms that are not aliases and not
         # state variables
-        self.componentclass = componentclass
+        self.component_class = component_class
         self.declared_symbols = copy(reserved_identifiers)
         self.atoms = set()
         self.input_event_port_names = set()
         self.event_out_port_names = set()
-        self.visit(self.componentclass)
+        self.visit(self.component_class)
         # Visit class and populate declared_symbols and atoms sets
         self.parameter_names = self.atoms - self.declared_symbols
 

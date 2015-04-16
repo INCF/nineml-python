@@ -23,71 +23,71 @@ class DynamicPortModifier(ComponentModifier):
     _ExpandPortDefinition = DynamicsExpandPortDefinition
 
     @classmethod
-    def close_analog_port(cls, componentclass, port_name, value="0"):
+    def close_analog_port(cls, component_class, port_name, value="0"):
         """Closes an incoming analog port by assigning its value to 0"""
 
-        if not componentclass.is_flat():
+        if not component_class.is_flat():
             raise NineMLRuntimeError('close_analog_port() on non-flat '
-                                     'componentclass')
+                                     'component_class')
 
         # Subsitute the value in:
-        componentclass.accept_visitor(cls._ExpandPortDefinition(port_name,
+        component_class.accept_visitor(cls._ExpandPortDefinition(port_name,
                                                                 value))
 
         # Remove it from the list of ports:
-        port = filter_expect_single(componentclass.analog_ports,
+        port = filter_expect_single(component_class.analog_ports,
                                     lambda ap: ap.name == port_name)
         if isinstance(port, AnalogSendPort):
-            componentclass._analog_send_ports.pop(port_name)
+            component_class._analog_send_ports.pop(port_name)
         elif isinstance(port, AnalogReceivePort):
-            componentclass._analog_receive_ports.pop(port_name)
+            component_class._analog_receive_ports.pop(port_name)
         elif isinstance(port, AnalogReducePort):
-            componentclass._analog_reduce_ports.pop(port_name)
+            component_class._analog_reduce_ports.pop(port_name)
         else:
             raise TypeError("Expected an analog port")
 
     @classmethod
-    def close_all_reduce_ports(cls, componentclass, exclude=None):
+    def close_all_reduce_ports(cls, component_class, exclude=None):
         """
-        Closes all the ``reduce`` ports on a componentclass by assigning them a
+        Closes all the ``reduce`` ports on a component_class by assigning them a
         value of 0
         """
-        if not componentclass.is_flat():
+        if not component_class.is_flat():
             raise NineMLRuntimeError('close_all_reduce_ports() on non-flat '
-                                     'componentclass')
+                                     'component_class')
 
-        for arp in componentclass.query.analog_reduce_ports:
+        for arp in component_class.query.analog_reduce_ports:
             if exclude and arp.name in exclude:
                 continue
-            cls.close_analog_port(componentclass=componentclass,
+            cls.close_analog_port(component_class=component_class,
                                   port_name=arp.name, value=0)
 
     @classmethod
-    def rename_port(cls, componentclass, old_port_name, new_port_name):
-        """ Renames a port in a componentclass """
-        if not componentclass.is_flat():
+    def rename_port(cls, component_class, old_port_name, new_port_name):
+        """ Renames a port in a component_class """
+        if not component_class.is_flat():
             raise NineMLRuntimeError('rename_port() on non-flat '
-                                     'componentclass')
+                                     'component_class')
 
         # Find the old port:
-        port = filter_expect_single(componentclass.analog_ports,
+        port = filter_expect_single(component_class.analog_ports,
                                     lambda ap: ap.name == old_port_name)
         port._name = new_port_name
 
     @classmethod
-    def remap_port_to_parameter(cls, componentclass, port_name):
-        """ Renames a port in a componentclass """
-        if not componentclass.is_flat():
+    def remap_port_to_parameter(cls, component_class, port_name):
+        """ Renames a port in a component_class """
+        if not component_class.is_flat():
             raise NineMLRuntimeError('rename_port_to_parameter() on non-flat '
-                                     'componentclass')
+                                     'component_class')
 
         # Find the old port:
-        port = filter_expect_single(componentclass.analog_ports,
+        port = filter_expect_single(component_class.analog_ports,
                                     lambda ap: ap.name == port_name)
-        componentclass._analog_ports.remove(port)
+        component_class._analog_ports.remove(port)
 
         # Add a new parameter:
-        componentclass._parameters[port_name] = Parameter(port_name)
+        component_class._parameters[port_name] = Parameter(port_name)
 
 
 class DynamicsRenameSymbol(ComponentRenameSymbol,
@@ -98,9 +98,9 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
     """
 
 
-    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
-        super(DynamicsRenameSymbol, self).action_componentclass(componentclass)
-        self._update_dicts(*componentclass.all_member_dicts)
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
+        super(DynamicsRenameSymbol, self).action_componentclass(component_class)
+        self._update_dicts(*component_class.all_member_dicts)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         if regime.name == self.old_symbol_name:
@@ -180,7 +180,7 @@ class DynamicsAssignIndices(ComponentAssignIndices,
         for elem in regime:
             regime.index_of(elem)
         for trans in regime.transitions:
-            self.componentclass.index_of(trans, 'Transition')
+            self.component_class.index_of(trans, 'Transition')
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         for elem in on_condition:

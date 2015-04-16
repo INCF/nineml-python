@@ -121,7 +121,7 @@ class PositionList(BaseULObject, DocumentLevelObject):
 
         `positions` should be a list of (x,y,z) tuples or a 3xN (Nx3?) numpy
                     array.
-        `structure` should be a Structure componentclass.
+        `structure` should be a Structure component_class.
         """
         super(PositionList, self).__init__()
         BaseULObject.__init__(self)

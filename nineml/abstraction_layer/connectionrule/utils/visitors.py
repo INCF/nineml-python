@@ -13,18 +13,18 @@ from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 class ConnectionRuleActionVisitor(ComponentActionVisitor):
 
-    def visit_componentclass(self, componentclass, **kwargs):
+    def visit_componentclass(self, component_class, **kwargs):
         super(ConnectionRuleActionVisitor, self).visit_componentclass(
-            componentclass, **kwargs)
+            component_class, **kwargs)
 
 
 class ConnectionRuleRequiredDefinitions(ComponentRequiredDefinitions,
                                         ConnectionRuleActionVisitor):
 
-    def __init__(self, componentclass, expressions):
+    def __init__(self, component_class, expressions):
         ConnectionRuleActionVisitor.__init__(self,
                                              require_explicit_overrides=False)
-        ComponentRequiredDefinitions.__init__(self, componentclass,
+        ComponentRequiredDefinitions.__init__(self, component_class,
                                               expressions)
 
 
