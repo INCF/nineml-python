@@ -17,7 +17,10 @@ def get_component():
         analog_ports=[al.AnalogReceivePort("V", dimension=un.voltage),
                       al.AnalogSendPort("I", dimension=un.current)],
         parameters=[al.Parameter('tau', dimension=un.time),
-                    al.Parameter('q', dimension=un.time),
+                    al.Parameter('q', dimension=un.conductance),
                     al.Parameter('vrev', dimension=un.voltage)]
     )
     return coba
+
+if __name__ == '__main__':
+    get_component()
