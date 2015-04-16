@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<NineML xmlns="http://nineml.net/9ML/1.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://nineml.net/9ML/1.0/schema/NineML_v0.2.xsd">
-  <ComponentClass name="IzhikevichClass">
+<NineML xmlns="http://nineml.net/9ML/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://nineml.net/9ML/1.0/schema/NineML_v0.2.xsd">
+  <DynamicsClass name="IzhikevichClass">
     <Parameter name="a" dimension="per_time"/>
     <Parameter name="b" dimension="per_time"/>
     <Parameter name="c" dimension="voltage"/>
@@ -13,38 +12,36 @@
     <AnalogSendPort name="U" dimension="voltage_per_time"/>
     <AnalogSendPort name="V" dimension="voltage"/>
     <EventSendPort name="spikeOutput" mode="send"/>
-    <Dynamics>
-      <!-- Suggested addition Wednesday morning...-->
-      <StateVariable name="V" dimension="voltage"/>
-      <StateVariable name="U" dimension="voltage_per_time"/>
-      <Regime name="subthresholdRegime">
-        <!-- if "independent_variable" is missing, it should be assumed to be "t" -->
-        <!-- Should this "ODE" be called "Rate", RateODE, "RateEqn" ??-->
-        <TimeDerivative variable="U">
-          <MathInline>a*(b*V - U)</MathInline>
-        </TimeDerivative>
-        <TimeDerivative variable="V">
-          <MathInline>const1*V*V + const2*V + const3 - U + iSyn/C</MathInline>
-        </TimeDerivative>
-        <OnCondition>
-          <Trigger>
-            <MathInline>V &gt; theta</MathInline>
-          </Trigger>
-          <StateAssignment variable="V">
-            <MathInline>c</MathInline>
-          </StateAssignment>
-          <StateAssignment variable="U">
-            <MathInline>U+d</MathInline>
-          </StateAssignment>
-          <OutputEvent port="spikeOutput"/>
-        </OnCondition>
-      </Regime>
-      <Constant name="const1" units="per_mV_ms">0.04</Constant>
-      <Constant name="const2" units="per_ms">5</Constant>
-      <Constant name="const3" units="mV_per_ms">140</Constant>
-      <Constant name="C" units="nF">1.0</Constant>
-    </Dynamics>
-  </ComponentClass>
+    <!-- Suggested addition Wednesday morning...-->
+    <StateVariable name="V" dimension="voltage"/>
+    <StateVariable name="U" dimension="voltage_per_time"/>
+    <Regime name="subthresholdRegime">
+      <!-- if "independent_variable" is missing, it should be assumed to be "t" -->
+      <!-- Should this "ODE" be called "Rate", RateODE, "RateEqn" ??-->
+      <TimeDerivative variable="U">
+        <MathInline>a*(b*V - U)</MathInline>
+      </TimeDerivative>
+      <TimeDerivative variable="V">
+        <MathInline>const1*V*V + const2*V + const3 - U + iSyn/C</MathInline>
+      </TimeDerivative>
+      <OnCondition>
+        <Trigger>
+          <MathInline>V &gt; theta</MathInline>
+        </Trigger>
+        <StateAssignment variable="V">
+          <MathInline>c</MathInline>
+        </StateAssignment>
+        <StateAssignment variable="U">
+          <MathInline>U+d</MathInline>
+        </StateAssignment>
+        <OutputEvent port="spikeOutput"/>
+      </OnCondition>
+    </Regime>
+    <Constant name="const1" units="per_mV_ms">0.04</Constant>
+    <Constant name="const2" units="per_ms">5</Constant>
+    <Constant name="const3" units="mV_per_ms">140</Constant>
+    <Constant name="C" units="nF">1.0</Constant>
+  </DynamicsClass>
   <Component name="Izhikevich">
     <Definition>IzhikevichClass</Definition>
     <Property name="a" units="per_ms">

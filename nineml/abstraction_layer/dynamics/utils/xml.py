@@ -30,14 +30,14 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
-    def load_componentclass(self, element):
+    def load_dynamicsclass(self, element):
 
         block_names = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
                        'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
                        'Dynamics', 'Regime', 'Alias', 'StateVariable',
                        'Constant')
 
-        blocks = self._load_blocks(element, blocks=block_names)
+        blocks = self._load_blocks(element, block_names=block_names)
 
         return DynamicsClass(
             name=element.get('name'),
@@ -82,7 +82,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     @read_annotations
     def load_regime(self, element):
         block_names = ('TimeDerivative', 'OnCondition', 'OnEvent')
-        blocks = self._load_blocks(element, blocks=block_names)
+        blocks = self._load_blocks(element, block_names=block_names)
         transitions = blocks["OnEvent"] + blocks['OnCondition']
         return Regime(name=element.get('name'),
                       time_derivatives=blocks["TimeDerivative"],
@@ -104,7 +104,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     @read_annotations
     def load_oncondition(self, element):
         block_names = ('Trigger', 'StateAssignment', 'OutputEvent')
-        blocks = self._load_blocks(element, blocks=block_names)
+        blocks = self._load_blocks(element, block_names=block_names)
         target_regime = element.get('target_regime')
         trigger = expect_single(blocks["Trigger"])
         return OnCondition(trigger=trigger,
@@ -115,7 +115,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     @read_annotations
     def load_onevent(self, element):
         block_names = ('StateAssignment', 'OutputEvent')
-        blocks = self._load_blocks(element, blocks=block_names)
+        blocks = self._load_blocks(element, block_names=block_names)
         target_regime = element.get('target_regime')
         return OnEvent(src_port_name=element.get('port'),
                        state_assignments=blocks["StateAssignment"],
@@ -136,29 +136,29 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         port_name = element.get('port')
         return OutputEvent(port_name=port_name)
 
-    tag_to_loader = {
-        "ComponentClass": load_componentclass,
-        "Regime": load_regime,
-        "StateVariable": load_statevariable,
-        "EventSendPort": load_eventsendport,
-        "AnalogSendPort": load_analogsendport,
-        "EventReceivePort": load_eventreceiveport,
-        "AnalogReceivePort": load_analogreceiveport,
-        "AnalogReducePort": load_analogreduceport,
-        "OnCondition": load_oncondition,
-        "OnEvent": load_onevent,
-        "TimeDerivative": load_timederivative,
-        "Trigger": load_trigger,
-        "StateAssignment": load_stateassignment,
-        "OutputEvent": load_outputevent,
-    }
+    tag_to_loader = dict(
+        tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
+        (("DynamicsClass", load_dynamicsclass),
+         ("Regime", load_regime),
+         ("StateVariable", load_statevariable),
+         ("EventSendPort", load_eventsendport),
+         ("AnalogSendPort", load_analogsendport),
+         ("EventReceivePort", load_eventreceiveport),
+         ("AnalogReceivePort", load_analogreceiveport),
+         ("AnalogReducePort", load_analogreduceport),
+         ("OnCondition", load_oncondition),
+         ("OnEvent", load_onevent),
+         ("TimeDerivative", load_timederivative),
+         ("Trigger", load_trigger),
+         ("StateAssignment", load_stateassignment),
+         ("OutputEvent", load_outputevent)))
 
 
 class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, componentclass):
-        return E('ComponentClass',
+        return E('DynamicsClass',
                  *[e.accept_visitor(self) for e in componentclass],
                  name=componentclass.name)
 

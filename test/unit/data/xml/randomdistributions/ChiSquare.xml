@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="ChiSquareDistribution">
+  <RandomDistributionClass name="ChiSquareDistribution">
     <Parameter name="degreesOfFreedom"/>
     <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/chi-square.xml"/>
-  </ComponentClass>
+  </RandomDistributionClass>
 </NineML>

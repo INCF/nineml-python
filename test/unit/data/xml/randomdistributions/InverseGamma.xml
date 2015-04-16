@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="InverseGammaDistribution">
+  <RandomDistributionClass name="InverseGammaDistribution">
     <Parameter name="shape"/>
     <Parameter name="scale"/>
     <RandomDistribution>
       <StandarLibrary definition="http://www.uncertml.org/distributions/inverse-gamma.xml">InverseGammaDistribution</StandarLibrary>
     </RandomDistribution>
-  </ComponentClass>
+  </RandomDistributionClass>
 </NineML>

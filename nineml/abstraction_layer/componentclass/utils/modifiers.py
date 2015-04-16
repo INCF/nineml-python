@@ -63,10 +63,8 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             self.note_port_changed(port)
 
     def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._update_dicts(*chain([componentclass._parameters],
-                                  componentclass._indices.itervalues(),
-                                  componentclass._aliases,
-                                  componentclass._constants))
+        self._update_dicts(*chain(componentclass.all_member_dicts,
+                                  componentclass._indices.itervalues()))
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         if parameter.name == self.old_symbol_name:

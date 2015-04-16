@@ -88,7 +88,7 @@ def get_component():
     analog_ports = [al.SendPort("V"),
                     al.ReducePort("Isyn", operator="+")]
 
-    c1 = al.ComponentClass("iaf_sfa_relref",
+    c1 = al.DynamicsClass("iaf_sfa_relref",
                            regimes=[subthreshold_regime, refractory_regime],
                            analog_ports=analog_ports,
                            )

@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="UniformDistribution">
+  <RandomDistributionClass name="UniformDistribution">
     <Parameter name="minimum"/>
     <Parameter name="maximum"/>
     <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/uniform.xml"/>
-  </ComponentClass>
+  </RandomDistributionClass>
 </NineML>

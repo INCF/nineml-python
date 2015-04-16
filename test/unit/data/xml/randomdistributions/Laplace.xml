@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="LaplaceDistribution">
+  <RandomDistributionClass name="LaplaceDistribution">
     <Parameter name="location"/>
     <Parameter name="scale"/>
     <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/laplace.xml"/>
-  </ComponentClass>
+  </RandomDistributionClass>
 </NineML>
