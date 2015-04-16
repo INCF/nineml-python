@@ -36,14 +36,13 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader):
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
         (("RandomDistributionClass", load_randomdistributionclass),))
 
-
 class RandomDistributionXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
-    def visit_componentclass(self, componentclass):
+    def visit_componentclass(self, component_class):
         return E('RandomDistributionClass',
                  *[e.accept_visitor(self) for e in componentclass],
-                 name=componentclass.name,
+                 name=component_class.name,
                  standardLibrary=componentclass.standard_library))
 
 from ..base import RandomDistributionClass

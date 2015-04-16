@@ -40,10 +40,10 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
 class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
-    def visit_componentclass(self, componentclass):
+    def visit_componentclass(self, component_class):
         return E('ConnectionRuleClass',
                  *[e.accept_visitor(self) for e in componentclass],
-                 name=componentclass.name,
+                 name=component_class.name,
                  standardLibrary=componentclass.standard_library))
 
 from ..base import ConnectionRuleClass

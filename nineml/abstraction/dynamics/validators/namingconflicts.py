@@ -59,11 +59,11 @@ class DimensionNameConflictsDynamicsValidator(
 
 class DuplicateRegimeNamesDynamicsValidator(PerNamespaceDynamicsValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         super(DuplicateRegimeNamesDynamicsValidator, self).__init__(
             require_explicit_overrides=False)
-        self.visit(componentclass)
+        self.visit(component_class)
 
-    def action_componentclass(self, componentclass, namespace):  # @UnusedVariable @IgnorePep8
-        regime_names = [r.name for r in componentclass.regimes]
+    def action_componentclass(self, component_class, namespace):  # @UnusedVariable @IgnorePep8
+        regime_names = [r.name for r in component_class.regimes]
         assert_no_duplicates(regime_names)

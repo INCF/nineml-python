@@ -182,7 +182,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                  constants=None, url=None):
         """Constructs a Dynamics
 
-        :param name: The name of the componentclass.
+        :param name: The name of the component_class.
         :param parameters: A list containing either |Parameter| objects
             or strings representing the parameter names. If ``None``, then the
             parameters are automatically inferred from the |Dynamics| block.
@@ -194,13 +194,13 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         :param subnodes: A dictionary mapping namespace-names to sub-
             componentclass. [Type: ``{string:|Dynamics|,
             string:|Dynamics|, string:|Dynamics|}`` ] describing the
-            namespace of subcomponents for this componentclass.
+            namespace of subcomponents for this component_class.
         :param portconnections: A list of pairs, specifying the connections
-            between the ports of the subcomponents in this componentclass.
+            between the ports of the subcomponents in this component_class.
             These can be `(|NamespaceAddress|, |NamespaceAddress|)' or
             ``(string, string)``.
         :param interface: A shorthand way of specifying the **interface** for
-            this componentclass; |Parameters|, |AnalogPorts| and |EventPorts|.
+            this component_class; |Parameters|, |AnalogPorts| and |EventPorts|.
             ``interface`` takes a list of these objects, and automatically
             resolves them by type into the correct types.
 
@@ -320,7 +320,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         # Store flattening Information:
         self._flattener = None
 
-        # Is the finished componentclass valid?:
+        # Is the finished component_class valid?:
         self.validate()
 
     # -------------------------- #

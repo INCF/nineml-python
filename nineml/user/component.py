@@ -46,10 +46,10 @@ class Reference(BaseReference):
         """
         docstring needed
 
-        `name`     -- a name of an existing componentclass to refer to
+        `name`     -- a name of an existing component_class to refer to
         `document` -- a Document object containing the top-level
                       objects in the current file
-        `url`      -- a url of the file containing the exiting componentclass
+        `url`      -- a url of the file containing the exiting component_class
         """
         super(Reference, self).__init__(name, document, url)
         if not isinstance(self._referred_to, BaseULObject):
@@ -93,23 +93,23 @@ class Component(BaseULObject, DocumentLevelObject):
     A :class:`Component` may be regarded as a parameterized instance of a
     :class:`~nineml.abstraction.ComponentClass`.
 
-    A componentclass may be created either from a
-    :class:`~nineml.abstraction.ComponentClass`  together with a set
+    A component_class may be created either from a
+    :class:`~nineml.abstraction_layer.ComponentClass`  together with a set
     of properties (parameter values), or by cloning then modifying an
-    existing componentclass (the prototype).
+    existing component_class (the prototype).
 
     *Arguments*:
         `name`:
-             a name for the componentclass.
+             a name for the component_class.
         `definition`:
-             the URL of an abstraction layer componentclass class definition,
+             the URL of an abstraction layer component_class class definition,
              a :class:`Definition` or a :class:`Prototype` instance.
         `properties`:
              a dictionary containing (value,units) pairs or a
-             :class:`PropertySet` for the componentclass's properties.
+             :class:`PropertySet` for the component_class's properties.
         `initial_values`:
             a dictionary containing (value,units) pairs or a
-            :class:`PropertySet` for the componentclass's state variables.
+            :class:`PropertySet` for the component_class's state variables.
 
     """
 
@@ -122,8 +122,8 @@ class Component(BaseULObject, DocumentLevelObject):
     def __init__(self, name, definition, properties={}, initial_values={},
                  url=None):
         """
-        Create a new componentclass with the given name, definition and
-        properties, or create a prototype to another componentclass that will
+        Create a new component_class with the given name, definition and
+        properties, or create a prototype to another component_class that will
         be resolved later.
         """
         BaseULObject.__init__(self)
@@ -175,9 +175,9 @@ class Component(BaseULObject, DocumentLevelObject):
     @property
     def component_class(self):
         """
-        Returns the componentclass class from the definition object or the
+        Returns the component_class class from the definition object or the
         prototype's definition, or the prototype's prototype's definition, etc.
-        depending on how the componentclass is defined.
+        depending on how the component_class is defined.
         """
         defn = self.definition
         # Dereference chains of Prototypes until we get a Definition object
@@ -192,7 +192,7 @@ class Component(BaseULObject, DocumentLevelObject):
     @property
     def property_set(self):
         """
-        The set of componentclass properties (parameter values).
+        The set of component_class properties (parameter values).
         """
         # Recursively retrieves properties defined in prototypes and updates
         # them with properties defined locally
@@ -205,7 +205,7 @@ class Component(BaseULObject, DocumentLevelObject):
     @property
     def properties(self):
         """
-        The set of componentclass properties (parameter values).
+        The set of component_class properties (parameter values).
         """
         # Recursively retrieves properties defined in prototypes and updates
         # them with properties defined locally
@@ -225,7 +225,7 @@ class Component(BaseULObject, DocumentLevelObject):
         if prop.units.dimension != param.dimension:
             raise NineMLUnitMismatchError(
                 "Dimensions for '{}' property ('{}') don't match that of "
-                "componentclass class ('{}')."
+                "component_class class ('{}')."
                 .format(prop.name, prop.units.dimension.name,
                         param.dimension.name))
         self._properties[prop.name] = prop
@@ -234,7 +234,7 @@ class Component(BaseULObject, DocumentLevelObject):
     def initial_value_set(self):
         """
         The set of initial values for the state variables of the
-        componentclass.
+        component_class.
         """
         # Recursively retrieves initial values defined in prototypes and
         # updates them with properties defined locally
@@ -258,7 +258,7 @@ class Component(BaseULObject, DocumentLevelObject):
                 hash(self.component_class) ^ hash(self.properties))
 
     def __repr__(self):
-        return ('%s(name="%s", componentclass="%s")' %
+        return ('%s(name="%s", component_class="%s")' %
                 (self.__class__.__name__, self.name,
                  self.component_class.name))
 
@@ -340,7 +340,7 @@ class Component(BaseULObject, DocumentLevelObject):
         else:
             prototype_element = element.find(NINEML + "Prototype")
             if prototype_element is None:
-                raise Exception("A componentclass must contain either a "
+                raise Exception("A component_class must contain either a "
                                 "defintion or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
         ComponentType = cls.get_component_type(definition)
@@ -424,7 +424,7 @@ class Quantity(BaseULObject):
     A numerical parameter is a (name, value, units) triplet, a string parameter
     is a (name, value) pair.
 
-    Numerical values may either be numbers, or a componentclass that generates
+    Numerical values may either be numbers, or a component_class that generates
     numbers, e.g. a RandomDistributionComponent instance.
     """
     __metaclass__ = ABCMeta  # Abstract base class
@@ -476,7 +476,7 @@ class Quantity(BaseULObject):
             return self._value.value
         else:
             raise NineMLRuntimeError("Cannot access single value for array or "
-                                     "componentclass type")
+                                     "component_class type")
 
     @property
     def quantity(self):
@@ -489,7 +489,7 @@ class Quantity(BaseULObject):
             raise NotImplementedError
         else:
             raise NineMLRuntimeError("Cannot access value array for "
-                                     "componentclass or single value types")
+                                     "component_class or single value types")
 
     @property
     def random_distribution(self):
@@ -498,7 +498,7 @@ class Quantity(BaseULObject):
         else:
             raise NineMLRuntimeError(
                 "Cannot access random randomdistribution"
-                "for componentclass or single value types")
+                "for component_class or single value types")
 
     def set_units(self, units):
         if units.dimension != self.units.dimension:
@@ -574,7 +574,7 @@ class Property(Quantity):
     A numerical parameter is a (name, value, units) triplet, a string parameter
     is a (name, value) pair.
 
-    Numerical values may either be numbers, or a componentclass that generates
+    Numerical values may either be numbers, or a component_class that generates
     numbers, e.g. a RandomDistributionComponent instance.
     """
     element_name = "Property"
@@ -627,7 +627,7 @@ class Initial(Property):
 class PropertySet(dict):
 
     """
-    Container for the set of properties for a componentclass.
+    Container for the set of properties for a component_class.
     """
 
     def __init__(self, *properties, **kwproperties):

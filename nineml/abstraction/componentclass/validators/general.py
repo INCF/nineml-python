@@ -21,14 +21,14 @@ class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
 
     """Check that aliases are not self-referential"""
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
-        self.visit(componentclass)
+        self.visit(component_class)
 
-    def action_componentclass(self, componentclass, namespace):
+    def action_componentclass(self, component_class, namespace):
 
-        unresolved_aliases = dict((a.lhs, a) for a in componentclass.aliases)
+        unresolved_aliases = dict((a.lhs, a) for a in component_class.aliases)
 
         def alias_contains_unresolved_symbols(alias):
             unresolved = [sym for sym in alias.rhs_atoms
@@ -60,7 +60,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
     parameters, aliases, statevariables and ports
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
 
@@ -69,7 +69,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
         self.time_derivatives = defaultdict(list)
         self.state_assignments = defaultdict(list)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
         # Check Aliases:
         for ns, aliases in self.aliases.iteritems():
@@ -122,15 +122,15 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
 
 class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=True)
         self.all_objects = list()
-        self.visit(componentclass)
+        self.visit(component_class)
         assert_no_duplicates(self.all_objects)
 
-    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(componentclass)
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.all_objects.append(component_class)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self.all_objects.append(parameter)
@@ -150,11 +150,11 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     on the left-hand-side of an equation
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def check_lhssymbol_is_valid(self, symbol):
         assert isinstance(symbol, basestring)
@@ -175,24 +175,24 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
 
 class DimensionalityComponentValidator(PerNamespaceComponentValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
-        self.componentclass = componentclass
+        self.component_class = component_class
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database
-        for a in componentclass.attributes_with_dimension:
+        for a in component_class.attributes_with_dimension:
             if not isinstance(a, SendPortBase):
                 self._dimensions[a] = sympify(a.dimension)
-        for a in componentclass.attributes_with_units:
+        for a in component_class.attributes_with_units:
             self._dimensions[a] = sympify(a.units.dimension)
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def _get_dimensions(self, element):
         if isinstance(element, (sympy.Symbol, basestring)):
             if element == sympy.Symbol('t'):  # Reserved symbol 't'
                 return sympy.Symbol('t')  # representation of the time dim.
-            element = self.componentclass[Expression.symbol_to_str(element)]
+            element = self.component_class[Expression.symbol_to_str(element)]
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions
@@ -277,7 +277,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
                                    reference.name, self.componentclass.name))))
 
     def _check_send_port(self, port):
-        element = self.componentclass[port.name]
+        element = self.component_class[port.name]
         try:
             if element.dimension != port.dimension:
                 raise NineMLDimensionError(self._construct_error_message(

@@ -721,7 +721,7 @@ class ComponentClass_test(unittest.TestCase):
                            ),
             state_variables=['X', 'V', 'Vt'])
 
-        c = ComponentClass(name='cl',
+        c = DynamicsClass(name='cl',
                            regimes=[
                                Regime('dX1/dt=1/t',
                                       name='r1',
@@ -744,7 +744,7 @@ class ComponentClass_test(unittest.TestCase):
 
     def test_transitions(self):
 
-        c = ComponentClass(name='cl',
+        c = DynamicsClass(name='cl',
                            regimes=[
                                Regime('dX1/dt=1/t',
                                       name='r1',
