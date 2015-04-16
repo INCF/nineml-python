@@ -3,6 +3,7 @@ from itertools import chain
 from nineml.abstraction_layer.dynamics import (
     DynamicsClass, Regime, On, OutputEvent)
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
+from nineml.abstraction_layer.expressions import reserved_identifiers
 
 
 # Testing Skeleton for class: DynamicsClonerPrefixNamespace
@@ -51,7 +52,7 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
                          "Expresions are duplicated in those required for {}: "
                          "{}".format(expression, required.expression_names))
         # Check all atoms are accounted for
-        atoms_to_find = list(expression.rhs_atoms)
+        atoms_to_find = list(set(expression.rhs_atoms) - reserved_identifiers)
         atoms_found = set()
         while atoms_to_find:
             atom = atoms_to_find.pop()
