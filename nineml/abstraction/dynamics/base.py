@@ -12,6 +12,7 @@ from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction_layer.componentclass import (
     ComponentClass, Parameter)
+from nineml.annotations import annotate_xml, read_annotations
 from .regimes import StateVariable, Regime
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
@@ -157,6 +158,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
          For more information, see
 
     """
+    element_name = 'DynamicsClass'
     defining_attributes = (ComponentClass.defining_attributes +
                            ('_analog_send_ports', '_analog_receive_ports',
                             '_analog_reduce_ports', '_event_send_ports',
@@ -576,6 +578,17 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                                 .format(trans.target_regime, trans._name))
                     trans.set_target_regime(target)
 
+    @annotate_xml
+    def to_xml(self):
+        self.standardize_unit_dimensions()
+        self.validate()
+        return DynamicsClassXMLWriter().visit(self)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        return DynamicsClassXMLLoader(document).load_dynamicsclass(element)
+
 
 def inf_check(l1, l2, desc):
     check_list_contain_same_items(l1, l2, desc1='Declared',
@@ -587,3 +600,4 @@ from .utils.visitors import (DynamicsElementFinder,
                              DynamicsRequiredDefinitions)
 from .utils.modifiers import (
     DynamicsRenameSymbol, DynamicsAssignIndices)
+from .utils.xml import DynamicsClassXMLLoader, DynamicsClassXMLWriter

@@ -4,8 +4,8 @@
 import warnings
 import unittest
 
-from nineml.abstraction import (
-    Dynamics as ComponentClass, Regime, On, OutputEvent,
+from nineml.abstraction_layer import (
+    DynamicsClass as DynamicsClass, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
     NamespaceAddress)
 from nineml.abstraction.dynamics.utils.cloner import (
@@ -19,7 +19,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
     def test_Constructor(self):
 
-        d = ComponentClass(
+        d = DynamicsClass(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
@@ -28,7 +28,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
             parameters=['dp1', 'dp2']
         )
 
-        c = ComponentClass(
+        c = DynamicsClass(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
@@ -74,7 +74,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         # Test Cloner, 1 level of hierachy
         # Everything should be as before:
-        b = ComponentClass(name='B',
+        b = DynamicsClass(name='B',
                            subnodes={'c1': c, 'c2': c},
                            portconnections=[('c1.C1', 'c2.cIn1'),
                                             ('c2.emit', 'c1.spikein')])
@@ -141,7 +141,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
         del c2_clone
 
         # Two Levels of nesting:
-        a = ComponentClass(name='A',
+        a = DynamicsClass(name='A',
                            subnodes={'b1': b, 'b2': b, 'c3': c},
                            portconnections=[
                            ('b1.c1.emit', 'c3.spikein'),

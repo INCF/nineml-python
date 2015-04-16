@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<NineML xmlns="http://nineml.net/9ML/1.0">
+  <Dimension i="1" name="current"/>
+  <DynamicsClass name="BrunelIaF">
+    <StateVariable dimension="time" name="t_rpend"/>
+    <StateVariable dimension="voltage" name="V"/>
+    <Parameter dimension="voltage" name="Vreset"/>
+    <Parameter dimension="time" name="tau"/>
+    <Parameter dimension="resistance" name="R"/>
+    <Parameter dimension="time" name="tau_rp"/>
+    <Parameter dimension="voltage" name="theta"/>
+    <Regime name="refractoryRegime">
+      <OnCondition target_regime="subthresholdRegime">
+        <Trigger>
+          <MathInline>t &gt; t_rpend</MathInline>
+        </Trigger>
+      </OnCondition>
+    </Regime>
+    <Regime name="subthresholdRegime">
+      <OnCondition target_regime="refractoryRegime">
+        <Trigger>
+          <MathInline>V &gt; theta</MathInline>
+        </Trigger>
+        <StateAssignment variable="V">
+          <MathInline>Vreset</MathInline>
+        </StateAssignment>
+        <StateAssignment variable="t_rpend">
+          <MathInline>t + tau_rp</MathInline>
+        </StateAssignment>
+        <OutputEvent port="spikeOutput"/>
+      </OnCondition>
+      <TimeDerivative variable="V">
+        <MathInline>(Isyn*R - V)/tau</MathInline>
+      </TimeDerivative>
+    </Regime>
+    <AnalogReducePort operator="+" dimension="current" name="Isyn"/>
+    <EventSendPort name="spikeOutput"/>
+    <AnalogSendPort dimension="time" name="t_rpend"/>
+    <AnalogSendPort dimension="voltage" name="V"/>
+  </DynamicsClass>
+  <Dimension i="-1" l="2" m="1" t="-3" name="voltage"/>
+  <Dimension i="-2" l="2" m="1" t="-3" name="resistance"/>
+  <Dimension name="time" t="1"/>
+</NineML>

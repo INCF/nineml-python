@@ -1,6 +1,6 @@
 
-from nineml.abstraction.dynamics import ComponentClass
-from nineml.abstraction.dynamics.testing_utils import RecordValue
+from nineml.abstraction_layer.dynamics import DynamicsClass
+from nineml.abstraction_layer.dynamics.testing_utils import RecordValue
 
 import nmda
 import coba_synapse
@@ -50,7 +50,7 @@ class ComponentMetaData(object):
 
 def get_component():
     # Create a model, composed of an iaf neuron, and
-    iaf_nmda_model = ComponentClass(
+    iaf_nmda_model = DynamicsClass(
         name="iaf_2coba",
         subnodes={"iaf":     iaf.get_component(),
                   "nmda":    nmda.get_component(),

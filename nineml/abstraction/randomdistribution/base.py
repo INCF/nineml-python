@@ -38,9 +38,23 @@ class RandomDistribution(ComponentClass):
     def standard_library(self):
         return self._main_block.standard_library
 
+    @annotate_xml
+    def to_xml(self):
+        self.standardize_unit_dimensions()
+        self.validate()
+        return RandomDistributionClassXMLWriter().visit(self)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        return RandomDistributionClassXMLLoader(
+            document).load_randomdistributionclass(element)
+
 from .utils.cloner import RandomDistributionCloner
 from .utils.modifiers import(
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
 from .utils.visitors import (RandomDistributionRequiredDefinitions,
                              RandomDistributionElementFinder)
 from .validators import RandomDistributionValidator
+from .utils.xml import (
+    RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter)

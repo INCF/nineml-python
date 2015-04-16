@@ -30,7 +30,8 @@ class RandomDistributionExpandAliasDefinition(RandomDistributionActionVisitor,
 class RandomDistributionCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
-        super(RandomDistributionCloner, self).visit_componentclass(componentclass)
+        super(RandomDistributionCloner, self).visit_componentclass(
+            componentclass)
         ccn = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)

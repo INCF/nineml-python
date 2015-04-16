@@ -99,13 +99,13 @@ class NamespaceAddress_test(unittest.TestCase):
                 # >>> a.get_subns_addr('subcomponent')
                 # NameSpaceAddress: '/level1/level2/level3/subcomponent/'
 
-        d = ComponentClass(name='D',)
-        e = ComponentClass(name='E')
-        f = ComponentClass(name='F')
-        g = ComponentClass(name='G')
-        b = ComponentClass(name='B', subnodes={'atD': d, 'atE': e})
-        c = ComponentClass(name='C', subnodes={'atF': f, 'atG': g})
-        a = ComponentClass(name='A', subnodes={'atB': b, 'atC': c})
+        d = DynamicsClass(name='D',)
+        e = DynamicsClass(name='E')
+        f = DynamicsClass(name='F')
+        g = DynamicsClass(name='G')
+        b = DynamicsClass(name='B', subnodes={'atD': d, 'atE': e})
+        c = DynamicsClass(name='C', subnodes={'atF': f, 'atG': g})
+        a = DynamicsClass(name='A', subnodes={'atB': b, 'atC': c})
 
         # Construction of the objects causes cloning to happen:
         # Therefore we test by looking up and checking that there

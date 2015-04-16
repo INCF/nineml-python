@@ -1,5 +1,5 @@
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="ExplicitConnectionList">
+  <ConnectionRuleClass name="ExplicitConnectionList">
     <Parameter name="sourceIndices" dimension="dimensionless"/>
     <Parameter name="destinationIndices" dimension="dimensionless"/>
     <ConnectionRule standard_library="http://nineml.net/standardlibraries/connectionrules/ExplicitConnectionList"/>
