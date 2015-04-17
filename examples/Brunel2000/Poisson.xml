@@ -2,7 +2,7 @@
 <NineML xmlns="http://nineml.net/9ML/1.0">
   <Dimension name="per_time" t="-1"/>
   <Unit symbol="ms" dimension="time" power="-3"/>
-  <DynamicsClass name="Poisson">
+  <Dynamics name="Poisson">
     <Parameter dimension="per_time" name="rate"/>
     <StateVariable dimension="time" name="t_next"/>
     <EventSendPort name="spikeOutput"/>
@@ -19,6 +19,6 @@
     </Regime>
     <Constant units="ms" name="one_ms">1.0</Constant>
     <Constant units="ms" name="thousand_milliseconds">1000.0</Constant>
-  </DynamicsClass>
+  </Dynamics>
   <Dimension name="time" t="1"/>
 </NineML>

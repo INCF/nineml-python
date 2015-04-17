@@ -4,7 +4,7 @@
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
   <Dimension name="current" i="1"/>
   <Dimension name="time" t="1"/>
-  <DynamicsClass name="DoubleExpCondSynapse">
+  <Dynamics name="DoubleExpCondSynapse">
     <Parameter name="gBar" dimension="conductance"/>
     <Parameter name="tau1" dimension="time"/>
     <Parameter name="tau2" dimension="time"/>
@@ -39,5 +39,5 @@
     <Alias name="normalising_factor">
       <MathInline>1.0 / (-exp(-tp/tau1) + exp(-tp/tau2))</MathInline>
     </Alias>
-  </DynamicsClass>
+  </Dynamics>
 </NineML>

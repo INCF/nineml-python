@@ -1,8 +1,8 @@
 import unittest
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.dynamics.testing_utils import TestableComponent
-from nineml.abstraction_layer import (
-    DynamicsClass as ComponentClass, AnalogSendPort, Alias,
+from nineml.abstraction.dynamics.testing_utils import TestableComponent
+from nineml.abstraction import (
+    Dynamics, AnalogSendPort, Alias,
     AnalogReceivePort, AnalogReducePort, Regime, On, NamespaceAddress,
     OutputEvent, EventReceivePort, Constant)
 
@@ -25,7 +25,7 @@ class ComponentClass_test(unittest.TestCase):
             def visit_componentclass(self, component, **kwargs):
                 return kwargs
 
-        c = DynamicsClass(name='MyComponent')
+        c = Dynamics(name='MyComponent')
         v = TestVisitor()
 
         self.assertEqual(
@@ -39,31 +39,31 @@ class ComponentClass_test(unittest.TestCase):
 
         # No Aliases:
         self.assertEqual(
-            list(DynamicsClass(name='C1').aliases),
+            list(Dynamics(name='C1').aliases),
             []
         )
 
         # 2 Aliases
-        C = DynamicsClass(name='C1', aliases=['G:= 0', 'H:=1'])
+        C = Dynamics(name='C1', aliases=['G:= 0', 'H:=1'])
         self.assertEqual(len(list((C.aliases))), 2)
         self.assertEqual(
             set(C.alias_names), set(['G', 'H'])
         )
 
-        C = DynamicsClass(name='C1', aliases=['G:= 0', 'H:=1', Alias('I', '3')])
+        C = Dynamics(name='C1', aliases=['G:= 0', 'H:=1', Alias('I', '3')])
         self.assertEqual(len(list((C.aliases))), 3)
         self.assertEqual(
             set(C.alias_names), set(['G', 'H', 'I'])
         )
 
         # Using DynamicsBlock Parameter:
-        C = DynamicsClass(name='C1', aliases=['G:= 0', 'H:=1'])
+        C = Dynamics(name='C1', aliases=['G:= 0', 'H:=1'])
         self.assertEqual(len(list((C.aliases))), 2)
         self.assertEqual(
             set(C.alias_names), set(['G', 'H'])
         )
 
-        C = DynamicsClass(name='C1',
+        C = Dynamics(name='C1',
                            aliases=['G:= 0', 'H:=1', Alias('I', '3')])
         self.assertEqual(len(list((C.aliases))), 3)
         self.assertEqual(
@@ -74,37 +74,37 @@ class ComponentClass_test(unittest.TestCase):
         # Invalid Valid String:
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass, name='C1', aliases=['H=0']
+            Dynamics, name='C1', aliases=['H=0']
         )
 
         # Duplicate Alias Names:
-        DynamicsClass(name='C1', aliases=['H:=0', 'G:=1'])
+        Dynamics(name='C1', aliases=['H:=0', 'G:=1'])
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass, name='C1', aliases=['H:=0', 'H:=1']
+            Dynamics, name='C1', aliases=['H:=0', 'H:=1']
         )
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass, name='C1', aliases=['H:=0', Alias('H', '1')]
+            Dynamics, name='C1', aliases=['H:=0', Alias('H', '1')]
         )
 
         # Self referential aliases:
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1', aliases=['H := H +1'],
         )
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1', aliases=['H := G + 1', 'G := H + 1'],
         )
 
         # Referencing none existant symbols:
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1',
             aliases=['H := G + I'],
             parameters=[],
@@ -114,30 +114,30 @@ class ComponentClass_test(unittest.TestCase):
         # Invalid Names:
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1', aliases=['H.2 := 0'],
         )
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1', aliases=['2H := 0'],
         )
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1', aliases=['E(H) := 0'],
         )
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1', aliases=['tanh := 0'],
         )
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1', aliases=['t := 0'],
         )
 
@@ -146,19 +146,19 @@ class ComponentClass_test(unittest.TestCase):
                 # Forwarding function to self.dynamics.alias_map
 
         self.assertEqual(
-            DynamicsClass(name='C1')._aliases, {}
+            Dynamics(name='C1')._aliases, {}
         )
 
-        c1 = DynamicsClass(name='C1', aliases=['A:=3'])
+        c1 = Dynamics(name='C1', aliases=['A:=3'])
         self.assertEqual(c1.alias('A').rhs_as_python_func(), 3)
         self.assertEqual(len(c1._aliases), 1)
 
-        c2 = DynamicsClass(name='C1', aliases=['A:=3', 'B:=5'])
+        c2 = Dynamics(name='C1', aliases=['A:=3', 'B:=5'])
         self.assertEqual(c2.alias('A').rhs_as_python_func(), 3)
         self.assertEqual(c2.alias('B').rhs_as_python_func(), 5)
         self.assertEqual(len(c2._aliases), 2)
 
-        c3 = DynamicsClass(name='C1', aliases=['C:=13', 'Z:=15'])
+        c3 = Dynamics(name='C1', aliases=['C:=13', 'Z:=15'])
         self.assertEqual(c3.alias('C').rhs_as_python_func(), 13)
         self.assertEqual(c3.alias('Z').rhs_as_python_func(), 15)
 
@@ -168,27 +168,27 @@ class ComponentClass_test(unittest.TestCase):
         # Signature: name
                 # No Docstring
 
-        c = DynamicsClass(name='C1')
+        c = Dynamics(name='C1')
         self.assertEqual(len(list(c.analog_ports)), 0)
 
-        c = DynamicsClass(name='C1')
+        c = Dynamics(name='C1')
         self.assertEqual(len(list(c.analog_ports)), 0)
 
-        c = DynamicsClass(name='C1', aliases=['A:=2'], analog_ports=[AnalogSendPort('A')])
+        c = Dynamics(name='C1', aliases=['A:=2'], analog_ports=[AnalogSendPort('A')])
         self.assertEqual(len(list(c.analog_ports)), 1)
         self.assertEqual(list(c.analog_ports)[0].mode, 'send')
         self.assertEqual(len(c.query.analog_send_ports), 1)
         self.assertEqual(len(c.query.analog_recv_ports), 0)
         self.assertEqual(len(c.query.analog_reduce_ports), 0)
 
-        c = DynamicsClass(name='C1', analog_ports=[AnalogReceivePort('B')])
+        c = Dynamics(name='C1', analog_ports=[AnalogReceivePort('B')])
         self.assertEqual(len(list(c.analog_ports)), 1)
         self.assertEqual(list(c.analog_ports)[0].mode, 'recv')
         self.assertEqual(len(c.query.analog_send_ports), 0)
         self.assertEqual(len(c.query.analog_recv_ports), 1)
         self.assertEqual(len(c.query.analog_reduce_ports), 0)
 
-        c = DynamicsClass(name='C1', analog_ports=[AnalogReducePort('B', operator='+')])
+        c = Dynamics(name='C1', analog_ports=[AnalogReducePort('B', operator='+')])
         self.assertEqual(len(list(c.analog_ports)), 1)
         self.assertEqual(list(c.analog_ports)[0].mode, 'reduce')
         self.assertEqual(list(c.analog_ports)[0].operator, '+')
@@ -199,7 +199,7 @@ class ComponentClass_test(unittest.TestCase):
         # Duplicate Port Names:
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1',
             aliases=['A:=1'],
             analog_ports=[AnalogReducePort('B', operator='+'), AnalogSendPort('B')]
@@ -207,7 +207,7 @@ class ComponentClass_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1',
             aliases=['A:=1'],
             analog_ports=[AnalogSendPort('A'), AnalogSendPort('A')]
@@ -215,7 +215,7 @@ class ComponentClass_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1',
             aliases=['A:=1'],
             analog_ports=[AnalogReceivePort('A'), AnalogReceivePort('A')]
@@ -223,25 +223,25 @@ class ComponentClass_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLRuntimeError,
-            lambda: DynamicsClass(name='C1', analog_ports=[AnalogReceivePort('1')])
+            lambda: Dynamics(name='C1', analog_ports=[AnalogReceivePort('1')])
         )
 
         self.assertRaises(
             NineMLRuntimeError,
-            lambda: DynamicsClass(name='C1', analog_ports=[AnalogReceivePort('?')])
+            lambda: Dynamics(name='C1', analog_ports=[AnalogReceivePort('?')])
         )
 
     def duplicate_port_name_event_analog(self):
 
         # Check different names are OK:
-        DynamicsClass(
+        Dynamics(
             name='C1', aliases=['A:=1'],
             event_ports=[EventReceivePort('A')],
             analog_ports=[AnalogSendPort('A')])
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1',
             aliases=['A:=1'],
             event_ports=[EventReceivePort('A')],
@@ -259,7 +259,7 @@ class ComponentClass_test(unittest.TestCase):
 
         # Check the aliases:
         # ====================== #
-        c2 = DynamicsClass(name='C1', aliases=['A:=1.0+2.0', 'B:=5.0*A', 'C:=B+2.0'])
+        c2 = Dynamics(name='C1', aliases=['A:=1.0+2.0', 'B:=5.0*A', 'C:=B+2.0'])
         self.assertEqual(c2.alias('A').rhs_as_python_func(), 3)
 
         # This should assert, because its not yet back-subbed
@@ -294,17 +294,17 @@ class ComponentClass_test(unittest.TestCase):
         tCoba = TestableComponent('coba_synapse')
 
         # Should be fine:
-        c = DynamicsClass(name='C1',
+        c = Dynamics(name='C1',
                            subnodes={'iaf': tIaf(), 'coba': tCoba()})
         c.connect_ports('iaf.V', 'coba.V')
 
-        c = DynamicsClass(name='C1',
+        c = Dynamics(name='C1',
                            subnodes={'iaf': tIaf(), 'coba': tCoba()},
                            portconnections=[('iaf.V', 'coba.V')]
                            )
 
         # Non existant Ports:
-        c = DynamicsClass(name='C1',
+        c = Dynamics(name='C1',
                            subnodes={'iaf': tIaf(), 'coba': tCoba()})
         self.assertRaises(
             NineMLRuntimeError,
@@ -315,7 +315,7 @@ class ComponentClass_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1',
             subnodes={'iaf': tIaf(), 'coba': tCoba()},
             portconnections=[('iaf.V1', 'coba.V')]
@@ -323,7 +323,7 @@ class ComponentClass_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='C1',
             subnodes={'iaf': tIaf(), 'coba': tCoba()},
             portconnections=[('iaf.V', 'coba.V1')]
@@ -331,12 +331,12 @@ class ComponentClass_test(unittest.TestCase):
 
         # Connect ports the wronf way around:
         # [Check the wright way around works:]
-        c = DynamicsClass(name='C1',
+        c = Dynamics(name='C1',
                            subnodes={'iaf': tIaf(), 'coba': tCoba()},
                            portconnections=[('coba.I', 'iaf.ISyn')]
                            )
         # And the wrong way around:
-        c = DynamicsClass(name='C1',
+        c = Dynamics(name='C1',
                            subnodes={'iaf': tIaf(), 'coba': tCoba()})
         self.assertRaises(
             NineMLRuntimeError,
@@ -346,7 +346,7 @@ class ComponentClass_test(unittest.TestCase):
             c.connect_ports, 'coba.V', 'iaf.V')
 
         # Error raised on duplicate port-connection:
-        c = DynamicsClass(name='C1',
+        c = Dynamics(name='C1',
                            subnodes={'iaf': tIaf(), 'coba': tCoba()},
                            )
 
@@ -360,7 +360,7 @@ class ComponentClass_test(unittest.TestCase):
                 # No Docstring
 
         # Check inference of output event ports:
-        c = DynamicsClass(
+        c = Dynamics(
             name='Comp1',
             regimes=Regime(
                 transitions=[
@@ -373,7 +373,7 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEquals(len(list(c.event_ports)), 2)
 
         # Check inference of output event ports:
-        c = DynamicsClass(
+        c = Dynamics(
             name='Comp1',
             regimes=[
                 Regime(name='r1',
@@ -394,7 +394,7 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEquals(len(list(c.event_ports)), 3)
 
         # Check inference of output event ports:
-        c = DynamicsClass(
+        c = Dynamics(
             name='Comp1',
             regimes=[
                 Regime(name='r1',
@@ -425,13 +425,13 @@ class ComponentClass_test(unittest.TestCase):
         # Signature: name(self)
                 # Get the namespace address of this component
 
-        d = DynamicsClass(name='D',)
-        e = DynamicsClass(name='E')
-        f = DynamicsClass(name='F')
-        g = DynamicsClass(name='G')
-        b = DynamicsClass(name='B', subnodes={'d': d, 'e': e})
-        c = DynamicsClass(name='C', subnodes={'f': f, 'g': g})
-        a = DynamicsClass(name='A', subnodes={'b': b, 'c': c})
+        d = Dynamics(name='D',)
+        e = Dynamics(name='E')
+        f = Dynamics(name='F')
+        g = Dynamics(name='G')
+        b = Dynamics(name='B', subnodes={'d': d, 'e': e})
+        c = Dynamics(name='C', subnodes={'f': f, 'g': g})
+        a = Dynamics(name='A', subnodes={'b': b, 'c': c})
 
         # Construction of the objects causes cloning to happen:
         # Therefore we test by looking up and checking that there
@@ -471,7 +471,7 @@ class ComponentClass_test(unittest.TestCase):
                 # Insert a subnode into this component
                 #
                 #
-                # :param subnode: An object of type ``DynamicsClass``.
+                # :param subnode: An object of type ``Dynamics``.
                 # :param namespace: A `string` specifying the name of the component in
                 #     this components namespace.
                 #
@@ -482,20 +482,20 @@ class ComponentClass_test(unittest.TestCase):
                 #
                 #     This method will clone the subnode.
 
-        d = DynamicsClass(name='D')
-        e = DynamicsClass(name='E')
-        f = DynamicsClass(name='F')
-        g = DynamicsClass(name='G')
+        d = Dynamics(name='D')
+        e = Dynamics(name='E')
+        f = Dynamics(name='F')
+        g = Dynamics(name='G')
 
-        b = DynamicsClass(name='B')
+        b = Dynamics(name='B')
         b.insert_subnode(namespace='d', subnode=d)
         b.insert_subnode(namespace='e', subnode=e)
 
-        c = DynamicsClass(name='C')
+        c = Dynamics(name='C')
         c.insert_subnode(namespace='f', subnode=f)
         c.insert_subnode(namespace='g', subnode=g)
 
-        a = DynamicsClass(name='A')
+        a = Dynamics(name='A')
         a.insert_subnode(namespace='b', subnode=b)
         a.insert_subnode(namespace='c', subnode=c)
 
@@ -539,9 +539,9 @@ class ComponentClass_test(unittest.TestCase):
         self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.b.X')
 
         # Adding to the same namespace twice:
-        d1 = DynamicsClass(name='D1')
-        d2 = DynamicsClass(name='D2')
-        a = DynamicsClass(name='B')
+        d1 = Dynamics(name='D1')
+        d2 = Dynamics(name='D2')
+        a = Dynamics(name='B')
 
         a.insert_subnode(namespace='d', subnode=d1)
         self.assertRaises(
@@ -558,27 +558,27 @@ class ComponentClass_test(unittest.TestCase):
                 # No Docstring
 
         # No parameters; nothing to infer
-        c = DynamicsClass(name='cl')
+        c = Dynamics(name='cl')
         self.assertEqual(len(list(c.parameters)), 0)
 
         # Mismatch between inferred and actual parameters
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass, name='cl', parameters=['a'])
+            Dynamics, name='cl', parameters=['a'])
 
         # Single parameter inference from an alias block
-        c = DynamicsClass(name='cl', aliases=['A:=a'])
+        c = Dynamics(name='cl', aliases=['A:=a'])
         self.assertEqual(len(list(c.parameters)), 1)
         self.assertEqual(list(c.parameters)[0].name, 'a')
 
         # More complex inference:
-        c = DynamicsClass(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'],
+        c = Dynamics(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'],
                            constants=[Constant('pi', 3.141592653589793)])
         self.assertEqual(len(list(c.parameters)), 3)
         self.assertEqual(sorted([p.name for p in c.parameters]), ['a', 'b', 'e'])
 
         # From State Assignments and Differential Equations, and Conditionals
-        c = DynamicsClass(name='cl',
+        c = Dynamics(name='cl',
                            aliases=['A:=a+e', 'B:=a+pi+b'],
                            regimes=Regime('dX/dt = (6 + c + sin(d))/t',
                                           'dV/dt = 1.0/t',
@@ -594,7 +594,7 @@ class ComponentClass_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='cl',
             aliases=['A:=a+e', 'B:=a+pi+b'],
             regimes=Regime('dX/dt = 6 + c + sin(d)',
@@ -605,17 +605,17 @@ class ComponentClass_test(unittest.TestCase):
 
     def test_regimes(self):
 
-        c = DynamicsClass(name='cl', )
+        c = Dynamics(name='cl', )
         self.assertEqual(len(list(c.regimes)), 0)
 
-        c = DynamicsClass(name='cl',
+        c = Dynamics(name='cl',
                            regimes=Regime('dX/dt=1/t',
                                           name='r1',
                                           transitions=On('X>X1', do=['X = X0'], to=None))
                            )
         self.assertEqual(len(list(c.regimes)), 1)
 
-        c = DynamicsClass(name='cl',
+        c = Dynamics(name='cl',
                            regimes=[
                                 Regime('dX/dt=1/t',
                                        name='r1',
@@ -640,7 +640,7 @@ class ComponentClass_test(unittest.TestCase):
             set(['r1', 'r2', 'r3', 'r4'])
         )
 
-        c = DynamicsClass(name='cl',
+        c = Dynamics(name='cl',
                            regimes=[
                                Regime('dX/dt=1/t', name='r1',
                                       transitions=On('X>X1', do=['X=X0'],
@@ -666,7 +666,7 @@ class ComponentClass_test(unittest.TestCase):
         # Duplicate Names:
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass, name='cl',
+            Dynamics, name='cl',
             regimes=[
                 Regime('dX/dt=1/t',
                        name='r',
@@ -678,16 +678,16 @@ class ComponentClass_test(unittest.TestCase):
 
     def test_state_variables(self):
         # No parameters; nothing to infer
-        c = DynamicsClass(name='cl')
+        c = Dynamics(name='cl')
         self.assertEqual(len(list(c.state_variables)), 0)
 
         # Mismatch between inferred and actual statevariables
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass, name='cl', state_variables=['a'])
+            Dynamics, name='cl', state_variables=['a'])
 
         # From State Assignments and Differential Equations, and Conditionals
-        c = DynamicsClass(name='cl',
+        c = Dynamics(name='cl',
                            aliases=['A:=a+e', 'B:=a+pi+b'],
                            regimes=Regime('dX/dt = (6 + c + sin(d))/t',
                                           'dV/dt = 1.0/t',
@@ -700,7 +700,7 @@ class ComponentClass_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='cl',
             aliases=['A:=a+e', 'B:=a+pi+b'],
             regimes=Regime('dX/dt = 6 + c + sin(d)',
@@ -712,7 +712,7 @@ class ComponentClass_test(unittest.TestCase):
         # Shouldn't pick up 'e' as a parameter:
         self.assertRaises(
             NineMLRuntimeError,
-            DynamicsClass,
+            Dynamics,
             name='cl',
             aliases=['A:=a+e', 'B:=a+pi+b'],
             regimes=Regime('dX/dt = 6 + c + sin(d)',
@@ -721,7 +721,7 @@ class ComponentClass_test(unittest.TestCase):
                            ),
             state_variables=['X', 'V', 'Vt'])
 
-        c = DynamicsClass(name='cl',
+        c = Dynamics(name='cl',
                            regimes=[
                                Regime('dX1/dt=1/t',
                                       name='r1',
@@ -744,7 +744,7 @@ class ComponentClass_test(unittest.TestCase):
 
     def test_transitions(self):
 
-        c = DynamicsClass(name='cl',
+        c = Dynamics(name='cl',
                            regimes=[
                                Regime('dX1/dt=1/t',
                                       name='r1',

@@ -13,8 +13,12 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from nineml.units import Unit, unitless
+<<<<<<< Upstream, based on origin/xml_exception_handling
 from nineml import units as un
 from ..abstraction import (
+=======
+from ..abstraction_layer import (
+>>>>>>> 3150ddf renamed *Class to * (e.g. DynamicsClass to Dynamics)
     ComponentClass, Dynamics, ConnectionRule, RandomDistribution)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject

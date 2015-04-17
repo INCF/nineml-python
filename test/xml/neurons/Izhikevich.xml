@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <NineML xmlns="http://nineml.net/9ML/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://nineml.net/9ML/1.0/schema/NineML_v0.2.xsd">
-  <DynamicsClass name="IzhikevichClass">
+  <Dynamics name="IzhikevichClass">
     <Parameter name="a" dimension="per_time"/>
     <Parameter name="b" dimension="per_time"/>
     <Parameter name="c" dimension="voltage"/>
@@ -41,7 +41,7 @@
     <Constant name="const2" units="per_ms">5</Constant>
     <Constant name="const3" units="mV_per_ms">140</Constant>
     <Constant name="C" units="nF">1.0</Constant>
-  </DynamicsClass>
+  </Dynamics>
   <Component name="Izhikevich">
     <Definition>IzhikevichClass</Definition>
     <Property name="a" units="per_ms">
