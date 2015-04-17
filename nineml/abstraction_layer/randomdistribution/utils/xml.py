@@ -29,8 +29,8 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
         children = self._load_blocks(element, blocks=subblocks)
         randomdistributionblock = expect_single(children["RandomDistribution"])
         return RandomDistributionClass(name=element.get('name'),
-                                       parameters=children["Parameter"],
-                                       randomdistributionblock=randomdistributionblock)
+                                 parameters=children["Parameter"],
+                                 randomdistributionblock=randomdistributionblock)
 
     @read_annotations
     def load_randomdistributionblock(self, element):

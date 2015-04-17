@@ -16,6 +16,7 @@ import hashlib
 from .exceptions import internal_error
 from .exceptions import NineMLRuntimeError
 from .xmlns import NINEML
+from nineml.base import MemberContainerObject
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
@@ -386,7 +387,7 @@ class LocationMgr(object):
     @classmethod
     def getComponentDir(cls):
         # localDir = realpath ( dirname( __file__ ) )
-        return join_norm(cls.getPythonPackageRootDir(), 'examples', 'AL',
+        return join_norm(cls.getPythonPackageRootDir(), '..', 'examples', 'AL',
                          'sample_components')
 
     @classmethod
@@ -412,23 +413,19 @@ def check_list_contain_same_items(lst1, lst2, desc1="", desc2="", ignore=[],
                                   desc=""):
     set1 = set(lst1)
     set2 = set(lst2)
-
     for i in ignore:
         set1.discard(i)
         set2.discard(i)
-
     # Are the lists subsets of each other.
-    if set1.issubset(set2) and set2.issubset(set1):
-        return
-
-    errmsg = "Lists were suppose to contain the same elements, but don't!!"
-    if desc:
-        errmsg += '\n' + desc
-    errmsg += "\n1: [%s]: %s" % (desc1, sorted(set1))
-    errmsg += "\n2: [%s]: %s" % (desc2, sorted(set2))
-    errmsg += "\nElements in : 1 (not 2): %s" % (sorted(set1 - set2))
-    errmsg += "\nElements in : 2 (not 1): %s" % (sorted(set2 - set1))
-    raise NineMLRuntimeError(errmsg)
+    if not set1.issubset(set2) or not set2.issubset(set1):
+        errmsg = "Lists were suppose to contain the same elements, but don't!!"
+        if desc:
+            errmsg += '\n' + desc
+        errmsg += "\n1: [%s]: %s" % (desc1, sorted(set1))
+        errmsg += "\n2: [%s]: %s" % (desc2, sorted(set2))
+        errmsg += "\nElements in : 1 (not 2): %s" % (sorted(set1 - set2))
+        errmsg += "\nElements in : 2 (not 1): %s" % (sorted(set2 - set1))
+        raise NineMLRuntimeError(errmsg)
 
 
 def safe_dict(vals):
@@ -475,7 +472,10 @@ def none_to_empty_list(obj):
 
 
 def normalise_parameter_as_list(param):
-    return ensure_iterable(none_to_empty_list(param))
+    if isinstance(param, MemberContainerObject):
+        return [param]
+    else:
+        return ensure_iterable(none_to_empty_list(param))
 
 
 def restore_sys_path(func):

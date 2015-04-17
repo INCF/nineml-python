@@ -31,11 +31,11 @@ class ConnectionRuleValidator(object):
         """
         # Check class structure:
         TypesConnectionRuleValidator(componentclass)
-        NoDuplicatedObjectsConnectionRuleValidator(componentclass)
-        LocalNameConflictsConnectionRuleValidator(componentclass)
-        DimensionNameConflictsConnectionRuleValidator(componentclass)
-        AliasesAreNotRecursiveConnectionRuleValidator(componentclass)
-        NoUnresolvedSymbolsConnectionRuleValidator(componentclass)
-        PortConnectionsConnectionRuleValidator(componentclass)
-        CheckNoLHSAssignmentsToMathsNamespaceConnectionRuleValidator(
-            componentclass)
+#         NoDuplicatedObjectsConnectionRuleValidator(componentclass)  # Commented out until perNamespaceValidator is removed @IgnorePep8
+#         LocalNameConflictsConnectionRuleValidator(componentclass)
+#         DimensionNameConflictsConnectionRuleValidator(componentclass)
+#         AliasesAreNotRecursiveConnectionRuleValidator(componentclass)
+#         NoUnresolvedSymbolsConnectionRuleValidator(componentclass)
+#         PortConnectionsConnectionRuleValidator(componentclass)
+#         CheckNoLHSAssignmentsToMathsNamespaceConnectionRuleValidator(
+#             componentclass)

@@ -197,9 +197,13 @@ class Expression(object):
         """
         Return copy of expression with all free symols suffixed (or prefixed)
         """
-        return self.rhs.xreplace(dict(
-            (s, sympy.Symbol(prefix + str(s) + suffix))
-            for s in self.rhs_symbols if str(s) not in excludes))
+        try:
+            return self.rhs.xreplace(dict(
+                (s, sympy.Symbol(prefix + str(s) + suffix))
+                for s in self.rhs_symbols if str(s) not in excludes))
+        except AttributeError:  # For rhs that have been simplified to floats
+            assert float(self.rhs)
+            return self.rhs
 
     def rhs_name_transform_inplace(self, name_map):
         """Replace atoms on the RHS with values in the name_map in place"""
@@ -369,19 +373,21 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
     That is, a single symbol, for example 's = t+1'
     """
 
-    defining_attributes = ('_lhs', '_rhs')
+    defining_attributes = ('name', 'rhs')
 
     def __init__(self, lhs, rhs):
         ExpressionWithLHS.__init__(self, rhs)
-
         if not is_single_symbol(lhs):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
             raise NineMLRuntimeError(err)
         if not is_valid_lhs_target(lhs):
             err = 'Invalid LHS target: %s' % lhs
             raise NineMLRuntimeError(err)
+        self._name = lhs.strip()
 
-        self._lhs = lhs.strip()
+    @property
+    def name(self):
+        return self._name
 
     def __str__(self):
         return '{} := {}'.format(self.lhs, self.rhs_str)
@@ -392,14 +398,14 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
 
     @property
     def lhs(self):
-        return self._lhs
+        return self._name
 
     @property
     def lhs_atoms(self):
         return [self.lhs]
 
     def lhs_name_transform_inplace(self, name_map):
-        self._lhs = name_map.get(self.lhs, self.lhs)
+        self._name = name_map.get(self.lhs, self.lhs)
 
     def _sympy_(self):
         return sympy.Symbol(self.lhs)
@@ -454,5 +460,6 @@ class ODE(ExpressionWithLHS):
     @property
     def lhs_atoms(self):
         return [self.independent_variable, self.dependent_variable]
+
 
 from .utils import str_to_npfunc_map, is_single_symbol, is_valid_lhs_target

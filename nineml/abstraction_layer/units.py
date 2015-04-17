@@ -1,6 +1,6 @@
 from nineml.xmlns import E
 from . import BaseALObject
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 
 # Might be an idea to subclass namedtuple to prevent dimensions being redefined
@@ -15,7 +15,7 @@ from nineml.annotations import annotate_xml, read_annotations
 # NB: Not sure this works
 
 
-class Dimension(BaseALObject, TopLevelObject):
+class Dimension(BaseALObject, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
@@ -26,7 +26,8 @@ class Dimension(BaseALObject, TopLevelObject):
                           'k': 'K', 'j': 'cd'}
 
     def __init__(self, name, **kwargs):
-        super(Dimension, self).__init__()
+        BaseALObject.__init__(self)
+        DocumentLevelObject.__init__(self, kwargs.pop('url', None))
         self._name = name
         for k in kwargs:
             if k not in self.valid_dims:
@@ -35,7 +36,8 @@ class Dimension(BaseALObject, TopLevelObject):
         self._dims = kwargs
 
     def __eq__(self, other):
-        assert isinstance(other, Dimension)
+        if not isinstance(other, Dimension):
+            return False
         return all(self.power(d) == other.power(d) for d in self.valid_dims)
 
     def __hash__(self):
@@ -79,14 +81,71 @@ class Dimension(BaseALObject, TopLevelObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, _):
+    def from_xml(cls, element, document):
         kwargs = dict(element.attrib)
         name = kwargs.pop('name')
         kwargs = dict((k, int(v)) for k, v in kwargs.items())
+        kwargs['url'] = document.url
         return cls(name, **kwargs)
 
+    @property
+    def t(self):
+        return self._dims.get('t', 0)
 
-class Unit(BaseALObject, TopLevelObject):
+    @property
+    def k(self):
+        return self._dims.get('k', 0)
+
+    @property
+    def j(self):
+        return self._dims.get('j', 0)
+
+    @property
+    def n(self):
+        return self._dims.get('n', 0)
+
+    @property
+    def m(self):
+        return self._dims.get('m', 0)
+
+    @property
+    def l(self):
+        return self._dims.get('l', 0)
+
+    @property
+    def i(self):
+        return self._dims.get('i', 0)
+
+    @property
+    def time(self):
+        return self.t
+
+    @property
+    def temperature(self):
+        return self.k
+
+    @property
+    def luminous_intensity(self):
+        return self.j
+
+    @property
+    def amount(self):
+        return self.n
+
+    @property
+    def mass(self):
+        return self.m
+
+    @property
+    def length(self):
+        return self.l
+
+    @property
+    def current(self):
+        return self.i
+
+
+class Unit(BaseALObject, DocumentLevelObject):
     """
     Defines the units of a quantity
     """
@@ -94,8 +153,9 @@ class Unit(BaseALObject, TopLevelObject):
     element_name = 'Unit'
     defining_attributes = ('name', 'dimension', 'power', 'offset')
 
-    def __init__(self, name, dimension, power, offset=0.0):
-        super(Unit, self).__init__()
+    def __init__(self, name, dimension, power, offset=0.0, url=None):
+        BaseALObject.__init__(self)
+        DocumentLevelObject.__init__(self, url)
         self._name = name
         self._dimension = dimension
         self._power = power
@@ -104,9 +164,8 @@ class Unit(BaseALObject, TopLevelObject):
     def __eq__(self, other):
         if not isinstance(other, Unit):
             return False
-        else:
-            return (self.power == other.power and self.offset == other.offset
-                    and self.dimension == other.dimension)
+        return (self.power == other.power and self.offset == other.offset and
+                self.dimension == other.dimension)
 
     def __hash__(self):
         return hash((self.power, self.offset, self.dimension))
@@ -172,7 +231,7 @@ class Unit(BaseALObject, TopLevelObject):
         dimension = document[element.attrib['dimension']]
         power = int(element.get('power', 0))
         offset = float(element.attrib.get('name', 0.0))
-        return cls(name, dimension, power, offset)
+        return cls(name, dimension, power, offset=offset, url=document.url)
 
 # Common units and dimensions
 

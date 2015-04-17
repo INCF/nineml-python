@@ -31,11 +31,11 @@ class RandomDistributionValidator(object):
         """
         # Check class structure:
         TypesRandomDistributionValidator(componentclass)
-        NoDuplicatedObjectsRandomDistributionValidator(componentclass)
-        LocalNameConflictsRandomDistributionValidator(componentclass)
-        DimensionNameConflictsRandomDistributionValidator(componentclass)
-        AliasesAreNotRecursiveRandomDistributionValidator(componentclass)
-        NoUnresolvedSymbolsRandomDistributionValidator(componentclass)
-        PortConnectionsRandomDistributionValidator(componentclass)
-        CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(
-            componentclass)
+#         NoDuplicatedObjectsRandomDistributionValidator(componentclass)  # Commented out until perNamespaceValidator is removed @IgnorePep8
+#         LocalNameConflictsRandomDistributionValidator(componentclass)
+#         DimensionNameConflictsRandomDistributionValidator(componentclass)
+#         AliasesAreNotRecursiveRandomDistributionValidator(componentclass)
+#         NoUnresolvedSymbolsRandomDistributionValidator(componentclass)
+#         PortConnectionsRandomDistributionValidator(componentclass)
+#         CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(
+#             componentclass)

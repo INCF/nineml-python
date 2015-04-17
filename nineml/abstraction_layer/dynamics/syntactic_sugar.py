@@ -54,16 +54,16 @@ def On(trigger, do=None, to=None):
 
 def DoOnEvent(input_event, do=None, to=None):
     assert isinstance(input_event, basestring)
-    assignments, event_outs = do_to_assignments_and_events(do)
+    assignments, output_events = do_to_assignments_and_events(do)
     return OnEvent(src_port_name=input_event,
                    state_assignments=assignments,
-                   event_outputs=event_outs,
-                   target_regime_name=to)
+                   output_events=output_events,
+                   target_regime=to)
 
 
 def DoOnCondition(condition, do=None, to=None):
-    assignments, event_outs = do_to_assignments_and_events(do)
+    assignments, output_events = do_to_assignments_and_events(do)
     return OnCondition(trigger=condition,
                        state_assignments=assignments,
-                       event_outputs=event_outs,
-                       target_regime_name=to)
+                       output_events=output_events,
+                       target_regime=to)

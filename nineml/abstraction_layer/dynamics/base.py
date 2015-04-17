@@ -10,9 +10,9 @@ from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
-from ..expressions import Alias
-from nineml.abstraction_layer.componentclass import ComponentClass, Parameter
-from .regimes import StateVariable
+from nineml.abstraction_layer.componentclass import (
+    ComponentClass, Parameter, MainBlock)
+from .regimes import StateVariable, Regime
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
@@ -20,105 +20,7 @@ from nineml.utils import (check_list_contain_same_items, invert_dictionary,
                             assert_no_duplicates)
 from .utils import DynamicsQueryer
 from .utils.cloner import (
-    DynamicsExpandAliasDefinition, DynamicsClonerVisitor)
-from .. import BaseALObject
-
-
-class DynamicsBlock(BaseALObject):
-
-    """
-    An object, which encapsulates a component's regimes, transitions,
-    and state variables
-    """
-
-    defining_attributes = ('_regimes', '_aliases', '_state_variables')
-
-    def __init__(self, regimes=None, aliases=None, state_variables=None,
-                 constants=None):
-        """DynamicsBlock object constructor
-
-           :param aliases: A list of aliases, which must be either |Alias|
-               objects or ``string``s.
-           :param regimes: A list containing at least one |Regime| object.
-           :param state_variables: An optional list of the state variables,
-                which can either be |StateVariable| objects or `string` s. If
-                provided, it must match the inferred state-variables from the
-                regimes; if it is not provided it will be inferred
-                automatically.
-        """
-
-        aliases = normalise_parameter_as_list(aliases)
-        regimes = normalise_parameter_as_list(regimes)
-        state_variables = normalise_parameter_as_list(state_variables)
-        constants = normalise_parameter_as_list(constants)
-
-        # Load the aliases as objects or strings:
-        alias_td = filter_discrete_types(aliases, (basestring, Alias))
-        aliases_from_strs = [Alias.from_str(o) for o in alias_td[basestring]]
-        aliases = alias_td[Alias] + aliases_from_strs
-
-        # Load the state variables as objects or strings:
-        sv_types = (basestring, StateVariable)
-        sv_td = filter_discrete_types(state_variables, sv_types)
-        sv_from_strings = [StateVariable(o, dimension=None)
-                           for o in sv_td[basestring]]
-        state_variables = sv_td[StateVariable] + sv_from_strings
-
-        assert_no_duplicates(r.name for r in regimes)
-        assert_no_duplicates(a.lhs for a in aliases)
-        assert_no_duplicates(s.name for s in state_variables)
-
-        self._regimes = dict((r.name, r) for r in regimes)
-        self._aliases = dict((a.lhs, a) for a in aliases)
-        self._state_variables = dict((s.name, s) for s in state_variables)
-        self._constants = dict((c.name, c) for c in constants)
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_dynamicsblock(self, **kwargs)
-
-    def __repr__(self):
-        return ('DynamicsBlock({} regimes, {} aliases, {} state-variables, '
-                '{} constants)'
-                .format(len(list(self.regimes)), len(list(self.aliases)),
-                        len(list(self.state_variables)),
-                        len(list(self.constants))))
-
-    @property
-    def regimes(self):
-        return self._regimes.itervalues()
-
-    @property
-    def regimes_map(self):
-        return self._regimes
-
-    @property
-    def transitions(self):
-        return chain(*[r.transitions for r in self.regimes])
-
-    @property
-    def aliases(self):
-        return self._aliases.itervalues()
-
-    @property
-    def aliases_map(self):
-        return self._aliases
-
-    @property
-    def constants(self):
-        return self._constants.itervalues()
-
-    @property
-    def constants_map(self):
-        return self._constants
-
-    @property
-    def state_variables(self):
-        return self._state_variables.itervalues()
-
-    @property
-    def state_variables_map(self):
-        return self._state_variables
+    DynamicsExpandAliasDefinition, DynamicsCloner)
 
 
 class _NamespaceMixin(object):
@@ -216,7 +118,7 @@ class _NamespaceMixin(object):
         if namespace in self.subnodes:
             err = 'Key already exists in namespace: %s' % namespace
             raise NineMLRuntimeError(err)
-        self.subnodes[namespace] = DynamicsClonerVisitor().visit(subnode)
+        self.subnodes[namespace] = DynamicsCloner().visit(subnode)
         self.subnodes[namespace].set_parent_model(self)
 
         self.validate()
@@ -255,10 +157,17 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
          For more information, see
 
     """
-    defining_attributes = ('name', '_parameters', '_analog_send_ports',
-                           '_analog_receive_ports', '_analog_reduce_ports',
-                           '_event_send_ports', '_event_receive_ports',
-                           'dynamicsblock')
+    defining_attributes = (ComponentClass.defining_attributes +
+                           ('_analog_send_ports', '_analog_receive_ports',
+                            '_analog_reduce_ports', '_event_send_ports',
+                            '_event_receive_ports'))
+    class_to_member_dict = dict(
+        tuple(ComponentClass.class_to_member_dict.iteritems()) +
+        ((AnalogSendPort, '_analog_send_ports'),
+         (AnalogReceivePort, '_analog_receive_ports'),
+         (AnalogReducePort, '_analog_reduce_ports'),
+         (EventSendPort, '_event_send_ports'),
+         (EventReceivePort, '_event_receive_ports')))
 
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[],
@@ -328,13 +237,14 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                                             analog_ports, event_ports))
 
         self._analog_send_ports = dict(
-            (p.name, p) for p in analog_ports if isinstance(p, AnalogSendPort))
+            (p.name, p) for p in analog_ports
+            if isinstance(p, AnalogSendPort))
         self._analog_receive_ports = dict(
-            (p.name, p) for p in analog_ports if isinstance(p,
-                                                            AnalogReceivePort))
+            (p.name, p) for p in analog_ports
+            if isinstance(p, AnalogReceivePort))
         self._analog_reduce_ports = dict(
-            (p.name, p) for p in analog_ports if isinstance(p,
-                                                            AnalogReducePort))
+            (p.name, p) for p in analog_ports
+            if isinstance(p, AnalogReducePort))
 
         # Create dummy event ports to keep the ActionVisitor base class of
         # the interface inferrer happy
@@ -352,16 +262,14 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                                     for n in inferred_struct.parameter_names)
 
         # Check any supplied state_variables match:
-        if self.dynamicsblock._state_variables:
-            state_var_names = [p.name
-                               for p in self.dynamicsblock.state_variables]
-            inf_check(state_var_names,
-                      inferred_struct.state_variable_names,
+        if self.num_state_variables:
+            state_var_names = [p.name for p in self.state_variables]
+            inf_check(state_var_names, inferred_struct.state_variable_names,
                       'StateVariables')
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
-            self.dynamicsblock._state_variables = state_vars
+            self._main_block._state_variables = state_vars
 
         # Set and check event receive ports match inferred
         self._event_receive_ports = dict(
@@ -376,7 +284,6 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                       inferred_struct.input_event_port_names,
                       'Event Ports In')
         else:
-            # FIXME: TGC don't like this shorthand
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.input_event_port_names:
                 self._event_receive_ports[pname] = EventReceivePort(name=pname)
@@ -397,9 +304,6 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         _NamespaceMixin.__init__(
             self, subnodes=subnodes, portconnections=portconnections)
 
-        # Finalise initiation:
-        self._resolve_transition_regime_names()
-
         # Store flattening Information:
         self._flattener = None
 
@@ -408,8 +312,189 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     # -------------------------- #
 
+    def __copy__(self, memo=None):  # @UnusedVariable
+        return DynamicsCloner().visit(self)
+
+    def rename_symbol(self, old_symbol, new_symbol):
+        DynamicsRenameSymbol(self, old_symbol, new_symbol)
+
+    def assign_indices(self):
+        DynamicsAssignIndices(self)
+
+    def required_for(self, expressions):
+        return DynamicsRequiredDefinitions(self, expressions)
+
+    def _find_element(self, element):
+        return DynamicsElementFinder(element).found_in(self)
+
     def __repr__(self):
         return "<dynamics.DynamicsClass %s>" % self.name
+
+    def validate(self):
+        self._resolve_transition_regimes()
+        DynamicsValidator.validate_componentclass(self)
+
+    @property
+    def query(self):
+        """ Returns the ``ComponentQuery`` object associated with this class"""
+        return self._query
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_componentclass(self, **kwargs)
+
+    @property
+    def num_state_variables(self):
+        return len(list(self._main_block._state_variables))
+
+    @property
+    def num_regimes(self):
+        return len(list(self._main_block._regimes))
+
+    @property
+    def attributes_with_dimension(self):
+        return chain(super(DynamicsClass, self).attributes_with_dimension,
+                     self.analog_ports, self.state_variables)
+
+    @property
+    def analog_send_ports(self):
+        """Returns an iterator over the local |AnalogSendPort| objects"""
+        return self._analog_send_ports.itervalues()
+
+    @property
+    def analog_receive_ports(self):
+        """Returns an iterator over the local |AnalogReceivePort| objects"""
+        return self._analog_receive_ports.itervalues()
+
+    @property
+    def analog_reduce_ports(self):
+        """Returns an iterator over the local |AnalogReducePort| objects"""
+        return self._analog_reduce_ports.itervalues()
+
+    @property
+    def event_send_ports(self):
+        """Returns an iterator over the local |EventSendPort| objects"""
+        return self._event_send_ports.itervalues()
+
+    @property
+    def event_receive_ports(self):
+        """Returns an iterator over the local |EventReceivePort| objects"""
+        return self._event_receive_ports.itervalues()
+
+    @property
+    def ports(self):
+        return chain(super(DynamicsClass, self).ports,
+                     self.analog_send_ports, self.analog_receive_ports,
+                     self.analog_reduce_ports, self.event_send_ports,
+                     self.event_receive_ports)
+
+    @property
+    def analog_ports(self):
+        """Returns an iterator over the local analog port objects"""
+        return chain(self.analog_send_ports, self.analog_receive_ports,
+                     self.analog_reduce_ports)
+
+    @property
+    def event_ports(self):
+        return chain(self.event_send_ports, self.event_receive_ports)
+
+    @property
+    def regimes(self):
+        """Forwarding function to self._main_block._regimes"""
+        return self._main_block._regimes.itervalues()
+
+    @property
+    def state_variables(self):
+        """Forwarding function to self._main_block._state_variables"""
+        return self._main_block._state_variables.itervalues()
+
+    def regime(self, name):
+        return self._main_block._regimes[name]
+
+    def state_variable(self, name):
+        return self._main_block._state_variables[name]
+
+    def analog_send_port(self, name):
+        return self._analog_send_ports[name]
+
+    def analog_receive_port(self, name):
+        return self._analog_receive_ports[name]
+
+    def analog_reduce_port(self, name):
+        return self._analog_reduce_ports[name]
+
+    def event_send_port(self, name):
+        return self._event_send_ports[name]
+
+    def event_receive_port(self, name):
+        return self._event_receive_ports[name]
+
+    @property
+    def regime_names(self):
+        return self._main_block._regimes.iterkeys()
+
+    @property
+    def state_variable_names(self):
+        return self._main_block._state_variables.iterkeys()
+
+    @property
+    def analog_port_names(self):
+        """Returns an iterator over the local analog port objects"""
+        return chain(self.analog_send_port_names,
+                     self.analog_receive_port_names,
+                     self.analog_reduce_port_names)
+
+    @property
+    def analog_send_port_names(self):
+        """Returns an iterator over the local |AnalogSendPort| names"""
+        return self._analog_send_ports.iterkeys()
+
+    @property
+    def analog_receive_port_names(self):
+        """Returns an iterator over the local |AnalogReceivePort| names"""
+        return self._analog_receive_ports.iterkeys()
+
+    @property
+    def analog_reduce_port_names(self):
+        """Returns an iterator over the local |AnalogReducePort| names"""
+        return self._analog_reduce_ports.iterkeys()
+
+    @property
+    def event_send_port_names(self):
+        """Returns an iterator over the local |EventSendPort| names"""
+        return self._event_send_ports.iterkeys()
+
+    @property
+    def event_receive_port_names(self):
+        """Returns an iterator over the local |EventReceivePort| names"""
+        return self._event_receive_ports.iterkeys()
+
+    @property
+    def transitions(self):
+        return self.all_transitions()
+
+    def all_transitions(self):
+        return chain(*(r.transitions for r in self.regimes))
+
+    def all_on_conditions(self):
+        return chain(*(r.on_conditions for r in self.regimes))
+
+    def all_on_events(self):
+        return chain(*(r.on_events for r in self.regimes))
+
+    def all_time_derivatives(self, state_variable=None):
+        return chain(*((td for td in r.time_derivatives
+                        if (state_variable is None or
+                            td.dependent_variable == state_variable.name))
+                        for r in self.regimes))
+
+    def all_output_analogs(self):
+        """
+        Returns an iterator over all aliases that are required for analog
+        send ports
+        """
+        return (a for a in self.aliases
+                if a.name in self.analog_send_port_names)
 
     @property
     def flattener(self):
@@ -433,185 +518,17 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         component"""
         return self.flattener is not None
 
-    def validate(self):
-        DynamicsValidator.validate_componentclass(self)
-
-    @property
-    def query(self):
-        """ Returns the ``ComponentQuery`` object associated with this class"""
-        return self._query
-
     def is_flat(self):
         """Is this component flat or does it have subcomponents?
 
         Returns a ``Boolean`` specifying whether this component is flat; i.e.
         has no subcomponent
         """
-
         return len(self.subnodes) == 0
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_componentclass(self, **kwargs)
-
-    def _resolve_transition_regime_names(self):
-        # Check that the names of the regimes are unique:
-        names = [r.name for r in self.regimes]
-        assert_no_duplicates(names)
-
-        # Create a map of regime names to regimes:
-        regime_map = dict([(r.name, r) for r in self.regimes])
-
-        # We only worry about 'target' regimes, since source regimes are taken
-        # care of for us by the Regime objects they are attached to.
-        for trans in self.transitions:
-            if trans.target_regime_name not in regime_map:
-                raise NineMLRuntimeError(
-                    "Can't find regime '{}'".format(trans.target_regime_name))
-            trans.set_target_regime(regime_map[trans.target_regime_name])
-
-    @property
-    def attributes_with_dimension(self):
-        return chain(super(DynamicsClass, self).attributes_with_dimension,
-                     self.analog_ports, self.state_variables)
-
-    @property
-    def dynamicsblock(self):
-        return self._main_block
-
-    @property
-    def ports(self):
-        return chain(super(DynamicsClass, self).ports,
-                     self.analog_send_ports, self.analog_receive_ports,
-                     self.analog_reduce_ports, self.event_send_ports,
-                     self.event_receive_ports)
-
-    @property
-    def analog_send_ports(self):
-        """Returns an iterator over the local |AnalogSendPort| objects"""
-        return self._analog_send_ports.itervalues()
-
-    @property
-    def analog_receive_ports(self):
-        """Returns an iterator over the local |AnalogReceivePort| objects"""
-        return self._analog_receive_ports.itervalues()
-
-    @property
-    def analog_reduce_ports(self):
-        """Returns an iterator over the local |AnalogReducePort| objects"""
-        return self._analog_reduce_ports.itervalues()
-
-    @property
-    def analog_ports(self):
-        """Returns an iterator over the local analog port objects"""
-        return chain(self.analog_send_ports, self.analog_receive_ports,
-                     self.analog_reduce_ports)
-
-    @property
-    def event_send_ports(self):
-        """Returns an iterator over the local |EventSendPort| objects"""
-        return self._event_send_ports.itervalues()
-
-    @property
-    def event_receive_ports(self):
-        """Returns an iterator over the local |EventReceivePort| objects"""
-        return self._event_receive_ports.itervalues()
-
-    @property
-    def event_ports(self):
-        return chain(self.event_send_ports, self.event_receive_ports)
-
-    # Forwarding functions to the dynamicsblock #
-
-    @property
-    def aliases(self):
-        """Forwarding function to self.dynamicsblock.aliases"""
-        return self.dynamicsblock.aliases
-
-    @property
-    def regimes(self):
-        """Forwarding function to self.dynamicsblock.regimes"""
-        return self.dynamicsblock.regimes
-
-    @property
-    def regimes_map(self):
-        """Forwarding function to self.dynamicsblock.regimes_map"""
-        return self.dynamicsblock.regimes_map
-
-    @property
-    def transitions(self):
-        """Forwarding function to self.dynamicsblock.transitions"""
-        return self.dynamicsblock.transitions
-
-    @property
-    def state_variables(self):
-        """Forwarding function to self.dynamicsblock.state_variables"""
-        return self.dynamicsblock.state_variables
-
-    @property
-    def analog_send_ports_map(self):
-        """
-        Returns the underlying dictionary containing the AnalogSendPort
-        objects
-        """
-        return self._analog_send_ports
-
-    @property
-    def analog_receive_ports_map(self):
-        """
-        Returns the underlying dictionary containing the AnalogReceivePort
-        objects
-        """
-        return self._analog_receive_ports
-
-    @property
-    def analog_reduce_ports_map(self):
-        """
-        Returns the underlying dictionary containing the AnalogReducePort
-        objects
-        """
-        return self._analog_reduce_ports
-
-    @property
-    def event_send_ports_map(self):
-        """
-        Returns the underlying dictionary containing the EventSendPort
-        objects
-        """
-        return self._event_send_ports
-
-    @property
-    def event_receive_ports_map(self):
-        """
-        Returns the underlying dictionary containing the EventReceivePort
-        objects
-        """
-        return self._event_receive_ports
-
-    @property
-    def state_variables_map(self):
-        """Forwarding function to self.dynamicsblock.state_variables_map"""
-        return self.dynamicsblock.state_variables_map
-
-    @property
-    def regime_names(self):
-        return self._main_block._regimes.iterkeys()
 
     @property
     def alias_names(self):
         return self._main_block._aliases.iterkeys()
-
-    @property
-    def state_variable_names(self):
-        return self._main_block._state_variables.iterkeys()
-
-    @property
-    def num_regimes(self):
-        return len(self._main_block._regimes)
-
-    @property
-    def num_state_variables(self):
-        return len(self._main_block._state_variables)
 
     @property
     def num_aliases(self):
@@ -634,6 +551,92 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                 originalname=alias.lhs, targetname=("(%s)" % alias.rhs))
             alias_expander.visit(self)
 
+    def _resolve_transition_regimes(self):
+        # Check that the names of the regimes are unique:
+        assert_no_duplicates([r.name for r in self.regimes])
+        # We only worry about 'target' regimes, since source regimes are taken
+        # care of for us by the Regime objects they are attached to.
+        for regime in self.regimes:
+            for trans in regime.transitions:
+                trans.set_source_regime(regime)
+                target = trans._target_regime
+                if not isinstance(target, Regime):
+                    if target is None:
+                        target = regime  # to same regime
+                    else:
+                        try:
+                            target = self.regime(target)  # Lookup by name
+                        except KeyError:
+                            raise NineMLRuntimeError(
+                                "Can't find regime '{}' referenced from '{}' "
+                                "transition"
+                                .format(trans.target_regime, trans._name))
+                    trans.set_target_regime(target)
+
+
+class DynamicsBlock(MainBlock):
+
+    """
+    An object, which encapsulates a component's regimes, transitions,
+    and state variables
+    """
+
+    defining_attributes = (MainBlock.defining_attributes +
+                           ('_regimes', '_state_variables'))
+    class_to_member_dict = dict(
+        tuple(MainBlock.class_to_member_dict.iteritems()) +
+        ((Regime, '_regimes'), (StateVariable, '_state_variables')))
+
+    def __init__(self, regimes=None, aliases=None, state_variables=None,
+                 constants=None):
+        """DynamicsBlock object constructor
+
+           :param aliases: A list of aliases, which must be either |Alias|
+               objects or ``string``s.
+           :param regimes: A list containing at least one |Regime| object.
+           :param state_variables: An optional list of the state variables,
+                which can either be |StateVariable| objects or `string` s. If
+                provided, it must match the inferred state-variables from the
+                regimes; if it is not provided it will be inferred
+                automatically.
+        """
+        super(DynamicsBlock, self).__init__(
+            aliases=aliases, constants=constants)
+        regimes = normalise_parameter_as_list(regimes)
+        state_variables = normalise_parameter_as_list(state_variables)
+
+        # Load the state variables as objects or strings:
+        sv_types = (basestring, StateVariable)
+        sv_td = filter_discrete_types(state_variables, sv_types)
+        sv_from_strings = [StateVariable(o, dimension=None)
+                           for o in sv_td[basestring]]
+        state_variables = sv_td[StateVariable] + sv_from_strings
+
+        assert_no_duplicates(r.name for r in regimes)
+        assert_no_duplicates(s.name for s in state_variables)
+
+        self._regimes = dict((r.name, r) for r in regimes)
+        self._state_variables = dict((s.name, s) for s in state_variables)
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_dynamicsblock(self, **kwargs)
+
+    def __repr__(self):
+        return ('DynamicsBlock({} regimes, {} aliases, {} state-variables, '
+                '{} constants)'
+                .format(len(self._regimes), len(self._aliases),
+                        len(self._state_variables),
+                        len(self._constants)))
+
+    @property
+    def regimes(self):
+        return self._regimes.itervalues()
+
+    @property
+    def state_variables(self):
+        return self._state_variables.itervalues()
+
 
 def inf_check(l1, l2, desc):
     check_list_contain_same_items(l1, l2, desc1='Declared',
@@ -641,3 +644,7 @@ def inf_check(l1, l2, desc):
 
 from .validators import DynamicsValidator
 from .utils import DynamicsClassInterfaceInferer
+from .utils.visitors import (DynamicsElementFinder,
+                             DynamicsRequiredDefinitions)
+from .utils.modifiers import (
+    DynamicsRenameSymbol, DynamicsAssignIndices)

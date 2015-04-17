@@ -1,14 +1,23 @@
 from copy import copy
+from collections import defaultdict
 from nineml.xmlns import E, NINEML
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 
 
-class Annotations(dict, TopLevelObject):
+class Annotations(defaultdict, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
 
     element_name = 'Annotations'
+
+    @classmethod
+    def _dict_tree(cls):
+        return defaultdict(cls._dict_tree)
+
+    def __init__(self, *args, **kwargs):
+        # Create an infinite (on request) tree of defaultdicts
+        super(Annotations, self).__init__(self._dict_tree, *args, **kwargs)
 
     def __repr__(self):
         return ("Annotations({})"
@@ -38,12 +47,9 @@ def read_annotations(from_xml):
             element = copy(element)
             element.remove(element.find(NINEML + Annotations.element_name))
         else:
-            annotations = None
+            annotations = Annotations()
         nineml_object = from_xml(cls, element, *args, **kwargs)
-        try:
-            nineml_object.annotations = annotations
-        except AttributeError:
-            raise
+        nineml_object.annotations.update(annotations.iteritems())
         return nineml_object
     return annotate_from_xml
 
@@ -52,11 +58,11 @@ def annotate_xml(to_xml):
     def annotate_to_xml(self, *args, **kwargs):
         elem = to_xml(self, *args, **kwargs)
         # If User Layer class
-        if hasattr(self, 'annotations') and self.annotations is not None:
+        if hasattr(self, 'annotations') and self.annotations:
             elem.append(self.annotations.to_xml())
         # If Abstraction Layer class
         elif (len(args) and hasattr(args[0], 'annotations') and
-              args[0].annotations is not None):
+              args[0].annotations):
             elem.append(args[0].annotations.to_xml())
         return elem
     return annotate_to_xml

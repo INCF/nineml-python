@@ -59,6 +59,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
             Component.
 
         """
+        BaseALObject.__init__(self)
         ExpressionWithSimpleLHS.__init__(self, lhs, rhs)
 
     def __repr__(self):
@@ -66,12 +67,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
     @property
     def name(self):
-        return self._lhs
-
-    @property
-    def _name(self):
-        "Used in polymorphic sorting of NineML objects"
-        return self._lhs
+        return self._name
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -99,6 +95,7 @@ class Constant(BaseALObject, ExpressionSymbol):
     defining_attributes = ('name', 'value', 'units')
 
     def __init__(self, name, value, units):
+        BaseALObject.__init__(self)
         self._name = name
         self._value = value
         self._units = units

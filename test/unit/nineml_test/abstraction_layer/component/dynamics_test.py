@@ -28,31 +28,31 @@ class TestOn(unittest.TestCase):
 
         # Check we can use 'do' with single and multiple values
         tr = On('V>0')
-        self.assertEquals(len(list(tr.event_outputs)), 0)
+        self.assertEquals(len(list(tr.output_events)), 0)
         self.assertEquals(len(list(tr.state_assignments)), 0)
         tr = On('SP0')
-        self.assertEquals(len(list(tr.event_outputs)), 0)
+        self.assertEquals(len(list(tr.output_events)), 0)
         self.assertEquals(len(list(tr.state_assignments)), 0)
 
         tr = On('V>0', do=OutputEvent('spike'))
-        self.assertEquals(len(list(tr.event_outputs)), 1)
+        self.assertEquals(len(list(tr.output_events)), 1)
         self.assertEquals(len(list(tr.state_assignments)), 0)
         tr = On('SP0', do=OutputEvent('spike'))
-        self.assertEquals(len(list(tr.event_outputs)), 1)
+        self.assertEquals(len(list(tr.output_events)), 1)
         self.assertEquals(len(list(tr.state_assignments)), 0)
 
         tr = On('V>0', do=[OutputEvent('spike')])
-        self.assertEquals(len(list(tr.event_outputs)), 1)
+        self.assertEquals(len(list(tr.output_events)), 1)
         self.assertEquals(len(list(tr.state_assignments)), 0)
         tr = On('SP0', do=[OutputEvent('spike')])
-        self.assertEquals(len(list(tr.event_outputs)), 1)
+        self.assertEquals(len(list(tr.output_events)), 1)
         self.assertEquals(len(list(tr.state_assignments)), 0)
 
         tr = On('V>0', do=['y=2', OutputEvent('spike'), 'x=1'])
-        self.assertEquals(len(list(tr.event_outputs)), 1)
+        self.assertEquals(len(list(tr.output_events)), 1)
         self.assertEquals(len(list(tr.state_assignments)), 2)
         tr = On('SP0', do=['y=2', OutputEvent('spike'), 'x=1'])
-        self.assertEquals(len(list(tr.event_outputs)), 1)
+        self.assertEquals(len(list(tr.output_events)), 1)
         self.assertEquals(len(list(tr.state_assignments)), 2)
 
 
@@ -213,7 +213,7 @@ class OnCondition_test(unittest.TestCase):
 
 
 # Tested in Component:
-#    def test_event_outputs(self):
+#    def test_output_events(self):
 # Signature: name
 # Events that happen when this transitions occurs
 # from nineml.abstraction_layer.component.dynamics import OnCondition
@@ -371,8 +371,8 @@ class Regime_test(unittest.TestCase):
 
         r = Regime(name='R1')
         self.assertEquals(set(r.on_conditions), set())
-        self.assertRaises(NineMLRuntimeError, r.add_on_condition, OnEvent('sp1'))
-        r.add_on_condition(OnCondition('sp1>0'))
+#         self.assertRaises(NineMLRuntimeError, r.add_on_condition, OnEvent('sp1'))
+        r.add(OnCondition('sp1>0'))
         self.assertEquals(len(set(r.on_conditions)), 1)
         self.assertEquals(len(set(r.on_events)), 0)
         self.assertEquals(len(set(r.transitions)), 1)
@@ -390,8 +390,8 @@ class Regime_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.dynamics import Regime
         r = Regime(name='R1')
         self.assertEquals(set(r.on_events), set())
-        self.assertRaises(NineMLRuntimeError, r.add_on_event, OnCondition('sp1>1'))
-        r.add_on_event(OnEvent('sp'))
+#         self.assertRaises(NineMLRuntimeError, r.add_on_event, OnCondition('sp1>1'))
+        r.add(OnEvent('sp'))
         self.assertEquals(len(set(r.on_events)), 1)
         self.assertEquals(len(set(r.on_conditions)), 0)
         self.assertEquals(len(set(r.transitions)), 1)
@@ -513,7 +513,7 @@ class StateVariable_test(unittest.TestCase):
 #        pass
 #
 #
-#    def test_event_outputs(self):
+#    def test_output_events(self):
 # Signature: name
 # Events that happen when this transitions occurs
 # from nineml.abstraction_layer.component.dynamics import Transition

@@ -10,6 +10,7 @@ from nineml.abstraction_layer.units import dimensionless
 from nineml.utils import ensure_valid_identifier
 from nineml.exceptions import NineMLRuntimeError
 from .expressions import ExpressionSymbol
+from nineml.base import SendPortBase  # A work around to avoid circular imports
 
 
 class Port(BaseALObject):
@@ -33,7 +34,6 @@ class Port(BaseALObject):
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
     defining_attributes = ('name',)
-    index_key = 'Port'
 
     def __init__(self, name):
         """ Port Constructor.
@@ -86,7 +86,7 @@ class DimensionedPort(Port, ExpressionSymbol):
                                                  self.dimension)
 
 
-class SendPort(object):
+class SendPort(SendPortBase):
     """SendPort
 
     Base class for sending ports

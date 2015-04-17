@@ -81,11 +81,10 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     def load_dynamicsblock(self, element):
         subblocks = ('Regime', 'Alias', 'StateVariable', 'Constant')
         subnodes = self._load_blocks(element, blocks=subblocks)
-
         return DynamicsBlock(regimes=subnodes["Regime"],
-                        aliases=subnodes["Alias"],
-                        state_variables=subnodes["StateVariable"],
-                        constants=subnodes["Constant"])
+                             aliases=subnodes["Alias"],
+                             state_variables=subnodes["StateVariable"],
+                             constants=subnodes["Constant"])
 
     @read_annotations
     def load_regime(self, element):
@@ -115,22 +114,20 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         subnodes = self._load_blocks(element, blocks=subblocks)
         target_regime = element.get('target_regime')
         trigger = expect_single(subnodes["Trigger"])
-
         return OnCondition(trigger=trigger,
                            state_assignments=subnodes["StateAssignment"],
-                           event_outputs=subnodes["OutputEvent"],
-                           target_regime_name=target_regime)
+                           output_events=subnodes["OutputEvent"],
+                           target_regime=target_regime)
 
     @read_annotations
     def load_onevent(self, element):
         subblocks = ('StateAssignment', 'OutputEvent')
         subnodes = self._load_blocks(element, blocks=subblocks)
-        target_regime_name = element.get('target_regime')
-
+        target_regime = element.get('target_regime')
         return OnEvent(src_port_name=element.get('port'),
                        state_assignments=subnodes["StateAssignment"],
-                       event_outputs=subnodes["OutputEvent"],
-                       target_regime_name=target_regime_name)
+                       output_events=subnodes["OutputEvent"],
+                       target_regime=target_regime)
 
     # FIXME: This should return a Trigger element not just an internal
     #        maths block (TGC 1/15)
@@ -177,25 +174,17 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
                      for p in componentclass.event_ports] +
                     [p.accept_visitor(self)
                      for p in componentclass.parameters] +
-                    [componentclass.dynamicsblock.accept_visitor(self)])
+                    [componentclass._main_block.accept_visitor(self)])
         return E('ComponentClass', *elements, name=componentclass.name)
 
     @annotate_xml
     def visit_dynamicsblock(self, dynamicsblock):
-        elements = ([b.accept_visitor(self)
-                     for b in dynamicsblock.state_variables] +
-                    [r.accept_visitor(self) for r in dynamicsblock.regimes] +
-                    [b.accept_visitor(self) for b in dynamicsblock.aliases] +
-                    [c.accept_visitor(self) for c in dynamicsblock.constants])
-        return E('Dynamics', *elements)
+        return E('Dynamics', *[e.accept_visitor(self) for e in dynamicsblock])
 
     @annotate_xml
     def visit_regime(self, regime):
-        nodes = ([node.accept_visitor(self)
-                  for node in regime.time_derivatives] +
-                 [node.accept_visitor(self) for node in regime.on_events] +
-                 [node.accept_visitor(self) for node in regime.on_conditions])
-        return E('Regime', name=regime.name, *nodes)
+        return E('Regime', name=regime.name,
+                 *[e.accept_visitor(self) for e in regime])
 
     @annotate_xml
     def visit_statevariable(self, state_variable):
@@ -232,7 +221,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
         return E('EventReceivePort', name=port.name)
 
     @annotate_xml
-    def visit_assignment(self, assignment):
+    def visit_stateassignment(self, assignment):
         return E('StateAssignment',
                  E("MathInline", assignment.rhs_cstr),
                  variable=assignment.lhs)
@@ -245,11 +234,9 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_oncondition(self, on_condition):
-        nodes = chain(on_condition.state_assignments,
-                      on_condition.event_outputs, [on_condition.trigger])
-        newNodes = [n.accept_visitor(self) for n in nodes]
-        return E('OnCondition', *newNodes,
-                 target_regime=on_condition._target_regime.name)
+        return E('OnCondition', on_condition.trigger.accept_visitor(self),
+                 target_regime=on_condition._target_regime.name,
+                 *[e.accept_visitor(self) for e in on_condition])
 
     @annotate_xml
     def visit_trigger(self, trigger):
@@ -257,8 +244,6 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_onevent(self, on_event):
-        elements = ([p.accept_visitor(self)
-                     for p in on_event.state_assignments] +
-                    [p.accept_visitor(self) for p in on_event.event_outputs])
-        return E('OnEvent', *elements, port=on_event.src_port_name,
-                 target_regime=on_event.target_regime.name)
+        return E('OnEvent', port=on_event.src_port_name,
+                 target_regime=on_event.target_regime.name,
+                 *[e.accept_visitor(self) for e in on_event])

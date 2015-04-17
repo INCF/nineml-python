@@ -26,7 +26,7 @@ class DynamicsClassInterfaceInferer(ComponentClassInterfaceInferer,
     def action_analogreduceport(self, analog_reduce_port):
         self.declared_symbols.add(analog_reduce_port.name)
 
-    def action_assignment(self, assignment):
+    def action_stateassignment(self, assignment):
         inferred_sv = assignment.lhs
         self.declared_symbols.add(inferred_sv)
         self.state_variable_names.add(inferred_sv)

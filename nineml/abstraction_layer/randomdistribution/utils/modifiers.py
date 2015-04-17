@@ -6,7 +6,9 @@ This file contains utility classes for modifying components.
 """
 
 from .cloner import RandomDistributionExpandPortDefinition
-from ...componentclass.utils.modifiers import ComponentModifier
+from .visitors import RandomDistributionActionVisitor
+from ...componentclass.utils.modifiers import (
+    ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
 
 
 class RandomDistributionModifier(ComponentModifier):
@@ -14,3 +16,17 @@ class RandomDistributionModifier(ComponentModifier):
     """Utility classes for modifying components"""
 
     _ExpandPortDefinition = RandomDistributionExpandPortDefinition
+
+
+class RandomDistributionRenameSymbol(RandomDistributionActionVisitor,
+                               ComponentRenameSymbol):
+
+    """ Can be used for:
+    Aliases
+    """
+    pass
+
+
+class RandomDistributionAssignIndices(ComponentAssignIndices,
+                                   RandomDistributionActionVisitor):
+    pass

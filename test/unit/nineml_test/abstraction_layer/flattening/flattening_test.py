@@ -52,15 +52,15 @@ class ComponentFlattener_test(unittest.TestCase):
         assert c_flat is not c
 
         self.assertEqual(c_flat.name, 'C')
-        self.assertEqual(set(c_flat.aliases_map.keys()), set(['C1', 'C2', 'C3']))
+        self.assertEqual(set(c_flat.alias_names), set(['C1', 'C2', 'C3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(set(c_flat.regimes_map.keys()), set(['r1', 'r2']))
-        self.assertEqual(len(list(c_flat.regimes_map['r1'].on_events)), 1)
-        self.assertEqual(len(list(c_flat.regimes_map['r1'].on_conditions)), 1)
-        self.assertEqual(len(list(c_flat.regimes_map['r2'].on_events)), 0)
-        self.assertEqual(len(list(c_flat.regimes_map['r2'].on_conditions)), 1)
-        self.assertEqual(len(list(c_flat.regimes_map['r2'].on_conditions)), 1)
+        self.assertEqual(set(c_flat.regime_names), set(['r1', 'r2']))
+        self.assertEqual(len(list(c_flat.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(c_flat.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(c_flat.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(c_flat.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(c_flat.regime('r2').on_conditions)), 1)
 
         #  - Ports & Parameters:
         self.assertEqual(
@@ -71,7 +71,7 @@ class ComponentFlattener_test(unittest.TestCase):
             set(['spikein', 'c_emit', 'emit']))
         self.assertEqual(set(c_flat.query.parameters_map.keys()),
                          set(['cp1', 'cp2']))
-        self.assertEqual(set(c_flat.state_variables_map.keys()),
+        self.assertEqual(set(c_flat.state_variable_names),
                          set(['SV1']))
 
     def test_Flattening2(self):
@@ -126,11 +126,11 @@ class ComponentFlattener_test(unittest.TestCase):
 
         # Aliases
         self.assertEqual(
-            set(b_flat.aliases_map.keys()),
+            set(b_flat.alias_names),
             set(['c1_C1', 'c1_C2', 'c1_C3', 'c2_C1', 'c2_C2', 'c2_C3', 'd_D1', 'd_D2', 'd_D3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(b_flat.regimes_map), 8)
+        self.assertEqual(len(b_flat._main_block._regimes), 8)
         r_c1_1_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r1 ')
         r_c1_1_c2_2_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r2 ')
         r_c1_2_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r2 c2:r1')
@@ -205,7 +205,7 @@ class ComponentFlattener_test(unittest.TestCase):
             set(['c1_cp1', 'c1_cp2', 'c2_cp1', 'c2_cp2', 'd_dp1', 'd_dp2', ]))
 
         self.assertEqual(
-            set(b_flat.state_variables_map.keys()),
+            set(b_flat.state_variable_names),
             set(['c1_SV1', 'c2_SV1', 'd_SV1']))
 
     def test_Flattening3(self):
@@ -261,11 +261,11 @@ class ComponentFlattener_test(unittest.TestCase):
 
         # Aliases
         self.assertEqual(
-            set(a_flat.aliases_map.keys()),
+            set(a_flat.alias_names),
             set(['b_c1_C1', 'b_c1_C2', 'b_c1_C3', 'b_c2_C1', 'b_c2_C2', 'b_c2_C3', 'b_d_D1', 'b_d_D2', 'b_d_D3', 'c_C1', 'c_C2', 'c_C3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(a_flat.regimes_map), 16)
+        self.assertEqual(len(a_flat._main_block._regimes), 16)
         r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
         r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
         r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
@@ -401,7 +401,7 @@ class ComponentFlattener_test(unittest.TestCase):
                  'b_d_dp1', 'b_d_dp2', ]))
 
         self.assertEqual(
-            set(a_flat.state_variables_map.keys()),
+            set(a_flat.state_variable_names),
             set(['b_c1_SV1', 'b_c2_SV1', 'b_d_SV1', 'c_SV1']))
 
     def test_Flattening4(self):
@@ -464,14 +464,14 @@ class ComponentFlattener_test(unittest.TestCase):
 
         # Aliases
         self.assertEqual(
-            set(a_flat.aliases_map.keys()),
+            set(a_flat.alias_names),
             set(['b_c1_C1', 'b_c1_C2', 'b_c1_C3', 'b_c1_C4',
                  'b_c2_C1', 'b_c2_C2', 'b_c2_C3', 'b_c2_C4',
                  'b_d_D1', 'b_d_D2', 'b_d_D3',
                  'c_C1', 'c_C2', 'c_C3', 'c_C4']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(a_flat.regimes_map), 16)
+        self.assertEqual(len(a_flat._main_block._regimes), 16)
         r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
         r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
         r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
@@ -607,30 +607,30 @@ class ComponentFlattener_test(unittest.TestCase):
                  'b_d_dp1', 'b_d_dp2', ]))
 
         self.assertEqual(
-            set(a_flat.state_variables_map.keys()),
+            set(a_flat.state_variable_names),
             set(['b_c1_SV1', 'b_c2_SV1', 'b_d_SV1', 'c_SV1']))
 
         # Back-sub everything - then do we get the correct port mappings:
         a_flat.backsub_all()
 
         self.assertEqual(
-            set(a_flat.aliases_map['b_c2_C4'].rhs_atoms),
+            set(a_flat.alias('b_c2_C4').rhs_atoms),
             set(['b_c1_cp1']))
 
         self.assertEqual(
-            set(a_flat.aliases_map['b_c1_C2'].rhs_atoms),
+            set(a_flat.alias('b_c1_C2').rhs_atoms),
             set(['b_c2_cp1']))
 
         self.assertEqual(
-            set(a_flat.aliases_map['b_c1_C4'].rhs_atoms),
+            set(a_flat.alias('b_c1_C4').rhs_atoms),
             set(['b_c1_cp1']))
 
         self.assertEqual(
-            set(a_flat.aliases_map['b_c2_C2'].rhs_atoms),
+            set(a_flat.alias('b_c2_C2').rhs_atoms),
             set(['b_c1_cp1']))
 
         self.assertEqual(
-            set(a_flat.aliases_map['b_d_D2'].rhs_atoms),
+            set(a_flat.alias('b_d_D2').rhs_atoms),
             set(['b_c2_cp1', 'b_d_dp2']))
 
     def test_event_resolution(self):
