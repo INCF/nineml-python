@@ -3,7 +3,7 @@ import nineml.units as un
 
 
 def get_component():
-    coba = al.dynamics.DynamicsClass(
+    coba = al.dynamics.Dynamics(
         name="CobaSyn",
         aliases=["I:=g*(vrev-V)", ],
         regimes=[
