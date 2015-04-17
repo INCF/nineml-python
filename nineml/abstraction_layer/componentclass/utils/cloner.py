@@ -81,3 +81,8 @@ class ComponentCloner(ComponentVisitor):
                 key = source.lookup_member_dict_name(s)
                 index = source.index_of(s)
                 destination._indices[key][d] = index
+
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
+        if randomvariable.name == self.old_symbol_name:
+            self.note_lhs_changed(randomvariable)
+            randomvariable.name_transform_inplace(self.namemap)
