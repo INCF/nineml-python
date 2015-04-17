@@ -205,31 +205,9 @@ class Projection(BaseULObject, DocumentLevelObject):
             expect_single(element.findall(NINEML + 'Delay')), document)
         # Get port connections by Loop through 'pre', 'post',
         # 'response', 'plasticity' tags and extracting the "From*" elements
-        port_connections = []
-        for receive_role in cls._component_roles:
-            # Get element for component name
-            e = element.find(NINEML + receive_role.capitalize())
-            if e is not None:  # Plasticity is not required
-                # Loop through all incoming port connections and add them to
-                # list
-                for sender_role in cls._component_roles:
-                    pc_elems = e.findall(NINEML +
-                                         'From' + sender_role.capitalize())
-                    if sender_role == receive_role and pc_elems:
-                        msg = ("{} port connection receives from itself in "
-                               "Projection '{}'".format(name, name))
-                        raise NineMLRuntimeError(msg)
-                    if (sender_role is 'plasticity' and plasticity is None and
-                         len(pc_elems)):
-                        msg = ("{} port connection receives from plasticity, "
-                               "which wasn't provided for Projection '{}'"
-                               .format(receive_role, name))
-                        raise NineMLRuntimeError(msg)
-                    for pc in pc_elems:
-                        port_connections.append(
-                            PortConnection(sender_role, receive_role,
-                                           pc.get('send_port'),
-                                           pc.get('receive_port')))
+        port_connections = [PortConnection.from_xml(e)
+                            for e in element.findall(
+                                NINEML + PortConnection.element_name)]
         return cls(name=element.attrib["name"],
                    pre=pre,
                    post=post,
@@ -382,3 +360,30 @@ class PortConnection(object):
             assert False, ("Invalid '{}' object in port connection"
                            .format(type(comp)))
         return comp_class
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        # Get element for component name
+        e = element.find(NINEML + receive_role.capitalize())
+        if e is not None:  # Plasticity is not required
+            # Loop through all incoming port connections and add them to
+            # list
+            for sender_role in cls._component_roles:
+                pc_elems = e.findall(NINEML +
+                                     'From' + sender_role.capitalize())
+                if sender_role == receive_role and pc_elems:
+                    msg = ("{} port connection receives from itself in "
+                           "Projection '{}'".format(name, name))
+                    raise NineMLRuntimeError(msg)
+                if (sender_role is 'plasticity' and plasticity is None and
+                     len(pc_elems)):
+                    msg = ("{} port connection receives from plasticity, "
+                           "which wasn't provided for Projection '{}'"
+                           .format(receive_role, name))
+                    raise NineMLRuntimeError(msg)
+                for pc in pc_elems:
+                    port_connections.append(
+                        PortConnection(sender_role, receive_role,
+                                       pc.get('send_port'),
+                                       pc.get('receive_port')))
