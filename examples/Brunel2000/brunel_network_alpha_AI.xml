@@ -32,13 +32,13 @@
     </nineml:Cell>
   </nineml:Population>
   <nineml:Projection name="Excitation">
-    <nineml:Source>
+    <nineml:Pre>
       <nineml:Reference>Exc</nineml:Reference>
-    </nineml:Source>
-    <nineml:Destination>
+    </nineml:Pre>
+    <nineml:Post>
       <nineml:Reference>All neurons</nineml:Reference>
       <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </nineml:Destination>
+    </nineml:Post>
     <nineml:Connectivity>
       <nineml:Component name="RandomExc">
         <nineml:Definition url="RandomFanIn.xml">RandomFanIn</nineml:Definition>
@@ -103,13 +103,13 @@
     </nineml:Cell>
   </nineml:Population>
   <nineml:Projection name="Inhibition">
-    <nineml:Source>
+    <nineml:Pre>
       <nineml:Reference>Inh</nineml:Reference>
-    </nineml:Source>
-    <nineml:Destination>
+    </nineml:Pre>
+    <nineml:Post>
       <nineml:Reference>All neurons</nineml:Reference>
       <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </nineml:Destination>
+    </nineml:Post>
     <nineml:Connectivity>
       <nineml:Component name="RandomInh">
         <nineml:Definition url="RandomFanIn.xml">RandomFanIn</nineml:Definition>
@@ -175,13 +175,13 @@
     </nineml:Cell>
   </nineml:Population>
   <nineml:Projection name="External">
-    <nineml:Source>
+    <nineml:Pre>
       <nineml:Reference>Ext</nineml:Reference>
-    </nineml:Source>
-    <nineml:Destination>
+    </nineml:Pre>
+    <nineml:Post>
       <nineml:Reference>All neurons</nineml:Reference>
       <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </nineml:Destination>
+    </nineml:Post>
     <nineml:Connectivity>
       <nineml:Component name="OneToOne">
         <nineml:Definition url="OneToOne.xml">OneToOne</nineml:Definition>

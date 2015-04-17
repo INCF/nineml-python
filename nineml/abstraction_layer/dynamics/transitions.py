@@ -212,7 +212,7 @@ class Transition(BaseALObject, MemberContainerObject):
         """
         if type(self._target_regime).__name__ != 'Regime':
             raise NineMLRuntimeError(
-                "Source regime has not been set for transition. It needs "
+                "Pre regime has not been set for transition. It needs "
                 "to be added to a regime first.")
         return self._source_regime
 

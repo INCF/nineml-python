@@ -57,7 +57,7 @@ exc_prj = nineml.Projection("Excitation", input, p1,
                             response=psr,
                             plasticity=static_exc,
                             port_connections=[nineml.PortConnection("plasticity", "response", "weight", "q"),
-                                              nineml.PortConnection("response", "destination", "Isyn", "Isyn")],
+                                              nineml.PortConnection("response", "post", "Isyn", "Isyn")],
                             delay=(delay, ms))
 
 
@@ -66,7 +66,7 @@ inh_prj = nineml.Projection("Inhibition", input, p2,
                             response=psr,
                             plasticity=static_inh,
                             port_connections=[nineml.PortConnection("plasticity", "response", "weight", "q"),
-                                              nineml.PortConnection("response", "destination", "Isyn", "Isyn")],
+                                              nineml.PortConnection("response", "post", "Isyn", "Isyn")],
                             delay=(delay, ms))
 
 

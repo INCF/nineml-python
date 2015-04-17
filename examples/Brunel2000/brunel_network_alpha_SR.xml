@@ -32,13 +32,13 @@
     </Cell>
   </Population>
   <Projection name="Excitation">
-    <Source>
+    <Pre>
       <Reference>Exc</Reference>
-    </Source>
-    <Destination>
+    </Pre>
+    <Post>
       <Reference>All neurons</Reference>
       <FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </Destination>
+    </Post>
     <Connectivity>
       <Component name="RandomExc">
         <Definition url="RandomFanIn.xml">RandomFanIn</Definition>
@@ -104,13 +104,13 @@
     </Cell>
   </Population>
   <Projection name="Inhibition">
-    <Source>
+    <Pre>
       <Reference>Inh</Reference>
-    </Source>
-    <Destination>
+    </Pre>
+    <Post>
       <Reference>All neurons</Reference>
       <FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </Destination>
+    </Post>
     <Connectivity>
       <Component name="RandomInh">
         <Definition url="RandomFanIn.xml">RandomFanIn</Definition>
@@ -176,13 +176,13 @@
     </Cell>
   </Population>
   <Projection name="External">
-    <Source>
+    <Pre>
       <Reference>Ext</Reference>
-    </Source>
-    <Destination>
+    </Pre>
+    <Post>
       <Reference>All neurons</Reference>
       <FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </Destination>
+    </Post>
     <Connectivity>
       <Component name="OneToOne">
         <Definition url="OneToOne.xml">OneToOne</Definition>

@@ -77,7 +77,7 @@ intra_column_connector = nineml.ConnectionRule(
 
 inner_exc2all = nineml.Projection(
     name="Intra-column excitatory connections",
-    source=exc_cells,
+    pre=exc_cells,
     target=column,
     rule=intra_column_connector,
     synaptic_response=exc_psr,
@@ -85,7 +85,7 @@ inner_exc2all = nineml.Projection(
 
 inner_inh2all = nineml.Projection(
     name="Intra-column inhibitory connections",
-    source=inh_cells,
+    pre=inh_cells,
     target=column,
     rule=intra_column_connector,
     synaptic_response=inh_psr,
@@ -108,7 +108,7 @@ columns = nineml.Population(
 
 outer_exc2all = nineml.Projection(
     name="Inter-column excitatory connections",
-    source=columns,
+    pre=columns,
     target=columns,
     rule=inter_column_connector,
     synaptic_response=exc_psr,

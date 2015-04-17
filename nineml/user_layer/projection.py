@@ -22,9 +22,9 @@ class Projection(BaseULObject, DocumentLevelObject):
     **Arguments**:
         *name*
             a name for this projection.
-        *source*
+        *pre*
             the presynaptic :class:`Population`.
-        *destination*
+        *post*
             the postsynaptic :class:`Population`.
         *response*
             a `dynamics` :class:`Component` that defines the post-synaptic
@@ -40,7 +40,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         *port_connections*
             a list of :class:`PortConnection` tuples `(sender, receiver,
             send_port, receive_port)` that define the connections between the 4
-            components of the projection, 'source', 'destination', 'response',
+            components of the projection, 'pre', 'post', 'response',
             'plasticity'. 'sender' and 'receiver' must be one of these 4 names
             and 'send_port' and 'receive_port' must each be the name of
             one of the ports in the corresponding components.
@@ -52,13 +52,13 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     """
     element_name = "Projection"
-    defining_attributes = ("name", "source", "destination", "connectivity",
+    defining_attributes = ("name", "pre", "post", "connectivity",
                            "response", "plasticity", "port_connections",
                            "delay")
 
-    _component_roles = set(['source', 'destination', 'plasticity', 'response'])
+    _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
-    def __init__(self, name, source, destination, response,
+    def __init__(self, name, pre, post, response,
                  plasticity, connectivity, delay, port_connections, url=None):
         """
         Create a new projection.
@@ -66,16 +66,16 @@ class Projection(BaseULObject, DocumentLevelObject):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
         self.name = name
-        self.source = source
+        self.pre = pre
         # When exporting to XML we use the reference instead of the object
         # maintaing the original format of the XML.
-        if source.from_reference is None:
-            source.from_reference = Reference(source.name,
-                                               {source.name: source})
-        self.destination = destination
-        if destination.from_reference is None:
-            destination.from_reference = Reference(
-                destination.name, {destination.name: destination})
+        if pre.from_reference is None:
+            pre.from_reference = Reference(pre.name,
+                                               {pre.name: pre})
+        self.post = post
+        if post.from_reference is None:
+            post.from_reference = Reference(
+                post.name, {post.name: post})
         self.response = response
         self.plasticity = plasticity
         self.connectivity = connectivity
@@ -93,10 +93,10 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._check_port_connections()
 
     def __repr__(self):
-        return ('Projection(name="{}", source={}, destination={}, '
+        return ('Projection(name="{}", pre={}, post={}, '
                 'connectivity={}, response={}{}, delay={}, '
                 'with {} port-connections)'
-                .format(self.name, repr(self.source), repr(self.destination),
+                .format(self.name, repr(self.pre), repr(self.post),
                         repr(self.connectivity), repr(self.response),
                         ('plasticity={}'.format(repr(self.plasticity))
                          if self.plasticity else ''), repr(self.delay),
@@ -152,8 +152,8 @@ class Projection(BaseULObject, DocumentLevelObject):
             pcs[pc._receive_role].append(
                 E('From' + pc._send_role.capitalize(),
                   send_port=pc.send_port, receive_port=pc.receive_port))
-        args = [E.Source(self.source.to_xml(), *pcs['source']),
-                E.Destination(self.destination.to_xml(), *pcs['destination']),
+        args = [E.Pre(self.pre.to_xml(), *pcs['pre']),
+                E.Post(self.post.to_xml(), *pcs['post']),
                 E.Connectivity(self.connectivity.to_xml()),
                 E.Response(self.response.to_xml(), *pcs['response'])]
         if self.plasticity:
@@ -169,15 +169,15 @@ class Projection(BaseULObject, DocumentLevelObject):
         check_tag(element, cls)
         # Get Name
         name = element.get('name')
-        # Get Source
-        e = expect_single(element.findall(NINEML + 'Source'))
+        # Get Pre
+        e = expect_single(element.findall(NINEML + 'Pre'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        source = nineml.user_layer.Reference.from_xml(
+        pre = nineml.user_layer.Reference.from_xml(
             e, document).user_layer_object
-        # Get Destination
-        e = expect_single(element.findall(NINEML + 'Destination'))
+        # Get Post
+        e = expect_single(element.findall(NINEML + 'Post'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        destination = nineml.user_layer.Reference.from_xml(
+        post = nineml.user_layer.Reference.from_xml(
             e, document).user_layer_object
         # Get Response
         e = element.find(NINEML + 'Response')
@@ -203,7 +203,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         # Get Delay
         delay = Delay.from_xml(
             expect_single(element.findall(NINEML + 'Delay')), document)
-        # Get port connections by Loop through 'source', 'destination',
+        # Get port connections by Loop through 'pre', 'post',
         # 'response', 'plasticity' tags and extracting the "From*" elements
         port_connections = []
         for receive_role in cls._component_roles:
@@ -231,8 +231,8 @@ class Projection(BaseULObject, DocumentLevelObject):
                                            pc.get('send_port'),
                                            pc.get('receive_port')))
         return cls(name=element.attrib["name"],
-                   source=source,
-                   destination=destination,
+                   pre=pre,
+                   post=post,
                    response=response,
                    plasticity=plasticity,
                    connectivity=connectivity,
@@ -275,9 +275,9 @@ class PortConnection(object):
 
     **Arguments**:
         *sender*
-           one of 'source', 'destination', 'plasticity' or 'response'.
+           one of 'pre', 'post', 'plasticity' or 'response'.
         *receiver*
-            one of 'source', 'destination', 'plasticity' or 'response'.
+            one of 'pre', 'post', 'plasticity' or 'response'.
         *send_port*
             the name of a send port in the sender component.
         *receive_port*
