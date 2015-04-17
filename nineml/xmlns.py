@@ -5,6 +5,7 @@ docstring goes here
 :license: BSD-3, see LICENSE for details.
 """
 from lxml.builder import ElementMaker
+from os import path
 
 nineml_namespace = 'http://nineml.net/9ML/1.0'
 NINEML = '{' + nineml_namespace + '}'

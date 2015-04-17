@@ -22,7 +22,8 @@ import connectionrule
 import randomdistribution
 import ports
 from .componentclass import Parameter, ComponentClass, NamespaceAddress
-from .expressions import Alias, Expression, Constant
+from .expressions import (
+    Alias, Expression, Constant, RandomVariable)
 from .dynamics import (Dynamics, Regime,
                        OutputEvent, StateAssignment, TimeDerivative,
                        OnCondition, Trigger, StateVariable, OnEvent, On,

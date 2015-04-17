@@ -5,6 +5,8 @@ from nineml.abstraction_layer import BaseALObject
 from nineml.exceptions import NineMLRuntimeError
 from nineml.xmlns import uncertml_namespace, UNCERTML
 from cStringIO import StringIO
+from nineml.units import Unit
+from nineml.utils import ensure_valid_identifier
 
 
 class RandomVariable(BaseALObject):
@@ -13,9 +15,25 @@ class RandomVariable(BaseALObject):
     defining_attributes = ('name', 'distribution', 'units')
 
     def __init__(self, name, distribution, units):
-        self.name = name
-        self.distribution = distribution
-        self.units = units
+        BaseALObject.__init__(self)
+        assert isinstance(name, basestring)
+        assert isinstance(distribution, RandomDistribution)
+        assert isinstance(units, Unit)
+        self._name = name
+        self._distribution = distribution
+        self._units = units
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def distribution(self):
+        return self._distribution
+
+    @property
+    def units(self):
+        return self._units
 
     def __repr__(self):
         return ("RandomVariable(name={}, units={}, distribution={})"
@@ -47,13 +65,13 @@ class RandomDistribution(BaseALObject):
     E = ElementMaker(namespace=uncertml_namespace,
                      nsmap={"un": uncertml_namespace})
 
-    valid_distributions = (
+    valid_distributions = set((
         'Normal', 'Bernoulli', 'Beta', 'Binomial', 'Cauchy',
         'ChiSquare', 'Dirichlet', 'Exponential', 'F', 'Gamma', 'Geometric',
         'Hypergeometric', 'InverseGamma', 'Laplace', 'Logistic', 'LogNormal',
         'MixtureModel Multinomial', 'NegativeBinomial', 'Normal',
         'NormalInverseGamma', 'Pareto', 'Poisson', 'StudentT', 'Uniform',
-        'Weibull')
+        'Weibull'))
 
     non_alphabetical = {'StudentT': ('location', 'scale', 'degreesOfFreedom'),
                         'Gamma': ('shape', 'scale'),
@@ -62,9 +80,18 @@ class RandomDistribution(BaseALObject):
                                                'shape', 'scale'),
                         'Uniform': ('minimum', 'maximum', 'numberOfClasses')}
 
-    def __init__(self, name, parameters, validate=True):
-        self.name = name
-        self.parameters = parameters
+    def __init__(self, name, validate=True, **parameters):
+        if name not in self.valid_distributions:
+            raise NineMLRuntimeError(
+                "'{}' is not a valid random distribution ('{}')"
+                .format(name, "', '".join(self.valid_distributions)))
+        self._name = name
+        self._parameters = {}
+        for param, var in parameters.iteritems():
+            try:
+                self._parameters[param] = float(var)
+            except TypeError:
+                self._parameters[param] = ensure_valid_identifier(var)
         # Convert to xml and check against UncertML schema
         if validate:
             try:
@@ -75,9 +102,22 @@ class RandomDistribution(BaseALObject):
                     "  {}\nSee {} for valid parameter/values."
                     .format(self.name, self.parameters, uncertml_namespace))
 
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_randomdistribution(self, **kwargs)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def parameters(self):
+        return self._parameters
+
     def to_xml(self):
-        # UncertML is order-specific, whereas NineML-UncertML is not in keeping
-        # with the general design philosophy of NineML
+        # UncertML is order-specific, whereas NineML-UncertML is not (in
+        # keeping with the general design philosophy of NineML) therefore some
+        # parameters need to be reordered before comparing with schema
         if self.name in self.non_alphabetical:
             sorted_params = ((n, self.parameters[n])
                              for n in self.non_alphabetical[self.name])
@@ -97,7 +137,7 @@ class RandomDistribution(BaseALObject):
         name = element.tag[len(UNCERTML):-len('Distribution')]
         params = dict((c.tag[len(UNCERTML):], float(c.text))
                       for c in element.getchildren())
-        return cls(name=name, parameters=params, validate=False)
+        return cls(name=name, validate=False, **params)
 
     @classmethod
     def _validate_xml(cls, xml):
@@ -911,64 +951,6 @@ _UNCERTML_SCHEMA = """<?xml version="1.0" encoding="UTF-8"?>
             <xs:element name="numberOfClasses" type="un:PositiveNaturalNumbersType"/>
           </xs:sequence>
         </xs:choice>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name="MixtureModel" substitutionGroup="un:AbstractDistribution">
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="un:MixtureModelType"/>
-      </xs:complexContent>
-    </xs:complexType>
-  </xs:element>
-  <xs:complexType name="MixtureModelType">
-    <xs:complexContent>
-      <xs:extension base="un:AbstractDistributionType">
-        <xs:sequence>
-          <xs:element name="component" maxOccurs="unbounded">
-            <xs:complexType>
-              <xs:sequence>
-                <xs:element ref="un:AbstractDistribution"/>
-              </xs:sequence>
-              <xs:attribute name="weight" type="un:probability" use="required"/>
-            </xs:complexType>
-          </xs:element>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name="MultivariateNormalDistribution" substitutionGroup="un:AbstractDistribution">
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="un:MultivariateNormalDistributionType"/>
-      </xs:complexContent>
-    </xs:complexType>
-  </xs:element>
-  <xs:complexType name="MultivariateNormalDistributionType">
-    <xs:complexContent>
-      <xs:extension base="un:AbstractDistributionType">
-        <xs:sequence>
-          <xs:element name="mean" type="un:ContinuousValuesType"/>
-          <xs:element name="covarianceMatrix" type="un:CovarianceMatrixType"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:element name="MultivariateStudentTDistribution" substitutionGroup="un:AbstractDistribution">
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="un:MultivariateStudentTDistributionType"/>
-      </xs:complexContent>
-    </xs:complexType>
-  </xs:element>
-  <xs:complexType name="MultivariateStudentTDistributionType">
-    <xs:complexContent>
-      <xs:extension base="un:AbstractDistributionType">
-        <xs:sequence>
-          <xs:element name="mean" type="un:ContinuousValuesType"/>
-          <xs:element name="covarianceMatrix" type="un:CovarianceMatrixType"/>
-          <xs:element name="degreesOfFreedom" type="un:PositiveNaturalNumbersType"/>
-        </xs:sequence>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

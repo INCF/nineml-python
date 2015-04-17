@@ -49,6 +49,7 @@ class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
         self.check_conflicting_symbol(namespace=namespace,
                                       symbol=randomvariable.name)
 
+
 class DimensionNameConflictsComponentValidator(PerNamespaceComponentValidator):
 
     def __init__(self, component_class):
@@ -75,4 +76,4 @@ class DimensionNameConflictsComponentValidator(PerNamespaceComponentValidator):
         self.check_conflicting_dimension(constant.units.dimension)
 
     def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_dimension(randomvariable.units.dimension)        
+        self.check_conflicting_dimension(randomvariable.units.dimension)

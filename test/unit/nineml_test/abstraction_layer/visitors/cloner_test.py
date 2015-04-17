@@ -5,11 +5,13 @@ import warnings
 import unittest
 
 from nineml.abstraction_layer import (
-    Dynamics as Dynamics, Regime, On, OutputEvent,
+    Dynamics, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
-    NamespaceAddress)
+    NamespaceAddress, StateAssignment, RandomVariable)
+from nineml.abstraction_layer.expressions.random import RandomDistribution
 from nineml.abstraction_layer.dynamics.utils.cloner import (
     DynamicsClonerPrefixNamespace)
+import nineml.units as un
 
 NSA = NamespaceAddress
 
@@ -23,7 +25,8 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
-                Regime('dSV1/dt = -SV1/(dp2*t)', name='r1', transitions=On('input', 'SV1=SV1+1'))],
+                Regime('dSV1/dt = -SV1/(dp2*t)', name='r1',
+                       transitions=On('input', 'SV1=SV1+1'))],
             analog_ports=[RecvPort('dIn1'), SendPort('D1'), SendPort('D2')],
             parameters=['dp1', 'dp2']
         )
@@ -34,13 +37,21 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
             regimes=[
                 Regime(
                     'dSV1/dt = -SV1/(cp2*t)',
-                    transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('emit')])],
+                    transitions=[
+                        On('SV1>cp1',
+                           do=[OutputEvent('emit'),
+                               StateAssignment('SV1', 'r'),
+                               RandomVariable(
+                                   'r', units=un.unitless,
+                                   distribution=RandomDistribution(
+                                       'Gamma', shape=10.0, scale=1.0))]),
+                        On('spikein', do=[OutputEvent('emit')])],
                     name='r1',
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('cIn1'), RecvPort('cIn2'), SendPort('C1'), SendPort('C2')],
+            analog_ports=[RecvPort('cIn1'), RecvPort('cIn2'), SendPort('C1'),
+                          SendPort('C2')],
             parameters=['cp1', 'cp2']
         )
 
