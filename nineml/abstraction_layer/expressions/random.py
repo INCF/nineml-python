@@ -83,7 +83,7 @@ class RandomDistribution(BaseALObject):
     def __init__(self, name, validate=True, **parameters):
         if name not in self.valid_distributions:
             raise NineMLRuntimeError(
-                "'{}' is not a valid random distribution ('{}')"
+                "'{}' is not a valid random distribution (valid: '{}')"
                 .format(name, "', '".join(self.valid_distributions)))
         self._name = name
         self._parameters = {}
@@ -98,9 +98,11 @@ class RandomDistribution(BaseALObject):
                 self._validate_xml(self.to_xml())
             except NineMLRuntimeError:
                 raise NineMLRuntimeError(
-                    "Invalid parameters/values to random distribution '{}':\n"
-                    "  {}\nSee {} for valid parameter/values."
-                    .format(self.name, self.parameters, uncertml_namespace))
+                    "Invalid parameters for '{}' distribution : '{}'\n"
+                    "  {}\nSee 'http://www.uncertml.org/distributions/{}' "
+                    "for valid parameters."
+                    .format(self.name, "', '".join(self.parameters.iterkeys()),
+                            self.name.lower()))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
