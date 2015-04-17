@@ -32,13 +32,13 @@
     </nineml:Cell>
   </nineml:Population>
   <nineml:Projection name="Excitation">
-    <nineml:Source>
+    <nineml:Pre>
       <nineml:Reference>Ext</nineml:Reference>
-    </nineml:Source>
-    <nineml:Destination>
+    </nineml:Pre>
+    <nineml:Post>
       <nineml:Reference>Exc</nineml:Reference>
       <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </nineml:Destination>
+    </nineml:Post>
     <nineml:Connectivity>
       <nineml:Component name="AllToAll">
         <nineml:Definition url="AllToAll.xml">AllToAll</nineml:Definition>
@@ -90,13 +90,13 @@
     </nineml:Cell>
   </nineml:Population>
   <nineml:Projection name="Inhibition">
-    <nineml:Source>
+    <nineml:Pre>
       <nineml:Reference>Ext</nineml:Reference>
-    </nineml:Source>
-    <nineml:Destination>
+    </nineml:Pre>
+    <nineml:Post>
       <nineml:Reference>Inh</nineml:Reference>
       <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
-    </nineml:Destination>
+    </nineml:Post>
     <nineml:Connectivity>
       <nineml:Component name="AllToAll">
         <nineml:Definition url="AllToAll.xml">AllToAll</nineml:Definition>
