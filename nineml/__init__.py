@@ -18,5 +18,4 @@ from abstraction_layer import (
     DynamicsClass, ConnectionRuleClass, RandomDistributionClass,
     ComponentClass)
 from user_layer import (
-    Dynamics, ConnectionRule, RandomDistribution, Selection, Population,
-    Projection, Property, Definition, Component)
+    Selection, Population, Projection, Property, Definition, Component)

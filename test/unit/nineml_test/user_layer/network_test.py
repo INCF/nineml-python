@@ -72,15 +72,15 @@ class TestNetwork(unittest.TestCase):
         p2 = nineml.Population("Inh", 1, celltype, positions=None)
         inpt = nineml.Population("Ext", 1, ext_stim, positions=None)
 
-        all_to_all = nineml.ConnectionRule("AllToAll",
+        all_to_all = nineml.Component("AllToAll",
                                            path.join(self.xml_dir,
                                                      "AllToAll.xml"), {})
 
-        static_exc = nineml.Dynamics(
+        static_exc = nineml.Component(
             "ExcitatoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"), {},
             initial_values={"weight": (Je, nA)})
-        static_inh = nineml.Dynamics(
+        static_inh = nineml.Component(
             "InhibitoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"),
             initial_values={"weight": (Ji, nA)})
