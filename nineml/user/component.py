@@ -343,26 +343,8 @@ class Component(BaseULObject, DocumentLevelObject):
                 raise Exception("A component_class must contain either a "
                                 "defintion or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
-        ComponentType = cls.get_component_type(definition)
-        return ComponentType(name, definition, properties=properties,
+        return Component(name, definition, properties=properties,
                              initial_values=initial_values, url=document.url)
-
-    @classmethod
-    def get_component_type(cls, definition):
-        try:
-            comp_type = type(definition.component)  # If Prototype
-        except AttributeError:
-            component_class = definition.component_class
-            if isinstance(component_class, Dynamics):
-                comp_type = DynamicsComponent
-            elif isinstance(component_class, RandomDistribution):
-                comp_type = RandomDistributionComponent
-            elif isinstance(component_class, ConnectionRule):
-                comp_type = ConnectionRuleComponent
-            else:
-                raise NineMLRuntimeError(
-                    "Unrecognised definition {}".format(definition))
-        return comp_type
 
     @property
     def used_units(self):
