@@ -330,23 +330,8 @@ class Component(BaseULObject, DocumentLevelObject):
                 raise Exception("A component_class must contain either a "
                                 "defintion or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
-        ComponentType = cls.get_component_type(definition)
-        return ComponentType(name, definition, properties=properties,
+        return Component(name, definition, properties=properties,
                              initial_values=initial_values, url=document.url)
-
-    @classmethod
-    def get_component_type(cls, definition):
-        try:
-            comp_type = type(definition.component)  # If Prototype
-        except AttributeError:
-            component_class = definition.component_class
-            if isinstance(component_class, DynamicsClass):
-                comp_type = Dynamics
-            elif isinstance(component_class, RandomDistributionClass):
-                comp_type = RandomDistribution
-            elif isinstance(component_class, ConnectionRuleClass):
-                comp_type = ConnectionRule
-        return comp_type
 
     @property
     def used_units(self):
@@ -654,32 +639,32 @@ class InitialValueSet(PropertySet):
         return cls(*initial_values)
 
 
-class Dynamics(Component):
-
-    def check_initial_values(self):
-        for var in self.definition.componentclass.state_variables:
-            try:
-                initial_value = self.initial_values[var.name]
-            except KeyError:
-                raise Exception("Initial value not specified for %s" %
-                                var.name)
-            check_units(initial_value.units, var.dimension)
-
-
-class ConnectionRule(Component):
-    """
-    docstring needed
-    """
-    pass
-
-
-class RandomDistribution(Component):
-    """
-    Component representing a random number randomdistribution, e.g. normal, gamma,
-    binomial.
-
-    *Example*::
-
-        example goes here
-    """
-    pass
+# class Dynamics(Component):
+# 
+#     def check_initial_values(self):
+#         for var in self.definition.componentclass.state_variables:
+#             try:
+#                 initial_value = self.initial_values[var.name]
+#             except KeyError:
+#                 raise Exception("Initial value not specified for %s" %
+#                                 var.name)
+#             check_units(initial_value.units, var.dimension)
+# 
+# 
+# class ConnectionRule(Component):
+#     """
+#     docstring needed
+#     """
+#     pass
+# 
+# 
+# class RandomDistribution(Component):
+#     """
+#     Component representing a random number randomdistribution, e.g. normal,
+#     gamma, binomial.
+# 
+#     *Example*::
+# 
+#         example goes here
+#     """
+#     pass
