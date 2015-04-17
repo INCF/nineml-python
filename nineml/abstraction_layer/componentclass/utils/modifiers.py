@@ -84,10 +84,15 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             self.note_lhs_changed(constant)
             constant.name_transform_inplace(self.namemap)
 
-    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
-        if randomvariable.name == self.old_symbol_name:
-            self.note_lhs_changed(randomvariable)
-            randomvariable.name_transform_inplace(self.namemap)            
+    def action_randomvariable(self, random_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        if random_variable.name == self.old_symbol_name:
+            self.note_lhs_changed(random_variable)
+            random_variable.name_transform_inplace(self.namemap)
+
+    def action_randomdistribution(self, random_distribution, **kwargs):  # @UnusedVariable @IgnorePep8
+        for key, var in random_distribution.parameters.iteritems():
+            if var == self.old_symbol_name:
+                random_distribution.parameters[key] = self.new_symbol_name
 
 
 class ComponentAssignIndices(ComponentActionVisitor):

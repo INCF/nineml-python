@@ -3,7 +3,7 @@ from .visitors import DynamicsActionVisitor
 
 
 class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
-                                    DynamicsActionVisitor):
+                               DynamicsActionVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
@@ -40,3 +40,6 @@ class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
 
     def action_trigger(self, trigger):
         self.atoms.update(trigger.rhs_atoms)
+
+    def action_randomvariable(self, randomvariable):
+        self.declared_symbols.add(randomvariable.name)

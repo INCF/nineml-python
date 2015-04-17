@@ -1,6 +1,6 @@
 from copy import copy
 from .visitors import ComponentActionVisitor
-from ...expressions import Expression, reserved_identifiers
+from ...expressions import reserved_identifiers
 
 
 class ComponentClassInterfaceInferer(ComponentActionVisitor):
@@ -29,5 +29,10 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.declared_symbols.add(constant.name)
 
-    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.declared_symbols.add(randomvariable.name)
+
+    def action_randomdistribution(self, random_distribution, **kwargs):  # @UnusedVariable @IgnorePep8
+        for var in random_distribution.parameters.itervalues():
+            if isinstance(var, basestring):
+                self.atoms.update(var)

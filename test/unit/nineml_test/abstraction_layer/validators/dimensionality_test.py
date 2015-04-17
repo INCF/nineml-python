@@ -6,6 +6,8 @@ from nineml.abstraction_layer import (
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
 from nineml import units as un
 from nineml.exceptions import NineMLDimensionError
+from nineml.abstraction_layer.expressions.random import (
+    RandomVariable, RandomDistribution)
 
 
 class Dimensionality_test(unittest.TestCase):
@@ -22,8 +24,15 @@ class Dimensionality_test(unittest.TestCase):
                 Regime(
                     'dSV1/dt = -SV1 / P2',
                     'dSV2/dt = A3 / ARP2 + SV2 / P2',
-                    transitions=[On('SV1 > P3', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('emit')])],
+                    transitions=[
+                        On('SV1 > P3', do=[OutputEvent('emit')]),
+                        On('spikein',
+                           do=[OutputEvent('emit'),
+                               StateAssignment('SV1', 'r'),
+                               RandomVariable(
+                                   'r', units=un.mV,
+                                   distribution=RandomDistribution(
+                                       'Gamma', shape=10.0, scale=1.0))])],
                     name='R1'
                 ),
                 Regime(name='R2', transitions=On('(SV1 > C1) & (SV2 < P4)',

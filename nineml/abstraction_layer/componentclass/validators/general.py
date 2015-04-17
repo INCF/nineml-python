@@ -144,8 +144,11 @@ class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.all_objects.append(constant)
 
-    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
-        self.all_objects.append(randomvariable)        
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.all_objects.append(randomvariable)
+
+    def action_randomdistribution(self, randomdistribution, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.all_objects.append(randomdistribution)
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
@@ -201,7 +204,18 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         if isinstance(element, (sympy.Symbol, basestring)):
             if element == sympy.Symbol('t'):  # Reserved symbol 't'
                 return sympy.Symbol('t')  # representation of the time dim.
-            element = self.component_class[Expression.symbol_to_str(element)]
+            name = Expression.symbol_to_str(element)
+            element = None
+            for scope in reversed(self._scopes):
+                try:
+                    element = scope[name]
+                except KeyError:
+                    pass
+            if element is None:
+                raise NineMLRuntimeError(
+                    "Did not find '{}' in '{}' dynamics class (scopes: {})"
+                    .format(name, self.component_class.name,
+                            reversed(self._scopes)))
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions

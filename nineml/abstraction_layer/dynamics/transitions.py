@@ -303,7 +303,8 @@ class OnEvent(Transition):
         return visitor.visit_onevent(self, **kwargs)
 
     def __init__(self, src_port_name, state_assignments=None,
-                 output_events=None, target_regime=None):
+                 output_events=None, target_regime=None,
+                 random_variables=None):
         """Constructor for ``OnEvent``
 
             :param src_port_name: The name of the |EventPort| that triggers
@@ -314,7 +315,8 @@ class OnEvent(Transition):
         """
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
-                            target_regime=target_regime)
+                            target_regime=target_regime,
+                            random_variables=random_variables)
         self._src_port_name = src_port_name.strip()
         ensure_valid_identifier(self._src_port_name)
 
@@ -343,7 +345,8 @@ class OnCondition(Transition):
         return visitor.visit_oncondition(self, **kwargs)
 
     def __init__(self, trigger, state_assignments=None,
-                 output_events=None, target_regime=None):
+                 output_events=None, target_regime=None,
+                 random_variables=None):
         """Constructor for ``OnEvent``
 
             :param trigger: Either a |Trigger| object or a ``string`` object
@@ -362,7 +365,8 @@ class OnCondition(Transition):
 
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
-                            target_regime=target_regime)
+                            target_regime=target_regime,
+                            random_variables=random_variables)
 
     def __repr__(self):
         return 'OnCondition( %s )' % self.trigger.rhs

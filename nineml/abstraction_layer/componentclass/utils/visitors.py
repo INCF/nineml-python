@@ -17,11 +17,15 @@ class ComponentActionVisitor(ComponentVisitor):
 
     def __init__(self, require_explicit_overrides=True):
         self.require_explicit_overrides = require_explicit_overrides
+        self._scopes = []
 
     def visit_componentclass(self, component_class, **kwargs):
         self.action_componentclass(component_class, **kwargs)
+        self._scopes.append(component_class)
         for p in component_class:
             p.accept_visitor(self, **kwargs)
+        popped = self._scopes.pop()
+        assert popped is component_class
 
     def visit_parameter(self, parameter, **kwargs):
         self.action_parameter(parameter, **kwargs)
@@ -32,8 +36,12 @@ class ComponentActionVisitor(ComponentVisitor):
     def visit_constant(self, constant, **kwargs):
         self.action_constant(constant, **kwargs)
 
-    def visit_randomvariable(self, randomvariable, **kwargs):
-        self.action_randomvariable(randomvariable, **kwargs)
+    def visit_randomvariable(self, random_variable, **kwargs):
+        self.action_randomvariable(random_variable, **kwargs)
+        self.visit(random_variable.distribution, **kwargs)
+
+    def visit_randomdistribution(self, random_distribution, **kwargs):
+        self.action_randomdistribution(random_distribution, **kwargs)
 
     def check_pass(self):
         if self.require_explicit_overrides:
@@ -51,11 +59,14 @@ class ComponentActionVisitor(ComponentVisitor):
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.check_pass()
-        
-    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
-        self.check_pass()        
+
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.check_pass()
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
+        self.check_pass()
+
+    def action_randomdistribution(self, random_distribution, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_pass()
 
 
@@ -114,6 +125,10 @@ class ComponentRequiredDefinitions(object):
     def action_constants(self, constant, **kwargs):  # @UnusedVariable
         if self._is_required(constant):
             self.constants.add(constant)
+
+    def action_randomvariable(self, random_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        if self._is_required(random_variable):
+            self.constants.add(random_variable)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if (self._is_required(alias) and
