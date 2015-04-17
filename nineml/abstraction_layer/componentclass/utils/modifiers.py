@@ -84,6 +84,11 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             self.note_lhs_changed(constant)
             constant.name_transform_inplace(self.namemap)
 
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
+        if randomvariable.name == self.old_symbol_name:
+            self.note_lhs_changed(randomvariable)
+            randomvariable.name_transform_inplace(self.namemap)            
+
 
 class ComponentAssignIndices(ComponentActionVisitor):
 

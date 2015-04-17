@@ -8,12 +8,12 @@ This file contains the definitions for the Events
 from copy import copy
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction_layer.componentclass import BaseALObject
-from ..expressions import Expression, ExpressionWithSimpleLHS
+from ..expressions import Expression, ExpressionWithSimpleLHS, RandomVariable
 from ...exceptions import (NineMLRuntimeError,
                            NineMLInvalidElementTypeException)
 from .utils.cloner import DynamicsCloner
 from nineml.base import MemberContainerObject
-from nineml.utils import normalise_parameter_as_list
+from nineml.utils import normalise_parameter_as_list, assert_no_duplicates
 from .utils.visitors import DynamicsElementFinder
 
 
@@ -121,12 +121,13 @@ class OutputEvent(BaseALObject):
 class Transition(BaseALObject, MemberContainerObject):
 
     defining_attributes = ('_state_assignments', '_output_events',
-                           'target_regime_name')
+                           '_random_variables', 'target_regime_name')
     class_to_member_dict = {StateAssignment: '_state_assignments',
-                            OutputEvent: '_output_events'}
+                            OutputEvent: '_output_events',
+                            RandomVariable: '_random_variables'}
 
     def __init__(self, state_assignments=None, output_events=None,
-                 target_regime=None):
+                 random_variables=None, target_regime=None):
         """Abstract class representing a transition from one |Regime| to
         another.
 
@@ -156,7 +157,10 @@ class Transition(BaseALObject, MemberContainerObject):
         MemberContainerObject.__init__(self)
 
         # Load state-assignment objects as strings or StateAssignment objects
-        state_assignments = state_assignments or []
+        state_assignments = normalise_parameter_as_list(state_assignments)
+        random_variables = normalise_parameter_as_list(random_variables)
+
+        assert_no_duplicates(rv.name for rv in random_variables)
 
         sa_types = (basestring, StateAssignment)
         sa_type_dict = filter_discrete_types(state_assignments, sa_types)
@@ -164,10 +168,10 @@ class Transition(BaseALObject, MemberContainerObject):
                        for o in sa_type_dict[basestring]]
         self._state_assignments = dict(
             (sa.lhs, sa) for sa in sa_type_dict[StateAssignment] + sa_from_str)
-
         self._output_events = dict(
             (oe.port_name, oe)
             for oe in normalise_parameter_as_list(output_events))
+        self._random_variables = dict((c.name, c) for c in random_variables)
 
         self._target_regime = target_regime
         self._source_regime = None
@@ -250,6 +254,18 @@ class Transition(BaseALObject, MemberContainerObject):
     @property
     def state_assignment_variables(self):
         return self._state_assignments.iterkeys()
+
+    @property
+    def random_variables(self):
+        return self._random_variables.itervalues()
+
+    @property
+    def random_variable_names(self):
+        return self._random_variables.iterkeys()
+
+    @property
+    def random_variable(self, name):
+        return self._random_variables[name]
 
     @property
     def output_events(self):

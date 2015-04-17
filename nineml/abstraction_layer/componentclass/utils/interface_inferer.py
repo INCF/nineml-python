@@ -28,3 +28,6 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.declared_symbols.add(constant.name)
+
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
+        self.declared_symbols.add(randomvariable.name)

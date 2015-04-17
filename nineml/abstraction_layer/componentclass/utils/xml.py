@@ -48,6 +48,16 @@ class ComponentClassXMLLoader(object):
         return Alias(lhs=name, rhs=rhs)
 
     @read_annotations
+    def load_randomvariable(self, element):
+        # RandomDistributions are defined in Uncertml (http://uncertml.org)
+        # so have their own reader/writing functions.
+        return RandomVariable(
+            name=element.get('name'),
+            distribution=RandomDistribution.from_xml(
+                expect_single(element.getchildren()), self.document),
+            units=self.document[element.get('units')])
+
+    @read_annotations
     def load_constant(self, element):
         return Constant(name=element.get('name'),
                         value=float(element.text),
@@ -93,7 +103,8 @@ class ComponentClassXMLLoader(object):
     tag_to_loader = {
         "Parameter": load_parameter,
         "Alias": load_alias,
-        "Constant": load_constant
+        "Constant": load_constant,
+        "RandomVariable": load_randomvariable
     }
 
 
@@ -117,127 +128,12 @@ class ComponentClassXMLWriter(ComponentVisitor):
                  name=constant.name,
                  units=constant.units.name)
 
-# 
-# class ComponentClassXMLReader(object):
-# 
-#     """A class that can read |COMPONENTCLASS| objects from a NineML XML file.
-#     """
-#     loader = ComponentClassXMLLoader
-# 
-#     @classmethod
-#     def _load_include(cls, include_element, basedir, xml_node_filename_map):
-#         """Help function for replacing <Include> nodes.
-# 
-#         We replace the include node with the tree referenced
-#         by that filename. To do this, we load the file referenced,
-#         get  the elements in the root node, and copy them over to the place
-#         in the origintree where the originnode was. It is important that
-#         we preserve the order. Finy, we remove the <Include> element node.
-# 
-#         """
-# 
-#         filename = include_element.get('file')
-# 
-#         # Load the new XML
-#         included_xml = cls._load_nested_xml(
-#             filename=os.path.join(basedir, filename),
-#             xml_node_filename_map=xml_node_filename_map)
-# 
-#         # Insert it into the parent node:
-#         index_of_node = include_element.getparent().index(include_element)
-#         for i, newchild in enumerate(included_xml.getchildren()):
-#             include_element.getparent().insert(i + index_of_node, newchild)
-# 
-#         include_element.getparent().remove(include_element)
-# 
-#     @classmethod
-#     def _load_nested_xml(cls, filename, xml_node_filename_map):
-#         """ Load the XML, including   referenced Include files .
-# 
-#         We o populate a dictionary, ``xml_node_filename_map`` which maps each
-#         node to the name of the filename that it was originy in, so that when
-#         we load in single components from a file, which are hierachically and
-#         contain references to other components, we can find the components that
-#         were in the file specified.
-# 
-#         """
-# 
-#         if filename[:5] == "https":  # lxml only supports http and ftp
-#             doc = etree.parse(urlopen(filename))
-#         else:
-#             doc = etree.parse(filename)
-#         # Store the source filenames of  the nodes:
-#         for node in doc.getroot().getiterator():
-#             xml_node_filename_map[node] = filename
-# 
-#         root = doc.getroot()
-#         if root.nsmap[None] != nineml_namespace:
-#             errmsg = ("The XML namespace is not compatible with this version "
-#                       "of the NineML library. Expected {}, file contains {}")
-#             raise Exception(errmsg.format(nineml_namespace, root.nsmap[None]))
-# 
-#         # Recursively Load Include Nodes:
-#         for include_element in root.getiterator(tag=NINEML + 'Include'):
-#             cls._load_include(include_element=include_element,
-#                               basedir=os.path.dirname(filename),
-#                               xml_node_filename_map=xml_node_filename_map)
-#         return root
-# 
-#     @classmethod
-#     def read(cls, filename, component_name=None):
-#         """Reads a single |COMPONENTCLASS| object from a filename.
-# 
-#         :param filename: The name of the file.
-#         :param component_name: If the file contains more than one
-#             ComponentClass definition, this parameter must be provided as a
-#             ``string`` specifying which component to return, otherwise a
-#             NineMLRuntimeException will be raised.
-#         :rtype: Returns a |COMPONENTCLASS| object.
-#         """
-#         return cls.read_component(filename, component_name=component_name)
-# 
-#     @classmethod
-#     def read_component(cls, filename, component_name=None):
-#         """Reads a single |COMPONENTCLASS| object from a filename.
-# 
-#         :param filename: The name of the file.
-#         :param component_name: If the file contains more than one
-#             ComponentClass definition, this parameter must be provided as a
-#             ``string`` specifying which component to return, otherwise a
-#             NineMLRuntimeException will be raised.
-#         :rtype: Returns a |COMPONENTCLASS| object.
-#         """
-# 
-#         xml_node_filename_map = {}
-#         root = cls._load_nested_xml(
-#             filename=filename, xml_node_filename_map=xml_node_filename_map)
-# 
-#         loader = cls.loader()
-#         loader.load_componentclasses(
-#             xmlroot=root, xml_node_filename_map=xml_node_filename_map)
-# 
-#         if component_name is None:
-#             key_func = lambda c: loader.component_srcs[c] == filename
-#             return filter_expect_single(loader.components, key_func)
-# 
-#         else:
-#             key_func = lambda c: c.name == component_name
-#             return filter_expect_single(loader.components, key_func)
-# 
-#     @classmethod
-#     def read_components(cls, filename):
-#         """Reads a sever|COMPONENTCLASS| object from a filename.
-# 
-#         :param filename: The name of the file.
-#         :rtype: Returns a list of |COMPONENTCLASS| objects, for each
-#             <ComponentClass> node in the XML tree.
-# 
-#         """
-#         xml_node_filename_map = {}
-#         root = cls._load_nested_xml(filename, xml_node_filename_map)
-#         loader = cls.loader()
-#         loader.load_componentclasses(
-#             xmlroot=root, xml_node_filename_map=xml_node_filename_map)
-#         return loader.components
+    @annotate_xml
+    def visit_randomvariable(self, randomvariable):
+        return E('RandomVariable',
+                 randomvariable.distribution.to_xml(),
+                 name=randomvariable.name,
+                 units=randomvariable.units.name)
+
 
 from nineml.document import Document

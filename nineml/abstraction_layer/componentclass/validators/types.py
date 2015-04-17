@@ -10,7 +10,7 @@ from ..base import ComponentClass, Parameter
 from ...expressions import Alias, Constant
 
 
-class TypesComponentValidator(ComponentActionVisitor):
+class TypesComponentValidator(ComponentActionVisitor):    
 
     def __init__(self, component_class):
         super(TypesComponentValidator, self).__init__()
@@ -28,3 +28,6 @@ class TypesComponentValidator(ComponentActionVisitor):
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         assert isinstance(constant, Constant)
+
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
+        assert isinstance(randomvariable, RandomVariable)        
