@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <RandomDistributionClass name="BinomialDistribution">
+  <RandomDistribution name="BinomialDistribution">
     <Parameter name="numberOfTrials"/>
     <Parameter name="probabilityOfSuccess"/>
     <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/binomial.xml"/>
-  </RandomDistributionClass>
+  </RandomDistribution>
 </NineML>

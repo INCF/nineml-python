@@ -1,6 +1,6 @@
 
 import unittest
-from nineml.abstraction_layer import DynamicsClass, SendPort, Regime, ReducePort
+from nineml.abstraction_layer import Dynamics, SendPort, Regime, ReducePort
 from nineml.abstraction_layer.testing_utils import std_pynn_simulation, RecordValue
 
 
@@ -12,14 +12,14 @@ class FuncTest_Flat1(unittest.TestCase):
 
     def test1(self):
 
-        cc = DynamicsClass(
+        cc = Dynamics(
             name='SimpleCurrentClamp',
             parameters=['i'],
             analog_ports=[SendPort('I')],
             aliases='I:=i',
         )
 
-        nrn = DynamicsClass(
+        nrn = Dynamics(
             name='LeakyNeuron',
             parameters=['Cm', 'gL', 'E'],
             regimes=[Regime('dV/dt = (iInj + (E-V)*gL )/Cm'), ],
@@ -27,7 +27,7 @@ class FuncTest_Flat1(unittest.TestCase):
                           ReducePort('iInj', operator='+')],
         )
 
-        combined_comp = DynamicsClass(name='Comp1',
+        combined_comp = Dynamics(name='Comp1',
                                        subnodes={'nrn': nrn, 'cc1': cc},
                                        portconnections=[('cc1.I', 'nrn.iInj')])
 

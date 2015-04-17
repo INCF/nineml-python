@@ -2,13 +2,13 @@ from ..componentclass import ComponentClass
 from nineml.annotations import read_annotations, annotate_xml
 
 
-class RandomDistributionClass(ComponentClass):
+class RandomDistribution(ComponentClass):
 
-    element_name = 'RandomDistributionClass'
+    element_name = 'RandomDistribution'
     defining_attributes = ('name', '_parameters')
 
     def __init__(self, name, parameters=None):
-        super(RandomDistributionClass, self).__init__(
+        super(RandomDistribution, self).__init__(
             name, parameters)
 
     def accept_visitor(self, visitor, **kwargs):
@@ -37,12 +37,12 @@ class RandomDistributionClass(ComponentClass):
     def to_xml(self):
         self.standardize_unit_dimensions()
         self.validate()
-        return RandomDistributionClassXMLWriter().visit(self)
+        return RandomDistributionXMLWriter().visit(self)
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        return RandomDistributionClassXMLLoader(
+        return RandomDistributionXMLLoader(
             document).load_randomdistributionclass(element)
 
 from .utils.cloner import RandomDistributionCloner
@@ -52,4 +52,4 @@ from .utils.visitors import (RandomDistributionRequiredDefinitions,
                              RandomDistributionElementFinder)
 from .validators import RandomDistributionValidator
 from .utils.xml import (
-    RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter)
+    RandomDistributionXMLLoader, RandomDistributionXMLWriter)

@@ -11,7 +11,7 @@ from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
-class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
+class RandomDistributionXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -25,21 +25,21 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
     def load_randomdistributionclass(self, element):
         block_names = ('Parameter',)
         blocks = self._load_blocks(element, block_names=block_names)
-        return RandomDistributionClass(
+        return RandomDistribution(
             name=element.get('name'),
             parameters=blocks["Parameter"])
 
     tag_to_loader = dict(
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
-        (("RandomDistributionClass", load_randomdistributionclass),))
+        (("RandomDistribution", load_randomdistributionclass),))
 
 
-class RandomDistributionClassXMLWriter(ComponentClassXMLWriter):
+class RandomDistributionXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
-        return E('RandomDistributionClass',
+        return E('RandomDistribution',
                  *[e.accept_visitor(self) for e in component_class],
                  name=component_class.name)
 
-from ..base import RandomDistributionClass
+from ..base import RandomDistribution

@@ -1,7 +1,7 @@
 import unittest
 from copy import copy
 from nineml.abstraction_layer.dynamics import (
-    DynamicsClass, Regime, On, OutputEvent, StateAssignment, StateVariable,
+    Dynamics, Regime, On, OutputEvent, StateAssignment, StateVariable,
     OnCondition, TimeDerivative)
 from nineml.abstraction_layer import Alias, Parameter
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
@@ -12,7 +12,7 @@ class MemberContainer_test(unittest.TestCase):
 
     def setUp(self):
 
-        self.a = DynamicsClass(
+        self.a = Dynamics(
             name='A',
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1'],
             regimes=[
@@ -31,7 +31,7 @@ class MemberContainer_test(unittest.TestCase):
             parameters=['P1', 'P2']
         )
 
-        self.b = DynamicsClass(
+        self.b = Dynamics(
             name='A',
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1',
                      'A4 := SV1^3 + SV2^-3'],

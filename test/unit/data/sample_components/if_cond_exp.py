@@ -60,5 +60,5 @@ def get_component():
     analog_ports = [al.SendPort("V"), al.SendPort("gE"), al.SendPort("gI"),
                     al.RecvPort("q")]
 
-    c1 = al.DynamicsClass("IF_cond_exp", regimes=regimes, analog_ports=analog_ports)
+    c1 = al.Dynamics("IF_cond_exp", regimes=regimes, analog_ports=analog_ports)
     return c1

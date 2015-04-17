@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.incf.org/9ML/0.3">
-  <DynamicsClass name="CobaSyn">
+  <Dynamics name="CobaSyn">
     <AnalogPort mode="recv" name="V"/>
     <AnalogPort mode="send" name="I"/>
     <EventPort mode="recv" name="spikeinput"/>
@@ -21,6 +21,6 @@
       <MathInline>g*(vrev-V)</MathInline>
     </Alias>
     <StateVariable dimension="conductance" name="g"/>
-  </DynamicsClass>
+  </Dynamics>
   <Dimension name="conductance" m="-1" l="-2" t="3" i="2"/>
 </NineML>

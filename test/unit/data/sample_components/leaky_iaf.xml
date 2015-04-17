@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.incf.org/9ML/0.3">
-  <DynamicsClass name="LeakyIAF">
+  <Dynamics name="LeakyIAF">
     <AnalogPort mode="send" name="V"/>
     <AnalogPort mode="reduce" operator="+" name="Isyn"/>
     <EventPort mode="send" name="spikeoutput"/>
@@ -36,5 +36,5 @@
     </Regime>
     <StateVariable dimension="" name="t_spike"/>
     <StateVariable dimension="" name="V"/>
-  </DynamicsClass>
+  </Dynamics>
 </NineML>

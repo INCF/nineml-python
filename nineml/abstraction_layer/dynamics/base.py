@@ -1,5 +1,5 @@
 """
-Definitions for the DynamicsClass. DynamicsClass derives from 2 other mixin
+Definitions for the Dynamics. Dynamics derives from 2 other mixin
 classes, which provide functionality for hierachical components and for local
 components definitions of interface and dynamics
 
@@ -32,7 +32,7 @@ class _NamespaceMixin(object):
 
     def __init__(self, subnodes=None, portconnections=None):
         """Constructor - For parameter descriptions, see the
-        DynamicsClass.__init__() method
+        Dynamics.__init__() method
         """
 
         # Prevent dangers with default arguments.
@@ -95,7 +95,7 @@ class _NamespaceMixin(object):
     def insert_subnode(self, namespace, subnode):
         """Insert a subnode into this component
 
-        :param subnode: An object of type ``DynamicsClass``.
+        :param subnode: An object of type ``Dynamics``.
         :param namespace: A `string` specifying the name of the component in
             this components namespace.
 
@@ -111,7 +111,7 @@ class _NamespaceMixin(object):
             err = 'Invalid namespace: %s' % type(subnode)
             raise NineMLRuntimeError(err)
 
-        if not isinstance(subnode, DynamicsClass):
+        if not isinstance(subnode, Dynamics):
             err = 'Attempting to insert invalid '
             err += 'object as subcomponent: %s' % type(subnode)
             raise NineMLRuntimeError(err)
@@ -149,16 +149,16 @@ class _NamespaceMixin(object):
         return self._portconnections
 
 
-class DynamicsClass(ComponentClass, _NamespaceMixin):
+class Dynamics(ComponentClass, _NamespaceMixin):
 
-    """A DynamicsClass object represents a *component* in NineML.
+    """A Dynamics object represents a *component* in NineML.
 
       .. todo::
 
          For more information, see
 
     """
-    element_name = 'DynamicsClass'
+    element_name = 'Dynamics'
     defining_attributes = (ComponentClass.defining_attributes +
                            ('_analog_send_ports', '_analog_receive_ports',
                             '_analog_reduce_ports', '_event_send_ports',
@@ -180,7 +180,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                  portconnections=None, regimes=None,
                  aliases=None, state_variables=None,
                  constants=None):
-        """Constructs a DynamicsClass
+        """Constructs a Dynamics
 
         :param name: The name of the component_class.
         :param parameters: A list containing either |Parameter| objects
@@ -192,8 +192,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
         :param subnodes: A dictionary mapping namespace-names to sub-
-            component_class. [Type: ``{string:|DynamicsClass|,
-            string:|DynamicsClass|, string:|DynamicsClass|}`` ] describing the
+            component_class. [Type: ``{string:|Dynamics|,
+            string:|Dynamics|, string:|Dynamics|}`` ] describing the
             namespace of subcomponents for this component_class.
         :param portconnections: A list of pairs, specifying the connections
             between the ports of the subcomponents in this component_class.
@@ -206,7 +206,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
         Examples:
 
-        >>> a = DynamicsClass(name='MyComponent1')
+        >>> a = Dynamics(name='MyComponent1')
 
         .. todo::
 
@@ -256,7 +256,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         self._event_receive_ports = self._event_send_ports = self.subnodes = {}
 
         # EventPort, StateVariable and Parameter Inference:
-        inferred_struct = DynamicsClassInterfaceInferer(self)
+        inferred_struct = DynamicsInterfaceInferer(self)
 
         # Check any supplied parameters match:
         if parameters is not None:
@@ -333,7 +333,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         return DynamicsElementFinder(element).found_in(self)
 
     def __repr__(self):
-        return "<dynamics.DynamicsClass %s>" % self.name
+        return "<dynamics.Dynamics %s>" % self.name
 
     def validate(self):
         self._resolve_transition_regimes()
@@ -358,7 +358,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def attributes_with_dimension(self):
-        return chain(super(DynamicsClass, self).attributes_with_dimension,
+        return chain(super(Dynamics, self).attributes_with_dimension,
                      self.analog_ports, self.state_variables)
 
     @property
@@ -388,7 +388,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def ports(self):
-        return chain(super(DynamicsClass, self).ports,
+        return chain(super(Dynamics, self).ports,
                      self.analog_send_ports, self.analog_receive_ports,
                      self.analog_reduce_ports, self.event_send_ports,
                      self.event_receive_ports)
@@ -574,12 +574,12 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
     def to_xml(self):
         self.standardize_unit_dimensions()
         self.validate()
-        return DynamicsClassXMLWriter().visit(self)
+        return DynamicsXMLWriter().visit(self)
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        return DynamicsClassXMLLoader(document).load_dynamicsclass(element)
+        return DynamicsXMLLoader(document).load_dynamicsclass(element)
 
 
 def inf_check(l1, l2, desc):
@@ -587,9 +587,9 @@ def inf_check(l1, l2, desc):
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
 from .validators import DynamicsValidator
-from .utils import DynamicsClassInterfaceInferer
+from .utils import DynamicsInterfaceInferer
 from .utils.visitors import (DynamicsElementFinder,
                              DynamicsRequiredDefinitions)
 from .utils.modifiers import (
     DynamicsRenameSymbol, DynamicsAssignIndices)
-from .utils.xml import DynamicsClassXMLLoader, DynamicsClassXMLWriter
+from .utils.xml import DynamicsXMLLoader, DynamicsXMLWriter

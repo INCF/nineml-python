@@ -11,7 +11,7 @@ from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
-class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
+class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -25,21 +25,21 @@ class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
     def load_connectionruleclass(self, element):
         block_names = ('Parameter',)
         blocks = self._load_blocks(element, block_names=block_names)
-        return ConnectionRuleClass(
+        return ConnectionRule(
             name=element.get('name'),
             parameters=blocks["Parameter"])
 
     tag_to_loader = dict(
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
-        (("ConnectionRuleClass", load_connectionruleclass),))
+        (("ConnectionRule", load_connectionruleclass),))
 
 
-class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
+class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
-        return E('ConnectionRuleClass',
+        return E('ConnectionRule',
                  *[e.accept_visitor(self) for e in component_class],
                  name=component_class.name)
 
-from ..base import ConnectionRuleClass
+from ..base import ConnectionRule
