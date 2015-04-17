@@ -2,7 +2,7 @@
 
 from nineml.abstraction_layer.testing_utils import (std_pynn_simulation,
                                                     RecordValue)
-from nineml.abstraction_layer import (DynamicsClass, Regime, On, OutputEvent,
+from nineml.abstraction_layer import (Dynamics, Regime, On, OutputEvent,
                                       SendPort, ReducePort, flattening)
 
 
@@ -15,7 +15,7 @@ class FuncTest_Flat2(object):
 
     def func_test(self):
 
-        emitter = DynamicsClass(
+        emitter = Dynamics(
             name='EventEmitter',
             parameters=['cyclelength'],
             regimes=[
@@ -24,7 +24,7 @@ class FuncTest_Flat2(object):
                         't > tchange + cyclelength', do=[OutputEvent('emit'), 'tchange=t'])),
             ])
 
-        ev_based_cc = DynamicsClass(
+        ev_based_cc = Dynamics(
             name='EventBasedCurrentClass',
             parameters=['dur', 'i'],
             analog_ports=[SendPort('I')],
@@ -38,12 +38,12 @@ class FuncTest_Flat2(object):
             ]
         )
 
-        pulsing_emitter = DynamicsClass(name='pulsing_cc',
+        pulsing_emitter = Dynamics(name='pulsing_cc',
                                          subnodes={'evs': emitter, 'cc': ev_based_cc},
                                          portconnections=[('evs.emit', 'cc.inputevent')]
                                          )
 
-        nrn = DynamicsClass(
+        nrn = Dynamics(
             name='LeakyNeuron',
             parameters=['Cm', 'gL', 'E'],
             regimes=[Regime('dV/dt = (iInj + (E-V)*gL )/Cm'), ],
@@ -52,7 +52,7 @@ class FuncTest_Flat2(object):
                           ReducePort('iInj', operator='+')],
         )
 
-        combined_comp = DynamicsClass(name='Comp1',
+        combined_comp = Dynamics(name='Comp1',
                                        subnodes={
                                        'nrn': nrn,  'cc1': pulsing_emitter, 'cc2': pulsing_emitter},
                                        portconnections=[('cc1.cc.I', 'nrn.iInj'),

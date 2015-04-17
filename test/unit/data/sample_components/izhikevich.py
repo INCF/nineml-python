@@ -20,7 +20,7 @@ def get_component():
     ports = [al.SendPort("V"),
              al.ReducePort("Isyn", operator="+")]
 
-    c1 = al.DynamicsClass(
+    c1 = al.Dynamics(
         name="Izhikevich",
         regimes=[subthreshold_regime],
         analog_ports=ports

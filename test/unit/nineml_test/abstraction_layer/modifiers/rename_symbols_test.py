@@ -1,6 +1,6 @@
 import unittest
 from nineml.abstraction_layer.dynamics import (
-    DynamicsClass, Regime, On, OutputEvent)
+    Dynamics, Regime, On, OutputEvent)
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
 
 
@@ -9,7 +9,7 @@ class DynamicsRenameSymbols_test(unittest.TestCase):
 
     def test_rename_symbol(self):
 
-        a = DynamicsClass(
+        a = Dynamics(
             name='A',
             aliases=['A1_a:=P1_a', 'A2_a := ARP1_a + SV2_a', 'A3_a := SV1_a'],
             regimes=[
@@ -28,7 +28,7 @@ class DynamicsRenameSymbols_test(unittest.TestCase):
             parameters=['P1_a', 'P2_a']
         )
 
-        b = DynamicsClass(
+        b = Dynamics(
             name='A',
             aliases=['A1_b:=P1_b', 'A2_b := ARP1_b + SV2_b', 'A3_b := SV1_b'],
             regimes=[

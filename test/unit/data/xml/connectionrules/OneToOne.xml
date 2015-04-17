@@ -1,5 +1,5 @@
 <NineML xmlns="http://nineml.org/9ML/0.1">
-  <ConnectionRuleClass name="OneToOne">
+  <ConnectionRule name="OneToOne">
     
-  </ConnectionRuleClass>
+  </ConnectionRule>
 </NineML>

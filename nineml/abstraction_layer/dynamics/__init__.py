@@ -5,10 +5,10 @@ Python module for reading 9ML abstraction layer files in XML format.
 :license: BSD-3, see LICENSE for details.
 """
 
-from .base import DynamicsClass
+from .base import Dynamics
 from .regimes import (Regime, TimeDerivative,
                       StateVariable)
 from .transitions import (OutputEvent, OnCondition, Trigger, OnEvent,
                           StateAssignment)
 from .syntactic_sugar import On, DoOnEvent, DoOnCondition, SpikeOutputEvent
-from .utils.xml import DynamicsClassXMLLoader, DynamicsClassXMLWriter
+from .utils.xml import DynamicsXMLLoader, DynamicsXMLWriter

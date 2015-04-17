@@ -1,3 +1,3 @@
-from .base import RandomDistributionClass
+from .base import RandomDistribution
 from .utils import (
-    RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter)
+    RandomDistributionXMLLoader, RandomDistributionXMLWriter)

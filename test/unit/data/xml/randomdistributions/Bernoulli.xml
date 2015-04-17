@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <RandomDistributionClass name="BernoulliDistribution">
+  <RandomDistribution name="BernoulliDistribution">
     <Parameter name="probabilities"/>
     <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/bernoulli.xml"/>
-  </RandomDistributionClass>
+  </RandomDistribution>
 </NineML>

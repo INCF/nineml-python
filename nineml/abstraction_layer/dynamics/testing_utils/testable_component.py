@@ -11,7 +11,7 @@ import sys
 from nineml.exceptions import NineMLRuntimeError
 from nineml.utils import restore_sys_path
 from nineml.utils import LocationMgr
-from nineml.abstraction_layer import DynamicsClass
+from nineml.abstraction_layer import Dynamics
 
 
 @restore_sys_path
@@ -92,7 +92,7 @@ class TestableComponent(object):
             raise NineMLRuntimeError('component_functor() threw an exception:'
                                      '{}'.format(e))
 
-        if not isinstance(c, DynamicsClass):
+        if not isinstance(c, Dynamics):
             raise NineMLRuntimeError('Functor does not return Component Class')
 
         # Try and get the meta-data

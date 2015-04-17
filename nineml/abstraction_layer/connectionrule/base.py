@@ -16,13 +16,13 @@ from ..componentclass import ComponentClass
 from nineml.annotations import annotate_xml, read_annotations
 
 
-class ConnectionRuleClass(ComponentClass):
+class ConnectionRule(ComponentClass):
 
-    element_name = 'ConnectionRuleClass'
+    element_name = 'ConnectionRule'
     defining_attributes = ('name', '_parameters', 'standard_library')
 
     def __init__(self, name, parameters=None):
-        super(ConnectionRuleClass, self).__init__(
+        super(ConnectionRule, self).__init__(
             name, parameters)
 
     def accept_visitor(self, visitor, **kwargs):
@@ -51,12 +51,12 @@ class ConnectionRuleClass(ComponentClass):
     def to_xml(self):
         self.standardize_unit_dimensions()
         self.validate()
-        return ConnectionRuleClassXMLWriter().visit(self)
+        return ConnectionRuleXMLWriter().visit(self)
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        return ConnectionRuleClassXMLLoader(document).load_connectionruleclass(
+        return ConnectionRuleXMLLoader(document).load_connectionruleclass(
             element)
 
 from .utils.cloner import ConnectionRuleCloner
@@ -66,4 +66,4 @@ from .utils.visitors import (
     ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder)
 from .validators import ConnectionRuleValidator
 from .utils.xml import (
-    ConnectionRuleClassXMLLoader, ConnectionRuleClassXMLWriter)
+    ConnectionRuleXMLLoader, ConnectionRuleXMLWriter)

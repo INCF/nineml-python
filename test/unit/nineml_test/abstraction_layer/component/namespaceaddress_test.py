@@ -5,7 +5,7 @@ import unittest
 
 from nineml.abstraction_layer import NamespaceAddress as NSA
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.dynamics import DynamicsClass as DynamicsClass
+from nineml.abstraction_layer.dynamics import Dynamics as Dynamics
 
 
 class NamespaceAddress_test(unittest.TestCase):
@@ -99,13 +99,13 @@ class NamespaceAddress_test(unittest.TestCase):
                 # >>> a.get_subns_addr('subcomponent')
                 # NameSpaceAddress: '/level1/level2/level3/subcomponent/'
 
-        d = DynamicsClass(name='D',)
-        e = DynamicsClass(name='E')
-        f = DynamicsClass(name='F')
-        g = DynamicsClass(name='G')
-        b = DynamicsClass(name='B', subnodes={'atD': d, 'atE': e})
-        c = DynamicsClass(name='C', subnodes={'atF': f, 'atG': g})
-        a = DynamicsClass(name='A', subnodes={'atB': b, 'atC': c})
+        d = Dynamics(name='D',)
+        e = Dynamics(name='E')
+        f = Dynamics(name='F')
+        g = Dynamics(name='G')
+        b = Dynamics(name='B', subnodes={'atD': d, 'atE': e})
+        c = Dynamics(name='C', subnodes={'atF': f, 'atG': g})
+        a = Dynamics(name='A', subnodes={'atB': b, 'atC': c})
 
         # Construction of the objects causes cloning to happen:
         # Therefore we test by looking up and checking that there

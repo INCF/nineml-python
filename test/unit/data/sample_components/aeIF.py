@@ -31,7 +31,7 @@ def get_component():
 
     parameters = ['C_m', 'g_L', 'E_L', 'Delta', 'V_T', 'S', 'tau_ref', 'tau_w', 'a', 'b']
 
-    aeIF = al.DynamicsClass("aeIF",
+    aeIF = al.Dynamics("aeIF",
                              regimes=[
                              al.Regime(
                              name="subthresholdregime",

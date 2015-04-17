@@ -8,7 +8,7 @@ from itertools import chain
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import DynamicsClass
+from ..base import Dynamics
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
                       AnalogReceivePort, AnalogReducePort)
@@ -19,7 +19,7 @@ from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
-class DynamicsClassXMLLoader(ComponentClassXMLLoader):
+class DynamicsXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -39,7 +39,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
         blocks = self._load_blocks(element, block_names=block_names)
 
-        return DynamicsClass(
+        return Dynamics(
             name=element.get('name'),
             parameters=blocks["Parameter"],
             analog_ports=chain(blocks["AnalogSendPort"],
@@ -138,7 +138,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
     tag_to_loader = dict(
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
-        (("DynamicsClass", load_dynamicsclass),
+        (("Dynamics", load_dynamicsclass),
          ("Regime", load_regime),
          ("StateVariable", load_statevariable),
          ("EventSendPort", load_eventsendport),
@@ -154,11 +154,11 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
          ("OutputEvent", load_outputevent)))
 
 
-class DynamicsClassXMLWriter(ComponentClassXMLWriter):
+class DynamicsXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
-        return E('DynamicsClass',
+        return E('Dynamics',
                  *[e.accept_visitor(self) for e in component_class],
                  name=component_class.name)
 

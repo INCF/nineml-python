@@ -1,6 +1,6 @@
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <ConnectionRuleClass name="AllToAll">
+  <ConnectionRule name="AllToAll">
     <Parameter name="probability" dimension="dimensionless"/>
     
-  </ConnectionRuleClass>
+  </ConnectionRule>
 </NineML>

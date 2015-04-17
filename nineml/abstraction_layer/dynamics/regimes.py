@@ -20,7 +20,7 @@ from .utils.visitors import DynamicsElementFinder
 
 class StateVariable(BaseALObject):
 
-    """A class representing a state-variable in a ``DynamicsClass``.
+    """A class representing a state-variable in a ``Dynamics``.
 
     This was originally a string, but if we intend to support units in the
     future, wrapping in into its own object may make the transition easier

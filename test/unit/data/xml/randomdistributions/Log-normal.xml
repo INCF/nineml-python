@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <RandomDistributionClass name="LogNormalDistribution">
+  <RandomDistribution name="LogNormalDistribution">
     <Parameter name="logScale"/>
     <Parameter name="shape"/>
     <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/log-normal.xml"/>
-  </RandomDistributionClass>
+  </RandomDistribution>
 </NineML>

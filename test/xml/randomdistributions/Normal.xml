@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <RandomDistributionClass name="NormalDistribution">
+  <RandomDistribution name="NormalDistribution">
     <Parameter name="mean"/>
     <Parameter name="variance"/>
     <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/normal.xml"/>
-  </RandomDistributionClass>
+  </RandomDistribution>
 </NineML>

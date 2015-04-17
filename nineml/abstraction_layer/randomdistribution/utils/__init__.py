@@ -1,3 +1,3 @@
-from .interface_inferer import RandomDistributionClassInterfaceInferer
+from .interface_inferer import RandomDistributionInterfaceInferer
 from .queryer import RandomDistributionQueryer
-from .xml import RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter
+from .xml import RandomDistributionXMLLoader, RandomDistributionXMLWriter
