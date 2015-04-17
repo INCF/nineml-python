@@ -33,3 +33,6 @@ def get_component():
         parameters=['cm', 'taurefrac', 'gl', 'vreset', 'vrest', 'vthresh']
     )
     return iaf
+
+if __name__ == '__main__':
+    get_component()

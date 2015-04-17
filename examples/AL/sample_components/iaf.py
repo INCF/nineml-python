@@ -3,7 +3,7 @@ from nineml import units as un
 
 
 def get_component():
-    iaf = al.dynamics.DynamicsClass(
+    iaf = al.dynamics.Dynamics(
         name="iaf",
         regimes=[
             al.Regime(
