@@ -94,7 +94,7 @@ class TestNetwork(unittest.TestCase):
                                                               "response",
                                                               "weight", "q"),
                                         nineml.PortConnection("response",
-                                                              "destination",
+                                                              "post",
                                                               "Isyn",
                                                               "Isyn")],
                                     delay=(delay, ms))
@@ -108,7 +108,7 @@ class TestNetwork(unittest.TestCase):
                                                               "response",
                                                               "weight", "q"),
                                         nineml.PortConnection("response",
-                                                              "destination",
+                                                              "post",
                                                               "Isyn",
                                                               "Isyn")],
                                     delay=(delay, ms))

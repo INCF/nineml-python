@@ -11,7 +11,7 @@ def get_component():
                                "B = B + weight*factor"])]
     )
 
-    nmda = al.DynamicsClass(
+    nmda = al.Dynamics(
         name="NMDAPSR",
         aliases=[
             "taupeak := taur*taud/(taud - taur)*log(taud/taur)",

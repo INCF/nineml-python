@@ -8,7 +8,7 @@ from itertools import chain
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import DynamicsClass
+from ..base import Dynamics
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
                       AnalogReceivePort, AnalogReducePort)
@@ -89,7 +89,6 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
 
     @read_annotations
     @handle_xml_exceptions
-    @handle_xml_exceptions
     def load_regime(self, element):
         block_names = ('TimeDerivative', 'OnCondition', 'OnEvent')
         blocks = self._load_blocks(element, block_names=block_names)
@@ -154,7 +153,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
 
     tag_to_loader = dict(
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
-        (("DynamicsClass", load_dynamicsclass),
+        (("Dynamics", load_dynamicsclass),
          ("Regime", load_regime),
          ("StateVariable", load_statevariable),
          ("EventSendPort", load_eventsendport),
@@ -174,7 +173,7 @@ class DynamicsXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
-        return E('DynamicsClass',
+        return E('Dynamics',
                  *[e.accept_visitor(self) for e in component_class],
                  name=component_class.name)
 

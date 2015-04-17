@@ -158,7 +158,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
          For more information, see
 
     """
-    element_name = 'DynamicsClass'
+    element_name = 'Dynamics'
     defining_attributes = (ComponentClass.defining_attributes +
                            ('_analog_send_ports', '_analog_receive_ports',
                             '_analog_reduce_ports', '_event_send_ports',
@@ -192,7 +192,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
         :param subnodes: A dictionary mapping namespace-names to sub-
-            componentclass. [Type: ``{string:|Dynamics|,
+            component_class. [Type: ``{string:|Dynamics|,
             string:|Dynamics|, string:|Dynamics|}`` ] describing the
             namespace of subcomponents for this component_class.
         :param portconnections: A list of pairs, specifying the connections
@@ -582,12 +582,12 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     def to_xml(self):
         self.standardize_unit_dimensions()
         self.validate()
-        return DynamicsClassXMLWriter().visit(self)
+        return DynamicsXMLWriter().visit(self)
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        return DynamicsClassXMLLoader(document).load_dynamicsclass(element)
+        return DynamicsXMLLoader(document).load_dynamicsclass(element)
 
 
 def inf_check(l1, l2, desc):
@@ -600,4 +600,4 @@ from .utils.visitors import (DynamicsElementFinder,
                              DynamicsRequiredDefinitions)
 from .utils.modifiers import (
     DynamicsRenameSymbol, DynamicsAssignIndices)
-from .utils.xml import DynamicsClassXMLLoader, DynamicsClassXMLWriter
+from .utils.xml import DynamicsXMLLoader, DynamicsXMLWriter

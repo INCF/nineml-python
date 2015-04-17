@@ -10,7 +10,7 @@
   <Dimension name="length2" l="2"/>
   <Dimension name="temperature" k="1"/>
   <Dimension name="per_time_voltage" m="-1" l="-2" t="2" i="1"/>
-  <DynamicsClass name="HodgkinHuxleyClass">
+  <Dynamics name="HodgkinHuxleyClass">
     <Parameter name="m_alpha_A" dimension="per_time_voltage"/>
     <Parameter name="m_alpha_V0" dimension="voltage"/>
     <Parameter name="m_alpha_K" dimension="voltage"/>
@@ -128,5 +128,5 @@
     <Alias name="n_beta">
       <MathInline>n_beta_A * exp(-(v - n_beta_V0) / n_beta_K)</MathInline>
     </Alias>
-  </DynamicsClass>
+  </Dynamics>
 </NineML>

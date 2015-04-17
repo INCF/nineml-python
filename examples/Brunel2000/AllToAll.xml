@@ -1,4 +1,4 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <ConnectionRuleClass name="AllToAll"/>
+  <ConnectionRule name="AllToAll"/>
 </NineML>

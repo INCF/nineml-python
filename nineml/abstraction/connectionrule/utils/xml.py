@@ -27,23 +27,23 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
     def load_connectionruleclass(self, element):
         block_names = ('Parameter',)
         blocks = self._load_blocks(element, block_names=block_names)
-        return ConnectionRuleClass(
+        return ConnectionRule(
             name=element.attrib['name'],
             parameters=blocks["Parameter"],
             standard_library=element.attrib['standard_library'])
 
     tag_to_loader = dict(
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
-        (("ConnectionRuleClass", load_connectionruleclass),))
+        (("ConnectionRule", load_connectionruleclass),))
 
 
 class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
-        return E('ConnectionRuleClass',
-                 *[e.accept_visitor(self) for e in componentclass],
+        return E('ConnectionRule',
+                 *[e.accept_visitor(self) for e in component_class],
                  name=component_class.name,
                  standardLibrary=componentclass.standard_library))
 
-from ..base import ConnectionRuleClass
+from ..base import ConnectionRule

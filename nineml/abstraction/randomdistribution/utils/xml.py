@@ -45,4 +45,4 @@ class RandomDistributionXMLWriter(ComponentClassXMLWriter):
                  name=component_class.name,
                  standardLibrary=componentclass.standard_library))
 
-from ..base import RandomDistributionClass
+from ..base import RandomDistribution
