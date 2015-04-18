@@ -74,7 +74,7 @@ def resolve_reference(from_xml):
             reference = Reference.from_xml(element, document)
             ul_object = reference.user_object
         else:
-            assert element.tag == NINEML + cls.element_name
+            cls.check_tag(element)
             ul_object = from_xml(cls, element, document)
         return ul_object
     return resolving_from_xml
@@ -175,6 +175,10 @@ class Component(BaseULObject, DocumentLevelObject):
             self.check_initial_values()
         except AttributeError:  # 'check_initial_values' is only in dynamics
             pass
+
+    def __getinitargs__(self):
+        return (self.name, self.definition, self.property_set,
+                self.initial_value_set, self._url)
 
     @property
     def component_class(self):
@@ -318,10 +322,9 @@ class Component(BaseULObject, DocumentLevelObject):
         props_and_initial_values = (self._properties.to_xml() +
                                     [iv.to_xml()
                                      for iv in self.initial_values])
-        element = E(self.element_name,
-                    self._definition.to_xml(),
-                    *props_and_initial_values,
-                    name=self.name)
+        element = E.Component(self._definition.to_xml(),
+                              *props_and_initial_values,
+                              name=self.name)
         return element
 
     @classmethod
@@ -330,9 +333,6 @@ class Component(BaseULObject, DocumentLevelObject):
     @handle_xml_exceptions
     def from_xml(cls, element, document):
         """docstring missing"""
-        if element.tag != NINEML + cls.element_name:
-            raise Exception("Expecting tag name %s%s, actual tag name %s" % (
-                NINEML, cls.element_name, element.tag))
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
             element.findall(NINEML + Property.element_name), document)
@@ -593,7 +593,7 @@ class Property(Quantity):
     @read_annotations
     @handle_xml_exceptions
     def from_xml(cls, element, document):
-        check_tag(element, cls)
+        cls.check_tag(element)
         quantity = Quantity.from_xml(element, document)
         try:
             name = element.attrib['name']
