@@ -164,6 +164,10 @@ class Component(BaseULObject, DocumentLevelObject):
         except AttributeError:  # 'check_initial_values' is only in dynamics
             pass
 
+    def __getinitargs__(self):
+        return (self.name, self.definition, self.propery_set,
+                self.initial_value_set, self._url)
+
     @property
     def component_class(self):
         """
