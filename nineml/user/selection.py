@@ -68,7 +68,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     @read_annotations
     @handle_xml_exceptions
     def from_xml(cls, element, document):
-        check_tag(element, cls)
+        cls.check_tag(element)
         # The only supported op at this stage
         op = Concatenate.from_xml(
             expect_single(element.findall(NINEML + 'Concatenate')), document)
@@ -171,7 +171,7 @@ class Concatenate(BaseULObject):
 #
 #     @classmethod
 #     def from_xml(cls, element, components):
-#         check_tag(element, cls)
+#         cls.check_tag(element)
 #         select_element = element.find(NINEML + 'select')
 #         assert len(select_element) == 1
 #         return cls(element.attrib["name"],

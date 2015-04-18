@@ -529,7 +529,7 @@ valid_uri_re = re.compile(r'^(?:https?|file)://'  # http:// or https://
                           r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 
-def check_tag(element, cls):
+def check_tag(cls, element):
     assert element.tag in (cls.element_name, NINEML + cls.element_name), \
         "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
 
