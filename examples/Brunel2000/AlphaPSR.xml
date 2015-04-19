@@ -10,7 +10,7 @@
     <Alias name="Isyn">
       <MathInline>A</MathInline>
     </Alias>
-    <AnalogReceivePort dimension="current" name="q"/>
+    <AnalogReceivePort dimension="current" name="weight"/>
     <Parameter dimension="time" name="tau_syn"/>
     <Regime name="default">
       <TimeDerivative variable="A">
@@ -21,7 +21,7 @@
       </TimeDerivative>
       <OnEvent target_regime="default" port="spike">
         <StateAssignment variable="B">
-          <MathInline>B + q</MathInline>
+          <MathInline>B + weight</MathInline>
         </StateAssignment>
       </OnEvent>
     </Regime>
