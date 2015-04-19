@@ -43,7 +43,7 @@ class SingleValue(BaseValue):
     @classmethod
     @read_annotations
     def from_xml(cls, element, _):
-        check_tag(element, cls)
+        cls.check_tag(element)
         return cls(float(element.text))
 
 

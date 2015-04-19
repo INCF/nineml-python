@@ -72,9 +72,8 @@ class TestNetwork(unittest.TestCase):
         p2 = nineml.Population("Inh", 1, celltype, positions=None)
         inpt = nineml.Population("Ext", 1, ext_stim, positions=None)
 
-        all_to_all = nineml.Component("AllToAll",
-                                           path.join(self.xml_dir,
-                                                     "AllToAll.xml"), {})
+        all_to_all = nineml.Connectivity(
+            "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})
 
         static_exc = nineml.Component(
             "ExcitatoryPlasticity",
@@ -85,33 +84,23 @@ class TestNetwork(unittest.TestCase):
             path.join(self.xml_dir, "StaticConnection.xml"),
             initial_values={"weight": (Ji, nA)})
 
-        exc_prj = nineml.Projection("Excitation", inpt, p1,
-                                    connectivity=all_to_all,
-                                    response=psr,
-                                    plasticity=static_exc,
-                                    port_connections=[
-                                        nineml.PortConnection("plasticity",
-                                                              "response",
-                                                              "weight", "q"),
-                                        nineml.PortConnection("response",
-                                                              "post",
-                                                              "Isyn",
-                                                              "Isyn")],
-                                    delay=(delay, ms))
+        exc_prj = nineml.Projection(
+            "Excitation", inpt,
+            (p1, nineml.PortConnection('Isyn', nineml.FromResponse('Isyn'))),
+            response=(psr, nineml.PortConnection(
+                'weight', nineml.FromPlasticity('q'))),
+            plasticity=static_exc,
+            connectivity=all_to_all,
+            delay=(delay, ms))
 
-        inh_prj = nineml.Projection("Inhibition", inpt, p2,
-                                    connectivity=all_to_all,
-                                    response=psr,
-                                    plasticity=static_inh,
-                                    port_connections=[
-                                        nineml.PortConnection("plasticity",
-                                                              "response",
-                                                              "weight", "q"),
-                                        nineml.PortConnection("response",
-                                                              "post",
-                                                              "Isyn",
-                                                              "Isyn")],
-                                    delay=(delay, ms))
+        inh_prj = nineml.Projection(
+            "Inhibition", inpt,
+            (p2, nineml.PortConnection('Isyn', nineml.FromResponse('Isyn'))),
+            response=(psr, nineml.PortConnection(
+                'weight', nineml.FromPlasticity('q'))),
+            plasticity=static_inh,
+            connectivity=all_to_all,
+            delay=(delay, ms))
 
         model = nineml.Network("Three-neuron network with alpha synapses")
         model.add(inpt, p1, p2)
