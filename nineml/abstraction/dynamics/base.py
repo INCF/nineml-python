@@ -174,6 +174,10 @@ class Dynamics(ComponentClass, _NamespaceMixin):
          (Regime, '_regimes'),
          (StateVariable, '_state_variables')))
 
+    send_port_dicts = ('_analog_send_ports', '_event_send_ports')
+    receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',
+                          '_event_send_ports')
+
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[],
                  subnodes=None,

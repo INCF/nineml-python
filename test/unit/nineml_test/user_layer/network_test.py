@@ -88,7 +88,7 @@ class TestNetwork(unittest.TestCase):
             "Excitation", inpt,
             (p1, nineml.PortConnection('Isyn', nineml.FromResponse('Isyn'))),
             response=(psr, nineml.PortConnection(
-                'weight', nineml.FromPlasticity('q'))),
+                'weight', nineml.FromPlasticity('weight'))),
             plasticity=static_exc,
             connectivity=all_to_all,
             delay=(delay, ms))
@@ -97,7 +97,7 @@ class TestNetwork(unittest.TestCase):
             "Inhibition", inpt,
             (p2, nineml.PortConnection('Isyn', nineml.FromResponse('Isyn'))),
             response=(psr, nineml.PortConnection(
-                'weight', nineml.FromPlasticity('q'))),
+                'weight', nineml.FromPlasticity('weight'))),
             plasticity=static_inh,
             connectivity=all_to_all,
             delay=(delay, ms))

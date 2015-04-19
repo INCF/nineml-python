@@ -127,6 +127,24 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
     def ports(self):
         return []
 
+    def send_port(self, port_name):
+        for dct_name in self.send_port_dicts:
+            try:
+                return getattr(self, dct_name)[port_name]
+            except KeyError:
+                pass
+        raise KeyError("Could not find send port '{}' in '{}' class"
+                       .format(port_name, self.name))
+
+    def receive_port(self, port_name):
+        for dct_name in self.receive_port_dicts:
+            try:
+                return getattr(self, dct_name)[port_name]
+            except KeyError:
+                pass
+        raise KeyError("Could not find receive port '{}' in '{}' class"
+                       .format(port_name, self.name))
+
     @property
     def parameters(self):
         """Returns an iterator over the local |Parameter| objects"""
