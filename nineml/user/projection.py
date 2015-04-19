@@ -15,6 +15,7 @@ from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
 from nineml.exceptions import handle_xml_exceptions
+from nineml.abstraction_layer.ports import Port
 
 
 class Projection(BaseULObject, DocumentLevelObject):
@@ -82,7 +83,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         # Connect ports between terminuses
         for terminus in (self.pre, self.post, self.response, self.plasticity):
             if terminus is not None:
-                terminus.bind_port_connections(self)
+                terminus.bind_ports(self)
 
     @property
     def pre(self):
@@ -184,9 +185,9 @@ class Terminus(BaseULObject):
             (pc.port_name, pc)
             for pc in normalise_parameter_as_list(port_connections))
 
-    def bind_port_connections(self, container):
+    def bind_ports(self, container):
         for pc in self.port_connections:
-            pc.bind_port_connections(self, container)
+            pc.bind_ports(self, container)
 
     @property
     def port_connections(self):
@@ -204,9 +205,8 @@ class Terminus(BaseULObject):
         return self._object
 
     @annotate_xml
-    def to_xml(self):
-        return E(self.element_name, self.object.to_xml(),
-                 *(pc.to_xml() for pc in self.port_connections))
+    def _port_connections_to_xml(self):
+        return (pc.to_xml() for pc in self.port_connections)
 
     @classmethod
     def _port_connections_from_xml(cls, element, document):
@@ -228,6 +228,16 @@ class PopulationTerminus(Terminus):
     def component(self):
         return self.object.cell
 
+    @annotate_xml
+    def to_xml(self):
+        if self.population.from_reference is None:  # Generated objects
+            # Assumes that population is written in same file as projection
+            pop_elem = E.Reference(self.population.name)
+        else:
+            pop_elem = self.population.to_xml(as_reference=True)
+        return E(self.element_name, pop_elem,
+                 *self._port_connections_to_xml())
+
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):  # @UnusedVariable
@@ -248,6 +258,11 @@ class ComponentTerminus(Terminus):
     @property
     def component(self):
         return self.object
+
+    @annotate_xml
+    def to_xml(self):
+        return E(self.element_name, self.component.to_xml(),
+                 *self._port_connections_to_xml())
 
     @classmethod
     @read_annotations
@@ -280,26 +295,55 @@ class Plasticity(ComponentTerminus):
     element_name = 'Plasticity'
 
 
-class PortConnection(BaseULObject):
+class BasePortConnection(BaseULObject):
+
+    defining_attributes = ('port_name',)
+
+    def __init__(self, port):
+        BaseULObject.__init__(self)
+        self._set_port(port)
+
+    @property
+    def port_name(self):
+        try:
+            return self._port.name
+        except AttributeError:
+            return self._port_name
+
+    @property
+    def port(self):
+        try:
+            return self._port
+        except AttributeError:
+            raise NineMLRuntimeError(
+                "PortConnection '{}' not bound".format(self._port_name))
+
+    def _set_port(self, port):
+        if isinstance(port, Port):
+            self._port = port
+            try:
+                del self._port_name
+            except AttributeError:
+                pass
+        else:
+            self._port_name = port
+
+
+class PortConnection(BasePortConnection):
+
     element_name = 'PortConnection'
-    defining_attributes = ('_port_name', '_senders')
+    defining_attributes = (BasePortConnection.defining_attributes +
+                           ('_senders',))
 
     def __init__(self, port, senders):
-        BaseULObject.__init__(self)
-        assert isinstance(port, basestring)
+        super(PortConnection, self).__init__(port)
         senders = normalise_parameter_as_list(senders)
         assert all(isinstance(s, Sender) for s in senders)
-        self._port_name = port
-        self._port = None
         self._senders = dict((s.key(), s) for s in senders)
 
     def __repr__(self):
         return ("PortConnection('{}' with {} senders)"
                 .format(self.port_name, len(self.senders)))
-
-    @property
-    def port_name(self):
-        return self._port_name
 
     @property
     def senders(self):
@@ -312,18 +356,14 @@ class PortConnection(BaseULObject):
     def sender(self, *key):
         return self._senders[key]
 
-    @property
-    def port(self):
-        assert self._port is not None, "PortConnection not bound"
-        return self._port
-
-    def bind_port_connections(self, receiver, container):
+    def bind_ports(self, receiver, container):
         """
         Binds the PortConnection to the components it is connecting
         """
-        self._port = receiver.component.port(self.port_name)
+        self._set_port(
+            receiver.component.component_class.receive_port(self.port_name))
         for sender in self.senders:
-            sender.connect(container)
+            sender.bind_port(container)
 
     @annotate_xml
     def to_xml(self):
@@ -334,37 +374,15 @@ class PortConnection(BaseULObject):
     @read_annotations
     def from_xml(cls, element, document):
         cls.check_tag(element)
-        cls(port=element.get('port'),
-            senders=(Sender.from_xml(e, document) for e in element))
+        return cls(port=element.get('port'),
+                   senders=[Sender.from_xml(e, document) for e in element])
 
 
-class Sender(BaseULObject):
+class Sender(BasePortConnection):
 
-    defining_attributes = ('_port_name',)
-
-    def __init__(self, port_name):
-        self._port_name = port_name
-        self._port = None
-
-    @property
-    def port_name(self):
-        return self._port_name
-
-    @property
-    def port(self):
-        assert self._port is not None, "PortConnection not bound"
-        return self._port
-
-    @annotate_xml
-    def to_xml(self):
-        return E(self.element_name, port=self.port_name)
-
-    @classmethod
-    @read_annotations
-    def from_xml(cls, element, document):
-        cls.check_tag(element)
-        return getattr(sys.modules[__name__], element.tag).from_xml(element,
-                                                                    document)
+    def __init__(self, port):
+        BaseULObject.__init__(self)
+        self._set_port(port)
 
     def key(self):
         """
@@ -372,37 +390,59 @@ class Sender(BaseULObject):
         """
         return (self.element_name, self._port_name)
 
+    @annotate_xml
+    def to_xml(self):
+        return E(self.element_name, port=self.port_name)
+
+    @classmethod
+    def from_xml(cls, element, document):
+        return getattr(sys.modules[__name__],
+                       element.tag[len(NINEML):])._from_xml(element, document)
+
+    @classmethod
+    @read_annotations
+    def _from_xml(cls, element, document):  # @UnusedVariable
+        cls.check_tag(element)
+        return cls(port=element.get('port'))
+
 
 class FromPre(Sender):
 
     element_name = 'FromPre'
 
-    def connect(self, projection):
-        self._port = projection.pre.population.port(self.port_name)
+    def bind_port(self, projection):
+        self._set_port(
+            projection.pre.population.cell.component_class.send_port(
+                self.port_name))
 
 
 class FromPost(Sender):
 
     element_name = 'FromPost'
 
-    def connect(self, projection):
-        self._port = projection.post.population.port(self.port_name)
+    def bind_port(self, projection):
+        self._set_port(
+            projection.post.population.cell.component_class.send_port(
+                self.port_name))
 
 
 class FromPlasticity(Sender):
 
     element_name = 'FromPlasticity'
 
-    def connect(self, projection):
-        self._port = projection.plasticity.component.port(self.port_name)
+    def bind_port(self, projection):
+        self._set_port(
+            projection.plasticity.component.component_class.send_port(
+                self.port_name))
 
 
 class FromResponse(Sender):
 
     element_name = 'FromResponse'
 
-    def connect(self, projection):
-        self._port = projection.response.component.port(self.port_name)
+    def bind_port(self, projection):
+        self._set_port(projection.response.component.component_class.send_port(
+            self.port_name))
 
 
 class Delay(Quantity):

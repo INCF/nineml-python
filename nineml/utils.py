@@ -9,6 +9,7 @@ analysis.
 from os.path import dirname, normpath, realpath, exists, join
 import sys
 import re
+import types
 
 import itertools
 import hashlib
@@ -474,6 +475,8 @@ def none_to_empty_list(obj):
 def normalise_parameter_as_list(param):
     if isinstance(param, MemberContainerObject):
         return [param]
+    elif isinstance(param, types.GeneratorType):
+        return list(param)
     else:
         return ensure_iterable(none_to_empty_list(param))
 
