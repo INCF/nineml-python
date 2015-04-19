@@ -4,10 +4,13 @@ from . import BaseULObject
 from .component import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.user_layer.component import Component
+from .component import Component
+from .population import Population
 from itertools import chain
 from .. import units as un
-from nineml.utils import expect_single, check_tag
+from nineml.utils import (
+    expect_single, check_tag, normalise_parameter_as_list,
+    expect_none_or_single)
 from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
@@ -44,8 +47,7 @@ class Projection(BaseULObject, DocumentLevelObject):
     """
     element_name = "Projection"
     defining_attributes = ("name", "pre", "post", "connectivity",
-                           "response", "plasticity", "port_connections",
-                           "delay")
+                           "response", "plasticity", "delay")
 
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
@@ -56,18 +58,54 @@ class Projection(BaseULObject, DocumentLevelObject):
         """
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
+        assert isinstance(name, basestring)
         self.name = name
-        self.pre = pre
-        self.post = post
-        self.response = response
-        self.plasticity = plasticity
-        self.connectivity = connectivity
+        # Check types of input arguments
+        if not isinstance(pre, Pre):
+            pre = Pre(*normalise_parameter_as_list(pre))
+        if not isinstance(post, Post):
+            post = Post(*normalise_parameter_as_list(post))
+        if not isinstance(response, Response):
+            response = Response(*normalise_parameter_as_list(response))
+        if plasticity is not None and not isinstance(plasticity, Plasticity):
+            plasticity = Plasticity(*normalise_parameter_as_list(plasticity))
         if isinstance(delay, tuple):
             value, units = delay
             delay = Delay(SingleValue(value), units)
-        self.delay = delay
+        self._pre = pre
+        self._post = post
+        self._response = response
+        self._plasticity = plasticity
+        self._connectivity = connectivity
+        self._delay = delay
+        # Connect ports between terminuses
         for terminus in (self.pre, self.post, self.response, self.plasticity):
-            terminus.connect(self)
+            if terminus is not None:
+                terminus.bind_port_connections(self)
+
+    @property
+    def pre(self):
+        return self._pre
+
+    @property
+    def post(self):
+        return self._post
+
+    @property
+    def response(self):
+        return self._response
+
+    @property
+    def plasticity(self):
+        return self._plasticity
+
+    @property
+    def connectivity(self):
+        return self._connectivity
+
+    @property
+    def delay(self):
+        return self._delay
 
     def __repr__(self):
         return ('Projection(name="{}", pre={}, post={}, '
@@ -77,50 +115,49 @@ class Projection(BaseULObject, DocumentLevelObject):
                         ('plasticity={}'.format(repr(self.plasticity))
                          if self.plasticity else ''), repr(self.delay)))
 
-    def get_components(self):
+    @property
+    def components(self):
         """
         Return a list of all components used by the projection.
         """
-        components = []
-        for name in ('connectivity', 'response', 'plasticity'):
-            component = getattr(self, name)
-            if component is not None:
-                components.append(component)
+        components = [self.connectivity, self.response.component]
+        if self.plasticity is not None:
+            components.append(self.plasticity.component)
         return components
 
     @property
     def attributes_with_units(self):
         return chain([self.delay],
-                     *[c.attributes_with_units for c in self.get_components()])
+                     *[c.attributes_with_units for c in self.components])
 
     @write_reference
     @annotate_xml
     def to_xml(self):
-        args = [E.Pre(self.pre.to_xml()),
-                E.Post(self.post.to_xml()),
-                E.Connectivity(self.connectivity.to_xml()),
-                E.Response(self.response.to_xml())]
-        if self.plasticity:
-            args.append(E.Plasticity(self.plasticity.to_xml()))
-        args.append(self.delay.to_xml())
-        return E(self.element_name, *args, name=self.name)
+        children = (self.pre, self.post, self.response, self.plasticity,
+                    self.connectivity, self.delay)
+        return E(self.element_name,
+                 *(m.to_xml() for m in children if m is not None),
+                 name=self.name)
 
     @classmethod
     @resolve_reference
     @read_annotations
     def from_xml(cls, element, document):
-        check_tag(element, cls)
+        cls.check_tag(element)
         # Get Name
         name = element.get('name')
         # Get Pre
-        pre = Pre.from_xml(expect_single(element.findall(NINEML + 'Pre')))
-        post = Post.from_xml(expect_single(element.findall(NINEML + 'Post')))
-        response = Post.from_xml(
-            expect_single(element.findall(NINEML + 'Response')))
-        plasticity = Post.from_xml(
-            expect_single(element.findall(NINEML + 'Plasticity')))
+        pre = Pre.from_xml(expect_single(element.findall(NINEML + 'Pre')),
+                           document)
+        post = Post.from_xml(expect_single(element.findall(NINEML + 'Post')),
+                             document)
+        response = Response.from_xml(
+            expect_single(element.findall(NINEML + 'Response')), document)
+        elem = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
+        plasticity = (Plasticity.from_xml(elem, document)
+                      if elem is not None else None)
         connectivity = Connectivity.from_xml(
-            expect_single(element.findall(NINEML + 'Connectivity')))
+            expect_single(element.findall(NINEML + 'Connectivity')), document)
         # Get Delay
         delay = Delay.from_xml(
             expect_single(element.findall(NINEML + 'Delay')), document)
@@ -136,14 +173,29 @@ class Projection(BaseULObject, DocumentLevelObject):
 
 class Terminus(BaseULObject):
 
-    def __init__(self, obj, port_connections):
-        assert isinstance(obj, Component)
-        self._object = obj
-        self._port_connections = port_connections
+    defining_attributes = ('_object', '_port_connections')
 
-    def connect(self, container):
+    def __init__(self, obj, port_connections=None):
+        BaseULObject.__init__(self)
+        self._object = obj
+        self._port_connections = dict(
+            (pc.port_name, pc)
+            for pc in normalise_parameter_as_list(port_connections))
+
+    def bind_port_connections(self, container):
         for pc in self.port_connections:
-            pc.connect(self, container)
+            pc.bind_port_connections(self, container)
+
+    @property
+    def port_connections(self):
+        return self._port_connections.itervalues()
+
+    @property
+    def port_connection_port_names(self):
+        return self._port_connections.iterkeys()
+
+    def port_connection(self, port_name):
+        return self._port_connections[port_name]
 
     @property
     def object(self):
@@ -152,29 +204,44 @@ class Terminus(BaseULObject):
     @annotate_xml
     def to_xml(self):
         return E(self.element_name, self.object.to_xml(),
-                 (pc.to_xml() for pc in self._port_connections))
+                 *(pc.to_xml() for pc in self.port_connections))
 
     @classmethod
-    def _port_connections_from_xml(cls, element):
-        return (PortConnection.from_xml(e)
+    def _port_connections_from_xml(cls, element, document):
+        return (PortConnection.from_xml(e, document)
                 for e in element.findall(NINEML + 'PortConnection'))
 
 
 class PopulationTerminus(Terminus):
 
+    def __init__(self, population, port_connections=None):
+        assert isinstance(population, Population)
+        super(PopulationTerminus, self).__init__(population, port_connections)
+
     @property
     def population(self):
         return self.object
 
+    @property
+    def component(self):
+        return self.object.cell
+
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):  # @UnusedVariable
-        check_tag(element, cls)
-        population = Reference.from_xml(element, document).user_layer_object
-        return cls(population, cls._port_connections_from_xml(element))
+        cls.check_tag(element)
+        population = Reference.from_xml(
+            expect_single(element.findall(NINEML + 'Reference')),
+            document).user_layer_object
+        return cls(population,
+                   cls._port_connections_from_xml(element, document))
 
 
 class ComponentTerminus(Terminus):
+
+    def __init__(self, component, port_connections=None):
+        assert isinstance(component, Component)
+        super(ComponentTerminus, self).__init__(component, port_connections)
 
     @property
     def component(self):
@@ -183,10 +250,12 @@ class ComponentTerminus(Terminus):
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):  # @UnusedVariable
-        check_tag(element, cls)
+        cls.check_tag(element)
         component = Component.from_xml(
-            expect_single(element.findall(NINEML + 'Component')))
-        return cls(component, cls._port_connections_from_xml(element))
+            expect_single(element.findall(NINEML + 'Component')),
+            document)
+        return cls(component,
+                   cls._port_connections_from_xml(element, document))
 
 
 class Pre(PopulationTerminus):
@@ -209,16 +278,18 @@ class Plasticity(ComponentTerminus):
     element_name = 'Plasticity'
 
 
-class PortConnection(object):
+class PortConnection(BaseULObject):
     element_name = 'PortConnection'
     defining_attributes = ('_port_name', '_senders')
 
     def __init__(self, port, senders):
+        BaseULObject.__init__(self)
         assert isinstance(port, basestring)
+        senders = normalise_parameter_as_list(senders)
         assert all(isinstance(s, Sender) for s in senders)
         self._port_name = port
         self._port = None
-        self._senders = sorted(senders)
+        self._senders = dict((s.key(), s) for s in senders)
 
     def __repr__(self):
         return ("PortConnection('{}' with {} senders)"
@@ -230,18 +301,25 @@ class PortConnection(object):
 
     @property
     def senders(self):
-        return self._senders
+        return self._senders.itervalues()
+
+    @property
+    def sender_keys(self):
+        return self._senders.iterkeys()
+
+    def sender(self, *key):
+        return self._senders[key]
 
     @property
     def port(self):
         assert self._port is not None, "PortConnection not bound"
         return self._port
 
-    def connect(self, receiver, container):
+    def bind_port_connections(self, receiver, container):
         """
         Binds the PortConnection to the components it is connecting
         """
-        self._port = receiver.port(self.port_name)
+        self._port = receiver.component.port(self.port_name)
         for sender in self.senders:
             sender.connect(container)
 
@@ -253,12 +331,14 @@ class PortConnection(object):
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        check_tag(element, cls)
+        cls.check_tag(element)
         cls(port=element.get('port'),
             senders=(Sender.from_xml(e, document) for e in element))
 
 
 class Sender(BaseULObject):
+
+    defining_attributes = ('_port_name',)
 
     def __init__(self, port_name):
         self._port_name = port_name
@@ -280,12 +360,15 @@ class Sender(BaseULObject):
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        check_tag(element, cls)
+        cls.check_tag(element)
         return getattr(sys.modules[__name__], element.tag).from_xml(element,
                                                                     document)
 
-    def __hash__(self):
-        return hash(self.element_name) ^ hash(self._port_name)
+    def key(self):
+        """
+        Generates a unique key for the Sender so it can be stored in a dict
+        """
+        return (self.element_name, self._port_name)
 
 
 class FromPre(Sender):
@@ -353,11 +436,12 @@ class Connectivity(Component):
 
     @annotate_xml
     def to_xml(self):
-        return E(self.element_name, super(Connectivity, self).to_xml())
+        return E.Connectivity(Component.to_xml(self))
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        check_tag(element, cls)
-        component = Component.from_xml(element, document)
-        return cls(component.__getinitargs__())
+        cls.check_tag(element)
+        component = Component.from_xml(
+            expect_single(element.findall(NINEML + 'Component')), document)
+        return cls(*component.__getinitargs__())

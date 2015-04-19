@@ -2,6 +2,7 @@ from itertools import chain
 from collections import defaultdict
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLInvalidElementTypeException)
+from nineml.xmlns import NINEML
 
 
 class BaseNineMLObject(object):
@@ -105,6 +106,12 @@ class BaseNineMLObject(object):
         else:
             result += "{} != {}".format(s, o)
         return result
+
+    @classmethod
+    def check_tag(cls, element):
+        assert element.tag in (cls.element_name, NINEML + cls.element_name), (
+            "Found '{}' element, expected '{}'".format(element.tag,
+                                                       cls.element_name))
 
 
 class DocumentLevelObject(object):
