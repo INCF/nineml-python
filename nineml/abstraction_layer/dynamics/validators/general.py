@@ -15,7 +15,6 @@ from ...componentclass.validators import (
     DimensionalityComponentValidator)
 from . import PerNamespaceDynamicsValidator
 from nineml import units as un
-import warnings
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(
@@ -254,4 +253,4 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
         self._check_send_port(port)
 
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        self._check_boolean_expr(trigger.rhs)
+        self._flatten_dims(trigger.rhs, trigger)
