@@ -1,7 +1,7 @@
 import unittest
 from copy import copy
 from nineml.abstraction_layer.dynamics import (
-    DynamicsClass, Regime, On, OutputEvent, StateAssignment, StateVariable,
+    Dynamics, Regime, On, OutputEvent, StateAssignment, StateVariable,
     OnCondition, TimeDerivative)
 from nineml.abstraction_layer import Alias, Parameter
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
@@ -12,13 +12,13 @@ class MemberContainer_test(unittest.TestCase):
 
     def setUp(self):
 
-        self.a = DynamicsClass(
+        self.a = Dynamics(
             name='A',
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1 / P2',
-                    'dSV2/dt = SV1 / ARP1 + SV2 / P1',
+                    'dSV1/dt = -SV1 / (P2*t)',
+                    'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
                     transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
                     name='R1',
@@ -31,15 +31,15 @@ class MemberContainer_test(unittest.TestCase):
             parameters=['P1', 'P2']
         )
 
-        self.b = DynamicsClass(
+        self.b = Dynamics(
             name='A',
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1',
                      'A4 := SV1^3 + SV2^-3'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1 / P2',
-                    'dSV2/dt = SV1 / ARP1 + SV2 / P1',
-                    'dSV3/dt = -SV3 + P3',
+                    'dSV1/dt = -SV1 / (P2*t)',
+                    'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
+                    'dSV3/dt = -SV3/t + P3/t',
                     transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
                     name='R1',
@@ -64,7 +64,7 @@ class MemberContainer_test(unittest.TestCase):
         # Add missing items
         a.add(Alias('A4', 'SV1^3 + SV2^-3'))
         a.add(StateVariable('SV3'))
-        a.regime('R1').add(TimeDerivative('SV3', '-SV3 + P3'))
+        a.regime('R1').add(TimeDerivative('SV3', '-SV3/t + P3/t'))
         a.regime('R2').add(OnCondition(
             'SV3 < 0.001', target_regime='R2',
             state_assignments=[StateAssignment('SV3', 1)]))

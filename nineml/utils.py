@@ -9,6 +9,7 @@ analysis.
 from os.path import dirname, normpath, realpath, exists, join
 import sys
 import re
+import types
 
 import itertools
 import hashlib
@@ -474,6 +475,8 @@ def none_to_empty_list(obj):
 def normalise_parameter_as_list(param):
     if isinstance(param, MemberContainerObject):
         return [param]
+    elif isinstance(param, types.GeneratorType):
+        return list(param)
     else:
         return ensure_iterable(none_to_empty_list(param))
 
@@ -529,7 +532,7 @@ valid_uri_re = re.compile(r'^(?:https?|file)://'  # http:// or https://
                           r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 
-def check_tag(element, cls):
+def check_tag(cls, element):
     assert element.tag in (cls.element_name, NINEML + cls.element_name), \
         "Found <%s>, expected <%s>" % (element.tag, cls.element_name)
 

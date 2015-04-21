@@ -2,14 +2,14 @@ from ...componentclass.utils import ComponentClassInterfaceInferer
 from .visitors import DynamicsActionVisitor
 
 
-class DynamicsClassInterfaceInferer(ComponentClassInterfaceInferer,
-                                    DynamicsActionVisitor):
+class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
+                               DynamicsActionVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
     def __init__(self, dynamicsclass):
         self.state_variable_names = set()
-        super(DynamicsClassInterfaceInferer, self).__init__(dynamicsclass)
+        super(DynamicsInterfaceInferer, self).__init__(dynamicsclass)
 
     def action_statevariable(self, state_variable):
         self.declared_symbols.add(state_variable.name)
@@ -40,3 +40,6 @@ class DynamicsClassInterfaceInferer(ComponentClassInterfaceInferer,
 
     def action_trigger(self, trigger):
         self.atoms.update(trigger.rhs_atoms)
+
+    def action_randomvariable(self, randomvariable):
+        self.declared_symbols.add(randomvariable.name)

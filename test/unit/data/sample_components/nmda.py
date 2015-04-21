@@ -11,7 +11,8 @@ def get_component():
                                "B = B + weight*factor"])]
     )
 
-    dynamicsblock = al.DynamicsBlock(
+    nmda = al.Dynamics(
+        name="NMDAPSR",
         aliases=[
             "taupeak := taur*taud/(taud - taur)*log(taud/taur)",
             "factor := 1/(exp(-taupeak/taud) - exp(-taupeak/taur))",
@@ -22,14 +23,9 @@ def get_component():
         ],
         state_variables=[al.StateVariable(o) for o in ('A', 'B')],
         regimes=[inter_event_regime],
-    )
-
-    nmda = al.ComponentClass(name="NMDAPSR",
-                             dynamicsblock=dynamicsblock,
-                             analog_ports=[al.RecvPort("V"), al.SendPort("I"), ],
-                             event_ports=[al.RecvEventPort('spikeinput')],
-                             parameters=[
-                             'taur', 'taud', 'gmax', 'mgconc', 'gamma', 'beta', 'E', 'weight']
-                             )
+        analog_ports=[al.AnalogReceivePort("V"), al.AnalogSendPort("I"), ],
+        event_ports=[al.AnalogReceivePort('spikeinput')],
+        parameters=['taur', 'taud', 'gmax', 'mgconc', 'gamma', 'beta', 'E',
+                    'weight'])
 
     return nmda

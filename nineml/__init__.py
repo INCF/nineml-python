@@ -15,8 +15,8 @@ import exceptions
 import units
 from .units import Unit, Dimension
 from abstraction_layer import (
-    DynamicsClass, ConnectionRuleClass, RandomDistributionClass,
+    Dynamics, ConnectionRule, RandomDistribution,
     ComponentClass)
 from user_layer import (
-    Dynamics, ConnectionRule, RandomDistribution, Selection, Population,
-    Projection, Property, Definition, Component)
+    Selection, Population, Projection, Property, Definition, Component,
+    Connectivity, Response, Plasticity, Pre, Post)

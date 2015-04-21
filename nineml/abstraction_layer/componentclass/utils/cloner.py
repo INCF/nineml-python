@@ -7,6 +7,7 @@ docstring needed
 from ...expressions.utils import is_builtin_symbol
 from .visitors import ComponentActionVisitor, ComponentVisitor
 from nineml.base import MemberContainerObject
+from copy import deepcopy
 
 
 class ComponentExpandPortDefinition(ComponentActionVisitor):
@@ -51,7 +52,6 @@ class ComponentCloner(ComponentVisitor):
 
         if is_builtin_symbol(variable):
             return variable
-
         else:
             return prefix + variable
 
@@ -82,3 +82,16 @@ class ComponentCloner(ComponentVisitor):
                 key = source.lookup_member_dict_name(s)
                 index = source.index_of(s)
                 destination._indices[key][d] = index
+
+    def visit_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
+        new_randomvariable = randomvariable.__class__(
+            name=self.prefix_variable(randomvariable.name, **kwargs),
+            distribution=self.visit(randomvariable.distribution),
+            units=randomvariable.units)
+        return new_randomvariable
+
+    def visit_randomdistribution(self, randomdistribution, **kwargs):  # @UnusedVariable @IgnorePep8
+        new_randomdistribution = randomdistribution.__class__(
+            name=randomdistribution.name,
+            **deepcopy(randomdistribution.parameters))
+        return new_randomdistribution

@@ -3,7 +3,7 @@ from nineml import units as un
 
 
 def get_component():
-    iaf = al.dynamics.DynamicsClass(
+    iaf = al.dynamics.Dynamics(
         name="iaf",
         regimes=[
             al.Regime(
@@ -18,22 +18,25 @@ def get_component():
 
             al.Regime(
                 name="refractoryregime",
-                time_derivatives=["dV/dt = 0"],
                 transitions=[al.On("t >= tspike + taurefrac",
                                    to="subthresholdregime")],
             )
         ],
         state_variables=[
-            al.StateVariable('V'),
+            al.StateVariable('V', dimension=un.voltage),
             al.StateVariable('tspike', dimension=un.time),
         ],
-        analog_ports=[al.AnalogSendPort("V"),
-                      al.AnalogReducePort("ISyn", operator="+"), ],
+        analog_ports=[al.AnalogSendPort("V", dimension=un.voltage),
+                      al.AnalogReducePort("ISyn", dimension=un.current,
+                                          operator="+"), ],
 
         event_ports=[al.EventSendPort('spikeoutput'), ],
-        parameters=['cm',
+        parameters=[al.Parameter('cm', dimension=un.capacitance),
                     al.Parameter('taurefrac', dimension=un.time),
-                    'gl', 'vreset', 'vrest', 'vthresh']
+                    al.Parameter('gl', dimension=un.conductance),
+                    al.Parameter('vreset', dimension=un.voltage),
+                    al.Parameter('vrest', dimension=un.voltage),
+                    al.Parameter('vthresh', dimension=un.voltage)]
     )
     return iaf
 

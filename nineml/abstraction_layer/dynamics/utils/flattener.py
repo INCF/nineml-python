@@ -197,22 +197,22 @@ class ComponentFlattener(object):
 
     # Flattening Functions:
     # --------------------- #
-    def __init__(self, componentclass, componentname=None):
-        assert isinstance(componentclass, DynamicsClass)
+    def __init__(self, component_class, componentname=None):
+        assert isinstance(component_class, Dynamics)
 
-        # Is our componentclass already flat??
-        if componentclass.is_flat():
-            self.reducedcomponent = DynamicsCloner().visit(componentclass)
-            if componentclass.was_flattened():
-                self.reducedcomponent.set_flattener(componentclass.flattener)
+        # Is our component_class already flat??
+        if component_class.is_flat():
+            self.reducedcomponent = DynamicsCloner().visit(component_class)
+            if component_class.was_flattened():
+                self.reducedcomponent.set_flattener(component_class.flattener)
             return
 
         # New components name
-        self.componentname = componentname if componentname else componentclass.name
+        self.componentname = componentname if componentname else component_class.name
 
-        # Make a clone of the componentclass; in which all hierachical components
+        # Make a clone of the component_class; in which all hierachical components
         # have their internal symbols prefixed:
-        cloned_comp = DynamicsClonerPrefixNamespace().visit(componentclass)
+        cloned_comp = DynamicsClonerPrefixNamespace().visit(component_class)
 
         # Make a list of all components, and those components with regimes:
         self.all_components = list(cloned_comp.query.recurse_all_components)
@@ -222,8 +222,8 @@ class ComponentFlattener(object):
         # This will get filled in build_new_regime_space(): (It maps {
         # (Regime,Regime,...,Regime) : Regime, (Regime,Regime,...,Regime) :
         # Regime,} Where the key tuple represents the regimes in the
-        # hierachical componentclass, corresponding to self.componentswithregimes.
-        # And the values are the regimes in the new componentclass.
+        # hierachical component_class, corresponding to self.componentswithregimes.
+        # And the values are the regimes in the new component_class.
         self.old_regime_tuple_to_new_regime_map = None
 
         # OK, Heavy-lifting Code:
@@ -231,7 +231,7 @@ class ComponentFlattener(object):
         self.build_new_regime_space()
 
         # Build Our New Component
-        self.reducedcomponent = DynamicsClass(
+        self.reducedcomponent = Dynamics(
             name=self.componentname,
             aliases=flatten_first_level(
                 [m.aliases for m in self.all_components]),
@@ -249,7 +249,7 @@ class ComponentFlattener(object):
 
         self.remap_analog_ports()
 
-        # Attach this flattening information to the componentclass:
+        # Attach this flattening information to the component_class:
         self.reducedcomponent.set_flattener(self)
 
     @classmethod
@@ -376,4 +376,4 @@ def flatten(model, componentname=None):
     reducer = ComponentFlattener(model, componentname)
     return reducer.reducedcomponent
 
-from ..base import DynamicsClass
+from ..base import Dynamics

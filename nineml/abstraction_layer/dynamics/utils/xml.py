@@ -8,17 +8,18 @@ from itertools import chain
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import DynamicsClass, DynamicsBlock
+from ..base import Dynamics
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
                       AnalogReceivePort, AnalogReducePort)
-from ..transitions import OnEvent, OnCondition, StateAssignment, OutputEvent
+from ..transitions import (
+    OnEvent, OnCondition, StateAssignment, OutputEvent, Trigger)
 from ..regimes import Regime, StateVariable, TimeDerivative
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
-class DynamicsClassXMLLoader(ComponentClassXMLLoader):
+class DynamicsXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -29,26 +30,27 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
-    def load_componentclass(self, element):
+    def load_dynamicsclass(self, element):
 
-        blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
-                  'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
-                  'Dynamics', 'Subnode', 'ConnectPorts', 'Component')
+        block_names = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
+                       'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
+                       'Dynamics', 'Regime', 'Alias', 'StateVariable',
+                       'Constant')
 
-        subnodes = self._load_blocks(element, blocks=blocks)
+        blocks = self._load_blocks(element, block_names=block_names)
 
-        dynamicsblock = expect_single(subnodes["Dynamics"])
-        return DynamicsClass(
+        return Dynamics(
             name=element.get('name'),
-            parameters=subnodes["Parameter"],
-            analog_ports=chain(subnodes["AnalogSendPort"],
-                               subnodes["AnalogReceivePort"],
-                               subnodes["AnalogReducePort"]),
-            event_ports=chain(subnodes["EventSendPort"],
-                              subnodes["EventReceivePort"]),
-            dynamicsblock=dynamicsblock,
-            subnodes=dict(subnodes['Subnode']),
-            portconnections=subnodes["ConnectPorts"])
+            parameters=blocks["Parameter"],
+            analog_ports=chain(blocks["AnalogSendPort"],
+                               blocks["AnalogReceivePort"],
+                               blocks["AnalogReducePort"]),
+            event_ports=chain(blocks["EventSendPort"],
+                              blocks["EventReceivePort"]),
+            regimes=blocks["Regime"],
+            aliases=blocks["Alias"],
+            state_variables=blocks["StateVariable"],
+            constants=blocks["Constant"])
 
     @read_annotations
     def load_eventsendport(self, element):
@@ -78,21 +80,12 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
             operator=element.get("operator"))
 
     @read_annotations
-    def load_dynamicsblock(self, element):
-        subblocks = ('Regime', 'Alias', 'StateVariable', 'Constant')
-        subnodes = self._load_blocks(element, blocks=subblocks)
-        return DynamicsBlock(regimes=subnodes["Regime"],
-                             aliases=subnodes["Alias"],
-                             state_variables=subnodes["StateVariable"],
-                             constants=subnodes["Constant"])
-
-    @read_annotations
     def load_regime(self, element):
-        subblocks = ('TimeDerivative', 'OnCondition', 'OnEvent')
-        subnodes = self._load_blocks(element, blocks=subblocks)
-        transitions = subnodes["OnEvent"] + subnodes['OnCondition']
+        block_names = ('TimeDerivative', 'OnCondition', 'OnEvent')
+        blocks = self._load_blocks(element, block_names=block_names)
+        transitions = blocks["OnEvent"] + blocks['OnCondition']
         return Regime(name=element.get('name'),
-                      time_derivatives=subnodes["TimeDerivative"],
+                      time_derivatives=blocks["TimeDerivative"],
                       transitions=transitions)
 
     @read_annotations
@@ -110,29 +103,31 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
     @read_annotations
     def load_oncondition(self, element):
-        subblocks = ('Trigger', 'StateAssignment', 'OutputEvent')
-        subnodes = self._load_blocks(element, blocks=subblocks)
+        block_names = ('Trigger', 'StateAssignment', 'OutputEvent',
+                       'RandomVariable')
+        blocks = self._load_blocks(element, block_names=block_names)
         target_regime = element.get('target_regime')
-        trigger = expect_single(subnodes["Trigger"])
+        trigger = expect_single(blocks["Trigger"])
         return OnCondition(trigger=trigger,
-                           state_assignments=subnodes["StateAssignment"],
-                           output_events=subnodes["OutputEvent"],
+                           state_assignments=blocks["StateAssignment"],
+                           output_events=blocks["OutputEvent"],
+                           random_variables=blocks["RandomVariable"],
                            target_regime=target_regime)
 
     @read_annotations
     def load_onevent(self, element):
-        subblocks = ('StateAssignment', 'OutputEvent')
-        subnodes = self._load_blocks(element, blocks=subblocks)
+        block_names = ('StateAssignment', 'OutputEvent',
+                       'RandomVariable')
+        blocks = self._load_blocks(element, block_names=block_names)
         target_regime = element.get('target_regime')
         return OnEvent(src_port_name=element.get('port'),
-                       state_assignments=subnodes["StateAssignment"],
-                       output_events=subnodes["OutputEvent"],
+                       state_assignments=blocks["StateAssignment"],
+                       output_events=blocks["OutputEvent"],
+                       random_variables=blocks["RandomVariable"],
                        target_regime=target_regime)
 
-    # FIXME: This should return a Trigger element not just an internal
-    #        maths block (TGC 1/15)
     def load_trigger(self, element):
-        return self.load_single_internmaths_block(element)
+        return Trigger(self.load_single_internmaths_block(element))
 
     @read_annotations
     def load_stateassignment(self, element):
@@ -145,41 +140,31 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         port_name = element.get('port')
         return OutputEvent(port_name=port_name)
 
-    tag_to_loader = {
-        "ComponentClass": load_componentclass,
-        "Regime": load_regime,
-        "StateVariable": load_statevariable,
-        "EventSendPort": load_eventsendport,
-        "AnalogSendPort": load_analogsendport,
-        "EventReceivePort": load_eventreceiveport,
-        "AnalogReceivePort": load_analogreceiveport,
-        "AnalogReducePort": load_analogreduceport,
-        "Dynamics": load_dynamicsblock,
-        "OnCondition": load_oncondition,
-        "OnEvent": load_onevent,
-        "TimeDerivative": load_timederivative,
-        "Trigger": load_trigger,
-        "StateAssignment": load_stateassignment,
-        "OutputEvent": load_outputevent,
-    }
+    tag_to_loader = dict(
+        tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
+        (("Dynamics", load_dynamicsclass),
+         ("Regime", load_regime),
+         ("StateVariable", load_statevariable),
+         ("EventSendPort", load_eventsendport),
+         ("AnalogSendPort", load_analogsendport),
+         ("EventReceivePort", load_eventreceiveport),
+         ("AnalogReceivePort", load_analogreceiveport),
+         ("AnalogReducePort", load_analogreduceport),
+         ("OnCondition", load_oncondition),
+         ("OnEvent", load_onevent),
+         ("TimeDerivative", load_timederivative),
+         ("Trigger", load_trigger),
+         ("StateAssignment", load_stateassignment),
+         ("OutputEvent", load_outputevent)))
 
 
-class DynamicsClassXMLWriter(ComponentClassXMLWriter):
-
-    @annotate_xml
-    def visit_componentclass(self, componentclass):
-        elements = ([p.accept_visitor(self)
-                     for p in componentclass.analog_ports] +
-                    [p.accept_visitor(self)
-                     for p in componentclass.event_ports] +
-                    [p.accept_visitor(self)
-                     for p in componentclass.parameters] +
-                    [componentclass._main_block.accept_visitor(self)])
-        return E('ComponentClass', *elements, name=componentclass.name)
+class DynamicsXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
-    def visit_dynamicsblock(self, dynamicsblock):
-        return E('Dynamics', *[e.accept_visitor(self) for e in dynamicsblock])
+    def visit_componentclass(self, component_class):
+        return E('Dynamics',
+                 *[e.accept_visitor(self) for e in component_class],
+                 name=component_class.name)
 
     @annotate_xml
     def visit_regime(self, regime):

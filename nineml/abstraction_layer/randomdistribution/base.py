@@ -1,26 +1,15 @@
-from ..componentclass import ComponentClass, MainBlock
+from ..componentclass import ComponentClass
+from nineml.annotations import read_annotations, annotate_xml
 
 
-class RandomDistributionBlock(MainBlock):
+class RandomDistribution(ComponentClass):
 
-    defining_attributes = ('standard_library',)
+    element_name = 'RandomDistribution'
+    defining_attributes = ('name', '_parameters')
 
-    def __init__(self, standard_library):
-        super(RandomDistributionBlock, self).__init__()
-        self.standard_library = standard_library
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_randomdistributionblock(self, **kwargs)
-
-
-class RandomDistributionClass(ComponentClass):
-
-    defining_attributes = ('name', '_parameters', '_main_block')
-
-    def __init__(self, name, randomdistributionblock, parameters=None):
-        super(RandomDistributionClass, self).__init__(
-            name, parameters, main_block=randomdistributionblock)
+    def __init__(self, name, parameters=None):
+        super(RandomDistribution, self).__init__(
+            name, parameters)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -44,9 +33,23 @@ class RandomDistributionClass(ComponentClass):
     def validate(self):
         RandomDistributionValidator.validate_componentclass(self)
 
+    @annotate_xml
+    def to_xml(self):
+        self.standardize_unit_dimensions()
+        self.validate()
+        return RandomDistributionXMLWriter().visit(self)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        return RandomDistributionXMLLoader(
+            document).load_randomdistributionclass(element)
+
 from .utils.cloner import RandomDistributionCloner
 from .utils.modifiers import(
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
 from .utils.visitors import (RandomDistributionRequiredDefinitions,
                              RandomDistributionElementFinder)
 from .validators import RandomDistributionValidator
+from .utils.xml import (
+    RandomDistributionXMLLoader, RandomDistributionXMLWriter)

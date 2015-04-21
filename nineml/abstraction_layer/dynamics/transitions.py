@@ -8,12 +8,12 @@ This file contains the definitions for the Events
 from copy import copy
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction_layer.componentclass import BaseALObject
-from ..expressions import Expression, ExpressionWithSimpleLHS
+from ..expressions import Expression, ExpressionWithSimpleLHS, RandomVariable
 from ...exceptions import (NineMLRuntimeError,
                            NineMLInvalidElementTypeException)
 from .utils.cloner import DynamicsCloner
 from nineml.base import MemberContainerObject
-from nineml.utils import normalise_parameter_as_list
+from nineml.utils import normalise_parameter_as_list, assert_no_duplicates
 from .utils.visitors import DynamicsElementFinder
 
 
@@ -36,7 +36,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         """StateAssignment Constructor
 
         `lhs` -- A `string`, which must be a state-variable of the
-                 componentclass.
+                 component_class.
         `rhs` -- A `string`, representing the new value of the state after
                  this assignment.
 
@@ -90,7 +90,7 @@ class OutputEvent(BaseALObject):
 
         :param port: The name of the output EventPort that should
             transmit an event. An `EventPort` with a mode of 'send' must exist
-            with a corresponding name in the componentclass, otherwise a
+            with a corresponding name in the component_class, otherwise a
             ``NineMLRuntimeException`` will be raised.
 
         """
@@ -121,12 +121,13 @@ class OutputEvent(BaseALObject):
 class Transition(BaseALObject, MemberContainerObject):
 
     defining_attributes = ('_state_assignments', '_output_events',
-                           'target_regime_name')
+                           '_random_variables', 'target_regime_name')
     class_to_member_dict = {StateAssignment: '_state_assignments',
-                            OutputEvent: '_output_events'}
+                            OutputEvent: '_output_events',
+                            RandomVariable: '_random_variables'}
 
     def __init__(self, state_assignments=None, output_events=None,
-                 target_regime=None):
+                 random_variables=None, target_regime=None):
         """Abstract class representing a transition from one |Regime| to
         another.
 
@@ -142,7 +143,7 @@ class Transition(BaseALObject, MemberContainerObject):
             transition.  ``None`` implies staying in the same regime. This has
             to be specified as a string, not the object, because in general the
             |Regime| object is not yet constructed. This is automatically
-            resolved by the |DynamicsClass| in
+            resolved by the |Dynamics| in
             ``_ResolveTransitionRegimeNames()`` during construction.
 
 
@@ -156,7 +157,10 @@ class Transition(BaseALObject, MemberContainerObject):
         MemberContainerObject.__init__(self)
 
         # Load state-assignment objects as strings or StateAssignment objects
-        state_assignments = state_assignments or []
+        state_assignments = normalise_parameter_as_list(state_assignments)
+        random_variables = normalise_parameter_as_list(random_variables)
+
+        assert_no_duplicates(rv.name for rv in random_variables)
 
         sa_types = (basestring, StateAssignment)
         sa_type_dict = filter_discrete_types(state_assignments, sa_types)
@@ -164,10 +168,10 @@ class Transition(BaseALObject, MemberContainerObject):
                        for o in sa_type_dict[basestring]]
         self._state_assignments = dict(
             (sa.lhs, sa) for sa in sa_type_dict[StateAssignment] + sa_from_str)
-
         self._output_events = dict(
             (oe.port_name, oe)
             for oe in normalise_parameter_as_list(output_events))
+        self._random_variables = dict((c.name, c) for c in random_variables)
 
         self._target_regime = target_regime
         self._source_regime = None
@@ -181,14 +185,14 @@ class Transition(BaseALObject, MemberContainerObject):
 
         .. note::
 
-            This method will only be available after the DynamicsClass
+            This method will only be available after the Dynamics
             containing this transition has been built. See
             ``set_source_regime``
         """
         if type(self._target_regime).__name__ != 'Regime':
             raise NineMLRuntimeError(
                 "Target regime ({}) has not been set (use 'validate()' "
-                "of DynamicsClass first)."
+                "of Dynamics first)."
                 .format(self._target_regime))
         return self._target_regime
 
@@ -206,13 +210,13 @@ class Transition(BaseALObject, MemberContainerObject):
 
         .. note::
 
-            This method will only be available after the |DynamicsClass|
+            This method will only be available after the |Dynamics|
             containing this transition has been built. See
             ``set_source_regime``
         """
         if type(self._target_regime).__name__ != 'Regime':
             raise NineMLRuntimeError(
-                "Source regime has not been set for transition. It needs "
+                "Pre regime has not been set for transition. It needs "
                 "to be added to a regime first.")
         return self._source_regime
 
@@ -221,7 +225,7 @@ class Transition(BaseALObject, MemberContainerObject):
 
         .. note::
 
-            This method will only be available after the DynamicsClass
+            This method will only be available after the Dynamics
             containing this transition has been built. See
             ``set_source_regime``
         """
@@ -233,7 +237,7 @@ class Transition(BaseALObject, MemberContainerObject):
 
         .. note::
 
-            This method will only be available after the DynamicsClass
+            This method will only be available after the Dynamics
             containing this transition has been built. See
             ``set_source_regime``
         """
@@ -250,6 +254,18 @@ class Transition(BaseALObject, MemberContainerObject):
     @property
     def state_assignment_variables(self):
         return self._state_assignments.iterkeys()
+
+    @property
+    def random_variables(self):
+        return self._random_variables.itervalues()
+
+    @property
+    def random_variable_names(self):
+        return self._random_variables.iterkeys()
+
+    @property
+    def random_variable(self, name):
+        return self._random_variables[name]
 
     @property
     def output_events(self):
@@ -287,7 +303,8 @@ class OnEvent(Transition):
         return visitor.visit_onevent(self, **kwargs)
 
     def __init__(self, src_port_name, state_assignments=None,
-                 output_events=None, target_regime=None):
+                 output_events=None, target_regime=None,
+                 random_variables=None):
         """Constructor for ``OnEvent``
 
             :param src_port_name: The name of the |EventPort| that triggers
@@ -298,7 +315,8 @@ class OnEvent(Transition):
         """
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
-                            target_regime=target_regime)
+                            target_regime=target_regime,
+                            random_variables=random_variables)
         self._src_port_name = src_port_name.strip()
         ensure_valid_identifier(self._src_port_name)
 
@@ -327,7 +345,8 @@ class OnCondition(Transition):
         return visitor.visit_oncondition(self, **kwargs)
 
     def __init__(self, trigger, state_assignments=None,
-                 output_events=None, target_regime=None):
+                 output_events=None, target_regime=None,
+                 random_variables=None):
         """Constructor for ``OnEvent``
 
             :param trigger: Either a |Trigger| object or a ``string`` object
@@ -346,7 +365,8 @@ class OnCondition(Transition):
 
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
-                            target_regime=target_regime)
+                            target_regime=target_regime,
+                            random_variables=random_variables)
 
     def __repr__(self):
         return 'OnCondition( %s )' % self.trigger.rhs

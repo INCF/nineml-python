@@ -31,7 +31,7 @@ def get_component():
 
     parameters = ['C_m', 'g_L', 'E_L', 'Delta', 'V_T', 'S', 'tau_ref', 'tau_w', 'a', 'b']
 
-    aeIF = al.ComponentClass("aeIF",
+    aeIF = al.Dynamics("aeIF",
                              regimes=[
                              al.Regime(
                              name="subthresholdregime",
@@ -51,7 +51,7 @@ def get_component():
                                                to="subthresholdregime"),
                              )
                              ],
-                             analog_ports=[al.ReducePort("Isyn", operator="+")]
+                             analog_ports=[al.AnalogReducePort("Isyn", operator="+")]
                              )
 
     return aeIF

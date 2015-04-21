@@ -14,23 +14,22 @@ from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 class DynamicsActionVisitor(ComponentActionVisitor):
 
-    def visit_componentclass(self, componentclass, **kwargs):
+    def visit_componentclass(self, component_class, **kwargs):
         super(DynamicsActionVisitor, self).visit_componentclass(
-            componentclass, **kwargs)
-        if componentclass._main_block:
-            componentclass._main_block.accept_visitor(self, **kwargs)
-        for subnode in componentclass.subnodes.values():
+            component_class, **kwargs)
+        self._scopes.append(component_class)
+        for subnode in component_class.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
-
-    def visit_dynamicsblock(self, dynamicsblock, **kwargs):
-        self.action_dynamicsblock(dynamicsblock, **kwargs)
-        for p in dynamicsblock:
-            p.accept_visitor(self, **kwargs)
+        popped = self._scopes.pop()
+        assert popped is component_class
 
     def visit_regime(self, regime, **kwargs):
         self.action_regime(regime, **kwargs)
-        for p in regime:
-            p.accept_visitor(self, **kwargs)
+        self._scopes.append(regime)
+        for e in regime:
+            e.accept_visitor(self, **kwargs)
+        popped = self._scopes.pop()
+        assert popped is regime
 
     def visit_statevariable(self, state_variable, **kwargs):
         self.action_statevariable(state_variable, **kwargs)
@@ -64,17 +63,20 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_oncondition(self, on_condition, **kwargs):
         self.action_oncondition(on_condition, **kwargs)
+        self._scopes.append(on_condition)
         on_condition.trigger.accept_visitor(self, **kwargs)
-        for p in on_condition:
-            p.accept_visitor(self, **kwargs)
+        for e in on_condition:
+            e.accept_visitor(self, **kwargs)
+        popped = self._scopes.pop()
+        assert popped is on_condition
 
     def visit_onevent(self, on_event, **kwargs):
         self.action_onevent(on_event, **kwargs)
-        for p in on_event:
-            p.accept_visitor(self, **kwargs)
-
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
-        self.check_pass()
+        self._scopes.append(on_event)
+        for e in on_event:
+            e.accept_visitor(self, **kwargs)
+        popped = self._scopes.pop()
+        assert popped is on_event
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         self.check_pass()
@@ -119,10 +121,10 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
                                   DynamicsActionVisitor):
 
-    def __init__(self, componentclass, expressions):
+    def __init__(self, component_class, expressions):
         DynamicsActionVisitor.__init__(self, require_explicit_overrides=False)
         self.state_variables = set()
-        ComponentRequiredDefinitions.__init__(self, componentclass,
+        ComponentRequiredDefinitions.__init__(self, component_class,
                                               expressions)
 
     def __repr__(self):
@@ -144,9 +146,6 @@ class DynamicsElementFinder(ComponentElementFinder, DynamicsActionVisitor):
     def __init__(self, element):
         DynamicsActionVisitor.__init__(self, require_explicit_overrides=True)
         ComponentElementFinder.__init__(self, element)
-
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
-        pass
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         if self.element is regime:

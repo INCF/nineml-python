@@ -13,7 +13,7 @@ from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from nineml.units import Unit, unitless
 from ..abstraction_layer import (
-    ComponentClass, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
+    ComponentClass, Dynamics, ConnectionRule, RandomDistribution)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
@@ -44,10 +44,10 @@ class Reference(BaseReference):
         """
         docstring needed
 
-        `name`     -- a name of an existing componentclass to refer to
+        `name`     -- a name of an existing component_class to refer to
         `document` -- a Document object containing the top-level
                       objects in the current file
-        `url`      -- a url of the file containing the exiting componentclass
+        `url`      -- a url of the file containing the exiting component_class
         """
         super(Reference, self).__init__(name, document, url)
         if not isinstance(self._referred_to, BaseULObject):
@@ -68,7 +68,7 @@ def resolve_reference(from_xml):
             reference = Reference.from_xml(element, document)
             ul_object = reference.user_layer_object
         else:
-            assert element.tag == NINEML + cls.element_name
+            cls.check_tag(element)
             ul_object = from_xml(cls, element, document)
         return ul_object
     return resolving_from_xml
@@ -91,23 +91,23 @@ class Component(BaseULObject, DocumentLevelObject):
     A :class:`Component` may be regarded as a parameterized instance of a
     :class:`~nineml.abstraction_layer.ComponentClass`.
 
-    A componentclass may be created either from a
+    A component_class may be created either from a
     :class:`~nineml.abstraction_layer.ComponentClass`  together with a set
     of properties (parameter values), or by cloning then modifying an
-    existing componentclass (the prototype).
+    existing component_class (the prototype).
 
     *Arguments*:
         `name`:
-             a name for the componentclass.
+             a name for the component_class.
         `definition`:
-             the URL of an abstraction layer componentclass class definition,
+             the URL of an abstraction layer component_class class definition,
              a :class:`Definition` or a :class:`Prototype` instance.
         `properties`:
              a dictionary containing (value,units) pairs or a
-             :class:`PropertySet` for the componentclass's properties.
+             :class:`PropertySet` for the component_class's properties.
         `initial_values`:
             a dictionary containing (value,units) pairs or a
-            :class:`PropertySet` for the componentclass's state variables.
+            :class:`PropertySet` for the component_class's state variables.
 
     """
 
@@ -120,8 +120,8 @@ class Component(BaseULObject, DocumentLevelObject):
     def __init__(self, name, definition, properties={}, initial_values={},
                  url=None):
         """
-        Create a new componentclass with the given name, definition and
-        properties, or create a prototype to another componentclass that will
+        Create a new component_class with the given name, definition and
+        properties, or create a prototype to another component_class that will
         be resolved later.
         """
         BaseULObject.__init__(self)
@@ -164,12 +164,16 @@ class Component(BaseULObject, DocumentLevelObject):
         except AttributeError:  # 'check_initial_values' is only in dynamics
             pass
 
+    def __getinitargs__(self):
+        return (self.name, self.definition, self.property_set,
+                self.initial_value_set, self._url)
+
     @property
     def component_class(self):
         """
-        Returns the componentclass class from the definition object or the
+        Returns the component_class class from the definition object or the
         prototype's definition, or the prototype's prototype's definition, etc.
-        depending on how the componentclass is defined.
+        depending on how the component_class is defined.
         """
         defn = self.definition
         while not isinstance(defn, Definition):
@@ -183,7 +187,7 @@ class Component(BaseULObject, DocumentLevelObject):
     @property
     def property_set(self):
         """
-        The set of componentclass properties (parameter values).
+        The set of component_class properties (parameter values).
         """
         # Recursively retrieves properties defined in prototypes and updates
         # them with properties defined locally
@@ -196,7 +200,7 @@ class Component(BaseULObject, DocumentLevelObject):
     @property
     def properties(self):
         """
-        The set of componentclass properties (parameter values).
+        The set of component_class properties (parameter values).
         """
         # Recursively retrieves properties defined in prototypes and updates
         # them with properties defined locally
@@ -216,7 +220,7 @@ class Component(BaseULObject, DocumentLevelObject):
         if prop.units.dimension != param.dimension:
             raise NineMLUnitMismatchError(
                 "Dimensions for '{}' property ('{}') don't match that of "
-                "componentclass class ('{}')."
+                "component_class class ('{}')."
                 .format(prop.name, prop.units.dimension.name,
                         param.dimension.name))
         self._properties[prop.name] = prop
@@ -225,7 +229,7 @@ class Component(BaseULObject, DocumentLevelObject):
     def initial_value_set(self):
         """
         The set of initial values for the state variables of the
-        componentclass.
+        component_class.
         """
         # Recursively retrieves initial values defined in prototypes and
         # updates them with properties defined locally
@@ -249,7 +253,7 @@ class Component(BaseULObject, DocumentLevelObject):
                 hash(self.component_class) ^ hash(self.properties))
 
     def __repr__(self):
-        return ('%s(name="%s", componentclass="%s")' %
+        return ('%s(name="%s", component_class="%s")' %
                 (self.__class__.__name__, self.name,
                  self.component_class.name))
 
@@ -289,7 +293,7 @@ class Component(BaseULObject, DocumentLevelObject):
             if prop_dimension != param_dimension:
                 raise NineMLRuntimeError(
                     "Dimensions for '{}' property ('{}') don't match that of "
-                    "componentclass class ('{}')."
+                    "component_class class ('{}')."
                     .format(param.name, prop_dimension, param_dimension))
 
     @write_reference
@@ -302,10 +306,9 @@ class Component(BaseULObject, DocumentLevelObject):
         props_and_initial_values = (self._properties.to_xml() +
                                     [iv.to_xml()
                                      for iv in self.initial_values])
-        element = E(self.element_name,
-                    self._definition.to_xml(),
-                    *props_and_initial_values,
-                    name=self.name)
+        element = E.Component(self._definition.to_xml(),
+                              *props_and_initial_values,
+                              name=self.name)
         return element
 
     @classmethod
@@ -313,9 +316,6 @@ class Component(BaseULObject, DocumentLevelObject):
     @read_annotations
     def from_xml(cls, element, document):
         """docstring missing"""
-        if element.tag != NINEML + cls.element_name:
-            raise Exception("Expecting tag name %s%s, actual tag name %s" % (
-                NINEML, cls.element_name, element.tag))
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
             element.findall(NINEML + Property.element_name), document)
@@ -327,26 +327,11 @@ class Component(BaseULObject, DocumentLevelObject):
         else:
             prototype_element = element.find(NINEML + "Prototype")
             if prototype_element is None:
-                raise Exception("A componentclass must contain either a "
+                raise Exception("A component_class must contain either a "
                                 "defintion or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
-        ComponentType = cls.get_component_type(definition)
-        return ComponentType(name, definition, properties=properties,
+        return Component(name, definition, properties=properties,
                              initial_values=initial_values, url=document.url)
-
-    @classmethod
-    def get_component_type(cls, definition):
-        try:
-            comp_type = type(definition.component)  # If Prototype
-        except AttributeError:
-            component_class = definition.component_class
-            if isinstance(component_class, DynamicsClass):
-                comp_type = Dynamics
-            elif isinstance(component_class, RandomDistributionClass):
-                comp_type = RandomDistribution
-            elif isinstance(component_class, ConnectionRuleClass):
-                comp_type = ConnectionRule
-        return comp_type
 
     @property
     def used_units(self):
@@ -394,7 +379,7 @@ class Quantity(BaseULObject):
     A numerical parameter is a (name, value, units) triplet, a string parameter
     is a (name, value) pair.
 
-    Numerical values may either be numbers, or a componentclass that generates
+    Numerical values may either be numbers, or a component_class that generates
     numbers, e.g. a RandomDistribution instance.
     """
     __metaclass__ = ABCMeta  # Abstract base class
@@ -438,7 +423,7 @@ class Quantity(BaseULObject):
             return self._value.value
         else:
             raise NineMLRuntimeError("Cannot access single value for array or "
-                                     "componentclass type")
+                                     "component_class type")
 
     @property
     def quantity(self):
@@ -451,7 +436,7 @@ class Quantity(BaseULObject):
             raise NotImplementedError
         else:
             raise NineMLRuntimeError("Cannot access value array for "
-                                     "componentclass or single value types")
+                                     "component_class or single value types")
 
     @property
     def random_distribution(self):
@@ -459,7 +444,7 @@ class Quantity(BaseULObject):
             return self._value.componentclass
         else:
             raise NineMLRuntimeError("Cannot access random randomdistribution for "
-                                     "componentclass or single value types")
+                                     "component_class or single value types")
 
     def set_units(self, units):
         if units.dimension != self.units.dimension:
@@ -534,7 +519,7 @@ class Property(Quantity):
     A numerical parameter is a (name, value, units) triplet, a string parameter
     is a (name, value) pair.
 
-    Numerical values may either be numbers, or a componentclass that generates
+    Numerical values may either be numbers, or a component_class that generates
     numbers, e.g. a RandomDistribution instance.
     """
     element_name = "Property"
@@ -566,7 +551,7 @@ class Property(Quantity):
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        check_tag(element, cls)
+        cls.check_tag(element)
         quantity = Quantity.from_xml(element, document)
         try:
             name = element.get('name')
@@ -586,7 +571,7 @@ class InitialValue(Property):
 class PropertySet(dict):
 
     """
-    Container for the set of properties for a componentclass.
+    Container for the set of properties for a component_class.
     """
 
     def __init__(self, *properties, **kwproperties):
@@ -654,32 +639,32 @@ class InitialValueSet(PropertySet):
         return cls(*initial_values)
 
 
-class Dynamics(Component):
-
-    def check_initial_values(self):
-        for var in self.definition.componentclass.state_variables:
-            try:
-                initial_value = self.initial_values[var.name]
-            except KeyError:
-                raise Exception("Initial value not specified for %s" %
-                                var.name)
-            check_units(initial_value.units, var.dimension)
-
-
-class ConnectionRule(Component):
-    """
-    docstring needed
-    """
-    pass
-
-
-class RandomDistribution(Component):
-    """
-    Component representing a random number randomdistribution, e.g. normal, gamma,
-    binomial.
-
-    *Example*::
-
-        example goes here
-    """
-    pass
+# class Dynamics(Component):
+# 
+#     def check_initial_values(self):
+#         for var in self.definition.componentclass.state_variables:
+#             try:
+#                 initial_value = self.initial_values[var.name]
+#             except KeyError:
+#                 raise Exception("Initial value not specified for %s" %
+#                                 var.name)
+#             check_units(initial_value.units, var.dimension)
+# 
+# 
+# class ConnectionRule(Component):
+#     """
+#     docstring needed
+#     """
+#     pass
+# 
+# 
+# class RandomDistribution(Component):
+#     """
+#     Component representing a random number randomdistribution, e.g. normal,
+#     gamma, binomial.
+# 
+#     *Example*::
+# 
+#         example goes here
+#     """
+#     pass

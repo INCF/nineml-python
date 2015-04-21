@@ -24,18 +24,18 @@ class RandomDistributionValidator(object):
     """Class for grouping all the component-validations tests together"""
 
     @classmethod
-    def validate_componentclass(cls, componentclass):
+    def validate_componentclass(cls, component_class):
         """
         Tests a componentclassclass against a variety of tests, to verify its
         internal structure
         """
         # Check class structure:
-        TypesRandomDistributionValidator(componentclass)
-#         NoDuplicatedObjectsRandomDistributionValidator(componentclass)  # Commented out until perNamespaceValidator is removed @IgnorePep8
-#         LocalNameConflictsRandomDistributionValidator(componentclass)
-#         DimensionNameConflictsRandomDistributionValidator(componentclass)
-#         AliasesAreNotRecursiveRandomDistributionValidator(componentclass)
-#         NoUnresolvedSymbolsRandomDistributionValidator(componentclass)
-#         PortConnectionsRandomDistributionValidator(componentclass)
+        TypesRandomDistributionValidator(component_class)
+#         NoDuplicatedObjectsRandomDistributionValidator(component_class)  # Commented out until perNamespaceValidator is removed @IgnorePep8
+#         LocalNameConflictsRandomDistributionValidator(component_class)
+#         DimensionNameConflictsRandomDistributionValidator(component_class)
+#         AliasesAreNotRecursiveRandomDistributionValidator(component_class)
+#         NoUnresolvedSymbolsRandomDistributionValidator(component_class)
+#         PortConnectionsRandomDistributionValidator(component_class)
 #         CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(
-#             componentclass)
+#             component_class)

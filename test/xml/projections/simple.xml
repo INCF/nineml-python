@@ -7,13 +7,13 @@
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="S" dimension="conductance"/>
   <Projection name="Izhikevich2HH">
-    <Source>
+    <Pre>
       <Reference url="../populations/simple.xml">IzhiPopulation</Reference>
-    </Source>
-    <Destination>
+    </Pre>
+    <Post>
       <Reference url="../populations/simple.xml">HHPopulation</Reference>
       <FromResponse send_port="i" receive_port="iSynapse"/>
-    </Destination>
+    </Post>
     <Response>
       <Component name="AMPA">
         <Definition url="../postsynapticresponses/DoubleExpCondSynapse.xml">DoubleExpCondSynapse</Definition>

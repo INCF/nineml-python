@@ -4,7 +4,7 @@ import unittest
 from nineml.abstraction_layer import (Regime, On, AnalogSendPort,
                                       AnalogReceivePort, NamespaceAddress,
                                       OutputEvent)
-from nineml.abstraction_layer.dynamics import DynamicsClass as ComponentClass
+from nineml.abstraction_layer.dynamics import Dynamics as Dynamics
 
 
 class ComponentClassQueryer_test(unittest.TestCase):
@@ -15,7 +15,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.componentqueryer import ComponentClassQueryer
 
         # Check inference of output event ports:
-        c = ComponentClass(
+        c = Dynamics(
             name='Comp1',
             regimes=Regime(
                 transitions=[
@@ -33,7 +33,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         self.assertEquals((list(c.query.event_send_ports)[1]).name, 'ev_port2')
 
         # Check inference of output event ports:
-        c = ComponentClass(
+        c = Dynamics(
             name='Comp1',
             regimes=[
                 Regime(name='r1',
@@ -61,7 +61,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         self.assertEquals((list(c.query.event_send_ports)[2]).name, 'ev_port3')
 
         # Check inference of output event ports:
-        c = ComponentClass(
+        c = Dynamics(
             name='Comp1',
             regimes=[
                 Regime(name='r1',
@@ -100,20 +100,20 @@ class ComponentClassQueryer_test(unittest.TestCase):
 
         # Signature: name(self)
                 # Get the namespace address of this component
-        d = ComponentClass(
+        d = Dynamics(
             name='D', aliases=['A:=1', 'B:=2'], analog_ports=[AnalogSendPort('A'), AnalogSendPort('B')])
-        e = ComponentClass(name='E', analog_ports=[AnalogReceivePort('C')])
-        f = ComponentClass(name='F', analog_ports=[AnalogReceivePort('D')])
-        g = ComponentClass(name='G', analog_ports=[AnalogReceivePort('E')])
-        b = ComponentClass(name='B', subnodes={
+        e = Dynamics(name='E', analog_ports=[AnalogReceivePort('C')])
+        f = Dynamics(name='F', analog_ports=[AnalogReceivePort('D')])
+        g = Dynamics(name='G', analog_ports=[AnalogReceivePort('E')])
+        b = Dynamics(name='B', subnodes={
                            'd': d, 'e': e}, portconnections=[('d.A', 'e.C')])
-        c = ComponentClass(name='C',
+        c = Dynamics(name='C',
                            aliases=['G:=-1'],
                            analog_ports=[AnalogSendPort('G')],
                            subnodes={'f': f, 'g': g},
                            portconnections=[('G', 'f.D')])
 
-        a = ComponentClass(name='A',
+        a = Dynamics(name='A',
                            subnodes={'b': b, 'c': c},
                            analog_ports=[AnalogReceivePort('F')],
                            portconnections=[('b.d.A', 'F')]
@@ -142,7 +142,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.componentqueryer import ComponentClassQueryer
 
 
-        c = ComponentClass(
+        c = Dynamics(
             name='Comp1',
             regimes=[
                 Regime(name='r1',
@@ -178,20 +178,20 @@ class ComponentClassQueryer_test(unittest.TestCase):
         # from nineml.abstraction_layer.component.componentqueryer import ComponentClassQueryer
 
 
-        c = ComponentClass(name='cl',
+        c = Dynamics(name='cl',
                            regimes=[
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r1',
                                        transitions=On('X>X1', do=['X=X0'], to='r2')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r2',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r3')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r3',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r4')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r4',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r1')),
@@ -207,20 +207,20 @@ class ComponentClassQueryer_test(unittest.TestCase):
                 # Returns an iterator over this component and all subcomponents
 
 
-        d = ComponentClass(name='D')
-        e = ComponentClass(name='E')
-        f = ComponentClass(name='F')
-        g = ComponentClass(name='G')
+        d = Dynamics(name='D')
+        e = Dynamics(name='E')
+        f = Dynamics(name='F')
+        g = Dynamics(name='G')
 
-        b = ComponentClass(name='B')
+        b = Dynamics(name='B')
         b.insert_subnode(namespace='d', subnode=d)
         b.insert_subnode(namespace='e', subnode=e)
 
-        c = ComponentClass(name='C')
+        c = Dynamics(name='C')
         c.insert_subnode(namespace='f', subnode=f)
         c.insert_subnode(namespace='g', subnode=g)
 
-        a = ComponentClass(name='A')
+        a = Dynamics(name='A')
         a.insert_subnode(namespace='b', subnode=b)
         a.insert_subnode(namespace='c', subnode=c)
 

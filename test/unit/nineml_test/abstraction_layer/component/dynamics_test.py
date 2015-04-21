@@ -56,7 +56,7 @@ class TestOn(unittest.TestCase):
         self.assertEquals(len(list(tr.state_assignments)), 2)
 
 
-# These are tested in the ComponentClass
+# These are tested in the Dynamics
 # class Dynamics_test(unittest.TestCase):
 #
 #    def test_Constructor(self):
@@ -225,7 +225,7 @@ class OnCondition_test(unittest.TestCase):
 # Signature: name(self, source_regime)
 # Internal method, used during component construction.
 #
-# Used internally by the ComponentClass objects after all objects
+# Used internally by the Dynamics objects after all objects
 # have be constructed, in the ``_ResolveTransitionRegimeNames()`` method.
 # This is because when we build Transitions, the Regimes that they refer
 # to generally are not build yet, so are refered to by strings. This
@@ -252,7 +252,7 @@ class OnCondition_test(unittest.TestCase):
 #
 # .. note::
 #
-# This method will only be available after the ComponentClass
+# This method will only be available after the Dynamics
 # containing this transition has been built. See ``set_source_regime``
 # from nineml.abstraction_layer.component.dynamics import OnCondition
 #        warnings.warn('Tests not implemented')
@@ -281,7 +281,7 @@ class OnCondition_test(unittest.TestCase):
 #
 # .. note::
 #
-# This method will only be available after the ComponentClass
+# This method will only be available after the Dynamics
 # containing this transition has been built. See ``set_source_regime``
 # from nineml.abstraction_layer.component.dynamics import OnCondition
 #        warnings.warn('Tests not implemented')
@@ -525,7 +525,7 @@ class StateVariable_test(unittest.TestCase):
 # Signature: name(self, source_regime)
 # Internal method, used during component construction.
 #
-# Used internally by the ComponentClass objects after all objects
+# Used internally by the Dynamics objects after all objects
 # have be constructed, in the ``_ResolveTransitionRegimeNames()`` method.
 # This is because when we build Transitions, the Regimes that they refer
 # to generally are not build yet, so are refered to by strings. This
@@ -552,7 +552,7 @@ class StateVariable_test(unittest.TestCase):
 #
 # .. note::
 #
-# This method will only be available after the ComponentClass
+# This method will only be available after the Dynamics
 # containing this transition has been built. See ``set_source_regime``
 # from nineml.abstraction_layer.component.dynamics import Transition
 #        warnings.warn('Tests not implemented')
@@ -583,7 +583,7 @@ class StateVariable_test(unittest.TestCase):
 #
 # .. note::
 #
-# This method will only be available after the ComponentClass
+# This method will only be available after the Dynamics
 # containing this transition has been built. See ``set_source_regime``
 # from nineml.abstraction_layer.component.dynamics import Transition
 #        warnings.warn('Tests not implemented')

@@ -1,7 +1,7 @@
 import nineml.abstraction_layer as al
 from nineml.units import current, time
 
-model = al.DynamicsClass(
+model = al.Dynamics(
     name="AlphaPSR",
     aliases=["Isyn := A"],
     regimes=[
@@ -11,7 +11,7 @@ model = al.DynamicsClass(
                 "dA/dt = (B - A)/tau_syn",  # TGC 4/15 changed from "B - A/tau_syn" as dimensions didn't add up @IgnorePep8
                 "dB/dt = -B/tau_syn"],
             transitions=al.On('spike',
-                              do=["B = B + q"]),  # would be nice to allow constant quantities, so we could make q dimensionless @IgnorePep8
+                              do=["B = B + weight"]),
         )
     ],
     state_variables=[
@@ -21,7 +21,7 @@ model = al.DynamicsClass(
     analog_ports=[al.AnalogSendPort("Isyn", dimension=current),
                   al.AnalogSendPort("A", dimension=current),
                   al.AnalogSendPort("B", dimension=current),
-                  al.AnalogReceivePort("q", dimension=current)],
+                  al.AnalogReceivePort("weight", dimension=current)],
     parameters=[al.Parameter('tau_syn', dimension=time)]
 )
 

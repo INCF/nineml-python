@@ -1,27 +1,26 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.incf.org/9ML/0.3">
-  <ComponentClass name="CobaSyn">
+  <Dynamics name="CobaSyn">
     <AnalogPort mode="recv" name="V"/>
     <AnalogPort mode="send" name="I"/>
     <EventPort mode="recv" name="spikeinput"/>
-    <Parameter dimension="" name="tau"/>
-    <Parameter dimension="" name="q"/>
-    <Parameter dimension="" name="vrev"/>
-    <Dynamics>
-      <Regime name="cobadefaultregime">
-        <TimeDerivative variable="g">
-          <MathInline>-g/tau</MathInline>
-        </TimeDerivative>
-        <OnEvent target_regime="cobadefaultregime" src_port="spikeinput">
-          <StateAssignment variable="g">
-            <MathInline>g+q</MathInline>
-          </StateAssignment>
-        </OnEvent>
-      </Regime>
-      <Alias name="I">
-        <MathInline>g*(vrev-V)</MathInline>
-      </Alias>
-      <StateVariable dimension="" name="g"/>
-    </Dynamics>
-  </ComponentClass>
+    <Parameter dimension="time" name="tau"/>
+    <Parameter dimension="dimensionless" name="q"/>
+    <Parameter dimension="voltage" name="vrev"/>
+    <Regime name="cobadefaultregime">
+      <TimeDerivative variable="g">
+        <MathInline>-g/tau</MathInline>
+      </TimeDerivative>
+      <OnEvent target_regime="cobadefaultregime" src_port="spikeinput">
+        <StateAssignment variable="g">
+          <MathInline>g+q</MathInline>
+        </StateAssignment>
+      </OnEvent>
+    </Regime>
+    <Alias name="I">
+      <MathInline>g*(vrev-V)</MathInline>
+    </Alias>
+    <StateVariable dimension="conductance" name="g"/>
+  </Dynamics>
+  <Dimension name="conductance" m="-1" l="-2" t="3" i="2"/>
 </NineML>

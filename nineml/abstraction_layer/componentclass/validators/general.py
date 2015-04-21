@@ -6,7 +6,7 @@ docstring needed
 """
 from collections import defaultdict
 from . import PerNamespaceComponentValidator
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLDimensionError
 from ...expressions.utils import is_valid_lhs_target
 from ...expressions import reserved_identifiers
 from nineml.utils import assert_no_duplicates
@@ -21,14 +21,14 @@ class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
 
     """Check that aliases are not self-referential"""
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
-        self.visit(componentclass)
+        self.visit(component_class)
 
-    def action_componentclass(self, componentclass, namespace):
+    def action_componentclass(self, component_class, namespace):
 
-        unresolved_aliases = dict((a.lhs, a) for a in componentclass.aliases)
+        unresolved_aliases = dict((a.lhs, a) for a in component_class.aliases)
 
         def alias_contains_unresolved_symbols(alias):
             unresolved = [sym for sym in alias.rhs_atoms
@@ -60,7 +60,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
     parameters, aliases, statevariables and ports
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
 
@@ -69,7 +69,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
         self.time_derivatives = defaultdict(list)
         self.state_assignments = defaultdict(list)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
         # Check Aliases:
         for ns, aliases in self.aliases.iteritems():
@@ -119,18 +119,21 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
     def action_constant(self, constant, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace, constant.name)
 
+    def action_randomvariable(self, randomvariable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.add_symbol(namespace, randomvariable.name)        
+
 
 class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=True)
         self.all_objects = list()
-        self.visit(componentclass)
+        self.visit(component_class)
         assert_no_duplicates(self.all_objects)
 
-    def action_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(componentclass)
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.all_objects.append(component_class)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self.all_objects.append(parameter)
@@ -141,6 +144,12 @@ class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.all_objects.append(constant)
 
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.all_objects.append(randomvariable)
+
+    def action_randomdistribution(self, randomdistribution, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.all_objects.append(randomdistribution)
+
 
 class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
         PerNamespaceComponentValidator):
@@ -150,11 +159,11 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     on the left-hand-side of an equation
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def check_lhssymbol_is_valid(self, symbol):
         assert isinstance(symbol, basestring)
@@ -166,6 +175,9 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(parameter.name)
 
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable
+        self.check_lhssymbol_is_valid(randomvariable.name)
+
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(alias.lhs)
 
@@ -175,24 +187,35 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
 
 class DimensionalityComponentValidator(PerNamespaceComponentValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
-        self.componentclass = componentclass
+        self.component_class = component_class
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database
-        for a in componentclass.attributes_with_dimension:
+        for a in component_class.attributes_with_dimension:
             if not isinstance(a, SendPortBase):
                 self._dimensions[a] = sympify(a.dimension)
-        for a in componentclass.attributes_with_units:
+        for a in component_class.attributes_with_units:
             self._dimensions[a] = sympify(a.units.dimension)
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def _get_dimensions(self, element):
         if isinstance(element, (sympy.Symbol, basestring)):
             if element == sympy.Symbol('t'):  # Reserved symbol 't'
                 return sympy.Symbol('t')  # representation of the time dim.
-            element = self.componentclass[Expression.symbol_to_str(element)]
+            name = Expression.symbol_to_str(element)
+            element = None
+            for scope in reversed(self._scopes):
+                try:
+                    element = scope[name]
+                except KeyError:
+                    pass
+            if element is None:
+                raise NineMLRuntimeError(
+                    "Did not find '{}' in '{}' dynamics class (scopes: {})"
+                    .format(name, self.component_class.name,
+                            reversed(self._scopes)))
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions
@@ -220,7 +243,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         elif isinstance(expr, sympy.Pow):
             exp_dims = self._flatten_dims(expr.args[1], element)
             if exp_dims != 1:
-                raise NineMLRuntimeError(self._construct_error_message(
+                raise NineMLDimensionError(self._construct_error_message(
                     "Exponents are required to be dimensionless arguments,"
                     " which was not the case in", exp_dims, expr, element))
             # FIXME: Probably should check that if the exponent is not an
@@ -233,14 +256,31 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
                 if dims is None:
                     dims = arg_dims
                 elif arg_dims - dims != 0:
-                    raise NineMLRuntimeError(self._construct_error_message(
+                    raise NineMLDimensionError(self._construct_error_message(
                         "Dimensions do not match within",
                         ' + '.join(str(self._flatten_dims(a, element))
                                    for a in expr.args), expr, element))
+        elif isinstance(expr, (sympy.GreaterThan, sympy.LessThan,
+                               sympy.StrictGreaterThan, sympy.StrictLessThan)):
+            lhs_dims = self._flatten_dims(expr.args[0], element)
+            rhs_dims = self._flatten_dims(expr.args[1], element)
+            if lhs_dims - rhs_dims != 0:
+                raise NineMLDimensionError(self._construct_error_message(
+                    "LHS/RHS dimensions of boolean expression",
+                    lhs_dims - rhs_dims, expr,
+                    postamble="do not match"))
+            dims = 0  # boolean expression
+        elif isinstance(expr, (sympy.And, sympy.Or, sympy.Not)):
+            for arg in expr.args:
+                dims = self._flatten_dims(arg, element)
+                if dims != 0:  # boolean expression == 0
+                    raise NineMLDimensionError(self._construct_error_message(
+                        "Logical expression provided non-boolean argument '{}'"
+                        .format(arg), dims, expr))
         elif isinstance(type(expr), sympy.FunctionClass):
             arg_dims = self._flatten_dims(expr.args[0], element)
             if arg_dims != 1:
-                raise NineMLRuntimeError(self._construct_error_message(
+                raise NineMLDimensionError(self._construct_error_message(
                     "Dimensionless arguments required for function",
                     arg_dims, element=element, expr=expr))
             dims = 1
@@ -252,25 +292,16 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
 
     def _compare_dimensionality(self, dimension, reference, element, ref_name):
         if dimension - sympify(reference) != 0:
-            raise NineMLRuntimeError(self._construct_error_message(
+            raise NineMLDimensionError(self._construct_error_message(
                 "Dimension of", dimension, element=element,
                 postamble=(" match that declared for '{}', {} ('{}')".format(
                     ref_name, sympify(reference), reference.name))))
 
-    def _check_boolean_expr(self, expr):
-        lhs, rhs = expr.args
-        lhs_dimension = self._get_dimensions(lhs)
-        rhs_dimension = self._get_dimensions(rhs)
-        if lhs_dimension - rhs_dimension != 0:
-            raise NineMLRuntimeError(self._construct_error_message(
-                "LHS/RHS dimensions of", lhs_dimension - rhs_dimension, expr,
-                postamble="do not match"))
-
     def _check_send_port(self, port):
-        element = self.componentclass[port.name]
+        element = self.component_class[port.name]
         try:
             if element.dimension != port.dimension:
-                raise NineMLRuntimeError(self._construct_error_message(
+                raise NineMLDimensionError(self._construct_error_message(
                     "Dimension of", sympify(element.dimension),
                     element=element, postamble=(
                         "does match attached send port dimension {} ('{}')"

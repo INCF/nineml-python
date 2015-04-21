@@ -1,5 +1,5 @@
 """
-Definitions for the DynamicsClass. DynamicsClass derives from 2 other mixin
+Definitions for the Dynamics. Dynamics derives from 2 other mixin
 classes, which provide functionality for hierachical components and for local
 components definitions of interface and dynamics
 
@@ -11,7 +11,8 @@ from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction_layer.componentclass import (
-    ComponentClass, Parameter, MainBlock)
+    ComponentClass, Parameter)
+from nineml.annotations import annotate_xml, read_annotations
 from .regimes import StateVariable, Regime
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
@@ -31,7 +32,7 @@ class _NamespaceMixin(object):
 
     def __init__(self, subnodes=None, portconnections=None):
         """Constructor - For parameter descriptions, see the
-        DynamicsClass.__init__() method
+        Dynamics.__init__() method
         """
 
         # Prevent dangers with default arguments.
@@ -94,7 +95,7 @@ class _NamespaceMixin(object):
     def insert_subnode(self, namespace, subnode):
         """Insert a subnode into this component
 
-        :param subnode: An object of type ``DynamicsClass``.
+        :param subnode: An object of type ``Dynamics``.
         :param namespace: A `string` specifying the name of the component in
             this components namespace.
 
@@ -110,7 +111,7 @@ class _NamespaceMixin(object):
             err = 'Invalid namespace: %s' % type(subnode)
             raise NineMLRuntimeError(err)
 
-        if not isinstance(subnode, DynamicsClass):
+        if not isinstance(subnode, Dynamics):
             err = 'Attempting to insert invalid '
             err += 'object as subcomponent: %s' % type(subnode)
             raise NineMLRuntimeError(err)
@@ -148,36 +149,44 @@ class _NamespaceMixin(object):
         return self._portconnections
 
 
-class DynamicsClass(ComponentClass, _NamespaceMixin):
+class Dynamics(ComponentClass, _NamespaceMixin):
 
-    """A DynamicsClass object represents a *component* in NineML.
+    """A Dynamics object represents a *component* in NineML.
 
       .. todo::
 
          For more information, see
 
     """
+    element_name = 'Dynamics'
     defining_attributes = (ComponentClass.defining_attributes +
                            ('_analog_send_ports', '_analog_receive_ports',
                             '_analog_reduce_ports', '_event_send_ports',
-                            '_event_receive_ports'))
+                            '_event_receive_ports', '_regimes',
+                            '_state_variables'))
     class_to_member_dict = dict(
         tuple(ComponentClass.class_to_member_dict.iteritems()) +
         ((AnalogSendPort, '_analog_send_ports'),
          (AnalogReceivePort, '_analog_receive_ports'),
          (AnalogReducePort, '_analog_reduce_ports'),
          (EventSendPort, '_event_send_ports'),
-         (EventReceivePort, '_event_receive_ports')))
+         (EventReceivePort, '_event_receive_ports'),
+         (Regime, '_regimes'),
+         (StateVariable, '_state_variables')))
+
+    send_port_dicts = ('_analog_send_ports', '_event_send_ports')
+    receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',
+                          '_event_send_ports')
 
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[],
-                 dynamicsblock=None, subnodes=None,
+                 subnodes=None,
                  portconnections=None, regimes=None,
                  aliases=None, state_variables=None,
                  constants=None):
-        """Constructs a DynamicsClass
+        """Constructs a Dynamics
 
-        :param name: The name of the componentclass.
+        :param name: The name of the component_class.
         :param parameters: A list containing either |Parameter| objects
             or strings representing the parameter names. If ``None``, then the
             parameters are automatically inferred from the |Dynamics| block.
@@ -186,24 +195,22 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         :param event_ports: A list of |EventPorts| objects, which will be the
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
-        :param dynamicsblock: A |DynamicsBlock| object, defining the local
-                              dynamicsblock of the componentclass.
         :param subnodes: A dictionary mapping namespace-names to sub-
-            componentclass. [Type: ``{string:|DynamicsClass|,
-            string:|DynamicsClass|, string:|DynamicsClass|}`` ] describing the
-            namespace of subcomponents for this componentclass.
+            component_class. [Type: ``{string:|Dynamics|,
+            string:|Dynamics|, string:|Dynamics|}`` ] describing the
+            namespace of subcomponents for this component_class.
         :param portconnections: A list of pairs, specifying the connections
-            between the ports of the subcomponents in this componentclass.
+            between the ports of the subcomponents in this component_class.
             These can be `(|NamespaceAddress|, |NamespaceAddress|)' or
             ``(string, string)``.
         :param interface: A shorthand way of specifying the **interface** for
-            this componentclass; |Parameters|, |AnalogPorts| and |EventPorts|.
+            this component_class; |Parameters|, |AnalogPorts| and |EventPorts|.
             ``interface`` takes a list of these objects, and automatically
             resolves them by type into the correct types.
 
         Examples:
 
-        >>> a = DynamicsClass(name='MyComponent1')
+        >>> a = Dynamics(name='MyComponent1')
 
         .. todo::
 
@@ -212,19 +219,24 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
             For examples
 
         """
-        # We can specify in the componentclass, and they will get forwarded to
-        # the dynamics class. We check that we do not specify half-and-half:
-        if dynamicsblock is not None:
-            if regimes or aliases or state_variables or constants:
-                err = "Either specify a 'dynamicsblock' parameter, or "
-                err += "state_variables /regimes/aliases, but not both!"
-                raise NineMLRuntimeError(err)
-        else:
-            dynamicsblock = DynamicsBlock(regimes=regimes, aliases=aliases,
-                                          state_variables=state_variables,
-                                          constants=constants)
-        ComponentClass.__init__(self, name, parameters,
-                                main_block=dynamicsblock)
+        ComponentClass.__init__(self, name=name, parameters=parameters,
+                                aliases=aliases, constants=constants)
+        regimes = normalise_parameter_as_list(regimes)
+        state_variables = normalise_parameter_as_list(state_variables)
+
+        # Load the state variables as objects or strings:
+        sv_types = (basestring, StateVariable)
+        sv_td = filter_discrete_types(state_variables, sv_types)
+        sv_from_strings = [StateVariable(o, dimension=None)
+                           for o in sv_td[basestring]]
+        state_variables = sv_td[StateVariable] + sv_from_strings
+
+        assert_no_duplicates(r.name for r in regimes)
+        assert_no_duplicates(s.name for s in state_variables)
+
+        self._regimes = dict((r.name, r) for r in regimes)
+        self._state_variables = dict((s.name, s) for s in state_variables)
+
         self._query = DynamicsQueryer(self)
 
         # Ensure analog_ports is a list not an iterator
@@ -248,7 +260,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         self._event_receive_ports = self._event_send_ports = self.subnodes = {}
 
         # EventPort, StateVariable and Parameter Inference:
-        inferred_struct = DynamicsClassInterfaceInferer(self)
+        inferred_struct = DynamicsInterfaceInferer(self)
 
         # Check any supplied parameters match:
         if parameters is not None:
@@ -266,7 +278,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
-            self._main_block._state_variables = state_vars
+            self._state_variables = state_vars
 
         # Set and check event receive ports match inferred
         self._event_receive_ports = dict(
@@ -304,7 +316,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         # Store flattening Information:
         self._flattener = None
 
-        # Is the finished componentclass valid?:
+        # Is the finished component_class valid?:
         self.validate()
 
     # -------------------------- #
@@ -325,7 +337,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         return DynamicsElementFinder(element).found_in(self)
 
     def __repr__(self):
-        return "<dynamics.DynamicsClass %s>" % self.name
+        return "<dynamics.Dynamics %s>" % self.name
 
     def validate(self):
         self._resolve_transition_regimes()
@@ -342,16 +354,21 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def num_state_variables(self):
-        return len(list(self._main_block._state_variables))
+        return len(list(self._state_variables))
 
     @property
     def num_regimes(self):
-        return len(list(self._main_block._regimes))
+        return len(list(self._regimes))
 
     @property
     def attributes_with_dimension(self):
-        return chain(super(DynamicsClass, self).attributes_with_dimension,
+        return chain(super(Dynamics, self).attributes_with_dimension,
                      self.analog_ports, self.state_variables)
+
+    @property
+    def attributes_with_units(self):
+        return chain(super(Dynamics, self).attributes_with_units,
+                     *(t.random_variables for t in self.transitions))
 
     @property
     def analog_send_ports(self):
@@ -380,7 +397,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def ports(self):
-        return chain(super(DynamicsClass, self).ports,
+        return chain(super(Dynamics, self).ports,
                      self.analog_send_ports, self.analog_receive_ports,
                      self.analog_reduce_ports, self.event_send_ports,
                      self.event_receive_ports)
@@ -397,19 +414,19 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def regimes(self):
-        """Forwarding function to self._main_block._regimes"""
-        return self._main_block._regimes.itervalues()
+        """Forwarding function to self._regimes"""
+        return self._regimes.itervalues()
 
     @property
     def state_variables(self):
-        """Forwarding function to self._main_block._state_variables"""
-        return self._main_block._state_variables.itervalues()
+        """Forwarding function to self._state_variables"""
+        return self._state_variables.itervalues()
 
     def regime(self, name):
-        return self._main_block._regimes[name]
+        return self._regimes[name]
 
     def state_variable(self, name):
-        return self._main_block._state_variables[name]
+        return self._state_variables[name]
 
     def analog_send_port(self, name):
         return self._analog_send_ports[name]
@@ -428,11 +445,11 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def regime_names(self):
-        return self._main_block._regimes.iterkeys()
+        return self._regimes.iterkeys()
 
     @property
     def state_variable_names(self):
-        return self._main_block._state_variables.iterkeys()
+        return self._state_variables.iterkeys()
 
     @property
     def analog_port_names(self):
@@ -523,14 +540,6 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         """
         return len(self.subnodes) == 0
 
-    @property
-    def alias_names(self):
-        return self._main_block._aliases.iterkeys()
-
-    @property
-    def num_aliases(self):
-        return len(self._main_block._aliases)
-
     # -------------------------- #
 
     def backsub_all(self):
@@ -570,69 +579,16 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                                 .format(trans.target_regime, trans._name))
                     trans.set_target_regime(target)
 
+    @annotate_xml
+    def to_xml(self):
+        self.standardize_unit_dimensions()
+        self.validate()
+        return DynamicsXMLWriter().visit(self)
 
-class DynamicsBlock(MainBlock):
-
-    """
-    An object, which encapsulates a component's regimes, transitions,
-    and state variables
-    """
-
-    defining_attributes = (MainBlock.defining_attributes +
-                           ('_regimes', '_state_variables'))
-    class_to_member_dict = dict(
-        tuple(MainBlock.class_to_member_dict.iteritems()) +
-        ((Regime, '_regimes'), (StateVariable, '_state_variables')))
-
-    def __init__(self, regimes=None, aliases=None, state_variables=None,
-                 constants=None):
-        """DynamicsBlock object constructor
-
-           :param aliases: A list of aliases, which must be either |Alias|
-               objects or ``string``s.
-           :param regimes: A list containing at least one |Regime| object.
-           :param state_variables: An optional list of the state variables,
-                which can either be |StateVariable| objects or `string` s. If
-                provided, it must match the inferred state-variables from the
-                regimes; if it is not provided it will be inferred
-                automatically.
-        """
-        super(DynamicsBlock, self).__init__(
-            aliases=aliases, constants=constants)
-        regimes = normalise_parameter_as_list(regimes)
-        state_variables = normalise_parameter_as_list(state_variables)
-
-        # Load the state variables as objects or strings:
-        sv_types = (basestring, StateVariable)
-        sv_td = filter_discrete_types(state_variables, sv_types)
-        sv_from_strings = [StateVariable(o, dimension=None)
-                           for o in sv_td[basestring]]
-        state_variables = sv_td[StateVariable] + sv_from_strings
-
-        assert_no_duplicates(r.name for r in regimes)
-        assert_no_duplicates(s.name for s in state_variables)
-
-        self._regimes = dict((r.name, r) for r in regimes)
-        self._state_variables = dict((s.name, s) for s in state_variables)
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_dynamicsblock(self, **kwargs)
-
-    def __repr__(self):
-        return ('DynamicsBlock({} regimes, {} aliases, {} state-variables, '
-                '{} constants)'
-                .format(len(self._regimes), len(self._aliases),
-                        len(self._state_variables),
-                        len(self._constants)))
-
-    @property
-    def regimes(self):
-        return self._regimes.itervalues()
-
-    @property
-    def state_variables(self):
-        return self._state_variables.itervalues()
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        return DynamicsXMLLoader(document).load_dynamicsclass(element)
 
 
 def inf_check(l1, l2, desc):
@@ -640,8 +596,9 @@ def inf_check(l1, l2, desc):
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
 from .validators import DynamicsValidator
-from .utils import DynamicsClassInterfaceInferer
+from .utils import DynamicsInterfaceInferer
 from .utils.visitors import (DynamicsElementFinder,
                              DynamicsRequiredDefinitions)
 from .utils.modifiers import (
     DynamicsRenameSymbol, DynamicsAssignIndices)
+from .utils.xml import DynamicsXMLLoader, DynamicsXMLWriter

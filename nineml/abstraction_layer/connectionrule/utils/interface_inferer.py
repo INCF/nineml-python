@@ -2,7 +2,7 @@ from ...componentclass.utils import ComponentClassInterfaceInferer
 from .visitors import ConnectionRuleActionVisitor
 
 
-class ConnectionRuleClassInterfaceInferer(ComponentClassInterfaceInferer,
+class ConnectionRuleInterfaceInferer(ComponentClassInterfaceInferer,
                                         ConnectionRuleActionVisitor):
 
     """

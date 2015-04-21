@@ -20,7 +20,7 @@ class ConnectionRuleExpandAliasDefinition(ConnectionRuleActionVisitor,
                                           ComponentExpandAliasDefinition):
 
     """
-    An action-class that walks over a componentclass, and expands an alias in
+    An action-class that walks over a component_class, and expands an alias in
     Aliases
     """
 
@@ -29,19 +29,11 @@ class ConnectionRuleExpandAliasDefinition(ConnectionRuleActionVisitor,
 
 class ConnectionRuleCloner(ComponentCloner):
 
-    def visit_componentclass(self, componentclass, **kwargs):
-        super(ConnectionRuleCloner, self).visit_componentclass(componentclass)
-        ccn = componentclass.__class__(
-            name=componentclass.name,
+    def visit_componentclass(self, component_class, **kwargs):
+        super(ConnectionRuleCloner, self).visit_componentclass(component_class)
+        ccn = component_class.__class__(
+            name=component_class.name,
             parameters=[p.accept_visitor(self, **kwargs)
-                        for p in componentclass.parameters],
-            connectionrule=(
-                componentclass.connectionrule.accept_visitor(self, **kwargs)
-                if componentclass.connectionrule else None))
+                        for p in component_class.parameters],
+            standard_libary=component_class.standard_library)
         return ccn
-
-    def visit_connectionrule(self, connectionrule, **kwargs):
-        return connectionrule.__class__(
-            aliases=[
-                a.accept_visitor(self, **kwargs)
-                for a in connectionrule.aliases])

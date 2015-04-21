@@ -3,16 +3,14 @@
   <Unit symbol="A_per_s" dimension="current_per_time" power="0"/>
   <Dimension name="current" i="1" k="0" j="0" m="0" l="0" n="0" t="0"/>
   <Dimension name="current_per_time" i="1" k="0" j="0" m="0" l="0" n="0" t="-1"/>
-  <ComponentClass name="StaticConnection">
+  <Dynamics name="StaticConnection">
     <AnalogSendPort dimension="current" name="weight"/>
-    <Dynamics>
-      <StateVariable dimension="current" name="weight"/>
-      <Regime name="default">
-        <TimeDerivative variable="weight">
-          <MathInline>zero</MathInline>
-        </TimeDerivative>
-      </Regime>
-      <Constant units="A_per_s" name="zero">0.0</Constant>
-    </Dynamics>
-  </ComponentClass>
+    <StateVariable dimension="current" name="weight"/>
+    <Regime name="default">
+      <TimeDerivative variable="weight">
+        <MathInline>zero</MathInline>
+      </TimeDerivative>
+    </Regime>
+    <Constant units="A_per_s" name="zero">0.0</Constant>
+  </Dynamics>
 </NineML>

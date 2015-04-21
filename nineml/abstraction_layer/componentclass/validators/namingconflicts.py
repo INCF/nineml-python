@@ -22,11 +22,11 @@ class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
     will use names.
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
         self.symbols = defaultdict(list)
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def check_conflicting_symbol(self, namespace, symbol):
         if symbol in self.symbols[namespace]:
@@ -45,14 +45,18 @@ class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
         self.check_conflicting_symbol(namespace=namespace,
                                       symbol=constant.name)
 
+    def action_randomvariable(self, randomvariable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.check_conflicting_symbol(namespace=namespace,
+                                      symbol=randomvariable.name)
+
 
 class DimensionNameConflictsComponentValidator(PerNamespaceComponentValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceComponentValidator.__init__(
             self, require_explicit_overrides=False)
         self.dimensions = {}
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def check_conflicting_dimension(self, dimension):
         try:
@@ -70,3 +74,6 @@ class DimensionNameConflictsComponentValidator(PerNamespaceComponentValidator):
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(constant.units.dimension)
+
+    def action_randomvariable(self, randomvariable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.check_conflicting_dimension(randomvariable.units.dimension)

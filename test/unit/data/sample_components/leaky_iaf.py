@@ -20,7 +20,7 @@ def get_component():
     analog_ports = [al.SendPort("V"),
                     al.ReducePort("Isyn", operator="+")]
 
-    c1 = al.ComponentClass("LeakyIAF", regimes=[
+    c1 = al.Dynamics("LeakyIAF", regimes=[
                            subthreshold_regime, refractory_regime], analog_ports=analog_ports)
 
     return c1

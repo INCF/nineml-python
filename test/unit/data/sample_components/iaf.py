@@ -1,8 +1,9 @@
 import nineml.abstraction_layer as al
+from nineml import units as un
 
 
 def get_component():
-    iaf = al.dynamics.DynamicsClass(
+    iaf = al.dynamics.Dynamics(
         name="iaf",
         regimes=[
             al.Regime(
@@ -17,19 +18,28 @@ def get_component():
 
             al.Regime(
                 name="refractoryregime",
-                time_derivatives=["dV/dt = 0"],
                 transitions=[al.On("t >= tspike + taurefrac",
                                    to="subthresholdregime")],
             )
         ],
         state_variables=[
-            al.StateVariable('V'),
-            al.StateVariable('tspike'),
+            al.StateVariable('V', dimension=un.voltage),
+            al.StateVariable('tspike', dimension=un.time),
         ],
-        analog_ports=[al.AnalogSendPort("V"),
-                      al.AnalogReducePort("ISyn", operator="+"), ],
+        analog_ports=[al.AnalogSendPort("V", dimension=un.voltage),
+                      al.AnalogReducePort("ISyn", dimension=un.current,
+                                          operator="+"), ],
 
         event_ports=[al.EventSendPort('spikeoutput'), ],
-        parameters=['cm', 'taurefrac', 'gl', 'vreset', 'vrest', 'vthresh']
+        parameters=[al.Parameter('cm', dimension=un.capacitance),
+                    al.Parameter('taurefrac', dimension=un.time),
+                    al.Parameter('gl', dimension=un.conductance),
+                    al.Parameter('vreset', dimension=un.voltage),
+                    al.Parameter('vrest', dimension=un.voltage),
+                    al.Parameter('vthresh', dimension=un.voltage)]
     )
     return iaf
+
+
+if __name__ == '__main__':
+    get_component()

@@ -5,11 +5,13 @@ import warnings
 import unittest
 
 from nineml.abstraction_layer import (
-    DynamicsClass as ComponentClass, Regime, On, OutputEvent,
+    Dynamics, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
-    NamespaceAddress)
+    NamespaceAddress, StateAssignment, RandomVariable)
+from nineml.abstraction_layer.expressions.random import RandomDistribution
 from nineml.abstraction_layer.dynamics.utils.cloner import (
     DynamicsClonerPrefixNamespace)
+import nineml.units as un
 
 NSA = NamespaceAddress
 
@@ -19,28 +21,37 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
     def test_Constructor(self):
 
-        d = ComponentClass(
+        d = Dynamics(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
-                Regime('dSV1/dt = -SV1/dp2', name='r1', transitions=On('input', 'SV1=SV1+1'))],
+                Regime('dSV1/dt = -SV1/(dp2*t)', name='r1',
+                       transitions=On('input', 'SV1=SV1+1'))],
             analog_ports=[RecvPort('dIn1'), SendPort('D1'), SendPort('D2')],
             parameters=['dp1', 'dp2']
         )
 
-        c = ComponentClass(
+        c = Dynamics(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
-                    transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('emit')])],
+                    'dSV1/dt = -SV1/(cp2*t)',
+                    transitions=[
+                        On('SV1>cp1',
+                           do=[OutputEvent('emit'),
+                               StateAssignment('SV1', 'r'),
+                               RandomVariable(
+                                   'r', units=un.unitless,
+                                   distribution=RandomDistribution(
+                                       'Gamma', shape=10.0, scale=1.0))]),
+                        On('spikein', do=[OutputEvent('emit')])],
                     name='r1',
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
             ],
-            analog_ports=[RecvPort('cIn1'), RecvPort('cIn2'), SendPort('C1'), SendPort('C2')],
+            analog_ports=[RecvPort('cIn1'), RecvPort('cIn2'), SendPort('C1'),
+                          SendPort('C2')],
             parameters=['cp1', 'cp2']
         )
 
@@ -74,7 +85,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         # Test Cloner, 1 level of hierachy
         # Everything should be as before:
-        b = ComponentClass(name='B',
+        b = Dynamics(name='B',
                            subnodes={'c1': c, 'c2': c},
                            portconnections=[('c1.C1', 'c2.cIn1'),
                                             ('c2.emit', 'c1.spikein')])
@@ -141,7 +152,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
         del c2_clone
 
         # Two Levels of nesting:
-        a = ComponentClass(name='A',
+        a = Dynamics(name='A',
                            subnodes={'b1': b, 'b2': b, 'c3': c},
                            portconnections=[
                            ('b1.c1.emit', 'c3.spikein'),
@@ -369,14 +380,6 @@ class ExpandPortDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_dynamicsblock(self):
-        # Signature: name(self, dynamicsblock, **kwargs)
-                # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
     def test_action_eventreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
@@ -499,14 +502,6 @@ class ExpandPortDefinition_test(unittest.TestCase):
 
     def test_visit_trigger(self):
         # Signature: name(self, condition, **kwargs)
-                # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
-    def test_visit_dynamicsblock(self):
-        # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
@@ -648,14 +643,6 @@ class ExpandAliasDefinition_test(unittest.TestCase):
         pass
         # raise NotImplementedError()
 
-    def test_action_dynamicsblock(self):
-        # Signature: name(self, dynamicsblock, **kwargs)
-                # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
     def test_action_eventreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
@@ -778,14 +765,6 @@ class ExpandAliasDefinition_test(unittest.TestCase):
 
     def test_visit_trigger(self):
         # Signature: name(self, condition, **kwargs)
-                # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
-    def test_visit_dynamicsblock(self):
-        # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
@@ -921,14 +900,6 @@ class RenameSymbol_test(unittest.TestCase):
 
     def test_action_trigger(self):
         # Signature: name(self, trigger, **kwargs)
-                # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
-    def test_action_dynamicsblock(self):
-        # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
@@ -1081,14 +1052,6 @@ class RenameSymbol_test(unittest.TestCase):
 
     def test_visit_trigger(self):
         # Signature: name(self, condition, **kwargs)
-                # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
-    def test_visit_dynamicsblock(self):
-        # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
         # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')

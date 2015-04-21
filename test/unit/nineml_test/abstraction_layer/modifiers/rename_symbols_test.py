@@ -1,6 +1,6 @@
 import unittest
 from nineml.abstraction_layer.dynamics import (
-    DynamicsClass, Regime, On, OutputEvent)
+    Dynamics, Regime, On, OutputEvent)
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
 
 
@@ -9,13 +9,13 @@ class DynamicsRenameSymbols_test(unittest.TestCase):
 
     def test_rename_symbol(self):
 
-        a = DynamicsClass(
+        a = Dynamics(
             name='A',
             aliases=['A1_a:=P1_a', 'A2_a := ARP1_a + SV2_a', 'A3_a := SV1_a'],
             regimes=[
                 Regime(
-                    'dSV1_a/dt = -SV1_a / P2_a',
-                    'dSV2_a/dt = SV1_a / ARP1_a + SV2_a / P1_a',
+                    'dSV1_a/dt = -SV1_a / (P2_a*t)',
+                    'dSV2_a/dt = SV1_a / (ARP1_a*t) + SV2_a / (P1_a*t)',
                     transitions=[On('SV1_a > P1_a', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
                     name='R1_a',
@@ -28,13 +28,13 @@ class DynamicsRenameSymbols_test(unittest.TestCase):
             parameters=['P1_a', 'P2_a']
         )
 
-        b = DynamicsClass(
+        b = Dynamics(
             name='A',
             aliases=['A1_b:=P1_b', 'A2_b := ARP1_b + SV2_b', 'A3_b := SV1_b'],
             regimes=[
                 Regime(
-                    'dSV1_b/dt = -SV1_b / P2_b',
-                    'dSV2_b/dt = SV1_b / ARP1_b + SV2_b / P1_b',
+                    'dSV1_b/dt = -SV1_b / (P2_b*t)',
+                    'dSV2_b/dt = SV1_b / (ARP1_b*t) + SV2_b / (P1_b*t)',
                     transitions=[On('SV1_b > P1_b', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
                     name='R1_b',

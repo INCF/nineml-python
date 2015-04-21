@@ -4,19 +4,19 @@ import unittest
 from nineml.abstraction_layer import (Regime, On, OutputEvent,
                                       AnalogReceivePort, AnalogSendPort,
                                       flattening)
-from nineml.abstraction_layer.dynamics import DynamicsClass as ComponentClass
+from nineml.abstraction_layer.dynamics import Dynamics as Dynamics
 
 
 class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening1(self):
 
-        c = ComponentClass(
+        c = Dynamics(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('c_emit')])],
                     name='r1',
@@ -28,12 +28,12 @@ class ComponentFlattener_test(unittest.TestCase):
             parameters=['cp1', 'cp2']
         )
 
-        d = ComponentClass(
+        d = Dynamics(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/dp2',
+                    'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('d_emit')])],
                     name='r1',
@@ -76,12 +76,12 @@ class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening2(self):
 
-        c = ComponentClass(
+        c = Dynamics(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('c_emit')])],
                     name='r1',
@@ -93,12 +93,12 @@ class ComponentFlattener_test(unittest.TestCase):
             parameters=['cp1', 'cp2']
         )
 
-        d = ComponentClass(
+        d = Dynamics(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/dp2',
+                    'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('d_emit')])],
                     name='r1',
@@ -114,7 +114,7 @@ class ComponentFlattener_test(unittest.TestCase):
         # ------------------------------ #
 
         # Everything should be as before:
-        b = ComponentClass(name='B',
+        b = Dynamics(name='B',
                            subnodes={'c1': c, 'c2': c, 'd': d},
                            # portconnections= [('c1.C1','c2.cIn1'),('c2.emit','c1.spikein'), ]
                            )
@@ -130,7 +130,7 @@ class ComponentFlattener_test(unittest.TestCase):
             set(['c1_C1', 'c1_C2', 'c1_C3', 'c2_C1', 'c2_C2', 'c2_C3', 'd_D1', 'd_D2', 'd_D3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(b_flat._main_block._regimes), 8)
+        self.assertEqual(len(b_flat._regimes), 8)
         r_c1_1_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r1 ')
         r_c1_1_c2_2_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r2 ')
         r_c1_2_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r2 c2:r1')
@@ -210,12 +210,12 @@ class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening3(self):
 
-        c = ComponentClass(
+        c = Dynamics(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('c_emit')])],
                     name='r1',
@@ -226,12 +226,12 @@ class ComponentFlattener_test(unittest.TestCase):
             parameters=['cp1', 'cp2']
         )
 
-        d = ComponentClass(
+        d = Dynamics(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/dp2',
+                    'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('d_emit')])],
                     name='r1',
@@ -246,11 +246,11 @@ class ComponentFlattener_test(unittest.TestCase):
         # ------------------------------ #
 
         # Everything should be as before:
-        b = ComponentClass(name='B',
+        b = Dynamics(name='B',
                            subnodes={'c1': c, 'c2': c, 'd': d},
                            )
 
-        a = ComponentClass(name='A',
+        a = Dynamics(name='A',
                            subnodes={'b': b, 'c': c},
                            )
 
@@ -265,7 +265,7 @@ class ComponentFlattener_test(unittest.TestCase):
             set(['b_c1_C1', 'b_c1_C2', 'b_c1_C3', 'b_c2_C1', 'b_c2_C2', 'b_c2_C3', 'b_d_D1', 'b_d_D2', 'b_d_D3', 'c_C1', 'c_C2', 'c_C3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(a_flat._main_block._regimes), 16)
+        self.assertEqual(len(a_flat._regimes), 16)
         r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
         r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
         r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
@@ -406,12 +406,12 @@ class ComponentFlattener_test(unittest.TestCase):
 
     def test_Flattening4(self):
 
-        c = ComponentClass(
+        c = Dynamics(
             name='C',
             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1', 'C4:=cIn2'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/cp2',
+                    'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('c_emit')])],
                     name='r1',
@@ -423,12 +423,12 @@ class ComponentFlattener_test(unittest.TestCase):
             parameters=['cp1', 'cp2']
         )
 
-        d = ComponentClass(
+        d = Dynamics(
             name='D',
             aliases=['D1:=dp1', 'D2 := dIn1 + dp2', 'D3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1/dp2',
+                    'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('d_emit')])],
                     name='r1',
@@ -444,13 +444,13 @@ class ComponentFlattener_test(unittest.TestCase):
         # ------------------------------ #
 
         # Everything should be as before:
-        b = ComponentClass(name='B',
+        b = Dynamics(name='B',
                            subnodes={'c1': c, 'c2': c, 'd': d},
                            portconnections=[('c1.C1', 'c2.cIn2'),
                                             ('c2.C1', 'c1.cIn1')],
                            )
 
-        a = ComponentClass(name='A',
+        a = Dynamics(name='A',
                            subnodes={'b': b, 'c': c},
                            portconnections=[('b.c1.C1', 'b.c1.cIn2'),
                                             ('b.c1.C1', 'b.c2.cIn1'),
@@ -471,7 +471,7 @@ class ComponentFlattener_test(unittest.TestCase):
                  'c_C1', 'c_C2', 'c_C3', 'c_C4']))
 
         # - Regimes and Transitions:
-        self.assertEqual(len(a_flat._main_block._regimes), 16)
+        self.assertEqual(len(a_flat._regimes), 16)
         r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
         r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
         r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
@@ -639,7 +639,7 @@ class ComponentFlattener_test(unittest.TestCase):
         # DONE IN FUNCTIONAL TESTS INSTEAD:
         #
         # Component that 'EvOut' every 20 ms
-        # c1 = ComponentClass(
+        # c1 = Dynamics(
         #        name = 'CC1',
         #        regimes = [ Regime(
         #                name = 'r1',
@@ -649,12 +649,12 @@ class ComponentFlattener_test(unittest.TestCase):
         #            ] )
 
         # Component that forwards events from EvIn to EvOut
-        # c2 = ComponentClass(
+        # c2 = Dynamics(
         #        name = 'CC2',
         #        regimes = [ Regime( name = 'r1', transitions = On('EvIn', do= OutputEvent('EvOut')) )
         #            ] )
 
-        # c3 = ComponentClass(
+        # c3 = Dynamics(
         #        name = 'CC3',
         #        regimes = [
         #            Regime( name = 'r1', transitions = On('EvIn', to='r2') ),
@@ -662,7 +662,7 @@ class ComponentFlattener_test(unittest.TestCase):
         #            ] )
 
         # Component that chains the components together:
-        # comp = ComponentClass(
+        # comp = Dynamics(
         #        name = 'C',
         #        subnodes = { 'c1':c1, 'c2':c2, 'c3':c3},
         #        portconnections= [ ('c1.EvOut','c2.EvIn'),('c2.EvOut','c3.EvIn') ]

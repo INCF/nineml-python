@@ -13,41 +13,27 @@ from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 class RandomDistributionActionVisitor(ComponentActionVisitor):
 
-    def visit_componentclass(self, componentclass, **kwargs):
+    def visit_componentclass(self, component_class, **kwargs):
         super(RandomDistributionActionVisitor, self).visit_componentclass(
-            componentclass, **kwargs)
-        componentclass._main_block.accept_visitor(self, **kwargs)
-
-    def visit_randomdistributionblock(self, randomdistributionblock, **kwargs):
-        self.action_randomdistributionblock(randomdistributionblock, **kwargs)
-        nodes = randomdistributionblock.aliases
-        for p in nodes:
-            p.accept_visitor(self, **kwargs)
-
-    def action_randomdistributionblock(self, randomdistributionblock, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_pass()
+            component_class, **kwargs)
+        for e in component_class:
+            e.accept_visitor(self, **kwargs)
 
 
 class RandomDistributionRequiredDefinitions(ComponentRequiredDefinitions,
-                                      RandomDistributionActionVisitor):
+                                            RandomDistributionActionVisitor):
 
-    def __init__(self, componentclass, expressions):
-        RandomDistributionActionVisitor.__init__(self,
-                                           require_explicit_overrides=False)
-        ComponentRequiredDefinitions.__init__(self, componentclass,
+    def __init__(self, component_class, expressions):
+        RandomDistributionActionVisitor.__init__(
+            self, require_explicit_overrides=False)
+        ComponentRequiredDefinitions.__init__(self, component_class,
                                               expressions)
-
-    def action_randomdistributionblock(self, randomdistributionblock, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.action_mainblock(randomdistributionblock, **kwargs)
 
 
 class RandomDistributionElementFinder(ComponentElementFinder,
-                                RandomDistributionActionVisitor):
+                                      RandomDistributionActionVisitor):
 
     def __init__(self, element):
-        RandomDistributionActionVisitor.__init__(self,
-                                           require_explicit_overrides=True)
+        RandomDistributionActionVisitor.__init__(
+            self, require_explicit_overrides=True)
         ComponentElementFinder.__init__(self, element)
-
-    def action_randomdistributionblock(self, dynamicsblock, **kwargs):
-        pass

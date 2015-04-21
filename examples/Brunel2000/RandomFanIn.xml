@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="RandomFanIn">
+  <ConnectionRule name="RandomFanIn">
     <Parameter name="number"/>
-    <ConnectionRule standardLibrary="RandomFanIn" />
-  </ComponentClass>
+  </ConnectionRule>
 </NineML>

@@ -1,18 +1,21 @@
 # encoding: utf-8
+import sys
 from . import BaseULObject
 from .component import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
-from collections import defaultdict
-from nineml.user_layer.component import Component
+from nineml.exceptions import NineMLRuntimeError
+from .component import Component
+from .population import Population
 from itertools import chain
-import nineml.user_layer
 from .. import units as un
-from nineml.utils import expect_single, expect_none_or_single, check_tag
-from ..exceptions import NineMLRuntimeError
+from nineml.utils import (
+    expect_single, normalise_parameter_as_list,
+    expect_none_or_single)
 from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
+from nineml.abstraction_layer.ports import Port
 
 
 class Projection(BaseULObject, DocumentLevelObject):
@@ -22,9 +25,9 @@ class Projection(BaseULObject, DocumentLevelObject):
     **Arguments**:
         *name*
             a name for this projection.
-        *source*
+        *pre*
             the presynaptic :class:`Population`.
-        *destination*
+        *post*
             the postsynaptic :class:`Population`.
         *response*
             a `dynamics` :class:`Component` that defines the post-synaptic
@@ -37,13 +40,6 @@ class Projection(BaseULObject, DocumentLevelObject):
             an algorithm for wiring up the neurons.
         *delay*
             a :class:`Delay` object specifying the delay of the connections.
-        *port_connections*
-            a list of :class:`PortConnection` tuples `(sender, receiver,
-            send_port, receive_port)` that define the connections between the 4
-            components of the projection, 'source', 'destination', 'response',
-            'plasticity'. 'sender' and 'receiver' must be one of these 4 names
-            and 'send_port' and 'receive_port' must each be the name of
-            one of the ports in the corresponding components.
 
     **Attributes**:
 
@@ -52,193 +48,400 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     """
     element_name = "Projection"
-    defining_attributes = ("name", "source", "destination", "connectivity",
-                           "response", "plasticity", "port_connections",
-                           "delay")
+    defining_attributes = ("name", "pre", "post", "connectivity",
+                           "response", "plasticity", "delay")
 
-    _component_roles = set(['source', 'destination', 'plasticity', 'response'])
+    _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
-    def __init__(self, name, source, destination, response,
-                 plasticity, connectivity, delay, port_connections, url=None):
+    def __init__(self, name, pre, post, response,
+                 plasticity, connectivity, delay, url=None):
         """
         Create a new projection.
         """
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
+        assert isinstance(name, basestring)
         self.name = name
-        self.source = source
-        # When exporting to XML we use the reference instead of the object
-        # maintaing the original format of the XML.
-        if source.from_reference is None:
-            source.from_reference = Reference(source.name,
-                                               {source.name: source})
-        self.destination = destination
-        if destination.from_reference is None:
-            destination.from_reference = Reference(
-                destination.name, {destination.name: destination})
-        self.response = response
-        self.plasticity = plasticity
-        self.connectivity = connectivity
+        # Check types of input arguments
+        if not isinstance(pre, Pre):
+            pre = Pre(*normalise_parameter_as_list(pre))
+        if not isinstance(post, Post):
+            post = Post(*normalise_parameter_as_list(post))
+        if not isinstance(response, Response):
+            response = Response(*normalise_parameter_as_list(response))
+        if plasticity is not None and not isinstance(plasticity, Plasticity):
+            plasticity = Plasticity(*normalise_parameter_as_list(plasticity))
         if isinstance(delay, tuple):
             value, units = delay
             delay = Delay(SingleValue(value), units)
-        self.delay = delay
-        self.port_connections = sorted(port_connections,
-                                       key=lambda x: (x._send_role,
-                                                      x._receive_role,
-                                                      x.send_port,
-                                                      x.receive_port))
-        for pc in self.port_connections:
-            pc.set_projection(self)
-        self._check_port_connections()
+        self._pre = pre
+        self._post = post
+        self._response = response
+        self._plasticity = plasticity
+        self._connectivity = connectivity
+        self._delay = delay
+        # Connect ports between terminuses
+        for terminus in (self.pre, self.post, self.response, self.plasticity):
+            if terminus is not None:
+                terminus.bind_ports(self)
+
+    @property
+    def pre(self):
+        return self._pre
+
+    @property
+    def post(self):
+        return self._post
+
+    @property
+    def response(self):
+        return self._response
+
+    @property
+    def plasticity(self):
+        return self._plasticity
+
+    @property
+    def connectivity(self):
+        return self._connectivity
+
+    @property
+    def delay(self):
+        return self._delay
 
     def __repr__(self):
-        return ('Projection(name="{}", source={}, destination={}, '
-                'connectivity={}, response={}{}, delay={}, '
-                'with {} port-connections)'
-                .format(self.name, repr(self.source), repr(self.destination),
+        return ('Projection(name="{}", pre={}, post={}, '
+                'connectivity={}, response={}{}, delay={})'
+                .format(self.name, repr(self.pre), repr(self.post),
                         repr(self.connectivity), repr(self.response),
                         ('plasticity={}'.format(repr(self.plasticity))
-                         if self.plasticity else ''), repr(self.delay),
-                        len(self.port_connections)))
+                         if self.plasticity else ''), repr(self.delay)))
 
-    def _check_port_connections(self):
-        for pc in self.port_connections:
-            if pc.send_port in (p.name
-                                for p in pc.send_class.analog_send_ports):
-                if (pc.receive_port not in
-                    (p.name
-                     for p in chain(pc.receive_class.analog_receive_ports,
-                                    pc.receive_class.analog_reduce_ports))):
-                    msg = ("No analog receive port named '{}' in {} component,"
-                           " '{}'.".format(pc.receive_port, pc._receive_role,
-                                           pc.receive_class.name))
-                    raise NineMLRuntimeError(msg)
-            elif pc.send_port in (p.name
-                                  for p in pc.send_class.event_send_ports):
-                if (pc.receive_port not in
-                     (p.name for p in pc.receive_class.event_receive_ports)):
-                    msg = ("No event receive port named '{}' in {} component, "
-                           "'{}'.".format(pc.receive_port, pc._receive_role,
-                                           pc.receive_class.name))
-                    raise NineMLRuntimeError(msg)
-            else:
-                msg = ("'{}' send port was not found in {} component, '{}'"
-                       .format(pc.send_port, pc._send_role,
-                               pc.send_class.name))
-                raise NineMLRuntimeError(msg)
-
-    def get_components(self):
+    @property
+    def components(self):
         """
         Return a list of all components used by the projection.
         """
-        components = []
-        for name in ('connectivity', 'response', 'plasticity'):
-            component = getattr(self, name)
-            if component is not None:
-                components.append(component)
+        components = [self.connectivity, self.response.component]
+        if self.plasticity is not None:
+            components.append(self.plasticity.component)
         return components
 
     @property
     def attributes_with_units(self):
         return chain([self.delay],
-                     *[c.attributes_with_units for c in self.get_components()])
+                     *[c.attributes_with_units for c in self.components])
 
     @write_reference
     @annotate_xml
     def to_xml(self):
-        pcs = defaultdict(list)
-        for pc in self.port_connections:
-            pcs[pc._receive_role].append(
-                E('From' + pc._send_role.capitalize(),
-                  send_port=pc.send_port, receive_port=pc.receive_port))
-        args = [E.Source(self.source.to_xml(), *pcs['source']),
-                E.Destination(self.destination.to_xml(), *pcs['destination']),
-                E.Connectivity(self.connectivity.to_xml()),
-                E.Response(self.response.to_xml(), *pcs['response'])]
-        if self.plasticity:
-            args.append(E.Plasticity(self.plasticity.to_xml(),
-                                     *pcs['plasticity']))
-        args.append(self.delay.to_xml())
-        return E(self.element_name, *args, name=self.name)
+        children = (self.pre, self.post, self.response, self.plasticity,
+                    self.connectivity, self.delay)
+        return E(self.element_name,
+                 *(m.to_xml() for m in children if m is not None),
+                 name=self.name)
 
     @classmethod
     @resolve_reference
     @read_annotations
     def from_xml(cls, element, document):
-        check_tag(element, cls)
+        cls.check_tag(element)
         # Get Name
         name = element.get('name')
-        # Get Source
-        e = expect_single(element.findall(NINEML + 'Source'))
-        e = expect_single(e.findall(NINEML + 'Reference'))
-        source = nineml.user_layer.Reference.from_xml(
-            e, document).user_layer_object
-        # Get Destination
-        e = expect_single(element.findall(NINEML + 'Destination'))
-        e = expect_single(e.findall(NINEML + 'Reference'))
-        destination = nineml.user_layer.Reference.from_xml(
-            e, document).user_layer_object
-        # Get Response
-        e = element.find(NINEML + 'Response')
-        component = e.find(NINEML + 'Component')
-        if component is None:
-            component = e.find(NINEML + 'Reference')
-        response = Component.from_xml(component, document)
-        # Get Plasticity
-        e = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
-        if e is not None:
-            component = e.find(NINEML + 'Component')
-            if component is None:
-                component = e.find(NINEML + 'Reference')
-            plasticity = Component.from_xml(component, document)
-        else:
-            plasticity = None
-        # Get Connectivity
-        e = element.find(NINEML + 'Connectivity')
-        component = e.find(NINEML + 'Component')
-        if component is None:
-            component = e.find(NINEML + 'Reference')
-        connectivity = Component.from_xml(component, document)
+        # Get Pre
+        pre = Pre.from_xml(expect_single(element.findall(NINEML + 'Pre')),
+                           document)
+        post = Post.from_xml(expect_single(element.findall(NINEML + 'Post')),
+                             document)
+        response = Response.from_xml(
+            expect_single(element.findall(NINEML + 'Response')), document)
+        elem = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
+        plasticity = (Plasticity.from_xml(elem, document)
+                      if elem is not None else None)
+        connectivity = Connectivity.from_xml(
+            expect_single(element.findall(NINEML + 'Connectivity')), document)
         # Get Delay
         delay = Delay.from_xml(
             expect_single(element.findall(NINEML + 'Delay')), document)
-        # Get port connections by Loop through 'source', 'destination',
-        # 'response', 'plasticity' tags and extracting the "From*" elements
-        port_connections = []
-        for receive_role in cls._component_roles:
-            # Get element for component name
-            e = element.find(NINEML + receive_role.capitalize())
-            if e is not None:  # Plasticity is not required
-                # Loop through all incoming port connections and add them to
-                # list
-                for sender_role in cls._component_roles:
-                    pc_elems = e.findall(NINEML +
-                                         'From' + sender_role.capitalize())
-                    if sender_role == receive_role and pc_elems:
-                        msg = ("{} port connection receives from itself in "
-                               "Projection '{}'".format(name, name))
-                        raise NineMLRuntimeError(msg)
-                    if (sender_role is 'plasticity' and plasticity is None and
-                         len(pc_elems)):
-                        msg = ("{} port connection receives from plasticity, "
-                               "which wasn't provided for Projection '{}'"
-                               .format(receive_role, name))
-                        raise NineMLRuntimeError(msg)
-                    for pc in pc_elems:
-                        port_connections.append(
-                            PortConnection(sender_role, receive_role,
-                                           pc.get('send_port'),
-                                           pc.get('receive_port')))
-        return cls(name=element.attrib["name"],
-                   source=source,
-                   destination=destination,
+        return cls(name=name,
+                   pre=pre,
+                   post=post,
                    response=response,
                    plasticity=plasticity,
                    connectivity=connectivity,
                    delay=delay,
-                   port_connections=port_connections,
                    url=document.url)
+
+
+class Terminus(BaseULObject):
+
+    defining_attributes = ('_object', '_port_connections')
+
+    def __init__(self, obj, port_connections=None):
+        BaseULObject.__init__(self)
+        self._object = obj
+        self._port_connections = dict(
+            (pc.port_name, pc)
+            for pc in normalise_parameter_as_list(port_connections))
+
+    def bind_ports(self, container):
+        for pc in self.port_connections:
+            pc.bind_ports(self, container)
+
+    @property
+    def port_connections(self):
+        return self._port_connections.itervalues()
+
+    @property
+    def port_connection_port_names(self):
+        return self._port_connections.iterkeys()
+
+    def port_connection(self, port_name):
+        return self._port_connections[port_name]
+
+    @property
+    def object(self):
+        return self._object
+
+    @annotate_xml
+    def _port_connections_to_xml(self):
+        return (pc.to_xml() for pc in self.port_connections)
+
+    @classmethod
+    def _port_connections_from_xml(cls, element, document):
+        return (PortConnection.from_xml(e, document)
+                for e in element.findall(NINEML + 'PortConnection'))
+
+
+class PopulationTerminus(Terminus):
+
+    def __init__(self, population, port_connections=None):
+        assert isinstance(population, Population)
+        super(PopulationTerminus, self).__init__(population, port_connections)
+
+    @property
+    def population(self):
+        return self.object
+
+    @property
+    def component(self):
+        return self.object.cell
+
+    @annotate_xml
+    def to_xml(self):
+        if self.population.from_reference is None:  # Generated objects
+            # Assumes that population is written in same file as projection
+            pop_elem = E.Reference(self.population.name)
+        else:
+            pop_elem = self.population.to_xml(as_reference=True)
+        return E(self.element_name, pop_elem,
+                 *self._port_connections_to_xml())
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):  # @UnusedVariable
+        cls.check_tag(element)
+        population = Reference.from_xml(
+            expect_single(element.findall(NINEML + 'Reference')),
+            document).user_layer_object
+        return cls(population,
+                   cls._port_connections_from_xml(element, document))
+
+
+class ComponentTerminus(Terminus):
+
+    def __init__(self, component, port_connections=None):
+        assert isinstance(component, Component)
+        super(ComponentTerminus, self).__init__(component, port_connections)
+
+    @property
+    def component(self):
+        return self.object
+
+    @annotate_xml
+    def to_xml(self):
+        return E(self.element_name, self.component.to_xml(),
+                 *self._port_connections_to_xml())
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):  # @UnusedVariable
+        cls.check_tag(element)
+        component = Component.from_xml(
+            expect_single(element.findall(NINEML + 'Component')),
+            document)
+        return cls(component,
+                   cls._port_connections_from_xml(element, document))
+
+
+class Pre(PopulationTerminus):
+
+    element_name = 'Pre'
+
+
+class Post(PopulationTerminus):
+
+    element_name = 'Post'
+
+
+class Response(ComponentTerminus):
+
+    element_name = 'Response'
+
+
+class Plasticity(ComponentTerminus):
+
+    element_name = 'Plasticity'
+
+
+class BasePortConnection(BaseULObject):
+
+    defining_attributes = ('port_name',)
+
+    def __init__(self, port):
+        BaseULObject.__init__(self)
+        self._set_port(port)
+
+    @property
+    def port_name(self):
+        try:
+            return self._port.name
+        except AttributeError:
+            return self._port_name
+
+    @property
+    def port(self):
+        try:
+            return self._port
+        except AttributeError:
+            raise NineMLRuntimeError(
+                "PortConnection '{}' not bound".format(self._port_name))
+
+    def _set_port(self, port):
+        if isinstance(port, Port):
+            self._port = port
+            try:
+                del self._port_name
+            except AttributeError:
+                pass
+        else:
+            self._port_name = port
+
+
+class PortConnection(BasePortConnection):
+
+    element_name = 'PortConnection'
+    defining_attributes = (BasePortConnection.defining_attributes +
+                           ('_senders',))
+
+    def __init__(self, port, senders):
+        super(PortConnection, self).__init__(port)
+        senders = normalise_parameter_as_list(senders)
+        assert all(isinstance(s, Sender) for s in senders)
+        self._senders = dict((s.key(), s) for s in senders)
+
+    def __repr__(self):
+        return ("PortConnection('{}' with {} senders)"
+                .format(self.port_name, len(self.senders)))
+
+    @property
+    def senders(self):
+        return self._senders.itervalues()
+
+    @property
+    def sender_keys(self):
+        return self._senders.iterkeys()
+
+    def sender(self, *key):
+        return self._senders[key]
+
+    def bind_ports(self, receiver, container):
+        """
+        Binds the PortConnection to the components it is connecting
+        """
+        self._set_port(
+            receiver.component.component_class.receive_port(self.port_name))
+        for sender in self.senders:
+            sender.bind_port(container)
+
+    @annotate_xml
+    def to_xml(self):
+        return E(self.element_name, *(s.to_xml() for s in self.senders),
+                 port=self.port_name)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        cls.check_tag(element)
+        return cls(port=element.get('port'),
+                   senders=[Sender.from_xml(e, document) for e in element])
+
+
+class Sender(BasePortConnection):
+
+    def __init__(self, port):
+        BaseULObject.__init__(self)
+        self._set_port(port)
+
+    def key(self):
+        """
+        Generates a unique key for the Sender so it can be stored in a dict
+        """
+        return (self.element_name, self._port_name)
+
+    @annotate_xml
+    def to_xml(self):
+        return E(self.element_name, port=self.port_name)
+
+    @classmethod
+    def from_xml(cls, element, document):
+        return getattr(sys.modules[__name__],
+                       element.tag[len(NINEML):])._from_xml(element, document)
+
+    @classmethod
+    @read_annotations
+    def _from_xml(cls, element, document):  # @UnusedVariable
+        cls.check_tag(element)
+        return cls(port=element.get('port'))
+
+
+class FromPre(Sender):
+
+    element_name = 'FromPre'
+
+    def bind_port(self, projection):
+        self._set_port(
+            projection.pre.population.cell.component_class.send_port(
+                self.port_name))
+
+
+class FromPost(Sender):
+
+    element_name = 'FromPost'
+
+    def bind_port(self, projection):
+        self._set_port(
+            projection.post.population.cell.component_class.send_port(
+                self.port_name))
+
+
+class FromPlasticity(Sender):
+
+    element_name = 'FromPlasticity'
+
+    def bind_port(self, projection):
+        self._set_port(
+            projection.plasticity.component.component_class.send_port(
+                self.port_name))
+
+
+class FromResponse(Sender):
+
+    element_name = 'FromResponse'
+
+    def bind_port(self, projection):
+        self._set_port(projection.response.component.component_class.send_port(
+            self.port_name))
 
 
 class Delay(Quantity):
@@ -268,117 +471,18 @@ class Delay(Quantity):
         Quantity.__init__(self, value, units)
 
 
-class PortConnection(object):
-    """
-    Specifies the connection of a send port with a receive port between two
-    :class:`Component`\s in a :class:`Projection`.
+class Connectivity(Component):
 
-    **Arguments**:
-        *sender*
-           one of 'source', 'destination', 'plasticity' or 'response'.
-        *receiver*
-            one of 'source', 'destination', 'plasticity' or 'response'.
-        *send_port*
-            the name of a send port in the sender component.
-        *receive_port*
-            the name of a receive or reduce port in the receiver component.
-    """
+    element_name = 'Connectivity'
 
-    def __init__(self, sender, receiver, send_port, receive_port):
-        if sender not in Projection._component_roles:
-            raise Exception("Sender must be one of '{}'"
-                            .format("', '".join(Projection._component_roles)))
-        if receiver not in Projection._component_roles:
-            raise Exception("Receiver must be one of '{}'"
-                            .format("', '".join(Projection._component_roles)))
-        if sender == receiver:
-            raise Exception("Sender and Receiver cannot be the same ('{}')"
-                            .format(sender))
-        if not isinstance(send_port, basestring):
-            raise NineMLRuntimeError("invalid send port '{}'"
-                                     .format(send_port))
-        if not isinstance(receive_port, basestring):
-            raise NineMLRuntimeError("invalid receive port '{}'"
-                                     .format(receive_port))
-        self._send_role = sender
-        self._receive_role = receiver
-        self.send_port = send_port
-        self.receive_port = receive_port
-        self._projection = None
+    @annotate_xml
+    def to_xml(self):
+        return E.Connectivity(Component.to_xml(self))
 
-    def __eq__(self, other):
-        return (self._send_role == other._send_role and
-                self._receive_role == other._receive_role and
-                self.send_port == other.send_port and
-                self.receive_port == other.receive_port)
-
-    def __repr__(self):
-        return ("PortConnection('{}', '{}', '{}', '{}')"
-                .format(self._send_role, self._receive_role, self.send_port,
-                        self.receive_port))
-
-    def __hash__(self):
-        return (hash(self._send_role) ^ hash(self._receive_role) ^
-                hash(self.send_port) ^ hash(self.receive_port))
-
-    def set_projection(self, projection):
-        """docstring"""
-        self._projection = projection
-
-    @property
-    def sender(self):
-        """The sending component."""
-        assert self._projection is not None, ("Projection not set on port "
-                                              "connection")
-        return getattr(self._projection, self._send_role)
-
-    @property
-    def receiver(self):
-        """The receiving component."""
-        assert self._projection is not None, ("Projection not set on port "
-                                              "connection")
-        return getattr(self._projection, self._receive_role)
-
-    @property
-    def send_class(self):
-        """The class of the sending component."""
-        return self._get_class(self.sender)
-
-    @property
-    def receive_class(self):
-        """The class of the receiving component."""
-        return self._get_class(self.receiver)
-
-    def _get_class(self, comp):
-        # Resolve ref
-        if isinstance(comp, nineml.user_layer.Reference):
-            comp = comp.user_layer_object
-        # Get component class
-        if isinstance(comp, nineml.user_layer.Population):
-            comp_class = comp.cell.component_class
-        elif isinstance(comp, nineml.user_layer.Component):
-            comp_class = comp.component_class
-        elif isinstance(comp, nineml.user_layer.Selection):
-            # print ("Warning: port connections have not been checked for '{}'"
-            #        " Selection".format(comp.name))
-            # only implemented for Concatenate
-            def resolve(item):   # doing this here is a hack, I think
-                if isinstance(item, Reference):
-                    return item.user_layer_object
-                else:
-                    return item
-            comp_classes = {}
-            for item in comp.operation.items:
-                cc = resolve(item).cell.component_class
-                # here we use equality of component class names, should really
-                # use equality of component classes
-                comp_classes[cc.name] = cc
-            if len(comp_classes) > 1:
-                raise Exception(
-                    "Selection contains multiple component classes: {}"
-                    .format(comp_classes))
-            comp_class = comp_classes.values()[0]
-        else:
-            assert False, ("Invalid '{}' object in port connection"
-                           .format(type(comp)))
-        return comp_class
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        cls.check_tag(element)
+        component = Component.from_xml(
+            expect_single(element.findall(NINEML + 'Component')), document)
+        return cls(*component.__getinitargs__())

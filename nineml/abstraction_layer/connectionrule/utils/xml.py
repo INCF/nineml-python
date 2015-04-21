@@ -5,14 +5,13 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.annotations import annotate_xml
-from nineml.utils import expect_single
 from nineml.xmlns import E
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
-class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
+class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -23,39 +22,24 @@ class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
-    def load_componentclass(self, element):
-        subblocks = ('Parameter', 'ConnectionRule')
-        children = self._load_blocks(element, blocks=subblocks)
-        connectionruleblock = expect_single(children["ConnectionRule"])
-        return ConnectionRuleClass(name=element.get('name'),
-                                   parameters=children["Parameter"],
-                                   connectionruleblock=connectionruleblock)
+    def load_connectionruleclass(self, element):
+        block_names = ('Parameter',)
+        blocks = self._load_blocks(element, block_names=block_names)
+        return ConnectionRule(
+            name=element.get('name'),
+            parameters=blocks["Parameter"])
 
-    @read_annotations
-    def load_connectionruleblock(self, element):
-        subblocks = ()
-        children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8
-        return ConnectionRuleBlock(
-            standard_library=element.attrib['standardLibrary'])
-
-    tag_to_loader = {
-        "ComponentClass": load_componentclass,
-        "ConnectionRule": load_connectionruleblock
-    }
+    tag_to_loader = dict(
+        tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
+        (("ConnectionRule", load_connectionruleclass),))
 
 
-class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
+class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
-    def visit_componentclass(self, componentclass):
-        elements = ([p.accept_visitor(self)
-                     for p in componentclass.parameters] +
-                    [componentclass._main_block.accept_visitor(self)])
-        return E('ComponentClass', *elements, name=componentclass.name)
-
-    @annotate_xml
-    def visit_connectionruleblock(self, connectionrule):
+    def visit_componentclass(self, component_class):
         return E('ConnectionRule',
-                 standardLibrary=connectionrule.standard_library)
+                 *[e.accept_visitor(self) for e in component_class],
+                 name=component_class.name)
 
-from ..base import ConnectionRuleClass, ConnectionRuleBlock
+from ..base import ConnectionRule

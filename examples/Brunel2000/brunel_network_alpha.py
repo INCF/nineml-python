@@ -99,21 +99,21 @@ def build_model(g, eta):
                                   response=psr,
                                   plasticity=static_ext,
                                   port_connections=[nineml.PortConnection("plasticity", "response", "weight", "q"),
-                                                    nineml.PortConnection("response", "destination", "Isyn", "Isyn")],
+                                                    nineml.PortConnection("response", "post", "Isyn", "Isyn")],
                                   delay=(delay, ms))
     exc_prj = nineml.Projection("Excitation", exc_cells, all_cells,
                                 connectivity=random_exc,
                                 response=psr,
                                 plasticity=static_exc,
                                 port_connections=[nineml.PortConnection("plasticity", "response", "weight", "q"),
-                                                  nineml.PortConnection("response", "destination", "Isyn", "Isyn")],
+                                                  nineml.PortConnection("response", "post", "Isyn", "Isyn")],
                                 delay=(delay, ms))
     inh_prj = nineml.Projection("Inhibition", inh_cells, all_cells,
                                 connectivity=random_inh,
                                 response=psr,
                                 plasticity=static_inh,
                                 port_connections=[nineml.PortConnection("plasticity", "response", "weight", "q"),
-                                                  nineml.PortConnection("response", "destination", "Isyn", "Isyn")],
+                                                  nineml.PortConnection("response", "post", "Isyn", "Isyn")],
                                 delay=(delay, ms))
 
     network = nineml.Network("BrunelCaseC")

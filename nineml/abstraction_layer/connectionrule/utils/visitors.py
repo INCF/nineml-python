@@ -13,32 +13,19 @@ from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 class ConnectionRuleActionVisitor(ComponentActionVisitor):
 
-    def visit_componentclass(self, componentclass, **kwargs):
+    def visit_componentclass(self, component_class, **kwargs):
         super(ConnectionRuleActionVisitor, self).visit_componentclass(
-            componentclass, **kwargs)
-        componentclass._main_block.accept_visitor(self, **kwargs)
-
-    def visit_connectionruleblock(self, connectionruleblock, **kwargs):
-        self.action_connectionruleblock(connectionruleblock, **kwargs)
-        nodes = connectionruleblock.aliases
-        for p in nodes:
-            p.accept_visitor(self, **kwargs)
-
-    def action_connectionruleblock(self, connectionrule, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_pass()
+            component_class, **kwargs)
 
 
 class ConnectionRuleRequiredDefinitions(ComponentRequiredDefinitions,
                                         ConnectionRuleActionVisitor):
 
-    def __init__(self, componentclass, expressions):
+    def __init__(self, component_class, expressions):
         ConnectionRuleActionVisitor.__init__(self,
                                              require_explicit_overrides=False)
-        ComponentRequiredDefinitions.__init__(self, componentclass,
+        ComponentRequiredDefinitions.__init__(self, component_class,
                                               expressions)
-
-    def action_connectionruleblock(self, connectionruleblock, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.action_mainblock(connectionruleblock, **kwargs)
 
 
 class ConnectionRuleElementFinder(ComponentElementFinder,
@@ -48,6 +35,3 @@ class ConnectionRuleElementFinder(ComponentElementFinder,
         ConnectionRuleActionVisitor.__init__(self,
                                              require_explicit_overrides=True)
         ComponentElementFinder.__init__(self, element)
-
-    def action_randomdistributionblock(self, dynamicsblock, **kwargs):
-        pass

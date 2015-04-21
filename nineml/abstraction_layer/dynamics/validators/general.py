@@ -15,7 +15,6 @@ from ...componentclass.validators import (
     DimensionalityComponentValidator)
 from . import PerNamespaceDynamicsValidator
 from nineml import units as un
-import warnings
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(
@@ -25,13 +24,13 @@ class TimeDerivativesAreDeclaredDynamicsValidator(
         as  StateVariables.
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.sv_declared = defaultdict(list)
         self.time_derivatives_used = defaultdict(list)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
         for namespace, time_derivatives in self.time_derivatives_used.\
                                                                    iteritems():
@@ -54,13 +53,13 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.sv_declared = defaultdict(list)
         self.state_assignments_lhses = defaultdict(list)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
         for namespace, state_assignments_lhs in self.state_assignments_lhses.\
                                                                    iteritems():
@@ -111,14 +110,14 @@ class NoUnresolvedSymbolsDynamicsValidator(
 
 class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
 
         self.connected_regimes_from_regime = defaultdict(set)
         self.regimes_in_namespace = defaultdict(set)
 
-        self.visit(componentclass)
+        self.visit(component_class)
 
         def add_connected_regimes_recursive(regime, connected):
             connected.add(regime)
@@ -137,8 +136,8 @@ class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
             if len(connected) != len(self.regimes_in_namespace[namespace]):
                 raise NineMLRuntimeError("Transition graph contains islands")
 
-    def action_componentclass(self, componentclass, namespace):
-        self.regimes_in_namespace[namespace] = list(componentclass.regimes)
+    def action_componentclass(self, component_class, namespace):
+        self.regimes_in_namespace[namespace] = list(component_class.regimes)
 
     def action_regime(self, regime, namespace):  # @UnusedVariable
         for transition in regime.transitions:
@@ -151,9 +150,6 @@ class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
 class NoDuplicatedObjectsDynamicsValidator(
         NoDuplicatedObjectsComponentValidator,
         PerNamespaceDynamicsValidator):
-
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
-        self.all_objects.append(dynamicsblock)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         self.all_objects.append(regime)
@@ -198,10 +194,10 @@ class NoDuplicatedObjectsDynamicsValidator(
 class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
         PerNamespaceDynamicsValidator):
 
-    def __init__(self, componentclass):
+    def __init__(self, component_class):
         PerNamespaceDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
-        self.visit(componentclass)
+        self.visit(component_class)
 
     def action_regime(self, regime, namespace, **kwargs):  # @UnusedVariable
         event_triggers = [on_event.src_port_name
@@ -231,33 +227,21 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
 class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
                                       PerNamespaceDynamicsValidator):
 
-    def __init__(self, componentclass):
-        if componentclass.subnodes:
-            warnings.warn("Skipping dimenion checking for DynamicsClass '{}' "
-                          "with subnodes".format(componentclass.name))
-        else:
+    def __init__(self, component_class):
+        if not component_class.subnodes:  # Assumes that subnodes are alread checked @IgnorePep8
             super(DimensionalityDynamicsValidator,
-                  self).__init__(componentclass)
+                  self).__init__(component_class)
 
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(timederivative)
-        sv = self.componentclass.state_variable(timederivative.variable)
-        try:
-            self._compare_dimensionality(
-                dimension, sv.dimension / un.time, timederivative,
-                'time derivative of ' + sv.name)
-        except NineMLRuntimeError:
-            if (sv.dimension == un.dimensionless and
-                    dimension in (1, un.dimensionless)):
-                warnings.warn(
-                    "Time derivative of dimensionless state variable '{}' is "
-                    "also dimensionless instead of 1/time".format(sv.name))
-            else:
-                raise
+        sv = self.component_class.state_variable(timederivative.variable)
+        self._compare_dimensionality(
+            dimension, sv.dimension / un.time, timederivative,
+            'time derivative of ' + sv.name)
 
     def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(stateassignment)
-        sv = self.componentclass.state_variable(stateassignment.variable)
+        sv = self.component_class.state_variable(stateassignment.variable)
         self._compare_dimensionality(dimension, sv.dimension,
                                      stateassignment,
                                      'state variable ' + sv.name)
@@ -266,4 +250,4 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
         self._check_send_port(port)
 
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        self._check_boolean_expr(trigger.rhs)
+        self._flatten_dims(trigger.rhs, trigger)
