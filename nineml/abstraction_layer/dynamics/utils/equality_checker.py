@@ -96,9 +96,9 @@ class DynamicsEqualityChecker(ComponentEqualityChecker):
             cls.check_equal_transitions(on_cond1, on_cond2)
 
         # Check the TimeDerivatives:
-        time_deriv1s = [(td.dependent_variable, td.rhs)
+        time_deriv1s = [(td.variable, td.rhs)
                         for td in rgm1.time_derivatives]
-        time_deriv2s = [(td.dependent_variable, td.rhs)
+        time_deriv2s = [(td.variable, td.rhs)
                         for td in rgm2.time_derivatives]
         assert_equal_list(time_deriv1s, time_deriv2s)
 

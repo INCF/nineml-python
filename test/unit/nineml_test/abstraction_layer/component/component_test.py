@@ -4,7 +4,7 @@ from nineml.abstraction_layer.dynamics.testing_utils import TestableComponent
 from nineml.abstraction_layer import (
     DynamicsClass as ComponentClass, DynamicsBlock, AnalogSendPort, Alias,
     AnalogReceivePort, AnalogReducePort, Regime, On, NamespaceAddress,
-    OutputEvent, EventReceivePort)
+    OutputEvent, EventReceivePort, Constant)
 
 
 class ComponentClass_test(unittest.TestCase):
@@ -155,7 +155,7 @@ class ComponentClass_test(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             ComponentClass,
-            name='C1', aliases=['pi := 0'],
+            name='C1', aliases=['t := 0'],
         )
 
     def test_aliases_map(self):
@@ -592,17 +592,20 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEqual(list(c.parameters)[0].name, 'a')
 
         # More complex inference:
-        c = ComponentClass(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'])
+        c = ComponentClass(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'],
+                           constants=[Constant('pi', 3.141592653589793)])
         self.assertEqual(len(list(c.parameters)), 3)
         self.assertEqual(sorted([p.name for p in c.parameters]), ['a', 'b', 'e'])
 
         # From State Assignments and Differential Equations, and Conditionals
         c = ComponentClass(name='cl',
                            aliases=['A:=a+e', 'B:=a+pi+b'],
-                           regimes=Regime('dX/dt = 6 + c + sin(d)',
-                                          'dV/dt = 1.0',
-                                          transitions=On('V>Vt', do=['X = X + f', 'V=0'])
-                                          )
+                           regimes=Regime('dX/dt = (6 + c + sin(d))/t',
+                                          'dV/dt = 1.0/t',
+                                          transitions=On('V>Vt',
+                                                         do=['X = X + f', 'V=0'])
+                                          ),
+                           constants=[Constant('pi', 3.1415926535)]
                            )
         self.assertEqual(len(list(c.parameters)), 7)
         self.assertEqual(
@@ -626,7 +629,7 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEqual(len(list(c.regimes)), 0)
 
         c = ComponentClass(name='cl',
-                           regimes=Regime('dX/dt=0',
+                           regimes=Regime('dX/dt=1/t',
                                           name='r1',
                                           transitions=On('X>X1', do=['X = X0'], to=None))
                            )
@@ -634,18 +637,18 @@ class ComponentClass_test(unittest.TestCase):
 
         c = ComponentClass(name='cl',
                            regimes=[
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r1',
                                        transitions=On('X>X1', do=['X=X0'], to='r2')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r2',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r3')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r3',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r4')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r4',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r1')),
@@ -660,18 +663,18 @@ class ComponentClass_test(unittest.TestCase):
         c = ComponentClass(name='cl',
                            dynamicsblock=DynamicsBlock(
                                 regimes=[
-                                    Regime('dX/dt=0',
+                                    Regime('dX/dt=1/t',
                                            name='r1',
                                            transitions=On('X>X1', do=['X=X0'], to='r2')),
-                                    Regime('dX/dt=0',
+                                    Regime('dX/dt=1/t',
                                            name='r2',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r3')),
-                                    Regime('dX/dt=0',
+                                    Regime('dX/dt=1/t',
                                            name='r3',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r4')),
-                                    Regime('dX/dt=0',
+                                    Regime('dX/dt=1/t',
                                            name='r4',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r1')),
@@ -689,10 +692,10 @@ class ComponentClass_test(unittest.TestCase):
             NineMLRuntimeError,
             ComponentClass, name='cl',
             regimes=[
-                Regime('dX/dt=0',
+                Regime('dX/dt=1/t',
                        name='r',
                        transitions=On('X>X1', do=['X=X0'])),
-                Regime('dX/dt=0',
+                Regime('dX/dt=1/t',
                        name='r',
                        transitions=On('X>X1', do=['X=X0'],)), ]
         )
@@ -710,8 +713,8 @@ class ComponentClass_test(unittest.TestCase):
         # From State Assignments and Differential Equations, and Conditionals
         c = ComponentClass(name='cl',
                            aliases=['A:=a+e', 'B:=a+pi+b'],
-                           regimes=Regime('dX/dt = 6 + c + sin(d)',
-                                          'dV/dt = 1.0',
+                           regimes=Regime('dX/dt = (6 + c + sin(d))/t',
+                                          'dV/dt = 1.0/t',
                                           transitions=On('V>Vt', do=['X = X + f', 'V=0'])
                                           )
                            )
@@ -745,18 +748,18 @@ class ComponentClass_test(unittest.TestCase):
         c = ComponentClass(name='cl',
                            dynamicsblock=DynamicsBlock(
                                 regimes=[
-                                    Regime('dX1/dt=0',
+                                    Regime('dX1/dt=1/t',
                                            name='r1',
                                            transitions=On('X>X1', do=['X=X0'], to='r2')),
-                                    Regime('dX1/dt=0',
+                                    Regime('dX1/dt=1/t',
                                            name='r2',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r3')),
-                                    Regime('dX2/dt=0',
+                                    Regime('dX2/dt=1/t',
                                            name='r3',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r4')),
-                                    Regime('dX2/dt=0',
+                                    Regime('dX2/dt=1/t',
                                            name='r4',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r1')),
@@ -771,19 +774,19 @@ class ComponentClass_test(unittest.TestCase):
         c = ComponentClass(name='cl',
                            dynamicsblock=DynamicsBlock(
                                 regimes=[
-                                    Regime('dX1/dt=0',
+                                    Regime('dX1/dt=1/t',
                                            name='r1',
                                            transitions=[On('X>X1', do=['X=X0'], to='r2'),
                                                         On('X>X2', do=['X=X0'], to='r3'), ]
                                            ),
-                                    Regime('dX1/dt=0',
+                                    Regime('dX1/dt=1/t',
                                            name='r2',
                                            transitions=On('X>X1', do=['X=X0'], to='r3'),),
-                                    Regime('dX2/dt=0',
+                                    Regime('dX2/dt=1/t',
                                            name='r3',
                                            transitions=[On('X>X1', do=['X=X0'], to='r4'),
                                                         On('X>X2', do=['X=X0'], to=None)]),
-                                    Regime('dX2/dt=0',
+                                    Regime('dX2/dt=1/t',
                                            name='r4',
                                            transitions=On('X>X1', do=['X=X0'], to=None)),
                                 ]

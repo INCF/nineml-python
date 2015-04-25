@@ -12,7 +12,7 @@ from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
 from nineml.exceptions import NineMLRuntimeError
 from ..expressions import ODE
 from .. import BaseALObject
-from ..units import dimensionless, Dimension
+from nineml.units import dimensionless, Dimension
 from nineml.base import MemberContainerObject
 from .transitions import OnEvent, OnCondition, Trigger
 from .utils.visitors import DynamicsElementFinder
@@ -70,11 +70,11 @@ class TimeDerivative(ODE, BaseALObject):
 
     """
 
-    def __init__(self, dependent_variable, rhs):
+    def __init__(self, variable, rhs):
         """Time Derivative Constructor
 
-            :param dependent_variable: A `string` containing a single symbol,
-                which is the dependent_variable.
+            :param variable: A `string` containing a single symbol,
+                which is the variable.
             :param rhs: A `string` containing the right-hand-side of the
                 equation.
 
@@ -87,7 +87,7 @@ class TimeDerivative(ODE, BaseALObject):
 
             Then this would be constructed as::
 
-                TimeDerivative( dependent_variable='g', rhs='g/gtau' )
+                TimeDerivative( variable='g', rhs='g/gtau' )
 
             Note that although initially the time variable
             (independent_variable) is ``t``, this can be changed using the
@@ -97,7 +97,7 @@ class TimeDerivative(ODE, BaseALObject):
 
             """
         ODE.__init__(self,
-                     dependent_variable=dependent_variable,
+                     dependent_variable=variable,
                      independent_variable='t',
                      rhs=rhs)
         BaseALObject.__init__(self)
@@ -108,11 +108,15 @@ class TimeDerivative(ODE, BaseALObject):
         This is included to allow Time-derivatives to be polymorphic with other
         named structures
         """
+        return self.variable
+
+    @property
+    def variable(self):
         return self.dependent_variable
 
     def __repr__(self):
         return "TimeDerivative( d%s/dt = %s )" % \
-            (self.dependent_variable, self.rhs)
+            (self.variable, self.rhs)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -130,9 +134,9 @@ class TimeDerivative(ODE, BaseALObject):
         if not match:
             err = "Unable to load time derivative: %s" % time_derivative_string
             raise NineMLRuntimeError(err)
-        dependent_variable = match.groupdict()['dependent_var']
+        variable = match.groupdict()['dependent_var']
         rhs = match.groupdict()['rhs']
-        return TimeDerivative(dependent_variable=dependent_variable, rhs=rhs)
+        return TimeDerivative(variable=variable, rhs=rhs)
 
 
 class Regime(BaseALObject, MemberContainerObject):
@@ -210,11 +214,11 @@ class Regime(BaseALObject, MemberContainerObject):
         time_derivatives = td_type_dict[TimeDerivative] + td_from_str
 
         # Check for double definitions:
-        td_dep_vars = [td.dependent_variable for td in time_derivatives]
+        td_dep_vars = [td.variable for td in time_derivatives]
         assert_no_duplicates(td_dep_vars)
 
         # Store as a dictionary
-        self._time_derivatives = dict((td.dependent_variable, td)
+        self._time_derivatives = dict((td.variable, td)
                                       for td in time_derivatives)
 
         # We support passing in 'transitions', which is a list of both OnEvents

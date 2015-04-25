@@ -5,7 +5,7 @@ from nineml.abstraction_layer import (Expression,
 from nineml.abstraction_layer.expressions import (
     ExpressionWithSimpleLHS, Constant)
 from nineml.exceptions import NineMLMathParseError
-from nineml.abstraction_layer.units import coulomb, S_per_cm2, mV
+from nineml.units import coulomb, S_per_cm2, mV
 from nineml.abstraction_layer.componentclass.utils.xml import (
     ComponentClassXMLWriter as XMLWriter, ComponentClassXMLLoader as XMLLoader)
 from nineml import Document
@@ -22,7 +22,6 @@ class Expression_test(unittest.TestCase):
             (('a+b'), ('a', 'b'), (), 13, {'a': 12, 'b': 1}),
             (('1./(alpha+2*beta)'), ('alpha', 'beta'), (), 0.2,
              {'alpha': 1, 'beta': 2}),
-            (('pi'), (), (), 3.14159265, {}),
         ]
 
         for rhs, exp_var, exp_func, exp_res, params in valid_rhses:
@@ -162,7 +161,7 @@ class ExpressionWithSimpleLHS_test(unittest.TestCase):
 
     def test_lhs(self):
 
-        e = ExpressionWithSimpleLHS('a', 't+t+3 + sin(t*pi) +q')
+        e = ExpressionWithSimpleLHS('a', 't+t+3 + sin(t) +q')
 
         self.assertEqual(list(e.lhs), ['a'])
         self.assertEqual(list(e.lhs_atoms), ['a'])
@@ -240,7 +239,7 @@ class TimeDerivative_test(unittest.TestCase):
             def visit_timederivative(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
                 return kwargs
 
-        c = TimeDerivative(dependent_variable='V', rhs='0')
+        c = TimeDerivative(variable='V', rhs='0')
         v = TimeDerivativeTestVisitor()
 
         self.assertEqual(
@@ -249,7 +248,7 @@ class TimeDerivative_test(unittest.TestCase):
         )
 
     def test_atoms(self):
-        td = TimeDerivative(dependent_variable='X',
+        td = TimeDerivative(variable='X',
                             rhs=' y * f - sin(q*q) + 4 * a * exp(Y)')
         self.assertEquals(sorted(td.atoms), sorted(
             ['X', 'y', 'f', 'sin', 'exp', 'q', 'a', 'Y', 't']))
@@ -259,14 +258,14 @@ class TimeDerivative_test(unittest.TestCase):
 
 #   def test_dependent_variable(self):
     def test_independent_variable(self):
-        td = TimeDerivative(dependent_variable='X',
+        td = TimeDerivative(variable='X',
                             rhs=' y*f - sin(q*q) + 4*a*exp(Y)')
         self.assertEquals(td.independent_variable, 't')
-        self.assertEquals(td.dependent_variable, 'X')
+        self.assertEquals(td.variable, 'X')
 
         # Check substitutions to the LHS:
         td.lhs_name_transform_inplace({'X': 'x'})
-        self.assertEquals(td.dependent_variable, 'x')
+        self.assertEquals(td.variable, 'x')
 
         # Since this is always time, we should not be changing the
         # independent_variable (dt)
@@ -276,7 +275,7 @@ class TimeDerivative_test(unittest.TestCase):
         # Aand change them again using 'name_transform_inplace'
         # Check substitutions to the LHS:
         td.name_transform_inplace({'x': 'X1'})
-        self.assertEquals(td.dependent_variable, 'X1')
+        self.assertEquals(td.variable, 'X1')
 
         # Since this is always time, we should not be changing the
         # independent_variable (dt)

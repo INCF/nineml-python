@@ -13,7 +13,7 @@ import re
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
 
-builtin_constants = set(['pi', 'true', 'false', 'True', 'False'])
+builtin_constants = set(['true', 'false', 'True', 'False'])
 builtin_functions = set([
     'exp', 'sin', 'cos', 'log', 'log10', 'pow', 'abs',
     'sinh', 'cosh', 'tanh', 'sqrt', 'mod', 'sum',
@@ -36,6 +36,8 @@ class Expression(object):
     # chain of valid identifiers follwed by an open parenthesis.
     _func_re = re.compile(r'([\w\.]+) *\(')  # Match identifier followed by (
     _strip_parens_re = re.compile(r'^\(+(\w+)\)+$')  # Match if enclosed by ()
+    _random_ns_map = dict((str(v), Parser.unescape_random_namespace(k))
+                          for k, v in Parser.inline_randoms_dict.iteritems())
 
     def __init__(self, rhs):
         self.rhs = rhs
@@ -94,8 +96,7 @@ class Expression(object):
     @property
     def rhs_cstr(self):
         rhs = self._unwrap_integer_powers(self._rhs)
-        cstr = ccode(rhs)
-        cstr = Parser.unescape_random_namespace(cstr)
+        cstr = ccode(rhs, user_functions=self._random_ns_map)
         return cstr
 
     @property
@@ -107,9 +108,7 @@ class Expression(object):
 
     @property
     def rhs_symbol_names(self):
-        # FIXME: Might be a better way to ensure there are no parentheses
-        return (self._strip_parens_re.sub(r'\1', str(s))
-                for s in self.rhs_symbols)
+        return (self.symbol_to_str(s) for s in self.rhs_symbols)
 
     @property
     def rhs_funcs(self):
@@ -271,14 +270,22 @@ class Expression(object):
     @classmethod
     def _unwrap_integer_powers(cls, expr):
         """
-        Convert integer powers in an expression to Muls, like a**2 => a*a.
+        Convert integer powers in an expression to Muls, e.g. a**3 => a*a*a.
+        This is used when printing to C-style strings as it is more accurate.
         """
         integer_pows = list(p for p in expr.atoms(sympy.Pow)
-                            if p.as_base_exp()[1].is_Integer)
-        repl = zip(integer_pows,
-                   (sympy.Mul(*[b] * e, evaluate=False)
-                    for b, e in (i.as_base_exp() for i in integer_pows)))
-        return cls._non_eval_xreplace(expr, dict(repl))
+                            if (p.as_base_exp()[1].is_Integer and
+                                abs(p.as_base_exp()[1]) > 1))
+        to_replace = {}
+        for int_pow in integer_pows:
+            base, expn = int_pow.as_base_exp()
+            repl = sympy.Mul(*([base] * abs(expn)), evaluate=False)
+            if expn < 0:
+                repl = sympy.Pow(repl, -1)
+            to_replace[int_pow] = repl
+        if to_replace:
+            expr = cls._non_eval_xreplace(expr, to_replace)
+        return expr
 
     @classmethod
     def _non_eval_xreplace(cls, expr, rule):
@@ -302,6 +309,10 @@ class Expression(object):
             if altered:
                 return expr.func(*args, evaluate=False)
         return expr
+
+    @classmethod
+    def symbol_to_str(cls, symbol):
+        return cls._strip_parens_re.sub(r'\1', str(symbol))
 
 
 class ExpressionSymbol(object):

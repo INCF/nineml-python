@@ -13,7 +13,7 @@ from __future__ import division
 import os.path
 import unittest
 import nineml.user_layer as nineml
-from nineml.abstraction_layer.units import ms, mV, nA, Hz, Mohm
+from nineml.units import ms, mV, nA, Hz, Mohm
 from os import path
 
 src_dir = os.path.dirname(__file__)

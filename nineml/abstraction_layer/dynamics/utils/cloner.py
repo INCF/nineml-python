@@ -70,7 +70,9 @@ class DynamicsCloner(ComponentCloner):
                 for a in dynamicsblock.aliases],
             state_variables=[
                 s.accept_visitor(self, **kwargs)
-                for s in dynamicsblock.state_variables])
+                for s in dynamicsblock.state_variables],
+            constants=[c.accept_visitor(self, **kwargs)
+                       for c in dynamicsblock.constants],)
 
     def visit_regime(self, regime, **kwargs):
         r = regime.__class__(
@@ -89,15 +91,18 @@ class DynamicsCloner(ComponentCloner):
 
     def visit_analogreceiveport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_analogreduceport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_analogsendport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_eventsendport(self, port, **kwargs):
         return port.__class__(
@@ -124,12 +129,12 @@ class DynamicsCloner(ComponentCloner):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
-        dep = self.prefix_variable(time_derivative.dependent_variable,
+        dep = self.prefix_variable(time_derivative.variable,
                                    **kwargs)
 
         rhs = time_derivative.rhs_suffixed(suffix='', prefix=prefix,
                                            excludes=prefix_excludes)
-        return time_derivative.__class__(dependent_variable=dep, rhs=rhs)
+        return time_derivative.__class__(variable=dep, rhs=rhs)
 
     def visit_trigger(self, trigger, **kwargs):
         prefix = kwargs.get('prefix', '')

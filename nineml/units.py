@@ -1,120 +1,99 @@
+from __future__ import division
+import re
+import operator
+from sympy import Symbol
 from nineml.xmlns import E
-from . import BaseALObject
-from nineml import DocumentLevelObject
+from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 
-# Might be an idea to subclass namedtuple to prevent dimensions being redefined
-# and therefore protect the hash
-#
-# class D(namedtuple('Base', 'name m l t i n k j'), A):
-#     def __new__(self, name, m=0, l=0, t=0, n=0, k=0, j=0):
-#         return super(D, self).__new__(self, name, t, k, m, l, n, j)
-#     def __init__(self, name, m=0, l=0, t=0, n=0, k=0, j=0):
-#         pass
-#
-# NB: Not sure this works
 
-
-class Dimension(BaseALObject, DocumentLevelObject):
+class Dimension(BaseNineMLObject, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
 
     element_name = 'Dimension'
-    valid_dims = ['m', 'l', 't', 'i', 'n', 'k', 'j']
-    SI_unit_conversion = {'m': 'Kg', 'l': 'm', 't': 's', 'i': 'A', 'n': 'mol',
-                          'k': 'K', 'j': 'cd'}
+    dimension_names = ('m', 'l', 't', 'i', 'n', 'k', 'j')
+    SI_units = ('Kg', 'm', 's', 'A', 'mol', 'K', 'cd')
+    defining_attributes = ('_dims',)
+    _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
-    def __init__(self, name, **kwargs):
-        BaseALObject.__init__(self)
+    def __init__(self, name, dimensions=None, **kwargs):
+        BaseNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, kwargs.pop('url', None))
         self._name = name
-        for k in kwargs:
-            if k not in self.valid_dims:
-                raise Exception("'{}' is not a valid dimension name ('{}')"
-                                .format(k, "', '".join(self.valid_dims)))
-        self._dims = kwargs
-
-    def __eq__(self, other):
-        if not isinstance(other, Dimension):
-            return False
-        return all(self.power(d) == other.power(d) for d in self.valid_dims)
+        if dimensions is not None:
+            assert len(dimensions) == 7, "Incorrect dimension length"
+            self._dims = tuple(dimensions)
+        else:
+            self._dims = tuple(kwargs.pop(d, 0) for d in self.dimension_names)
+        assert not len(kwargs), "Unrecognised kwargs ({})".format(kwargs)
 
     def __hash__(self):
-        return hash(tuple(self.power(d) for d in self.valid_dims))
+        return hash(self._dims)
 
     def __ne__(self, other):
         return not (self == other)
 
     def __repr__(self):
-        return ("Dimension(name='{}'{})"
-                .format(self.name, ''.join(", {}={}".format(d, p)
-                                           for d, p in self._dims.items())))
+        return ("Dimension(name='{}'{})".format(
+            self.name, ''.join(' {}={}'.format(n, p) if p != 0 else ''
+                               for n, p in zip(self.dimension_names,
+                                               self._dims))))
+
+    def __iter__(self):
+        return iter(self._dims)
 
     @property
     def name(self):
         return self._name
 
-    def power(self, dim_name):
-        return self._dims.get(dim_name, 0)
+    def power(self, name):
+        return self._dims[self.dimension_names.index(name)]
 
     def to_SI_units_str(self):
-        numer = '*'.join(('({}**{})'.format(self.SI_unit_conversion[n], p)
-                          if p > 1 else self.SI_unit_conversion[n])
-                         for n, p in self._dims.iteritems()
-                         if p > 0)
-        denom = '*'.join(('({}**{})'.format(self.SI_unit_conversion[n], p)
-                          if p > 1 else self.SI_unit_conversion[n])
-                         for n, p in self._dims.iteritems()
-                         if p < 0)
+        numer = '*'.join('({}**{})'.format(si, p) if p > 1 else si
+                         for si, p in zip(self.SI_units, self._dims) if p > 0)
+        denom = '*'.join('({}**{})'.format(si, p) if p < -1 else si
+                         for si, p in zip(self.SI_units, self._dims) if p < 0)
         return '{}/({})'.format(numer, denom)
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_dimension(self, **kwargs)
-
-    @annotate_xml
-    def to_xml(self):
-        kwargs = {'name': self.name}
-        kwargs.update(dict((k, str(v)) for k, v in self._dims.items()))
-        return E(self.element_name, **kwargs)
-
-    @classmethod
-    @read_annotations
-    def from_xml(cls, element, document):
-        kwargs = dict(element.attrib)
-        name = kwargs.pop('name')
-        kwargs = dict((k, int(v)) for k, v in kwargs.items())
-        kwargs['url'] = document.url
-        return cls(name, **kwargs)
-
-    @property
-    def t(self):
-        return self._dims.get('t', 0)
-
-    @property
-    def k(self):
-        return self._dims.get('k', 0)
-
-    @property
-    def j(self):
-        return self._dims.get('j', 0)
-
-    @property
-    def n(self):
-        return self._dims.get('n', 0)
+    def _sympy_(self):
+        """
+        Create a sympy expression by multiplying symbols representing each of
+        the dimensions together
+        """
+        return reduce(
+            operator.mul,
+            (Symbol(n) ** p for n, p in zip(self.dimension_names, self._dims)))
 
     @property
     def m(self):
-        return self._dims.get('m', 0)
+        return self._dims[0]
 
     @property
     def l(self):
-        return self._dims.get('l', 0)
+        return self._dims[1]
+
+    @property
+    def t(self):
+        return self._dims[2]
 
     @property
     def i(self):
-        return self._dims.get('i', 0)
+        return self._dims[3]
+
+    @property
+    def n(self):
+        return self._dims[4]
+
+    @property
+    def k(self):
+        return self._dims[5]
+
+    @property
+    def j(self):
+        return self._dims[6]
 
     @property
     def time(self):
@@ -144,28 +123,125 @@ class Dimension(BaseALObject, DocumentLevelObject):
     def current(self):
         return self.i
 
+    @annotate_xml
+    def to_xml(self):
+        kwargs = {'name': self.name}
+        kwargs.update(dict(
+            (n, str(p))
+            for n, p in zip(self.dimension_names, self._dims) if abs(p) > 0))
+        return E(self.element_name, **kwargs)
 
-class Unit(BaseALObject, DocumentLevelObject):
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        kwargs = dict(element.attrib)
+        name = kwargs.pop('name')
+        kwargs = dict((k, int(v)) for k, v in kwargs.items())
+        kwargs['url'] = document.url
+        return cls(name, **kwargs)
+
+    def __mul__(self, other):
+        "self * other"
+        if other == 1:
+            other = dimensionless
+        return Dimension(self.make_name([self.name, other.name]),
+                         dimensions=tuple(s + o for s, o in zip(self, other)))
+
+    def __truediv__(self, other):
+        "self / expr"
+        if other == 1:
+            other = dimensionless
+        return Dimension(self.make_name([self.name], [other.name]),
+                         dimensions=tuple(s - o for s, o in zip(self, other)))
+
+    def __pow__(self, power):
+        "self ** expr"
+        return Dimension(self.make_name([self.name], power=power),
+                         dimensions=tuple(s * power for s in self))
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
+        if other == 1:
+            other = dimensionless
+        return other.__truediv__(self)
+
+    def __div__(self, other):
+        return self.__truediv__(other)
+
+    def __rdiv__(self, other):
+        return self.__rtruediv__(other)
+
+    @classmethod
+    def make_name(cls, products=[], divisors=[], power=1):
+        """
+        Generates a sensible name from the combination of dimensions/units.
+
+        E.g.
+
+        voltage * current -> voltage_current
+        voltage / current -> voltage_per_current
+        voltage ** 2 -> voltage2
+        dimensionless / voltage -> per_voltage
+        (voltage * current * dimensionless) ** 3 -> current3_voltage3
+        """
+        if power == 0:
+            return 'dimensionless'
+        numerator = []
+        denominator = []
+        for p in products:
+            p_split = p.split('_per_')
+            numerator.extend(p_split[0].split('_'))
+            if len(p_split) > 1:
+                denominator.extend(p_split[1].split('_'))
+        for d in divisors:
+            d_split = d.split('_per_')
+            denominator.extend(d_split[0].split('_'))
+            if len(d_split) > 1:
+                numerator.extend(d_split[1].split('_'))
+        num_denoms = []
+        for lst in ((numerator, denominator)
+                    if power > 0 else (denominator, numerator)):
+            new_lst = []
+            for dim_name in lst:
+                if dim_name not in ('dimensionless', 'unitless', 'none'):
+                    if power != 1:
+                        assert isinstance(power, int)
+                        match = cls._trailing_numbers_re.match(dim_name)
+                        if match:
+                            name = match.group(1)
+                            pw = int(match.group(2)) * power
+                        else:
+                            name = dim_name
+                            pw = power
+                        dim_name = name + str(abs(pw))
+                    new_lst.append(dim_name)
+            num_denoms.append(new_lst)
+        numerator, denominator = num_denoms
+        name = '_'.join(sorted(numerator))
+        if len(denominator):
+            if len(numerator):
+                name += '_'
+            name += 'per_' + '_'.join(sorted(denominator))
+        return name
+
+
+class Unit(BaseNineMLObject, DocumentLevelObject):
     """
     Defines the units of a quantity
     """
 
     element_name = 'Unit'
-    defining_attributes = ('name', 'dimension', 'power', 'offset')
+    defining_attributes = ('_dimension', '_power', '_offset')
 
     def __init__(self, name, dimension, power, offset=0.0, url=None):
-        BaseALObject.__init__(self)
+        BaseNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
         self._name = name
         self._dimension = dimension
         self._power = power
         self._offset = offset
-
-    def __eq__(self, other):
-        if not isinstance(other, Unit):
-            return False
-        return (self.power == other.power and self.offset == other.offset and
-                self.dimension == other.dimension)
 
     def __hash__(self):
         return hash((self.power, self.offset, self.dimension))
@@ -185,6 +261,13 @@ class Unit(BaseALObject, DocumentLevelObject):
                             "not zero ({})".format(self.offset))
         return (self.dimension.to_SI_units_str() +
                 ' * 10**({})'.format(self.power) if self.power else '')
+
+    def _sympy_(self):
+        """
+        Create a sympy expression by multiplying symbols representing each of
+        the dimensions together
+        """
+        return self.dimension._sympy_() * 10 ** self.power + self.offset
 
     @property
     def name(self):
@@ -233,7 +316,51 @@ class Unit(BaseALObject, DocumentLevelObject):
         offset = float(element.attrib.get('name', 0.0))
         return cls(name, dimension, power, offset=offset, url=document.url)
 
-# Common units and dimensions
+    def __mul__(self, other):
+        "self * other"
+        if other == 1:
+            other = unitless
+        assert (self.offset == 0 and
+                other.offset == 0), "Can't multiply units with nonzero offsets"
+        return Unit(Dimension.make_name([self.name, other.name]),
+                    dimension=self.dimension * other.dimension,
+                    power=(self.power + other.power))
+
+    def __truediv__(self, other):
+        "self / expr"
+        if other == 1:
+            other = unitless
+        assert (self.offset == 0 and
+                other.offset == 0), "Can't divide units with nonzero offsets"
+        return Unit(Dimension.make_name([self.name], [other.name]),
+                    dimension=self.dimension / other.dimension,
+                    power=(self.power - other.power))
+
+    def __pow__(self, power):
+        "self ** expr"
+        assert self.offset == 0, "Can't raise units with nonzero offsets"
+        return Unit(Dimension.make_name([self.name], power=power),
+                    dimension=(self.dimension ** power),
+                    power=(self.power * power))
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __rtruediv__(self, other):
+        if other == 1:
+            other = unitless
+        return other.__truediv__(self)
+
+    def __div__(self, other):
+        return self.__truediv__(other)
+
+    def __rdiv__(self, other):
+        return self.__rtruediv__(other)
+
+
+# ----------------- #
+# Common dimensions #
+# ----------------- #
 
 time = Dimension(name="time", t=1)
 per_time = Dimension(name="per_time", t=-1)
@@ -269,6 +396,10 @@ rho_factor = Dimension(name="rho_factor", l=-1, n=1, i=-1, t=-1)
 dimensionless = Dimension(name="dimensionless")
 energy_per_temperature = Dimension(name="energy_per_temperature", m=1, l=2,
                                    t=-2, k=-1)
+
+# ------------ #
+# Common units #
+# ------------ #
 
 s = Unit(name="s", dimension=time, power=0)
 per_s = Unit(name="per_s", dimension=per_time, power=0)
@@ -337,3 +468,7 @@ mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s",
                              dimension=rho_factor, power=0)
 unitless = Unit(name="unitless", dimension=dimensionless, power=0)
 coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)
+
+if __name__ == '__main__':
+    print 1 / voltage
+    print (current / voltage) ** -3

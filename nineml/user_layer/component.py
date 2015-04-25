@@ -11,7 +11,7 @@ from operator import and_
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
-from ..abstraction_layer.units import Unit, unitless
+from nineml.units import Unit, unitless
 from ..abstraction_layer import (
     ComponentClass, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
@@ -287,11 +287,10 @@ class Component(BaseULObject, DocumentLevelObject):
             prop_dimension = prop_units.dimension
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
-                raise NineMLUnitMismatchError(
+                raise NineMLRuntimeError(
                     "Dimensions for '{}' property ('{}') don't match that of "
                     "componentclass class ('{}')."
-                    .format(param.name, prop_dimension.name,
-                            param_dimension.name))
+                    .format(param.name, prop_dimension, param_dimension))
 
     @write_reference
     @annotate_xml
@@ -399,6 +398,7 @@ class Quantity(BaseULObject):
     numbers, e.g. a RandomDistribution instance.
     """
     __metaclass__ = ABCMeta  # Abstract base class
+    element_name = 'Quantity'
 
     defining_attributes = ("name", "value", "units")
 
@@ -510,7 +510,13 @@ class Quantity(BaseULObject):
             raise Exception(
                 "Did not find recognised value tag in property (found {})"
                 .format(', '.join(c.tag for c in element.getchildren())))
-        units_str = element.attrib.get('units')
+        try:
+            units_str = element.attrib['units']
+        except KeyError:
+            raise NineMLRuntimeError(
+                "{} element '{}' is missing 'units' attribute (found '{}')"
+                .format(element.tag, element.get('name', ''),
+                        "', '".join(element.attrib.iterkeys())))
         try:
             units = document[units_str]
         except KeyError:

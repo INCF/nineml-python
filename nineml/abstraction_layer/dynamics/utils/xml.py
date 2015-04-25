@@ -105,7 +105,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     def load_timederivative(self, element):
         variable = element.get("variable")
         expr = self.load_single_internmaths_block(element)
-        return TimeDerivative(dependent_variable=variable,
+        return TimeDerivative(variable=variable,
                               rhs=expr)
 
     @read_annotations
@@ -230,7 +230,7 @@ class DynamicsClassXMLWriter(ComponentClassXMLWriter):
     def visit_timederivative(self, time_derivative):
         return E('TimeDerivative',
                  E("MathInline", time_derivative.rhs_cstr),
-                 variable=time_derivative.dependent_variable)
+                 variable=time_derivative.variable)
 
     @annotate_xml
     def visit_oncondition(self, on_condition):

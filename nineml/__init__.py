@@ -12,8 +12,11 @@ from document import read, write, load, Document
 import abstraction_layer
 import user_layer
 import exceptions
+import units
+from .units import Unit, Dimension
 from abstraction_layer import (
-    Unit, Dimension, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
+    DynamicsClass, ConnectionRuleClass, RandomDistributionClass,
+    ComponentClass)
 from user_layer import (
     Dynamics, ConnectionRule, RandomDistribution, Selection, Population,
-    Projection, Property, Definition)
+    Projection, Property, Definition, Component)

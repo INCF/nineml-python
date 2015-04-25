@@ -5,7 +5,6 @@ from nineml.abstraction_layer.dynamics import (
 from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
 
 
-# Testing Skeleton for class: DynamicsClonerPrefixNamespace
 class DynamicsAssignIndices_test(unittest.TestCase):
 
     def test_after_cloning(self):
@@ -15,8 +14,8 @@ class DynamicsAssignIndices_test(unittest.TestCase):
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1'],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1 / P2',
-                    'dSV2/dt = SV1 / ARP1 + SV2 / P1',
+                    'dSV1/dt = -SV1 / (P2*t)',
+                    'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
                     transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
                     name='R1',

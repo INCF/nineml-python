@@ -11,8 +11,10 @@ from ...componentclass.validators import (
     AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,
     NoDuplicatedObjectsComponentValidator,
-    CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
+    CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
+    DimensionalityComponentValidator)
 from . import PerNamespaceDynamicsValidator
+from nineml import units as un
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(
@@ -42,7 +44,7 @@ class TimeDerivativesAreDeclaredDynamicsValidator(
 
     def action_timederivative(self, timederivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.time_derivatives_used[namespace].append(
-            timederivative.dependent_variable)
+            timederivative.variable)
 
 
 class StateAssignmentsAreOnStateVariablesDynamicsValidator(
@@ -222,4 +224,33 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
         self.check_lhssymbol_is_valid(assignment.lhs)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_lhssymbol_is_valid(time_derivative.dependent_variable)
+        self.check_lhssymbol_is_valid(time_derivative.variable)
+
+
+class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
+                                      PerNamespaceDynamicsValidator):
+
+    def __init__(self, componentclass):
+        if not componentclass.subnodes:  # Assumes that subnodes are alread checked @IgnorePep8
+            super(DimensionalityDynamicsValidator,
+                  self).__init__(componentclass)
+
+    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        dimension = self._get_dimensions(timederivative)
+        sv = self.componentclass.state_variable(timederivative.variable)
+        self._compare_dimensionality(
+            dimension, sv.dimension / un.time, timederivative,
+            'time derivative of ' + sv.name)
+
+    def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
+        dimension = self._get_dimensions(stateassignment)
+        sv = self.componentclass.state_variable(stateassignment.variable)
+        self._compare_dimensionality(dimension, sv.dimension,
+                                     stateassignment,
+                                     'state variable ' + sv.name)
+
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
+        self._check_send_port(port)
+
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        self._flatten_dims(trigger.rhs, trigger)

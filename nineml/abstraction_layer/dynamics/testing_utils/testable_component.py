@@ -88,8 +88,9 @@ class TestableComponent(object):
         # Check the functor will actually return us an object:
         try:
             c = self.component_functor()
-        except Exception:
-            raise NineMLRuntimeError('component_functor() threw an exception')
+        except Exception, e:
+            raise NineMLRuntimeError('component_functor() threw an exception:'
+                                     '{}'.format(e))
 
         if not isinstance(c, DynamicsClass):
             raise NineMLRuntimeError('Functor does not return Component Class')

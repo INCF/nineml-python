@@ -145,12 +145,12 @@ class Document(dict, BaseNineMLObject):
     @property
     def units(self):
         return (o for o in self.itervalues()
-                if isinstance(nineml.abstraction_layer.units.Unit))  # @UndefinedVariable @IgnorePep8
+                if isinstance(nineml.units.Unit))  # @UndefinedVariable @IgnorePep8
 
     @property
     def dimensions(self):
         return (o for o in self.itervalues()
-                if isinstance(nineml.abstraction_layer.units.Dimension))  # @UndefinedVariable @IgnorePep8
+                if isinstance(nineml.units.Dimension))  # @UndefinedVariable @IgnorePep8
 
     def _load_elem_from_xml(self, unloaded):
         """
@@ -186,9 +186,8 @@ class Document(dict, BaseNineMLObject):
             *[o.all_dimensions for o in self.itervalues()]))
         # Delete unused units from the document
         for k, o in self.items():
-            if ((isinstance(o, nineml.abstraction_layer.Unit) and
-                 o not in all_units) or
-                (isinstance(o, nineml.abstraction_layer.Dimension) and
+            if ((isinstance(o, nineml.Unit) and o not in all_units) or
+                (isinstance(o, nineml.Dimension) and
                  o not in all_dimensions)):
                 del self[k]
         # Add missing units and dimensions to the document
@@ -262,15 +261,11 @@ class Document(dict, BaseNineMLObject):
                     annotations = Annotations.from_xml(child)
                     continue
                 try:
-                    child_cls = getattr(nineml.user_layer, element_name)
+                    child_cls = getattr(nineml, element_name)
                 except AttributeError:
-                    try:
-                        child_cls = getattr(nineml.abstraction_layer,
-                                            element_name)
-                    except AttributeError:
-                        raise NineMLRuntimeError(
-                            "Did not find matching NineML class for '{}' "
-                            "element".format(element_name))
+                    raise NineMLRuntimeError(
+                        "Did not find matching NineML class for '{}' "
+                        "element".format(element_name))
                 if not issubclass(child_cls, DocumentLevelObject):
                     raise NineMLRuntimeError(
                         "'{}' is not a valid top-level NineML element"
