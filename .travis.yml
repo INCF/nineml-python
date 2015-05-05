@@ -3,11 +3,10 @@ python:
   - "2.7"
 # command to install dependencies
 install:
-  - pip install -r nineml/requirements.txt --use-mirrors
+  - pip install -r requirements.txt --use-mirrors
   - pip install coveralls --use-mirrors
-  - pip install nineml --use-mirrors
 # command to run tests, e.g. python setup.py test
 script:
-  nosetests nineml/test/unit --with-coverage --cover-package=nineml
+  nosetests test/unit --with-coverage --cover-package=nineml
 after_success:
   coveralls

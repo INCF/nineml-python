@@ -1,8 +1,8 @@
 from nineml.utils import filter_discrete_types
 from nineml.exceptions import NineMLRuntimeError
-from ..expressions.utils import MathUtil
 from .transitions import (OutputEvent, Trigger, StateAssignment, OnEvent,
                           OnCondition)
+from nineml.abstraction_layer.expressions.utils import is_single_symbol
 
 
 def SpikeOutputEvent():
@@ -39,7 +39,7 @@ def On(trigger, do=None, to=None):
     elif do is None:
         do = []
     if isinstance(trigger, basestring):
-        if MathUtil.is_single_symbol(trigger):
+        if is_single_symbol(trigger):
             return DoOnEvent(input_event=trigger, do=do, to=to)
         else:
             return DoOnCondition(condition=trigger, do=do, to=to)
@@ -54,16 +54,16 @@ def On(trigger, do=None, to=None):
 
 def DoOnEvent(input_event, do=None, to=None):
     assert isinstance(input_event, basestring)
-    assignments, event_outs = do_to_assignments_and_events(do)
+    assignments, output_events = do_to_assignments_and_events(do)
     return OnEvent(src_port_name=input_event,
                    state_assignments=assignments,
-                   event_outputs=event_outs,
-                   target_regime_name=to)
+                   output_events=output_events,
+                   target_regime=to)
 
 
 def DoOnCondition(condition, do=None, to=None):
-    assignments, event_outs = do_to_assignments_and_events(do)
+    assignments, output_events = do_to_assignments_and_events(do)
     return OnCondition(trigger=condition,
                        state_assignments=assignments,
-                       event_outputs=event_outs,
-                       target_regime_name=to)
+                       output_events=output_events,
+                       target_regime=to)

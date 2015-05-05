@@ -1,13 +1,10 @@
-
-
-import warnings
 import unittest
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction_layer.dynamics.testing_utils import TestableComponent
 from nineml.abstraction_layer import (
     DynamicsClass as ComponentClass, DynamicsBlock, AnalogSendPort, Alias,
     AnalogReceivePort, AnalogReducePort, Regime, On, NamespaceAddress,
-    OutputEvent, EventReceivePort)
+    OutputEvent, EventReceivePort, Constant)
 
 
 class ComponentClass_test(unittest.TestCase):
@@ -50,27 +47,27 @@ class ComponentClass_test(unittest.TestCase):
         C = ComponentClass(name='C1', aliases=['G:= 0', 'H:=1'])
         self.assertEqual(len(list((C.aliases))), 2)
         self.assertEqual(
-            set(C.aliases_map.keys()), set(['G', 'H'])
+            set(C.alias_names), set(['G', 'H'])
         )
 
         C = ComponentClass(name='C1', aliases=['G:= 0', 'H:=1', Alias('I', '3')])
         self.assertEqual(len(list((C.aliases))), 3)
         self.assertEqual(
-            set(C.aliases_map.keys()), set(['G', 'H', 'I'])
+            set(C.alias_names), set(['G', 'H', 'I'])
         )
 
         # Using DynamicsBlock Parameter:
         C = ComponentClass(name='C1', dynamicsblock=DynamicsBlock(aliases=['G:= 0', 'H:=1']))
         self.assertEqual(len(list((C.aliases))), 2)
         self.assertEqual(
-            set(C.aliases_map.keys()), set(['G', 'H'])
+            set(C.alias_names), set(['G', 'H'])
         )
 
         C = ComponentClass(name='C1', dynamicsblock=DynamicsBlock(
             aliases=['G:= 0', 'H:=1', Alias('I', '3')]))
         self.assertEqual(len(list((C.aliases))), 3)
         self.assertEqual(
-            set(C.aliases_map.keys()), set(['G', 'H', 'I'])
+            set(C.alias_names), set(['G', 'H', 'I'])
         )
 
         # Invalid Construction:
@@ -158,7 +155,7 @@ class ComponentClass_test(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             ComponentClass,
-            name='C1', aliases=['pi := 0'],
+            name='C1', aliases=['t := 0'],
         )
 
     def test_aliases_map(self):
@@ -166,23 +163,23 @@ class ComponentClass_test(unittest.TestCase):
                 # Forwarding function to self.dynamics.alias_map
 
         self.assertEqual(
-            ComponentClass(name='C1').aliases_map, {}
+            ComponentClass(name='C1')._main_block._aliases, {}
         )
 
         c1 = ComponentClass(name='C1', aliases=['A:=3'])
-        self.assertEqual(c1.aliases_map['A'].rhs_as_python_func()(), 3)
-        self.assertEqual(len(c1.aliases_map), 1)
+        self.assertEqual(c1.alias('A').rhs_as_python_func(), 3)
+        self.assertEqual(len(c1._main_block._aliases), 1)
 
         c2 = ComponentClass(name='C1', aliases=['A:=3', 'B:=5'])
-        self.assertEqual(c2.aliases_map['A'].rhs_as_python_func()(), 3)
-        self.assertEqual(c2.aliases_map['B'].rhs_as_python_func()(), 5)
-        self.assertEqual(len(c2.aliases_map), 2)
+        self.assertEqual(c2.alias('A').rhs_as_python_func(), 3)
+        self.assertEqual(c2.alias('B').rhs_as_python_func(), 5)
+        self.assertEqual(len(c2._main_block._aliases), 2)
 
         c3 = ComponentClass(name='C1', dynamicsblock=DynamicsBlock(aliases=['C:=13', 'Z:=15']))
-        self.assertEqual(c3.aliases_map['C'].rhs_as_python_func()(), 13)
-        self.assertEqual(c3.aliases_map['Z'].rhs_as_python_func()(), 15)
+        self.assertEqual(c3.alias('C').rhs_as_python_func(), 13)
+        self.assertEqual(c3.alias('Z').rhs_as_python_func(), 15)
 
-        self.assertEqual(len(c3.aliases_map), 2)
+        self.assertEqual(len(c3._main_block._aliases), 2)
 
     def test_analog_ports(self):
         # Signature: name
@@ -208,10 +205,10 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEqual(len(c.query.analog_recv_ports), 1)
         self.assertEqual(len(c.query.analog_reduce_ports), 0)
 
-        c = ComponentClass(name='C1', analog_ports=[AnalogReducePort('B', reduce_op='+')])
+        c = ComponentClass(name='C1', analog_ports=[AnalogReducePort('B', operator='+')])
         self.assertEqual(len(list(c.analog_ports)), 1)
         self.assertEqual(list(c.analog_ports)[0].mode, 'reduce')
-        self.assertEqual(list(c.analog_ports)[0].reduce_op, '+')
+        self.assertEqual(list(c.analog_ports)[0].operator, '+')
         self.assertEqual(len(c.query.analog_send_ports), 0)
         self.assertEqual(len(c.query.analog_recv_ports), 0)
         self.assertEqual(len(c.query.analog_reduce_ports), 1)
@@ -222,7 +219,7 @@ class ComponentClass_test(unittest.TestCase):
             ComponentClass,
             name='C1',
             aliases=['A:=1'],
-            analog_ports=[AnalogReducePort('B', reduce_op='+'), AnalogSendPort('B')]
+            analog_ports=[AnalogReducePort('B', operator='+'), AnalogSendPort('B')]
         )
 
         self.assertRaises(
@@ -279,14 +276,14 @@ class ComponentClass_test(unittest.TestCase):
 
         # Check the aliases:
         # ====================== #
-        c2 = ComponentClass(name='C1', aliases=['A:=1+2', 'B:=5*A', 'C:=B+2'])
-        self.assertEqual(c2.aliases_map['A'].rhs_as_python_func()(), 3)
+        c2 = ComponentClass(name='C1', aliases=['A:=1.0+2.0', 'B:=5.0*A', 'C:=B+2.0'])
+        self.assertEqual(c2.alias('A').rhs_as_python_func(), 3)
 
         # This should assert, because its not yet back-subbed
         c2.backsub_all()
-        self.assertEqual(c2.aliases_map['B'].rhs_as_python_func()(), 15)
+        self.assertEqual(c2.alias('B').rhs_as_python_func(), 15)
         # Check the ordering:
-        self.assertEqual(c2.aliases_map['C'].rhs_as_python_func()(), ((5 * (3)) + 2))
+        self.assertEqual(c2.alias('C').rhs_as_python_func(), ((5 * (3)) + 2))
         # ====================== #
 
         # Check the equations:
@@ -595,17 +592,20 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEqual(list(c.parameters)[0].name, 'a')
 
         # More complex inference:
-        c = ComponentClass(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'])
+        c = ComponentClass(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'],
+                           constants=[Constant('pi', 3.141592653589793)])
         self.assertEqual(len(list(c.parameters)), 3)
         self.assertEqual(sorted([p.name for p in c.parameters]), ['a', 'b', 'e'])
 
         # From State Assignments and Differential Equations, and Conditionals
         c = ComponentClass(name='cl',
                            aliases=['A:=a+e', 'B:=a+pi+b'],
-                           regimes=Regime('dX/dt = 6 + c + sin(d)',
-                                          'dV/dt = 1.0',
-                                          transitions=On('V>Vt', do=['X = X + f', 'V=0'])
-                                          )
+                           regimes=Regime('dX/dt = (6 + c + sin(d))/t',
+                                          'dV/dt = 1.0/t',
+                                          transitions=On('V>Vt',
+                                                         do=['X = X + f', 'V=0'])
+                                          ),
+                           constants=[Constant('pi', 3.1415926535)]
                            )
         self.assertEqual(len(list(c.parameters)), 7)
         self.assertEqual(
@@ -629,7 +629,7 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEqual(len(list(c.regimes)), 0)
 
         c = ComponentClass(name='cl',
-                           regimes=Regime('dX/dt=0',
+                           regimes=Regime('dX/dt=1/t',
                                           name='r1',
                                           transitions=On('X>X1', do=['X = X0'], to=None))
                            )
@@ -637,18 +637,18 @@ class ComponentClass_test(unittest.TestCase):
 
         c = ComponentClass(name='cl',
                            regimes=[
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r1',
                                        transitions=On('X>X1', do=['X=X0'], to='r2')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r2',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r3')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r3',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r4')),
-                                Regime('dX/dt=0',
+                                Regime('dX/dt=1/t',
                                        name='r4',
                                        transitions=On('X>X1', do=['X=X0'],
                                                       to='r1')),
@@ -656,25 +656,25 @@ class ComponentClass_test(unittest.TestCase):
                            )
         self.assertEqual(len(list(c.regimes)), 4)
         self.assertEqual(
-            set(c.regimes_map.keys()),
+            set(c.regime_names),
             set(['r1', 'r2', 'r3', 'r4'])
         )
 
         c = ComponentClass(name='cl',
                            dynamicsblock=DynamicsBlock(
                                 regimes=[
-                                    Regime('dX/dt=0',
+                                    Regime('dX/dt=1/t',
                                            name='r1',
                                            transitions=On('X>X1', do=['X=X0'], to='r2')),
-                                    Regime('dX/dt=0',
+                                    Regime('dX/dt=1/t',
                                            name='r2',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r3')),
-                                    Regime('dX/dt=0',
+                                    Regime('dX/dt=1/t',
                                            name='r3',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r4')),
-                                    Regime('dX/dt=0',
+                                    Regime('dX/dt=1/t',
                                            name='r4',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r1')),
@@ -692,10 +692,10 @@ class ComponentClass_test(unittest.TestCase):
             NineMLRuntimeError,
             ComponentClass, name='cl',
             regimes=[
-                Regime('dX/dt=0',
+                Regime('dX/dt=1/t',
                        name='r',
                        transitions=On('X>X1', do=['X=X0'])),
-                Regime('dX/dt=0',
+                Regime('dX/dt=1/t',
                        name='r',
                        transitions=On('X>X1', do=['X=X0'],)), ]
         )
@@ -713,13 +713,13 @@ class ComponentClass_test(unittest.TestCase):
         # From State Assignments and Differential Equations, and Conditionals
         c = ComponentClass(name='cl',
                            aliases=['A:=a+e', 'B:=a+pi+b'],
-                           regimes=Regime('dX/dt = 6 + c + sin(d)',
-                                          'dV/dt = 1.0',
+                           regimes=Regime('dX/dt = (6 + c + sin(d))/t',
+                                          'dV/dt = 1.0/t',
                                           transitions=On('V>Vt', do=['X = X + f', 'V=0'])
                                           )
                            )
         self.assertEqual(
-            set(c.state_variables_map.keys()),
+            set(c.state_variable_names),
             set(['X', 'V']))
 
         self.assertRaises(
@@ -748,25 +748,25 @@ class ComponentClass_test(unittest.TestCase):
         c = ComponentClass(name='cl',
                            dynamicsblock=DynamicsBlock(
                                 regimes=[
-                                    Regime('dX1/dt=0',
+                                    Regime('dX1/dt=1/t',
                                            name='r1',
                                            transitions=On('X>X1', do=['X=X0'], to='r2')),
-                                    Regime('dX1/dt=0',
+                                    Regime('dX1/dt=1/t',
                                            name='r2',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r3')),
-                                    Regime('dX2/dt=0',
+                                    Regime('dX2/dt=1/t',
                                            name='r3',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r4')),
-                                    Regime('dX2/dt=0',
+                                    Regime('dX2/dt=1/t',
                                            name='r4',
                                            transitions=On('X>X1', do=['X=X0'],
                                                           to='r1')),
                                 ]
                            )
                            )
-        self.assertEqual(set(c.state_variables_map.keys()),
+        self.assertEqual(set(c.state_variable_names),
                          set(['X1', 'X2', 'X']))
 
     def test_transitions(self):
@@ -774,39 +774,39 @@ class ComponentClass_test(unittest.TestCase):
         c = ComponentClass(name='cl',
                            dynamicsblock=DynamicsBlock(
                                 regimes=[
-                                    Regime('dX1/dt=0',
+                                    Regime('dX1/dt=1/t',
                                            name='r1',
                                            transitions=[On('X>X1', do=['X=X0'], to='r2'),
                                                         On('X>X2', do=['X=X0'], to='r3'), ]
                                            ),
-                                    Regime('dX1/dt=0',
+                                    Regime('dX1/dt=1/t',
                                            name='r2',
                                            transitions=On('X>X1', do=['X=X0'], to='r3'),),
-                                    Regime('dX2/dt=0',
+                                    Regime('dX2/dt=1/t',
                                            name='r3',
                                            transitions=[On('X>X1', do=['X=X0'], to='r4'),
                                                         On('X>X2', do=['X=X0'], to=None)]),
-                                    Regime('dX2/dt=0',
+                                    Regime('dX2/dt=1/t',
                                            name='r4',
                                            transitions=On('X>X1', do=['X=X0'], to=None)),
                                 ]
                            )
                            )
 
-        self.assertEquals(len(list(c.transitions)), 6)
+        self.assertEquals(len(list(c.all_transitions())), 6)
 
-        r_map = c.regimes_map
-        r1 = r_map['r1']
-        r2 = r_map['r2']
-        r3 = r_map['r3']
-        r4 = r_map['r4']
+        r1 = c.regime('r1')
+        r2 = c.regime('r2')
+        r3 = c.regime('r3')
+        r4 = c.regime('r4')
 
         self.assertEquals(len(list(r1.transitions)), 2)
         self.assertEquals(len(list(r2.transitions)), 1)
         self.assertEquals(len(list(r3.transitions)), 2)
         self.assertEquals(len(list(r4.transitions)), 1)
 
-        target_regimes = lambda r: set([tr.target_regime for tr in r.transitions])
+        target_regimes = lambda r: set([tr.target_regime
+                                        for tr in r.transitions])
         self.assertEquals(target_regimes(r1), set([r2, r3]))
         self.assertEquals(target_regimes(r2), set([r3]))
         self.assertEquals(target_regimes(r3), set([r3, r4]))

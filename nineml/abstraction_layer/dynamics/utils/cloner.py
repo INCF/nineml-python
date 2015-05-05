@@ -4,18 +4,17 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...expressions.utils import MathUtil
 from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
 from ...componentclass.utils.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
-    ComponentRenameSymbol, ComponentClonerVisitor)
+    ComponentCloner)
 from .visitors import DynamicsActionVisitor
 
 
 class DynamicsExpandPortDefinition(DynamicsActionVisitor,
                                    ComponentExpandPortDefinition):
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -32,7 +31,7 @@ class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
     Assignments, Aliases, TimeDerivatives and Conditions
     """
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         assignment.name_transform_inplace(self.namemap)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -42,76 +41,10 @@ class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
         trigger.rhs_name_transform_inplace(self.namemap)
 
 
-class DynamicsRenameSymbol(DynamicsActionVisitor,
-                           ComponentRenameSymbol):
-
-    """ Can be used for:
-    StateVariables, Aliases, Ports
-    """
-
-    def action_dynamicsblock(self, dynamicsblock, **kwargs):
-        pass
-
-    def action_regime(self, regime, **kwargs):
-        pass
-
-    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        if state_variable.name == self.old_symbol_name:
-            state_variable._name = self.new_symbol_name
-            self.note_lhs_changed(state_variable)
-
-    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self._action_port(port, **kwargs)
-
-    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
-        if event_out.port_name == self.old_symbol_name:
-            event_out._port_name = self.new_symbol_name
-            self.note_rhs_changed(event_out)
-
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
-        if self.old_symbol_name in assignment.atoms:
-            self.note_rhs_changed(assignment)
-            assignment.name_transform_inplace(self.namemap)
-
-    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        if timederivative.dependent_variable == self.old_symbol_name:
-            self.note_lhs_changed(timederivative)
-            timederivative.name_transform_inplace(self.namemap)
-        elif self.old_symbol_name in timederivative.atoms:
-            self.note_rhs_changed(timederivative)
-            timederivative.name_transform_inplace(self.namemap)
-
-    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        if self.old_symbol_name in trigger.rhs_atoms:
-            self.note_rhs_changed(trigger)
-            trigger.rhs_name_transform_inplace(self.namemap)
-
-    def action_oncondition(self, on_condition, **kwargs):
-        """ Handled in action_condition """
-        pass
-
-    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        if on_event.src_port_name == self.old_symbol_name:
-            on_event._port_name = self.new_symbol_name
-            self.note_rhs_changed(on_event)
-
-
-class DynamicsClonerVisitor(ComponentClonerVisitor):
+class DynamicsCloner(ComponentCloner):
 
     def visit_componentclass(self, componentclass, **kwargs):
-        ccn = componentclass.__class__(
+        cc = componentclass.__class__(
             name=componentclass.name,
             parameters=[p.accept_visitor(self, **kwargs)
                         for p in componentclass.parameters],
@@ -119,29 +52,37 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
                           for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
-            dynamicsblock=(componentclass.dynamicsblock.accept_visitor(self, **kwargs)
-                      if componentclass.dynamicsblock else None),
+            dynamicsblock=(
+                componentclass._main_block.accept_visitor(self, **kwargs)
+                if componentclass._main_block else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=componentclass.portconnections[:])
-        return ccn
+        self.copy_indices(componentclass, cc)
+        return cc
 
     def visit_dynamicsblock(self, dynamicsblock, **kwargs):
         return dynamicsblock.__class__(
             regimes=[r.accept_visitor(self, **kwargs)
                      for r in dynamicsblock.regimes],
             aliases=[
-                a.accept_visitor(self, **kwargs) for a in dynamicsblock.aliases],
-            state_variables=[s.accept_visitor(self, **kwargs)
-                             for s in dynamicsblock.state_variables])
+                a.accept_visitor(self, **kwargs)
+                for a in dynamicsblock.aliases],
+            state_variables=[
+                s.accept_visitor(self, **kwargs)
+                for s in dynamicsblock.state_variables],
+            constants=[c.accept_visitor(self, **kwargs)
+                       for c in dynamicsblock.constants],)
 
     def visit_regime(self, regime, **kwargs):
-        return regime.__class__(
+        r = regime.__class__(
             name=regime.name,
             time_derivatives=[t.accept_visitor(self, **kwargs)
                               for t in regime.time_derivatives],
             transitions=[t.accept_visitor(self, **kwargs)
                          for t in regime.transitions])
+        self.copy_indices(regime, r)
+        return r
 
     def visit_statevariable(self, state_variable, **kwargs):
         return state_variable.__class__(
@@ -150,15 +91,18 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
 
     def visit_analogreceiveport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_analogreduceport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_analogsendport(self, port, **kwargs):
         return port.__class__(
-            name=self.prefix_variable(port.name, **kwargs))
+            name=self.prefix_variable(port.name, **kwargs),
+            dimension=port.dimension)
 
     def visit_eventsendport(self, port, **kwargs):
         return port.__class__(
@@ -172,64 +116,68 @@ class DynamicsClonerVisitor(ComponentClonerVisitor):
         return event_out.__class__(
             port_name=self.prefix_variable(event_out.port_name, **kwargs))
 
-    def visit_assignment(self, assignment, **kwargs):
+    def visit_stateassignment(self, assignment, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
         lhs = self.prefix_variable(assignment.lhs, **kwargs)
-        rhs = MathUtil.get_prefixed_rhs_string(
-            expr_obj=assignment, prefix=prefix, exclude=prefix_excludes)
-
+        rhs = assignment.rhs_suffixed(suffix='', prefix=prefix,
+                                      excludes=prefix_excludes)
         return assignment.__class__(lhs=lhs, rhs=rhs)
 
     def visit_timederivative(self, time_derivative, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
 
-        dep = self.prefix_variable(time_derivative.dependent_variable,
+        dep = self.prefix_variable(time_derivative.variable,
                                    **kwargs)
 
-        rhs = MathUtil.get_prefixed_rhs_string(
-            expr_obj=time_derivative, prefix=prefix, exclude=prefix_excludes)
-        return time_derivative.__class__(dependent_variable=dep, rhs=rhs)
+        rhs = time_derivative.rhs_suffixed(suffix='', prefix=prefix,
+                                           excludes=prefix_excludes)
+        return time_derivative.__class__(variable=dep, rhs=rhs)
 
     def visit_trigger(self, trigger, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
-        rhs = MathUtil.get_prefixed_rhs_string(
-            expr_obj=trigger, prefix=prefix, exclude=prefix_excludes)
+        rhs = trigger.rhs_suffixed(suffix='', prefix=prefix,
+                                   excludes=prefix_excludes)
         return trigger.__class__(rhs=rhs)
 
     def visit_oncondition(self, on_condition, **kwargs):
-        return on_condition.__class__(
+        oc = on_condition.__class__(
             trigger=on_condition.trigger.accept_visitor(self, **kwargs),
-            event_outputs=[e.accept_visitor(self, **kwargs)
-                           for e in on_condition.event_outputs],
+            output_events=[e.accept_visitor(self, **kwargs)
+                           for e in on_condition.output_events],
             state_assignments=[s.accept_visitor(self, **kwargs)
                                for s in on_condition.state_assignments],
-            target_regime_name=on_condition.target_regime_name
+            target_regime=on_condition.target_regime.name
         )
+        self.copy_indices(on_condition, oc)
+        return oc
 
     def visit_onevent(self, on_event, **kwargs):
-        return on_event.__class__(
+        oe = on_event.__class__(
             src_port_name=self.prefix_variable(on_event.src_port_name,
                                                **kwargs),
-            event_outputs=[e.accept_visitor(self, **kwargs)
-                           for e in on_event.event_outputs],
+            output_events=[e.accept_visitor(self, **kwargs)
+                           for e in on_event.output_events],
             state_assignments=[s.accept_visitor(self, **kwargs)
                                for s in on_event.state_assignments],
-            target_regime_name=on_event.target_regime_name
+            target_regime=on_event.target_regime.name
         )
+        self.copy_indices(on_event, oe, **kwargs)
+        return oe
 
 
-class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
+class DynamicsClonerPrefixNamespace(DynamicsCloner):
 
-    """ A visitor that walks over a hierarchical componentclass, and prefixes every
+    """
+    A visitor that walks over a hierarchical componentclass, and prefixes every
     variable with the namespace that that variable is in. This is preparation
     for flattening
     """
 
-    def visit_componentclass(self, componentclass, **kwargs):  # @UnusedVariable
+    def visit_componentclass(self, componentclass, **kwargs):  # @UnusedVariable @IgnorePep8
         prefix = componentclass.get_node_addr().get_str_prefix()
         if prefix == '_':
             prefix = ''
@@ -270,8 +218,9 @@ class DynamicsClonerVisitorPrefixNamespace(DynamicsClonerVisitor):
                           for p in componentclass.analog_ports],
             event_ports=[p.accept_visitor(self, **kwargs)
                          for p in componentclass.event_ports],
-            dynamicsblock=(componentclass.dynamicsblock.accept_visitor(self, **kwargs)
-                      if componentclass.dynamicsblock else None),
+            dynamicsblock=(
+                componentclass._main_block.accept_visitor(self, **kwargs)
+                if componentclass._main_block else None),
             subnodes=dict([(k, v.accept_visitor(self, **kwargs))
                            for (k, v) in componentclass.subnodes.iteritems()]),
             portconnections=port_connections)

@@ -25,8 +25,8 @@ class DynamicsEqualityChecker(ComponentEqualityChecker):
         assert_equal_list(ap1Dict.keys(), ap2Dict.keys())
         for portname in ap1Dict.keys():
             assert_equal(ap1Dict[portname].mode, ap2Dict[portname].mode)
-            assert_equal(ap1Dict[portname].reduce_op,
-                         ap2Dict[portname].reduce_op)
+            assert_equal(ap1Dict[portname].operator,
+                         ap2Dict[portname].operator)
 
         # Event Ports: Check Modes & reduce ops:
         ev1Dict = safe_dict([(ev.name, ev) for ev in comp1.event_ports])
@@ -34,8 +34,8 @@ class DynamicsEqualityChecker(ComponentEqualityChecker):
         assert_equal_list(ev1Dict.keys(), ev2Dict.keys())
         for portname in ev1Dict.keys():
             assert_equal(ev1Dict[portname].mode, ev2Dict[portname].mode)
-            assert_equal(ev1Dict[portname].reduce_op,
-                         ev2Dict[portname].reduce_op)
+            assert_equal(ev1Dict[portname].operator,
+                         ev2Dict[portname].operator)
 
         # CHECK THE SUBNAMESPACES AND PORT CONNECTIONS
         # ------------------------------------------- #
@@ -96,9 +96,9 @@ class DynamicsEqualityChecker(ComponentEqualityChecker):
             cls.check_equal_transitions(on_cond1, on_cond2)
 
         # Check the TimeDerivatives:
-        time_deriv1s = [(td.dependent_variable, td.rhs)
+        time_deriv1s = [(td.variable, td.rhs)
                         for td in rgm1.time_derivatives]
-        time_deriv2s = [(td.dependent_variable, td.rhs)
+        time_deriv2s = [(td.variable, td.rhs)
                         for td in rgm2.time_derivatives]
         assert_equal_list(time_deriv1s, time_deriv2s)
 
@@ -115,6 +115,6 @@ class DynamicsEqualityChecker(ComponentEqualityChecker):
         assert_equal_list(sa1, sa2)
 
         # Output Events:
-        op1 = [op.port_name for op in trans1.event_outputs]
-        op2 = [op.port_name for op in trans2.event_outputs]
+        op1 = [op.port_name for op in trans1.output_events]
+        op2 = [op.port_name for op in trans2.output_events]
         assert_equal_list(sa1, sa2)

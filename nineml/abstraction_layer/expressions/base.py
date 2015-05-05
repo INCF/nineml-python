@@ -4,17 +4,24 @@ This file defines mathematical classes and derived classes
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
+from __future__ import division
+from itertools import chain
+from copy import deepcopy
+import sympy
+from sympy.printing import ccode
 import re
-import itertools
-import quantities as pq
-
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
-from .utils import (MathUtil, str_to_npfunc_map, func_namespace_split,
-                    is_valid_lhs_target)
-from .. import BaseALObject
-from . import parse
+
+builtin_constants = set(['true', 'false', 'True', 'False'])
+builtin_functions = set([
+    'exp', 'sin', 'cos', 'log', 'log10', 'pow', 'abs',
+    'sinh', 'cosh', 'tanh', 'sqrt', 'mod', 'sum',
+    'atan', 'asin', 'acos', 'asinh', 'acosh', 'atanh', 'atan2'])
+reserved_symbols = set(['t'])
+reserved_identifiers = set(chain(builtin_constants, builtin_functions,
+                                 reserved_symbols))
+from .parser import Parser
 
 
 class Expression(object):
@@ -23,57 +30,101 @@ class Expression(object):
     the basic interface for parsing, yielding of python functions,
     C equivalents, name substitution """
 
-    defining_attributes = ('_rhs',)
+    defining_attributes = ('rhs',)
+
+    # Regular expression for extracting function names from strings (i.e. a
+    # chain of valid identifiers follwed by an open parenthesis.
+    _func_re = re.compile(r'([\w\.]+) *\(')  # Match identifier followed by (
+    _strip_parens_re = re.compile(r'^\(+(\w+)\)+$')  # Match if enclosed by ()
+    _random_ns_map = dict((str(v), Parser.unescape_random_namespace(k))
+                          for k, v in Parser.inline_randoms_dict.iteritems())
 
     def __init__(self, rhs):
-        self._rhs = None
-        self._rhs_names = None
-        self._rhs_funcs = None
-
-        self._set_rhs(rhs)
+        self.rhs = rhs
 
     def __eq__(self, other):
-        return self._rhs == other._rhs
-
-    # Subclasses can over-ride this, if need be.
-    def _parse_rhs(self, rhs):
-        # A temporary measure, this is until the parser is
-        # generalised to handle conditionals
-        # return parse.expr_parse(rhs)
-        if isinstance(rhs, str):
-            parsed = parse.expr(rhs)
-        elif not isinstance(rhs, pq.quantity):
-            raise NotImplementedError
-        return parsed
-
-    # If we assign to rhs, then we need to update the
-    # cached names and funcs:
-    def _set_rhs(self, rhs):
-        rhs = rhs.strip()
-        self._rhs = rhs
-        if isinstance(rhs, str):
-            self._rhs_names, self._rhs_funcs = self._parse_rhs(rhs)
-            for name in self._rhs_names:
-                assert name not in self._rhs_funcs
-            for func in self._rhs_funcs:
-                assert func not in self._rhs_names
-        elif isinstance(rhs, pq.Quantity):  # FIXME: This should be in Constant
-            self._rhs_names = []
-            self._rhs_funcs = []
-        else:
-            raise NotImplementedError
-
-    def _get_rhs(self):
-        return self._rhs
-    rhs = property(_get_rhs, _set_rhs)
+        return sympy.simplify(self.rhs - other.rhs) == 0
 
     @property
-    def rhs_names(self):
-        return self._rhs_names
+    def rhs(self):
+        return self._rhs
+
+    @rhs.setter
+    def rhs(self, rhs):
+        self._rhs = Parser().parse(rhs)  # Maybe this parser could be reused??
+
+    def __str__(self):
+        return self.rhs_str
+
+    def __repr__(self):
+        return "{}('{}')".format(self.__class__.__name__, self.rhs_str)
+
+    @property
+    def rhs_str(self):
+        try:
+            if self._rhs.is_Boolean:
+                expr_str = self._unwrap_bool(self.rhs)
+            else:
+                expr_str = str(self._rhs)
+        except AttributeError:
+            # For expressions that have simplified to Python objects (e.g.
+            # True, False,...)
+            expr_str = str(self._rhs)
+        expr_str = Parser.unescape_random_namespace(expr_str)
+        expr_str = expr_str.replace('**', '^')
+        return expr_str
+
+    @classmethod
+    def _unwrap_bool(cls, expr):
+        """
+        Recursive helper method to unwrap boolean expressions
+        """
+        if isinstance(expr, sympy.And):
+            arg1 = cls._unwrap_bool(expr.args[0])
+            arg2 = cls._unwrap_bool(expr.args[1])
+            expr_str = '({}) && ({})'.format(arg1, arg2)
+        elif isinstance(expr, sympy.Or):
+            arg1 = cls._unwrap_bool(expr.args[0])
+            arg2 = cls._unwrap_bool(expr.args[1])
+            expr_str = '({}) || ({})'.format(arg1, arg2)
+        elif isinstance(expr, sympy.Not):
+            expr_str = '!({})'.format(arg1, arg2)
+        else:
+            expr_str = str(expr)
+        return expr_str
+
+    @property
+    def rhs_cstr(self):
+        rhs = self._unwrap_integer_powers(self._rhs)
+        cstr = ccode(rhs, user_functions=self._random_ns_map)
+        return cstr
+
+    @property
+    def rhs_symbols(self):
+        try:
+            return self._rhs.free_symbols
+        except AttributeError:  # For expressions that have been simplified
+            return []
+
+    @property
+    def rhs_symbol_names(self):
+        return (self.symbol_to_str(s) for s in self.rhs_symbols)
 
     @property
     def rhs_funcs(self):
-        return self._rhs_funcs
+        try:
+            return (type(f) for f in self._rhs.atoms(sympy.Function)
+                    if type(f) not in Parser.inline_random_distributions())
+        except AttributeError:  # For expressions that have been simplified
+            return []
+
+    @property
+    def rhs_random_distributions(self):
+        try:
+            return (type(f) for f in self._rhs.atoms(sympy.Function)
+                    if type(f) in Parser.inline_random_distributions())
+        except AttributeError:  # For expressions that have been simplified
+            return []
 
     @property
     def rhs_atoms(self):
@@ -81,32 +132,220 @@ class Expression(object):
         functions on the RHS function. This does not include defined
         mathematical symbols such as ``pi`` and ``e``, but does include
         functions such as ``sin`` and ``log`` """
-
-        return itertools.chain(self.rhs_names, self.rhs_funcs)
-
-    def rhs_as_python_func(self, namespace=None):
-        """ Returns a python callable which evaluates the expression in
-        namespace and returns the result """
-        namespace = namespace or {}
-
-        return eval("lambda %s: %s" % (','.join(self.rhs_names), self.rhs),
-                    str_to_npfunc_map, namespace)
-
-    def rhs_name_transform_inplace(self, name_map):
-        """Replace atoms on the RHS with values in the name_map"""
-
-        for name in name_map:
-            replacment = name_map[name]
-            self.rhs = MathUtil.str_expr_replacement(name, replacment,
-                                                     self.rhs)
+        return (str(a) for a in chain(self.rhs_symbol_names, self.rhs_funcs))
 
     def rhs_atoms_in_namespace(self, namespace):
-        atoms = set()
-        for a in self.rhs_atoms:
-            ns, func = func_namespace_split(a)
-            if ns == namespace:
-                atoms.add(func)
+        """
+        Deprecated: Should be able to remove once random namespace is removed
+        """
+        if namespace == 'random':
+            atoms = set(str(r)[7:-1] for r in self.rhs_random_distributions)
+        else:
+            atoms = set()
+            for a in chain(self.rhs_atoms, ):
+                try:
+                    ns, func = a.split('.')
+                except ValueError:
+                    ns = ''
+                    func = a
+                if ns == namespace:
+                    atoms.add(func)
         return atoms
+
+    @property
+    def rhs_as_python_func(self):
+        """ Returns a python callable which evaluates the expression in
+        namespace and returns the result """
+        def nineml_expression(**kwargs):
+            if isinstance(self.rhs, (bool, int, float)):
+                val = self.rhs
+            else:
+                if self.rhs.is_Boolean:
+                    try:
+                        val = self.rhs.subs(kwargs)
+                    except Exception:
+                        raise NineMLRuntimeError(
+                            "Incorrect arguments provided to expression ('{}')"
+                            ": '{}'\n".format(
+                                "', '".join(self.rhs_symbol_names),
+                                "', '".join(kwargs.keys())))
+                else:
+                    try:
+                        val = self.rhs.evalf(subs=kwargs)
+                    except Exception:
+                        raise NineMLRuntimeError(
+                            "Incorrect arguments provided to expression ('{}')"
+                            ": '{}'\n".format(
+                                "', '".join(self.rhs_symbol_names),
+                                "', '".join(kwargs.keys())))
+                    try:
+                        val = float(val)
+                    except TypeError:
+                        try:
+                            locals_dict = deepcopy(kwargs)
+                            locals_dict.update(str_to_npfunc_map)
+                            val = eval(str(val), {}, locals_dict)
+                        except Exception:
+                            raise NineMLRuntimeError(
+                                "Could not evaluate expression: {}"
+                                .format(self.rhs_str))
+            return val
+        return nineml_expression
+
+    def rhs_suffixed(self, suffix='', prefix='', excludes=[]):
+        """
+        Return copy of expression with all free symols suffixed (or prefixed)
+        """
+        try:
+            return self.rhs.xreplace(dict(
+                (s, sympy.Symbol(prefix + str(s) + suffix))
+                for s in self.rhs_symbols if str(s) not in excludes))
+        except AttributeError:  # For rhs that have been simplified to floats
+            assert float(self.rhs)
+            return self.rhs
+
+    def rhs_name_transform_inplace(self, name_map):
+        """Replace atoms on the RHS with values in the name_map in place"""
+        self._rhs = self.rhs_substituted(name_map)
+
+    def rhs_substituted(self, name_map):
+        """Replace atoms on the RHS with values in the name_map"""
+        return self.rhs.xreplace(dict(
+            (sympy.Symbol(old), (sympy.Symbol(new)
+                                 if isinstance(new, basestring) else new))
+            for old, new in name_map.iteritems()))
+
+    def rhs_str_substituted(self, name_map={}, funcname_map={}):
+        """
+        Replaces names and function names. Deprecated
+        """
+        expr_str = str(self.rhs_substituted(name_map))
+        for old, new in funcname_map.iteritems():
+            expr_str = re.sub(r'(?<!\w)({})\('.format(old), new, expr_str)
+        expr_str = expr_str.replace('**', '^')
+        return expr_str
+
+    def __iadd__(self, expr):
+        "self += expr"
+        self.rhs = self.rhs + expr
+        return self
+
+    def __isub__(self, expr):
+        "self -= expr"
+        self.rhs = self.rhs - expr
+        return self
+
+    def __imul__(self, expr):
+        "self *= expr"
+        self.rhs = self.rhs * expr
+        return self
+
+    def __itruediv__(self, expr):
+        "self /= expr"
+        self.rhs = self.rhs / expr
+        return self
+
+    def __ipow__(self, expr):
+        "self **= expr"
+        self.rhs = self.rhs ** expr
+        return self
+
+    def __iand__(self, expr):
+        "self &= expr"
+        self.rhs = sympy.And(self.rhs, expr)
+        return self
+
+    def __ior__(self, expr):
+        "self |= expr"
+        self.rhs = sympy.Or(self.rhs, expr)
+        return self
+
+    def negate(self):
+        self.rhs = sympy.Not(self.rhs)
+        return self
+
+    def simplify(self):
+        self.rhs = sympy.simplify(self.rhs)
+
+    @classmethod
+    def _unwrap_integer_powers(cls, expr):
+        """
+        Convert integer powers in an expression to Muls, e.g. a**3 => a*a*a.
+        This is used when printing to C-style strings as it is more accurate.
+        """
+        integer_pows = list(p for p in expr.atoms(sympy.Pow)
+                            if (p.as_base_exp()[1].is_Integer and
+                                abs(p.as_base_exp()[1]) > 1))
+        to_replace = {}
+        for int_pow in integer_pows:
+            base, expn = int_pow.as_base_exp()
+            repl = sympy.Mul(*([base] * abs(expn)), evaluate=False)
+            if expn < 0:
+                repl = sympy.Pow(repl, -1)
+            to_replace[int_pow] = repl
+        if to_replace:
+            expr = cls._non_eval_xreplace(expr, to_replace)
+        return expr
+
+    @classmethod
+    def _non_eval_xreplace(cls, expr, rule):
+        """
+        Duplicate of sympy's xreplace but with non-evaluate statement included
+        """
+        if expr in rule:
+            return rule[expr]
+        elif rule:
+            args = []
+            altered = False
+            for a in expr.args:
+                try:
+                    new_a = cls._non_eval_xreplace(a, rule)
+                except AttributeError:
+                    new_a = a
+                if new_a != a:
+                    altered = True
+                args.append(new_a)
+            args = tuple(args)
+            if altered:
+                return expr.func(*args, evaluate=False)
+        return expr
+
+    @classmethod
+    def symbol_to_str(cls, symbol):
+        return cls._strip_parens_re.sub(r'\1', str(symbol))
+
+
+class ExpressionSymbol(object):
+    """
+    Base class for all NineML objects that can be treated like Sympy symbols
+    """
+
+    def _sympy_(self):
+        return sympy.Symbol(self.name)
+
+    def __add__(self, other):
+        return sympy.sympify(self) + other
+
+    def __sub__(self, other):
+        return sympy.sympify(self) - other
+
+    def __mul__(self, other):
+        return sympy.sympify(self) * other
+
+    def __truediv__(self, other):
+        return sympy.sympify(self) / other
+
+    def __mod__(self, other):
+        return sympy.sympify(self) % other
+
+    def __pow__(self, other):
+        return sympy.sympify(self) ** other
+
+    def __and__(self, other):
+        return sympy.sympify(self) & other
+
+    def __or__(self, other):
+        return sympy.sympify(self) | other
 
 
 class ExpressionWithLHS(Expression):
@@ -125,7 +364,7 @@ class ExpressionWithLHS(Expression):
     @property
     def atoms(self):
         """Returns a list of the atoms in the LHS and RHS of this expression"""
-        return itertools.chain(self.rhs_atoms, self.lhs_atoms)
+        return chain(self.rhs_atoms, self.lhs_atoms)
 
     def lhs_name_transform_inplace(self, name_map):
         raise NotImplementedError()
@@ -139,36 +378,48 @@ class ExpressionWithLHS(Expression):
                 self.lhs == other.lhs)
 
 
-class ExpressionWithSimpleLHS(ExpressionWithLHS):
+class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
 
     """Represents a an equation with a simple left-hand-side.
     That is, a single symbol, for example 's = t+1'
     """
 
-    defining_attributes = ('_lhs', '_rhs')
+    defining_attributes = ('name', 'rhs')
 
     def __init__(self, lhs, rhs):
         ExpressionWithLHS.__init__(self, rhs)
-
-        if not MathUtil.is_single_symbol(lhs):
+        if not is_single_symbol(lhs):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
             raise NineMLRuntimeError(err)
         if not is_valid_lhs_target(lhs):
             err = 'Invalid LHS target: %s' % lhs
             raise NineMLRuntimeError(err)
+        self._name = lhs.strip()
 
-        self._lhs = lhs.strip()
+    @property
+    def name(self):
+        return self._name
+
+    def __str__(self):
+        return '{} := {}'.format(self.lhs, self.rhs_str)
+
+    def __repr__(self):
+        return "{}(lhs='{}', rhs=({}))".format(self.__class__.__name__,
+                                               self.lhs, self.rhs_str)
 
     @property
     def lhs(self):
-        return self._lhs
+        return self._name
 
     @property
     def lhs_atoms(self):
         return [self.lhs]
 
     def lhs_name_transform_inplace(self, name_map):
-        self._lhs = name_map.get(self.lhs, self.lhs)
+        self._name = name_map.get(self.lhs, self.lhs)
+
+    def _sympy_(self):
+        return sympy.Symbol(self.lhs)
 
 
 class ODE(ExpressionWithLHS):
@@ -222,80 +473,4 @@ class ODE(ExpressionWithLHS):
         return [self.independent_variable, self.dependent_variable]
 
 
-class Alias(BaseALObject, ExpressionWithSimpleLHS):
-
-    """Aliases are a way of defining a variable local to a ``ComponentClass``,
-    in terms of its ``Parameters``, ``StateVariables`` and input ``Analog
-    Ports``. ``Alias``es allow us to reduce the duplication of code in
-    ComponentClass definition, and allow allow more complex outputs to
-    ``AnalogPort`` than simply individual ``StateVariables``.
-
-   When specified from a ``string``, an alias uses the notation ``:=``
-
-    ``Alias``es can be defined in terms of other ``Alias``es, so for example,
-    if we had ComponentClass representing a Hodgkin-Huxley style gating
-    channel, which has a ``Property``, `reversal_potential`, and an input
-    ``AnalogPort``, `membrane_voltage`, then we could define an ``Alias``::
-
-        ``driving_force := reversal_potential - membrane_voltage``
-
-    If the relevant ``StateVariables``, ``m`` and ``h``, for example were also
-    defined, and a ``Parameter``, ``g_bar``, we could also define the current
-    flowing through this channel as::
-
-        current := driving_force * g * m * m * m * h
-
-    This current could then be attached to an output ``AnalogPort`` for
-    example.
-
-    It is important to ensure that Alias definitions are not circular, for
-    example, it is not valid to define two alias in terms of each other::
-
-        a := b + 1
-        b := 2 * a
-
-    During code generation, we typically call ``ComponentClass.backsub_all()``.
-    This method first expands each alias in terms of other aliases, such that
-    each alias depends only on Parameters, StateVariables and *incoming*
-    AnalogPort. Next, it expands any alias definitions within TimeDerivatives,
-    StateAssignments, Conditions and output AnalogPorts.
-
-
-
-    """
-    defining_attributes = ('_lhs', '_rhs')
-
-    def __init__(self, lhs=None, rhs=None):
-        """ Constructor for an Alias
-
-        :param lhs: A `string` specifying the left-hand-side, i.e. the Alias
-            name. This should be a single `symbol`.
-        :param rhs: A `string` specifying the right-hand-side. This should be a
-            mathematical expression, expressed in terms of other Aliases,
-            StateVariables, Parameters and *incoming* AnalogPorts local to the
-            Component.
-
-        """
-        ExpressionWithSimpleLHS.__init__(self, lhs, rhs)
-
-    def __repr__(self):
-        return "<Alias: %s := %s>" % (self.lhs, self.rhs)
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_alias(self, **kwargs)
-
-    @classmethod
-    def from_str(cls, alias_string):
-        """Creates an Alias object from a string"""
-        if not cls.is_alias_str(alias_string):
-            errmsg = "Invalid Alias: %s" % alias_string
-            raise NineMLRuntimeError(errmsg)
-
-        lhs, rhs = alias_string.split(':=')
-        return Alias(lhs=lhs.strip(), rhs=rhs.strip())
-
-    @classmethod
-    def is_alias_str(cls, alias_str):
-        """ Returns True if the string could be an alias"""
-        return ':=' in alias_str
+from .utils import str_to_npfunc_map, is_single_symbol, is_valid_lhs_target

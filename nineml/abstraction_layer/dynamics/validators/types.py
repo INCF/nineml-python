@@ -45,7 +45,7 @@ class TypesDynamicsValidator(DynamicsActionVisitor,
     def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         assert isinstance(event_out, OutputEvent)
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         assert isinstance(assignment, StateAssignment)
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8

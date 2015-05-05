@@ -7,15 +7,15 @@ from collections import defaultdict
 from nineml.user_layer.component import Component
 from itertools import chain
 import nineml.user_layer
-from ..abstraction_layer import units as un
+from .. import units as un
 from nineml.utils import expect_single, expect_none_or_single, check_tag
 from ..exceptions import NineMLRuntimeError
 from .values import SingleValue
 from .component import Quantity
-from nineml import TopLevelObject
+from nineml import DocumentLevelObject
 
 
-class Projection(BaseULObject, TopLevelObject):
+class Projection(BaseULObject, DocumentLevelObject):
     """
     A collection of connections between two :class:`Population`\s.
 
@@ -59,11 +59,12 @@ class Projection(BaseULObject, TopLevelObject):
     _component_roles = set(['source', 'destination', 'plasticity', 'response'])
 
     def __init__(self, name, source, destination, response,
-                 plasticity, connectivity, delay, port_connections):
+                 plasticity, connectivity, delay, port_connections, url=None):
         """
         Create a new projection.
         """
-        super(Projection, self).__init__()
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self, url)
         self.name = name
         self.source = source
         # When exporting to XML we use the reference instead of the object
@@ -236,7 +237,8 @@ class Projection(BaseULObject, TopLevelObject):
                    plasticity=plasticity,
                    connectivity=connectivity,
                    delay=delay,
-                   port_connections=port_connections)
+                   port_connections=port_connections,
+                   url=document.url)
 
 
 class Delay(Quantity):
@@ -263,7 +265,7 @@ class Delay(Quantity):
         if units.dimension != un.time:
             raise Exception("Units for delay must be of the time dimension "
                             "(found {})".format(units))
-        super(Delay, self).__init__(value, units)
+        Quantity.__init__(self, value, units)
 
 
 class PortConnection(object):

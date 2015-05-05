@@ -10,11 +10,23 @@ class NineMLRuntimeError(Exception):
     pass
 
 
+class NineMLDimensionError(NineMLRuntimeError):
+    pass
+
+
 class NineMLMathParseError(ValueError):
     pass
 
 
 class NineMLUnitMismatchError(ValueError):
+    pass
+
+
+class NineMLMissingElementError(KeyError):
+    pass
+
+
+class NineMLInvalidElementTypeException(TypeError):
     pass
 
 

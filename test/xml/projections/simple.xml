@@ -2,10 +2,10 @@
 <NineML xmlns="http://nineml.net/9ML/1.0">
   <Dimension name="time" t="1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
-  <Dimension name="conductanceDensity" m="-1" l="-4" t="3" i="2"/>
+  <Dimension name="conductance" m="-1" l="-2" t="3" i="2"/>
   <Unit symbol="ms" dimension="time" power="-3"/>
   <Unit symbol="mV" dimension="voltage" power="-3"/>
-  <Unit symbol="S_per_cm2" dimension="conductanceDensity" power="4"/>
+  <Unit symbol="S" dimension="conductance"/>
   <Projection name="Izhikevich2HH">
     <Source>
       <Reference url="../populations/simple.xml">IzhiPopulation</Reference>
@@ -17,7 +17,7 @@
     <Response>
       <Component name="AMPA">
         <Definition url="../postsynapticresponses/DoubleExpCondSynapse.xml">DoubleExpCondSynapse</Definition>
-        <Property name="gBar" units="S_per_cm2">
+        <Property name="gBar" units="S">
           <SingleValue>2.6e-3</SingleValue>
         </Property>        
         <Property name="tau1" units="ms">
@@ -35,7 +35,7 @@
     </Response>
     <Connectivity>
       <Component name="AllToAll">
-        <Definition url="../connectionrules/all_to_all.xml">AllToAll</Definition>
+        <Definition url="../connectionrules/AllToAll.xml">AllToAll</Definition>
       </Component>
     </Connectivity>
     <Delay units="ms">

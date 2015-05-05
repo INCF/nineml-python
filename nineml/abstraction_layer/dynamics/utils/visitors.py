@@ -6,8 +6,10 @@ docstring needed
 """
 
 
-from itertools import chain
-from ...componentclass.utils import ComponentActionVisitor
+# from itertools import chain
+from ...componentclass.utils import (
+    ComponentActionVisitor, ComponentElementFinder)
+from ...componentclass.utils.visitors import ComponentRequiredDefinitions
 
 
 class DynamicsActionVisitor(ComponentActionVisitor):
@@ -15,23 +17,19 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_componentclass(self, componentclass, **kwargs):
         super(DynamicsActionVisitor, self).visit_componentclass(
             componentclass, **kwargs)
-        if componentclass.dynamicsblock:
-            componentclass.dynamicsblock.accept_visitor(self, **kwargs)
+        if componentclass._main_block:
+            componentclass._main_block.accept_visitor(self, **kwargs)
         for subnode in componentclass.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 
     def visit_dynamicsblock(self, dynamicsblock, **kwargs):
         self.action_dynamicsblock(dynamicsblock, **kwargs)
-        nodes = chain(dynamicsblock.regimes, dynamicsblock.aliases,
-                      dynamicsblock.state_variables)
-        for p in nodes:
+        for p in dynamicsblock:
             p.accept_visitor(self, **kwargs)
 
     def visit_regime(self, regime, **kwargs):
         self.action_regime(regime, **kwargs)
-        nodes = chain(regime.time_derivatives, regime.on_events,
-                      regime.on_conditions)
-        for p in nodes:
+        for p in regime:
             p.accept_visitor(self, **kwargs)
 
     def visit_statevariable(self, state_variable, **kwargs):
@@ -55,8 +53,8 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_outputevent(self, event_out, **kwargs):
         self.action_outputevent(event_out, **kwargs)
 
-    def visit_assignment(self, assignment, **kwargs):
-        self.action_assignment(assignment, **kwargs)
+    def visit_stateassignment(self, assignment, **kwargs):
+        self.action_stateassignment(assignment, **kwargs)
 
     def visit_timederivative(self, time_derivative, **kwargs):
         self.action_timederivative(time_derivative, **kwargs)
@@ -66,18 +64,13 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_oncondition(self, on_condition, **kwargs):
         self.action_oncondition(on_condition, **kwargs)
-        nodes = chain([on_condition.trigger],
-                      on_condition.event_outputs,
-                      on_condition.state_assignments)
-        for p in nodes:
+        on_condition.trigger.accept_visitor(self, **kwargs)
+        for p in on_condition:
             p.accept_visitor(self, **kwargs)
 
     def visit_onevent(self, on_event, **kwargs):
         self.action_onevent(on_event, **kwargs)
-        nodes = chain(on_event.event_outputs, on_event.state_assignments)
-        nodes = list(nodes)
-        # print nodes
-        for p in nodes:
+        for p in on_event:
             p.accept_visitor(self, **kwargs)
 
     def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
@@ -107,7 +100,7 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         self.check_pass()
 
-    def action_assignment(self, assignment, **kwargs):  # @UnusedVariable
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         self.check_pass()
 
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -121,3 +114,88 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.check_pass()
+
+
+class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
+                                  DynamicsActionVisitor):
+
+    def __init__(self, componentclass, expressions):
+        DynamicsActionVisitor.__init__(self, require_explicit_overrides=False)
+        self.state_variables = set()
+        ComponentRequiredDefinitions.__init__(self, componentclass,
+                                              expressions)
+
+    def __repr__(self):
+        return ("State-variables: {}\n"
+                .format(', '.join(self.state_variable_names)) +
+                super(DynamicsRequiredDefinitions, self).__repr__())
+
+    def action_statevariable(self, statevariable, **kwargs):  # @UnusedVariable
+        if self._is_required(statevariable):
+            self.state_variables.add(statevariable)
+
+    @property
+    def state_variable_names(self):
+        return (r.name for r in self.state_variables)
+
+
+class DynamicsElementFinder(ComponentElementFinder, DynamicsActionVisitor):
+
+    def __init__(self, element):
+        DynamicsActionVisitor.__init__(self, require_explicit_overrides=True)
+        ComponentElementFinder.__init__(self, element)
+
+    def action_dynamicsblock(self, dynamicsblock, **kwargs):  # @UnusedVariable
+        pass
+
+    def action_regime(self, regime, **kwargs):  # @UnusedVariable
+        if self.element is regime:
+            self._found()
+
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        if self.element is state_variable:
+            self._found()
+
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
+        if self.element is port:
+            self._found()
+
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
+        if self.element is port:
+            self._found()
+
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
+        if self.element is port:
+            self._found()
+
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
+        if self.element is port:
+            self._found()
+
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
+        if self.element is port:
+            self._found()
+
+    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
+        if self.element is event_out:
+            self._found()
+
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
+        if self.element is assignment:
+            self._found()
+
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        if self.element is time_derivative:
+            self._found()
+
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        if self.element is trigger:
+            self._found()
+
+    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
+        if self.element is on_condition:
+            self._found()
+
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
+        if self.element is on_event:
+            self._found()

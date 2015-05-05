@@ -26,14 +26,14 @@ class DynamicsClassInterfaceInferer(ComponentClassInterfaceInferer,
     def action_analogreduceport(self, analog_reduce_port):
         self.declared_symbols.add(analog_reduce_port.name)
 
-    def action_assignment(self, assignment):
+    def action_stateassignment(self, assignment):
         inferred_sv = assignment.lhs
         self.declared_symbols.add(inferred_sv)
         self.state_variable_names.add(inferred_sv)
         self.atoms.update(assignment.rhs_atoms)
 
     def action_timederivative(self, time_derivative):
-        inferred_sv = time_derivative.dependent_variable
+        inferred_sv = time_derivative.variable
         self.state_variable_names.add(inferred_sv)
         self.declared_symbols.add(inferred_sv)
         self.atoms.update(time_derivative.rhs_atoms)

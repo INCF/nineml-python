@@ -6,8 +6,9 @@ import collections
 from nineml.xmlns import NINEML, E
 from nineml.annotations import Annotations
 from . import BaseNineMLObject
-from nineml.exceptions import NineMLRuntimeError
-from nineml import TopLevelObject
+from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
+from nineml import DocumentLevelObject
+import contextlib
 
 
 class Document(dict, BaseNineMLObject):
@@ -18,35 +19,48 @@ class Document(dict, BaseNineMLObject):
     demand so it doesn't matter which order they appear in the NineML file.
     """
 
+    defining_attributes = ('elements',)
     element_name = 'NineML'
 
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
 
     def __init__(self, *elements, **kwargs):
-        self.url = kwargs.pop('_url', None)
-        dict.__init__(self, **kwargs)
+        BaseNineMLObject.__init__(self, annotations=kwargs.pop('annotations',
+                                                               None))
+        self._url = kwargs.pop('url', None)
+        assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
+                                  .format("', '".join(kwargs.iterkeys())))
         for element in elements:
             self.add(element)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
 
+    @property
+    def url(self):
+        return self._url
+
     def add(self, element):
-        try:
-            if not isinstance(element, TopLevelObject):
-                raise NineMLRuntimeError(
-                    "Could not add {} as it is not a document level NineML "
-                    "object ('{}') ".format(element.element_name,
-                                            "', '".join(self.top_level_types)))
-        except AttributeError:
-            raise NineMLRuntimeError("Could not add {} as it is not a NineML "
-                                     "object".format(element))
+        if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
+            raise NineMLRuntimeError(
+                "Could not add {} as it is not a document level NineML "
+                "object ('{}') ".format(element.element_name,
+                                        "', '".join(self.top_level_types)))
         if element.name in self:
             raise NineMLRuntimeError(
                 "Could not add element '{}' as an element with that name "
                 "already exists in the document".format(element.name))
         self[element.name] = element
+
+    def remove(self, element):
+        if not isinstance(element, DocumentLevelObject):
+            raise NineMLRuntimeError(
+                "Could not remove {} as it is not a document level NineML "
+                "object ('{}') ".format(element.element_name,
+                                        "', '".join(self.top_level_types)))
+        name = element.name
+        del self[name]
 
     def __eq__(self, other):
         # Ensure all objects are loaded
@@ -68,7 +82,7 @@ class Document(dict, BaseNineMLObject):
         try:
             elem = super(Document, self).__getitem__(name)
         except KeyError:
-            raise KeyError(
+            raise NineMLMissingElementError(
                 "'{}' was not found in the NineML document {} (elements in the"
                 " document were '{}')."
                 .format(name, self.url or '', "', '".join(self.iterkeys())))
@@ -76,6 +90,10 @@ class Document(dict, BaseNineMLObject):
         if isinstance(elem, self._Unloaded):
             elem = self._load_elem_from_xml(elem)
         return elem
+
+    @property
+    def elements(self):
+        return dict(self.iteritems())  # Ensures all elements are loaded
 
     def itervalues(self):
         for v in super(Document, self).itervalues():
@@ -124,18 +142,28 @@ class Document(dict, BaseNineMLObject):
     def network_structures(self):
         return chain(self.populations, self.projections, self.selections)
 
+    @property
+    def units(self):
+        return (o for o in self.itervalues()
+                if isinstance(nineml.units.Unit))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def dimensions(self):
+        return (o for o in self.itervalues()
+                if isinstance(nineml.units.Dimension))  # @UndefinedVariable @IgnorePep8
+
     def _load_elem_from_xml(self, unloaded):
         """
         Resolve an element from its XML description and store back in the
         element dictionary
         """
         if unloaded in self._loading:
-            raise Exception("Circular reference detected in '{}(name={})' "
-                            "element. Resolution stack was:\n"
-                            .format(unloaded.name,
-                                    "\n".join('{}(name={})'.format(u.tag,
-                                                                   u.name)
-                                              for u in self._loading)))
+            raise NineMLRuntimeError(
+                "Circular reference detected in '{}(name={})' element. "
+                "Resolution stack was:\n"
+                .format(unloaded.cls.__name__, unloaded.name,
+                        "\n".join('{}(name={})'.format(u.cls.__name__, u.name)
+                                  for u in self._loading)))
         self._loading.append(unloaded)
         elem = unloaded.cls.from_xml(unloaded.xml, self)
         assert self._loading[-1] is unloaded
@@ -158,9 +186,8 @@ class Document(dict, BaseNineMLObject):
             *[o.all_dimensions for o in self.itervalues()]))
         # Delete unused units from the document
         for k, o in self.items():
-            if ((isinstance(o, nineml.abstraction_layer.Unit) and
-                 o not in all_units) or
-                (isinstance(o, nineml.abstraction_layer.Dimension) and
+            if ((isinstance(o, nineml.Unit) and o not in all_units) or
+                (isinstance(o, nineml.Dimension) and
                  o not in all_dimensions)):
                 del self[k]
         # Add missing units and dimensions to the document
@@ -221,7 +248,7 @@ class Document(dict, BaseNineMLObject):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Not a NineML root ('{}')".format(element.tag))
         # Initialise the document
-        elements = {'_url': url}
+        elements = []
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
         annotations = None
@@ -234,16 +261,12 @@ class Document(dict, BaseNineMLObject):
                     annotations = Annotations.from_xml(child)
                     continue
                 try:
-                    child_cls = getattr(nineml.user_layer, element_name)
+                    child_cls = getattr(nineml, element_name)
                 except AttributeError:
-                    try:
-                        child_cls = getattr(nineml.abstraction_layer,
-                                            element_name)
-                    except AttributeError:
-                        raise NineMLRuntimeError(
-                            "Did not find matching NineML class for '{}' "
-                            "element".format(element_name))
-                if not issubclass(child_cls, TopLevelObject):
+                    raise NineMLRuntimeError(
+                        "Did not find matching NineML class for '{}' "
+                        "element".format(element_name))
+                if not issubclass(child_cls, DocumentLevelObject):
                     raise NineMLRuntimeError(
                         "'{}' is not a valid top-level NineML element"
                         .format(element_name))
@@ -259,10 +282,20 @@ class Document(dict, BaseNineMLObject):
                     "Duplicate identifier '{ob1}:{name}'in NineML file '{url}'"
                     .format(name=name, ob1=elements[name].cls.element_name,
                             ob2=child_cls.element_name, url=url or ''))
-            elements[name] = cls._Unloaded(name, child, child_cls)
-        document = cls(**elements)
-        document.annotations = annotations
+            elements.append(cls._Unloaded(name, child, child_cls))
+        document = cls(*elements, url=url, annotations=annotations)
         return document
+
+    def find_mismatch(self, other):
+        """
+        A function used to display where two documents differ (typically used
+        in unit test debugging)
+        """
+        result = 'Mismatch between documents:'
+        for k, s in self.iteritems():
+            if s != other[k]:
+                result += s.find_mismatch(other[k])
+        return result
 
 
 def load(root_element, read_from=None):
@@ -288,16 +321,17 @@ def read(url, relative_to=None):
     try:
         if not isinstance(url, file):
             try:
-                f = urlopen(url)
-                xml = etree.parse(f)
-            except:  # FIXME: Need to work out what exceptions urlopen raises
-                raise Exception("Could not read URL '{}'".format(url))
-            finally:
-                f.close()
+                with contextlib.closing(urlopen(url)) as f:
+                    f = urlopen(url)
+                    xml = etree.parse(f)
+            except IOError, e:
+                raise NineMLRuntimeError("Could not read 9ML URL '{}': \n{}"
+                                         .format(url, e))
         else:
             xml = etree.parse(url)
-    except:  # FIXME: Need to work out what exceptions etree raises
-        raise Exception("Could not parse XML file '{}'".format(url))
+    except etree.LxmlError, e:
+        raise NineMLRuntimeError("Could not parse XML of 9ML file '{}': \n {}"
+                                 .format(url, e))
     root = xml.getroot()
     return load(root, url)
 

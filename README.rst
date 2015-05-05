@@ -1,17 +1,12 @@
-======
-NineML
+lib9ML
 ======
 
-`lib9ML` is a Python library for reading, writing, validating and manipulating
+`nineml` is a Python library for reading, writing, validating and manipulating
 models defined in the NineML language (http://nineml.net).
 
-More information
-----------------
-
-* Documentation: http://readthedocs.org/nineml
+* Documentation: http://nineml.readthedocs.org
 * Mailing list: nineml-users@incf.org
-* Home page: http://nineml.net
-* Issue tracker: https://github.com/INCF/lib9ML
+* Issue tracker: https://github.com/INCF/lib9ML/issues
 
 .. image:: https://travis-ci.org/INCF/lib9ML.png?branch=master
    :target: https://travis-ci.org/INCF/lib9ML

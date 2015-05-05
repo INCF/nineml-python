@@ -73,11 +73,14 @@ class ComponentEqualityChecker(object):
 
         # CHECK THE DISTRIBUTION
         # ------------------- #
-        d1 = comp1.distribution
-        d2 = comp2.distribution
+        d1 = comp1.randomdistribution
+        d2 = comp2.randomdistribution
 
         # Check Aliases:
         assert strict_aliases
         a1 = [(a.lhs, a.rhs) for a in d1.aliases]
         a2 = [(a.lhs, a.rhs) for a in d2.aliases]
         assert_equal_list(a1, a2)
+
+        # Check Constants:
+        assert_equal_list(comp1.constants, comp2.constants)
