@@ -105,7 +105,7 @@ class ComponentRequiredDefinitions(object):
         if self._is_required(port):
             self.ports.add(port)
 
-    def action_constants(self, constant, **kwargs):  # @UnusedVariable
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable
         if self._is_required(constant):
             self.constants.add(constant)
 
