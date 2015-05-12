@@ -256,6 +256,18 @@ class Regime(BaseALObject, MemberContainerObject):
     # Regime Properties:
     # ------------------
     @property
+    def num_time_derivatives(self):
+        return len(self._time_derivatives)
+
+    @property
+    def num_on_events(self):
+        return len(self._on_events)
+
+    @property
+    def num_on_conditions(self):
+        return len(self._on_conditions)
+
+    @property
     def time_derivatives(self):
         """Returns the state-variable time-derivatives in this regime.
 

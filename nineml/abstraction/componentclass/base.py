@@ -146,6 +146,18 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
                        .format(port_name, self.name))
 
     @property
+    def num_parameters(self):
+        return len(self._parameters)
+
+    @property
+    def num_aliases(self):
+        return len(self._aliases)
+
+    @property
+    def num_constants(self):
+        return len(self._constants)
+
+    @property
     def parameters(self):
         """Returns an iterator over the local |Parameter| objects"""
         return self._parameters.itervalues()

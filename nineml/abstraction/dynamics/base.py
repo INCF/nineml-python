@@ -374,6 +374,31 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                      self.analog_ports, self.state_variables)
 
     @property
+    def num_analog_send_ports(self):
+        """Returns an iterator over the local |AnalogSendPort| objects"""
+        return len(self._analog_send_ports)
+
+    @property
+    def num_analog_receive_ports(self):
+        """Returns an iterator over the local |AnalogReceivePort| objects"""
+        return len(self._analog_receive_ports)
+
+    @property
+    def num_analog_reduce_ports(self):
+        """Returns an iterator over the local |AnalogReducePort| objects"""
+        return len(self._analog_reduce_ports)
+
+    @property
+    def num_event_send_ports(self):
+        """Returns an iterator over the local |EventSendPort| objects"""
+        return len(self._event_send_ports)
+
+    @property
+    def num_event_receive_ports(self):
+        """Returns an iterator over the local |EventReceivePort| objects"""
+        return len(self._event_receive_ports)
+
+    @property
     def analog_send_ports(self):
         """Returns an iterator over the local |AnalogSendPort| objects"""
         return self._analog_send_ports.itervalues()
