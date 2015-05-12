@@ -241,6 +241,15 @@ class Transition(BaseALObject, MemberContainerObject):
         self._source_regime = regime
 
     @property
+    def num_state_assignments(self):
+        return len(self._state_assignments)
+
+    @property
+    def num_output_events(self):
+        """|Events| that happen when this transitions occurs"""
+        return len(self._output_events)
+
+    @property
     def state_assignments(self):
         return self._state_assignments.itervalues()
 
