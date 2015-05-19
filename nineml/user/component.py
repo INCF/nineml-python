@@ -8,17 +8,11 @@ from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError,
     handle_xml_exceptions)
 from nineml.xmlns import nineml_namespace
-from operator import and_
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.utils import expect_single, check_tag, check_units
+from nineml.utils import expect_single, check_units
 from nineml.units import Unit, unitless
-<<<<<<< Upstream, based on origin/xml_exception_handling
 from nineml import units as un
-from ..abstraction import (
-=======
-from ..abstraction_layer import (
->>>>>>> 3150ddf renamed *Class to * (e.g. DynamicsClass to Dynamics)
     ComponentClass, Dynamics, ConnectionRule, RandomDistribution)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
@@ -411,7 +405,7 @@ class Quantity(BaseULObject):
     is a (name, value) pair.
 
     Numerical values may either be numbers, or a component_class that generates
-    numbers, e.g. a RandomDistributionComponent instance.
+    numbers, e.g. a RandomDistribution instance.
     """
     __metaclass__ = ABCMeta  # Abstract base class
     element_name = 'Quantity'
@@ -561,7 +555,7 @@ class Property(Quantity):
     is a (name, value) pair.
 
     Numerical values may either be numbers, or a component_class that generates
-    numbers, e.g. a RandomDistributionComponent instance.
+    numbers, e.g. a RandomDistribution instance.
     """
     element_name = "Property"
 
@@ -681,7 +675,7 @@ class InitialSet(PropertySet):
         return cls(*initial_values)
 
 
-class DynamicsComponent(Component):
+class DynamicsProperties(Component):
 
     def check_initial_values(self):
         for var in self.definition.componentclass.state_variables:
@@ -693,7 +687,7 @@ class DynamicsComponent(Component):
             check_units(initial_value.units, var.dimension)
 
 
-class ConnectionRuleComponent(Component):
+class ConnectionRuleProperties(Component):
     """
     docstring needed
     """
@@ -703,10 +697,10 @@ class ConnectionRuleComponent(Component):
         return self.component_class.standard_library
 
 
-class RandomDistributionComponent(Component):
+class RandomDistributionProperties(Component):
     """
-    Component representing a random number randomdistribution, e.g. normal, gamma,
-    binomial.
+    Component representing a random number randomdistribution, e.g. normal,
+    gamma, binomial.
 
     *Example*::
 
