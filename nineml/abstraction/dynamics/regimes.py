@@ -323,6 +323,12 @@ class Regime(BaseALObject, MemberContainerObject):
 
         return chain(self.on_events, self.on_conditions)
 
+    def all_triggers(self):
+        return (oc.trigger for oc in self.on_conditions)
+
+    def all_state_assignments(self):
+        return chain(*(t.state_assignments for t in self.transitions))
+
     @property
     def name(self):
         return self._name

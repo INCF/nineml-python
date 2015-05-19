@@ -430,6 +430,36 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                      self.analog_reduce_ports, self.event_send_ports,
                      self.event_receive_ports)
 
+    def port(self, name):
+        try:
+            return self.send_port(name)
+        except KeyError:
+            return self.receive_port(name)
+
+    def receive_port(self, name):
+        try:
+            return self.event_receive_port(name)
+        except KeyError:
+            try:
+                return self.analog_receive_port(name)
+            except KeyError:
+                return self.analog_reduce_port(name)
+
+    def send_port(self, name):
+        try:
+            return self.event_send_port(name)
+        except KeyError:
+            return self.analog_send_port(name)
+
+    @property
+    def send_ports(self):
+        return chain(self.analog_send_ports, self.event_send_ports)
+
+    @property
+    def receive_ports(self):
+        return chain(self.analog_receive_ports, self.analog_reduce_ports,
+                     self.event_receive_ports)
+
     @property
     def analog_ports(self):
         """Returns an iterator over the local analog port objects"""
@@ -439,6 +469,21 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     @property
     def event_ports(self):
         return chain(self.event_send_ports, self.event_receive_ports)
+
+    def analog_port(self, name):
+        try:
+            return self.analog_send_port(name)
+        except KeyError:
+            try:
+                return self.analog_receive_port(name)
+            except KeyError:
+                return self.analog_reduce_port(name)
+
+    def event_port(self, name):
+        try:
+            return self.event_send_port(name)
+        except KeyError:
+            return self.event_receive_port(name)
 
     @property
     def regimes(self):
