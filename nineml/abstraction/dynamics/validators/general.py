@@ -242,9 +242,9 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
     def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(stateassignment)
         sv = self.component_class.state_variable(stateassignment.variable)
-        self._compare_dimensionality(dimension, sv.dimension,
-                                     stateassignment,
-                                     'state variable ' + sv.name)
+        self._compare_dimensionality(
+            dimension, sv.dimension, stateassignment, 'state variable ' +
+            sv.name)
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
         self._check_send_port(port)

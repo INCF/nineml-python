@@ -454,7 +454,10 @@ def file_sha1_hexdigest(filename):
 
 
 def ensure_iterable(expected_list):
-    if isinstance(expected_list, basestring):
+    if isinstance(expected_list, dict):
+        raise TypeError("Expected a list, got a dictionary ({})"
+                        .format(expected_list))
+    elif isinstance(expected_list, basestring):
         lst = [expected_list]
     elif isinstance(expected_list, collections.Iterable):
         lst = list(expected_list)

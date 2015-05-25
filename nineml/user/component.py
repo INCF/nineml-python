@@ -348,15 +348,6 @@ class Component(BaseULObject, DocumentLevelObject):
     def used_units(self):
         return set(p.units for p in self.properties.itervalues())
 
-    def write(self, file):  # @ReservedAssignment
-        self.standardize_units()
-        xml = [self.to_xml()]
-        xml.extend(chain(*((u.to_xml(), u.dimension.to_xml())
-                            for u in self.used_units)))
-        doc = E.NineML(*xml, xmlns=nineml_namespace)
-        etree.ElementTree(doc).write(file, encoding="UTF-8", pretty_print=True,
-                                     xml_declaration=True)
-
     def property(self, name):
         return self.property_set[name]
 
