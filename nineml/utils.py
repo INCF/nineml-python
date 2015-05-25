@@ -13,6 +13,7 @@ import types
 
 import itertools
 import hashlib
+import collections
 
 from .exceptions import internal_error
 from .exceptions import NineMLRuntimeError
@@ -454,15 +455,12 @@ def file_sha1_hexdigest(filename):
 
 def ensure_iterable(expected_list):
     if isinstance(expected_list, basestring):
-        return [expected_list, ]
-    try:
-        for obj in expected_list:
-            pass
-        return expected_list
-    except TypeError:
-        return [expected_list, ]
-
-    assert False, 'Unreachable Code'
+        lst = [expected_list]
+    elif isinstance(expected_list, collections.Iterable):
+        lst = list(expected_list)
+    else:
+        lst = [expected_list]
+    return lst
 
 
 def none_to_empty_list(obj):
@@ -473,12 +471,7 @@ def none_to_empty_list(obj):
 
 
 def normalise_parameter_as_list(param):
-    if isinstance(param, MemberContainerObject):
-        return [param]
-    elif isinstance(param, types.GeneratorType):
-        return list(param)
-    else:
-        return ensure_iterable(none_to_empty_list(param))
+    return ensure_iterable(none_to_empty_list(param))
 
 
 def restore_sys_path(func):
