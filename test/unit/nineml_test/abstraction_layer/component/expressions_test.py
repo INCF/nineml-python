@@ -150,6 +150,27 @@ class AnsiC89ToSympy_test(unittest.TestCase):
         self.assertEqual(expr.rhs, sympy.Not(self.a))
 
 
+class Rationals_test(unittest.TestCase):
+
+    def test_xml(self):
+        "Tests conversion of rationals back from the c-code version 1.0L/2.0L"
+        expr = Expression('1/2')
+        self.assertEqual(expr.rhs_xml, '1/2')
+
+    def test_c89(self):
+        "Tests conversion of rationals back from the c-code version 1.0L/2.0L"
+        expr = Expression('1/2')
+        self.assertEqual(expr.rhs_cstr, '1.0L/2.0L')
+
+
+class C89_test(unittest.TestCase):
+
+    def test_logical_and(self):
+        "Tests conversion of rationals back from the c-code version 1.0L/2.0L"
+        expr = Expression('1/2')
+        self.assertEqual(str(expr.rhs), '1/2')
+
+
 class TestVisitor(object):
 
     def visit(self, obj, **kwargs):
@@ -215,7 +236,7 @@ class StateAssignment_test(unittest.TestCase):
 
         class StateAssignmentTestVisitor(TestVisitor):
 
-            def visit_stateassignment(self, component, **kwargs):  # @UnusedVariable
+            def visit_stateassignment(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
                 return kwargs
 
         c = StateAssignment(lhs='V', rhs='0')

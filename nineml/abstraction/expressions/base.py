@@ -36,8 +36,12 @@ class Expression(object):
     # chain of valid identifiers follwed by an open parenthesis.
     _func_re = re.compile(r'([\w\.]+) *\(')  # Match identifier followed by (
     _strip_parens_re = re.compile(r'^\(+(\w+)\)+$')  # Match if enclosed by ()
-    _random_ns_map = dict((str(v), Parser.unescape_random_namespace(k))
-                          for k, v in Parser.inline_randoms_dict.iteritems())
+    _random_map = dict((str(v), Parser.unescape_random_namespace(k))
+                       for k, v in Parser.inline_randoms_dict.iteritems())
+    _cfunc_map = dict([(str(v), Parser.unescape_random_namespace(k))
+                       for k, v in Parser.inline_randoms_dict.iteritems()] +
+                      [('abs', 'fabs')])
+    _rationals_re = re.compile(r'(\d+)\.0L/(\d+).0L')
 
     def __init__(self, rhs):
         self.rhs = rhs
@@ -96,7 +100,14 @@ class Expression(object):
     @property
     def rhs_cstr(self):
         rhs = self._unwrap_integer_powers(self._rhs)
-        cstr = ccode(rhs, user_functions=self._random_ns_map)
+        cstr = ccode(rhs, user_functions=self._cfunc_map)
+        return cstr
+
+    @property
+    def rhs_xml(self):
+        rhs = self._unwrap_integer_powers(self._rhs)
+        cstr = ccode(rhs, user_functions=self._random_map)
+        cstr = self._rationals_re.sub(r'\1/\2', cstr)
         return cstr
 
     @property

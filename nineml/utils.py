@@ -265,9 +265,8 @@ def filter_discrete_types(lst, acceptedtypes):
     res = dict([(a, []) for a in acceptedtypes])
     for obj in lst:
         obj_type = filter_expect_single(
-                    acceptedtypes,
-                    lambda at: isinstance(obj, at),
-                    error_func='%s could not be mapped to a single type' % obj)
+            acceptedtypes, lambda at: isinstance(obj, at),
+            error_func='%s could not be mapped to a single type' % obj)
         res[obj_type].append(obj)
     return res
 
@@ -457,7 +456,7 @@ def ensure_iterable(expected_list):
     if isinstance(expected_list, dict):
         raise TypeError("Expected a list, got a dictionary ({})"
                         .format(expected_list))
-    elif isinstance(expected_list, basestring):
+    elif isinstance(expected_list, (basestring, MemberContainerObject)):
         lst = [expected_list]
     elif isinstance(expected_list, collections.Iterable):
         lst = list(expected_list)
