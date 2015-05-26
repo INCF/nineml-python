@@ -42,6 +42,7 @@ class Expression(object):
                        for k, v in Parser.inline_randoms_dict.iteritems()] +
                       [('abs', 'fabs')])
     _rationals_re = re.compile(r'(\d+)\.0L/(\d+).0L')
+    _ccode_print_warn_re = re.compile(r'// (?:Not supported in C:|abs)\n')
 
     def __init__(self, rhs):
         self.rhs = rhs
@@ -106,9 +107,10 @@ class Expression(object):
     @property
     def rhs_xml(self):
         rhs = self._unwrap_integer_powers(self._rhs)
-        cstr = ccode(rhs, user_functions=self._random_map)
-        cstr = self._rationals_re.sub(r'\1/\2', cstr)
-        return cstr
+        s = ccode(rhs, user_functions=self._random_map)
+        s = self._rationals_re.sub(r'\1/\2', s)
+        s = self._ccode_print_warn_re.sub('', s)
+        return s
 
     @property
     def rhs_symbols(self):
