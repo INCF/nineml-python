@@ -4,7 +4,9 @@ from nineml.abstraction.dynamics.testing_utils import TestableComponent
 from nineml.abstraction import (
     Dynamics, AnalogSendPort, Alias,
     AnalogReceivePort, AnalogReducePort, Regime, On, NamespaceAddress,
-    OutputEvent, EventReceivePort, Constant)
+    OutputEvent, EventReceivePort, Constant, StateVariable, Parameter)
+import nineml.units as un
+from sympy import sympify
 
 
 class ComponentClass_test(unittest.TestCase):
@@ -786,6 +788,46 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEquals(target_regimes(r2), set([r3]))
         self.assertEquals(target_regimes(r3), set([r3, r4]))
         self.assertEquals(target_regimes(r4), set([r4]))
+
+    def test_all_expressions(self):
+        a = Dynamics(
+            name='A',
+            aliases=['A1:=P1 * SV2', 'A2 := ARP1 + SV2', 'A3 := SV1'],
+            state_variables=[
+                StateVariable('SV1', dimension=un.voltage),
+                StateVariable('SV2', dimension=un.current)],
+            regimes=[
+                Regime(
+                    'dSV1/dt = -SV1 / P2',
+                    'dSV2/dt = A3 / ARP2 + SV2 / P2',
+                    transitions=[On('SV1 > P3', do=[OutputEvent('emit')]),
+                                 On('spikein', do=[OutputEvent('emit')])],
+                    name='R1'
+                ),
+                Regime(name='R2', transitions=On('(SV1 > C1) & (SV2 < P4)',
+                                                 to='R1'))
+            ],
+            analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
+                          AnalogReceivePort('ARP2',
+                                            dimension=(un.resistance *
+                                                       un.time)),
+                          AnalogSendPort('A1',
+                                         dimension=un.voltage * un.current),
+                          AnalogSendPort('A2', dimension=un.current)],
+            parameters=[Parameter('P1', dimension=un.voltage),
+                        Parameter('P2', dimension=un.time),
+                        Parameter('P3', dimension=un.voltage),
+                        Parameter('P4', dimension=un.current)],
+            constants=[Constant('C1', value=1.0, units=un.mV)]
+        )
+
+        self.assertEqual(
+            set(a.all_expressions), set((
+                sympify('P1 * SV2'), sympify('ARP1 + SV2'), sympify('SV1'),
+                sympify('-SV1 / P2'), sympify('-SV1 / P2'),
+                sympify('A3 / ARP2 + SV2 / P2'), sympify('SV1 > P3'),
+                sympify('(SV1 > C1) & (SV2 < P4)'))),
+            "All expressions were not extracted from component class")
 
 
 
