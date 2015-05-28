@@ -37,6 +37,10 @@ class RandomDistribution(ComponentClass):
         RandomDistributionValidator.validate_componentclass(self)
 
     @property
+    def all_expressions(self):
+        return RandomDistributionExpressionExtractor().visit(self)
+
+    @property
     def standard_library(self):
         return self._main_block.standard_library
 
@@ -57,7 +61,8 @@ from .visitors.cloner import RandomDistributionCloner
 from .visitors.modifiers import(
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
 from .visitors.queriers import (RandomDistributionRequiredDefinitions,
-                                RandomDistributionElementFinder)
+                                RandomDistributionElementFinder,
+                                RandomDistributionExpressionExtractor)
 from .visitors.validators import RandomDistributionValidator
 from .visitors.xml import (
     RandomDistributionXMLLoader, RandomDistributionXMLWriter)

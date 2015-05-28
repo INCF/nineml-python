@@ -68,7 +68,8 @@ from .visitors.cloner import ConnectionRuleCloner
 from .visitors.modifiers import (
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
 from .visitors.queriers import (
-    ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder)
+    ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder,
+    ConnectionRuleExpressionExtractor)
 from .visitors.validators import ConnectionRuleValidator
 from .visitors.xml import (
     ConnectionRuleXMLLoader, ConnectionRuleXMLWriter)
