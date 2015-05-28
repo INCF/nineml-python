@@ -3,7 +3,7 @@
 import nineml
 from nineml.abstraction.testing_utils import (std_pynn_simulation,
                                                     RecordValue)
-from nineml.abstraction_layer import (Dynamics, Regime, On, SendPort,
+from nineml.abstraction import (Dynamics, Regime, On, SendPort,
                                       OutputEvent, ReducePort, flattening)
 
 

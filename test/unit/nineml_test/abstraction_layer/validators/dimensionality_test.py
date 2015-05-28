@@ -1,10 +1,6 @@
 from __future__ import division
 import unittest
-<<<<<<< Upstream, based on origin/xml_exception_handling
 from nineml.abstraction import (
-=======
-from nineml.abstraction_layer import (
->>>>>>> 3150ddf renamed *Class to * (e.g. DynamicsClass to Dynamics)
     Parameter, Constant, Dynamics, Regime, On, OutputEvent, StateVariable,
     StateAssignment)
 from nineml.abstraction.ports import AnalogSendPort, AnalogReceivePort

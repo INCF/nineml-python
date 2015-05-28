@@ -6,7 +6,7 @@
   <Unit symbol="per_ms" dimension="per_time" power="3"/>
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="per_ms_mV" dimension="per_time_voltage" power="6"/>
-  <Component name="HodgkinHuxleyModified">
+  <DynamicsProperties name="HodgkinHuxleyModified">
     <Prototype url="./HodgkinHuxley.xml">HodgkinHuxley</Prototype>
     <Property name="m_alpha_A" units="per_ms_mV">
       <SingleValue>0.5</SingleValue>
@@ -17,5 +17,5 @@
     <Property name="m_alpha_K" units="mV">
       <SingleValue>5.0</SingleValue>
     </Property>
-  </Component>
+  </DynamicsProperties>
 </NineML>

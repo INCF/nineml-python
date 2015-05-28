@@ -2,7 +2,7 @@
 
 from nineml.abstraction.testing_utils import (std_pynn_simulation,
                                                     RecordValue)
-from nineml.abstraction_layer import (Dynamics, Regime, On, OutputEvent,
+from nineml.abstraction import (Dynamics, Regime, On, OutputEvent,
                                       SendPort, ReducePort, flattening)
 
 

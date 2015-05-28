@@ -15,7 +15,7 @@
       <FromResponse send_port="i" receive_port="iSynapse"/>
     </Post>
     <Response>
-      <Component name="AMPA">
+      <DynamicsProperties name="AMPA">
         <Definition url="../postsynapticresponses/DoubleExpCondSynapse.xml">DoubleExpCondSynapse</Definition>
         <Property name="gBar" units="S">
           <SingleValue>2.6e-3</SingleValue>
@@ -29,14 +29,14 @@
         <Property name="eReversal" units="mV">
           <SingleValue>-0.1</SingleValue>
         </Property>
-      </Component>
+      </DynamicsProperties>
       <FromSource send_port="spikeOutput" receive_port="spike"/>
       <FromDestination send_port="v" receive_port="v"/>
     </Response>
     <Connectivity>
-      <Component name="AllToAll">
+      <ConnectionRuleProperties name="AllToAll">
         <Definition url="../connectionrules/AllToAll.xml">AllToAll</Definition>
-      </Component>
+      </ConnectionRuleProperties>
     </Connectivity>
     <Delay units="ms">
       <SingleValue>0.5</SingleValue>

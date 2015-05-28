@@ -4,7 +4,8 @@ from . import BaseULObject
 from .component import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
-from .component import Component
+from nineml.exceptions import NineMLRuntimeError
+from .component import DynamicsProperties, ConnectionRuleProperties
 from .population import Population
 from itertools import chain
 from .. import units as un
@@ -15,7 +16,7 @@ from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
 from nineml.exceptions import handle_xml_exceptions
-from nineml.abstraction_layer.ports import Port
+from nineml.abstraction.ports import Port
 
 
 class Projection(BaseULObject, DocumentLevelObject):
@@ -461,7 +462,7 @@ class Delay(Quantity):
             value.
 
     Numerical values may either be numbers, or a component that generates
-    numbers, e.g. a RandomDistributionComponent instance.
+    numbers, e.g. a RandomDistribution instance.
     """
     element_name = 'Delay'
 
@@ -472,18 +473,19 @@ class Delay(Quantity):
         Quantity.__init__(self, value, units)
 
 
-class Connectivity(Component):
-
-    element_name = 'Connectivity'
+class Connectivity(ConnectionRuleProperties):
 
     @annotate_xml
     def to_xml(self):
-        return E.Connectivity(Component.to_xml(self))
+        return E.Connectivity(ConnectionRuleProperties.to_xml(self))
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        cls.check_tag(element)
-        component = Component.from_xml(
-            expect_single(element.findall(NINEML + 'Component')), document)
+        assert element.tag in ('Connectivity', NINEML + 'Connectivity'), (
+            "Found '{}' element, expected '{}'".format(element.tag,
+                                                       'Connectivity'))
+        component = ConnectionRuleProperties.from_xml(
+            expect_single(element.findall(
+                NINEML + 'ConnectionRuleProperties')), document)
         return cls(*component.__getinitargs__())

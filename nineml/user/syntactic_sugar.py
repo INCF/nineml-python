@@ -1,41 +1,41 @@
-from . import DynamicsComponent
+from . import DynamicsProperties
 
 
-class SpikingNodeType(DynamicsComponent):
+class SpikingNodeType(DynamicsProperties):
     """
-    Component representing a model of a spiking node, i.e. something that can
+    DynamicsProperties representing a model of a spiking node, i.e. something that can
     emit (and optionally receive) spikes.
     """
     pass
 
 
-class IonDynamicsType(DynamicsComponent):
+class IonDynamicsType(DynamicsProperties):
     """
-    Component representing either a ion channel or the dynamics of the
+    DynamicsProperties representing either a ion channel or the dynamics of the
     concentration of a pool of ions. Typically part of a SpikingNodeType.
     """
     pass
 
 
-class SynapseType(DynamicsComponent):
+class SynapseType(DynamicsProperties):
     """
-    Component representing a model of a post-synaptic response, i.e. the
+    DynamicsProperties representing a model of a post-synaptic response, i.e. the
     current produced in response to a spike.
     """
     pass
 
 
-class CurrentSourceType(DynamicsComponent):
+class CurrentSourceType(DynamicsProperties):
     """
-    Component representing a model of a current source that may be injected
+    DynamicsProperties representing a model of a current source that may be injected
     into a spiking node.
     """
     pass
 
 
-class ConnectionType(DynamicsComponent):
+class ConnectionType(DynamicsProperties):
     """
-    Component representing a model of a synaptic connection, including weight,
+    DynamicsProperties representing a model of a synaptic connection, including weight,
     delay, optionally a synaptic plasticity rule.
     """
     pass

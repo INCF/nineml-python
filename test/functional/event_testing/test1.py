@@ -1,7 +1,7 @@
 
 import unittest
-from nineml.abstraction_layer import Dynamics, SendPort, Regime, ReducePort
-from nineml.abstraction_layer.testing_utils import std_pynn_simulation, RecordValue
+from nineml.abstraction import Dynamics, SendPort, Regime, ReducePort
+from nineml.abstraction.testing_utils import std_pynn_simulation, RecordValue
 
 
 class FuncTest_Flat1(unittest.TestCase):

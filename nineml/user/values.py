@@ -173,7 +173,7 @@ class ExternalArrayValue(BaseValue):
 #     @classmethod
 #     @read_annotations
 #     def from_xml(cls, element, document):
-#         comp_element = element.find(NINEML + 'Component')
+#         comp_element = element.find(NINEML + 'DynamicsProperties')
 #         if comp_element is None:
 #             comp_element = element.find(NINEML + 'Reference')
 #             if comp_element is None:
