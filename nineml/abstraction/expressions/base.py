@@ -360,6 +360,10 @@ class ExpressionSymbol(object):
     def __or__(self, other):
         return sympy.sympify(self) | other
 
+    @property
+    def symbol(self):
+        return self._sympy_()
+
 
 class ExpressionWithLHS(Expression):
     # Sub-classes should override this, to allow
@@ -430,9 +434,6 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
 
     def lhs_name_transform_inplace(self, name_map):
         self._name = name_map.get(self.lhs, self.lhs)
-
-    def _sympy_(self):
-        return sympy.Symbol(self.lhs)
 
 
 class ODE(ExpressionWithLHS):
