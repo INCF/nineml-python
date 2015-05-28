@@ -17,7 +17,6 @@ from ..transitions import (
 from ..regimes import Regime, StateVariable, TimeDerivative
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
-from nineml.exceptions import handle_xml_exceptions
 
 
 class DynamicsXMLLoader(ComponentClassXMLLoader):
@@ -31,7 +30,6 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
-    @handle_xml_exceptions
     def load_dynamicsclass(self, element):
 
         block_names = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
@@ -42,7 +40,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
         blocks = self._load_blocks(element, block_names=block_names)
 
         return Dynamics(
-            name=element.attrib['name'],
+            name=element.get('name'),
             parameters=blocks["Parameter"],
             analog_ports=chain(blocks["AnalogSendPort"],
                                blocks["AnalogReceivePort"],
@@ -52,72 +50,62 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
             regimes=blocks["Regime"],
             aliases=blocks["Alias"],
             state_variables=blocks["StateVariable"],
-            constants=blocks["Constant"],
-            url=self.document.url)
+            constants=blocks["Constant"])
 
     @read_annotations
-    @handle_xml_exceptions
     def load_eventsendport(self, element):
-        return EventSendPort(name=element.attrib['name'])
+        return EventSendPort(name=element.get('name'))
 
     @read_annotations
-    @handle_xml_exceptions
     def load_eventreceiveport(self, element):
-        return EventReceivePort(name=element.attrib['name'])
+        return EventReceivePort(name=element.get('name'))
 
     @read_annotations
-    @handle_xml_exceptions
     def load_analogsendport(self, element):
         return AnalogSendPort(
-            name=element.attrib['name'],
-            dimension=self.document[element.attrib['dimension']])
+            name=element.get("name"),
+            dimension=self.document[element.get('dimension')])
 
     @read_annotations
-    @handle_xml_exceptions
     def load_analogreceiveport(self, element):
         return AnalogReceivePort(
-            name=element.attrib['name'],
-            dimension=self.document[element.attrib['dimension']])
+            name=element.get("name"),
+            dimension=self.document[element.get('dimension')])
 
     @read_annotations
-    @handle_xml_exceptions
     def load_analogreduceport(self, element):
         return AnalogReducePort(
-            name=element.attrib['name'],
-            dimension=self.document[element.attrib['dimension']],
-            operator=element.attrib['operator'])
+            name=element.get('name'),
+            dimension=self.document[element.get('dimension')],
+            operator=element.get("operator"))
 
     @read_annotations
-    @handle_xml_exceptions
     def load_regime(self, element):
         block_names = ('TimeDerivative', 'OnCondition', 'OnEvent')
         blocks = self._load_blocks(element, block_names=block_names)
         transitions = blocks["OnEvent"] + blocks['OnCondition']
-        return Regime(name=element.attrib['name'],
+        return Regime(name=element.get('name'),
                       time_derivatives=blocks["TimeDerivative"],
                       transitions=transitions)
 
     @read_annotations
-    @handle_xml_exceptions
     def load_statevariable(self, element):
-        name = element.attrib['name']
-        dimension = self.document[element.attrib['dimension']]
+        name = element.get("name")
+        dimension = self.document[element.get('dimension')]
         return StateVariable(name=name, dimension=dimension)
 
     @read_annotations
-    @handle_xml_exceptions
     def load_timederivative(self, element):
-        variable = element.attrib['variable']
+        variable = element.get("variable")
         expr = self.load_single_internmaths_block(element)
         return TimeDerivative(variable=variable,
                               rhs=expr)
 
     @read_annotations
-    @handle_xml_exceptions
     def load_oncondition(self, element):
         block_names = ('Trigger', 'StateAssignment', 'OutputEvent')
         blocks = self._load_blocks(element, block_names=block_names)
-        target_regime = element.attrib['target_regime']
+        target_regime = element.get('target_regime')
         trigger = expect_single(blocks["Trigger"])
         return OnCondition(trigger=trigger,
                            state_assignments=blocks["StateAssignment"],
@@ -125,12 +113,11 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
                            target_regime=target_regime)
 
     @read_annotations
-    @handle_xml_exceptions
     def load_onevent(self, element):
         block_names = ('StateAssignment', 'OutputEvent')
         blocks = self._load_blocks(element, block_names=block_names)
-        target_regime = element.attrib['target_regime']
-        return OnEvent(src_port_name=element.attrib['port'],
+        target_regime = element.get('target_regime')
+        return OnEvent(src_port_name=element.get('port'),
                        state_assignments=blocks["StateAssignment"],
                        output_events=blocks["OutputEvent"],
                        target_regime=target_regime)
@@ -139,16 +126,14 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
         return Trigger(self.load_single_internmaths_block(element))
 
     @read_annotations
-    @handle_xml_exceptions
     def load_stateassignment(self, element):
-        lhs = element.attrib['variable']
+        lhs = element.get('variable')
         rhs = self.load_single_internmaths_block(element)
         return StateAssignment(lhs=lhs, rhs=rhs)
 
     @read_annotations
-    @handle_xml_exceptions
     def load_outputevent(self, element):
-        port_name = element.attrib['port']
+        port_name = element.get('port')
         return OutputEvent(port_name=port_name)
 
     tag_to_loader = dict(

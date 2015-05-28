@@ -9,7 +9,6 @@ from nineml.xmlns import E
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
-from nineml.exceptions import handle_xml_exceptions
 
 
 class RandomDistributionXMLLoader(ComponentClassXMLLoader):
@@ -23,26 +22,24 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
-    @handle_xml_exceptions
     def load_randomdistributionclass(self, element):
         block_names = ('Parameter',)
         blocks = self._load_blocks(element, block_names=block_names)
-        return RandomDistributionClass(
-            name=element.attrib['name'],
-            parameters=blocks["Parameter"],
-            url=self.document.url)
+        return RandomDistribution(
+            name=element.get('name'),
+            parameters=blocks["Parameter"])
 
     tag_to_loader = dict(
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
-        (("RandomDistributionClass", load_randomdistributionclass),))
+        (("RandomDistribution", load_randomdistributionclass),))
+
 
 class RandomDistributionXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
-        return E('RandomDistributionClass',
-                 *[e.accept_visitor(self) for e in componentclass],
-                 name=component_class.name,
-                 standardLibrary=componentclass.standard_library))
+        return E('RandomDistribution',
+                 *[e.accept_visitor(self) for e in component_class],
+                 name=component_class.name)
 
 from ..base import RandomDistribution

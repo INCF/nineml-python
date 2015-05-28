@@ -19,7 +19,7 @@ class ConnectionRuleEqualityChecker(ComponentEqualityChecker):
         super(ConnectionRuleEqualityChecker, cls).check_equal_component(
             comp1, comp2, strict_aliases)
 
-        # Check the ConnectionRuleComponent
+        # Check the ConnectionRule
         # --------------------- #
         d1 = comp1.connectionrule
         d2 = comp2.connectionrule

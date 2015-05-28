@@ -24,5 +24,5 @@ class ConnectionRuleQueryer(ComponentQueryer):
     def ports(self):
         """Return an iterator over all the port (Event & Analog) in the
         component_class"""
-        # TODO: ConnectionRuleComponent-specific ports to go here
+        # TODO: ConnectionRule-specific ports to go here
         return chain(super(ConnectionRuleQueryer, self).ports, [])
