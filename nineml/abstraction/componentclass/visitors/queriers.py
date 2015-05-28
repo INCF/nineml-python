@@ -143,3 +143,14 @@ class ComponentElementFinder(ComponentActionVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         if self.element is constant:
             self._found()
+
+
+class ComponentExpressionExtractor(ComponentActionVisitor):
+
+    def __init__(self):
+        super(ComponentExpressionExtractor, self).__init__(
+            require_explicit_overrides=False)
+        self.expressions = []
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        self.expressions.append(alias.rhs)

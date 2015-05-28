@@ -1,7 +1,7 @@
+from .base import DynamicsActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentElementFinder,
-    ComponentRequiredDefinitions)
-from .base import DynamicsActionVisitor
+    ComponentRequiredDefinitions, ComponentExpressionExtractor)
 
 
 class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
@@ -124,3 +124,21 @@ class DynamicsElementFinder(ComponentElementFinder, DynamicsActionVisitor):
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         if self.element is on_event:
             self._found()
+
+
+class DynamicsExpressionExtractor(ComponentExpressionExtractor,
+                                  DynamicsActionVisitor):
+
+    def __init__(self):
+        DynamicsActionVisitor.__init__(self,
+                                             require_explicit_overrides=True)
+        ComponentExpressionExtractor.__init__(self)
+
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
+        self.expressions.append(assignment.rhs)
+
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.expressions.append(time_derivative.rhs)
+
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        self.expressions.append(trigger.rhs)
