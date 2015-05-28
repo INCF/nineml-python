@@ -9,14 +9,15 @@ __version__ = "0.2dev"
 
 from .base import BaseNineMLObject, DocumentLevelObject
 from document import read, write, load, Document
-import abstraction
-import user
-import exceptions
-import units
+from . import abstraction
+from . import user
+from . import exceptions
+from . import units
 from .units import Unit, Dimension
-from abstraction_layer import (
+from abstraction import (
     Dynamics, ConnectionRule, RandomDistribution,
     ComponentClass)
-from user import (
+from .user import (
     Selection, Population, Projection, Property, Definition, Component,
-    Connectivity, Response, Plasticity, Pre, Post)
+    Connectivity, Response, Plasticity, Pre, Post, DynamicsProperties,
+    ConnectionRuleProperties, RandomDistributionProperties)

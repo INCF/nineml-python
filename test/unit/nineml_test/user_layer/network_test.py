@@ -75,11 +75,11 @@ class TestNetwork(unittest.TestCase):
         all_to_all = nineml.Connectivity(
             "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})
 
-        static_exc = nineml.Component(
+        static_exc = nineml.DynamicsProperties(
             "ExcitatoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"), {},
             initial_values={"weight": (Je, nA)})
-        static_inh = nineml.Component(
+        static_inh = nineml.DynamicsProperties(
             "InhibitoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"),
             initial_values={"weight": (Ji, nA)})

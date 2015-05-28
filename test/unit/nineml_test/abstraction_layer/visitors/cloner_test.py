@@ -4,7 +4,7 @@
 import warnings
 import unittest
 
-from nineml.abstraction_layer import (
+from nineml.abstraction import (
     Dynamics as Dynamics, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
     NamespaceAddress)

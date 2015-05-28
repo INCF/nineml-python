@@ -145,7 +145,7 @@ NET_RECEIVE(weight, on, nspike, r0, t0 (ms)) {
 # synon could be removed, using the concept of Regimes
 # All the nspike business could be removed due to Regimes and Transitions
 
-from nineml.abstraction_layer import Regime, On, RecvPort, SendPort, Dynamics
+from nineml.abstraction import Regime, On, RecvPort, SendPort, Dynamics
 
 
 def get_component():

@@ -14,7 +14,7 @@
   <Unit symbol="uF_per_cm2" dimension="specificCapacitance" power="-2"/>
   <Unit symbol="K" dimension="temperature"/>
   <Unit symbol="um2" dimension="length2"/>
-  <Component name="HodgkinHuxley">
+  <DynamicsProperties name="HodgkinHuxley">
     <Definition url="./HodgkinHuxleyClass.xml">HodgkinHuxleyClass</Definition>
     <Property name="m_alpha_A" units="per_ms_mV">
       <SingleValue>0.1</SingleValue>
@@ -109,5 +109,5 @@
     <Property name="spikeImpulse" units="mV">
       <SingleValue>5</SingleValue>
     </Property>
-  </Component>
+  </DynamicsProperties>
 </NineML>

@@ -10,7 +10,7 @@ from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction.componentclass.namespace import NamespaceAddress
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
-from nineml.abstraction_layer.componentclass import (
+from nineml.abstraction.componentclass import (
     ComponentClass, Parameter)
 from nineml.annotations import annotate_xml, read_annotations
 from .regimes import StateVariable, Regime

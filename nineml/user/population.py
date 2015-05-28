@@ -1,9 +1,10 @@
 from itertools import chain
 from . import BaseULObject
-from .component import resolve_reference, write_reference, Component
+from .component import (resolve_reference, write_reference, DynamicsProperties,
+                        RandomDistributionProperties, Component)
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
-from nineml.utils import expect_single, check_tag
+from nineml.utils import expect_single
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import handle_xml_exceptions
 
@@ -85,15 +86,16 @@ class Population(BaseULObject, DocumentLevelObject):
         layout_elem = element.find(NINEML + 'Layout')
         kwargs = {}
         if layout_elem:
-            kwargs['positions'] = Component.from_xml(layout_elem, document)
+            kwargs['positions'] = RandomDistributionProperties.from_xml(
+                layout_elem, document)
             kwargs['url'] = document.url
         cell = expect_single(element.findall(NINEML + 'Cell'))
-        cell_component = cell.find(NINEML + 'Component')
+        cell_component = cell.find(NINEML + 'DynamicsProperties')
         if cell_component is None:
             cell_component = cell.find(NINEML + 'Reference')
         return cls(name=element.attrib['name'],
                    size=int(element.find(NINEML + 'Size').text),
-                   cell=Component.from_xml(cell_component, document),
+                   cell=DynamicsProperties.from_xml(cell_component, document),
                    url=document.url, **kwargs)
 
 
