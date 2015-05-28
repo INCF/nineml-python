@@ -1,8 +1,8 @@
 from copy import copy
 import unittest
-from nineml.abstraction_layer.dynamics import (
+from nineml.abstraction.dynamics import (
     DynamicsClass, Regime, On, OutputEvent)
-from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
+from nineml.abstraction.ports import AnalogSendPort, AnalogReceivePort
 
 
 class DynamicsAssignIndices_test(unittest.TestCase):

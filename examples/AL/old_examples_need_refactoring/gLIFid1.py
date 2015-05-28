@@ -11,7 +11,7 @@ development. Neural Network, 23 517-527
 Author: Abigail Morrison, 1/2011.
 
 """
-import nineml.abstraction_layer as nineml
+import nineml.abstraction as nineml
 
 regimes = [
     nineml.Regime(

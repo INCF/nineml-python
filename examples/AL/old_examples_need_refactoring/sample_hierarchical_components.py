@@ -1,12 +1,12 @@
 
-# import nineml.abstraction_layer.models as models
+# import nineml.abstraction.models as models
 import os
 
-# import nineml.abstraction_layer as nineml
-import nineml.abstraction_layer as al
-# from nineml.abstraction_layer import Regime, Transition, SendPort,
+# import nineml.abstraction as nineml
+import nineml.abstraction as al
+# from nineml.abstraction import Regime, Transition, SendPort,
 # RecvPort, On, SpikeInputEvent, SpikeOutputEvent, ReducePort
-from nineml.abstraction_layer import * \
+from nineml.abstraction import * \
     #Regime, Transition, SendPort, RecvPort, On, SpikeInputEvent, SpikeOutputEvent, ReducePort
 
 # from nineml import Regime, Transition

@@ -1,12 +1,12 @@
 
 import unittest
-from nineml.abstraction_layer import (Expression,
+from nineml.abstraction import (Expression,
                                       Alias, StateAssignment, TimeDerivative)
-from nineml.abstraction_layer.expressions import (
+from nineml.abstraction.expressions import (
     ExpressionWithSimpleLHS, Constant)
 from nineml.exceptions import NineMLMathParseError
 from nineml.units import coulomb, S_per_cm2, mV
-from nineml.abstraction_layer.componentclass.utils.xml import (
+from nineml.abstraction.componentclass.utils.xml import (
     ComponentClassXMLWriter as XMLWriter, ComponentClassXMLLoader as XMLLoader)
 from nineml import Document
 import sympy

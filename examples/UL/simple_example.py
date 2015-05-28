@@ -1,5 +1,5 @@
 # encoding: utf-8
-import nineml.user_layer as nineml
+import nineml.user as nineml
 
 #catalog = "https://raw.githubusercontent.com/INCF/nineml/master/catalog/"
 catalog = "https://raw.githubusercontent.com/apdavison/nineml/modular/catalog/"

@@ -178,7 +178,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
     @annotate_xml
     def to_xml(self):
         self.standardize_unit_dimensions()
-        XMLWriter = getattr(nineml.abstraction_layer,
+        XMLWriter = getattr(nineml.abstraction,
                             self.__class__.__name__ + 'XMLWriter')
         self.validate()
         return XMLWriter().visit(self)
@@ -186,7 +186,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):  # @UnusedVariable
-        XMLLoader = getattr(nineml.abstraction_layer,
+        XMLLoader = getattr(nineml.abstraction,
                             ComponentClassXMLLoader.read_class_type(element) +
                             'ClassXMLLoader')
         return XMLLoader(document).load_componentclass(element)

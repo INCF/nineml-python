@@ -1,5 +1,5 @@
 # encoding: utf-8
-import nineml.user_layer as nineml
+import nineml.user as nineml
 
 catalog = "http://svn.incf.org/svn/nineml/trunk/catalog/"
 

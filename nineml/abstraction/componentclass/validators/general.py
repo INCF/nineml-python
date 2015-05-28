@@ -14,7 +14,7 @@ import operator
 import sympy
 from sympy import sympify
 from nineml.base import SendPortBase
-from nineml.abstraction_layer.expressions import Expression
+from nineml.abstraction.expressions import Expression
 
 
 class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):

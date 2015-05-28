@@ -5,7 +5,7 @@ import warnings
 import unittest
 
 
-from nineml.abstraction_layer import AnalogReceivePort, AnalogReducePort, AnalogSendPort, EventReceivePort, EventSendPort
+from nineml.abstraction import AnalogReceivePort, AnalogReducePort, AnalogSendPort, EventReceivePort, EventSendPort
 from nineml.exceptions import NineMLRuntimeError
 
 
@@ -57,7 +57,7 @@ class AnalogPort_test(unittest.TestCase):
     def test_operator(self):
         # Signature: name
                 # The reduction operation of the port, if it is a 'reduce' port
-        # from nineml.abstraction_layer.component.ports import AnalogPort
+        # from nineml.abstraction.component.ports import AnalogPort
         self.assertRaises(
             NineMLRuntimeError,
             AnalogReducePort, 'V', operator='-')
@@ -99,7 +99,7 @@ class EventPort_test(unittest.TestCase):
     def test_mode(self):
         # Signature: name
                 # The mode of the port. ['send','recv' or 'reduce']
-        # from nineml.abstraction_layer.component.ports import EventPort
+        # from nineml.abstraction.component.ports import EventPort
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()

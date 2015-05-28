@@ -2,8 +2,8 @@
 
 """
 
-from nineml.abstraction_layer import parse, writers, flattening
-from nineml.abstraction_layer.testing_utils import (RecordValue,
+from nineml.abstraction import parse, writers, flattening
+from nineml.abstraction.testing_utils import (RecordValue,
                                                     TestableComponent,
                                                     std_pynn_simulation)
 

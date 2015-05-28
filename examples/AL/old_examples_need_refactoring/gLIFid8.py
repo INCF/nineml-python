@@ -11,7 +11,7 @@ Hebbian Plasticity, J. Neuroscience, 23(9) 3697--3714
 Author: Abigail Morrison, 1/2011.
 
 """
-import nineml.abstraction_layer as nineml
+import nineml.abstraction as nineml
 
 regimes = [
     nineml.Regime(

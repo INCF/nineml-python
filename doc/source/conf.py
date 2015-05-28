@@ -300,42 +300,42 @@ rst_prolog = """
 .. |VISITATION| replace:: link to something about visitation.
 
 
-.. |COMPONENTCLASS| replace:: :class:`~nineml.abstraction_layer.ComponentClass`
-.. |Alias| replace:: :class:`~nineml.abstraction_layer.Alias`
-.. |TimeDerivative| replace:: :class:`~nineml.abstraction_layer.TimeDerivative`
-.. |AnalogPort| replace:: :class:`~nineml.abstraction_layer.AnalogPort`
-.. |StateAssignment| replace:: :class:`~nineml.abstraction_layer.StateAssignment`
-.. |Condition| replace:: :class:`~nineml.abstraction_layer.Condition`
-.. |OnCondition| replace:: :class:`~nineml.abstraction_layer.OnCondition`
-.. |OnEvent| replace:: :class:`~nineml.abstraction_layer.OnEvent`
-.. |StateVariable| replace:: :class:`~nineml.abstraction_layer.StateVariable`
-.. |EventPort| replace:: :class:`~nineml.abstraction_layer.EventPort`
-.. |Parameter| replace:: :class:`~nineml.abstraction_layer.Parameter`
-.. |NamespaceAddress| replace:: :class:`~nineml.abstraction_layer.NamespaceAddress`
-.. |DynamicsBlock| replace:: :class:`~nineml.abstraction_layer.DynamicsBlock`
-.. |Transition| replace:: :class:`~nineml.abstraction_layer.Transition`
-.. |AnalogReceivePort| replace:: :class:`~nineml.abstraction_layer.AnalogReceivePort`
-.. |AnalogSendPort| replace:: :class:`~nineml.abstraction_layer.AnalogSendPort`
-.. |AnalogReducePort| replace:: :class:`~nineml.abstraction_layer.AnalogReducePort`
-.. |EventSendPort| replace:: :class:`~nineml.abstraction_layer.EventSendPort`
-.. |EventReceivePort| replace:: :class:`~nineml.abstraction_layer.EventReceivePort`
+.. |COMPONENTCLASS| replace:: :class:`~nineml.abstraction.ComponentClass`
+.. |Alias| replace:: :class:`~nineml.abstraction.Alias`
+.. |TimeDerivative| replace:: :class:`~nineml.abstraction.TimeDerivative`
+.. |AnalogPort| replace:: :class:`~nineml.abstraction.AnalogPort`
+.. |StateAssignment| replace:: :class:`~nineml.abstraction.StateAssignment`
+.. |Condition| replace:: :class:`~nineml.abstraction.Condition`
+.. |OnCondition| replace:: :class:`~nineml.abstraction.OnCondition`
+.. |OnEvent| replace:: :class:`~nineml.abstraction.OnEvent`
+.. |StateVariable| replace:: :class:`~nineml.abstraction.StateVariable`
+.. |EventPort| replace:: :class:`~nineml.abstraction.EventPort`
+.. |Parameter| replace:: :class:`~nineml.abstraction.Parameter`
+.. |NamespaceAddress| replace:: :class:`~nineml.abstraction.NamespaceAddress`
+.. |DynamicsBlock| replace:: :class:`~nineml.abstraction.DynamicsBlock`
+.. |Transition| replace:: :class:`~nineml.abstraction.Transition`
+.. |AnalogReceivePort| replace:: :class:`~nineml.abstraction.AnalogReceivePort`
+.. |AnalogSendPort| replace:: :class:`~nineml.abstraction.AnalogSendPort`
+.. |AnalogReducePort| replace:: :class:`~nineml.abstraction.AnalogReducePort`
+.. |EventSendPort| replace:: :class:`~nineml.abstraction.EventSendPort`
+.. |EventReceivePort| replace:: :class:`~nineml.abstraction.EventReceivePort`
 
-.. |ComponentFlattener| replace:: :class:`~nineml.abstraction_layer.flattening.ComponentFlattener`
+.. |ComponentFlattener| replace:: :class:`~nineml.abstraction.flattening.ComponentFlattener`
 
 
-.. |Aliases| replace:: :class:`Aliases <nineml.abstraction_layer.Alias>`
-.. |TimeDerivatives| replace:: :class:`TimeDerivatives <nineml.abstraction_layer.TimeDerivative>`
-.. |AnalogPorts| replace:: :class:`AnalogPorts <nineml.abstraction_layer.AnalogPort>`
-.. |StateAssignments| replace:: :class:`StateAssignments <nineml.abstraction_layer.StateAssignment>`
-.. |Conditions| replace:: :class:`Conditions <nineml.abstraction_layer.Condition>`
-.. |StateVariables| replace:: :class:`StateVariables <nineml.abstraction_layer.StateVariable>`
-.. |EventPorts| replace:: :class:`EventPorts <nineml.abstraction_layer.EventPort>`
-.. |Parameters| replace:: :class:`Parameters <nineml.abstraction_layer.Parameter>`
-.. |NamespaceAddresses| replace:: :class:`NamespaceAddresses <nineml.abstraction_layer.NamespaceAddress>`
-.. |Transitions| replace:: :class:`Transitions <nineml.abstraction_layer.Transition>`
-.. |AnalogSendPorts| replace:: :class:`AnalogSendPorts <nineml.abstraction_layer.AnalogSendPort>`
-.. |EventSendPorts| replace:: :class:`EventSendPorts <nineml.abstraction_layer.EventSendPort>`
-.. |EventReceivePorts| replace:: :class:`EventReceivePorts <nineml.abstraction_layer.EventReceivePort>`
+.. |Aliases| replace:: :class:`Aliases <nineml.abstraction.Alias>`
+.. |TimeDerivatives| replace:: :class:`TimeDerivatives <nineml.abstraction.TimeDerivative>`
+.. |AnalogPorts| replace:: :class:`AnalogPorts <nineml.abstraction.AnalogPort>`
+.. |StateAssignments| replace:: :class:`StateAssignments <nineml.abstraction.StateAssignment>`
+.. |Conditions| replace:: :class:`Conditions <nineml.abstraction.Condition>`
+.. |StateVariables| replace:: :class:`StateVariables <nineml.abstraction.StateVariable>`
+.. |EventPorts| replace:: :class:`EventPorts <nineml.abstraction.EventPort>`
+.. |Parameters| replace:: :class:`Parameters <nineml.abstraction.Parameter>`
+.. |NamespaceAddresses| replace:: :class:`NamespaceAddresses <nineml.abstraction.NamespaceAddress>`
+.. |Transitions| replace:: :class:`Transitions <nineml.abstraction.Transition>`
+.. |AnalogSendPorts| replace:: :class:`AnalogSendPorts <nineml.abstraction.AnalogSendPort>`
+.. |EventSendPorts| replace:: :class:`EventSendPorts <nineml.abstraction.EventSendPort>`
+.. |EventReceivePorts| replace:: :class:`EventReceivePorts <nineml.abstraction.EventReceivePort>`
 """
 
 # Remove the copyright notice from docstrings:

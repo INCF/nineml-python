@@ -1,4 +1,4 @@
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 # Define a single regime, and specify the differential equations:
 regime = al.Regime(

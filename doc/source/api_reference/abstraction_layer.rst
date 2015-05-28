@@ -2,7 +2,7 @@
 Abstraction layer API
 =====================
 
-.. currentmodule:: nineml.abstraction_layer
+.. currentmodule:: nineml.abstraction
 
 The abstraction layer is intended to provide explicit mathematical descriptions of any components used in a
 neuronal network model, where such components may be neuron models, synapse models, synaptic plasticity
@@ -37,7 +37,7 @@ A number of :class:`Dimension`\s and :class:`Unit`\ have been pre-defined, for e
 
 .. code-block:: python
 
-    >>> from nineml.abstraction_layer.units import time, voltage, capacitance, nA, mol_per_cm3, Mohm
+    >>> from nineml.abstraction.units import time, voltage, capacitance, nA, mol_per_cm3, Mohm
     >>> voltage
     Dimension(name='voltage', i=-1, m=1, t=-3, l=2)
     >>> nA
@@ -47,7 +47,7 @@ A number of :class:`Dimension`\s and :class:`Unit`\ have been pre-defined, for e
 ComponentClass interface
 ------------------------
 
-.. autoclass:: nineml.abstraction_layer.ComponentClass
+.. autoclass:: nineml.abstraction.ComponentClass
    :members:
 
 .. autoclass:: Parameter

@@ -10,7 +10,7 @@ Author: Eilif Muller, 2012.
 
 """
 
-import nineml.abstraction_layer as nineml
+import nineml.abstraction as nineml
 
 
 regimes = [

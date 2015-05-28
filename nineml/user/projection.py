@@ -4,9 +4,9 @@ from .component import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from collections import defaultdict
-from nineml.user_layer.component import Component
+from nineml.user.component import Component
 from itertools import chain
-import nineml.user_layer
+import nineml.user
 from .. import units as un
 from nineml.utils import expect_single, expect_none_or_single, check_tag
 from ..exceptions import NineMLRuntimeError
@@ -172,13 +172,13 @@ class Projection(BaseULObject, DocumentLevelObject):
         # Get Source
         e = expect_single(element.findall(NINEML + 'Source'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        source = nineml.user_layer.Reference.from_xml(
-            e, document).user_layer_object
+        source = nineml.user.Reference.from_xml(
+            e, document).user_object
         # Get Destination
         e = expect_single(element.findall(NINEML + 'Destination'))
         e = expect_single(e.findall(NINEML + 'Reference'))
-        destination = nineml.user_layer.Reference.from_xml(
-            e, document).user_layer_object
+        destination = nineml.user.Reference.from_xml(
+            e, document).user_object
         # Get Response
         e = element.find(NINEML + 'Response')
         component = e.find(NINEML + 'Component')
@@ -351,20 +351,20 @@ class PortConnection(object):
 
     def _get_class(self, comp):
         # Resolve ref
-        if isinstance(comp, nineml.user_layer.Reference):
-            comp = comp.user_layer_object
+        if isinstance(comp, nineml.user.Reference):
+            comp = comp.user_object
         # Get component class
-        if isinstance(comp, nineml.user_layer.Population):
+        if isinstance(comp, nineml.user.Population):
             comp_class = comp.cell.component_class
-        elif isinstance(comp, nineml.user_layer.Component):
+        elif isinstance(comp, nineml.user.Component):
             comp_class = comp.component_class
-        elif isinstance(comp, nineml.user_layer.Selection):
+        elif isinstance(comp, nineml.user.Selection):
             # print ("Warning: port connections have not been checked for '{}'"
             #        " Selection".format(comp.name))
             # only implemented for Concatenate
             def resolve(item):   # doing this here is a hack, I think
                 if isinstance(item, Reference):
-                    return item.user_layer_object
+                    return item.user_object
                 else:
                     return item
             comp_classes = {}

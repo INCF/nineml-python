@@ -1,10 +1,10 @@
 import unittest
 from copy import copy
-from nineml.abstraction_layer.dynamics import (
+from nineml.abstraction.dynamics import (
     DynamicsClass, Regime, On, OutputEvent, StateAssignment, StateVariable,
     OnCondition, TimeDerivative)
-from nineml.abstraction_layer import Alias, Parameter
-from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
+from nineml.abstraction import Alias, Parameter
+from nineml.abstraction.ports import AnalogSendPort, AnalogReceivePort
 from nineml.exceptions import NineMLInvalidElementTypeException
 
 

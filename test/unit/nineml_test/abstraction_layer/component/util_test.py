@@ -3,9 +3,9 @@
 # Automatically Generated Testing Skeleton Template:
 import unittest
 
-from nineml.abstraction_layer.dynamics import StateAssignment, TimeDerivative
-from nineml.abstraction_layer.expressions import Alias
-from nineml.abstraction_layer.expressions.utils import (
+from nineml.abstraction.dynamics import StateAssignment, TimeDerivative
+from nineml.abstraction.expressions import Alias
+from nineml.abstraction.expressions.utils import (
     is_single_symbol, str_expr_replacement)
 import sympy
 
@@ -17,7 +17,7 @@ import sympy
 #    def test_parse(self):
 # Signature: name(filename)
 # Left over from orignal Version. This will be deprecated
-# from nineml.abstraction_layer.component.util import parse
+# from nineml.abstraction.component.util import parse
 #        warnings.warn('Tests not implemented')
 # raise NotImplementedError()
 
@@ -48,7 +48,7 @@ class MathUtil_test(unittest.TestCase):
     def test_get_rhs_substituted(self):
         # Signature: name(cls, expr_obj, namemap)
                 # No Docstring
-        # from nineml.abstraction_layer.component.util import MathUtil
+        # from nineml.abstraction.component.util import MathUtil
 
         e = Alias.from_str('a := b*c + b1 + e_*exp(-12*g) + d/(e*sin(f + g/e))')
 
@@ -64,7 +64,7 @@ class MathUtil_test(unittest.TestCase):
                 # argument substitution.
                 #
                 # Returns the resulting string.
-        # from nineml.abstraction_layer.component.util import MathUtil
+        # from nineml.abstraction.component.util import MathUtil
         t = 'b*c + d/(e*sin(f+g/e)) + b1 + e_ / exp(12*g)'
 
         t = str_expr_replacement('b', 'B', t)
@@ -77,7 +77,7 @@ class MathUtil_test(unittest.TestCase):
     def test_get_prefixed_rhs_string(self):
         # Signature: name(cls, expr_obj, prefix='', exclude=None)
                 # No Docstring
-        # from nineml.abstraction_layer.component.util import MathUtil
+        # from nineml.abstraction.component.util import MathUtil
 
         e = Alias.from_str('a := b*c + d/(e_*sin(f+g/e_)) + b1 + e_ / exp(12*g)')
 

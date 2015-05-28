@@ -11,7 +11,7 @@ intrinsic and network oscillations. J. Physiol. 104 91--98
 Author: Abigail Morrison, 1/2011.
 
 """
-import nineml.abstraction_layer as nineml
+import nineml.abstraction as nineml
 
 # there may be a better way of doing this. this also does not clamp the individual v_i to
 # v_reset durung the refractory period, it just doesn't sum over them.

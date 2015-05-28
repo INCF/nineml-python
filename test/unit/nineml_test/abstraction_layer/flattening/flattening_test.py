@@ -1,10 +1,10 @@
 
 
 import unittest
-from nineml.abstraction_layer import (Regime, On, OutputEvent,
+from nineml.abstraction import (Regime, On, OutputEvent,
                                       AnalogReceivePort, AnalogSendPort,
                                       flattening)
-from nineml.abstraction_layer.dynamics import DynamicsClass as ComponentClass
+from nineml.abstraction.dynamics import DynamicsClass as ComponentClass
 
 
 class ComponentFlattener_test(unittest.TestCase):
@@ -668,4 +668,4 @@ class ComponentFlattener_test(unittest.TestCase):
         #        portconnections= [ ('c1.EvOut','c2.EvIn'),('c2.EvOut','c3.EvIn') ]
         #        )
 
-        # c_flat = nineml.abstraction_layer.flattening.flatten(comp)
+        # c_flat = nineml.abstraction.flattening.flatten(comp)

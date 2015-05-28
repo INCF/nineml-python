@@ -4,7 +4,7 @@ synapses, like the IF_cond_exp standard cell model in PyNN
 
 """
 
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 
 # class ComponentMetaData(object):

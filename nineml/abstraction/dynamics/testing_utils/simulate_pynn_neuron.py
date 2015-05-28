@@ -10,7 +10,7 @@ def std_pynn_simulation(test_component, parameters, initial_values,
                         synapse_components, records, plot=True, sim_time=100.,
                         synapse_weights=1.0, syn_input_rate=100):
 
-    from nineml.abstraction_layer.flattening import ComponentFlattener
+    from nineml.abstraction.flattening import ComponentFlattener
 
     import pyNN.neuron as sim
     import pyNN.neuron.nineml as pyNNml

@@ -1,4 +1,4 @@
-import nineml.abstraction_layer as nineml
+import nineml.abstraction as nineml
 import numpy
 
 # A model which generates a fixed sequence of spikes

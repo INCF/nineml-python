@@ -215,7 +215,7 @@ class Structure(Component):
     Component representing the structure of a network, e.g. 2D grid, random
     randomdistribution within a sphere, etc.
     """
-    abstraction_layer_module = 'Structure'
+    abstraction_module = 'Structure'
 
     def generate_positions(self, number):
         """

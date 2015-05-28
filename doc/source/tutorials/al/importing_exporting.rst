@@ -25,7 +25,7 @@ have written::
      c = ComponentClass(...)
 
      # Save the component as NineML-XML:
-     from nineml.abstraction_layer.writers import XMLWriter
+     from nineml.abstraction.writers import XMLWriter
      XMLWriter.write(c,"test.xml")
 
 
@@ -35,7 +35,7 @@ dot
 To visualize the component, we can export it in dot format
 (http://en.wikipedia.org/wiki/DOT_language)::
 
-    from nineml.abstraction_layer.writers import DotWriter
+    from nineml.abstraction.writers import DotWriter
     DotWriter.write(c,"test.dot")
     
 Various tools can convert a dot file to an image, for example GraphViz
@@ -52,7 +52,7 @@ Text
 It can be useful to export a component to an easy-to-read text file format.
 This can be done with the ``TextWriter`` ::
 
-    from nineml.abstraction_layer.writers import TextWriter
+    from nineml.abstraction.writers import TextWriter
     TextWriter.write(c,"test.dot")
 
 This is also a good starting point for anyone interested in writing code-generation back-ends.
@@ -69,18 +69,18 @@ XML
 We can load files from XML; we do this with the ``XMLReader``::
 
 
-    from nineml.abstraction_layer.readers import XMLReader
+    from nineml.abstraction.readers import XMLReader
     c = XMLReader.read("test.xml")
 
 This will work provided there is just a single component specified in the file. If more than one component is specified, then we need to explicitly name the component we want to load::
 
 
-    from nineml.abstraction_layer.readers import XMLReader
+    from nineml.abstraction.readers import XMLReader
     c = XMLReader.read("test.xml", component_name='MyComponent')
 
 If we want to load all the components from a file, we can use::
 
-    from nineml.abstraction_layer.readers import XMLReader
+    from nineml.abstraction.readers import XMLReader
     component_list = XMLReader.read_components("test.xml")
 
 

@@ -1,4 +1,4 @@
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 r1 = al.Regime(
     name="sub-threshold-regime",
     time_derivatives=["dV/dt = (-gL*(V-vL) + I)/C", ],

@@ -7,10 +7,10 @@ components definitions of interface and dynamics
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
+from nineml.abstraction.componentclass.namespace import NamespaceAddress
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
-from nineml.abstraction_layer.componentclass import (
+from nineml.abstraction.componentclass import (
     ComponentClass, Parameter, MainBlock)
 from .regimes import StateVariable, Regime
 from ..ports import (AnalogReceivePort, AnalogSendPort,

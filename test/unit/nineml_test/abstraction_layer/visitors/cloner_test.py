@@ -4,11 +4,11 @@
 import warnings
 import unittest
 
-from nineml.abstraction_layer import (
+from nineml.abstraction import (
     DynamicsClass as ComponentClass, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
     NamespaceAddress)
-from nineml.abstraction_layer.dynamics.utils.cloner import (
+from nineml.abstraction.dynamics.utils.cloner import (
     DynamicsClonerPrefixNamespace)
 
 NSA = NamespaceAddress
@@ -316,7 +316,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_alias(self):
         # Signature: name(self, alias, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -324,7 +324,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_analogreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -332,7 +332,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_analogreduceport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -340,7 +340,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_analogsendport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -348,7 +348,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -356,7 +356,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_componentclass(self):
         # Signature: name(self, component, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -364,7 +364,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_trigger(self):
         # Signature: name(self, trigger, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -372,7 +372,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_dynamicsblock(self):
         # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -380,7 +380,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_eventreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -388,7 +388,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_eventsendport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -396,7 +396,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_oncondition(self):
         # Signature: name(self, on_condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -404,7 +404,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_onevent(self):
         # Signature: name(self, on_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -412,7 +412,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -420,7 +420,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_parameter(self):
         # Signature: name(self, parameter, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -428,7 +428,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_regime(self):
         # Signature: name(self, regime, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -436,7 +436,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_statevariable(self):
         # Signature: name(self, state_variable, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -444,7 +444,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_action_timederivative(self):
         # Signature: name(self, time_derivative, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -452,7 +452,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_check_pass(self):
         # Signature: name(self)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -460,7 +460,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit(self):
         # Signature: name(self, obj, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -468,7 +468,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_alias(self):
         # Signature: name(self, alias, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -476,7 +476,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_analogport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -484,7 +484,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -492,7 +492,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_componentclass(self):
         # Signature: name(self, component, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -500,7 +500,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_trigger(self):
         # Signature: name(self, condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -508,7 +508,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_dynamicsblock(self):
         # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -516,7 +516,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_eventport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -524,7 +524,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_inputevent(self):
         # Signature: name(self, input_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -532,7 +532,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_oncondition(self):
         # Signature: name(self, on_condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -540,7 +540,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_onevent(self):
         # Signature: name(self, on_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -548,7 +548,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -556,7 +556,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_parameter(self):
         # Signature: name(self, parameter, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -564,7 +564,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_regime(self):
         # Signature: name(self, regime, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -572,7 +572,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_statevariable(self):
         # Signature: name(self, state_variable, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -580,7 +580,7 @@ class ExpandPortDefinition_test(unittest.TestCase):
     def test_visit_timederivative(self):
         # Signature: name(self, time_derivative, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -595,7 +595,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_alias(self):
         # Signature: name(self, alias, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -603,7 +603,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_analogsendport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -611,7 +611,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_analogreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -619,7 +619,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_analogreduceport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -627,7 +627,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -635,7 +635,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_componentclass(self):
         # Signature: name(self, component, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -643,7 +643,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_trigger(self):
         # Signature: name(self, trigger, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -651,7 +651,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_dynamicsblock(self):
         # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -659,7 +659,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_eventreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -667,7 +667,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_eventsendport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -675,7 +675,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_oncondition(self):
         # Signature: name(self, on_condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -683,7 +683,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_onevent(self):
         # Signature: name(self, on_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -691,7 +691,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -699,7 +699,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_parameter(self):
         # Signature: name(self, parameter, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -707,7 +707,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_regime(self):
         # Signature: name(self, regime, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -715,7 +715,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_statevariable(self):
         # Signature: name(self, state_variable, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -723,7 +723,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_action_timederivative(self):
         # Signature: name(self, time_derivative, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -731,7 +731,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_check_pass(self):
         # Signature: name(self)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -739,7 +739,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit(self):
         # Signature: name(self, obj, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -747,7 +747,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_alias(self):
         # Signature: name(self, alias, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -755,7 +755,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_analogport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -763,7 +763,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -771,7 +771,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_componentclass(self):
         # Signature: name(self, component, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -779,7 +779,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_trigger(self):
         # Signature: name(self, condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -787,7 +787,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_dynamicsblock(self):
         # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -795,7 +795,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_eventport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -803,7 +803,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_inputevent(self):
         # Signature: name(self, input_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -811,7 +811,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_oncondition(self):
         # Signature: name(self, on_condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -819,7 +819,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_onevent(self):
         # Signature: name(self, on_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -827,7 +827,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -835,7 +835,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_parameter(self):
         # Signature: name(self, parameter, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -843,7 +843,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_regime(self):
         # Signature: name(self, regime, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -851,7 +851,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_statevariable(self):
         # Signature: name(self, state_variable, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -859,7 +859,7 @@ class ExpandAliasDefinition_test(unittest.TestCase):
     def test_visit_timederivative(self):
         # Signature: name(self, time_derivative, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandAliasDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandAliasDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -874,7 +874,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_alias(self):
         # Signature: name(self, alias, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -882,7 +882,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_analogreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -890,7 +890,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_analogreduceport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -898,7 +898,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_analogsendport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.base import ActionVisitor
+        # from nineml.abstraction.visitors.base import ActionVisitor
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -906,7 +906,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -914,7 +914,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_componentclass(self):
         # Signature: name(self, component, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -922,7 +922,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_trigger(self):
         # Signature: name(self, trigger, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -930,7 +930,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_dynamicsblock(self):
         # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -938,7 +938,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_eventreceiveport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -946,7 +946,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_eventsendport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import ExpandPortDefinition
+        # from nineml.abstraction.visitors.cloner import ExpandPortDefinition
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -954,7 +954,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_oncondition(self):
         # Signature: name(self, on_condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -962,7 +962,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_onevent(self):
         # Signature: name(self, on_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -970,7 +970,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -978,7 +978,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_parameter(self):
         # Signature: name(self, parameter, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -986,7 +986,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_regime(self):
         # Signature: name(self, regime, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -994,7 +994,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_statevariable(self):
         # Signature: name(self, state_variable, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1002,7 +1002,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_action_timederivative(self):
         # Signature: name(self, timederivative, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1010,7 +1010,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_check_pass(self):
         # Signature: name(self)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1018,7 +1018,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_note_lhs_changed(self):
         # Signature: name(self, what)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1026,7 +1026,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_note_port_changed(self):
         # Signature: name(self, what)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1034,7 +1034,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_note_rhs_changed(self):
         # Signature: name(self, what)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1042,7 +1042,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit(self):
         # Signature: name(self, obj, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1050,7 +1050,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_alias(self):
         # Signature: name(self, alias, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1058,7 +1058,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_analogport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1066,7 +1066,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_stateassignment(self):
         # Signature: name(self, assignment, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1074,7 +1074,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_componentclass(self):
         # Signature: name(self, component, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1082,7 +1082,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_trigger(self):
         # Signature: name(self, condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1090,7 +1090,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_dynamicsblock(self):
         # Signature: name(self, dynamicsblock, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1098,7 +1098,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_eventport(self):
         # Signature: name(self, port, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1106,7 +1106,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_inputevent(self):
         # Signature: name(self, input_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1114,7 +1114,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_oncondition(self):
         # Signature: name(self, on_condition, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1122,7 +1122,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_onevent(self):
         # Signature: name(self, on_event, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1130,7 +1130,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_outputevent(self):
         # Signature: name(self, event_out, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1138,7 +1138,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_parameter(self):
         # Signature: name(self, parameter, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1146,7 +1146,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_regime(self):
         # Signature: name(self, regime, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1154,7 +1154,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_statevariable(self):
         # Signature: name(self, state_variable, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -1162,7 +1162,7 @@ class RenameSymbol_test(unittest.TestCase):
     def test_visit_timederivative(self):
         # Signature: name(self, time_derivative, **kwargs)
                 # No Docstring
-        # from nineml.abstraction_layer.visitors.cloner import RenameSymbol
+        # from nineml.abstraction.visitors.cloner import RenameSymbol
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()

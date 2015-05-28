@@ -7,7 +7,7 @@ docstring needed
 from collections import defaultdict
 from . import PerNamespaceComponentValidator
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
+from nineml.abstraction.componentclass.namespace import NamespaceAddress
 
 
 class PortConnectionsComponentValidator(PerNamespaceComponentValidator):

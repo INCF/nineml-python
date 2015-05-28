@@ -12,7 +12,7 @@ backend.
 from __future__ import division
 import os.path
 import unittest
-import nineml.user_layer as nineml
+import nineml.user as nineml
 from nineml.units import ms, mV, nA, Hz, Mohm
 from os import path
 

@@ -11,9 +11,9 @@ from nineml.utils import flatten_first_level
 from .cloner import (
     DynamicsCloner, DynamicsClonerPrefixNamespace,
     DynamicsExpandPortDefinition)
-from nineml.abstraction_layer.componentclass.namespace import NamespaceAddress
+from nineml.abstraction.componentclass.namespace import NamespaceAddress
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.dynamics.regimes import Regime
+from nineml.abstraction.dynamics.regimes import Regime
 from ..transitions import OnCondition, OnEvent
 from operator import add, mul
 import sympy

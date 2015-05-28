@@ -1,4 +1,4 @@
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 iz = al.ComponentClass(
     name="IzikevichNeuron",

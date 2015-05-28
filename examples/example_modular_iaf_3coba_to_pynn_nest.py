@@ -22,9 +22,9 @@ os.environ['LD_LIBRARY_PATH']=os.environ.get('LD_LIBRARY_PATH','')+':%s/code_gen
 print os.environ['LD_LIBRARY_PATH']
            
 
-#from nineml.abstraction_layer.example_models import  get_hierachical_iaf_3coba
-from nineml.abstraction_layer.testing_utils import TestableComponent
-from nineml.abstraction_layer.flattening import ComponentFlattener
+#from nineml.abstraction.example_models import  get_hierachical_iaf_3coba
+from nineml.abstraction.testing_utils import TestableComponent
+from nineml.abstraction.flattening import ComponentFlattener
 
 #import pyNN.neuron as sim
 #import pyNN.neuron.nineml as pyNNml

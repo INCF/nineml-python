@@ -12,7 +12,7 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from nineml.units import Unit, unitless
-from ..abstraction_layer import (
+from ..abstraction import (
     ComponentClass, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
@@ -57,7 +57,7 @@ class Reference(BaseReference):
         self._referred_to.from_reference = self
 
     @property
-    def user_layer_object(self):
+    def user_object(self):
         """The object being referred to."""
         return self._referred_to
 
@@ -66,7 +66,7 @@ def resolve_reference(from_xml):
     def resolving_from_xml(cls, element, document):
         if element.tag == NINEML + Reference.element_name:
             reference = Reference.from_xml(element, document)
-            ul_object = reference.user_layer_object
+            ul_object = reference.user_object
         else:
             assert element.tag == NINEML + cls.element_name
             ul_object = from_xml(cls, element, document)
@@ -89,10 +89,10 @@ class Component(BaseULObject, DocumentLevelObject):
     Base class for model components.
 
     A :class:`Component` may be regarded as a parameterized instance of a
-    :class:`~nineml.abstraction_layer.ComponentClass`.
+    :class:`~nineml.abstraction.ComponentClass`.
 
     A componentclass may be created either from a
-    :class:`~nineml.abstraction_layer.ComponentClass`  together with a set
+    :class:`~nineml.abstraction.ComponentClass`  together with a set
     of properties (parameter values), or by cloning then modifying an
     existing componentclass (the prototype).
 

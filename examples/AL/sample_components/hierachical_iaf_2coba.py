@@ -1,6 +1,6 @@
 
-from nineml.abstraction_layer.dynamics import ComponentClass
-from nineml.abstraction_layer.dynamics.testing_utils import RecordValue
+from nineml.abstraction.dynamics import ComponentClass
+from nineml.abstraction.dynamics.testing_utils import RecordValue
 
 import coba_synapse
 import iaf

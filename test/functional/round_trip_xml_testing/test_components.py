@@ -6,9 +6,9 @@ import os
 import shutil
 
 # from nineml.exceptions import NineMLRuntimeError
-# from nineml.abstraction_layer.dynamics.utils import (xml, modifiers)
+# from nineml.abstraction.dynamics.utils import (xml, modifiers)
 
-from nineml.abstraction_layer.dynamics.testing_utils import (
+from nineml.abstraction.dynamics.testing_utils import (
     std_pynn_simulation)
 
 

@@ -23,7 +23,7 @@ To read a file containing only abstraction layer elements:
     'voltage': Dimension(name='voltage', i=-1, m=1, t=-3, l=2)}
 
 This gives us a :class:`~nineml.Document` instance, a dictionary-like object containing a
-:class:`~nineml.abstraction_layer.ComponentClass` definition of an integrate-and-fire
+:class:`~nineml.abstraction.ComponentClass` definition of an integrate-and-fire
 neuron model, together with the definitions of the physical dimensions of parameters
 and state variables used in the model.
 
@@ -35,14 +35,14 @@ containing the abstraction layer definitions):
     >>> all_items = nineml.read("brunel_network_alpha_AI.xml")
     >>> from pprint import pprint
     >>> pprint(all_items)
-    {'All neurons': <nineml.user_layer.containers.Selection object at 0x105c49cd0>,
+    {'All neurons': <nineml.user.containers.Selection object at 0x105c49cd0>,
      'Exc': Population(name='Exc', number=4000, cell=nrn),
-     'Excitation': Projection(name="Excitation", source=Population(name='Exc', number=4000, cell=nrn), destination=<nineml.user_layer.containers.Selection object at 0x105c49cd0>, connectivity=BaseComponent(name="RandomExc", componentclass="RandomFanIn"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="ExcitatoryPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
+     'Excitation': Projection(name="Excitation", source=Population(name='Exc', number=4000, cell=nrn), destination=<nineml.user.containers.Selection object at 0x105c49cd0>, connectivity=BaseComponent(name="RandomExc", componentclass="RandomFanIn"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="ExcitatoryPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
      'Ext': Population(name='Ext', number=5000, cell=stim),
-     'External': Projection(name="External", source=Population(name='Ext', number=5000, cell=stim), destination=<nineml.user_layer.containers.Selection object at 0x105c49cd0>, connectivity=BaseComponent(name="OneToOne", componentclass="OneToOne"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="ExternalPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
+     'External': Projection(name="External", source=Population(name='Ext', number=5000, cell=stim), destination=<nineml.user.containers.Selection object at 0x105c49cd0>, connectivity=BaseComponent(name="OneToOne", componentclass="OneToOne"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="ExternalPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
      'Hz': Unit(name='Hz', dimension='per_time', power=0),
      'Inh': Population(name='Inh', number=1000, cell=nrn),
-     'Inhibition': Projection(name="Inhibition", source=Population(name='Inh', number=1000, cell=nrn), destination=<nineml.user_layer.containers.Selection object at 0x105c49cd0>, connectivity=BaseComponent(name="RandomInh", componentclass="RandomFanIn"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="InhibitoryPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
+     'Inhibition': Projection(name="Inhibition", source=Population(name='Inh', number=1000, cell=nrn), destination=<nineml.user.containers.Selection object at 0x105c49cd0>, connectivity=BaseComponent(name="RandomInh", componentclass="RandomFanIn"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="InhibitoryPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
      'Mohm': Unit(name='Mohm', dimension='resistance', power=6),
      'current': Dimension(name='current', i=1),
      'mV': Unit(name='mV', dimension='voltage', power=-3),
@@ -54,16 +54,16 @@ containing the abstraction layer definitions):
      'voltage': Dimension(name='voltage', i=-1, m=1, t=-3, l=2)}
 
 Again we get a dictionary-like object containing all the NineML objects in the XML file. An alternative
-representation can be obtained by reading the file as a :class:`~nineml.user_layer.Network` object:
+representation can be obtained by reading the file as a :class:`~nineml.user.Network` object:
 
 .. code-block:: python
 
-    >>> from nineml.user_layer import Network
+    >>> from nineml.user import Network
     >>> net = Network.read("brunel_network_alpha_AI.xml")
     >>> print(net)
-    <nineml.user_layer.containers.Network object at 0x106442690>
+    <nineml.user.containers.Network object at 0x106442690>
 
-This gives a much more structured representation. For example, all the :class:`~nineml.user_layer.Population`\s within the model are
+This gives a much more structured representation. For example, all the :class:`~nineml.user.Population`\s within the model are
 available through the ``populations`` attribute:
 
 .. code-block:: python
@@ -170,7 +170,7 @@ The refractory regime can be introspected in a similar way.
 Introspecting user layer models
 -------------------------------
 
-As shown above, once a complete network model has been loaded as a :class:`~nineml.user_layer.Network` object, we
+As shown above, once a complete network model has been loaded as a :class:`~nineml.user.Network` object, we
 can look at its neuron populations and the connections between these populations ("projections"):
 
 .. code-block:: python
@@ -181,9 +181,9 @@ can look at its neuron populations and the connections between these populations
      'Inh': Population(name='Inh', number=1000, cell=nrn)}
 
     >>> net.projections
-    {'Excitation': Projection(name="Excitation", source=Population(name='Exc', number=4000, cell=nrn), destination=<nineml.user_layer.containers.Selection object at 0x1097f39d0>, connectivity=BaseComponent(name="RandomExc", componentclass="RandomFanIn"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="ExcitatoryPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
-    'External': Projection(name="External", source=Population(name='Ext', number=5000, cell=stim), destination=<nineml.user_layer.containers.Selection object at 0x1097f39d0>, connectivity=BaseComponent(name="OneToOne", componentclass="OneToOne"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="ExternalPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
-    'Inhibition': Projection(name="Inhibition", source=Population(name='Inh', number=1000, cell=nrn), destination=<nineml.user_layer.containers.Selection object at 0x1097f39d0>, connectivity=BaseComponent(name="RandomInh", componentclass="RandomFanIn"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="InhibitoryPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections)}
+    {'Excitation': Projection(name="Excitation", source=Population(name='Exc', number=4000, cell=nrn), destination=<nineml.user.containers.Selection object at 0x1097f39d0>, connectivity=BaseComponent(name="RandomExc", componentclass="RandomFanIn"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="ExcitatoryPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
+    'External': Projection(name="External", source=Population(name='Ext', number=5000, cell=stim), destination=<nineml.user.containers.Selection object at 0x1097f39d0>, connectivity=BaseComponent(name="OneToOne", componentclass="OneToOne"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="ExternalPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections),
+    'Inhibition': Projection(name="Inhibition", source=Population(name='Inh', number=1000, cell=nrn), destination=<nineml.user.containers.Selection object at 0x1097f39d0>, connectivity=BaseComponent(name="RandomInh", componentclass="RandomFanIn"), response=BaseComponent(name="syn", componentclass="AlphaPSR")plasticity=BaseComponent(name="InhibitoryPlasticity", componentclass="StaticConnection"), delay=Delay(value=1.5, unit=ms), with 2 port-connections)}
 
 NineML also supports "selections", groupings of neurons which span populations:
 
@@ -196,7 +196,7 @@ NineML also supports "selections", groupings of neurons which span populations:
           versions it will be possible to select and combine sub-populations.
 
 Looking more closely at a population, we can see its name, the number of neurons it contains and
-the neuron model used (:class:`~nineml.user_layer.Component`):
+the neuron model used (:class:`~nineml.user.Component`):
 
 .. code-block:: python
 
@@ -209,7 +209,7 @@ the neuron model used (:class:`~nineml.user_layer.Component`):
     BaseComponent(name="nrn", componentclass="BrunelIaF")
 
 In the neuron model component we can see its abstraction layer definition
-(:class:`~nineml.abstraction_layer.dynamics.ComponentClass`), it's properties (parameter values), and the initial
+(:class:`~nineml.abstraction.dynamics.ComponentClass`), it's properties (parameter values), and the initial
 values of its state variables.
 
 .. note:: the handling of initial values is likely to change in future versions of NineML.
@@ -244,9 +244,9 @@ Turning from a population to a projection:
     [PortConnection('plasticity', 'response', 'weight', 'q'),
      PortConnection('response', 'destination', 'Isyn', 'Isyn')]
 
-Note that the :attr:`source` and :attr:`destination` attributes point to :class:`~nineml.user_layer.Population`\s or
-:class:`~nineml.user_layer.Projection`\s, the :attr:`connectivity` rule, the post-synaptic :attr:`response` model and
-the synaptic :attr:`plasticity` model are all :class:`~nineml.user_layer.Component`\s. The :attr:`port_connections`
+Note that the :attr:`source` and :attr:`destination` attributes point to :class:`~nineml.user.Population`\s or
+:class:`~nineml.user.Projection`\s, the :attr:`connectivity` rule, the post-synaptic :attr:`response` model and
+the synaptic :attr:`plasticity` model are all :class:`~nineml.user.Component`\s. The :attr:`port_connections`
 attribute indicates which ports in the different components should be connected together.
 
 

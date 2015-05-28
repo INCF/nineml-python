@@ -11,7 +11,7 @@ from itertools import chain
 from nineml.xmlns import E
 from . import ComponentVisitor
 from ...expressions import Alias, Constant
-from nineml.abstraction_layer.componentclass.base import Parameter
+from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.utils import expect_single, filter_expect_single
 from nineml.xmlns import NINEML, MATHML, nineml_namespace

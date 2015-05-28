@@ -7,7 +7,7 @@ This file contains the definitions for the Events
 
 from copy import copy
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
-from nineml.abstraction_layer.componentclass import BaseALObject
+from nineml.abstraction.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ...exceptions import (NineMLRuntimeError,
                            NineMLInvalidElementTypeException)

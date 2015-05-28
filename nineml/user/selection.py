@@ -75,7 +75,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     def evaluate(self):
         assert isinstance(self.operation, Concatenate), \
             "Only concatenation is currently supported"
-        return (item.user_layer_object for item in self.operation.items)
+        return (item.user_object for item in self.operation.items)
 
 
 class Concatenate(BaseULObject):
@@ -138,7 +138,7 @@ class Concatenate(BaseULObject):
 
 
 # TGC 11/11/ This old implementation of Set (now called Selection) was copied
-#            from nineml.user_layer.populations.py probably some of it is worth
+#            from nineml.user.populations.py probably some of it is worth
 #            salvaging as we look to implement some of this functionality for
 #            version 2.0
 #

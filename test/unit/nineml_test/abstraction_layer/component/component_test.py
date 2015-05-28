@@ -1,7 +1,7 @@
 import unittest
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.dynamics.testing_utils import TestableComponent
-from nineml.abstraction_layer import (
+from nineml.abstraction.dynamics.testing_utils import TestableComponent
+from nineml.abstraction import (
     DynamicsClass as ComponentClass, DynamicsBlock, AnalogSendPort, Alias,
     AnalogReceivePort, AnalogReducePort, Regime, On, NamespaceAddress,
     OutputEvent, EventReceivePort, Constant)
