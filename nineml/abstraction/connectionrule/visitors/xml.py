@@ -7,7 +7,7 @@ docstring needed
 from nineml.annotations import annotate_xml
 from nineml.xmlns import E
 from nineml.annotations import read_annotations
-from ...componentclass.utils.xml import (
+from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 

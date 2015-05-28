@@ -6,7 +6,7 @@ from nineml.abstraction.expressions import (
     ExpressionWithSimpleLHS, Constant)
 from nineml.exceptions import NineMLMathParseError
 from nineml.units import coulomb, S_per_cm2, mV
-from nineml.abstraction.componentclass.utils.xml import (
+from nineml.abstraction.componentclass.visitors.xml import (
     ComponentClassXMLWriter as XMLWriter, ComponentClassXMLLoader as XMLLoader)
 from nineml import Document
 import sympy

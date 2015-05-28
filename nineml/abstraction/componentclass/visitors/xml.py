@@ -15,7 +15,7 @@ from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.utils import expect_single, filter_expect_single
 from nineml.xmlns import NINEML, MATHML, nineml_namespace
-from nineml.exceptions import NineMLRuntimeError, handle_xml_exceptions
+from nineml.exceptions import NineMLRuntimeError
 
 
 class ComponentClassXMLLoader(object):
@@ -34,27 +34,24 @@ class ComponentClassXMLLoader(object):
         self.document = document
 
     def load_connectports(self, element):
-        return element.attrib['source'], element.attrib['sink']
+        return element.get('source'), element.get('sink')
 
     @read_annotations
-    @handle_xml_exceptions
     def load_parameter(self, element):
-        return Parameter(name=element.attrib['name'],
-                         dimension=self.document[element.attrib['dimension']])
+        return Parameter(name=element.get('name'),
+                         dimension=self.document[element.get('dimension')])
 
     @read_annotations
-    @handle_xml_exceptions
     def load_alias(self, element):
-        name = element.attrib['name']
+        name = element.get("name")
         rhs = self.load_single_internmaths_block(element)
         return Alias(lhs=name, rhs=rhs)
 
     @read_annotations
-    @handle_xml_exceptions
     def load_constant(self, element):
-        return Constant(name=element.attrib['name'],
+        return Constant(name=element.get('name'),
                         value=float(element.text),
-                        units=self.document[element.attrib['units']])
+                        units=self.document[element.get('units')])
 
     def load_single_internmaths_block(self, element, checkOnlyBlock=True):
         if checkOnlyBlock:
@@ -87,11 +84,9 @@ class ComponentClassXMLLoader(object):
             # Strip namespace
             tag = t.tag[len(NINEML):] if t.tag.startswith(NINEML) else t.tag
             if tag not in block_names:
-                raise NineMLRuntimeError(
-                    "Unexpected element {} was found in {} block in '{}'"
-                    " (expected tags are: '{}')"
-                    .format(tag, element.tag[len(NINEML):], self.document.url,
-                            "', '".join(block_names)))
+                err = "Unexpected block tag: %s " % tag
+                err += '\n Expected: %s' % ','.join(block_names)
+                raise NineMLRuntimeError(err)
             loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
         return loaded_objects
 

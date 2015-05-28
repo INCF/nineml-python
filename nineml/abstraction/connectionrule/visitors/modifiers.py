@@ -6,9 +6,9 @@ This file contains utility classes for modifying components.
 """
 
 from .cloner import ConnectionRuleExpandPortDefinition
-from ...componentclass.utils.modifiers import (
+from ...componentclass.visitors.modifiers import (
     ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
-from .visitors import ConnectionRuleActionVisitor
+from .base import ConnectionRuleActionVisitor
 
 
 class ConnectionRuleModifier(ComponentModifier):

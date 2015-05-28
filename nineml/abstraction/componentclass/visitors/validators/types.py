@@ -5,9 +5,9 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ..utils import ComponentActionVisitor
-from ..base import ComponentClass, Parameter
-from ...expressions import Alias, Constant
+from ..base import ComponentActionVisitor
+from ...base import ComponentClass, Parameter
+from nineml.abstraction.expressions import Alias, Constant
 
 
 class TypesComponentValidator(ComponentActionVisitor):

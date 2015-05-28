@@ -19,8 +19,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      EventSendPort)
 from nineml.utils import (check_list_contain_same_items, invert_dictionary,
                             assert_no_duplicates)
-from .utils import DynamicsQueryer
-from .utils.cloner import (
+from .visitors.cloner import (
     DynamicsExpandAliasDefinition, DynamicsCloner)
 
 
@@ -237,8 +236,6 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         self._regimes = dict((r.name, r) for r in regimes)
         self._state_variables = dict((s.name, s) for s in state_variables)
 
-        self._query = DynamicsQueryer(self)
-
         # Ensure analog_ports is a list not an iterator
         analog_ports = list(analog_ports)
         event_ports = list(event_ports)
@@ -350,11 +347,6 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     def validate(self):
         self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self)
-
-    @property
-    def query(self):
-        """ Returns the ``ComponentQuery`` object associated with this class"""
-        return self._query
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -532,6 +524,12 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                      self.analog_reduce_port_names)
 
     @property
+    def event_port_names(self):
+        """Returns an iterator over the local analog port objects"""
+        return chain(self.event_send_port_names,
+                     self.event_receive_port_names)
+
+    @property
     def analog_send_port_names(self):
         """Returns an iterator over the local |AnalogSendPort| names"""
         return self._analog_send_ports.iterkeys()
@@ -555,6 +553,35 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     def event_receive_port_names(self):
         """Returns an iterator over the local |EventReceivePort| names"""
         return self._event_receive_ports.iterkeys()
+
+    @property
+    def all_components(self):
+        """
+        Returns an iterator over this component_class and all subcomponents
+        """
+        yield self
+        for subcomponent in self.subnodes.values():
+            for subcomp in subcomponent.all_components:
+                yield subcomp
+
+    @property
+    def fully_qualified_port_connections(self):
+        """Used by the flattening code.
+
+        This method returns a list of tuples of the
+        the fully-qualified port connections.
+        For example,
+        [("a.b.C","d.e.F"),("g.h.I","j.k.L"), ..., ("u.W","x.y.Z") ]
+        but note that it is not ``string`` objects that are returned, but
+        NamespaceAddress objects.
+        """
+        namespace = self.get_node_addr()
+        conns = []
+        for src, sink in self.portconnections:
+            src_new = namespace.get_subns_addr(src)
+            sink_new = namespace.get_subns_addr(sink)
+            conns.append((src_new, sink_new))
+        return conns
 
     @property
     def transitions(self):
@@ -668,10 +695,10 @@ def inf_check(l1, l2, desc):
     check_list_contain_same_items(l1, l2, desc1='Declared',
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
-from .validators import DynamicsValidator
-from .utils import DynamicsInterfaceInferer
-from .utils.visitors import (DynamicsElementFinder,
-                             DynamicsRequiredDefinitions)
-from .utils.modifiers import (
+from .visitors.validators import DynamicsValidator
+from .visitors import DynamicsInterfaceInferer
+from .visitors.queriers import (DynamicsElementFinder,
+                                DynamicsRequiredDefinitions)
+from .visitors.modifiers import (
     DynamicsRenameSymbol, DynamicsAssignIndices)
-from .utils.xml import DynamicsXMLLoader, DynamicsXMLWriter
+from .visitors.xml import DynamicsXMLLoader, DynamicsXMLWriter

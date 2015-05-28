@@ -11,10 +11,10 @@ from nineml.abstraction.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ...exceptions import (NineMLRuntimeError,
                            NineMLInvalidElementTypeException)
-from .utils.cloner import DynamicsCloner
+from .visitors.cloner import DynamicsCloner
 from nineml.base import MemberContainerObject
 from nineml.utils import normalise_parameter_as_list
-from .utils.visitors import DynamicsElementFinder
+from .visitors.queriers import DynamicsElementFinder
 
 
 class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):

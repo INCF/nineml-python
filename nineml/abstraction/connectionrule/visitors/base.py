@@ -6,9 +6,9 @@ docstring needed
 """
 
 
-from ...componentclass.utils import (
+from ...componentclass.visitors import (
     ComponentActionVisitor, ComponentElementFinder)
-from ...componentclass.utils.visitors import ComponentRequiredDefinitions
+
 
 
 class ConnectionRuleActionVisitor(ComponentActionVisitor):
@@ -17,21 +17,3 @@ class ConnectionRuleActionVisitor(ComponentActionVisitor):
         super(ConnectionRuleActionVisitor, self).visit_componentclass(
             component_class, **kwargs)
 
-
-class ConnectionRuleRequiredDefinitions(ComponentRequiredDefinitions,
-                                        ConnectionRuleActionVisitor):
-
-    def __init__(self, component_class, expressions):
-        ConnectionRuleActionVisitor.__init__(self,
-                                             require_explicit_overrides=False)
-        ComponentRequiredDefinitions.__init__(self, component_class,
-                                              expressions)
-
-
-class ConnectionRuleElementFinder(ComponentElementFinder,
-                                  ConnectionRuleActionVisitor):
-
-    def __init__(self, element):
-        ConnectionRuleActionVisitor.__init__(self,
-                                             require_explicit_overrides=True)
-        ComponentElementFinder.__init__(self, element)

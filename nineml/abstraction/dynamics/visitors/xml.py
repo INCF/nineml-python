@@ -15,7 +15,7 @@ from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
 from ..transitions import (
     OnEvent, OnCondition, StateAssignment, OutputEvent, Trigger)
 from ..regimes import Regime, StateVariable, TimeDerivative
-from ...componentclass.utils.xml import (
+from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 

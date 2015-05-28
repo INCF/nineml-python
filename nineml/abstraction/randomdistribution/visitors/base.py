@@ -6,9 +6,7 @@ docstring needed
 """
 
 
-from ...componentclass.utils import (
-    ComponentActionVisitor, ComponentElementFinder)
-from ...componentclass.utils.visitors import ComponentRequiredDefinitions
+from ...componentclass.visitors import ComponentActionVisitor
 
 
 class RandomDistributionActionVisitor(ComponentActionVisitor):
@@ -18,22 +16,3 @@ class RandomDistributionActionVisitor(ComponentActionVisitor):
             component_class, **kwargs)
         for e in component_class:
             e.accept_visitor(self, **kwargs)
-
-
-class RandomDistributionRequiredDefinitions(ComponentRequiredDefinitions,
-                                            RandomDistributionActionVisitor):
-
-    def __init__(self, component_class, expressions):
-        RandomDistributionActionVisitor.__init__(
-            self, require_explicit_overrides=False)
-        ComponentRequiredDefinitions.__init__(self, component_class,
-                                              expressions)
-
-
-class RandomDistributionElementFinder(ComponentElementFinder,
-                                      RandomDistributionActionVisitor):
-
-    def __init__(self, element):
-        RandomDistributionActionVisitor.__init__(
-            self, require_explicit_overrides=True)
-        ComponentElementFinder.__init__(self, element)

@@ -177,24 +177,24 @@ class ComponentClass_test(unittest.TestCase):
         c = Dynamics(name='C1', aliases=['A:=2'], analog_ports=[AnalogSendPort('A')])
         self.assertEqual(len(list(c.analog_ports)), 1)
         self.assertEqual(list(c.analog_ports)[0].mode, 'send')
-        self.assertEqual(len(c.query.analog_send_ports), 1)
-        self.assertEqual(len(c.query.analog_recv_ports), 0)
-        self.assertEqual(len(c.query.analog_reduce_ports), 0)
+        self.assertEqual(len(list(c.analog_send_ports)), 1)
+        self.assertEqual(len(list(c.analog_receive_ports)), 0)
+        self.assertEqual(len(list(c.analog_reduce_ports)), 0)
 
         c = Dynamics(name='C1', analog_ports=[AnalogReceivePort('B')])
         self.assertEqual(len(list(c.analog_ports)), 1)
         self.assertEqual(list(c.analog_ports)[0].mode, 'recv')
-        self.assertEqual(len(c.query.analog_send_ports), 0)
-        self.assertEqual(len(c.query.analog_recv_ports), 1)
-        self.assertEqual(len(c.query.analog_reduce_ports), 0)
+        self.assertEqual(len(list(c.analog_send_ports)), 0)
+        self.assertEqual(len(list(c.analog_receive_ports)), 1)
+        self.assertEqual(len(list(c.analog_reduce_ports)), 0)
 
         c = Dynamics(name='C1', analog_ports=[AnalogReducePort('B', operator='+')])
         self.assertEqual(len(list(c.analog_ports)), 1)
         self.assertEqual(list(c.analog_ports)[0].mode, 'reduce')
         self.assertEqual(list(c.analog_ports)[0].operator, '+')
-        self.assertEqual(len(c.query.analog_send_ports), 0)
-        self.assertEqual(len(c.query.analog_recv_ports), 0)
-        self.assertEqual(len(c.query.analog_reduce_ports), 1)
+        self.assertEqual(len(list(c.analog_send_ports)), 0)
+        self.assertEqual(len(list(c.analog_receive_ports)), 0)
+        self.assertEqual(len(list(c.analog_reduce_ports)), 1)
 
         # Duplicate Port Names:
         self.assertRaises(

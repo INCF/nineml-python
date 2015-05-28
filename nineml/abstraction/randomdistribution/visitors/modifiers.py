@@ -6,8 +6,8 @@ This file contains utility classes for modifying components.
 """
 
 from .cloner import RandomDistributionExpandPortDefinition
-from .visitors import RandomDistributionActionVisitor
-from ...componentclass.utils.modifiers import (
+from .base import RandomDistributionActionVisitor
+from ...componentclass.visitors.modifiers import (
     ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
 
 

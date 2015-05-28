@@ -5,8 +5,8 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ...componentclass.validators.types import TypesComponentValidator
-from ..utils.visitors import ConnectionRuleActionVisitor
+from ....componentclass.visitors.validators.types import TypesComponentValidator
+from ..base import ConnectionRuleActionVisitor
 
 
 class TypesConnectionRuleValidator(ConnectionRuleActionVisitor,

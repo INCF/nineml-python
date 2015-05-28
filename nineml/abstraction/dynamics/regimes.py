@@ -15,7 +15,7 @@ from .. import BaseALObject
 from nineml.units import dimensionless, Dimension
 from nineml.base import MemberContainerObject
 from .transitions import OnEvent, OnCondition, Trigger
-from .utils.visitors import DynamicsElementFinder
+from .visitors.queriers import DynamicsElementFinder
 
 
 class StateVariable(BaseALObject):

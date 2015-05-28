@@ -1,5 +1,5 @@
-from ...componentclass.validators.base import BaseValidator
-from ..utils.visitors import RandomDistributionActionVisitor
+from ....componentclass.visitors.validators.base import BaseValidator
+from ..base import RandomDistributionActionVisitor
 
 
 class BaseRandomDistributionValidator(BaseValidator, RandomDistributionActionVisitor):

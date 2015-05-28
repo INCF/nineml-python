@@ -6,7 +6,7 @@ This file contains utility classes for modifying components.
 """
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
-from .visitors import ComponentActionVisitor
+from .base import ComponentActionVisitor
 
 
 class ComponentModifier(object):

@@ -5,10 +5,10 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-# from ..utils import xml
-# from ..utils import flattener as flattening2
+# from ..visitors import xml
+# from ..visitors import flattener as flattening2
 # from nineml.utils import file_sha1_hexdigest
-# from ...validators.equality_checker import DynamicsEqualityChecker
+# from ...visitors.validators.equality_checker import DynamicsEqualityChecker
 #
 #
 # class TestXMLWriteReadWrite(object):
