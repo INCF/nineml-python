@@ -124,7 +124,7 @@ class TransitionResolver(object):
 
         name = oldtransition._target_regime
         dst_regime_old = self.flattener.componentswithregimes[
-            regime_index].query.regime(name=name)
+            regime_index].regime(name=name)
         dst_regime_tuple[regime_index] = dst_regime_old
 
         # Return the tuple:
@@ -215,7 +215,7 @@ class ComponentFlattener(object):
         cloned_comp = DynamicsClonerPrefixNamespace().visit(component_class)
 
         # Make a list of all components, and those components with regimes:
-        self.all_components = list(cloned_comp.query.recurse_all_components)
+        self.all_components = list(cloned_comp.all_components)
         self.componentswithregimes = [
             m for m in self.all_components if list(m.regimes)]
 

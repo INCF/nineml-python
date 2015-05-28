@@ -1,5 +1,5 @@
-from ...componentclass.validators.base import BaseValidator
-from ..utils.visitors import ConnectionRuleActionVisitor
+from ....componentclass.visitors.validators.base import BaseValidator
+from ..base import ConnectionRuleActionVisitor
 
 
 class BaseConnectionRuleValidator(BaseValidator, ConnectionRuleActionVisitor):

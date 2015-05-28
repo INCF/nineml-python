@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from ...expressions.utils import is_builtin_symbol
-from .visitors import ComponentActionVisitor, ComponentVisitor
+from .base import ComponentActionVisitor, ComponentVisitor
 from nineml.base import MemberContainerObject
 
 

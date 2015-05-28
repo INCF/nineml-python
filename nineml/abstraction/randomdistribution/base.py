@@ -53,11 +53,11 @@ class RandomDistribution(ComponentClass):
         return RandomDistributionXMLLoader(
             document).load_randomdistributionclass(element)
 
-from .utils.cloner import RandomDistributionCloner
-from .utils.modifiers import(
+from .visitors.cloner import RandomDistributionCloner
+from .visitors.modifiers import(
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
-from .utils.visitors import (RandomDistributionRequiredDefinitions,
-                             RandomDistributionElementFinder)
-from .validators import RandomDistributionValidator
-from .utils.xml import (
+from .visitors.queriers import (RandomDistributionRequiredDefinitions,
+                                RandomDistributionElementFinder)
+from .visitors.validators import RandomDistributionValidator
+from .visitors.xml import (
     RandomDistributionXMLLoader, RandomDistributionXMLWriter)

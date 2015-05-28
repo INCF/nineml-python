@@ -1,5 +1,5 @@
-from ...componentclass.validators.base import PerNamespaceComponentValidator
-from ..utils.visitors import DynamicsActionVisitor
+from ....componentclass.visitors.validators.base import PerNamespaceComponentValidator
+from ..base import DynamicsActionVisitor
 
 
 class PerNamespaceDynamicsValidator(PerNamespaceComponentValidator,

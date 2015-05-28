@@ -8,7 +8,7 @@ from nineml.exceptions import NineMLRuntimeError
 from .component import DynamicsProperties, ConnectionRuleProperties
 from .population import Population
 from itertools import chain
-from .. import units as un
+import nineml.units as un
 from nineml.utils import (
     expect_single, check_tag, normalise_parameter_as_list,
     expect_none_or_single)

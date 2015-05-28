@@ -5,8 +5,8 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ...componentclass.validators.types import TypesComponentValidator
-from ..utils.visitors import RandomDistributionActionVisitor
+from ....componentclass.visitors.validators.types import TypesComponentValidator
+from ..base import RandomDistributionActionVisitor
 
 
 class TypesRandomDistributionValidator(RandomDistributionActionVisitor,

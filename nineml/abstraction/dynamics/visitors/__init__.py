@@ -1,4 +1,3 @@
-from .interface_inferer import DynamicsInterfaceInferer
-from .queryer import DynamicsQueryer
+from .queriers import DynamicsInterfaceInferer
 from .modifiers import DynamicsRenameSymbol
 from .cloner import DynamicsCloner

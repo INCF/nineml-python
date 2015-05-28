@@ -5,10 +5,10 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.abstraction.componentclass.namespace import NamespaceAddress
-from ...componentclass.utils.cloner import (
+from ...componentclass.visitors.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
     ComponentCloner)
-from .visitors import DynamicsActionVisitor
+from .base import DynamicsActionVisitor
 
 
 class DynamicsExpandPortDefinition(DynamicsActionVisitor,

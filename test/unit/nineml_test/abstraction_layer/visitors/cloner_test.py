@@ -8,7 +8,7 @@ from nineml.abstraction import (
     Dynamics as Dynamics, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
     NamespaceAddress)
-from nineml.abstraction.dynamics.utils.cloner import (
+from nineml.abstraction.dynamics.visitors.cloner import (
     DynamicsClonerPrefixNamespace)
 
 NSA = NamespaceAddress
@@ -61,11 +61,13 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         #  - Ports & Parameters:
         self.assertEqual(
-            set(c_clone.query.analog_ports_map.keys()),
+            set(c_clone.analog_port_names),
             set(['cIn2', 'cIn1', 'C1', 'C2']))
-        self.assertEqual(set(c_clone.query.event_ports_map.keys()),
-                         set(['spikein', 'emit']))
-        self.assertEqual(set(c_clone.query.parameters_map.keys()),
+        self.assertEqual(set(c_clone.event_send_port_names),
+                         set(['emit']))
+        self.assertEqual(set(c_clone.event_receive_port_names),
+                         set(['spikein']))
+        self.assertEqual(set(c_clone.parameter_names),
                          set(['cp1', 'cp2']))
         self.assertEqual(set(c_clone.state_variable_names),
                          set(['SV1']))
@@ -105,22 +107,26 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         #  - Ports & Parameters:
         self.assertEqual(
-            set(c1_clone.query.analog_ports_map.keys()),
+            set(c1_clone.analog_port_names),
             set(['c1_cIn1', 'c1_cIn2', 'c1_C1', 'c1_C2']))
         self.assertEqual(
-            set(c2_clone.query.analog_ports_map.keys()),
+            set(c2_clone.analog_port_names),
             set(['c2_cIn1', 'c2_cIn2', 'c2_C1', 'c2_C2']))
 
-        self.assertEqual(set(c1_clone.query.event_ports_map.keys()),
-                         set(['c1_spikein', 'c1_emit']))
-        self.assertEqual(set(c2_clone.query.event_ports_map.keys()),
-                         set(['c2_spikein', 'c2_emit']))
+        self.assertEqual(set(c1_clone.event_send_port_names),
+                         set(['c1_emit']))
+        self.assertEqual(set(c2_clone.event_send_port_names),
+                         set(['c2_emit']))
+        self.assertEqual(set(c1_clone.event_receive_port_names),
+                         set(['c1_spikein']))
+        self.assertEqual(set(c2_clone.event_receive_port_names),
+                         set(['c2_spikein']))
 
         self.assertEqual(
-            set(c1_clone.query.parameters_map.keys()),
+            set(c1_clone.parameter_names),
             set(['c1_cp1', 'c1_cp2']))
         self.assertEqual(
-            set(c2_clone.query.parameters_map.keys()),
+            set(c2_clone.parameter_names),
             set(['c2_cp1', 'c2_cp2']))
         self.assertEqual(
             set(c1_clone.state_variable_names),
@@ -232,54 +238,54 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         # Ports, params and state-vars:
         # c1:
-        self.assertEqual(set(b1c1_clone.query.analog_ports_map.keys()), set(
+        self.assertEqual(set(b1c1_clone.analog_port_names), set(
             ['b1_c1_cIn1', 'b1_c1_cIn2',  'b1_c1_C1', 'b1_c1_C2']))
         self.assertEqual(
-            set(b1c1_clone.query.event_ports_map.keys()),  set(['b1_c1_spikein', 'b1_c1_emit']))
+            set(b1c1_clone.event_port_names),  set(['b1_c1_spikein', 'b1_c1_emit']))
         self.assertEqual(
-            set(b1c1_clone.query.parameters_map.keys()),   set(['b1_c1_cp1',    'b1_c1_cp2']))
+            set(b1c1_clone.parameter_names),   set(['b1_c1_cp1',    'b1_c1_cp2']))
         self.assertEqual(set(b1c1_clone.state_variable_names),    set(['b1_c1_SV1']))
 
-        self.assertEqual(set(b1c2_clone.query.analog_ports_map.keys()), set(
+        self.assertEqual(set(b1c2_clone.analog_port_names), set(
             ['b1_c2_cIn1',  'b1_c2_cIn2',  'b1_c2_C1', 'b1_c2_C2']))
         self.assertEqual(
-            set(b1c2_clone.query.event_ports_map.keys()),  set(['b1_c2_spikein', 'b1_c2_emit']))
+            set(b1c2_clone.event_port_names),  set(['b1_c2_spikein', 'b1_c2_emit']))
         self.assertEqual(
-            set(b1c2_clone.query.parameters_map.keys()),   set(['b1_c2_cp1',    'b1_c2_cp2']))
+            set(b1c2_clone.parameter_names),   set(['b1_c2_cp1',    'b1_c2_cp2']))
         self.assertEqual(set(b1c2_clone.state_variable_names),    set(['b1_c2_SV1']))
 
-        self.assertEqual(set(b2c1_clone.query.analog_ports_map.keys()),
+        self.assertEqual(set(b2c1_clone.analog_port_names),
                          set(['b2_c1_cIn1',  'b2_c1_cIn2',  'b2_c1_C1', 'b2_c1_C2']))
         self.assertEqual(
-            set(b2c1_clone.query.event_ports_map.keys()),  set(['b2_c1_spikein', 'b2_c1_emit']))
+            set(b2c1_clone.event_port_names),  set(['b2_c1_spikein', 'b2_c1_emit']))
         self.assertEqual(
-            set(b2c1_clone.query.parameters_map.keys()),   set(['b2_c1_cp1',    'b2_c1_cp2']))
+            set(b2c1_clone.parameter_names),   set(['b2_c1_cp1',    'b2_c1_cp2']))
         self.assertEqual(set(b2c1_clone.state_variable_names),    set(['b2_c1_SV1']))
 
-        self.assertEqual(set(b2c2_clone.query.analog_ports_map.keys()), set(
+        self.assertEqual(set(b2c2_clone.analog_port_names), set(
             ['b2_c2_cIn1',  'b2_c2_cIn2',  'b2_c2_C1', 'b2_c2_C2']))
         self.assertEqual(
-            set(b2c2_clone.query.event_ports_map.keys()),  set(['b2_c2_spikein', 'b2_c2_emit']))
+            set(b2c2_clone.event_port_names),  set(['b2_c2_spikein', 'b2_c2_emit']))
         self.assertEqual(
-            set(b2c2_clone.query.parameters_map.keys()),   set(['b2_c2_cp1',    'b2_c2_cp2']))
+            set(b2c2_clone.parameter_names),   set(['b2_c2_cp1',    'b2_c2_cp2']))
         self.assertEqual(set(b2c2_clone.state_variable_names),    set(['b2_c2_SV1']))
 
-        self.assertEqual(set(c3_clone.query.analog_ports_map.keys()), set(
+        self.assertEqual(set(c3_clone.analog_port_names), set(
             ['c3_cIn1', 'c3_cIn2', 'c3_C1', 'c3_C2']))
         self.assertEqual(
-            set(c3_clone.query.event_ports_map.keys()),  set(['c3_spikein',     'c3_emit']))
+            set(c3_clone.event_port_names),  set(['c3_spikein',     'c3_emit']))
         self.assertEqual(
-            set(c3_clone.query.parameters_map.keys()),   set(['c3_cp1',         'c3_cp2']))
+            set(c3_clone.parameter_names),   set(['c3_cp1',         'c3_cp2']))
         self.assertEqual(set(c3_clone.state_variable_names),    set(['c3_SV1']))
 
-        self.assertEqual(set(b1_clone.query.analog_ports_map.keys()), set([]))
-        self.assertEqual(set(b1_clone.query.event_ports_map.keys()),  set([]))
-        self.assertEqual(set(b1_clone.query.parameters_map.keys()),   set([]))
+        self.assertEqual(set(b1_clone.analog_port_names), set([]))
+        self.assertEqual(set(b1_clone.event_port_names),  set([]))
+        self.assertEqual(set(b1_clone.parameter_names),   set([]))
         self.assertEqual(set(b1_clone.state_variable_names),    set([]))
 
-        self.assertEqual(set(b2_clone.query.analog_ports_map.keys()), set([]))
-        self.assertEqual(set(b2_clone.query.event_ports_map.keys()),  set([]))
-        self.assertEqual(set(b2_clone.query.parameters_map.keys()),   set([]))
+        self.assertEqual(set(b2_clone.analog_port_names), set([]))
+        self.assertEqual(set(b2_clone.event_port_names),  set([]))
+        self.assertEqual(set(b2_clone.parameter_names),   set([]))
         self.assertEqual(set(b2_clone.state_variable_names),    set([]))
 
         # Port Connections

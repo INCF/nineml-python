@@ -5,11 +5,11 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.utils import assert_no_duplicates
-from ...componentclass.validators import (
+from ....componentclass.visitors.validators import (
     LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
 from . import PerNamespaceDynamicsValidator
-from ..utils.visitors import DynamicsActionVisitor
+from ..base import DynamicsActionVisitor
 
 
 # Check that the sub-components stored are all of the

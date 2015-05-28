@@ -64,11 +64,11 @@ class ConnectionRule(ComponentClass):
         return ConnectionRuleXMLLoader(document).load_connectionruleclass(
             element)
 
-from .utils.cloner import ConnectionRuleCloner
-from .utils.modifiers import (
+from .visitors.cloner import ConnectionRuleCloner
+from .visitors.modifiers import (
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
-from .utils.visitors import (
+from .visitors.queriers import (
     ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder)
-from .validators import ConnectionRuleValidator
-from .utils.xml import (
+from .visitors.validators import ConnectionRuleValidator
+from .visitors.xml import (
     ConnectionRuleXMLLoader, ConnectionRuleXMLWriter)

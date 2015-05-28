@@ -1,3 +1,3 @@
 from .base import RandomDistribution
-from .utils import (
+from .visitors.xml import (
     RandomDistributionXMLLoader, RandomDistributionXMLWriter)

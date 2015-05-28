@@ -1,3 +1,2 @@
-from .interface_inferer import ConnectionRuleInterfaceInferer
-from .queryer import ConnectionRuleQueryer
+from .queriers import ConnectionRuleInterfaceInferer
 from .xml import ConnectionRuleXMLLoader, ConnectionRuleXMLWriter

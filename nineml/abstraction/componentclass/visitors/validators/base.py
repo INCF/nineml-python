@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ..utils.visitors import ComponentActionVisitor
+from ..base import ComponentActionVisitor
 
 
 class BaseValidator(object):

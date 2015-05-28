@@ -4,9 +4,9 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...componentclass.validators.ports import (
+from ....componentclass.visitors.validators.ports import (
     PortConnectionsComponentValidator)
-from ..utils.visitors import ConnectionRuleActionVisitor
+from ..base import ConnectionRuleActionVisitor
 
 
 class PortConnectionsConnectionRuleValidator(

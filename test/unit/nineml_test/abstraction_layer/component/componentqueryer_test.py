@@ -2,14 +2,14 @@
 
 import unittest
 from nineml.abstraction import (Regime, On, AnalogSendPort,
-                                      AnalogReceivePort, NamespaceAddress,
-                                      OutputEvent)
+                                AnalogReceivePort, NamespaceAddress,
+                                OutputEvent)
 from nineml.abstraction.dynamics import Dynamics
 
 
 class ComponentClassQueryer_test(unittest.TestCase):
 
-    def test_event_send_recv_ports(self):
+    def test_event_send_receive_ports(self):
         # Signature: name(self)
                 # Get the ``recv`` EventPorts
         # from nineml.abstraction.component.componentqueryer import ComponentClassQueryer
@@ -25,12 +25,12 @@ class ComponentClassQueryer_test(unittest.TestCase):
                 ]
             ),
         )
-        self.assertEquals(len(c.query.event_recv_ports), 1)
-        self.assertEquals((list(c.query.event_recv_ports)[0]).name, 'in_ev1')
+        self.assertEquals(len(list(c.event_receive_ports)), 1)
+        self.assertEquals((list(list(c.event_receive_ports))[0]).name, 'in_ev1')
 
-        self.assertEquals(len(c.query.event_send_ports), 2)
-        self.assertEquals((list(c.query.event_send_ports)[0]).name, 'ev_port1')
-        self.assertEquals((list(c.query.event_send_ports)[1]).name, 'ev_port2')
+        self.assertEquals(len(list(c.event_send_ports)), 2)
+        self.assertEquals(set(c.event_send_port_names),
+                          set(['ev_port1', 'ev_port2']))
 
         # Check inference of output event ports:
         c = Dynamics(
@@ -51,14 +51,13 @@ class ComponentClassQueryer_test(unittest.TestCase):
                        )
             ]
         )
-        self.assertEquals(len(c.query.event_recv_ports), 2)
-        self.assertEquals((list(c.query.event_recv_ports)[0]).name, 'in_ev1')
-        self.assertEquals((list(c.query.event_recv_ports)[1]).name, 'in_ev2')
+        self.assertEquals(len(list(c.event_receive_ports)), 2)
+        self.assertEquals(set(c.event_receive_port_names),
+                          set(['in_ev1', 'in_ev2']))
 
-        self.assertEquals(len(c.query.event_send_ports), 3)
-        self.assertEquals((list(c.query.event_send_ports)[0]).name, 'ev_port1')
-        self.assertEquals((list(c.query.event_send_ports)[1]).name, 'ev_port2')
-        self.assertEquals((list(c.query.event_send_ports)[2]).name, 'ev_port3')
+        self.assertEquals(len(list(c.event_send_ports)), 3)
+        self.assertEquals(set(c.event_send_port_names),
+                           set(['ev_port1', 'ev_port2', 'ev_port3']))
 
         # Check inference of output event ports:
         c = Dynamics(
@@ -80,15 +79,13 @@ class ComponentClassQueryer_test(unittest.TestCase):
                        )
             ]
         )
-        self.assertEquals(len(c.query.event_recv_ports), 3)
-        self.assertEquals((list(c.query.event_recv_ports)[0]).name, 'spikeinput1')
-        self.assertEquals((list(c.query.event_recv_ports)[1]).name, 'spikeinput2')
-        self.assertEquals((list(c.query.event_recv_ports)[2]).name, 'spikeinput3')
+        self.assertEquals(len(list(c.event_receive_ports)), 3)
+        self.assertEquals(set(c.event_receive_port_names),
+                          set(['spikeinput1', 'spikeinput2', 'spikeinput3']))
 
-        self.assertEquals(len(c.query.event_send_ports), 3)
-        self.assertEquals((list(c.query.event_send_ports)[0]).name, 'ev_port1')
-        self.assertEquals((list(c.query.event_send_ports)[1]).name, 'ev_port2')
-        self.assertEquals((list(c.query.event_send_ports)[2]).name, 'ev_port3')
+        self.assertEquals(len(list(c.event_send_ports)), 3)
+        self.assertEquals(set(c.event_send_port_names),
+                          set(['ev_port1', 'ev_port2', 'ev_port3']))
 
     def test_get_fully_qualified_port_connections(self):
         # Signature: name(self)
@@ -126,13 +123,13 @@ class ComponentClassQueryer_test(unittest.TestCase):
         # fNew = a.get_subnode('c.f')
         # gNew = a.get_subnode('c.g')
 
-        self.assertEquals(list(a.query.get_fully_qualified_port_connections()),
+        self.assertEquals(list(a.fully_qualified_port_connections),
                           [(NamespaceAddress('b.d.A'), NamespaceAddress('F'))])
 
-        self.assertEquals(list(bNew.query.get_fully_qualified_port_connections()),
+        self.assertEquals(list(bNew.fully_qualified_port_connections),
                           [(NamespaceAddress('b.d.A'), NamespaceAddress('b.e.C'))])
 
-        self.assertEquals(list(cNew.query.get_fully_qualified_port_connections()),
+        self.assertEquals(list(cNew.fully_qualified_port_connections),
                           [(NamespaceAddress('c.G'), NamespaceAddress('c.f.D'))])
 
     def test_ports(self):
@@ -163,7 +160,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
             analog_ports=[AnalogSendPort('A'), AnalogReceivePort('B'), AnalogSendPort('C')]
         )
 
-        ports = list(c.query.ports)
+        ports = list(list(c.ports))
         port_names = [p.name for p in ports]
 
         self.assertEquals(len(port_names), 8)
@@ -197,10 +194,10 @@ class ComponentClassQueryer_test(unittest.TestCase):
                                                       to='r1')),
                            ]
                            )
-        self.assertEqual(c.query.regime(name='r1').name, 'r1')
-        self.assertEqual(c.query.regime(name='r2').name, 'r2')
-        self.assertEqual(c.query.regime(name='r3').name, 'r3')
-        self.assertEqual(c.query.regime(name='r4').name, 'r4')
+        self.assertEqual(c.regime(name='r1').name, 'r1')
+        self.assertEqual(c.regime(name='r2').name, 'r2')
+        self.assertEqual(c.regime(name='r3').name, 'r3')
+        self.assertEqual(c.regime(name='r4').name, 'r4')
 
     def test_recurse_all_components(self):
         # Signature: name
@@ -235,23 +232,23 @@ class ComponentClassQueryer_test(unittest.TestCase):
         gNew = a.get_subnode('c.g')
 
         self.assertEquals(
-            set(a.query.recurse_all_components),
+            set(a.all_components),
             set([a, bNew, cNew, dNew, eNew, fNew, gNew]))
         self.assertEquals(
-            set(bNew.query.recurse_all_components),
+            set(bNew.all_components),
             set([bNew, dNew, eNew]))
         self.assertEquals(
-            set(cNew.query.recurse_all_components),
+            set(cNew.all_components),
             set([cNew, fNew, gNew]))
         self.assertEquals(
-            set(dNew.query.recurse_all_components),
+            set(dNew.all_components),
             set([dNew]))
         self.assertEquals(
-            set(eNew.query.recurse_all_components),
+            set(eNew.all_components),
             set([eNew]))
         self.assertEquals(
-            set(fNew.query.recurse_all_components),
+            set(fNew.all_components),
             set([fNew]))
         self.assertEquals(
-            set(gNew.query.recurse_all_components),
+            set(gNew.all_components),
             set([gNew]))

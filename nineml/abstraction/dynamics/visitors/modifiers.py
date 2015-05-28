@@ -11,9 +11,9 @@ from .cloner import DynamicsExpandPortDefinition
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utils import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
-from ...componentclass.utils.modifiers import (
+from ...componentclass.visitors.modifiers import (
     ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
-from .visitors import DynamicsActionVisitor
+from .base import DynamicsActionVisitor
 
 
 class DynamicPortModifier(ComponentModifier):

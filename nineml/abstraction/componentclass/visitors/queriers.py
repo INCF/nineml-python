@@ -1,56 +1,33 @@
-"""
-docstring needed
-
-:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
-:license: BSD-3, see LICENSE for details.
-"""
+from copy import copy
+from .base import ComponentActionVisitor
 from ...expressions import reserved_identifiers
 
 
-class ComponentVisitor(object):
+class ComponentClassInterfaceInferer(ComponentActionVisitor):
 
-    def visit(self, obj, **kwargs):
-        return obj.accept_visitor(self, **kwargs)
+    """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
-
-class ComponentActionVisitor(ComponentVisitor):
-
-    def __init__(self, require_explicit_overrides=True):
-        self.require_explicit_overrides = require_explicit_overrides
-
-    def visit_componentclass(self, component_class, **kwargs):
-        self.action_componentclass(component_class, **kwargs)
-        for p in component_class:
-            p.accept_visitor(self, **kwargs)
-
-    def visit_parameter(self, parameter, **kwargs):
-        self.action_parameter(parameter, **kwargs)
-
-    def visit_alias(self, alias, **kwargs):
-        self.action_alias(alias, **kwargs)
-
-    def visit_constant(self, constant, **kwargs):
-        self.action_constant(constant, **kwargs)
-
-    def check_pass(self):
-        if self.require_explicit_overrides:
-            assert False, ("There is an overriding function missing from {}"
-                           .format(self.__class__.__name__))
-        else:
-            pass
-
-    # To be overridden:
-    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_pass()
-
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        self.check_pass()
+    def __init__(self, component_class):
+        super(ComponentClassInterfaceInferer, self).__init__(
+            require_explicit_overrides=False)
+        # Parameters:
+        # Use visitation to collect all atoms that are not aliases and not
+        # state variables
+        self.component_class = component_class
+        self.declared_symbols = copy(reserved_identifiers)
+        self.atoms = set()
+        self.input_event_port_names = set()
+        self.event_out_port_names = set()
+        self.visit(self.component_class)
+        # Visit class and populate declared_symbols and atoms sets
+        self.parameter_names = self.atoms - self.declared_symbols
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self.check_pass()
+        self.declared_symbols.add(alias.lhs)
+        self.atoms.update(alias.rhs_atoms)
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
-        self.check_pass()
+        self.declared_symbols.add(constant.name)
 
 
 class ComponentRequiredDefinitions(object):

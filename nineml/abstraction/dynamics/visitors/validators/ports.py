@@ -8,9 +8,9 @@ from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
 from . import PerNamespaceDynamicsValidator
-from ...componentclass.validators.ports import (
+from ....componentclass.visitors.validators.ports import (
     PortConnectionsComponentValidator)
-from ..utils.visitors import DynamicsActionVisitor
+from ..base import DynamicsActionVisitor
 
 
 class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):

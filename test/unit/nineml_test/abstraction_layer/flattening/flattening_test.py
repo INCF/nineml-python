@@ -66,12 +66,12 @@ class ComponentFlattener_test(unittest.TestCase):
 
         #  - Ports & Parameters:
         self.assertEqual(
-            set(c_flat.query.analog_ports_map.keys()),
+            set(c_flat.analog_port_names),
             set(['cIn2', 'cIn1', 'C1', 'C2']))
         self.assertEqual(
-            set(c_flat.query.event_ports_map.keys()),
+            set(c_flat.event_port_names),
             set(['spikein', 'c_emit', 'emit']))
-        self.assertEqual(set(c_flat.query.parameters_map.keys()),
+        self.assertEqual(set(c_flat.parameter_names),
                          set(['cp1', 'cp2']))
         self.assertEqual(set(c_flat.state_variable_names),
                          set(['SV1']))
@@ -195,15 +195,15 @@ class ComponentFlattener_test(unittest.TestCase):
         # ToDo: Check the OnConditions:
         #  - Ports & Parameters:
         self.assertEqual(
-            set(b_flat.query.analog_ports_map.keys()),
+            set(b_flat.analog_port_names),
             set(['c1_cIn1', 'c1_cIn2', 'c1_C1', 'c1_C2', 'c2_cIn1', 'c2_cIn2', 'c2_C1', 'c2_C2', 'd_dIn1', 'd_dIn2', 'd_D1', 'd_D2']))
 
         self.assertEqual(
-            set(b_flat.query.event_ports_map.keys()),
+            set(b_flat.event_port_names),
             set(['c1_spikein', 'c1_emit', 'c1_c_emit', 'c2_spikein', 'c2_emit', 'c2_c_emit', 'd_spikein', 'd_emit', 'd_d_emit']))
 
         self.assertEqual(
-            set(b_flat.query.parameters_map.keys()),
+            set(b_flat.parameter_names),
             set(['c1_cp1', 'c1_cp2', 'c2_cp1', 'c2_cp2', 'd_dp1', 'd_dp2', ]))
 
         self.assertEqual(
@@ -382,21 +382,21 @@ class ComponentFlattener_test(unittest.TestCase):
 
         #  - Ports & Parameters:
         self.assertEqual(
-            set(a_flat.query.analog_ports_map.keys()),
+            set(a_flat.analog_port_names),
             set(['b_c1_cIn1', 'b_c1_cIn2', 'b_c1_C1', 'b_c1_C2',
                  'b_c2_cIn1', 'b_c2_cIn2', 'b_c2_C1', 'b_c2_C2',
                  'b_d_dIn1', 'b_d_dIn2', 'b_d_D1', 'b_d_D2',
                  'c_cIn1', 'c_cIn2', 'c_C1', 'c_C2']))
 
         self.assertEqual(
-            set(a_flat.query.event_ports_map.keys()),
+            set(a_flat.event_port_names),
             set(['b_c1_spikein', 'b_c1_emit', 'b_c1_c_emit',
                  'b_c2_spikein', 'b_c2_emit', 'b_c2_c_emit',
                  'b_d_spikein', 'b_d_emit', 'b_d_d_emit',
                  'c_spikein', 'c_emit', 'c_c_emit', ]))
 
         self.assertEqual(
-            set(a_flat.query.parameters_map.keys()),
+            set(a_flat.parameter_names),
             set(['c_cp1', 'c_cp2',
                  'b_c1_cp1', 'b_c1_cp2',
                  'b_c2_cp1', 'b_c2_cp2',
@@ -588,21 +588,21 @@ class ComponentFlattener_test(unittest.TestCase):
 
         #  - Ports & Parameters:
         self.assertEqual(
-            set(a_flat.query.analog_ports_map.keys()),
+            set(a_flat.analog_port_names),
             set(['b_c1_C1', 'b_c1_C2',
                  'b_c2_C1', 'b_c2_C2',
                  'b_d_dIn2', 'b_d_D1', 'b_d_D2',
                  'c_cIn1', 'c_cIn2', 'c_C1', 'c_C2']))
 
         self.assertEqual(
-            set(a_flat.query.event_ports_map.keys()),
+            set(a_flat.event_port_names),
             set(['b_c1_spikein', 'b_c1_emit', 'b_c1_c_emit',
                  'b_c2_spikein', 'b_c2_emit', 'b_c2_c_emit',
                  'b_d_spikein', 'b_d_emit', 'b_d_d_emit',
                  'c_spikein', 'c_emit', 'c_c_emit', ]))
 
         self.assertEqual(
-            set(a_flat.query.parameters_map.keys()),
+            set(a_flat.parameter_names),
             set(['c_cp1', 'c_cp2',
                  'b_c1_cp1', 'b_c1_cp2',
                  'b_c2_cp1', 'b_c2_cp2',
