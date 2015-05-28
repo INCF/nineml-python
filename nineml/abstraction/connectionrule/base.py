@@ -49,6 +49,12 @@ class ConnectionRule(ComponentClass):
         ConnectionRuleValidator.validate_componentclass(self)
 
     @property
+    def all_expressions(self):
+        extractor = ConnectionRuleExpressionExtractor()
+        extractor.visit(self)
+        return extractor.expressions
+
+    @property
     def standard_library(self):
         return self._main_block.standard_library
 

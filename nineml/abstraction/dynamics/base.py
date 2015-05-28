@@ -566,7 +566,9 @@ class Dynamics(ComponentClass, _NamespaceMixin):
 
     @property
     def all_expressions(self):
-        return DynamicsExpressionExtractor().visit(self)
+        extractor = DynamicsExpressionExtractor()
+        extractor.visit(self)
+        return extractor.expressions
 
     @property
     def fully_qualified_port_connections(self):

@@ -38,7 +38,9 @@ class RandomDistribution(ComponentClass):
 
     @property
     def all_expressions(self):
-        return RandomDistributionExpressionExtractor().visit(self)
+        extractor = RandomDistributionExpressionExtractor()
+        extractor.visit(self)
+        return extractor.expressions
 
     @property
     def standard_library(self):
