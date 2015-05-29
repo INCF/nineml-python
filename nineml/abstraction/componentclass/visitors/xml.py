@@ -49,9 +49,9 @@ class ComponentClassXMLLoader(object):
 
     @read_annotations
     def load_constant(self, element):
-        return Constant(name=element.get('name'),
-                        value=float(element.text),
-                        units=self.document[element.get('units')])
+        return Constant(name=element.attrib['name'],
+                        value=float(element.attrib['value']),
+                        units=self.document[element.attrib['units']])
 
     def load_single_internmaths_block(self, element, checkOnlyBlock=True):
         if checkOnlyBlock:
@@ -113,8 +113,9 @@ class ComponentClassXMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_constant(self, constant):
-        return E('Constant', str(constant.value),
+        return E('Constant',
                  name=constant.name,
+                 value=str(constant.value),
                  units=constant.units.name)
 
 from nineml.document import Document

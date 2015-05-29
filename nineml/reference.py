@@ -42,10 +42,10 @@ class BaseReference(BaseNineMLObject):
 
     @annotate_xml
     def to_xml(self):
-        kwargs = {'url': self.url} if self.url else {}
-        element = E(self.element_name,
-                    self._referred_to.name,
-                    **kwargs)
+        kwargs = {'name': self._referred_to.name}
+        if self.url:
+            kwargs['url'] = self.url
+        element = E(self.element_name, **kwargs)
         return element
 
     @classmethod
@@ -55,7 +55,7 @@ class BaseReference(BaseNineMLObject):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
-        name = element.text
+        name = element.attrib["name"]
         url = element.attrib.get("url", None)
         return cls(name=name, document=document, url=url)
 
