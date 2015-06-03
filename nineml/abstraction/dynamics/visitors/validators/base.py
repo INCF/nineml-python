@@ -17,7 +17,8 @@ from .general import (
 from .names import (
     LocalNameConflictsDynamicsValidator,
     DimensionNameConflictsDynamicsValidator,
-    DuplicateRegimeNamesDynamicsValidator)
+    DuplicateRegimeNamesDynamicsValidator,
+    RegimeAliasMatchesBaseScopeValidator)
 from .ports import (
     EventPortsDynamicsValidator, OutputAnalogPortsDynamicsValidator,
     PortConnectionsDynamicsValidator)
@@ -42,6 +43,7 @@ class DynamicsValidator(object):
         DuplicateRegimeNamesDynamicsValidator(component_class)
         LocalNameConflictsDynamicsValidator(component_class)
         DimensionNameConflictsDynamicsValidator(component_class)
+        RegimeAliasMatchesBaseScopeValidator(component_class)
         EventPortsDynamicsValidator(component_class)
         OutputAnalogPortsDynamicsValidator(component_class)
         TimeDerivativesAreDeclaredDynamicsValidator(component_class)
