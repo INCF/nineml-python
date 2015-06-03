@@ -14,7 +14,7 @@ from .general import (
     RegimeOnlyHasOneHandlerPerEventDynamicsValidator,
     CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator,
     DimensionalityDynamicsValidator)
-from .namingconflicts import (
+from .names import (
     LocalNameConflictsDynamicsValidator,
     DimensionNameConflictsDynamicsValidator,
     DuplicateRegimeNamesDynamicsValidator)

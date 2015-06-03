@@ -10,7 +10,7 @@ from .general import (
     NoUnresolvedSymbolsConnectionRuleValidator,
     NoDuplicatedObjectsConnectionRuleValidator,
     CheckNoLHSAssignmentsToMathsNamespaceConnectionRuleValidator)
-from .namingconflicts import (
+from .names import (
     LocalNameConflictsConnectionRuleValidator,
     DimensionNameConflictsConnectionRuleValidator)
 from .ports import (
