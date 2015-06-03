@@ -37,10 +37,10 @@
         <OutputEvent port="spikeOutput"/>
       </OnCondition>
     </Regime>
-    <Constant name="const1" units="per_mV_ms">0.04</Constant>
-    <Constant name="const2" units="per_ms">5</Constant>
-    <Constant name="const3" units="mV_per_ms">140</Constant>
-    <Constant name="C" units="nF">1.0</Constant>
+    <Constant name="const1" units="per_mV_ms" value="0.04"/>
+    <Constant name="const2" units="per_ms" value="5"/>
+    <Constant name="const3" units="mV_per_ms" value="140"/>
+    <Constant name="C" units="nF" value="1.0"/>
   </Dynamics>
   <DynamicsProperties name="Izhikevich">
     <Definition name="IzhikevichClass"/>

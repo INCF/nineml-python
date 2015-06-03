@@ -7,7 +7,7 @@
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="per_ms_mV" dimension="per_time_voltage" power="6"/>
   <DynamicsProperties name="HodgkinHuxleyModified">
-    <Prototype url="./HodgkinHuxley.xml">HodgkinHuxley</Prototype>
+    <Prototype name="HodgkinHuxley" url="./HodgkinHuxley.xml"/>
     <Property name="m_alpha_A" units="per_ms_mV">
       <SingleValue>0.5</SingleValue>
     </Property>

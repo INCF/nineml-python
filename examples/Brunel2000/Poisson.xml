@@ -17,8 +17,8 @@
         <OutputEvent port="spikeOutput"/>
       </OnCondition>
     </Regime>
-    <Constant units="ms" name="one_ms">1.0</Constant>
-    <Constant units="ms" name="thousand_milliseconds">1000.0</Constant>
+    <Constant units="ms" name="one_ms" value="1.0"/>
+    <Constant units="ms" name="thousand_milliseconds" value="1000.0"/>
   </Dynamics>
   <Dimension name="time" t="1"/>
 </NineML>

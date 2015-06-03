@@ -33,10 +33,10 @@
   </Population>
   <Projection name="Excitation">
     <Pre>
-      <Reference>Exc</Reference>
+      <Reference name="Exc"/>
     </Pre>
     <Post>
-      <Reference>All neurons</Reference>
+      <Reference name="All neurons"/>
       <FromResponse send_port="Isyn" receive_port="Isyn"/>
     </Post>
     <Connectivity>
@@ -78,10 +78,10 @@
   <Selection name="All neurons">
     <Concatenate>
       <Item index="0">
-        <Reference>Exc</Reference>
+        <Reference name="Exc"/>
       </Item>
       <Item index="1">
-        <Reference>Inh</Reference>
+        <Reference name="Inh"/>
       </Item>
     </Concatenate>
   </Selection>
@@ -105,10 +105,10 @@
   </Population>
   <Projection name="Inhibition">
     <Pre>
-      <Reference>Inh</Reference>
+      <Reference name="Inh"/>
     </Pre>
     <Post>
-      <Reference>All neurons</Reference>
+      <Reference name="All neurons"/>
       <FromResponse send_port="Isyn" receive_port="Isyn"/>
     </Post>
     <Connectivity>
@@ -177,10 +177,10 @@
   </Population>
   <Projection name="External">
     <Pre>
-      <Reference>Ext</Reference>
+      <Reference name="Ext"/>
     </Pre>
     <Post>
-      <Reference>All neurons</Reference>
+      <Reference name="All neurons"/>
       <FromResponse send_port="Isyn" receive_port="Isyn"/>
     </Post>
     <Connectivity>

@@ -11,6 +11,6 @@
         <MathInline>zero</MathInline>
       </TimeDerivative>
     </Regime>
-    <Constant units="A_per_s" name="zero">0.0</Constant>
+    <Constant units="A_per_s" name="zero" value="0.0"/>
   </Dynamics>
 </NineML>

@@ -233,7 +233,7 @@ class PopulationTerminus(Terminus):
     def to_xml(self):
         if self.population.from_reference is None:  # Generated objects
             # Assumes that population is written in same file as projection
-            pop_elem = E.Reference(self.population.name)
+            pop_elem = E.Reference(name=self.population.name)
         else:
             pop_elem = self.population.to_xml(as_reference=True)
         return E(self.element_name, pop_elem,

@@ -16,8 +16,8 @@
   </Population>
   <Selection name="CombinedSelection">
     <Concatenate>
-      <Item index="0"><Reference>HHPopulation</Reference></Item>
-      <Item index="1"><Reference>IzhiPopulation</Reference>
+      <Item index="0"><Reference name="HHPopulation"/></Item>
+      <Item index="1"><Reference name="IzhiPopulation"/>
       <Annotations><Text>This is another test annotation</Text></Annotations> 
       </Item>
       <Annotations><Text>This is a test annotation</Text></Annotations>  
