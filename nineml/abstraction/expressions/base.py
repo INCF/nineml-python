@@ -16,7 +16,7 @@ from nineml.exceptions import NineMLRuntimeError
 builtin_constants = set(['true', 'false', 'True', 'False'])
 builtin_functions = set([
     'exp', 'sin', 'cos', 'log', 'log10', 'pow', 'abs',
-    'sinh', 'cosh', 'tanh', 'sqrt', 'mod', 'sum',
+    'sinh', 'cosh', 'tanh', 'sqrt', 'mod',  # 'sum',
     'atan', 'asin', 'acos', 'asinh', 'acosh', 'atanh', 'atan2'])
 reserved_symbols = set(['t'])
 reserved_identifiers = set(chain(builtin_constants, builtin_functions,
@@ -334,7 +334,7 @@ class ExpressionSymbol(object):
     """
 
     def _sympy_(self):
-        return sympy.Symbol(self.name)
+        return sympy.Symbol(self.name, real=True)
 
     def __add__(self, other):
         return sympy.sympify(self) + other
