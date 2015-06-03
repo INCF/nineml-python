@@ -111,7 +111,7 @@ class Concatenate(BaseULObject):
             if isinstance(item, Reference):
                 return item.to_xml()
             else:
-                return E.Reference(item.name)
+                return E.Reference(name=item.name)
         return E(self.element_name,
                  *[E.Item(item_to_xml(item), index=str(i))
                    for i, item in enumerate(self.items)])

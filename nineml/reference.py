@@ -55,7 +55,10 @@ class BaseReference(BaseNineMLObject):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
-        name = element.attrib["name"]
+        try:
+            name = element.attrib["name"]
+        except KeyError:
+            raise
         url = element.attrib.get("url", None)
         return cls(name=name, document=document, url=url)
 

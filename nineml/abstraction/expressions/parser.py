@@ -45,6 +45,9 @@ class Parser(object):
                     expr = sympy_parse(
                         expr, transformations=[self] + self._sympy_transforms,
                         local_dict=self.inline_randoms_dict)
+                    # TODO: Could perform a second pass parse and assume all
+                    #       symbols to be real (not sure it is necessary
+                    #       though)
                     expr = self._postprocess(expr)
                 except Exception, e:
                     raise NineMLMathParseError(
