@@ -399,6 +399,7 @@ rho_factor = Dimension(name="rho_factor", l=-1, n=1, i=-1, t=-1)
 dimensionless = Dimension(name="dimensionless")
 energy_per_temperature = Dimension(name="energy_per_temperature", m=1, l=2,
                                    t=-2, k=-1)
+luminous_intensity = Dimension(name="luminous_intensity", j=1)
 
 # ------------ #
 # Common units #
@@ -471,6 +472,7 @@ mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s",
                              dimension=rho_factor, power=0)
 unitless = Unit(name="unitless", dimension=dimensionless, power=0)
 coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)
+cd = Unit(name="cd", dimension=luminous_intensity, power=0)
 
 if __name__ == '__main__':
     print 1 / voltage
