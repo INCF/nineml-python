@@ -10,7 +10,7 @@ from .general import (
     NoUnresolvedSymbolsRandomDistributionValidator,
     NoDuplicatedObjectsRandomDistributionValidator,
     CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator)
-from .namingconflicts import (
+from .names import (
     LocalNameConflictsRandomDistributionValidator,
     DimensionNameConflictsRandomDistributionValidator)
 from .ports import (

@@ -130,5 +130,3 @@ class MemberContainer_test(unittest.TestCase):
                          self.b.index_of(sa, key='StateAssignments'))
         self.assertRaises(NineMLInvalidElementTypeException,
                           self.b.index_of, sa)
-        self.assertRaises(AssertionError,
-                          self.a.index_of, sa, key='StateAssignments')

@@ -5,7 +5,7 @@ from .general import (
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
     DimensionalityComponentValidator)
-from .namingconflicts import (LocalNameConflictsComponentValidator,
+from .names import (LocalNameConflictsComponentValidator,
                               DimensionNameConflictsComponentValidator)
 from .types import TypesComponentValidator
 from .ports import PortConnectionsComponentValidator
