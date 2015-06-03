@@ -6,7 +6,7 @@
     <Size>4000</Size>
     <Cell>
       <Component name="nrn">
-        <Definition url="BrunelIaF.xml">BrunelIaF</Definition>
+        <Definition name="BrunelIaF" url="BrunelIaF.xml"/>
         <Property units="Mohm" name="R">
           <SingleValue>1.5</SingleValue>
         </Property>
@@ -41,7 +41,7 @@
     </Post>
     <Connectivity>
       <Component name="RandomExc">
-        <Definition url="RandomFanIn.xml">RandomFanIn</Definition>
+        <Definition name="RandomFanIn" url="RandomFanIn.xml"/>
         <Property units="unitless" name="number">
           <SingleValue>400</SingleValue>
         </Property>
@@ -49,7 +49,7 @@
     </Connectivity>
     <Response>
       <Component name="syn">
-        <Definition url="AlphaPSR.xml">AlphaPSR</Definition>
+        <Definition name="AlphaPSR" url="AlphaPSR.xml"/>
         <Property units="ms" name="tau_syn">
           <SingleValue>0.1</SingleValue>
         </Property>
@@ -64,7 +64,7 @@
     </Response>
     <Plasticity>
       <Component name="ExcitatoryPlasticity">
-        <Definition url="StaticConnection.xml">StaticConnection</Definition>
+        <Definition name="StaticConnection" url="StaticConnection.xml"/>
         <Initial units="nA" name="weight">
           <SingleValue>2.4</SingleValue>
         </Initial>
@@ -93,7 +93,7 @@
     <Size>5000</Size>
     <Cell>
       <Component name="stim">
-        <Definition url="Poisson.xml">Poisson</Definition>
+        <Definition name="Poisson" url="Poisson.xml"/>
         <Property units="Hz" name="rate">
           <SingleValue>20000.0</SingleValue>
         </Property>
@@ -113,7 +113,7 @@
     </Post>
     <Connectivity>
       <Component name="RandomInh">
-        <Definition url="RandomFanIn.xml">RandomFanIn</Definition>
+        <Definition name="RandomFanIn" url="RandomFanIn.xml"/>
         <Property units="unitless" name="number">
           <SingleValue>100</SingleValue>
         </Property>
@@ -121,7 +121,7 @@
     </Connectivity>
     <Response>
       <Component name="syn">
-        <Definition url="AlphaPSR.xml">AlphaPSR</Definition>
+        <Definition name="AlphaPSR" url="AlphaPSR.xml"/>
         <Property units="ms" name="tau_syn">
           <SingleValue>0.1</SingleValue>
         </Property>
@@ -136,7 +136,7 @@
     </Response>
     <Plasticity>
       <Component name="InhibitoryPlasticity">
-        <Definition url="StaticConnection.xml">StaticConnection</Definition>
+        <Definition name="StaticConnection" url="StaticConnection.xml"/>
         <Initial units="nA" name="weight">
           <SingleValue>-7.2</SingleValue>
         </Initial>
@@ -150,7 +150,7 @@
     <Size>1000</Size>
     <Cell>
       <Component name="nrn">
-        <Definition url="BrunelIaF.xml">BrunelIaF</Definition>
+        <Definition name="BrunelIaF" url="BrunelIaF.xml"/>
         <Property units="Mohm" name="R">
           <SingleValue>1.5</SingleValue>
         </Property>
@@ -185,12 +185,12 @@
     </Post>
     <Connectivity>
       <Component name="OneToOne">
-        <Definition url="OneToOne.xml">OneToOne</Definition>
+        <Definition name="OneToOne" url="OneToOne.xml"/>
       </Component>
     </Connectivity>
     <Response>
       <Component name="syn">
-        <Definition url="AlphaPSR.xml">AlphaPSR</Definition>
+        <Definition name="AlphaPSR" url="AlphaPSR.xml"/>
         <Property units="ms" name="tau_syn">
           <SingleValue>0.1</SingleValue>
         </Property>
@@ -205,7 +205,7 @@
     </Response>
     <Plasticity>
       <Component name="ExternalPlasticity">
-        <Definition url="StaticConnection.xml">StaticConnection</Definition>
+        <Definition name="StaticConnection" url="StaticConnection.xml"/>
         <Initial units="nA" name="weight">
           <SingleValue>2.4</SingleValue>
         </Initial>

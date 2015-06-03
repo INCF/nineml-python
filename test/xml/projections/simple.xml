@@ -8,15 +8,15 @@
   <Unit symbol="S" dimension="conductance"/>
   <Projection name="Izhikevich2HH">
     <Pre>
-      <Reference url="../populations/simple.xml">IzhiPopulation</Reference>
+      <Reference name="IzhiPopulation" url="../populations/simple.xml"/>
     </Pre>
     <Post>
-      <Reference url="../populations/simple.xml">HHPopulation</Reference>
+      <Reference name="HHPopulation" url="../populations/simple.xml"/>
       <FromResponse send_port="i" receive_port="iSynapse"/>
     </Post>
     <Response>
       <DynamicsProperties name="AMPA">
-        <Definition url="../postsynapticresponses/DoubleExpCondSynapse.xml">DoubleExpCondSynapse</Definition>
+        <Definition name="DoubleExpCondSynapse" url="../postsynapticresponses/DoubleExpCondSynapse.xml"/>
         <Property name="gBar" units="S">
           <SingleValue>2.6e-3</SingleValue>
         </Property>        
@@ -35,7 +35,7 @@
     </Response>
     <Connectivity>
       <ConnectionRuleProperties name="AllToAll">
-        <Definition url="../connectionrules/AllToAll.xml">AllToAll</Definition>
+        <Definition name="AllToAll" url="../connectionrules/AllToAll.xml"/>
       </ConnectionRuleProperties>
     </Connectivity>
     <Delay units="ms">

@@ -15,7 +15,7 @@
   <Unit symbol="K" dimension="temperature"/>
   <Unit symbol="um2" dimension="length2"/>
   <DynamicsProperties name="HodgkinHuxley">
-    <Definition url="./HodgkinHuxleyClass.xml">HodgkinHuxleyClass</Definition>
+    <Definition name="HodgkinHuxleyClass" url="./HodgkinHuxleyClass.xml"/>
     <Property name="m_alpha_A" units="per_ms_mV">
       <SingleValue>0.1</SingleValue>
       <Annotations>
