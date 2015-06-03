@@ -226,14 +226,14 @@ class MemberContainerObject(object):
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
         """
-        if key is None:
-            key = self.lookup_member_dict_name(element)
-        dct = self._indices[key]
+        dct = self._indices[self.lookup_member_dict_name(element)
+                            if key is None else key]
         try:
             index = dct[element]
         except KeyError:
-            assert element in self, ("'{}' is not a member of '{}'"
-                                     .format(element._name, self._name))
+            if key is None:
+                assert element in self, ("'{}' is not a member of '{}'"
+                                         .format(element._name, self._name))
             # Get the first index ascending from 0 not in the set
             try:
                 index = next(iter(sorted(
