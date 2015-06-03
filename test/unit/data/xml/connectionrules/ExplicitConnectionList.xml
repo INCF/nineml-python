@@ -1,7 +1,0 @@
-<NineML xmlns="http://nineml.net/9ML/1.0">
-  <ConnectionRule name="ExplicitConnectionList">
-    <Parameter name="sourceIndices" dimension="dimensionless"/>
-    <Parameter name="destinationIndices" dimension="dimensionless"/>
-  </ConnectionRule>
-  <Dimension name="dimensionless"/>
-</NineML>

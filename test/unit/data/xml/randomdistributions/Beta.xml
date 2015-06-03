@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<NineML xmlns="http://nineml.net/9ML/1.0">
-  <RandomDistribution name="BetaDistribution">
-    <Parameter name="alpha"/>
-    <Parameter name="beta"/>
-    <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/beta.xml"/>
-  </RandomDistribution>
-</NineML>

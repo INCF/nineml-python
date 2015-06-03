@@ -3,13 +3,13 @@
   <Population name="HHPopulation">
     <Size>10</Size>
     <Cell>
-      <Reference url="../neurons/HodgkinHuxley.xml">HodgkinHuxley</Reference>
+      <Reference name="HodgkinHuxley" url="../neurons/HodgkinHuxley.xml"/>
     </Cell>
   </Population>
   <Population name="IzhiPopulation">
     <Size>20</Size>
     <Cell>
-      <Reference url="../neurons/Izhikevich.xml">Izhikevich</Reference>
+      <Reference name="Izhikevich" url="../neurons/Izhikevich.xml"/>
       <Annotations><Text>This is a third test annotation</Text></Annotations>
     </Cell>
     <Annotations><Text>This is a third test annotation</Text></Annotations>
