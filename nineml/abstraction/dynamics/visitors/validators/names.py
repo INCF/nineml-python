@@ -10,6 +10,7 @@ from ....componentclass.visitors.validators import (
     DimensionNameConflictsComponentValidator)
 from . import PerNamespaceDynamicsValidator
 from ..base import DynamicsActionVisitor
+from nineml.exceptions import NineMLRuntimeError
 
 
 # Check that the sub-components stored are all of the
@@ -67,3 +68,19 @@ class DuplicateRegimeNamesDynamicsValidator(PerNamespaceDynamicsValidator):
     def action_componentclass(self, component_class, namespace):  # @UnusedVariable @IgnorePep8
         regime_names = [r.name for r in component_class.regimes]
         assert_no_duplicates(regime_names)
+
+
+class RegimeAliasMatchesBaseScopeValidator(DynamicsActionVisitor):
+
+    def __init__(self, component_class):
+        super(RegimeAliasMatchesBaseScopeValidator, self).__init__(
+            require_explicit_overrides=False)
+        self.component_class = component_class
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        if alias.name not in self.component_class.alias_names:
+            raise NineMLRuntimeError(
+                "Alias '{}' in regime scope does not match any in the base "
+                "scope of the Dynamics class '{}'"
+                .format(alias.name,
+                        "', '".join(self.component_class.alias_names)))
