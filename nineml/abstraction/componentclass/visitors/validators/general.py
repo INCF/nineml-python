@@ -70,7 +70,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
         self.aliases = defaultdict(list)
         self.time_derivatives = defaultdict(list)
         self.state_assignments = defaultdict(list)
-
+        self.component_class = component_class
         self.visit(component_class)
 
         # Check Aliases:
@@ -112,8 +112,9 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
         self.available_symbols[namespace].append(symbol)
 
     def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
-        self.add_symbol(namespace=namespace, symbol=alias.lhs)
-        self.aliases[namespace].append(alias)
+        if alias in self.component_class.aliases:
+            self.add_symbol(namespace=namespace, symbol=alias.lhs)
+            self.aliases[namespace].append(alias)
 
     def action_parameter(self, parameter, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace=namespace, symbol=parameter.name)
