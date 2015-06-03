@@ -10,6 +10,7 @@ from nineml.abstraction import (
 import nineml.units as un
 from nineml.utils import restore_sys_path
 from nineml.utils import LocationMgr
+from nineml.document import Document
 
 
 class ComponentClass_test(unittest.TestCase):
@@ -681,6 +682,39 @@ class ComponentClass_test(unittest.TestCase):
                        transitions=On('X>X1', do=['X=X0'],)), ]
         )
 
+    def test_regime_aliases(self):
+        a = Dynamics(
+            name='a',
+            aliases=[Alias('A', '4/t')],
+            regimes=[
+                Regime('dX/dt=1/t + A',
+                       name='r1',
+                       transitions=On('X>X1', do=['X=X0'], to='r2')),
+                Regime('dX/dt=1/t + A',
+                       name='r2',
+                       transitions=On('X>X1', do=['X=X0'],
+                                      to='r1'),
+                       aliases=[Alias('A', '8 / t')])])
+        self.assertEqual(a.regime('r2').alias('A'), Alias('A', '8 / t'))
+        self.assertRaises(
+            NineMLRuntimeError,
+            Dynamics,
+            name='a',
+            regimes=[
+                Regime('dX/dt=1/t + A',
+                       name='r1',
+                       transitions=On('X>X1', do=['X=X0'], to='r2')),
+                Regime('dX/dt=1/t + A',
+                       name='r2',
+                       transitions=On('X>X1', do=['X=X0'],
+                                      to='r1'),
+                       aliases=[Alias('A', '8 / t')])])
+        a_xml = a.to_xml()
+        b = Dynamics.from_xml(a_xml, Document(un.dimensionless))
+        self.assertEqual(a, b,
+                         "Dynamics with regime-specific alias failed xml "
+                         "roundtrip")
+
     def test_state_variables(self):
         # No parameters; nothing to infer
         c = Dynamics(name='cl')
@@ -692,13 +726,12 @@ class ComponentClass_test(unittest.TestCase):
             Dynamics, name='cl', state_variables=['a'])
 
         # From State Assignments and Differential Equations, and Conditionals
-        c = Dynamics(name='cl',
-                           aliases=['A:=a+e', 'B:=a+pi+b'],
-                           regimes=Regime('dX/dt = (6 + c + sin(d))/t',
-                                          'dV/dt = 1.0/t',
-                                          transitions=On('V>Vt', do=['X = X + f', 'V=0'])
-                                          )
-                           )
+        c = Dynamics(
+            name='cl',
+            aliases=['A:=a+e', 'B:=a+pi+b'],
+            regimes=Regime('dX/dt = (6 + c + sin(d))/t',
+                           'dV/dt = 1.0/t',
+                           transitions=On('V>Vt', do=['X = X + f', 'V=0'])))
         self.assertEqual(
             set(c.state_variable_names),
             set(['X', 'V']))

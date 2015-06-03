@@ -94,7 +94,7 @@ class OutputAnalogPortsDynamicsValidator(PerNamespaceDynamicsValidator):
 
         self.output_analogports = defaultdict(list)
         self.available_symbols = defaultdict(list)
-
+        self.component_class = component_class
         self.visit(component_class)
 
         for namespace, analogports in self.output_analogports.iteritems():
@@ -118,7 +118,9 @@ class OutputAnalogPortsDynamicsValidator(PerNamespaceDynamicsValidator):
         self.add_symbol(namespace=namespace, symbol=state_variable.name)
 
     def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
-        self.add_symbol(namespace=namespace, symbol=alias.lhs)
+        if alias not in chain(*(r.aliases
+                                for r in self.component_class.regimes)):
+            self.add_symbol(namespace=namespace, symbol=alias.lhs)
 
 
 class PortConnectionsDynamicsValidator(

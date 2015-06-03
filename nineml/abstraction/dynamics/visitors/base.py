@@ -13,8 +13,8 @@ from ...componentclass.visitors import ComponentActionVisitor
 class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_componentclass(self, component_class, **kwargs):
-        super(DynamicsActionVisitor, self).visit_componentclass(component_class,
-                                                                **kwargs)
+        super(DynamicsActionVisitor, self).visit_componentclass(
+            component_class, **kwargs)
         for subnode in component_class.subnodes.values():
             subnode.accept_visitor(self, **kwargs)
 
