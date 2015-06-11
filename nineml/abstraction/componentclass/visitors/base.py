@@ -17,11 +17,15 @@ class ComponentActionVisitor(ComponentVisitor):
 
     def __init__(self, require_explicit_overrides=True):
         self.require_explicit_overrides = require_explicit_overrides
+        self._scopes = []        
 
     def visit_componentclass(self, component_class, **kwargs):
         self.action_componentclass(component_class, **kwargs)
+        self._scopes.append(component_class)
         for p in component_class:
             p.accept_visitor(self, **kwargs)
+        popped = self._scopes.pop()
+        assert popped is component_class
 
     def visit_parameter(self, parameter, **kwargs):
         self.action_parameter(parameter, **kwargs)
