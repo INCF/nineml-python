@@ -34,16 +34,16 @@ class ComponentClassXMLLoader(object):
         self.document = document
 
     def load_connectports(self, element):
-        return element.get('source'), element.get('sink')
+        return element.attrib['source'], element.attrib['sink']
 
     @read_annotations
     def load_parameter(self, element):
-        return Parameter(name=element.get('name'),
-                         dimension=self.document[element.get('dimension')])
+        return Parameter(name=element.attrib['name'],
+                         dimension=self.document[element.attrib['dimension']])
 
     @read_annotations
     def load_alias(self, element):
-        name = element.get("name")
+        name = element.attrib["name"]
         rhs = self.load_single_internmaths_block(element)
         return Alias(lhs=name, rhs=rhs)
 
@@ -87,7 +87,12 @@ class ComponentClassXMLLoader(object):
                 err = "Unexpected block tag: %s " % tag
                 err += '\n Expected: %s' % ','.join(block_names)
                 raise NineMLRuntimeError(err)
-            loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
+            try:
+                loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
+            except KeyError, e:
+                raise NineMLRuntimeError(
+                    "Missing '{}' attribute in '{}' block"
+                    .format(e.message, tag))
         return loaded_objects
 
     tag_to_loader = {
