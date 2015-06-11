@@ -116,14 +116,17 @@ class Parser(object):
         return new_result
 
     def _postprocess(self, expr):
-        # Convert symbol names that were escaped to avoid clashes with in-built
-        # Sympy functions back to their original form
-        while self.escaped_names:
-            name = self.escaped_names.pop()
-            expr = expr.xreplace(
-                {sympy.Symbol(self._escape(name)): sympy.Symbol(name)})
-        # Convert ANSI C functions to corresponding operator (i.e. 'pow')
-        expr = self._func_to_op(expr)
+        # Replace 'pow' functions with sympy '**'
+        if isinstance(expr, sympy.Basic):
+            expr = expr.replace(sympy.Function('pow'), lambda b, e: b ** e)
+            # Convert symbol names that were escaped to avoid clashes with in-
+            # built Sympy functions back to their original form
+            while self.escaped_names:
+                name = self.escaped_names.pop()
+                expr = expr.xreplace(
+                    {sympy.Symbol(self._escape(name)): sympy.Symbol(name)})
+            # Convert ANSI C functions to corresponding operator (i.e. 'pow')
+            expr = self._func_to_op(expr)
         return expr
 
     def __call__(self, tokens, local_dict, global_dict):  # @UnusedVariable
