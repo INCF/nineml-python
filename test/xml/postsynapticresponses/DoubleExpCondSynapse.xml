@@ -14,7 +14,7 @@
     <EventReceivePort name="spike"/>
     <StateVariable name="g1" dimension="conductance"/>
     <StateVariable name="g2" dimension="conductance"/>
-    <Regime>
+    <Regime name="default">
       <TimeDerivative variable="g1">
         <MathInline>-g1 / tau1</MathInline>
       </TimeDerivative>

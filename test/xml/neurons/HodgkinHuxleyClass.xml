@@ -47,9 +47,9 @@
     <EventReceivePort name="incomingSpike"/>
     <EventSendPort name="outgoingSpike"/>
     <StateVariable name="v" dimension="voltage"/>
-    <StateVariable name="m"/>
-    <StateVariable name="h"/>
-    <StateVariable name="n"/>
+    <StateVariable name="m" dimension="dimensionless"/>
+    <StateVariable name="h" dimension="dimensionless"/>
+    <StateVariable name="n" dimension="dimensionless"/>
     <Regime name="single">
       <TimeDerivative variable="v">
         <MathInline>(iNa + iK + iLeak + iSynapse / surfaceArea) / C</MathInline>
