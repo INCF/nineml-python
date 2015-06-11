@@ -694,7 +694,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     @classmethod
     @read_annotations
     def from_xml(cls, element, document):
-        return DynamicsXMLLoader(document).load_dynamicsclass(element)
+        return DynamicsXMLLoader(document).load_dynamics(element)
 
 
 def inf_check(l1, l2, desc):

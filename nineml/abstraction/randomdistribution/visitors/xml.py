@@ -26,7 +26,7 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader):
         block_names = ('Parameter',)
         blocks = self._load_blocks(element, block_names=block_names)
         return RandomDistribution(
-            name=element.get('name'),
+            name=element.attrib['name'],
             parameters=blocks["Parameter"])
 
     tag_to_loader = dict(
