@@ -91,8 +91,11 @@ class ComponentClassXMLLoader(object):
                 loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
             except KeyError, e:
                 raise NineMLRuntimeError(
-                    "Missing '{}' attribute in '{}' block"
-                    .format(e.message, tag))
+                    "Missing '{}' attribute in {}{} block in '{}' document"
+                    .format(e.message,
+                            ("'{}' ".format(t.attrib['name'])
+                             if 'name' in t.attrib else ''), tag,
+                            self.document.url))
         return loaded_objects
 
     tag_to_loader = {
