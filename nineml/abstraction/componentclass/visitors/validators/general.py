@@ -15,6 +15,8 @@ import sympy
 from sympy import sympify
 from nineml.base import SendPortBase
 from nineml.abstraction.expressions import Expression
+from sympy.functions.elementary.piecewise import ExprCondPair
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 
 class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
@@ -31,7 +33,7 @@ class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
         unresolved_aliases = dict((a.lhs, a) for a in component_class.aliases)
 
         def alias_contains_unresolved_symbols(alias):
-            unresolved = [sym for sym in alias.rhs_atoms
+            unresolved = [sym for sym in alias.rhs_symbol_names
                           if sym in unresolved_aliases]
             return len(unresolved) != 0
 
@@ -74,7 +76,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
         # Check Aliases:
         for ns, aliases in self.aliases.iteritems():
             for alias in aliases:
-                for rhs_atom in alias.rhs_atoms:
+                for rhs_atom in alias.rhs_symbol_names:
                     if rhs_atom in reserved_identifiers:
                         continue
                     if rhs_atom not in self.available_symbols[ns]:
@@ -85,7 +87,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
         # Check TimeDerivatives:
         for ns, timederivatives in self.time_derivatives.iteritems():
             for timederivative in timederivatives:
-                for rhs_atom in timederivative.rhs_atoms:
+                for rhs_atom in timederivative.rhs_symbol_names:
                     if (rhs_atom not in self.available_symbols[ns] and
                             rhs_atom not in reserved_identifiers):
                         raise NineMLRuntimeError(
@@ -95,7 +97,7 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
         # Check StateAssignments
         for ns, state_assignments in self.state_assignments.iteritems():
             for state_assignment in state_assignments:
-                for rhs_atom in state_assignment.rhs_atoms:
+                for rhs_atom in state_assignment.rhs_symbol_names:
                     if (rhs_atom not in self.available_symbols[ns] and
                             rhs_atom not in reserved_identifiers):
                         err = ('Unresolved Symbol in Assignment: %s [%s]' %
@@ -192,7 +194,18 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         if isinstance(element, (sympy.Symbol, basestring)):
             if element == sympy.Symbol('t'):  # Reserved symbol 't'
                 return sympy.Symbol('t')  # representation of the time dim.
-            element = self.component_class[Expression.symbol_to_str(element)]
+            name = Expression.symbol_to_str(element)
+            element = None
+            for scope in reversed(self._scopes):
+                try:
+                    element = scope[name]
+                except KeyError:
+                    pass
+            if element is None:
+                raise NineMLRuntimeError(
+                    "Did not find '{}' in '{}' dynamics class (scopes: {})"
+                    .format(name, self.component_class.name,
+                            list(reversed(self._scopes))))
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions
@@ -210,6 +223,8 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
     def _flatten_dims(self, expr, element):
         if isinstance(expr, (sympy.Integer, sympy.Float, int, float)):
             dims = 1
+        elif isinstance(expr, (BooleanTrue, BooleanFalse)):
+            dims = 0
         elif isinstance(expr, sympy.Symbol):
             dims = self._get_dimensions(expr)
         elif isinstance(expr, sympy.Mul):
@@ -244,24 +259,26 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
             if lhs_dims - rhs_dims != 0:
                 raise NineMLDimensionError(self._construct_error_message(
                     "LHS/RHS dimensions of boolean expression",
-                    lhs_dims - rhs_dims, expr,
-                    postamble="do not match"))
+                    lhs_dims - rhs_dims, expr, postamble="do not match"))
             dims = 0  # boolean expression
         elif isinstance(expr, (sympy.And, sympy.Or, sympy.Not)):
             for arg in expr.args:
                 dims = self._flatten_dims(arg, element)
-                if dims != 0:  # boolean expression == 0
+                # boolean expression == 0
+                if dims != 0 and dims != 1:  # FIXME: allow dimless until bool params @IgnorePep8
                     raise NineMLDimensionError(self._construct_error_message(
                         "Logical expression provided non-boolean argument '{}'"
                         .format(arg), dims, expr))
         elif isinstance(type(expr), sympy.FunctionClass):
-            arg_dims = self._flatten_dims(expr.args[0], element)
-            if arg_dims != 1:
-                raise NineMLDimensionError(self._construct_error_message(
-                    "Dimensionless arguments required for function",
-                    arg_dims, element=element, expr=expr))
+            for arg in expr.args:
+                arg_dims = self._flatten_dims(arg, element)
+                if arg_dims != 1:
+                    raise NineMLDimensionError(self._construct_error_message(
+                        "Dimensionless arguments required for function",
+                        arg_dims, element=element, expr=arg))
             dims = 1
-        elif type(expr).__name__ in ('Pi',):
+        elif (type(expr).__name__ in ('Pi',) or
+              isinstance(expr, sympy.Rational)):
             dims = 1
         else:
             raise NotImplementedError
@@ -293,7 +310,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         if expr is None:
             try:
                 expr = element.rhs
-                symbols = element.rhs_symbols
+                symbols = element.rhs_symbol_names
             except AttributeError:
                 expr = ''
                 symbols = []
