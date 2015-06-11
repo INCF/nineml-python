@@ -233,14 +233,22 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
             if isinstance(dims, sympy.Basic):
                 dims = dims.powsimp()
         elif isinstance(expr, sympy.Pow):
-            exp_dims = self._flatten_dims(expr.args[1], element)
+            base = expr.args[0]
+            exponent = expr.args[1]
+            exp_dims = self._flatten_dims(exponent, element)
             if exp_dims != 1:
                 raise NineMLDimensionError(self._construct_error_message(
                     "Exponents are required to be dimensionless arguments,"
                     " which was not the case in", exp_dims, expr, element))
-            # FIXME: Probably should check that if the exponent is not an
-            # integer that the base is dimensionless
-            dims = (self._flatten_dims(expr.args[0], element) ** expr.args[1])
+            base_dims = self._flatten_dims(base, element)
+            if base_dims != 1:
+                if not isinstance(exponent, (sympy.Integer, int,
+                                             sympy.numbers.NegativeOne)):
+                    raise NineMLDimensionError(self._construct_error_message(
+                        "Integer exponents are required for non-dimensionless "
+                        "bases, which was not the case in", exp_dims, expr,
+                        element))
+            dims = (self._flatten_dims(base, element) ** exponent)
         elif isinstance(expr, sympy.Add):
             dims = None
             for arg in expr.args:

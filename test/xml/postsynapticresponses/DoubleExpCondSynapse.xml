@@ -21,7 +21,7 @@
       <TimeDerivative variable="g2">
         <MathInline>-g2 / tau2</MathInline>
       </TimeDerivative>
-      <OnEvent port="spike">
+      <OnEvent port="spike" target_regime="default">
         <StateAssignment variable="g1">
           <MathInline>g1 + gBar * normalising_factor</MathInline>
         </StateAssignment>
