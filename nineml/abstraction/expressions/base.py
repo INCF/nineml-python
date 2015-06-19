@@ -102,6 +102,7 @@ class Expression(object):
     def rhs_cstr(self):
         rhs = self._unwrap_integer_powers(self._rhs)
         cstr = ccode(rhs, user_functions=self._cfunc_map)
+        cstr = self._rationals_re.sub(r'\1/\2', cstr)
         return cstr
 
     @property
