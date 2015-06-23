@@ -4,7 +4,7 @@ from abc import ABCMeta
 from nineml.reference import resolve_reference, write_reference
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
-from nineml.utils import expect_single
+from nineml.utils import expect_single_or_none
 from nineml.annotations import annotate_xml, read_annotations
 from .values import ArrayValue
 
@@ -117,9 +117,23 @@ class Mapping(IndexArray):
 
 class Domain(BaseULObject):
 
+    element_name = 'Domain'
+
     def __init__(self, dynamics, port_connections):
         self._dynamics = dynamics
         self._port_connections = port_connections
 
+    @annotate_xml
     def to_xml(self):
-        
+        E(self.element_name, self._dynamics.to_xml(),
+          *[pc.to_xml() for pc in self._port_connections])
+
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        dynamics = expect_single_or_none(element.findall(
+            NINEML + 'DynamicsProperties'))
+            
+        dynamics = 
+          
