@@ -4,6 +4,7 @@ from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from .component import ConnectionRuleProperties, DynamicsProperties
+from ..abstraction import AnalogSendPort
 from copy import copy
 from itertools import chain
 import nineml.units as un
