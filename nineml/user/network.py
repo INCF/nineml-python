@@ -81,7 +81,7 @@ class Network(BaseULObject):
     @resolve_reference
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):
         cls.check_tag(element)
         populations = []
         for pop_elem in element.findall(NINEML + 'PopulationItem'):

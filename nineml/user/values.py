@@ -2,7 +2,11 @@
 from . import BaseULObject
 from nineml.xmlns import E, NINEML
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.utils import check_tag
+#from .component import Component
+from urllib import urlopen
+import contextlib
+import numpy
+from nineml.exceptions import NineMLRuntimeError
 from nineml.exceptions import handle_xml_exceptions
 
 
@@ -52,40 +56,54 @@ class SingleValue(BaseValue):
 class ArrayValue(BaseValue):
 
     element_name = "ArrayValue"
-    defining_attributes = ("rows",)
+    defining_attributes = ("_values",)
 
-    def __init__(self, rows):
+    def __init__(self, values):
         super(ArrayValue, self).__init__()
-        self.rows = rows
+        self._values = values
+
+    @property
+    def values(self):
+        return self._values
 
     def __repr__(self):
-        return "ArrayValue(with {} rows)".format(len(self.rows))
-
-    def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
-                len(self.rows) == len(other.rows) and
-                all(r1 == r2 for r1, r2 in zip(self.rows, other.rows)))
+        return "ArrayValue(with {} values)".format(len(self._values))
 
     def __hash__(self):
         return hash(self.value)
 
+    def __iter__(self):
+        return iter(self._values)
+
+    def __getitem__(self, index):
+        return self._values[index]
+
     @annotate_xml
     def to_xml(self):
-        return E(self.element_name, *[r.to_xml() for r in self.rows])
+        return E(self.element_name,
+                 *[ArrayValueRow(i, v).to_xml()
+                   for i, v in enumerate(self._values)])
 
     @classmethod
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
-        rows = []
-        for row_xml in element.findall(NINEML + ArrayValueRow.element_name):
-            rows.append(ArrayValueRow.from_xml(row_xml, document))
-        sorted_rows = sorted(rows, key=lambda r: r.index)
-        if any(r.index != i for i, r in enumerate(sorted_rows)):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+        rows = [ArrayValueRow.from_xml(r, document)
+                for r in element.findall(NINEML + ArrayValueRow.element_name)]
+        if set(r.index for r in rows) != set(xrange(len(rows))):
             raise Exception("Missing or duplicate indices in ArrayValue rows "
-                            "({})".format(', '.join(r.index
-                                                    for r in sorted_rows)))
-        return cls(sorted_rows)
+                            "({})".format(', '.join(r.index for r in rows)))
+        values_str = [row.value for row in sorted(rows, key=lambda r: r.index)]
+        try:
+            values = [int(v) for v in values_str]
+        except ValueError:
+            try:
+                values = [float(v) for v in values_str]
+            except ValueError:
+                raise NineMLRuntimeError(
+                    "Could not converted loaded values to numerical values "
+                    "({})".format(', '.join(values_str)))
+        return cls(values)
 
 
 class ArrayValueRow(BaseValue):
@@ -108,13 +126,13 @@ class ArrayValueRow(BaseValue):
 
     @annotate_xml
     def to_xml(self):
-        return E(self.element_name, self.value, index=self.index)
+        return E(self.element_name, str(self.value), index=str(self.index))
 
     @classmethod
     @read_annotations
     @handle_xml_exceptions
     def from_xml(cls, element, _):
-        return cls(index=element.attrib["index"], value=element.text)
+        return cls(index=int(element.attrib["index"]), value=element.text)
 
 
 class ExternalArrayValue(BaseValue):
@@ -122,8 +140,9 @@ class ExternalArrayValue(BaseValue):
     element_name = "ExternalArrayValue"
     defining_attributes = ("url", "mimetype", "columnName")
 
-    def __init__(self, url, mimetype, columnName):
+    def __init__(self, data, url=None, mimetype=None, columnName=None):
         super(ExternalArrayValue, self).__init__()
+        self.data = data
         self.url = url
         self.mimetype = mimetype
         self.columnName = columnName
@@ -131,12 +150,14 @@ class ExternalArrayValue(BaseValue):
     def __repr__(self):
         return "ExternalArrayValue(with {} rows)".format(len(self.rows))
 
-    def __eq__(self, other):
-        return (self.url == other.url and self.mimetype == other.mimetype and
-                self.columnName == other.columnName)
-
     @annotate_xml
     def to_xml(self):
+        try:
+            numpy.savetxt(self.url, self.data)
+        except Exception:
+            raise NineMLRuntimeError(
+                "Could not write external array to file '{}'"
+                .format(self.url))
         return E(self.element_name, url=self.url, mimetype=self.mimetype,
                  columnName=self.columnName)
 
@@ -144,35 +165,38 @@ class ExternalArrayValue(BaseValue):
     @read_annotations
     @handle_xml_exceptions
     def from_xml(cls, element, _):
-        return cls(url=element.attrib["url"],
+        url = element.attrib["url"]
+        with contextlib.closing(urlopen(url)) as f:
+            data = numpy.loadtxt(f)
+        return cls(data, url=element.attrib["url"],
                    mimetype=element.attrib["mimetype"],
                    columnName=element.attrib["columnName"])
 
 
-# class ComponentValue(BaseValue):
+#class ComponentValue(BaseValue):
 #
-#     element_name = "ComponentValue"
-#     defining_attributes = ("port", "component")
+#    element_name = "ComponentValue"
+#    defining_attributes = ("port", "component")
 #
-#     def __init__(self, component, port):
-#         self.port = port
-#         self.component = component
+#    def __init__(self, component, port):
+#        self.port = port
+#        self.component = component
 #
-#     def __repr__(self):
-#         return ("ComponentValue({} port of {} component)"
-#                 .format(self.port, self.component.name))
+#    def __repr__(self):
+#        return ("ComponentValue({} port of {} component)"
+#                .format(self.port, self.component.name))
 #
-#     def __eq__(self, other):
-#         return (self.port == other.port and
-#                 self.component == other.component)
+#    def __eq__(self, other):
+#        return (self.port == other.port and
+#                self.component == other.component)
 #
-#     @annotate_xml
-#     def to_xml(self):
-#         return E(self.element_name, self.component.to_xml(), port=self.url)
+#    @annotate_xml
+#    def to_xml(self):
+#        return E(self.element_name, self.component.to_xml(), port=self.url)
 #
 #     @classmethod
 #     @read_annotations
-#     def from_xml(cls, element, document):
+#     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 #         comp_element = element.find(NINEML + 'DynamicsProperties')
 #         if comp_element is None:
 #             comp_element = element.find(NINEML + 'Reference')
