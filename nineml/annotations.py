@@ -2,6 +2,7 @@ from copy import copy
 from collections import defaultdict
 from nineml.xmlns import E, NINEML
 from nineml import DocumentLevelObject
+from itertools import chain
 
 
 class Annotations(defaultdict, DocumentLevelObject):
@@ -32,14 +33,16 @@ class Annotations(defaultdict, DocumentLevelObject):
 
     def to_xml(self):
         return E(self.element_name,
-                 *self.itervalues())
+                 *chain(*[[E(k, str(v)) for k, v in dct.iteritems()]
+                          for dct in self.itervalues()]))
 
     @classmethod
     def from_xml(cls, element):
         children = {}
         for child in element.getchildren():
-            children[child.tag] = child
-        return cls(**children)
+            children[child.tag] = child.text
+        kwargs = {NINEML: children}
+        return cls(**kwargs)
 
 
 def read_annotations(from_xml):
@@ -54,6 +57,7 @@ def read_annotations(from_xml):
             element.remove(element.find(NINEML + Annotations.element_name))
         else:
             annotations = Annotations()
+        kwargs['annotations'] = annotations
         nineml_object = from_xml(cls, element, *args, **kwargs)
         nineml_object.annotations.update(annotations.iteritems())
         return nineml_object
@@ -72,5 +76,8 @@ def annotate_xml(to_xml):
             elem.append(args[0].annotations.to_xml())
         return elem
     return annotate_to_xml
+
+
+NO_DIMENSION_CHECK = 'NoDimensionCheck'
 
 from nineml.utils import expect_none_or_single

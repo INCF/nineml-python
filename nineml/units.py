@@ -15,7 +15,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     element_name = 'Dimension'
     dimension_names = ('m', 'l', 't', 'i', 'n', 'k', 'j')
-    SI_units = ('Kg', 'm', 's', 'A', 'mol', 'K', 'cd')
+    SI_units = ('kg', 'm', 's', 'A', 'mol', 'K', 'cd')
     defining_attributes = ('_dims',)
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
@@ -473,6 +473,8 @@ mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s",
 unitless = Unit(name="unitless", dimension=dimensionless, power=0)
 coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)
 cd = Unit(name="cd", dimension=luminous_intensity, power=0)
+kg_per_coulomb = Unit(name="kg_per_coulomb", dimension=mass_per_charge,
+                      power=0)
 
 if __name__ == '__main__':
     print 1 / voltage

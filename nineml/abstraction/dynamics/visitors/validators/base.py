@@ -30,7 +30,8 @@ class DynamicsValidator(object):
     """Class for grouping all the component-validations tests together"""
 
     @classmethod
-    def validate_componentclass(cls, component_class):
+    def validate_componentclass(cls, component_class,
+                                validate_dimensions=True):
         """
         Tests a componentclassclass against a variety of tests, to verify its
         internal structure
@@ -51,4 +52,5 @@ class DynamicsValidator(object):
         RegimeGraphDynamicsValidator(component_class)
         RegimeOnlyHasOneHandlerPerEventDynamicsValidator(component_class)
         CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(component_class)
-        DimensionalityDynamicsValidator(component_class)
+        if validate_dimensions:
+            DimensionalityDynamicsValidator(component_class)

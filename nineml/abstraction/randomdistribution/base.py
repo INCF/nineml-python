@@ -5,14 +5,12 @@ from nineml.exceptions import handle_xml_exceptions
 
 class RandomDistribution(ComponentClass):
 
-    element_name = 'RandomDistributionClass'
-    defining_attributes = ('name', '_parameters', 'standard_library')
+    element_name = 'RandomDistribution'
+    defining_attributes = ('name', '_parameters')
 
-    def __init__(self, name, standard_library, parameters=None,
-                 url=None):
-        super(RandomDistributionClass, self).__init__(
-            name, parameters, url=url)
-        self.standard_library = standard_library
+    def __init__(self, name, parameters=None):
+        super(RandomDistribution, self).__init__(
+            name, parameters)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -42,19 +40,12 @@ class RandomDistribution(ComponentClass):
         extractor.visit(self)
         return extractor.expressions
 
-    @property
-    def standard_library(self):
-        return self._main_block.standard_library
-
-    @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
         return RandomDistributionXMLWriter().visit(self)
 
     @classmethod
-    @read_annotations
-    @handle_xml_exceptions
     def from_xml(cls, element, document):
         return RandomDistributionXMLLoader(
             document).load_randomdistributionclass(element)
