@@ -4,7 +4,7 @@ from abc import ABCMeta
 from nineml.reference import resolve_reference, write_reference
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
-from nineml.utils import expect_single
+from nineml.utils import expect_single, normalise_parameter_as_list
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from .values import ArrayValue
@@ -15,12 +15,13 @@ from .port_connections import PortConnection, Sender
 class MultiComponent(BaseULObject, DocumentLevelObject):
 
     element_name = "MultiComponent"
+    defining_attributes = ('_name', '_subcomponents', '_port_exposures')
 
-    def __init__(self, name, subcomponents, port_exposures):
+    def __init__(self, name, subcomponents, port_exposures=()):
         super(MultiComponent, self).__init__()
         self._name = name
-        self._subcomponents = subcomponents
-        self._port_exposures = port_exposures
+        self._subcomponents = dict((c.name, c) for c in subcomponents)
+        self._port_exposures = dict((pe.name, pe) for pe in port_exposures)
 
     @property
     def name(self):
@@ -28,11 +29,25 @@ class MultiComponent(BaseULObject, DocumentLevelObject):
 
     @property
     def subcomponents(self):
-        return self._subcomponents
+        return self._subcomponents.itervalues()
 
     @property
     def port_exposures(self):
-        return self._port_exposures
+        return self._port_exposures.itervalues()
+
+    def subcomponent(self, name):
+        return self._subcomponents[name]
+
+    def port_exposure(self, name):
+        return self._port_exposures[name]
+
+    @property
+    def subcomponent_names(self):
+        return self._subcomponents.iterkeys()
+
+    @property
+    def port_exposure_names(self):
+        return self._port_exposures.iterkeys()
 
     @property
     def attributes_with_units(self):
@@ -40,10 +55,12 @@ class MultiComponent(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, document, **kwargs):
         return E(self.element_name,
-                 *chain((c.to_xml() for c in self.subcomponents),
-                        (pe.to_xml() for pe in self.port_exposures)),
+                 *list(chain((c.to_xml(document, **kwargs)
+                              for c in self.subcomponents),
+                             (pe.to_xml(document, **kwargs)
+                              for pe in self.port_exposures))),
                  name=self.name)
 
     @classmethod
@@ -62,6 +79,7 @@ class MultiComponent(BaseULObject, DocumentLevelObject):
 class PortExposure(BaseULObject):
 
     element_name = 'PortExposure'
+    defining_attributes = ('_name', '_component', '_port')
 
     def __init__(self, name, component, port):
         super(PortExposure, self).__init__()
@@ -87,7 +105,7 @@ class PortExposure(BaseULObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name,
                  name=self.name,
                  component=self.component,
@@ -120,35 +138,59 @@ class MultiCompartment(BaseULObject, DocumentLevelObject):
             TODO: need to check if positions/structure are in the v1 spec
     """
     element_name = "MultiCompartment"
-    defining_attributes = ('name', 'tree', 'mapping', 'domains')
+    defining_attributes = ('_name', '_tree', '_mapping', '_domains')
 
     def __init__(self, name, tree, mapping, domains, url=None):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
+        assert isinstance(name, basestring)
         self._name = name
-        self._domains = domains
+        self._domains = dict((d.name, d) for d in domains)
+        assert isinstance(mapping, Mapping)
         self._mapping = mapping
-        self._tree = tree
+        if isinstance(tree, Tree):
+            self._tree = tree
+        elif hasattr(tree, '__iter__'):
+            self._tree = Tree(normalise_parameter_as_list(tree))
 
     @property
     def name(self):
         return self._name
 
     @property
-    def domains(self):
-        return self._domains
-
-    @property
     def mapping(self):
         return self._mapping
 
     @property
+    def domains(self):
+        return self._domains.itervalues()
+
+    def domain(self, name_or_index):
+        """
+        Returns the domain corresponding to either the compartment index if
+        provided an int or the domain name if provided a str
+        """
+        if isinstance(name_or_index, int):
+            name = self.mapping.domain_name(name_or_index)
+        elif isinstance(name_or_index, basestring):
+            name = name_or_index
+        else:
+            raise NineMLRuntimeError(
+                "Unrecognised type of 'name_or_index' ({}) can be either int "
+                "or str".format(name_or_index))
+        return self._domains[name]
+
+    @property
+    def domain_names(self):
+        return self._domains.iterkeys()
+
+    @property
     def tree(self):
-        return self._tree
+        return self._tree.indices
 
     def __str__(self):
-        return ('MultiCompartment "%s": %dx"%s" %s' %
-                (self.name, self.size, self.cell.name, self.positions))
+        return ("MultiCompartment(name='{}', {} compartments, {} domains)"
+                .format(self.name, len(self.tree), len(self._domains)))
 
     @property
     def attributes_with_units(self):
@@ -156,11 +198,11 @@ class MultiCompartment(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 self.tree.to_xml(),
-                 self.mapping.to_xml(),
-                 *[d.to_xml() for d in self.domains],
+                 self._tree.to_xml(document, **kwargs),
+                 self._mapping.to_xml(document, **kwargs),
+                 *[d.to_xml(document, **kwargs) for d in self.domains],
                  name=self.name)
 
     @classmethod
@@ -178,33 +220,29 @@ class MultiCompartment(BaseULObject, DocumentLevelObject):
                    domains=domains)
 
 
-class IndexArray(BaseULObject):
+class Tree(BaseULObject):
 
-    """
-    Representation of a numerical- or string-valued parameter.
-
-    A numerical parameter is a (name, value, units) triplet, a string parameter
-    is a (name, value) pair.
-
-    Numerical values may either be numbers, or a component_class that generates
-    numbers, e.g. a RandomDistribution instance.
-    """
+    element_name = "Tree"
     __metaclass__ = ABCMeta  # Abstract base class
 
-    defining_attributes = ("_values",)
+    defining_attributes = ("_indices",)
 
-    def __init__(self, values):
-        super(IndexArray, self).__init__()
-        self._values = values
+    def __init__(self, indices):
+        super(Tree, self).__init__()
+        if any(not isinstance(i, int) for i in indices):
+            raise NineMLRuntimeError(
+                "Mapping keys need to be ints ({})"
+                .format(', '.join(str(i) for i in indices)))
+        self._indices = indices
 
     @property
-    def values(self):
-        return self._values
+    def indices(self):
+        return self._indices
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 ArrayValue(self._values).to_xml())
+                 ArrayValue(self._indices).to_xml(document, **kwargs))
 
     @classmethod
     @read_annotations
@@ -214,21 +252,88 @@ class IndexArray(BaseULObject):
         return cls(array.values)
 
 
-class Tree(IndexArray):
-
-    element_name = "Tree"
-
-
-class Mapping(IndexArray):
+class Mapping(BaseULObject):
 
     element_name = "Mapping"
+    defining_attributes = ("_indices", '_keys')
+
+    def __init__(self, keys, indices):
+        super(Mapping, self).__init__()
+        self._keys = keys
+        if any(not isinstance(k, int) for k in keys.iterkeys()):
+            raise NineMLRuntimeError(
+                "Mapping keys need to be ints ({})"
+                .format(', '.join(str(k) for k in keys.iterkeys())))
+        if any(i not in keys.iterkeys() for i in indices):
+            raise NineMLRuntimeError(
+                "Some mapping indices ({}) are not present in key"
+                .format(', '.join(set(str(i) for i in indices
+                                      if i not in keys.iterkeys()))))
+        self._indices = indices
+
+    @property
+    def keys(self):
+        return self._keys
+
+    @property
+    def indices(self):
+        return self._indices
+
+    def domain_name(self, index):
+        domain_index = self.indices[index]
+        return self.keys[domain_index]
+
+    @annotate_xml
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        return E(self.element_name,
+                 ArrayValue(self._indices).to_xml(document, **kwargs),
+                 *[Key(i, n).to_xml(document, **kwargs)
+                   for i, n in self.keys.iteritems()])
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):
+        array = ArrayValue.from_xml(
+            expect_single(element.findall(NINEML + 'ArrayValue')), document)
+        keys = [Key.from_xml(e, document)
+                for e in element.findall(NINEML + 'Key')]
+        return cls(dict((k.index, k.domain) for k in keys), array.values)
+
+
+class Key(BaseULObject):
+
+    element_name = 'Key'
+
+    def __init__(self, index, domain):
+        BaseULObject.__init__(self)
+        self._index = index
+        self._domain = domain
+
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def domain(self):
+        return self._domain
+
+    @annotate_xml
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        return E(self.element_name, index=str(self.index),
+                 domain=self.domain)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document):  # @UnusedVariable
+        return cls(int(element.attrib['index']), element.attrib['domain'])
 
 
 class SubComponent(BaseULObject):
 
     element_name = 'SubComponent'
+    defining_attributes = ('_name', '_dynamics', '_port_connections')
 
-    def __init__(self, name, dynamics, port_connections):
+    def __init__(self, name, dynamics, port_connections=()):
         BaseULObject.__init__(self)
         self._name = name
         self._dynamics = dynamics
@@ -251,9 +356,11 @@ class SubComponent(BaseULObject):
         return self._dynamics.attributes_with_units
 
     @annotate_xml
-    def to_xml(self):
-        return E(self.element_name, self._dynamics.to_xml(),
-                 *[pc.to_xml() for pc in self._port_connections])
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        return E(self.element_name, self._dynamics.to_xml(document, **kwargs),
+                 *[pc.to_xml(document, **kwargs)
+                   for pc in self._port_connections],
+                 name=self.name)
 
     @classmethod
     @read_annotations
@@ -267,21 +374,12 @@ class SubComponent(BaseULObject):
         port_connections = [
             PortConnection.from_xml(e, document)
             for e in element.findall(NINEML + 'PortConnection')]
-        return cls(dynamics, port_connections)
+        return cls(element.attrib['name'], dynamics, port_connections)
 
 
 class Domain(SubComponent):
 
     element_name = 'Domain'
-
-    def __init__(self, index, dynamics, port_connections):
-        BaseULObject.__init__(self)
-        super(Domain, self).__init__(str(index), dynamics, port_connections)
-        self._index = index
-
-    @property
-    def index(self):
-        return self._index
 
 
 class FromSibling(Sender):
@@ -299,7 +397,7 @@ class FromSibling(Sender):
         return (self.element_name, self.component, self._port_name)
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name, component=self.component,
                  port=self.port_name)
 
@@ -324,7 +422,7 @@ class MultiCompartmentSender(Sender):
         return (self.element_name, self.domain, self._port_name)
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         kwargs = {'port': self.port_name}
         if self.domain:
             kwargs['domain'] = str(self.domain)
@@ -334,7 +432,7 @@ class MultiCompartmentSender(Sender):
     @read_annotations
     def _from_xml(cls, element, document):  # @UnusedVariable
         cls.check_tag(element)
-        return cls(domain=element.attrib['domain'],
+        return cls(domain=element.get('domain', None),
                    port=element.attrib['port'])
 
 

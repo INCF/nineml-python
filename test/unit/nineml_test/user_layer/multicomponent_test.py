@@ -17,7 +17,7 @@ examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
 
 class TestMultiComponent(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self): 
 
         self.a = Dynamics(
             name='A',

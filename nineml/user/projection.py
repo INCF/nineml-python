@@ -7,15 +7,12 @@ from .component import ConnectionRuleProperties, DynamicsProperties
 from ..abstraction import AnalogSendPort
 from copy import copy
 from itertools import chain
-import nineml.units as un
 from nineml.utils import (
     expect_single, expect_none_or_single)
-from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
 from .port_connections import (
-    BasePortConnection, AnalogPortConnection, EventPortConnection)
-from nineml.exceptions import handle_xml_exceptions
+    AnalogPortConnection, EventPortConnection, BasePortConnection)
 
 
 class Projection(BaseULObject, DocumentLevelObject):
@@ -61,10 +58,11 @@ class Projection(BaseULObject, DocumentLevelObject):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
         assert isinstance(name, basestring)
+        try:
+            assert isinstance(delay, Quantity)
+        except:
+            raise
         self.name = name
-        if isinstance(delay, tuple):
-            value, units = delay
-            delay = Delay(SingleValue(value), units)
         assert pre.name != post.name
         self._pre = pre
         self._post = post
@@ -143,7 +141,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         members.extend([
             E.Response(self.response.to_xml(document, **kwargs)),
             E.Connectivity(self.connectivity.to_xml(document, **kwargs)),
-            self.delay.to_xml(document, **kwargs)])
+            E.Delay(self.delay.to_xml(document, **kwargs))])
         if self.plasticity is not None:
             members.append(
                 E.Plasticity(self.plasticity.to_xml(document, **kwargs)))
@@ -154,7 +152,6 @@ class Projection(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @handle_xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         # Get Name
@@ -193,9 +190,10 @@ class Projection(BaseULObject, DocumentLevelObject):
             EventPortConnection.from_xml(pc, document, **kwargs)
             for pc in element.findall(NINEML + 'EventPortConnection')]
         # Get Delay
-        delay = Delay.from_xml(
-            expect_single(element.findall(NINEML + 'Delay')), document,
-            **kwargs)
+        delay = Quantity.from_xml(
+            expect_single(
+                expect_single(element.findall(NINEML + 'Delay'))
+                .findall(NINEML + 'Quantity')), document, **kwargs)
         return cls(name=name,
                    pre=pre,
                    post=post,
@@ -206,30 +204,3 @@ class Projection(BaseULObject, DocumentLevelObject):
                    port_connections=chain(analog_port_connections,
                                           event_port_connections),
                    url=document.url)
-
-
-class Delay(Quantity):
-    """
-    Representation of the connection delay.
-
-    **Arguments**:
-        *value*
-            a numerical value, array of such values, or a component which
-            generates such values (e.g. a random number generator). Allowed
-            types are :class:`int`, :class:`float`, :class:`SingleValue`,
-            :class:`ArrayValue', :class:`ExternalArrayValue`,
-            :class:`ComponentValue`.
-        *units*
-            a :class:`Unit` object representing the physical units of the
-            value.
-
-    Numerical values may either be numbers, or a component that generates
-    numbers, e.g. a RandomDistribution instance.
-    """
-    element_name = 'Delay'
-
-    def __init__(self, value, units):
-        if units.dimension != un.time:
-            raise Exception("Units for delay must be of the time dimension "
-                            "(found {})".format(units))
-        Quantity.__init__(self, value, units)
