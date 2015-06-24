@@ -22,7 +22,7 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
-    def load_connectionruleclass(self, element):
+    def load_connectionruleclass(self, element, **kwargs):  # @UnusedVariable
         block_names = ('Parameter',)
         blocks = self._load_blocks(element, block_names=block_names)
         return ConnectionRule(
@@ -37,7 +37,7 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
 class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
-    def visit_componentclass(self, component_class):
+    def visit_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         return E('ConnectionRule',
                  *[e.accept_visitor(self) for e in component_class],
                  name=component_class.name)
