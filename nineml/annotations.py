@@ -77,11 +77,7 @@ def annotate_xml(to_xml):
         # If User Layer class
         else:
             obj = self
-        try:
-            elem = to_xml(self, document_or_obj, **kwargs)
-        except:
-            print type(self)
-            raise
+        elem = to_xml(self, document_or_obj, **kwargs)
         try:
             elem.append(obj.annotations.to_xml(**kwargs))
         except:
