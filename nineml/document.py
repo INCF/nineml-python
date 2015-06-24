@@ -23,7 +23,8 @@ class Document(dict, BaseNineMLObject):
     element_name = 'NineML'
     write_order = ['Population', 'Projection', 'Selection', 'Network',
                    'Dynamics', 'ConnectionRule', 'RandomDistribution',
-                   'DynamicsProperties', 'ConnectionRuleProperties',
+                   'DynamicsProperties', 'MultiComponent',
+                   'MultiCompartment', 'ConnectionRuleProperties',
                    'RandomDistributionProperties', 'Dimension', 'Unit']
 
     # A tuple to hold the unresolved elements
