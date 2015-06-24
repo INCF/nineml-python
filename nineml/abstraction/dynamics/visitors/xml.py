@@ -30,7 +30,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
-    def load_dynamics(self, element):
+    def load_dynamics(self, element, **kwargs):  # @UnusedVariable
 
         block_names = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
                        'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
@@ -39,6 +39,10 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
 
         blocks = self._load_blocks(element, block_names=block_names)
 
+        try:
+            dyn_kwargs = {'validate_dimensions': kwargs['validate_dimensions']}
+        except KeyError:
+            dyn_kwargs = {}
         return Dynamics(
             name=element.attrib['name'],
             parameters=blocks["Parameter"],
@@ -50,59 +54,61 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
             regimes=blocks["Regime"],
             aliases=blocks["Alias"],
             state_variables=blocks["StateVariable"],
-            constants=blocks["Constant"])
+            constants=blocks["Constant"], **dyn_kwargs)
 
     @read_annotations
-    def load_eventsendport(self, element):
+    def load_eventsendport(self, element, **kwargs):  # @UnusedVariable
         return EventSendPort(name=element.attrib['name'])
 
     @read_annotations
-    def load_eventreceiveport(self, element):
+    def load_eventreceiveport(self, element, **kwargs):  # @UnusedVariable
         return EventReceivePort(name=element.attrib['name'])
 
     @read_annotations
-    def load_analogsendport(self, element):
+    def load_analogsendport(self, element, **kwargs):  # @UnusedVariable
         return AnalogSendPort(
             name=element.attrib['name'],
             dimension=self.document[element.attrib['dimension']])
 
     @read_annotations
-    def load_analogreceiveport(self, element):
+    def load_analogreceiveport(self, element, **kwargs):  # @UnusedVariable
         return AnalogReceivePort(
             name=element.attrib['name'],
             dimension=self.document[element.attrib['dimension']])
 
     @read_annotations
-    def load_analogreduceport(self, element):
+    def load_analogreduceport(self, element, **kwargs):  # @UnusedVariable
         return AnalogReducePort(
             name=element.attrib['name'],
             dimension=self.document[element.attrib['dimension']],
             operator=element.attrib['operator'])
 
     @read_annotations
-    def load_regime(self, element):
-        block_names = ('TimeDerivative', 'OnCondition', 'OnEvent')
+    def load_regime(self, element, **kwargs):  # @UnusedVariable
+        block_names = ('TimeDerivative', 'OnCondition', 'OnEvent',
+                       'Alias')
         blocks = self._load_blocks(element, block_names=block_names)
         transitions = blocks["OnEvent"] + blocks['OnCondition']
         return Regime(name=element.attrib['name'],
                       time_derivatives=blocks["TimeDerivative"],
-                      transitions=transitions)
+                      transitions=transitions,
+                      aliases=blocks['Alias'])
 
     @read_annotations
-    def load_statevariable(self, element):
+    def load_statevariable(self, element, **kwargs):  # @UnusedVariable
         name = element.attrib['name']
         dimension = self.document[element.attrib['dimension']]
         return StateVariable(name=name, dimension=dimension)
 
     @read_annotations
-    def load_timederivative(self, element):
+    def load_timederivative(self, element, **kwargs):  # @UnusedVariable
         variable = element.attrib['variable']
         expr = self.load_single_internmaths_block(element)
         return TimeDerivative(variable=variable,
                               rhs=expr)
 
     @read_annotations
-    def load_oncondition(self, element):
+    def load_oncondition(self, element, **kwargs):  # @UnusedVariable
         block_names = ('Trigger', 'StateAssignment', 'OutputEvent')
         blocks = self._load_blocks(element, block_names=block_names)
         target_regime = element.attrib['target_regime']
@@ -113,7 +119,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
                            target_regime=target_regime)
 
     @read_annotations
-    def load_onevent(self, element):
+    def load_onevent(self, element, **kwargs):  # @UnusedVariable
         block_names = ('StateAssignment', 'OutputEvent')
         blocks = self._load_blocks(element, block_names=block_names)
         target_regime = element.attrib['target_regime']
@@ -122,17 +128,17 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
                        output_events=blocks["OutputEvent"],
                        target_regime=target_regime)
 
-    def load_trigger(self, element):
+    def load_trigger(self, element, **kwargs):  # @UnusedVariable
         return Trigger(self.load_single_internmaths_block(element))
 
     @read_annotations
-    def load_stateassignment(self, element):
+    def load_stateassignment(self, element, **kwargs):  # @UnusedVariable
         lhs = element.attrib['variable']
         rhs = self.load_single_internmaths_block(element)
         return StateAssignment(lhs=lhs, rhs=rhs)
 
     @read_annotations
-    def load_outputevent(self, element):
+    def load_outputevent(self, element, **kwargs):  # @UnusedVariable
         port_name = element.attrib['port']
         return OutputEvent(port_name=port_name)
 
@@ -156,16 +162,23 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
 
 class DynamicsXMLWriter(ComponentClassXMLWriter):
 
+    # Maintains order of elements between writes
+    write_order = ['Parameter', 'EventReceivePort', 'AnalogReceivePort',
+                   'AnalogReducePort', 'EventSendPort', 'AnalogSendPort',
+                   'StateVariable', 'Regime', 'Alias', 'Constant',
+                   'TimeDerivative', 'OnEvent', 'OnCondition', 'Trigger',
+                   'StateAssignment', 'OutputEvent', 'Annotations']
+
     @annotate_xml
     def visit_componentclass(self, component_class):
         return E('Dynamics',
-                 *[e.accept_visitor(self) for e in component_class],
+                 *self._sort(e.accept_visitor(self) for e in component_class),
                  name=component_class.name)
 
     @annotate_xml
     def visit_regime(self, regime):
         return E('Regime', name=regime.name,
-                 *[e.accept_visitor(self) for e in regime])
+                 *self._sort(e.accept_visitor(self) for e in regime))
 
     @annotate_xml
     def visit_statevariable(self, state_variable):
@@ -217,7 +230,7 @@ class DynamicsXMLWriter(ComponentClassXMLWriter):
     def visit_oncondition(self, on_condition):
         return E('OnCondition', on_condition.trigger.accept_visitor(self),
                  target_regime=on_condition._target_regime.name,
-                 *[e.accept_visitor(self) for e in on_condition])
+                 *self._sort(e.accept_visitor(self) for e in on_condition))
 
     @annotate_xml
     def visit_trigger(self, trigger):
@@ -227,4 +240,4 @@ class DynamicsXMLWriter(ComponentClassXMLWriter):
     def visit_onevent(self, on_event):
         return E('OnEvent', port=on_event.src_port_name,
                  target_regime=on_event.target_regime.name,
-                 *[e.accept_visitor(self) for e in on_event])
+                 *self._sort(e.accept_visitor(self) for e in on_event))

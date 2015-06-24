@@ -33,22 +33,22 @@ class ComponentClassXMLLoader(object):
             document = Document()
         self.document = document
 
-    def load_connectports(self, element):
+    def load_connectports(self, element, **kwargs):  # @UnusedVariable
         return element.attrib['source'], element.attrib['sink']
 
     @read_annotations
-    def load_parameter(self, element):
+    def load_parameter(self, element, **kwargs):  # @UnusedVariable
         return Parameter(name=element.attrib['name'],
                          dimension=self.document[element.attrib['dimension']])
 
     @read_annotations
-    def load_alias(self, element):
+    def load_alias(self, element, **kwargs):  # @UnusedVariable
         name = element.attrib["name"]
         rhs = self.load_single_internmaths_block(element)
         return Alias(lhs=name, rhs=rhs)
 
     @read_annotations
-    def load_constant(self, element):
+    def load_constant(self, element, **kwargs):  # @UnusedVariable
         return Constant(name=element.attrib['name'],
                         value=float(element.attrib['value']),
                         units=self.document[element.attrib['units']])

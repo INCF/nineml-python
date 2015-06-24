@@ -21,6 +21,8 @@ from nineml.utils import (check_list_contain_same_items, invert_dictionary,
                             assert_no_duplicates)
 from .visitors.cloner import (
     DynamicsExpandAliasDefinition, DynamicsCloner)
+from nineml.xmlns import NINEML
+from nineml.annotations import NO_DIMENSION_CHECK
 
 
 class _NamespaceMixin(object):
@@ -182,7 +184,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                  subnodes=None,
                  portconnections=None, regimes=None,
                  aliases=None, state_variables=None,
-                 constants=None, url=None):
+                 constants=None, url=None, validate_dimensions=True):
         """Constructs a Dynamics
 
         :param name: The name of the component_class.
@@ -219,7 +221,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
 
         """
         ComponentClass.__init__(self, name=name, parameters=parameters,
-                                aliases=aliases, constants=constants, url=url)
+                                aliases=aliases, constants=constants)
         regimes = normalise_parameter_as_list(regimes)
         state_variables = normalise_parameter_as_list(state_variables)
 
@@ -322,6 +324,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         self._flattener = None
 
         # Is the finished component_class valid?:
+        self.annotations[NINEML][NO_DIMENSION_CHECK] = validate_dimensions
         self.validate()
 
     # -------------------------- #
@@ -344,9 +347,12 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     def __repr__(self):
         return "<dynamics.Dynamics %s>" % self.name
 
-    def validate(self):
+    def validate(self, validate_dimensions=None):
+        if validate_dimensions:
+            validate_dimensions = self.annotations[NINEML].get(
+                NO_DIMENSION_CHECK, True)
         self._resolve_transition_regimes()
-        DynamicsValidator.validate_componentclass(self)
+        DynamicsValidator.validate_componentclass(self, validate_dimensions)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -685,14 +691,12 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                                 .format(trans.target_regime, trans._name))
                     trans.set_target_regime(target)
 
-    @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
         return DynamicsXMLWriter().visit(self)
 
     @classmethod
-    @read_annotations
     def from_xml(cls, element, document):
         return DynamicsXMLLoader(document).load_dynamics(element)
 
