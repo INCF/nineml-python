@@ -135,7 +135,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     @classmethod
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         kwargs = dict(element.attrib)
         name = kwargs.pop('name')
         kwargs = dict((k, int(v)) for k, v in kwargs.items())
@@ -312,7 +312,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     @classmethod
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         name = element.attrib['symbol']
         dimension = document[element.attrib['dimension']]
         power = int(element.get('power', 0))

@@ -60,7 +60,7 @@ class ConnectionRule(ComponentClass):
         return ConnectionRuleXMLWriter().visit(self)
 
     @classmethod
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return ConnectionRuleXMLLoader(document).load_connectionruleclass(
             element)
 

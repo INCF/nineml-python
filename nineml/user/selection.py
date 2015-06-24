@@ -67,7 +67,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     @resolve_reference
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         # The only supported op at this stage
         op = Concatenate.from_xml(
@@ -120,7 +120,7 @@ class Concatenate(BaseULObject):
     @resolve_reference
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         # Load references and indices from xml
         items = ((e.attrib['index'],
                   Reference.from_xml(e.find(NINEML + 'Reference'), document))

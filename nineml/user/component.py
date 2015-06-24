@@ -92,7 +92,7 @@ class Component(BaseULObject, DocumentLevelObject):
     :class:`~nineml.abstraction.ComponentClass`.
 
     A component_class may be created either from a
-    :class:`~nineml.abstraction_layer.ComponentClass`  together with a set
+    :class:`~nineml.abstraction.ComponentClass`  together with a set
     of properties (parameter values), or by cloning then modifying an
     existing component_class (the prototype).
 
@@ -173,6 +173,15 @@ class Component(BaseULObject, DocumentLevelObject):
     def get_element_name(self):
         "Used to stop accidental construction of this class"
         pass        
+
+    def __getinitargs__(self):
+        return (self.name, self.definition, self.property_set,
+                self.initial_value_set, self._url)
+
+    @abstractmethod
+    def get_element_name(self):
+        "Used to stop accidental construction of this class"
+        pass
 
     def __getinitargs__(self):
         return (self.name, self.definition, self.property_set,
@@ -328,7 +337,7 @@ class Component(BaseULObject, DocumentLevelObject):
     @resolve_reference
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         """docstring missing"""
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
@@ -504,7 +513,7 @@ class Quantity(BaseULObject):
     @classmethod
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         if element.find(NINEML + 'SingleValue') is not None:
             value = SingleValue.from_xml(
                 expect_single(element.findall(NINEML + 'SingleValue')),
@@ -581,7 +590,7 @@ class Property(Quantity):
     @classmethod
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):
         cls.check_tag(element)
         quantity = Quantity.from_xml(element, document)
         try:
@@ -672,6 +681,8 @@ class InitialSet(PropertySet):
 
 class DynamicsProperties(Component):
 
+    element_name = 'DynamicsProperties'
+
     def check_initial_values(self):
         for var in self.definition.componentclass.state_variables:
             try:
@@ -689,7 +700,6 @@ class ConnectionRuleProperties(Component):
     """
     docstring needed
     """
-
     element_name = 'ConnectionRuleProperties'
 
     def get_element_name(self):
