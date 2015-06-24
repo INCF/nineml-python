@@ -3,13 +3,12 @@ import unittest
 from nineml import load, Document
 from nineml.user.multicomponent import (
     MultiComponent, SubComponent, PortExposure, MultiCompartment,
-    FromSibling, FromDistal, FromProximal, Tree, Mapping, Domain)
+    FromSibling, FromDistal, FromProximal, Mapping, Domain)
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, OutputEvent, AnalogSendPort, On,
     StateAssignment)
 from nineml.user.port_connections import PortConnection
 from nineml.user.component import DynamicsProperties
-from nineml.user.values import ArrayValue
 
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
@@ -42,7 +41,7 @@ class TestMultiComponent(unittest.TestCase):
         self.b = Dynamics(
             name='B',
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1',
-                     'A4 := SV1^3 + SV2^-3'],
+                     'A4 := SV1^3 + SV2^3'],
             regimes=[
                 Regime(
                     'dSV1/dt = -SV1 / (P2*t)',
@@ -112,7 +111,8 @@ class TestMultiComponent(unittest.TestCase):
                     port_connections=[
                         PortConnection('ARP1', FromDistal('A1')),
                         PortConnection('ARP2', FromProximal('A2')),
-                        PortConnection('ARP3', FromDistal('A3', domain=1))]),
+                        PortConnection('ARP3',
+                                       FromDistal('A3', domain='dendrites'))]),
                 Domain(
                     index=1,
                     dynamics=self.b_props,
