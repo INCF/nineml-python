@@ -348,9 +348,9 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         return "<dynamics.Dynamics %s>" % self.name
 
     def validate(self, validate_dimensions=None):
-        if validate_dimensions:
+        if validate_dimensions is None:
             validate_dimensions = self.annotations[NINEML].get(
-                NO_DIMENSION_CHECK, True)
+                VALIDATE_DIMENSIONS, True)
         self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self, validate_dimensions)
 

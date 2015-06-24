@@ -40,7 +40,7 @@ class Annotations(defaultdict, DocumentLevelObject):
     def from_xml(cls, element):
         children = {}
         for child in element.getchildren():
-            children[child.tag] = child.text
+            children[child.tag[len(NINEML):]] = child.text
         kwargs = {NINEML: children}
         return cls(**kwargs)
 
@@ -57,7 +57,12 @@ def read_annotations(from_xml):
             element.remove(element.find(NINEML + Annotations.element_name))
         else:
             annotations = Annotations()
-        kwargs['annotations'] = annotations
+        if (cls.__class__.__name__ == 'DynamicsXMLLoader' and
+                VALIDATE_DIMENSIONS in annotations[NINEML]):
+            # FIXME: Hack until I work out how to let other 9ML objects ignore
+            #        this kwarg TGC 6/15
+            kwargs['validate_dimensions'] = (
+                annotations[NINEML][VALIDATE_DIMENSIONS] == 'True')
         nineml_object = from_xml(cls, element, *args, **kwargs)
         nineml_object.annotations.update(annotations.iteritems())
         return nineml_object
@@ -78,6 +83,6 @@ def annotate_xml(to_xml):
     return annotate_to_xml
 
 
-NO_DIMENSION_CHECK = 'NoDimensionCheck'
+VALIDATE_DIMENSIONS = 'ValidateDimensions'
 
 from nineml.utils import expect_none_or_single

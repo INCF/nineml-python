@@ -241,6 +241,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         BaseNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
         self._name = name
+        assert isinstance(dimension, Dimension)
         self._dimension = dimension
         self._power = power
         self._offset = offset
@@ -368,6 +369,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
 time = Dimension(name="time", t=1)
 per_time = Dimension(name="per_time", t=-1)
 voltage = Dimension(name="voltage", m=1, l=2, t=-3, i=-1)
+velocity = Dimension(name="velocity", l=1, t=-1)
 per_voltage = Dimension(name="per_voltage", m=-1, l=-2, t=3, i=1)
 conductance = Dimension(name="conductance", m=-1, l=-2, t=3, i=2)
 conductanceDensity = Dimension(name="conductanceDensity", m=-1, l=-4, t=3, i=2)
@@ -475,6 +477,7 @@ coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)
 cd = Unit(name="cd", dimension=luminous_intensity, power=0)
 kg_per_coulomb = Unit(name="kg_per_coulomb", dimension=mass_per_charge,
                       power=0)
+cm_per_s = Unit(name="cm_per_s", dimension=velocity, power=-2)
 
 if __name__ == '__main__':
     print 1 / voltage
