@@ -337,4 +337,4 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         return msg
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self._get_dimensions(alias)  # Check if dimensions can be resolved
+        self._get_dimensions(alias)

@@ -1,7 +1,8 @@
 from .base import DynamicsActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentElementFinder,
-    ComponentRequiredDefinitions, ComponentExpressionExtractor)
+    ComponentRequiredDefinitions, ComponentExpressionExtractor,
+    ComponentDimensionResolver)
 
 
 class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
@@ -142,3 +143,10 @@ class DynamicsExpressionExtractor(ComponentExpressionExtractor,
 
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
         self.expressions.append(trigger.rhs)
+
+
+class DynamicsDimensionResolver(ComponentDimensionResolver,
+                                DynamicsActionVisitor):
+
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._get_sympy_expr(state_variable)

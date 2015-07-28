@@ -1,7 +1,8 @@
 from .base import RandomDistributionActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentRequiredDefinitions,
-    ComponentElementFinder, ComponentExpressionExtractor)
+    ComponentElementFinder, ComponentExpressionExtractor,
+    ComponentDimensionResolver)
 
 
 class RandomDistributionInterfaceInferer(ComponentClassInterfaceInferer,
@@ -38,6 +39,11 @@ class RandomDistributionExpressionExtractor(ComponentExpressionExtractor,
                                             RandomDistributionActionVisitor):
 
     def __init__(self):
-        RandomDistributionActionVisitor.__init__(self,
-                                             require_explicit_overrides=True)
+        RandomDistributionActionVisitor.__init__(
+            self, require_explicit_overrides=True)
         ComponentExpressionExtractor.__init__(self)
+
+
+class RandomDistributionDimensionResolver(ComponentDimensionResolver,
+                                          RandomDistributionActionVisitor):
+    pass

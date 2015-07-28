@@ -2,6 +2,7 @@ from __future__ import division
 import re
 import operator
 from sympy import Symbol
+import sympy
 from nineml.xmlns import E
 from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
@@ -14,7 +15,9 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     """
 
     element_name = 'Dimension'
-    dimension_names = ('m', 'l', 't', 'i', 'n', 'k', 'j')
+    dimension_symbols = ('m', 'l', 't', 'i', 'n', 'k', 'j')
+    dimension_names = ('mass', 'length', 'time', 'current', 'amount',
+                       'temperature', 'luminous_intensity')
     SI_units = ('kg', 'm', 's', 'A', 'mol', 'K', 'cd')
     defining_attributes = ('_dims',)
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
@@ -27,7 +30,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
             assert len(dimensions) == 7, "Incorrect dimension length"
             self._dims = tuple(dimensions)
         else:
-            self._dims = tuple(kwargs.pop(d, 0) for d in self.dimension_names)
+            self._dims = tuple(kwargs.pop(d, 0) for d in self.dimension_symbols)
         assert not len(kwargs), "Unrecognised kwargs ({})".format(kwargs)
 
     def __hash__(self):
@@ -39,7 +42,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     def __repr__(self):
         return ("Dimension(name='{}'{})".format(
             self.name, ''.join(' {}={}'.format(n, p) if p != 0 else ''
-                               for n, p in zip(self.dimension_names,
+                               for n, p in zip(self.dimension_symbols,
                                                self._dims))))
 
     def __iter__(self):
@@ -50,7 +53,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return self._name
 
     def power(self, name):
-        return self._dims[self.dimension_names.index(name)]
+        return self._dims[self.dimension_symbols.index(name)]
 
     def to_SI_units_str(self):
         numer = '*'.join('({}**{})'.format(si, p) if p > 1 else si
@@ -66,7 +69,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         """
         return reduce(
             operator.mul,
-            (Symbol(n) ** p for n, p in zip(self.dimension_names, self._dims)))
+            (Symbol(n) ** p for n, p in zip(self.dimension_symbols, self._dims)))
 
     @property
     def m(self):
@@ -129,7 +132,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         kwargs = {'name': self.name}
         kwargs.update(dict(
             (n, str(p))
-            for n, p in zip(self.dimension_names, self._dims) if abs(p) > 0))
+            for n, p in zip(self.dimension_symbols, self._dims) if abs(p) > 0))
         return E(self.element_name, **kwargs)
 
     @classmethod
@@ -227,6 +230,34 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
                 name += '_'
             name += 'per_' + '_'.join(sorted(denominator))
         return name
+
+    @classmethod
+    def from_sympy(self, expr):
+        powers = {}
+        stack = [expr]
+        while stack:
+            expr = stack.pop()
+            if isinstance(expr, sympy.Mul):
+                stack.extend(expr.args)
+            elif isinstance(expr, sympy.Pow):
+                powers[str(expr.args[0])] = expr.args[1]
+            else:
+                powers[str(expr)] = 1
+        name_num = []
+        name_den = []
+        for sym, p in powers.iteritems():
+            name = self.dimension_names[next(
+                i for i, s in enumerate(self.dimension_symbols) if s == sym)]
+            if abs(p) > 1:
+                name += str(abs(p))
+            if p > 0:
+                name_num.append(name)
+            else:
+                name_den.append(name)
+        name = '_'.join(name_num)
+        if name_den:
+            name += '_per_' + '_'.join(name_den)
+        return Dimension(name, **powers)
 
 
 class Unit(BaseNineMLObject, DocumentLevelObject):

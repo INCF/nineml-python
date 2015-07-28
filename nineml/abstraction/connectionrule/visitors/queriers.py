@@ -1,7 +1,8 @@
 from .base import ConnectionRuleActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentRequiredDefinitions, ComponentClassInterfaceInferer,
-    ComponentElementFinder, ComponentExpressionExtractor)
+    ComponentElementFinder, ComponentExpressionExtractor,
+    ComponentDimensionResolver)
 
 
 class ConnectionRuleInterfaceInferer(ComponentClassInterfaceInferer,
@@ -40,3 +41,8 @@ class ConnectionRuleExpressionExtractor(ComponentExpressionExtractor,
         ConnectionRuleActionVisitor.__init__(self,
                                              require_explicit_overrides=True)
         ComponentExpressionExtractor.__init__(self)
+
+
+class ConnectionRuleDimensionResolver(ComponentDimensionResolver,
+                                      ConnectionRuleActionVisitor):
+    pass
