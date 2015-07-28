@@ -185,9 +185,12 @@ class ComponentDimensionResolver(ComponentActionVisitor):
         self.visit(component_class)
 
     def __getitem__(self, element):
-        return Dimension.from_sympy(self._flatten(sympify(element)))
+        if isinstance(element, basestring):
+            element = self.component_class[element]
+        return Dimension.from_sympy(self._flatten(element))
 
     def _flatten(self, expr):
+        expr = sympify(expr)
         if expr in self.reserved_symbol_dims:
             return self.reserved_symbol_dims[expr]
         elif isinstance(expr, sympy.Symbol):
@@ -223,11 +226,11 @@ class ComponentDimensionResolver(ComponentActionVisitor):
         elif isinstance(expr, sympy.Pow):
             dim = (self._flatten(expr.args[0]) ** expr.args[1])
         elif isinstance(expr, sympy.Add):
-            dim = self._flatten(expr.arg[0])
+            dim = self._flatten(expr.args[0])
         elif isinstance(expr, sympy.Piecewise):
-            dim = self._flatten(expr.arg[0])
+            dim = self._flatten(expr.args[0])
         elif isinstance(expr, ExprCondPair):
-            dim = self._flatten(expr.arg[0])
+            dim = self._flatten(expr.args[0])
         elif isinstance(expr, sympy.Mul):
             dim = reduce(
                 operator.mul, (self._flatten(a) for a in expr.args))
@@ -237,5 +240,5 @@ class ComponentDimensionResolver(ComponentActionVisitor):
             assert False, "Unrecognised expression type '{}'".format(expr)
         return dim
 
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self._get_sympy_expr(alias)
+    def action_alias(self, alias):
+        self._flatten(alias)

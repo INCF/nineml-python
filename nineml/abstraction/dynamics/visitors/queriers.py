@@ -147,6 +147,4 @@ class DynamicsExpressionExtractor(ComponentExpressionExtractor,
 
 class DynamicsDimensionResolver(ComponentDimensionResolver,
                                 DynamicsActionVisitor):
-
-    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._get_sympy_expr(state_variable)
+    pass
