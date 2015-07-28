@@ -341,6 +341,9 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
+    def dimension_of(self, element):
+        return DynamicsDimensionResolver(self)[element]
+
     def _find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)
 
@@ -709,7 +712,8 @@ from .visitors.validators import DynamicsValidator
 from .visitors import DynamicsInterfaceInferer
 from .visitors.queriers import (DynamicsElementFinder,
                                 DynamicsRequiredDefinitions,
-                                DynamicsExpressionExtractor)
+                                DynamicsExpressionExtractor,
+                                DynamicsDimensionResolver)
 from .visitors.modifiers import (
     DynamicsRenameSymbol, DynamicsAssignIndices)
 from .visitors.xml import DynamicsXMLLoader, DynamicsXMLWriter

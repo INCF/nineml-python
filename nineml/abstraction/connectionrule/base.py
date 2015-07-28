@@ -42,6 +42,9 @@ class ConnectionRule(ComponentClass):
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
+    def dimension_of(self, element):
+        return ConnectionRuleDimensionResolver(self)[element]
+
     def _find_element(self, element):
         return ConnectionRuleElementFinder(element).found_in(self)
 
@@ -69,7 +72,7 @@ from .visitors.modifiers import (
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
 from .visitors.queriers import (
     ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder,
-    ConnectionRuleExpressionExtractor)
+    ConnectionRuleExpressionExtractor, ConnectionRuleDimensionResolver)
 from .visitors.validators import ConnectionRuleValidator
 from .visitors.xml import (
     ConnectionRuleXMLLoader, ConnectionRuleXMLWriter)

@@ -6,7 +6,7 @@ import sympy
 from nineml.xmlns import E
 from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import handle_xml_exceptions
+from nineml.exceptions import handle_xml_exceptions, NineMLRuntimeError
 
 
 class Dimension(BaseNineMLObject, DocumentLevelObject):
@@ -233,6 +233,11 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     @classmethod
     def from_sympy(self, expr):
+        if expr == 1:
+            return dimensionless
+        elif not isinstance(expr, sympy.Basic):
+            raise NineMLRuntimeError(
+                "Cannot convert '{}' dimension, must be 1 or sympy expression")
         powers = {}
         stack = [expr]
         while stack:
