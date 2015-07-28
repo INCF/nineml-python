@@ -1,6 +1,14 @@
 from copy import copy
+import sympy
+from sympy import sympify
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+from sympy.functions.elementary.piecewise import ExprCondPair
 from .base import ComponentActionVisitor
 from ...expressions import reserved_identifiers
+from nineml.units import Dimension
+from nineml.abstraction.ports import SendPortBase
+from nineml.abstraction.expressions import Expression
+import operator
 
 
 class ComponentClassInterfaceInferer(ComponentActionVisitor):
@@ -154,3 +162,80 @@ class ComponentExpressionExtractor(ComponentActionVisitor):
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.expressions.append(alias.rhs)
+
+
+class ComponentDimensionResolver(ComponentActionVisitor):
+    """
+    Used to calculate the unit dimension of elements within a component class
+    """
+
+    reserved_symbol_dims = {sympy.Symbol('t'): sympy.Symbol('t')}
+
+    def __init__(self, component_class):
+        ComponentActionVisitor.__init__(
+            self, require_explicit_overrides=False)
+        self.component_class = component_class
+        self._dims = {}
+        # Insert declared dimensions into dimensionality database
+        for a in component_class.attributes_with_dimension:
+            if not isinstance(a, SendPortBase):
+                self._dims[sympify(a)] = sympify(a.dimension)
+        for a in component_class.attributes_with_units:
+            self._dims[sympify(a)] = sympify(a.units.dimension)
+        self.visit(component_class)
+
+    def __getitem__(self, element):
+        return Dimension.from_sympy(self._flatten(sympify(element)))
+
+    def _flatten(self, expr):
+        if expr in self.reserved_symbol_dims:
+            return self.reserved_symbol_dims[expr]
+        elif isinstance(expr, sympy.Symbol):
+            try:
+                dim = self._dims[expr]
+            except KeyError:
+                name = Expression.symbol_to_str(expr)
+                element = None
+                for scope in reversed(self._scopes):
+                    try:
+                        element = scope[name]
+                    except KeyError:
+                        pass
+                if element is None:
+                    raise KeyError(
+                        "'{}' element was not found in component class '{}'"
+                        .format(element.name, self.component_class.name))
+                dim = self._flatten(element.rhs)
+                self._dims[expr] = dim
+        elif isinstance(expr, (sympy.GreaterThan, sympy.LessThan,
+                               sympy.StrictGreaterThan, sympy.StrictLessThan)):
+            dim = 0
+        elif isinstance(expr, (BooleanTrue, BooleanFalse, sympy.And, sympy.Or,
+                               sympy.Not)):
+            dim = 0
+        elif isinstance(expr, (sympy.Integer, sympy.Float, int, float)):
+            dim = 1
+        elif isinstance(type(expr), sympy.FunctionClass):
+            dim = 1
+        elif (type(expr).__name__ in ('Pi',) or
+              isinstance(expr, sympy.Rational)):
+            dim = 1
+        elif isinstance(expr, sympy.Pow):
+            dim = (self._flatten(expr.args[0]) ** expr.args[1])
+        elif isinstance(expr, sympy.Add):
+            dim = self._flatten(expr.arg[0])
+        elif isinstance(expr, sympy.Piecewise):
+            dim = self._flatten(expr.arg[0])
+        elif isinstance(expr, ExprCondPair):
+            dim = self._flatten(expr.arg[0])
+        elif isinstance(expr, sympy.Mul):
+            dim = reduce(
+                operator.mul, (self._flatten(a) for a in expr.args))
+            if isinstance(dim, sympy.Basic):
+                dim = dim.powsimp()  # Simplify the expression
+        else:
+            assert False, "Unrecognised expression type '{}'".format(expr)
+        return dim
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        self._get_sympy_expr(alias)
