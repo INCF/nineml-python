@@ -43,7 +43,7 @@ class ConnectionRule(ComponentClass):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
     def dimension_of(self, element):
-        return ConnectionRuleDimensionResolver(self)[element]
+        return ConnectionRuleDimensionResolver(self).dimension_of(element)
 
     def _find_element(self, element):
         return ConnectionRuleElementFinder(element).found_in(self)
