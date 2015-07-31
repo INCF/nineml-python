@@ -147,4 +147,6 @@ class DynamicsExpressionExtractor(ComponentExpressionExtractor,
 
 class DynamicsDimensionResolver(ComponentDimensionResolver,
                                 DynamicsActionVisitor):
-    pass
+
+    def action_statevariable(self, statevariable):
+        self._flatten(statevariable)

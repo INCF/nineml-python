@@ -184,7 +184,7 @@ class ComponentDimensionResolver(ComponentActionVisitor):
             self._dims[sympify(a)] = sympify(a.units.dimension)
         self.visit(component_class)
 
-    def __getitem__(self, element):
+    def dimension_of(self, element):
         if isinstance(element, basestring):
             element = self.component_class[element]
         return Dimension.from_sympy(self._flatten(element))
@@ -192,53 +192,76 @@ class ComponentDimensionResolver(ComponentActionVisitor):
     def _flatten(self, expr):
         expr = sympify(expr)
         if expr in self.reserved_symbol_dims:
-            return self.reserved_symbol_dims[expr]
+            flattened = self._flatten_reserved(expr)
         elif isinstance(expr, sympy.Symbol):
-            try:
-                dim = self._dims[expr]
-            except KeyError:
-                name = Expression.symbol_to_str(expr)
-                element = None
-                for scope in reversed(self._scopes):
-                    try:
-                        element = scope[name]
-                    except KeyError:
-                        pass
-                if element is None:
-                    raise KeyError(
-                        "'{}' element was not found in component class '{}'"
-                        .format(element.name, self.component_class.name))
-                dim = self._flatten(element.rhs)
-                self._dims[expr] = dim
+            flattened = self._flatten_symbol(expr)
         elif isinstance(expr, (sympy.GreaterThan, sympy.LessThan,
-                               sympy.StrictGreaterThan, sympy.StrictLessThan)):
-            dim = 0
-        elif isinstance(expr, (BooleanTrue, BooleanFalse, sympy.And, sympy.Or,
+                               sympy.StrictGreaterThan, sympy.StrictLessThan,
+                               BooleanTrue, BooleanFalse, sympy.And, sympy.Or,
                                sympy.Not)):
-            dim = 0
-        elif isinstance(expr, (sympy.Integer, sympy.Float, int, float)):
-            dim = 1
+            flattened = self._flatten_boolean(expr)
+        elif (isinstance(expr, (sympy.Integer, sympy.Float, int, float,
+                                sympy.Rational)) or
+              type(expr).__name__ in ('Pi',)):
+            flattened = self._flatten_constant(expr)
         elif isinstance(type(expr), sympy.FunctionClass):
-            dim = 1
-        elif (type(expr).__name__ in ('Pi',) or
-              isinstance(expr, sympy.Rational)):
-            dim = 1
+            flattened = self._flatten_function(expr)
         elif isinstance(expr, sympy.Pow):
-            dim = (self._flatten(expr.args[0]) ** expr.args[1])
-        elif isinstance(expr, sympy.Add):
-            dim = self._flatten(expr.args[0])
-        elif isinstance(expr, sympy.Piecewise):
-            dim = self._flatten(expr.args[0])
-        elif isinstance(expr, ExprCondPair):
-            dim = self._flatten(expr.args[0])
+            flattened = self._flatten_power(expr)
+        elif isinstance(expr, (sympy.Add, sympy.Piecewise, ExprCondPair)):
+            flattened = self._flatten_matching(expr)
         elif isinstance(expr, sympy.Mul):
-            dim = reduce(
-                operator.mul, (self._flatten(a) for a in expr.args))
-            if isinstance(dim, sympy.Basic):
-                dim = dim.powsimp()  # Simplify the expression
+            flattened = self._flatten_multiplied(expr)
         else:
             assert False, "Unrecognised expression type '{}'".format(expr)
-        return dim
+        return flattened
+
+    def _find_element(self, sym):
+        name = Expression.symbol_to_str(sym)
+        element = None
+        for scope in reversed(self._scopes):
+            try:
+                element = scope[name]
+            except KeyError:
+                pass
+        if element is None:
+            raise KeyError(
+                "'{}' element was not found in component class '{}'"
+                .format(element.name, self.component_class.name))
+        return element
+
+    def _flatten_symbol(self, sym):
+        try:
+            flattened = self._dims[sym]
+        except KeyError:
+            element = self._find_element(sym)
+            flattened = self._flatten(element.rhs)
+            self._dims[sym] = flattened
+        return flattened
+
+    def _flatten_boolean(self, expr):  # @UnusedVariable
+        return 0
+
+    def _flatten_constant(self, expr):  # @UnusedVariable
+        return 1
+
+    def _flatten_function(self, expr):  # @UnusedVariable
+        return 1
+
+    def _flatten_matching(self, expr):
+        return self._flatten(expr.args[0])
+
+    def _flatten_multiplied(self, expr):
+        flattened = reduce(operator.mul, (self._flatten(a) for a in expr.args))
+        if isinstance(flattened, sympy.Basic):
+            flattened = flattened.powsimp()  # Simplify the expression
+        return flattened
+
+    def _flatten_power(self, expr):
+        return (self._flatten(expr.args[0]) ** expr.args[1])
+
+    def _flatten_reserved(self, expr):
+        return self.reserved_symbol_dims[expr]
 
     def action_alias(self, alias):
         self._flatten(alias)
