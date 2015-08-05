@@ -48,6 +48,8 @@ class Expression(object):
         self.rhs = rhs
 
     def __eq__(self, other):
+        if not isinstance(other, Expression):
+            return False
         return sympy.simplify(self.rhs - other.rhs) == 0
 
     @property

@@ -342,7 +342,12 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         return DynamicsRequiredDefinitions(self, expressions)
 
     def dimension_of(self, element):
-        return DynamicsDimensionResolver(self).dimension_of(element)
+        try:
+            resolver = self._dimension_resolver
+        except AttributeError:
+            resolver = DynamicsDimensionResolver(self)
+            self._dimension_resolver = resolver
+        return resolver.dimension_of(element)
 
     def _find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)

@@ -29,7 +29,12 @@ class RandomDistribution(ComponentClass):
         return RandomDistributionRequiredDefinitions(self, expressions)
 
     def dimension_of(self, element):
-        return RandomDistributionDimensionResolver(self).dimension_of(element)
+        try:
+            resolver = self._dimension_resolver
+        except AttributeError:
+            resolver = RandomDistributionDimensionResolver(self)
+            self._dimension_resolver = resolver
+        return resolver.dimension_of(element)
 
     def _find_element(self, element):
         return RandomDistributionElementFinder(element).found_in(self)
