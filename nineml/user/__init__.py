@@ -70,7 +70,7 @@ from .component import (PropertySet, Property, Component, Definition,
                         Prototype, resolve_reference,
                         write_reference, Reference, Initial, InitialSet,
                         DynamicsProperties, ConnectionRuleProperties,
-                        RandomDistributionProperties)
+                        RandomDistributionProperties, Quantity)
 from .syntactic_sugar import (
     SpikingNodeType, IonDynamicsType, SynapseType, CurrentSourceType,
     ConnectionType)

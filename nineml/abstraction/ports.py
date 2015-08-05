@@ -83,7 +83,7 @@ class DimensionedPort(Port, ExpressionSymbol):
     def __repr__(self):
         classstring = self.__class__.__name__
         return "{}('{}', dimension='{}')".format(classstring, self.name,
-                                                 self.dimension)
+                                                 self.dimension.name)
 
 
 class SendPort(SendPortBase):

@@ -13,7 +13,6 @@ docstring goes here
 :license: BSD-3, see LICENSE for details.
 """
 from ..componentclass import ComponentClass
-from nineml.annotations import annotate_xml, read_annotations
 
 
 class ConnectionRule(ComponentClass):
@@ -43,7 +42,12 @@ class ConnectionRule(ComponentClass):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
     def dimension_of(self, element):
-        return ConnectionRuleDimensionResolver(self).dimension_of(element)
+        try:
+            resolver = self._dimension_resolver
+        except AttributeError:  # If dimension resolver hasn't been set
+            resolver = ConnectionRuleDimensionResolver(self)
+            self._dimension_resolver = resolver
+        return resolver.dimension_of(element)
 
     def _find_element(self, element):
         return ConnectionRuleElementFinder(element).found_in(self)
