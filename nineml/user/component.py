@@ -3,12 +3,12 @@ from itertools import chain
 from lxml import etree
 from abc import ABCMeta, abstractmethod
 import collections
-from nineml.reference import BaseReference
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError,
     handle_xml_exceptions)
-from nineml.xmlns import nineml_namespace
-from nineml.xmlns import NINEML, E
+from nineml.xmlns import NINEML, E, nineml_namespace
+from nineml.reference import (
+    Reference, Prototype, Definition, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_units
 from nineml.units import Unit, unitless
@@ -168,15 +168,6 @@ class Component(BaseULObject, DocumentLevelObject):
             self.check_initial_values()
         except AttributeError:  # 'check_initial_values' is only in dynamics
             pass
-        
-    @abstractmethod
-    def get_element_name(self):
-        "Used to stop accidental construction of this class"
-        pass        
-
-    def __getinitargs__(self):
-        return (self.name, self.definition, self.property_set,
-                self.initial_value_set, self._url)
 
     @abstractmethod
     def get_element_name(self):
@@ -416,9 +407,11 @@ class Quantity(BaseULObject):
     defining_attributes = ("name", "value", "units")
 
     def __init__(self, value, units=None):
-        if not isinstance(value, (int, float, SingleValue, ArrayValue,
-                                  ExternalArrayValue,
-                                  RandomDistributionComponent)):
+        if isinstance(value, (list, tuple)):
+            value = ArrayValue(value)
+        elif not isinstance(value, (int, float, SingleValue, ArrayValue,
+                                    ExternalArrayValue,
+                                    RandomDistributionProperties)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference',"
                             "'RandomDistributionProperties', 'ValueList', "
@@ -448,7 +441,7 @@ class Quantity(BaseULObject):
         return isinstance(self._value, SingleValue)
 
     def is_random(self):
-        return isinstance(self._value, RandomDistributionComponent)
+        return isinstance(self._value, RandomDistributionProperties)
 
     def is_array(self):
         return (isinstance(self._value, ArrayValue) or
@@ -459,30 +452,39 @@ class Quantity(BaseULObject):
         if self.is_single():
             return self._value.value
         else:
-            raise NineMLRuntimeError("Cannot access single value for array or "
-                                     "component_class type")
+            return self._value.values
 
     @property
     def quantity(self):
         """The value of the parameter (magnitude and units)."""
         return (self.value, self.units)
 
-    @property
-    def value_array(self):
+    def __iter__(self):
         if self.is_array():
-            raise NotImplementedError
+            return iter(self._value.values)
+        elif self.is_single():
+            return iter([self._value.value])
         else:
-            raise NineMLRuntimeError("Cannot access value array for "
-                                     "component_class or single value types")
+            raise NineMLRuntimeError(
+                "Cannot iterate random distribution")
+
+    def __getitem__(self, index):
+        if self.is_array():
+            return self._value.values[index]
+        elif self.is_single():
+            return self._value.value
+        else:
+            raise NineMLRuntimeError(
+                "Cannot get item from random distribution")
 
     @property
     def random_distribution(self):
         if self.is_random():
             return self._value
         else:
-            raise NineMLRuntimeError(
-                "Cannot access random randomdistribution "
-                "for component_class or single value types")
+            raise NineMLRuntimeError("Cannot access random randomdistribution "
+                                     "for component_class or single value "
+                                     "types")
 
     def set_units(self, units):
         if units.dimension != self.units.dimension:
@@ -523,8 +525,8 @@ class Quantity(BaseULObject):
                 expect_single(element.findall(NINEML + 'ArrayValue')),
                 document)
         elif element.find(NINEML + 'ExternalArrayValue') is not None:
-            value = ArrayValue.from_xml(
-                expect_single(element.findall(NINEML + 'ArrayValue')),
+            value = ExternalArrayValue.from_xml(
+                expect_single(element.findall(NINEML + 'ExternalArrayValue')),
                 document)
         elif element.find(NINEML + 'Component') is not None:
             value = RandomDistributionComponent.from_xml(
@@ -541,12 +543,12 @@ class Quantity(BaseULObject):
                 "{} element '{}' is missing 'units' attribute (found '{}')"
                 .format(element.tag, element.get('name', ''),
                         "', '".join(element.attrib.iterkeys())))
-        try:
-            units = document[units_str]
-        except KeyError:
-            raise NineMLMissingElementError(
-                "Did not find definition of '{}' units in the current "
-                "document.".format(units_str))
+#         try:
+        units = document[units_str]
+#         except KeyError:
+#             raise NineMLMissingElementError(
+#                 "Did not find definition of '{}' units in the current "
+#                 "document.".format(units_str))
         return cls(value=value, units=units)
 
 
@@ -590,7 +592,7 @@ class Property(Quantity):
     @classmethod
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document, **kwargs):
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         quantity = Quantity.from_xml(element, document)
         try:
@@ -622,7 +624,12 @@ class PropertySet(dict):
         dict.__init__(self)
         for prop in properties:
             self[prop.name] = prop  # should perhaps do a copy
-        for name, (value, units) in kwproperties.items():
+        for name, qty in kwproperties.items():
+            try:
+                value, units = qty
+            except TypeError:
+                value = qty
+                units = None
             self[name] = Property(name, value, units)
 
     def __hash__(self):
