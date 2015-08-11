@@ -189,29 +189,29 @@ class ComponentDimensionResolver(ComponentActionVisitor):
             element = self.component_class[element]
         return Dimension.from_sympy(self._flatten(element))
 
-    def _flatten(self, expr):
+    def _flatten(self, expr, **kwargs):  # @UnusedVariable
         expr = sympify(expr)
         if expr in self.reserved_symbol_dims:
-            flattened = self._flatten_reserved(expr)
+            flattened = self._flatten_reserved(expr, **kwargs)
         elif isinstance(expr, sympy.Symbol):
-            flattened = self._flatten_symbol(expr)
+            flattened = self._flatten_symbol(expr, **kwargs)
         elif isinstance(expr, (sympy.GreaterThan, sympy.LessThan,
                                sympy.StrictGreaterThan, sympy.StrictLessThan,
                                BooleanTrue, BooleanFalse, sympy.And, sympy.Or,
                                sympy.Not)):
-            flattened = self._flatten_boolean(expr)
+            flattened = self._flatten_boolean(expr, **kwargs)
         elif (isinstance(expr, (sympy.Integer, sympy.Float, int, float,
                                 sympy.Rational)) or
               type(expr).__name__ in ('Pi',)):
-            flattened = self._flatten_constant(expr)
-        elif isinstance(type(expr), sympy.FunctionClass):
-            flattened = self._flatten_function(expr)
+            flattened = self._flatten_constant(expr, **kwargs)
         elif isinstance(expr, sympy.Pow):
-            flattened = self._flatten_power(expr)
+            flattened = self._flatten_power(expr, **kwargs)
         elif isinstance(expr, (sympy.Add, sympy.Piecewise, ExprCondPair)):
-            flattened = self._flatten_matching(expr)
+            flattened = self._flatten_matching(expr, **kwargs)
+        elif isinstance(type(expr), sympy.FunctionClass):
+            flattened = self._flatten_function(expr, **kwargs)
         elif isinstance(expr, sympy.Mul):
-            flattened = self._flatten_multiplied(expr)
+            flattened = self._flatten_multiplied(expr, **kwargs)
         else:
             assert False, "Unrecognised expression type '{}'".format(expr)
         return flattened
@@ -239,28 +239,28 @@ class ComponentDimensionResolver(ComponentActionVisitor):
             self._dims[sym] = flattened
         return flattened
 
-    def _flatten_boolean(self, expr):  # @UnusedVariable
+    def _flatten_boolean(self, expr, **kwargs):  # @UnusedVariable
         return 0
 
-    def _flatten_constant(self, expr):  # @UnusedVariable
+    def _flatten_constant(self, expr, **kwargs):  # @UnusedVariable
         return 1
 
-    def _flatten_function(self, expr):  # @UnusedVariable
+    def _flatten_function(self, expr, **kwargs):  # @UnusedVariable
         return 1
 
-    def _flatten_matching(self, expr):
+    def _flatten_matching(self, expr, **kwargs):  # @UnusedVariable
         return self._flatten(expr.args[0])
 
-    def _flatten_multiplied(self, expr):
+    def _flatten_multiplied(self, expr, **kwargs):  # @UnusedVariable
         flattened = reduce(operator.mul, (self._flatten(a) for a in expr.args))
         if isinstance(flattened, sympy.Basic):
             flattened = flattened.powsimp()  # Simplify the expression
         return flattened
 
-    def _flatten_power(self, expr):
+    def _flatten_power(self, expr, **kwargs):  # @UnusedVariable
         return (self._flatten(expr.args[0]) ** expr.args[1])
 
-    def _flatten_reserved(self, expr):
+    def _flatten_reserved(self, expr, **kwargs):  # @UnusedVariable
         return self.reserved_symbol_dims[expr]
 
     def action_alias(self, alias):
