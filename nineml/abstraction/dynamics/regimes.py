@@ -326,6 +326,10 @@ class Regime(BaseALObject, MemberContainerObject):
     def all_triggers(self):
         return (oc.trigger for oc in self.on_conditions)
 
+    def all_target_triggers(self):
+        return chain(*[[oc.trigger for oc in t.target_regime.on_conditions]
+                       for t in self.transitions if t.target_regime != self])
+
     def all_state_assignments(self):
         return chain(*(t.state_assignments for t in self.transitions))
 
