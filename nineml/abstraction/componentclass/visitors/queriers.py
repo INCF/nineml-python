@@ -54,7 +54,7 @@ class ComponentRequiredDefinitions(object):
         self.expressions = list()
         self._required_stack = []
         self._push_required_symbols(expressions)
-        self._componentclass = component_class
+        self.component_class = component_class
         self.visit(component_class)
 
     def __repr__(self):
@@ -104,7 +104,7 @@ class ComponentRequiredDefinitions(object):
             # order they are executed is important so we make sure their
             # dependencies are added first
             self._push_required_symbols(alias)
-            self.visit(self._componentclass)
+            self.visit(self.component_class)
             self._required_stack.pop()
             self.expressions.append(alias)
 

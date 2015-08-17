@@ -59,6 +59,13 @@ class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
                 .format(', '.join(self.state_variable_names)) +
                 super(DynamicsRequiredDefinitions, self).__repr__())
 
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        # Check to see if the alias is a top level alias, and not nested within
+        # a regime
+        if alias in self.component_class.aliases:
+            super(DynamicsRequiredDefinitions, self).action_alias(alias,
+                                                                  **kwargs)
+
     def action_statevariable(self, statevariable, **kwargs):  # @UnusedVariable
         if self._is_required(statevariable):
             self.state_variables.add(statevariable)
