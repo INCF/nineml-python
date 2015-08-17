@@ -2,6 +2,7 @@ import unittest
 from itertools import chain
 from nineml.abstraction.dynamics import (
     Dynamics, Regime, On, OutputEvent)
+from nineml.abstraction import Alias
 from nineml.abstraction.ports import AnalogSendPort, AnalogReceivePort
 from nineml.abstraction.expressions import reserved_identifiers
 
@@ -33,6 +34,7 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
                 Regime(
                     'dSV1/dt = -SV1 / (P2*t)',
                     'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
+                    aliases=[Alias('A1', '2*P1')],
                     transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
                     name='R1',

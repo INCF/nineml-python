@@ -350,7 +350,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         return resolver.dimension_of(element)
 
     def overridden_in_regimes(self, alias):
-        return (r for r in self.regimes if alias in r.aliases)
+        return (r for r in self.regimes if alias.name in r.alias_names)
 
     def _find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)
