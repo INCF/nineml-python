@@ -206,15 +206,7 @@ class MemberContainerObject(object):
                     return True
             return False
         else:
-            try:
-                dct = self.lookup_member_dict(element)  # Quick search via dict
-                try:
-                    found = dct[element._name]
-                    return found is element
-                except KeyError:
-                    return False
-            except NineMLInvalidElementTypeException:
-                return self._find_element(element)  # Lookup via full-search
+            return self._find_element(element)  # Lookup via full-search
 
     def index_of(self, element, key=None):
         """
