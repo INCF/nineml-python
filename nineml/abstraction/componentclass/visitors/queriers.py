@@ -68,7 +68,10 @@ class ComponentRequiredDefinitions(object):
         required_atoms = set()
         try:
             for expr in expression:
-                required_atoms.update(expr.rhs_atoms)
+                try:
+                    required_atoms.update(expr.rhs_atoms)
+                except AttributeError:  # If a output port instead of expr
+                    required_atoms.add(expr.name)
         except TypeError:
             required_atoms.update(expression.rhs_atoms)
         # Strip builtin symbols from required atoms
@@ -112,6 +115,10 @@ class ComponentRequiredDefinitions(object):
     @property
     def port_names(self):
         return (p.name for p in self.ports)
+
+    @property
+    def random_variable_names(self):
+        return (rv.name for rv in self.random_variables)
 
     @property
     def constant_names(self):
