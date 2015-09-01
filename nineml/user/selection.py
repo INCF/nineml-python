@@ -1,9 +1,9 @@
 from operator import itemgetter
 from . import BaseULObject
-from .component import resolve_reference, write_reference, Reference
+from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.utils import expect_single, check_tag
+from nineml.utils import expect_single
 from nineml import DocumentLevelObject
 from nineml.exceptions import handle_xml_exceptions
 

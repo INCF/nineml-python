@@ -31,18 +31,13 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
 
     @read_annotations
     def load_dynamics(self, element, **kwargs):  # @UnusedVariable
-
         block_names = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
                        'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
                        'Dynamics', 'Regime', 'Alias', 'StateVariable',
                        'Constant')
-
         blocks = self._load_blocks(element, block_names=block_names)
-
-        try:
-            dyn_kwargs = {'validate_dimensions': kwargs['validate_dimensions']}
-        except KeyError:
-            dyn_kwargs = {}
+        dyn_kwargs = dict((k, v) for k, v in kwargs.iteritems()
+                          if k in ('validate_dimensions', 'url'))
         return Dynamics(
             name=element.attrib['name'],
             parameters=blocks["Parameter"],
