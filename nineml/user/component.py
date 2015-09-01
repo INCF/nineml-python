@@ -9,6 +9,8 @@ from nineml.exceptions import (
 from nineml.xmlns import NINEML, E, nineml_namespace
 from nineml.reference import (
     Reference, Prototype, Definition, write_reference, resolve_reference)
+from nineml.reference import (
+    Prototype, Definition, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_units
 from nineml.units import Unit, unitless
@@ -19,69 +21,6 @@ from . import BaseULObject
 from nineml.document import Document
 from nineml import DocumentLevelObject
 from os import path
-
-
-class Reference(BaseReference):
-    """
-    A reference to a NineML user layer object previously defined or defined
-    elsewhere.
-
-    **Arguments**:
-        *name*
-            The name of a NineML object which already exists, or which is
-            defined in a separate XML file.
-        *document*
-            A dictionary or :class:`Document` object containing the object
-            being referred to, if the object already exists.
-        *url*
-            If the object is defined in a separate XML file, the URL
-            of the file.
-
-    """
-    element_name = "Reference"
-
-    def __init__(self, name, document, url=None):
-        """
-        docstring needed
-
-        `name`     -- a name of an existing component_class to refer to
-        `document` -- a Document object containing the top-level
-                      objects in the current file
-        `url`      -- a url of the file containing the exiting component_class
-        """
-        super(Reference, self).__init__(name, document, url)
-        if not isinstance(self._referred_to, BaseULObject):
-            msg = ("Reference points to a non-user-layer object '{}'"
-                   .format(self._referred_to.name))
-            raise NineMLRuntimeError(msg)
-        self._referred_to.from_reference = self
-
-    @property
-    def user_object(self):
-        """The object being referred to."""
-        return self._referred_to
-
-
-def resolve_reference(from_xml):
-    def resolving_from_xml(cls, element, document):
-        if element.tag == NINEML + Reference.element_name:
-            reference = Reference.from_xml(element, document)
-            ul_object = reference.user_object
-        else:
-            cls.check_tag(element)
-            ul_object = from_xml(cls, element, document)
-        return ul_object
-    return resolving_from_xml
-
-
-def write_reference(to_xml):
-    def unresolving_to_xml(self, as_reference=True):
-        if self.from_reference is not None and as_reference:
-            xml = self.from_reference.to_xml()
-        else:
-            xml = to_xml(self)
-        return xml
-    return unresolving_to_xml
 
 
 class Component(BaseULObject, DocumentLevelObject):
@@ -217,6 +156,9 @@ class Component(BaseULObject, DocumentLevelObject):
         # them with properties defined locally
         return self.property_set.itervalues()
 
+    def __iter__(self):
+        return self.property_set.itervalues()
+
     @property
     def property_names(self):
         return self.property_set.iterkeys()
@@ -297,7 +239,7 @@ class Component(BaseULObject, DocumentLevelObject):
                                    self.name, ",".join(diff_b)))
         if msg:
             # need a more specific type of Exception
-            raise Exception(". ".join(msg))
+            raise NineMLRuntimeError(". ".join(msg))
         # Check dimensions match
         for param in self.component_class.parameters:
             prop_units = self.property(param.name).units
@@ -354,13 +296,17 @@ class Component(BaseULObject, DocumentLevelObject):
     def property(self, name):
         return self.property_set[name]
 
+    def write(self, fname):
+        """
+        Writes the top-level NineML object to file in XML.
+        """
+        to_write = [self]
+        # Also write the component class definition to file if cannot be
+        # referenced from a separate url
+        if self.definition.url is None:
+            to_write.append(self.component_class)
+        Document(*to_write).write(fname)
 
-class Definition(BaseReference):
-
-    """
-    Base class for model components that are defined in the abstraction layer.
-    """
-    element_name = "Definition"
 
     def __init__(self, name=None, document=None, component_class=None,
                  url=None):

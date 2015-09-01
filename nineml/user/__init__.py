@@ -67,8 +67,8 @@ from .projection import (
     Projection, PortConnection, Delay, Connectivity, Response, Plasticity, Pre,
     Post, FromPre, FromPost, FromPlasticity, FromResponse)
 from .component import (PropertySet, Property, Component, Definition,
-                        Prototype, resolve_reference,
-                        write_reference, Reference, Initial, InitialSet,
+                        Prototype, resolve_reference, write_reference,
+                        Initial, InitialSet,
                         DynamicsProperties, ConnectionRuleProperties,
                         RandomDistributionProperties, Quantity)
 from .syntactic_sugar import (

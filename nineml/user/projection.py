@@ -1,7 +1,7 @@
 # encoding: utf-8
 import sys
 from . import BaseULObject
-from .component import resolve_reference, write_reference, Reference
+from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.exceptions import NineMLRuntimeError
