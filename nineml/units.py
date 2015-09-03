@@ -128,7 +128,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return self.i
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         kwargs = {'name': self.name}
         kwargs.update(dict(
             (n, str(p))
@@ -339,7 +339,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         return self.name
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         kwargs = {'symbol': self.name, 'dimension': self.dimension.name,
                   'power': str(self.power)}
         if self.offset:
@@ -515,7 +515,7 @@ cd = Unit(name="cd", dimension=luminous_intensity, power=0)
 kg_per_coulomb = Unit(name="kg_per_coulomb", dimension=mass_per_charge,
                       power=0)
 cm_per_s = Unit(name="cm_per_s", dimension=velocity, power=-2)
-pF_per_nA = Unit(name='pF_per_nA', dimension=voltage_per_time, power=-6)
+pF_per_nA = Unit(name='pF_per_nA', dimension=voltage / time, power=-6)
 
 
 if __name__ == '__main__':

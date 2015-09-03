@@ -86,8 +86,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
         transitions = blocks["OnEvent"] + blocks['OnCondition']
         return Regime(name=element.attrib['name'],
                       time_derivatives=blocks["TimeDerivative"],
-                      transitions=transitions,
-                      aliases=blocks['Alias'])
+                      transitions=transitions)
 
     @read_annotations
     def load_statevariable(self, element, **kwargs):  # @UnusedVariable

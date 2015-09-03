@@ -160,7 +160,7 @@ class Rationals_test(unittest.TestCase):
     def test_c89(self):
         "Tests conversion of rationals back from the c-code version 1.0L/2.0L"
         expr = Expression('1/2')
-        self.assertEqual(expr.rhs_cstr, '1.0L/2.0L')
+        self.assertEqual(expr.rhs_cstr, '1/2')
 
 
 class C89_test(unittest.TestCase):

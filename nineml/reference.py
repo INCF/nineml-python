@@ -45,7 +45,7 @@ class BaseReference(BaseNineMLObject):
                             ' in "{}"'.format(self.url) if self.url else ''))
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         kwargs = {'name': self._referred_to.name}
         if self.url:
             kwargs['url'] = self.url

@@ -69,7 +69,7 @@ class Population(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         positions = [self.positions.to_xml()] if self.positions else []
         return E(self.element_name,
                  E.Size(str(self.size)),
@@ -175,7 +175,7 @@ class PositionList(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         element = E(self.element_name)
         if self._positions:
             for pos in self._positions:
