@@ -254,7 +254,7 @@ class Component(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         """
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
@@ -453,7 +453,7 @@ class Quantity(BaseULObject):
                 other.value * 10 ** other.units.power)
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         return E(self.element_name,
                  self._value.to_xml(),
                  units=self.units.name)
@@ -529,7 +529,7 @@ class Property(Quantity):
                 .format(self.element_name, self.name, self.value, units))
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         return E(self.element_name,
                  self._value.to_xml(),
                  name=self.name,
@@ -596,7 +596,7 @@ class PropertySet(dict):
     def get_random_distributions(self):
         return [p.random_distribution for p in self.values() if p.is_random()]
 
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         # serialization is in alphabetical order
         return [self[name].to_xml() for name in sorted(self.keys())]
 

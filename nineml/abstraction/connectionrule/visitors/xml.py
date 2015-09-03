@@ -27,6 +27,7 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
         blocks = self._load_blocks(element, block_names=block_names)
         return ConnectionRule(
             name=element.attrib['name'],
+            standard_library=element.attrib['standard_library'],
             parameters=blocks["Parameter"])
 
     tag_to_loader = dict(
@@ -40,6 +41,7 @@ class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
     def visit_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         return E('ConnectionRule',
                  *[e.accept_visitor(self) for e in component_class],
-                 name=component_class.name)
+                 name=component_class.name,
+                 standard_library=component_class.standard_library)
 
 from ..base import ConnectionRule

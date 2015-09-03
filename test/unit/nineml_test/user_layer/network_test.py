@@ -12,7 +12,11 @@ backend.
 from __future__ import division
 import os.path
 import unittest
-import nineml.user as nineml
+from nineml.user import (
+    PropertySet, Projection, Network,
+    PortConnection, DynamicsProperties, Connectivity, Population,
+    FromResponse, FromPlasticity)
+from nineml import Document, load
 from nineml.units import ms, mV, nA, Hz, Mohm
 from os import path
 
@@ -24,7 +28,6 @@ class TestNetwork(unittest.TestCase):
     Loads Brunel 2000 network and reads and writes it from XML
     """
 
-    tmp_xml_file = path.join(src_dir, 'network_tmp.xml')
     xml_dir = path.normpath(path.join(src_dir, '..', '..', '..', '..',
                                       'examples', '_old', 'Brunel2000'))
 
@@ -42,70 +45,77 @@ class TestNetwork(unittest.TestCase):
         tau_syn = 0.5        # synapse time constant
         input_rate = 50.0    # mean input spiking rate
 
-        neuron_parameters = nineml.PropertySet(tau=(tau, ms),
+        neuron_parameters = PropertySet(tau=(tau, ms),
                                                 theta=(theta, mV),
                                                 tau_rp=(2.0, ms),
                                                 Vreset=(10.0, mV),
                                                 R=(1.5, Mohm))
-        psr_parameters = nineml.PropertySet(tau_syn=(tau_syn, ms))
+        psr_parameters = PropertySet(tau_syn=(tau_syn, ms))
         neuron_initial_values = {"V": (0.0, mV),  # todo: use random distr.
                                  "t_rpend": (0.0, ms)}
         synapse_initial_values = {"A": (0.0, nA), "B": (0.0, nA)}
 
-        celltype = nineml.SpikingNodeType("nrn",
+        celltype = DynamicsProperties("nrn",
                                           path.join(self.xml_dir,
                                                     'BrunelIaF.xml'),
                                           properties=neuron_parameters,
                                           initial_values=neuron_initial_values)
-        ext_stim = nineml.SpikingNodeType("stim",
+        ext_stim = DynamicsProperties("stim",
                                           path.join(self.xml_dir,
                                                     "Poisson.xml"),
-                                          nineml.PropertySet(rate=(input_rate,
+                                          PropertySet(rate=(input_rate,
                                                                    Hz)),
                                           initial_values={"t_next": (0.5, ms)})
-        psr = nineml.SynapseType("syn",
+        psr = DynamicsProperties("syn",
                                  path.join(self.xml_dir, "AlphaPSR.xml"),
                                  properties=psr_parameters,
                                  initial_values=synapse_initial_values)
 
-        p1 = nineml.Population("Exc", 1, celltype, positions=None)
-        p2 = nineml.Population("Inh", 1, celltype, positions=None)
-        inpt = nineml.Population("Ext", 1, ext_stim, positions=None)
+        p1 = Population("Exc", 1, celltype, positions=None)
+        p2 = Population("Inh", 1, celltype, positions=None)
+        inpt = Population("Ext", 1, ext_stim, positions=None)
 
-        all_to_all = nineml.Connectivity(
+        all_to_all = Connectivity(
             "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})
 
-        static_exc = nineml.DynamicsProperties(
+        static_exc = DynamicsProperties(
             "ExcitatoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"), {},
             initial_values={"weight": (Je, nA)})
-        static_inh = nineml.DynamicsProperties(
+        static_inh = DynamicsProperties(
             "InhibitoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"),
             initial_values={"weight": (Ji, nA)})
 
-        exc_prj = nineml.Projection(
+        exc_prj = Projection(
             "Excitation", inpt,
-            (p1, nineml.PortConnection('Isyn', nineml.FromResponse('Isyn'))),
-            response=(psr, nineml.PortConnection(
-                'weight', nineml.FromPlasticity('weight'))),
-            plasticity=static_exc,
+            (p1, PortConnection('Isyn', FromResponse('Isyn'))),
+            response=(psr, PortConnection(
+                'weight', FromPlasticity('weight'))),
+            plasticity=(static_exc,),
             connectivity=all_to_all,
             delay=(delay, ms))
 
-        inh_prj = nineml.Projection(
+        inh_prj = Projection(
             "Inhibition", inpt,
-            (p2, nineml.PortConnection('Isyn', nineml.FromResponse('Isyn'))),
-            response=(psr, nineml.PortConnection(
-                'weight', nineml.FromPlasticity('weight'))),
-            plasticity=static_inh,
+            (p2, PortConnection('Isyn', FromResponse('Isyn'))),
+            response=(psr, PortConnection(
+                'weight', FromPlasticity('weight'))),
+            plasticity=(static_inh,),
             connectivity=all_to_all,
             delay=(delay, ms))
 
-        model = nineml.Network("Three-neuron network with alpha synapses")
+        model = Network("Three-neuron network with alpha synapses")
         model.add(inpt, p1, p2)
         model.add(exc_prj, inh_prj)
-        model.write(self.tmp_xml_file)
-        loaded_model = nineml.Network.read(self.tmp_xml_file)
-        self.assertEqual(loaded_model, model)
-        os.remove(self.tmp_xml_file)
+        doc = Document(model, static_exc, static_inh, exc_prj,
+                       inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
+        xml = doc.to_xml()
+        loaded_doc = load(xml)
+        if loaded_doc != doc:
+            mismatch = loaded_doc.find_mismatch(doc)
+        else:
+            mismatch = ''
+        self.assertEqual(loaded_doc, doc,
+                         "Brunel network model failed xml roundtrip:\n\n{}"
+                         .format(mismatch))

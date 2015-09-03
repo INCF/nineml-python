@@ -31,7 +31,7 @@ class Annotations(defaultdict, DocumentLevelObject):
                 .format(', '.join('{}={}'.format(k, v)
                                   for k, v in self.iteritems())))
 
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         return E(self.element_name,
                  *chain(*[[E(k, str(v)) for k, v in dct.iteritems()]
                           for dct in self.itervalues()]))

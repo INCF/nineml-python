@@ -135,7 +135,7 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         children = (self.pre, self.post, self.response, self.plasticity,
                     self.connectivity, self.delay)
         return E(self.element_name,
@@ -230,7 +230,7 @@ class PopulationTerminus(Terminus):
         return self.object.cell
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         if self.population.from_reference is None:  # Generated objects
             # Assumes that population is written in same file as projection
             pop_elem = E.Reference(name=self.population.name)
@@ -261,7 +261,7 @@ class ComponentTerminus(Terminus):
         return self.object
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         return E(self.element_name, self.component.to_xml(),
                  *self._port_connections_to_xml())
 
@@ -367,7 +367,7 @@ class PortConnection(BasePortConnection):
             sender.bind_port(container)
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         return E(self.element_name, *(s.to_xml() for s in self.senders),
                  port=self.port_name)
 
@@ -392,7 +392,7 @@ class Sender(BasePortConnection):
         return (self.element_name, self._port_name)
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         return E(self.element_name, port=self.port_name)
 
     @classmethod
@@ -476,7 +476,7 @@ class Delay(Quantity):
 class Connectivity(ConnectionRuleProperties):
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         return E.Connectivity(ConnectionRuleProperties.to_xml(self))
 
     @classmethod

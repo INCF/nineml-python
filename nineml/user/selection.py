@@ -58,7 +58,7 @@ class Selection(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         return E(self.element_name,
                  self.operation.to_xml(),
                  name=self.name)
@@ -106,7 +106,7 @@ class Concatenate(BaseULObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, **kwargs):  # @UnusedVariable
         def item_to_xml(item):
             if isinstance(item, Reference):
                 return item.to_xml()
@@ -164,7 +164,7 @@ class Concatenate(BaseULObject):
 #         self.populations = []
 #         self.evaluated = False
 #
-#     def to_xml(self):
+#     def to_xml(self, **kwargs):  # @UnusedVariable
 #         return E(self.element_name,
 #                  E.select(self.condition.to_xml()),
 #                  name=self.name)
@@ -263,7 +263,7 @@ class Concatenate(BaseULObject):
 #     def __init__(self, *operands):
 #         self.operands = operands
 #
-#     def to_xml(self):
+#     def to_xml(self, **kwargs):  # @UnusedVariable
 #         operand_elements = []
 #         for c in self.operands:
 #             if isinstance(c, (basestring, float, int)):
