@@ -20,4 +20,5 @@ from abstraction import (
 from .user import (
     Selection, Population, Projection, Property, Definition, Component,
     Connectivity, Response, Plasticity, Pre, Post, DynamicsProperties,
-    ConnectionRuleProperties, RandomDistributionProperties, Network)
+    ConnectionRuleProperties, RandomDistributionProperties, Network,
+    MultiComponent, MultiCompartment)
