@@ -3,7 +3,7 @@ from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
-from .component import ConnectionRuleProperties
+from .component import ConnectionRuleProperties, DynamicsProperties
 from itertools import chain
 import nineml.units as un
 from nineml.utils import (
@@ -122,11 +122,14 @@ class Projection(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
-        children = (self.pre, self.post, self.response, self.plasticity,
-                    self.connectivity, self.delay)
         return E(self.element_name,
-                 *[m.to_xml(document, **kwargs) for m in children
-                   if m is not None],
+                 E.Pre(self.pre.to_xml(as_reference=True)),
+                 E.Post(self.post.to_xml(as_reference=True)),
+                 E.Response(self.response.to_xml()),
+                 E.Plasticity(self.plasticity.to_xml()),
+                 E.Connectivity(self.connectivity.to_xml()),
+                 E.Delay(self.delay.to_xml()),
+                 *[pc.to_xml() for pc in self.port_connections],
                  name=self.name)
 
     @classmethod
@@ -138,15 +141,34 @@ class Projection(BaseULObject, DocumentLevelObject):
         # Get Name
         name = element.attrib['name']
         # Get Pre
-        pre = expect_single(element.findall(NINEML + 'Pre'))
-        post = expect_single(element.findall(NINEML + 'Post'))
-        response = expect_single(element.findall(NINEML + 'Response'))
-        plasticity = expect_none_or_single(element.findall(NINEML +
-                                                           'Plasticity'))
-        if plasticity is None:
-            pass
-        connectivity = Connectivity.from_xml(
-            expect_single(element.findall(NINEML + 'Connectivity')), document)
+        pre = Reference.from_xml(
+            expect_single(
+                expect_single(element.findall(NINEML + 'Pre'))
+                .findall(NINEML + 'Reference')), document).user_object
+        post = Reference.from_xml(
+            expect_single(
+                expect_single(element.findall(NINEML + 'Post'))
+                .findall(NINEML + 'Reference')), document).user_object
+        response = DynamicsProperties.from_xml(
+            expect_single(
+                expect_single(element.findall(NINEML + 'Response'))
+                .findall(NINEML + 'DynamicsProperties')), document)
+        plasticity = expect_none_or_single(
+            element.findall(NINEML + 'Plasticity'))
+        if plasticity is not None:
+            plasticity = DynamicsProperties.from_xml(
+                expect_single(plasticity.findall(NINEML +
+                                                 'DynamicsProperties')))
+        connectivity = ConnectionRuleProperties.from_xml(
+            expect_single(
+                expect_single(element.findall(NINEML + 'Connectivity'))
+                .findall(NINEML + 'ConnectionRuleProperties')), document)
+        analog_port_connections = [
+            AnalogPortConnection.from_xml(pc)
+            for pc in element.findall(NINEML + 'AnalogPortConnection')]
+        event_port_connections = [
+            EventPortConnection.from_xml(pc)
+            for pc in element.findall(NINEML + 'EventPortConnection')]
         # Get Delay
         delay = Delay.from_xml(
             expect_single(element.findall(NINEML + 'Delay')), document)
@@ -157,6 +179,8 @@ class Projection(BaseULObject, DocumentLevelObject):
                    plasticity=plasticity,
                    connectivity=connectivity,
                    delay=delay,
+                   port_connections=chain(analog_port_connections,
+                                          event_port_connections),
                    url=document.url)
 
 
@@ -185,22 +209,3 @@ class Delay(Quantity):
             raise Exception("Units for delay must be of the time dimension "
                             "(found {})".format(units))
         Quantity.__init__(self, value, units)
-
-
-class Connectivity(ConnectionRuleProperties):
-
-    @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E.Connectivity(ConnectionRuleProperties.to_xml(
-            self, document, **kwargs))
-
-    @classmethod
-    @read_annotations
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        assert element.tag in ('Connectivity', NINEML + 'Connectivity'), (
-            "Found '{}' element, expected '{}'".format(element.tag,
-                                                       'Connectivity'))
-        component = ConnectionRuleProperties.from_xml(
-            expect_single(element.findall(
-                NINEML + 'ConnectionRuleProperties')), document)
-        return cls(*component.__getinitargs__())
