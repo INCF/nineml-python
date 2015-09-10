@@ -92,6 +92,7 @@ class Parser(object):
                     tokval = 'True'
                 elif tokval == 'false':
                     tokval = 'False'
+                # Unescape relationals escaped in _parse_relationals
                 elif tokval.endswith('__'):
                     tokval = tokval[:-2]
             # Handle multiple negations
