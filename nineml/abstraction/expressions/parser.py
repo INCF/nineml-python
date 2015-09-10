@@ -7,7 +7,9 @@ from sympy.parsing.sympy_tokenize import NAME, OP
 import operator
 import re
 from nineml.exceptions import NineMLMathParseError
-from .base import builtin_constants, builtin_functions
+from .base import (
+    builtin_constants, builtin_functions, reserved_symbols,
+    reserved_identifiers)
 
 # # Inline randoms are deprecated in favour of RandomVariable elements,
 # # but included here to get Brunel model to work
@@ -19,10 +21,11 @@ class Parser(object):
     # Escape all objects in sympy namespace that aren't defined in NineML
     # by predefining them as symbol names to avoid naming conflicts when
     # sympifying RHS strings.
-    _to_escape = set(s for s in dir(sympy)
-                     if s not in chain(builtin_constants, builtin_functions))
+    _to_escape = (set(dir(sympy)) -
+                  set(chain(builtin_constants, builtin_functions)))
     _valid_funcs = set((sympy.And, sympy.Or, sympy.Not)) | builtin_functions
     _func_to_op_map = {sympy.Function('pow'): operator.pow}
+    _valid_identifier_re = re.compile(r'^[a-zA-Z_]\w*$')
     _escape_random_re = re.compile(r'(?<!\w)random\.(\w+)(?!\w)')
     _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_(?!\w)')
     _logic_relation_re = re.compile(r'(?:&|\||<|>|=)')
@@ -45,15 +48,21 @@ class Parser(object):
         self.escaped_names = None
 
     def parse(self, expr):
-        if not isinstance(expr, (int, float)):
-            if isinstance(expr, sympy.Basic):
-                self._check_valid_funcs(expr)
-            elif isinstance(expr, basestring):
-                return self._parse_expr(expr)
-            else:
-                raise TypeError("Cannot convert value '{}' of type '{}' to "
-                                " SymPy expression".format(repr(expr),
-                                                           type(expr)))
+        if isinstance(expr, (int, float)):
+            pass
+        elif isinstance(expr, sympy.Basic):
+            self._check_valid_funcs(expr)
+        elif self.valid_identifier(expr, safe_symbols=reserved_symbols):
+            # Feeling lucky, first check we can't get away with just converting
+            # the expression into a symbol to avoid full parsing for trivial
+            # cases
+            expr = sympy.Symbol(expr)
+        elif isinstance(expr, basestring):
+            return self._parse_expr(expr)
+        else:
+            raise TypeError("Cannot convert value '{}' of type '{}' to "
+                            " SymPy expression".format(repr(expr),
+                                                       type(expr)))
         return expr
 
     def _parse_expr(self, expr):
@@ -87,7 +96,7 @@ class Parser(object):
                 if tokval in self._to_escape:
                     self.escaped_names.add(tokval)
                     tokval = self._escape(tokval)
-                # Convert logical identities from ANSI to Python names
+                # Convert logical identities from ANSI C -> Python names
                 elif tokval == 'true':
                     tokval = 'True'
                 elif tokval == 'false':
@@ -152,6 +161,12 @@ class Parser(object):
         to the Sympy parser
         """
         return self._preprocess(tokens)
+
+    @classmethod
+    def valid_identifier(cls, expr, safe_symbols=set([])):
+        if expr in reserved_identifiers - safe_symbols:
+            return False
+        return cls._valid_identifier_re.match(expr)
 
     @classmethod
     def _escape(self, s):
