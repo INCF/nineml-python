@@ -234,8 +234,7 @@ class Expression(object):
     def rhs_substituted(self, name_map):
         """Replace atoms on the RHS with values in the name_map"""
         return self.rhs.xreplace(dict(
-            (sympy.Symbol(old), (sympy.Symbol(new)
-                                 if isinstance(new, basestring) else new))
+            (sympy.sympify(old), sympy.sympify(new))
             for old, new in name_map.iteritems()))
 
     def subs(self, old, new):
