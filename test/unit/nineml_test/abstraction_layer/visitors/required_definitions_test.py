@@ -36,6 +36,7 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
                     'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
                     transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
                                  On('spikein', do=[OutputEvent('emit')])],
+                    aliases=[Alias('A1', 'P1 * 2')],
                     name='R1',
                 ),
                 Regime(name='R2', transitions=On('SV1 > 1', to='R1'))
