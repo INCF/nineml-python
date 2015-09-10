@@ -21,10 +21,11 @@ class BaseReference(BaseNineMLObject):
             document = Document()
         self.url = url
         if self.url:
-            if document.url is None:
-                document = read(url, relative_to=os.getcwd())
+            if document.url is None or not os.path.dirname(document.url):
+                rel_dir = os.getcwd()
             else:
-                document = read(url, relative_to=os.path.dirname(document.url))
+                rel_dir = os.path.dirname(document.url)
+            document = read(url, relative_to=rel_dir)
         self._referred_to = document[name]
 
     def __eq__(self, other):
