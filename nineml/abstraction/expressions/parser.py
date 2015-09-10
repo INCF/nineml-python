@@ -53,7 +53,7 @@ class Parser(object):
         elif isinstance(expr, sympy.Basic):
             self._check_valid_funcs(expr)
         elif self.valid_identifier(expr, safe_symbols=reserved_symbols):
-            # Feeling lucky, first check we can't get away with just converting
+            # Feeling lucky, first check we can get away with just converting
             # the expression into a symbol to avoid full parsing for trivial
             # cases
             expr = sympy.Symbol(expr)

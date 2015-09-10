@@ -1,9 +1,7 @@
 import unittest
-from itertools import chain
-from nineml.abstraction.dynamics import Dynamics, Regime
-from nineml.abstraction.expressions import reserved_identifiers
+from nineml.abstraction import (
+    Dynamics, Regime, Alias, Parameter, AnalogReceivePort)
 from nineml import units as un
-from nineml.abstraction import Parameter, AnalogReceivePort, StateVariable
 
 
 # Testing Skeleton for class: DynamicsClonerPrefixNamespace
@@ -16,6 +14,7 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
             aliases=['A1:=P1 / P2', 'A2 := ARP2 + P3', 'A3 := P4 * P5'],
             regimes=[
                 Regime('dSV1/dt = -A1 / A2',
+                       aliases=[Alias('A1', 'P1 / P2 * 2')],
                        name='R1')],
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.resistance),
                           AnalogReceivePort('ARP2', dimension=un.charge)],
