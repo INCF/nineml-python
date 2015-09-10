@@ -9,9 +9,12 @@ from itertools import chain
 from copy import deepcopy
 import sympy
 from sympy.printing import ccode
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+from sympy.functions.elementary.piecewise import ExprCondPair
 import re
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
+
 
 builtin_constants = set(['true', 'false', 'True', 'False'])
 builtin_functions = set([
@@ -42,6 +45,7 @@ class Expression(object):
                        for k, v in Parser.inline_randoms_dict.iteritems()] +
                       [('abs', 'fabs')])
     _rationals_re = re.compile(r'(\d+)\.0L/(\d+).0L')
+    _multiple_whitespace_re = re.compile(r'\s+')
     _ccode_print_warn_re = re.compile(r'// (?:Not supported in C:|abs)\n')
 
     def __init__(self, rhs):
@@ -102,17 +106,18 @@ class Expression(object):
 
     @property
     def rhs_cstr(self):
-        rhs = self._unwrap_integer_powers(self._rhs)
+        rhs = self.expand_integer_powers(self.rhs)
         cstr = ccode(rhs, user_functions=self._cfunc_map)
         cstr = self._rationals_re.sub(r'\1/\2', cstr)
         return cstr
 
     @property
     def rhs_xml(self):
-        rhs = self._unwrap_integer_powers(self._rhs)
+        rhs = self.expand_integer_powers(self.rhs)
         s = ccode(rhs, user_functions=self._random_map)
         s = self._rationals_re.sub(r'\1/\2', s)
         s = self._ccode_print_warn_re.sub('', s)
+        s = self._multiple_whitespace_re.sub(' ', s)
         return s
 
     @property
@@ -173,7 +178,8 @@ class Expression(object):
         """ Returns a python callable which evaluates the expression in
         namespace and returns the result """
         def nineml_expression(**kwargs):
-            if isinstance(self.rhs, (bool, int, float)):
+            if isinstance(self.rhs, (bool, int, float, BooleanTrue,
+                                     BooleanFalse)):
                 val = self.rhs
             else:
                 if self.rhs.is_Boolean:
@@ -190,10 +196,11 @@ class Expression(object):
                         val = self.rhs.evalf(subs=kwargs)
                     except Exception:
                         raise NineMLRuntimeError(
-                            "Incorrect arguments provided to expression ('{}')"
-                            ": '{}'\n".format(
-                                "', '".join(self.rhs_symbol_names),
-                                "', '".join(kwargs.keys())))
+                            "Incorrect arguments provided to expression '{}'"
+                            ": '{}' (expected '{}')\n".format(
+                                self.rhs,
+                                "', '".join(kwargs.keys()),
+                                "', '".join(self.rhs_symbol_names)))
                     try:
                         val = float(val)
                     except TypeError:
@@ -227,7 +234,8 @@ class Expression(object):
     def rhs_substituted(self, name_map):
         """Replace atoms on the RHS with values in the name_map"""
         return self.rhs.xreplace(dict(
-            (sympy.sympify(old), sympy.sympify(new))
+            (sympy.Symbol(old), (sympy.Symbol(new)
+                                 if isinstance(new, basestring) else new))
             for old, new in name_map.iteritems()))
 
     def subs(self, old, new):
@@ -286,23 +294,24 @@ class Expression(object):
         self.rhs = sympy.simplify(self.rhs)
 
     @classmethod
-    def _unwrap_integer_powers(cls, expr):
+    def expand_integer_powers(cls, expr):
         """
         Convert integer powers in an expression to Muls, e.g. a**3 => a*a*a.
         This is used when printing to C-style strings as it is more accurate.
         """
-        integer_pows = list(p for p in expr.atoms(sympy.Pow)
-                            if (p.as_base_exp()[1].is_Integer and
-                                abs(p.as_base_exp()[1]) > 1))
-        to_replace = {}
-        for int_pow in integer_pows:
-            base, expn = int_pow.as_base_exp()
-            repl = sympy.Mul(*([base] * abs(expn)), evaluate=False)
-            if expn < 0:
-                repl = sympy.Pow(repl, -1)
-            to_replace[int_pow] = repl
-        if to_replace:
-            expr = cls._non_eval_xreplace(expr, to_replace)
+        if isinstance(expr, sympy.Basic):
+            integer_pows = list(p for p in expr.atoms(sympy.Pow)
+                                if (p.as_base_exp()[1].is_Integer and
+                                    abs(p.as_base_exp()[1]) > 1))
+            to_replace = {}
+            for int_pow in integer_pows:
+                base, expn = int_pow.as_base_exp()
+                repl = sympy.Mul(*([base] * abs(expn)), evaluate=False)
+                if expn < 0:
+                    repl = sympy.Pow(repl, -1)
+                to_replace[int_pow] = repl
+            if to_replace:
+                expr = cls._non_eval_xreplace(expr, to_replace)
         return expr
 
     @classmethod
@@ -325,7 +334,12 @@ class Expression(object):
                 args.append(new_a)
             args = tuple(args)
             if altered:
-                return expr.func(*args, evaluate=False)
+                if isinstance(expr, ExprCondPair):
+                    return ExprCondPair(
+                        cls._non_eval_xreplace(expr.args[0], rule),
+                        cls._non_eval_xreplace(expr.args[1], rule))
+                else:
+                    return expr.func(*args, evaluate=False)
         return expr
 
     @classmethod

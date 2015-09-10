@@ -124,6 +124,14 @@ class AnsiC89ToSympy_test(unittest.TestCase):
     def setUp(self):
         self.a = sympy.Symbol('a')
         self.b = sympy.Symbol('b')
+        self.c = sympy.Symbol('c')
+        self.d = sympy.Symbol('d')
+        self.e = sympy.Symbol('e')
+        self.f = sympy.Symbol('f')
+        self.g = sympy.Symbol('g')
+        self.h = sympy.Symbol('h')
+        self.i = sympy.Symbol('i')
+        self.j = sympy.Symbol('j')
 
     def test_logical_and(self):
         expr = Expression('a && b')
@@ -132,6 +140,32 @@ class AnsiC89ToSympy_test(unittest.TestCase):
     def test_logical_or(self):
         expr = Expression('a || b')
         self.assertEqual(expr.rhs, sympy.Or(self.a, self.b))
+
+    def test_equality(self):
+        expr = Expression('a == b')
+        self.assertEqual(expr.rhs, sympy.Eq(self.a, self.b))
+
+    def test_equality_combined(self):
+        expr = Expression('(a == b) && (c == d) || (e == f)')
+        self.assertEqual(
+            expr.rhs, sympy.Or(sympy.And(sympy.Eq(self.a, self.b),
+                                         sympy.Eq(self.c, self.d)),
+                               sympy.Eq(self.e, self.f)))
+
+    def test_nested_relational(self):
+        expr = Expression('((a == b) || (c == d)) && ((e == f) || (g < f))')
+        self.assertEqual(
+            expr.rhs, sympy.And(sympy.Or(sympy.Eq(self.a, self.b),
+                                         sympy.Eq(self.c, self.d)),
+                                sympy.Or(sympy.Eq(self.e, self.f),
+                                         sympy.Lt(self.g, self.f))))
+
+    def test_equality_nested_func(self):
+        expr = Expression('((a == b) || (c == pow(d, 2))) && (e == f)')
+        self.assertEqual(
+            expr.rhs, sympy.And(sympy.Or(sympy.Eq(self.a, self.b),
+                                         sympy.Eq(self.c, self.d ** 2)),
+                                sympy.Eq(self.e, self.f)))
 
     def test_pow(self):
         expr = Expression('pow(a, b)')
@@ -148,6 +182,55 @@ class AnsiC89ToSympy_test(unittest.TestCase):
     def test_triple_negation(self):
         expr = Expression('!!!a')
         self.assertEqual(expr.rhs, sympy.Not(self.a))
+
+
+class SympyToC89_test(unittest.TestCase):
+
+    def setUp(self):
+        self.a = sympy.Symbol('a')
+        self.b = sympy.Symbol('b')
+        self.c = sympy.Symbol('c')
+        self.d = sympy.Symbol('d')
+        self.e = sympy.Symbol('e')
+        self.f = sympy.Symbol('f')
+        self.g = sympy.Symbol('g')
+        self.h = sympy.Symbol('h')
+        self.i = sympy.Symbol('i')
+        self.j = sympy.Symbol('j')
+
+    def test_logical_and(self):
+        expr = Expression(sympy.And(self.a, self.b))
+        self.assertEqual(expr.rhs_cstr, 'a && b')
+
+    def test_logical_or(self):
+        expr = Expression(sympy.Or(self.a, self.b))
+        self.assertEqual(expr.rhs_cstr, 'a || b')
+
+    def test_equality(self):
+        expr = Expression(sympy.Eq(self.a, self.b))
+        self.assertEqual(expr.rhs_cstr, 'a == b')
+
+    def test_equality_combined(self):
+        expr = Expression(sympy.Or(sympy.And(sympy.Eq(self.a, self.b),
+                                             sympy.Eq(self.c, self.d)),
+                                   sympy.Eq(self.e, self.f)))
+        self.assertEqual(expr.rhs_cstr, 'a == b && c == d || e == f')
+
+    def test_nested_relational(self):
+        expr = Expression(sympy.And(sympy.Or(sympy.Eq(self.a, self.b),
+                                             sympy.Eq(self.c, self.d)),
+                                    sympy.Or(sympy.Eq(self.e, self.f),
+                                             sympy.Lt(self.g, self.f))))
+        self.assertEqual(
+            expr.rhs_cstr, '(a == b || c == d) && (e == f || g < f)')
+
+    def test_pow(self):
+        expr = Expression(self.a ** self.b)
+        self.assertEqual(expr.rhs_cstr, 'pow(a, b)')
+
+    def test_negation(self):
+        expr = Expression(sympy.Not(self.a))
+        self.assertEqual(expr.rhs_cstr, '!a')
 
 
 class Rationals_test(unittest.TestCase):

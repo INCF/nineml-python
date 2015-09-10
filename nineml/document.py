@@ -21,6 +21,10 @@ class Document(dict, BaseNineMLObject):
 
     defining_attributes = ('elements',)
     element_name = 'NineML'
+    write_order = ['Population', 'Projection', 'Selection', 'Network',
+                   'Dynamics', 'ConnectionRule', 'RandomDistribution',
+                   'DynamicsProperties', 'ConnectionRuleProperties',
+                   'RandomDistributionProperties', 'Dimension', 'Unit']
 
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
@@ -240,7 +244,8 @@ class Document(dict, BaseNineMLObject):
         self.standardize_units()
         return E(
             self.element_name,
-            *[c.to_xml(as_reference=False) for c in self.itervalues()])
+            *self._sort(c.to_xml(as_reference=False)
+                        for c in self.itervalues()))
 
     def write(self, filename):
         doc = self.to_xml()
@@ -341,7 +346,6 @@ def read(url, relative_to=None):
         if not isinstance(url, file):
             try:
                 with contextlib.closing(urlopen(url)) as f:
-                    f = urlopen(url)
                     xml = etree.parse(f)
             except IOError, e:
                 raise NineMLRuntimeError("Could not read 9ML URL '{}': \n{}"
