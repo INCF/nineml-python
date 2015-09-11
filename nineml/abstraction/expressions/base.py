@@ -44,7 +44,7 @@ class Expression(object):
     _cfunc_map = dict([(str(v), Parser.unescape_random_namespace(k))
                        for k, v in Parser.inline_randoms_dict.iteritems()] +
                       [('abs', 'fabs')])
-    _rationals_re = re.compile(r'(\d+)\.0L/(\d+).0L')
+    _rationals_re = re.compile(r'(?<!\w)([\d\.]+)\L/(?<!\w)([\d\.]+)L')
     _multiple_whitespace_re = re.compile(r'\s+')
     _ccode_print_warn_re = re.compile(r'// (?:Not supported in C:|abs)\n')
 
@@ -108,14 +108,14 @@ class Expression(object):
     def rhs_cstr(self):
         rhs = self.expand_integer_powers(self.rhs)
         cstr = ccode(rhs, user_functions=self._cfunc_map)
-        cstr = self._rationals_re.sub(r'\1/\2', cstr)
+        cstr = self.strip_L_from_rationals(cstr)
         return cstr
 
     @property
     def rhs_xml(self):
         rhs = self.expand_integer_powers(self.rhs)
         s = ccode(rhs, user_functions=self._random_map)
-        s = self._rationals_re.sub(r'\1/\2', s)
+        s = self.strip_L_from_rationals(s)
         s = self._ccode_print_warn_re.sub('', s)
         s = self._multiple_whitespace_re.sub(' ', s)
         return s
@@ -340,6 +340,14 @@ class Expression(object):
                 else:
                     return expr.func(*args, evaluate=False)
         return expr
+
+    @classmethod
+    def strip_L_from_rationals(cls, expr_str):
+        """
+        Strips the 'L' inserted by Sympy's ANSI C printer for rational
+        numbers as it is not supported in all C-like simulators (namely HOC)
+        """
+        return cls._rationals_re.sub(r'\1/\2', expr_str)
 
     @classmethod
     def symbol_to_str(cls, symbol):
