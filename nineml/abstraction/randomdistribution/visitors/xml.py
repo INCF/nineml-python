@@ -36,10 +36,13 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader):
 
 class RandomDistributionXMLWriter(ComponentClassXMLWriter):
 
+    # Maintains order of elements between writes
+    write_order = ['Parameters', 'Alias', 'Constant', 'Annotations']
+
     @annotate_xml
     def visit_componentclass(self, component_class):
         return E('RandomDistribution',
-                 *[e.accept_visitor(self) for e in component_class],
+                 *self._sort(e.accept_visitor(self) for e in component_class),
                  name=component_class.name)
 
 from ..base import RandomDistribution

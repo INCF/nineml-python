@@ -40,7 +40,7 @@ class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         return E('ConnectionRule',
-                 *[e.accept_visitor(self) for e in component_class],
+                 *self._sort(e.accept_visitor(self) for e in component_class),
                  name=component_class.name,
                  standard_library=component_class.standard_library)
 
