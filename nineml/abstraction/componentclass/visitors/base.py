@@ -16,7 +16,7 @@ class ComponentActionVisitor(ComponentVisitor):
 
     def __init__(self, require_explicit_overrides=True):
         self.require_explicit_overrides = require_explicit_overrides
-        self._scopes = []        
+        self._scopes = []
 
     def visit_componentclass(self, component_class, **kwargs):
         self.action_componentclass(component_class, **kwargs)

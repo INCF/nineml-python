@@ -389,6 +389,14 @@ class Trigger(BaseALObject, Expression):
         return "Trigger('%s')" % (self.rhs)
 
     @property
+    def _name(self):
+        """
+        This is included to allow OnConditions to be polymorphic with
+        other named structures
+        """
+        return self.rhs
+
+    @property
     def reactivate_condition(self):
         negated = copy(self)
         negated.negate()

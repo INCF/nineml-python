@@ -71,7 +71,8 @@ class ComponentClassXMLLoader(object):
         return mblock
 
     def load_mathml(self, mathml):
-        raise NotImplementedError
+        raise NotImplementedError("MathML is not currently supported but is "
+                                  "planned in future versions")
 
     def _load_blocks(self, element, block_names):
         """
@@ -125,5 +126,12 @@ class ComponentClassXMLWriter(ComponentVisitor):
                  name=constant.name,
                  value=str(constant.value),
                  units=constant.units.name)
+
+    def _sort(self, elements):
+        """Sorts the element into a consistent, logical order before write"""
+        return sorted(
+            elements,
+            key=lambda e: self.write_order.index(e.tag[len(NINEML):]))
+
 
 from nineml.document import Document
