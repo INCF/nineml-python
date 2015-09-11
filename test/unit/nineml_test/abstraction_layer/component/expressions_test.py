@@ -4,6 +4,7 @@ from nineml.abstraction import (Expression,
                                       Alias, StateAssignment, TimeDerivative)
 from nineml.abstraction.expressions import (
     ExpressionWithSimpleLHS, Constant)
+from nineml.abstraction.expressions.parser import Parser
 from nineml.exceptions import NineMLMathParseError
 from nineml.units import coulomb, S_per_cm2, mV
 from nineml.abstraction.componentclass.visitors.xml import (
@@ -238,12 +239,24 @@ class Rationals_test(unittest.TestCase):
     def test_xml(self):
         "Tests conversion of rationals back from the c-code version 1.0L/2.0L"
         expr = Expression('1/2')
-        self.assertEqual(expr.rhs_xml, '1/2')
+        self.assertEqual(expr.rhs_xml, '1.0/2.0')
 
     def test_c89(self):
         "Tests conversion of rationals back from the c-code version 1.0L/2.0L"
         expr = Expression('1/2')
-        self.assertEqual(expr.rhs_cstr, '1/2')
+        self.assertEqual(expr.rhs_cstr, '1.0/2.0')
+
+    def test_rationals_match(self):
+        self.assertEqual(Expression.strip_L_from_rationals('aL/bL'), 'aL/bL')
+        self.assertEqual(Expression.strip_L_from_rationals('a0L/bL'), 'a0L/bL')
+        self.assertEqual(Expression.strip_L_from_rationals('aL/b0L'), 'aL/b0L')
+        self.assertEqual(Expression.strip_L_from_rationals('a0L/b0L'),
+                         'a0L/b0L')
+        self.assertEqual(Expression.strip_L_from_rationals('aL/b0L'), 'aL/b0L')
+        self.assertEqual(Expression.strip_L_from_rationals('1/2'), '1/2')
+        self.assertEqual(Expression.strip_L_from_rationals('1L/2L'), '1/2')
+        self.assertEqual(Expression.strip_L_from_rationals('1.0L/2.0L'),
+                         '1.0/2.0')
 
 
 class C89_test(unittest.TestCase):
