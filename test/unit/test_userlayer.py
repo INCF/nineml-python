@@ -56,7 +56,7 @@ class ParameterTest(unittest.TestCase):
 
     def test_xml_roundtrip(self):
         p1 = Property("tau_m", 20.0, mV)
-        document = Document()
+        document = Document(mV)
         element = p1.to_xml(document)
         p2 = Property.from_xml(element, document)
         self.assertEqual(p1, p2)

@@ -421,7 +421,7 @@ class Constant_test(unittest.TestCase):
         )
 
     def test_xml_roundtrip(self):
-        document = Document()
+        document = Document(coulomb)
         writer = XMLWriter(document)
         xml = self.c.accept_visitor(writer)
         loader = XMLLoader(document)
