@@ -40,26 +40,7 @@ Classes
 :license: BSD-3, see LICENSE for details.
 
 """
-from .. import BaseNineMLObject
-
-
-class BaseULObject(BaseNineMLObject):
-
-    """
-    Base class for user layer classes
-    """
-
-    def __init__(self):
-        super(BaseULObject, self).__init__()
-        self.from_reference = None
-
-    def __lt__(self, other):
-        if self.__class__.__name__ < other.__class__.__name__:
-            return True
-        else:
-            return self.name < other.name
-
-
+from .base import BaseULObject
 from .network import Network
 from .population import Population, PositionList, Structure
 from .selection import Selection, Concatenate

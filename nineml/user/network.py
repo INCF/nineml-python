@@ -3,11 +3,13 @@ from .population import Population
 from .projection import Projection
 from .selection import Selection
 from ..document import Document
+from copy import copy
 from . import BaseULObject
 from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.xmlns import E, NINEML
 from nineml.base import DocumentLevelObject
+from nineml.reference import Reference
 import nineml
 from nineml.exceptions import handle_xml_exceptions, NineMLRuntimeError
 
@@ -27,18 +29,29 @@ class Network(BaseULObject, DocumentLevelObject):
             a dict containing the selections contained in the network.
     """
     element_name = "Network"
-    defining_attributes = ("populations", "projections", "selections")
-    children = ("populations", "projections", "selections")
+    defining_attributes = ("_populations", "_projections", "_selections")
 
-    def __init__(self, name="anonymous", populations={}, projections={},
-                 selections={}):
+    def __init__(self, name="anonymous", populations=[], projections=[],
+                 selections=[]):
         # better would be *items, then sort by type, taking the name from the
         # item
         super(Network, self).__init__()
         self.name = name
-        self.populations = populations
-        self.projections = projections
-        self.selections = selections
+        self._populations = dict((p.name, p) for p in populations)
+        self._projections = dict((p.name, p) for p in projections)
+        self._selections = dict((s.name, s) for s in selections)
+
+    @property
+    def populations(self):
+        return self._populations.itervalues()
+
+    @property
+    def projections(self):
+        return self._projections.itervalues()
+
+    @property
+    def selections(self):
+        return self._selections.itervalues()
 
     def add(self, *objs):
         """
@@ -47,11 +60,11 @@ class Network(BaseULObject, DocumentLevelObject):
         """
         for obj in objs:
             if isinstance(obj, Population):
-                self.populations[obj.name] = obj
+                self._populations[obj.name] = obj
             elif isinstance(obj, Projection):
-                self.projections[obj.name] = obj
+                self._projections[obj.name] = obj
             elif isinstance(obj, Selection):
-                self.selections[obj.name] = obj
+                self._selections[obj.name] = obj
             else:
                 raise Exception("Networks may only contain Populations, "
                                 "Projections, or Selections")
@@ -71,11 +84,14 @@ class Network(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
-                 name=self.name,
-                 *[p.to_xml(document, **kwargs) for p in chain(self.populations.values(),
-                                             self.selections.values(),
-                                             self.projections.values())])
+        as_ref_kwargs = copy(kwargs)
+        as_ref_kwargs['as_reference'] = True
+        member_elems = []
+        for member in chain(self.populations, self.selections,
+                            self.projections):
+            member.set_local_reference(document, overwrite=False)
+            member_elems.append(member.to_xml(document, **as_ref_kwargs))
+        return E(self.element_name, name=self.name, *member_elems)
 
     @classmethod
     @resolve_reference
@@ -83,18 +99,22 @@ class Network(BaseULObject, DocumentLevelObject):
     @handle_xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
         cls.check_tag(element)
-        populations = {}
-        for pop_elem in element.findall(NINEML + 'Population'):
-            pop = Population.from_xml(pop_elem, document)
-            populations[pop.name] = pop
-        projections = {}
-        for proj_elem in element.findall(NINEML + 'Projection'):
-            proj = Projection.from_xml(proj_elem, document)
-            projections[proj.name] = proj
-        selections = {}
-        for sel_elem in element.findall(NINEML + 'Selection'):
-            sel = Selection.from_xml(sel_elem, document)
-            selections[sel.name] = sel
+        populations = []
+        projections = []
+        selections = []
+        for elem in element.findall(NINEML + 'Reference'):
+            ref = Reference.from_xml(elem, document, **kwargs)
+            obj = ref.user_object
+            if isinstance(obj, Population):
+                populations.append(obj)
+            elif isinstance(obj, Projection):
+                projections.append(obj)
+            elif isinstance(obj, Selection):
+                selections.append(obj)
+            else:
+                raise NineMLRuntimeError(
+                    "Unrecognised object {} in '{}' Network"
+                    .format(type(obj), element.attrib['name']))
         network = cls(name=element.attrib["name"], populations=populations,
                       projections=projections, selections=selections)
         return network

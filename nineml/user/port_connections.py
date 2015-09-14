@@ -27,6 +27,11 @@ class BasePortConnection(BaseULObject):
                         self.send_port_name, self._receiver_rel,
                         self.receive_port_name))
 
+    def __iter__(self):
+        """Allows port connections to be expanded like a tuple"""
+        return (m for m in (self._sender_rel, self._receiver_rel,
+                            self.send_port_name, self.receive_port_name))
+
     @property
     def sender(self):
         if self._sender is None:

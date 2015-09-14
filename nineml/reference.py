@@ -3,8 +3,7 @@ from operator import and_
 from . import BaseNineMLObject
 from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import handle_xml_exceptions, NineMLRuntimeError
-from nineml.user import BaseULObject
+from nineml.exceptions import NineMLRuntimeError, handle_xml_exceptions
 from nineml.document import Document
 
 
@@ -19,7 +18,7 @@ class BaseReference(BaseNineMLObject):
         super(BaseReference, self).__init__()
         if document is None:
             document = Document()
-        self.url = url
+        self._url = url
         if self.url:
             if document.url is None or not os.path.dirname(document.url):
                 rel_dir = os.getcwd()
@@ -28,6 +27,10 @@ class BaseReference(BaseNineMLObject):
             document = read(url, relative_to=rel_dir)
         self._referred_to = document[name]
 
+    @property
+    def url(self):
+        return self._url
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
@@ -35,17 +38,14 @@ class BaseReference(BaseNineMLObject):
                              self.url == other.url))
 
     def __hash__(self):
-        return (hash(self.__class__) ^ hash(self.component_name) ^
+        return (hash(self.__class__) ^ hash(self._referred_to.name) ^
                 hash(self.url))
 
     def __repr__(self):
             return ('{}(name="{}"{})'
-                    .format(self.__class__.__name__,
-                            (self._referred_to.name if self._referred_to
-                             else ''),
+                    .format(self.__class__.__name__, self._referred_to.name,
                             ' in "{}"'.format(self.url) if self.url else ''))
 
-    @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
         kwargs = {'name': self._referred_to.name}
         if self.url:
@@ -97,48 +97,21 @@ class Reference(BaseReference):
         `url`      -- a url of the file containing the exiting component_class
         """
         super(Reference, self).__init__(name, document, url)
-        if not isinstance(self._referred_to, BaseULObject):
-            msg = ("Reference points to a non-user-layer object '{}'"
-                   .format(self._referred_to.name))
-            raise NineMLRuntimeError(msg)
-        self._referred_to.from_reference = self
+        try:
+            self._referred_to.from_reference = self
+        except AttributeError:
+            NineMLRuntimeError(
+                "Reference points to a non-user-layer object '{}'"
+                .format(self._referred_to.name))
 
     @property
     def user_object(self):
         """The object being referred to."""
         return self._referred_to
 
-
-class Definition(BaseReference):
-
-    element_name = "Definition"
-
-    def __init__(self, name=None, document=None, component_class=None,
-                 url=None):
-        if component_class is None:
-            assert name is not None and document is not None
-            super(Definition, self).__init__(name, document, url)
-        else:
-            self.url = component_class.url
-            self._referred_to = component_class
-
-    @property
-    def component_class(self):
-        return self._referred_to
-
-
-class Prototype(Definition):
-
-    element_name = "Prototype"
-
-    def __init__(self, name=None, document=None, component=None,
-                 url=None):
-        super(Prototype, self).__init__(name=name, document=document,
-                                        component_class=component, url=url)
-
-    @property
-    def component(self):
-        return self._referred_to
+    @annotate_xml
+    def to_xml(self, document, **kwargs):
+        return super(Reference, self).to_xml(document, **kwargs)
 
 
 def resolve_reference(from_xml):

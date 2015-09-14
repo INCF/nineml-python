@@ -3,7 +3,8 @@ from itertools import chain
 from abc import ABCMeta, abstractmethod
 import collections
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, handle_xml_exceptions)
+    NineMLUnitMismatchError, NineMLRuntimeError, handle_xml_exceptions,
+    NineMLMissingElementError)
 from nineml.xmlns import NINEML, E
 from nineml.reference import (
     Prototype, Definition, write_reference, resolve_reference)
@@ -16,6 +17,72 @@ from . import BaseULObject
 from nineml.document import Document
 from nineml import DocumentLevelObject
 from os import path
+
+
+
+class Definition(BaseReference):
+
+    """
+    Base class for model components that are defined in the abstraction layer.
+    """
+    element_name = "Definition"
+
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1:
+            if not isinstance(args[0], ComponentClass):
+                raise NineMLRuntimeError(
+                    "Object passed to component definition ({}) is not a "
+                    "component class".format(args[0]))
+            BaseNineMLObject.__init__(self)
+            self._referred_to = args[0]
+            if kwargs:
+                raise NineMLRuntimeError(
+                    "Cannot provide name, document or url arguments with "
+                    "explicit component class")
+            self._url = None
+        elif not args:
+            super(Definition, self).__init__(
+                name=kwargs['name'], document=kwargs['document'],
+                url=kwargs['url'])
+        else:
+            raise NineMLRuntimeError(
+                "Wrong number of arguments ({}), provided to Definition "
+                "__init__, can either be one (the component class) or zero"
+                .format(len(args)))
+
+    @property
+    def component_class(self):
+        return self._referred_to
+
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        if self.url is None:
+            # If definition was created in Python, add component class
+            # reference to document argument before writing definition
+            try:
+                doc_obj = document[self._referred_to.name]
+                if doc_obj != self._referred_to:
+                    raise NineMLRuntimeError(
+                        "Cannot create reference for '{}' {} in the provided "
+                        "document due to name clash with existing {} "
+                        "object"
+                        .format(self._referred_to.name,
+                                type(self._referred_to), type(doc_obj)))
+            except NineMLMissingElementError:
+                document.add(self._referred_to)
+        return super(Definition, self).to_xml(document, **kwargs)
+
+
+class Prototype(Definition):
+
+    element_name = "Prototype"
+
+    @property
+    def component(self):
+        return self._referred_to
+
+    @property
+    def component_class(self):
+        return self.component.component_class
 
 
 class Component(BaseULObject, DocumentLevelObject):
@@ -323,8 +390,7 @@ class Quantity(BaseULObject):
         if isinstance(value, (list, tuple)):
             value = ArrayValue(value)
         elif not isinstance(value, (int, float, SingleValue, ArrayValue,
-                                    ExternalArrayValue,
-                                    RandomDistributionProperties)):
+                                    ExternalArrayValue, RandomValue)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference',"
                             "'RandomDistributionProperties', 'ValueList', "
@@ -441,9 +507,9 @@ class Quantity(BaseULObject):
             value = ExternalArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ExternalArrayValue')),
                 document)
-        elif element.find(NINEML + 'Component') is not None:
+        elif element.find(NINEML + 'RandomValue') is not None:
             value = RandomDistributionComponent.from_xml(
-                expect_single(element.findall(NINEML + 'Component')),
+                expect_single(element.findall(NINEML + 'RandomValue')),
                 document)
         else:
             raise NineMLRuntimeError(
