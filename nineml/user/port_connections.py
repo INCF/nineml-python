@@ -7,20 +7,27 @@ from nineml.exceptions import NineMLRuntimeError
 
 class BasePortConnection(BaseULObject):
 
-    _member_types = ('sender', 'receiver', 'send_port', 'receive_port')
-    defining_attributes = list(
-        chain(('_' + m, '_' + m + '_name') for m in _member_types))
+    defining_attributes = ('sender_id', 'receiver_id', 'sender', 'receiver'
+                           'send_port', 'receive_port', 'send_port_name',
+                           'receive_port_name')
 
-    def __init__(self, sender, receiver, send_port, receive_port):
+    def __init__(self, sender_relationship, receiver_relationship,
+                 send_port_name, receive_port_name):
         super(BasePortConnection, self).__init__()
-        self._set_member('sender', sender)
-        self._set_member('receiver', receiver)
-        self._set_member('send_port', send_port)
-        self._set_member('receive_port', receive_port)
+        self._sender_rel = sender_relationship
+        self._receiver_rel = receiver_relationship
+        self._send_port_name = send_port_name
+        self._receive_port_name = receive_port_name
+        self._sender = None
+        self._receiver = None
+        self._send_port = None
+        self._receive_port = None
 
     def __repr__(self):
-        return ("{}('{}' with {} senders)"
-                .format(self.element_name, self.port_name, len(self.senders)))
+        return ("{}(sender={}->{}, receiver={}->{})"
+                .format(self.element_name, self.sender_rel,
+                        self.send_port_name, self.receiver_rel,
+                        self.receive_port_name))
 
     @property
     def sender(self):
@@ -47,18 +54,12 @@ class BasePortConnection(BaseULObject):
         return self.receive_port
 
     @property
-    def sender_name(self):
-        if self._sender is None:
-            return self._sender_name
-        else:
-            return self._sender.name
+    def sender_relationship(self):
+        return self._sender_rel
 
     @property
-    def receiver_name(self):
-        if self._receiver is None:
-            return self._receiver_name
-        else:
-            return self._receiver.name
+    def receiver_relationship(self):
+        return self._receiver_rel
 
     @property
     def send_port_name(self):
@@ -74,24 +75,21 @@ class BasePortConnection(BaseULObject):
         else:
             return self._receive_port.name
 
-    def bind_ports(self, container):
+    def bind_ports(self, sender, receiver):
         """
         Binds the PortConnection to the components it is connecting
         """
-        for member_type in self._member_types:
-            member_name = getattr(self, '_' + member_type + '_name')
-            if member_name is not None:
-                setattr(self, '_' + member_type, container.port(member_name))
-                setattr(self, '_' + member_type + '_name', None)
-            else:
-                member = getattr(self, '_' + member_type)
-                assert container.port(member.name) is member
+        self._sender = sender
+        self._receiver = receiver
+        self._send_port = sender.port(self._send_port_name)
+        self._receive_port = receiver.port(self._receive_port_name)
 
     @annotate_xml
     def to_xml(self):
         return E(
             self.element_name,
-            sender=self.sender_name, receiver=self.receiver_name,
+            sender=self.sender_relationship,
+            receiver=self.receiver_relationship,
             send_port=self.send_port_name, receive_port=self.receive_port_name)
 
     @classmethod
@@ -100,14 +98,6 @@ class BasePortConnection(BaseULObject):
         cls.check_tag(element)
         return cls(element.attrib['sender'], element.attrib['receiver'],
                    element.attrib['send_port'], element.attrib['receive_port'])
-
-    def _set_member(self, member_type, obj):
-        if isinstance(obj, basestring):
-            setattr(self, '_' + member_type, None)
-            setattr(self, '_' + member_type + '_name', obj)
-        else:
-            setattr(self, '_' + member_type, obj)
-            setattr(self, '_' + member_type + '_name', None)
 
 
 class AnalogPortConnection(BasePortConnection):

@@ -19,6 +19,5 @@ from abstraction import (
     ComponentClass)
 from .user import (
     Selection, Population, Projection, Property, Definition, Component,
-    Connectivity, Response, Plasticity, Pre, Post, DynamicsProperties,
-    ConnectionRuleProperties, RandomDistributionProperties, Network,
-    MultiComponent, MultiCompartment)
+    DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
+    Network)
