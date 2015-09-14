@@ -4,6 +4,7 @@ from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from .component import ConnectionRuleProperties, DynamicsProperties
+from copy import copy
 from itertools import chain
 import nineml.units as un
 from nineml.utils import (
@@ -49,7 +50,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                            "response", "plasticity", "delay")
 
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
-   
+
     def __init__(self, name, pre, post, response, connectivity,
                  delay, plasticity=None, port_connections=[], url=None):
         """
