@@ -7,91 +7,93 @@ from nineml.abstraction import (
 from nineml.user import (
     Population, DynamicsProperties, Projection, ConnectionRuleProperties)
 from nineml.xmlns import NINEML
-from nineml import units as un
+from nineml import units as un, Document
 
 
 class TestProjection(unittest.TestCase):
 
-    pre_dynamics = Dynamics(
-        name='PreDynamics',
-        state_variables=[
-            StateVariable('SV1', dimension=un.voltage)],
-        regimes=[
-            Regime(
-                'dSV1/dt = -SV1 / P1',
-                transitions=[On('SV1 > P2', do=[OutputEvent('emit')])],
-                name='R1'
-            ),
-        ],
-        parameters=[Parameter('P1', dimension=un.time),
-                    Parameter('P2', dimension=un.voltage)]
-    )
+    def setUp(self):
+        self.pre_dynamics = Dynamics(
+            name='PreDynamics',
+            state_variables=[
+                StateVariable('SV1', dimension=un.voltage)],
+            regimes=[
+                Regime(
+                    'dSV1/dt = -SV1 / P1',
+                    transitions=[On('SV1 > P2', do=[OutputEvent('emit')])],
+                    name='R1'
+                ),
+            ],
+            parameters=[Parameter('P1', dimension=un.time),
+                        Parameter('P2', dimension=un.voltage)]
+        )
 
-    post_dynamics = Dynamics(
-        name='PostDynamics',
-        state_variables=[
-            StateVariable('SV1', dimension=un.voltage)],
-        regimes=[
-            Regime(
-                'dSV1/dt = -SV1 / P1 + ARP1 / P2',
-                name='R1'
-            ),
-        ],
-        analog_ports=[AnalogReceivePort('ARP1', dimension=un.current)],
-        parameters=[Parameter('P1', dimension=un.time),
-                    Parameter('P2', dimension=un.capacitance)]
-    )
+        self.post_dynamics = Dynamics(
+            name='PostDynamics',
+            state_variables=[
+                StateVariable('SV1', dimension=un.voltage)],
+            regimes=[
+                Regime(
+                    'dSV1/dt = -SV1 / P1 + ARP1 / P2',
+                    name='R1'
+                ),
+            ],
+            analog_ports=[AnalogReceivePort('ARP1', dimension=un.current)],
+            parameters=[Parameter('P1', dimension=un.time),
+                        Parameter('P2', dimension=un.capacitance)]
+        )
 
-    response_dynamics = Dynamics(
-        name='ResponseDynamics',
-        state_variables=[
-            StateVariable('SV1', dimension=un.current)],
-        regimes=[
-            Regime(
-                'dSV1/dt = -SV1 / P1',
-                transitions=[On('receive',
-                                do=[StateAssignment('SV1', 'SV1 + P2')])],
-                name='R1'
-            ),
-        ],
-        analog_ports=[AnalogSendPort('SV1', dimension=un.current)],
-        parameters=[Parameter('P1', dimension=un.time),
-                    Parameter('P2', dimension=un.current)]
-    )
+        self.response_dynamics = Dynamics(
+            name='ResponseDynamics',
+            state_variables=[
+                StateVariable('SV1', dimension=un.current)],
+            regimes=[
+                Regime(
+                    'dSV1/dt = -SV1 / P1',
+                    transitions=[On('receive',
+                                    do=[StateAssignment('SV1', 'SV1 + P2')])],
+                    name='R1'
+                ),
+            ],
+            analog_ports=[AnalogSendPort('SV1', dimension=un.current)],
+            parameters=[Parameter('P1', dimension=un.time),
+                        Parameter('P2', dimension=un.current)]
+        )
 
-    pre = Population(
-        name="Population1",
-        size=1,
-        cell=DynamicsProperties(
-            name="PreDynamicsProps", definition=pre_dynamics,
-            properties={'P1': 1 * un.ms, 'P2': -65 * un.mV}))
+        self.pre = Population(
+            name="Population1",
+            size=1,
+            cell=DynamicsProperties(
+                name="PreDynamicsProps", definition=self.pre_dynamics,
+                properties={'P1': (1, un.ms), 'P2': (-65, un.mV)}))
 
-    post = Population(
-        name="Population1",
-        size=1,
-        cell=DynamicsProperties(
-            name="PostDynamicsProps", definition=post_dynamics,
-            properties={'P1': 1 * un.ms, 'P2': 1 * un.uF}))
+        self.post = Population(
+            name="Population1",
+            size=1,
+            cell=DynamicsProperties(
+                name="PostDynamicsProps", definition=self.post_dynamics,
+                properties={'P1': (1, un.ms), 'P2': (1, un.uF)}))
 
-    one_to_one = ConnectionRule(
-        name="OneToOne",
-        standard_library=(NINEML + 'connectionrules/OneToOne'))
+        self.one_to_one = ConnectionRule(
+            name="OneToOne",
+            standard_library=(NINEML + 'connectionrules/OneToOne'))
 
-    projection = Projection(
-        name="Projection",
-        pre=pre, post=post,
-        response=DynamicsProperties(
-            name="ResponseProps",
-            definition=response_dynamics,
-            properties={'P1': 10 * un.ms, 'P2': 1 * un.nA}),
-        connectivity=ConnectionRuleProperties(
-            name="ConnectionRuleProps",
-            definition=one_to_one),
-        delay=1 * un.ms)
+        self.projection = Projection(
+            name="Projection",
+            pre=self.pre, post=self.post,
+            response=DynamicsProperties(
+                name="ResponseProps",
+                definition=self.response_dynamics,
+                properties={'P1': (10, un.ms), 'P2': (1, un.nA)}),
+            connectivity=ConnectionRuleProperties(
+                name="ConnectionRuleProps",
+                definition=self.one_to_one),
+            delay=(1, un.ms))
 
     def test_xml_roundtrip(self):
+        document = Document()
         xml = self.projection.to_xml()
-        projection2 = Projection.from_xml(xml)
+        projection2 = Projection.from_xml(xml, document)
         self.assertEquals(self.projection, projection2,
                           "Projection failed XML roundtrip")
 

@@ -49,9 +49,9 @@ class Projection(BaseULObject, DocumentLevelObject):
                            "response", "plasticity", "delay")
 
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
-
-    def __init__(self, name, pre, post, response, plasticity, connectivity,
-                 delay, port_connections=[], url=None):
+   
+    def __init__(self, name, pre, post, response, connectivity,
+                 delay, plasticity=None, port_connections=[], url=None):
         """
         Create a new projection.
         """
@@ -68,9 +68,27 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._plasticity = plasticity
         self._connectivity = connectivity
         self._delay = delay
-        # Connect ports between terminuses
+        self._port_connections = []
         for port_connection in port_connections:
-            port_connection.bind_ports()
+            sender_name, receiver_name, send_port_name, _ = port_connection
+            sender_container = getattr(self, sender_name)
+            receiver_container = getattr(self, receiver_name)
+            try:
+                sender = sender_container.cell.component_class
+            except AttributeError:
+                sender = sender_container.component_class
+            try:
+                receiver = receiver_container.cell.component_class
+            except AttributeError:
+                receiver = receiver_container.component_class
+            if isinstance(port_connection, tuple):
+                send_port = sender.port(send_port_name)
+                if send_port.communication_type == 'analog':
+                    port_connection = AnalogPortConnection(*port_connection)
+                else:
+                    port_connection = EventPortConnection(*port_connection)
+            port_connection.bind_ports(sender, receiver)
+            self._port_connections.append(port_connection)
 
     @property
     def pre(self):
@@ -96,6 +114,10 @@ class Projection(BaseULObject, DocumentLevelObject):
     def delay(self):
         return self._delay
 
+    @property
+    def port_connections(self):
+        return self._port_connections
+
     def __repr__(self):
         return ('Projection(name="{}", pre={}, post={}, '
                 'connectivity={}, response={}{}, delay={})'
@@ -109,9 +131,9 @@ class Projection(BaseULObject, DocumentLevelObject):
         """
         Return a list of all components used by the projection.
         """
-        components = [self.connectivity, self.response.component]
+        components = [self.connectivity, self.response]
         if self.plasticity is not None:
-            components.append(self.plasticity.component)
+            components.append(self.plasticity)
         return components
 
     @property
@@ -122,15 +144,17 @@ class Projection(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
-                 E.Pre(self.pre.to_xml(as_reference=True)),
-                 E.Post(self.post.to_xml(as_reference=True)),
-                 E.Response(self.response.to_xml()),
-                 E.Plasticity(self.plasticity.to_xml()),
-                 E.Connectivity(self.connectivity.to_xml()),
-                 E.Delay(self.delay.to_xml()),
-                 *[pc.to_xml() for pc in self.port_connections],
-                 name=self.name)
+        ref_kwargs = copy(kwargs)
+        ref_kwargs['as_reference'] = True
+        members = [E.Pre(self.pre.to_xml(document, **ref_kwargs)),
+                   E.Post(self.post.to_xml(document, **ref_kwargs)),
+                   E.Response(self.response.to_xml(document, **kwargs)),
+                   E.Connectivity(self.connectivity.to_xml(document, **kwargs)),
+                   E.Delay(self.delay.to_xml(document, **kwargs))]
+        if self.plasticity is not None:
+            members.append(E.Plasticity(self.plasticity.to_xml(document, **kwargs)))
+        members.extend([pc.to_xml(document, **kwargs) for pc in self.port_connections])
+        return E(self.element_name, *members, name=self.name)
 
     @classmethod
     @resolve_reference

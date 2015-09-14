@@ -13,9 +13,8 @@ from __future__ import division
 import os.path
 import unittest
 from nineml.user import (
-    PropertySet, Projection, Network,
-    PortConnection, DynamicsProperties, Connectivity, Population,
-    FromResponse, FromPlasticity)
+    PropertySet, Projection, Network, DynamicsProperties,
+    ConnectionRuleProperties, Population)
 from nineml import Document, load
 from nineml.units import ms, mV, nA, Hz, Mohm
 from os import path
@@ -54,18 +53,14 @@ class TestNetwork(unittest.TestCase):
         neuron_initial_values = {"V": (0.0, mV),  # todo: use random distr.
                                  "t_rpend": (0.0, ms)}
         synapse_initial_values = {"A": (0.0, nA), "B": (0.0, nA)}
-
         celltype = DynamicsProperties("nrn",
-                                      path.join(self.xml_dir,
-                                                'BrunelIaF.xml'),
+                                      path.join(self.xml_dir, 'BrunelIaF.xml'),
                                       properties=neuron_parameters,
                                       initial_values=neuron_initial_values)
         ext_stim = DynamicsProperties("stim",
-                                          path.join(self.xml_dir,
-                                                    "Poisson.xml"),
-                                          PropertySet(rate=(input_rate,
-                                                                   Hz)),
-                                          initial_values={"t_next": (0.5, ms)})
+                                      path.join(self.xml_dir, "Poisson.xml"),
+                                      PropertySet(rate=(input_rate, Hz)),
+                                      initial_values={"t_next": (0.5, ms)})
         psr = DynamicsProperties("syn",
                                  path.join(self.xml_dir, "AlphaPSR.xml"),
                                  properties=psr_parameters,
@@ -75,9 +70,8 @@ class TestNetwork(unittest.TestCase):
         p2 = Population("Inh", 1, celltype, positions=None)
         inpt = Population("Ext", 1, ext_stim, positions=None)
 
-        all_to_all = Connectivity(
+        all_to_all = ConnectionRuleProperties(
             "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})
-
         static_exc = DynamicsProperties(
             "ExcitatoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"), {},
@@ -88,24 +82,16 @@ class TestNetwork(unittest.TestCase):
             initial_values={"weight": (Ji, nA)})
 
         exc_prj = Projection(
-            "Excitation", inpt,
-            (p1, PortConnection('Isyn', FromResponse('Isyn'))),
-            response=(psr, PortConnection(
-                'weight', FromPlasticity('weight'))),
-            plasticity=(static_exc,),
-            connectivity=all_to_all,
-            delay=(delay, ms))
-
+            "Excitation", pre=inpt, post=p1, response=psr,
+            plasticity=static_exc, connectivity=all_to_all, delay=(delay, ms),
+            port_connections=[('response', 'post', 'Isyn', 'Isyn'),
+                              ('plasticity', 'response', 'weight', 'weight')])
         inh_prj = Projection(
-            "Inhibition", inpt,
-            (p2, PortConnection('Isyn', FromResponse('Isyn'))),
-            response=(psr, PortConnection(
-                'weight', FromPlasticity('weight'))),
-            plasticity=(static_inh,),
-            connectivity=all_to_all,
-            delay=(delay, ms))
-
-        model = Network("Three-neuron network with alpha synapses")
+            "Inhibition", pre=inpt, post=p2, response=psr,
+            plasticity=static_inh, connectivity=all_to_all, delay=(delay, ms),
+            port_connections=[('response', 'post', 'Isyn', 'Isyn'),
+                              ('plasticity', 'response', 'weight', 'weight')])
+        model = Network("brunel_network")
         model.add(inpt, p1, p2)
         model.add(exc_prj, inh_prj)
         doc = Document(model, static_exc, static_inh, exc_prj,
