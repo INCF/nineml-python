@@ -703,10 +703,10 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                                 .format(trans.target_regime, trans._name))
                     trans.set_target_regime(target)
 
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return DynamicsXMLWriter().visit(self)
+        return DynamicsXMLWriter(document).visit(self)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):

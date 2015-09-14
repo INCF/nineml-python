@@ -135,11 +135,12 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         children = (self.pre, self.post, self.response, self.plasticity,
                     self.connectivity, self.delay)
         return E(self.element_name,
-                 *(m.to_xml() for m in children if m is not None),
+                 *[m.to_xml(document, **kwargs) for m in children
+                   if m is not None],
                  name=self.name)
 
     @classmethod
@@ -205,12 +206,11 @@ class Terminus(BaseULObject):
     def object(self):
         return self._object
 
-    @annotate_xml
-    def _port_connections_to_xml(self):
-        return (pc.to_xml() for pc in self.port_connections)
+    def _port_connections_to_xml(self, document, **kwargs):
+        return (pc.to_xml(document, **kwargs) for pc in self.port_connections)
 
     @classmethod
-    def _port_connections_from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+    def _port_connections_from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
         return (PortConnection.from_xml(e, document)
                 for e in element.findall(NINEML + 'PortConnection'))
 
@@ -230,18 +230,18 @@ class PopulationTerminus(Terminus):
         return self.object.cell
 
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         if self.population.from_reference is None:  # Generated objects
             # Assumes that population is written in same file as projection
             pop_elem = E.Reference(name=self.population.name)
         else:
-            pop_elem = self.population.to_xml(as_reference=True)
+            pop_elem = self.population.to_xml(document, as_reference=True)
         return E(self.element_name, pop_elem,
-                 *self._port_connections_to_xml())
+                 *self._port_connections_to_xml(document, **kwargs))
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable  # @UnusedVariable
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable  # @UnusedVariable @IgnorePep8
         cls.check_tag(element)
         population = Reference.from_xml(
             expect_single(element.findall(NINEML + 'Reference')),
@@ -261,9 +261,9 @@ class ComponentTerminus(Terminus):
         return self.object
 
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
-        return E(self.element_name, self.component.to_xml(),
-                 *self._port_connections_to_xml())
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        return E(self.element_name, self.component.to_xml(document, **kwargs),
+                 *self._port_connections_to_xml(document, **kwargs))
 
     @classmethod
     @read_annotations
@@ -367,8 +367,8 @@ class PortConnection(BasePortConnection):
             sender.bind_port(container)
 
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
-        return E(self.element_name, *(s.to_xml() for s in self.senders),
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        return E(self.element_name, *(s.to_xml(document, **kwargs) for s in self.senders),
                  port=self.port_name)
 
     @classmethod
@@ -392,7 +392,7 @@ class Sender(BasePortConnection):
         return (self.element_name, self._port_name)
 
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name, port=self.port_name)
 
     @classmethod
@@ -476,8 +476,9 @@ class Delay(Quantity):
 class Connectivity(ConnectionRuleProperties):
 
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
-        return E.Connectivity(ConnectionRuleProperties.to_xml(self))
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        return E.Connectivity(ConnectionRuleProperties.to_xml(
+            self, document, **kwargs))
 
     @classmethod
     @read_annotations

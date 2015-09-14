@@ -709,7 +709,8 @@ class ComponentClass_test(unittest.TestCase):
                        transitions=On('X>X1', do=['X=X0'],
                                       to='r1'),
                        aliases=[Alias('A', '8 / t')])])
-        a_xml = a.to_xml()
+        document = Document()
+        a_xml = a.to_xml(document)
         b = Dynamics.from_xml(a_xml, Document(un.dimensionless))
         self.assertEqual(a, b,
                          "Dynamics with regime-specific alias failed xml "
