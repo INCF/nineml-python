@@ -147,28 +147,16 @@ class Projection(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
-        ref_kwargs = copy(kwargs)
-        ref_kwargs['as_reference'] = True
+        as_ref_kwargs = copy(kwargs)
+        as_ref_kwargs['as_reference'] = True
         members = []
         for pop, tag_name in ((self.pre, 'Pre'), (self.post, 'Post')):
-            if pop.from_reference is None:  # Generated objects
-                try:
-                    doc_pop = document[pop.name]
-                    if doc_pop != pop:
-                        raise NineMLRuntimeError(
-                            "Cannot write poplulation '{}' in the document "
-                            "due to name clash with existing (and different) "
-                            "object")
-                except NineMLMissingElementError:
-                    document.add(pop)
-                elem = E.Reference(name=pop.name)
-            else:
-                elem = pop.to_xml(document, **ref_kwargs)
-            members.append(E(tag_name, elem))
+            pop.set_local_reference(document, overwrite=False)
+            members.append(E(tag_name, pop.to_xml(document, **as_ref_kwargs)))
         members.extend([
             E.Response(self.response.to_xml(document, **kwargs)),
             E.Connectivity(self.connectivity.to_xml(document, **kwargs)),
-            E.Delay(self.delay.to_xml(document, **kwargs))])
+            self.delay.to_xml(document, **kwargs)])
         if self.plasticity is not None:
             members.append(
                 E.Plasticity(self.plasticity.to_xml(document, **kwargs)))
@@ -188,34 +176,39 @@ class Projection(BaseULObject, DocumentLevelObject):
         pre = Reference.from_xml(
             expect_single(
                 expect_single(element.findall(NINEML + 'Pre'))
-                .findall(NINEML + 'Reference')), document).user_object
+                .findall(
+                    NINEML + 'Reference')), document, **kwargs).user_object
         post = Reference.from_xml(
             expect_single(
                 expect_single(element.findall(NINEML + 'Post'))
-                .findall(NINEML + 'Reference')), document).user_object
+                .findall(
+                    NINEML + 'Reference')), document, **kwargs).user_object
         response = DynamicsProperties.from_xml(
             expect_single(
                 expect_single(element.findall(NINEML + 'Response'))
-                .findall(NINEML + 'DynamicsProperties')), document)
+                .findall(NINEML + 'DynamicsProperties')), document, **kwargs)
         plasticity = expect_none_or_single(
             element.findall(NINEML + 'Plasticity'))
         if plasticity is not None:
             plasticity = DynamicsProperties.from_xml(
-                expect_single(plasticity.findall(NINEML +
-                                                 'DynamicsProperties')))
+                expect_single(
+                    plasticity.findall(
+                        NINEML + 'DynamicsProperties')), document, **kwargs)
         connectivity = ConnectionRuleProperties.from_xml(
             expect_single(
                 expect_single(element.findall(NINEML + 'Connectivity'))
-                .findall(NINEML + 'ConnectionRuleProperties')), document)
+                .findall(
+                    NINEML + 'ConnectionRuleProperties')), document, **kwargs)
         analog_port_connections = [
-            AnalogPortConnection.from_xml(pc)
+            AnalogPortConnection.from_xml(pc, document, **kwargs)
             for pc in element.findall(NINEML + 'AnalogPortConnection')]
         event_port_connections = [
-            EventPortConnection.from_xml(pc)
+            EventPortConnection.from_xml(pc, document, **kwargs)
             for pc in element.findall(NINEML + 'EventPortConnection')]
         # Get Delay
         delay = Delay.from_xml(
-            expect_single(element.findall(NINEML + 'Delay')), document)
+            expect_single(element.findall(NINEML + 'Delay')), document,
+            **kwargs)
         return cls(name=name,
                    pre=pre,
                    post=post,

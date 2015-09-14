@@ -91,7 +91,7 @@ class TestProjection(unittest.TestCase):
             delay=(1, un.ms))
 
     def test_xml_roundtrip(self):
-        document = Document()
+        document = Document(un.ms, un.nA)
         xml = self.projection.to_xml(document)
         projection2 = Projection.from_xml(xml, document)
         self.assertEquals(self.projection, projection2,
