@@ -92,7 +92,7 @@ class TestProjection(unittest.TestCase):
 
     def test_xml_roundtrip(self):
         document = Document()
-        xml = self.projection.to_xml()
+        xml = self.projection.to_xml(document)
         projection2 = Projection.from_xml(xml, document)
         self.assertEquals(self.projection, projection2,
                           "Projection failed XML roundtrip")

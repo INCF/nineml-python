@@ -1,5 +1,4 @@
 from . import BaseULObject
-from itertools import chain
 from nineml.xmlns import E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.exceptions import NineMLRuntimeError
@@ -7,9 +6,8 @@ from nineml.exceptions import NineMLRuntimeError
 
 class BasePortConnection(BaseULObject):
 
-    defining_attributes = ('sender_id', 'receiver_id', 'sender', 'receiver'
-                           'send_port', 'receive_port', 'send_port_name',
-                           'receive_port_name')
+    defining_attributes = ('_sender_rel', '_receiver_rel',
+                           'send_port_name', 'receive_port_name')
 
     def __init__(self, sender_relationship, receiver_relationship,
                  send_port_name, receive_port_name):
@@ -25,8 +23,8 @@ class BasePortConnection(BaseULObject):
 
     def __repr__(self):
         return ("{}(sender={}->{}, receiver={}->{})"
-                .format(self.element_name, self.sender_rel,
-                        self.send_port_name, self.receiver_rel,
+                .format(self.element_name, self._sender_rel,
+                        self.send_port_name, self._receiver_rel,
                         self.receive_port_name))
 
     @property
@@ -85,7 +83,7 @@ class BasePortConnection(BaseULObject):
         self._receive_port = receiver.port(self._receive_port_name)
 
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(
             self.element_name,
             sender=self.sender_relationship,
