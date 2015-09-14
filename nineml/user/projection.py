@@ -13,7 +13,8 @@ from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
 from .port_connections import AnalogPortConnection, EventPortConnection
-from nineml.exceptions import handle_xml_exceptions
+from nineml.exceptions import (handle_xml_exceptions,
+                               NineMLRuntimeError, NineMLMissingElementError)
 
 
 class Projection(BaseULObject, DocumentLevelObject):
@@ -63,6 +64,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         if isinstance(delay, tuple):
             value, units = delay
             delay = Delay(SingleValue(value), units)
+        assert pre.name != post.name
         self._pre = pre
         self._post = post
         self._response = response
@@ -147,14 +149,31 @@ class Projection(BaseULObject, DocumentLevelObject):
     def to_xml(self, document, **kwargs):  # @UnusedVariable
         ref_kwargs = copy(kwargs)
         ref_kwargs['as_reference'] = True
-        members = [E.Pre(self.pre.to_xml(document, **ref_kwargs)),
-                   E.Post(self.post.to_xml(document, **ref_kwargs)),
-                   E.Response(self.response.to_xml(document, **kwargs)),
-                   E.Connectivity(self.connectivity.to_xml(document, **kwargs)),
-                   E.Delay(self.delay.to_xml(document, **kwargs))]
+        members = []
+        for pop, tag_name in ((self.pre, 'Pre'), (self.post, 'Post')):
+            if pop.from_reference is None:  # Generated objects
+                try:
+                    doc_pop = document[pop.name]
+                    if doc_pop != pop:
+                        raise NineMLRuntimeError(
+                            "Cannot write poplulation '{}' in the document "
+                            "due to name clash with existing (and different) "
+                            "object")
+                except NineMLMissingElementError:
+                    document.add(pop)
+                elem = E.Reference(name=pop.name)
+            else:
+                elem = pop.to_xml(document, **ref_kwargs)
+            members.append(E(tag_name, elem))
+        members.extend([
+            E.Response(self.response.to_xml(document, **kwargs)),
+            E.Connectivity(self.connectivity.to_xml(document, **kwargs)),
+            E.Delay(self.delay.to_xml(document, **kwargs))])
         if self.plasticity is not None:
-            members.append(E.Plasticity(self.plasticity.to_xml(document, **kwargs)))
-        members.extend([pc.to_xml(document, **kwargs) for pc in self.port_connections])
+            members.append(
+                E.Plasticity(self.plasticity.to_xml(document, **kwargs)))
+        members.extend([pc.to_xml(document, **kwargs)
+                        for pc in self.port_connections])
         return E(self.element_name, *members, name=self.name)
 
     @classmethod
@@ -164,7 +183,7 @@ class Projection(BaseULObject, DocumentLevelObject):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         # Get Name
-        name = element.attrib['name']
+        name = element.get('name')
         # Get Pre
         pre = Reference.from_xml(
             expect_single(

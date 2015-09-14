@@ -61,14 +61,14 @@ class TestProjection(unittest.TestCase):
         )
 
         self.pre = Population(
-            name="Population1",
+            name="PrePopulation",
             size=1,
             cell=DynamicsProperties(
                 name="PreDynamicsProps", definition=self.pre_dynamics,
                 properties={'P1': (1, un.ms), 'P2': (-65, un.mV)}))
 
         self.post = Population(
-            name="Population1",
+            name="PostPopulation",
             size=1,
             cell=DynamicsProperties(
                 name="PostDynamicsProps", definition=self.post_dynamics,
