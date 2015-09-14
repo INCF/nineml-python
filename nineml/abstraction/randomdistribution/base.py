@@ -48,10 +48,10 @@ class RandomDistribution(ComponentClass):
         extractor.visit(self)
         return extractor.expressions
 
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return RandomDistributionXMLWriter().visit(self)
+        return RandomDistributionXMLWriter(document).visit(self)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable

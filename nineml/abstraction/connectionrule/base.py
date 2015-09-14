@@ -69,10 +69,10 @@ class ConnectionRule(ComponentClass):
         extractor.visit(self)
         return extractor.expressions
 
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return ConnectionRuleXMLWriter().visit(self)
+        return ConnectionRuleXMLWriter(document).visit(self)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable

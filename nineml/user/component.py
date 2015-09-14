@@ -254,15 +254,15 @@ class Component(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         """
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
         """
-        props_and_initial_values = (self._properties.to_xml() +
-                                    [iv.to_xml()
+        props_and_initial_values = (self._properties.to_xml(document, **kwargs) +
+                                    [iv.to_xml(document, **kwargs)
                                      for iv in self.initial_values])
-        element = E(self.element_name, self._definition.to_xml(),
+        element = E(self.element_name, self._definition.to_xml(document, **kwargs),
                     *props_and_initial_values, name=self.name)
         return element
 
@@ -453,9 +453,9 @@ class Quantity(BaseULObject):
                 other.value * 10 ** other.units.power)
 
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 self._value.to_xml(),
+                 self._value.to_xml(document, **kwargs),
                  units=self.units.name)
 
     @classmethod
@@ -529,9 +529,9 @@ class Property(Quantity):
                 .format(self.element_name, self.name, self.value, units))
 
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 self._value.to_xml(),
+                 self._value.to_xml(document, **kwargs),
                  name=self.name,
                  units=self.units.name)
 
@@ -596,9 +596,9 @@ class PropertySet(dict):
     def get_random_distributions(self):
         return [p.random_distribution for p in self.values() if p.is_random()]
 
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         # serialization is in alphabetical order
-        return [self[name].to_xml() for name in sorted(self.keys())]
+        return [self[name].to_xml(document, **kwargs) for name in sorted(self.keys())]
 
     @classmethod
     def from_xml(cls, elements, document):

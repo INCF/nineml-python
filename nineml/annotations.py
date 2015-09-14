@@ -70,15 +70,18 @@ def read_annotations(from_xml):
 
 
 def annotate_xml(to_xml):
-    def annotate_to_xml(self, *args, **kwargs):
-        elem = to_xml(self, *args, **kwargs)
-        # If User Layer class
-        if hasattr(self, 'annotations') and self.annotations:
-            elem.append(self.annotations.to_xml())
+    def annotate_to_xml(self, document_or_obj, **kwargs):
         # If Abstraction Layer class
-        elif (len(args) and hasattr(args[0], 'annotations') and
-              args[0].annotations):
-            elem.append(args[0].annotations.to_xml())
+        if hasattr(self, 'document'):
+            obj = document_or_obj
+        # If User Layer class
+        else:
+            obj = self
+        elem = to_xml(self, document_or_obj, **kwargs)
+        try:
+            elem.append(obj.annotations.to_xml(**kwargs))
+        except:
+            raise
         return elem
     return annotate_to_xml
 

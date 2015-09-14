@@ -108,6 +108,9 @@ class ComponentClassXMLLoader(object):
 
 class ComponentClassXMLWriter(ComponentVisitor):
 
+    def __init__(self, document):
+        self.document = document
+
     @annotate_xml
     def visit_parameter(self, parameter):
         return E(Parameter.element_name,

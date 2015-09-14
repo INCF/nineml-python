@@ -63,8 +63,8 @@ class Document(dict, BaseNineMLObject):
         if not isinstance(element, DocumentLevelObject):
             raise NineMLRuntimeError(
                 "Could not remove {} as it is not a document level NineML "
-                "object ('{}') ".format(element.element_name,
-                                        "', '".join(self.top_level_types)))
+                "object ('{}') ".format(
+                    element.element_name, "', '".join(self.write_order)))
         name = element.name
         del self[name]
 
@@ -177,8 +177,6 @@ class Document(dict, BaseNineMLObject):
         elem = unloaded.cls.from_xml(unloaded.xml, self)
         assert self._loading[-1] is unloaded
         self._loading.pop()
-        if not isinstance(unloaded.name, basestring):
-            print unloaded.name
         assert isinstance(unloaded.name, basestring)
         self[unloaded.name] = elem
         return elem
@@ -244,11 +242,11 @@ class Document(dict, BaseNineMLObject):
         self.standardize_units()
         return E(
             self.element_name,
-            *self._sort(c.to_xml(as_reference=False)
+            *self._sort(c.to_xml(self, as_reference=False)
                         for c in self.itervalues()))
 
-    def write(self, filename):
-        doc = self.to_xml()
+    def write(self, filename, **kwargs):
+        doc = self.to_xml(**kwargs)
         write_xml(doc, filename)
 
     @classmethod
@@ -321,6 +319,12 @@ class Document(dict, BaseNineMLObject):
                 result += s.find_mismatch(other[k])
         return result
 
+    def _sort(self, elements):
+        """Sorts the element into a consistent, logical order before write"""
+        return sorted(
+            elements,
+            key=lambda e: self.write_order.index(e.tag[len(NINEML):]))
+
 
 def load(root_element, read_from=None):
     """
@@ -375,7 +379,6 @@ def write_xml(xml, filename):
         etree.ElementTree(xml).write(f, encoding="UTF-8",
                                      pretty_print=True,
                                      xml_declaration=True)
-
 
 import nineml.user
 import nineml.abstraction

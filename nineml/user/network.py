@@ -70,10 +70,10 @@ class Network(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name,
                  name=self.name,
-                 *[p.to_xml() for p in chain(self.populations.values(),
+                 *[p.to_xml(document, **kwargs) for p in chain(self.populations.values(),
                                              self.selections.values(),
                                              self.projections.values())])
 

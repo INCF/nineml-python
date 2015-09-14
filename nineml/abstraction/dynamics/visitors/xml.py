@@ -123,6 +123,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
                        output_events=blocks["OutputEvent"],
                        target_regime=target_regime)
 
+    @read_annotations
     def load_trigger(self, element, **kwargs):  # @UnusedVariable
         return Trigger(self.load_single_internmaths_block(element))
 
