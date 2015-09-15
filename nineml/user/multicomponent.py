@@ -1,6 +1,7 @@
 from itertools import chain
 from . import BaseULObject
 from abc import ABCMeta
+from nineml.abstraction import Dynamics
 from nineml.reference import resolve_reference, write_reference
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
@@ -12,7 +13,7 @@ from nineml.exceptions import NineMLRuntimeError
 from .port_connections import AnalogPortConnection, EventPortConnection
 
 
-class MultiComponent(BaseULObject, DocumentLevelObject):
+class MultiComponent(Dynamics):
 
     element_name = "MultiComponent"
     defining_attributes = ('_name', '_subcomponents', '_port_exposures')
@@ -102,6 +103,49 @@ class MultiComponent(BaseULObject, DocumentLevelObject):
                                           event_port_connections))
 
 
+class SubComponent(BaseULObject):
+
+    element_name = 'SubComponent'
+    defining_attributes = ('_name', '_component')
+
+    def __init__(self, name, component):
+        BaseULObject.__init__(self)
+        self._name = name
+        self._component = component
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def component(self):
+        return self._component
+
+    @property
+    def attributes_with_units(self):
+        return self._component.attributes_with_units
+
+    @annotate_xml
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        return E(self.element_name, self._component.to_xml(document, **kwargs),
+                 name=self.name)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document, **kwargs):
+        try:
+            component = DynamicsProperties.from_xml(
+                expect_single(
+                    element.findall(NINEML + 'DynamicsProperties')),
+                document, **kwargs)
+        except NineMLRuntimeError:
+            component = MultiComponent.from_xml(
+                expect_single(
+                    element.findall(NINEML + 'MultiComponent')),
+                document, **kwargs)
+        return cls(element.attrib['name'], component)
+
+
 class PortExposure(BaseULObject):
 
     element_name = 'PortExposure'
@@ -145,6 +189,11 @@ class PortExposure(BaseULObject):
         return cls(name=element.attrib['name'],
                    component=element.attrib['component'],
                    port=element.attrib['port'])
+
+
+# =============================================================================
+# Code for Multi-compartment tree representations (Experimental)
+# =============================================================================
 
 
 class MultiCompartment(BaseULObject, DocumentLevelObject):
@@ -356,49 +405,6 @@ class Key(BaseULObject):
     @read_annotations
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return cls(int(element.attrib['index']), element.attrib['domain'])
-
-
-class SubComponent(BaseULObject):
-
-    element_name = 'SubComponent'
-    defining_attributes = ('_name', '_component')
-
-    def __init__(self, name, component):
-        BaseULObject.__init__(self)
-        self._name = name
-        self._component = component
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def component(self):
-        return self._component
-
-    @property
-    def attributes_with_units(self):
-        return self._component.attributes_with_units
-
-    @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E(self.element_name, self._component.to_xml(document, **kwargs),
-                 name=self.name)
-
-    @classmethod
-    @read_annotations
-    def from_xml(cls, element, document, **kwargs):
-        try:
-            component = DynamicsProperties.from_xml(
-                expect_single(
-                    element.findall(NINEML + 'DynamicsProperties')),
-                document, **kwargs)
-        except NineMLRuntimeError:
-            component = MultiComponent.from_xml(
-                expect_single(
-                    element.findall(NINEML + 'MultiComponent')),
-                document, **kwargs)
-        return cls(element.attrib['name'], component)
 
 
 class Domain(SubComponent):
