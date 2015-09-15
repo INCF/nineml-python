@@ -7,9 +7,9 @@ from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single, normalise_parameter_as_list
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
-from .values import ArrayValue
+from nineml.values import ArrayValue
 from nineml.exceptions import NineMLRuntimeError
-from .port_connections import PortConnection, Sender
+from .port_connections import AnalogPortConnection, EventPortConnection
 
 
 class MultiComponent(BaseULObject, DocumentLevelObject):
@@ -17,11 +17,25 @@ class MultiComponent(BaseULObject, DocumentLevelObject):
     element_name = "MultiComponent"
     defining_attributes = ('_name', '_subcomponents', '_port_exposures')
 
-    def __init__(self, name, subcomponents, port_exposures=()):
+    def __init__(self, name, subcomponents, port_connections,
+                 port_exposures=[]):
         super(MultiComponent, self).__init__()
         self._name = name
         self._subcomponents = dict((c.name, c) for c in subcomponents)
         self._port_exposures = dict((pe.name, pe) for pe in port_exposures)
+        self._port_connections = []
+        for port_connection in port_connections:
+            snd_name, rcv_name, snd_port_name, _ = port_connection
+            sender = self.subcomponent(snd_name).component.component_class
+            receiver = self.subcomponent(rcv_name).component.component_class
+            if isinstance(port_connection, tuple):
+                if sender.port(snd_port_name).communication_type == 'analog':
+                    PortConnectionClass = AnalogPortConnection
+                else:
+                    PortConnectionClass = EventPortConnection
+                port_connection = PortConnectionClass(*port_connection)
+            port_connection.bind_ports(sender, receiver)
+            self._port_connections.append(port_connection)
 
     @property
     def name(self):
@@ -30,6 +44,10 @@ class MultiComponent(BaseULObject, DocumentLevelObject):
     @property
     def subcomponents(self):
         return self._subcomponents.itervalues()
+
+    @property
+    def port_connections(self):
+        return iter(self._port_connections)
 
     @property
     def port_exposures(self):
@@ -56,24 +74,32 @@ class MultiComponent(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, **kwargs):
-        return E(self.element_name,
-                 *list(chain((c.to_xml(document, **kwargs)
-                              for c in self.subcomponents),
-                             (pe.to_xml(document, **kwargs)
-                              for pe in self.port_exposures))),
-                 name=self.name)
+        members = [c.to_xml(document, **kwargs) for c in self.subcomponents]
+        members.extend(pe.to_xml(document, **kwargs)
+                        for pe in self.port_exposures)
+        members.extend(pc.to_xml(document, **kwargs)
+                       for pc in self.port_connections)
+        return E(self.element_name, *members, name=self.name)
 
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):
         cls.check_tag(element)
-        subcomponents = [SubComponent.from_xml(e, document)
+        subcomponents = [SubComponent.from_xml(e, document, **kwargs)
                          for e in element.findall(NINEML + 'SubComponent')]
-        port_exposures = [PortExposure.from_xml(e, document)
+        port_exposures = [PortExposure.from_xml(e, document, **kwargs)
                           for e in element.findall(NINEML + 'PortExposure')]
+        analog_port_connections = [
+            AnalogPortConnection.from_xml(e, document, **kwargs)
+            for e in element.findall(NINEML + 'AnalogPortConnection')]
+        event_port_connections = [
+            EventPortConnection.from_xml(e, document, **kwargs)
+            for e in element.findall(NINEML + 'EventPortConnection')]
         return cls(name=element.attrib['name'],
-                   subcomponents=subcomponents, port_exposures=port_exposures)
+                   subcomponents=subcomponents, port_exposures=port_exposures,
+                   port_connections=chain(analog_port_connections,
+                                          event_port_connections))
 
 
 class PortExposure(BaseULObject):
@@ -114,7 +140,7 @@ class PortExposure(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, document):  # @UnusedVariable
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         return cls(name=element.attrib['name'],
                    component=element.attrib['component'],
@@ -208,13 +234,15 @@ class MultiCompartment(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):
         cls.check_tag(element)
         tree = Tree.from_xml(
-            expect_single(element.findall(NINEML + 'Tree')), document)
+            expect_single(element.findall(NINEML + 'Tree')),
+            document, **kwargs)
         mapping = Mapping.from_xml(
-            expect_single(element.findall(NINEML + 'Mapping')), document)
-        domains = [Domain.from_xml(e, document)
+            expect_single(element.findall(NINEML + 'Mapping')),
+            document, **kwargs)
+        domains = [Domain.from_xml(e, document, **kwargs)
                    for e in element.findall(NINEML + 'Domain')]
         return cls(name=element.attrib['name'], tree=tree, mapping=mapping,
                    domains=domains)
@@ -246,9 +274,10 @@ class Tree(BaseULObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):
         array = ArrayValue.from_xml(
-            expect_single(element.findall(NINEML + 'ArrayValue')), document)
+            expect_single(element.findall(NINEML + 'ArrayValue')),
+            document, **kwargs)
         return cls(array.values)
 
 
@@ -292,10 +321,11 @@ class Mapping(BaseULObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):
         array = ArrayValue.from_xml(
-            expect_single(element.findall(NINEML + 'ArrayValue')), document)
-        keys = [Key.from_xml(e, document)
+            expect_single(element.findall(NINEML + 'ArrayValue')),
+            document, **kwargs)
+        keys = [Key.from_xml(e, document, **kwargs)
                 for e in element.findall(NINEML + 'Key')]
         return cls(dict((k.index, k.domain) for k in keys), array.values)
 
@@ -324,123 +354,53 @@ class Key(BaseULObject):
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, document):  # @UnusedVariable
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return cls(int(element.attrib['index']), element.attrib['domain'])
 
 
 class SubComponent(BaseULObject):
 
     element_name = 'SubComponent'
-    defining_attributes = ('_name', '_dynamics', '_port_connections')
+    defining_attributes = ('_name', '_component')
 
-    def __init__(self, name, dynamics, port_connections=()):
+    def __init__(self, name, component):
         BaseULObject.__init__(self)
         self._name = name
-        self._dynamics = dynamics
-        self._port_connections = port_connections
+        self._component = component
 
     @property
     def name(self):
         return self._name
 
     @property
-    def dynamics(self):
-        return self._dynamics
-
-    @property
-    def port_connections(self):
-        return self._port_connections
+    def component(self):
+        return self._component
 
     @property
     def attributes_with_units(self):
-        return self._dynamics.attributes_with_units
+        return self._component.attributes_with_units
 
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E(self.element_name, self._dynamics.to_xml(document, **kwargs),
-                 *[pc.to_xml(document, **kwargs)
-                   for pc in self._port_connections],
+        return E(self.element_name, self._component.to_xml(document, **kwargs),
                  name=self.name)
 
     @classmethod
     @read_annotations
-    def from_xml(cls, element, document):
+    def from_xml(cls, element, document, **kwargs):
         try:
-            dynamics = DynamicsProperties.from_xml(expect_single(
-                element.findall(NINEML + 'DynamicsProperties')), document)
+            component = DynamicsProperties.from_xml(
+                expect_single(
+                    element.findall(NINEML + 'DynamicsProperties')),
+                document, **kwargs)
         except NineMLRuntimeError:
-            dynamics = MultiComponent.from_xml(expect_single(
-                element.findall(NINEML + 'MultiComponent')), document)
-        port_connections = [
-            PortConnection.from_xml(e, document)
-            for e in element.findall(NINEML + 'PortConnection')]
-        return cls(element.attrib['name'], dynamics, port_connections)
+            component = MultiComponent.from_xml(
+                expect_single(
+                    element.findall(NINEML + 'MultiComponent')),
+                document, **kwargs)
+        return cls(element.attrib['name'], component)
 
 
 class Domain(SubComponent):
 
     element_name = 'Domain'
-
-
-class FromSibling(Sender):
-
-    element_name = 'FromSibling'
-
-    def __init__(self, component, port):
-        super(FromSibling, self).__init__(port)
-        self.component = component
-
-    def key(self):
-        """
-        Generates a unique key for the Sender so it can be stored in a dict
-        """
-        return (self.element_name, self.component, self._port_name)
-
-    @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E(self.element_name, component=self.component,
-                 port=self.port_name)
-
-    @classmethod
-    @read_annotations
-    def _from_xml(cls, element, document):  # @UnusedVariable
-        cls.check_tag(element)
-        return cls(component=element.attrib['component'],
-                   port=element.attrib['port'])
-
-
-class MultiCompartmentSender(Sender):
-
-    def __init__(self, port, domain=None):
-        super(MultiCompartmentSender, self).__init__(port)
-        self.domain = domain
-
-    def key(self):
-        """
-        Generates a unique key for the Sender so it can be stored in a dict
-        """
-        return (self.element_name, self.domain, self._port_name)
-
-    @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
-        kwargs = {'port': self.port_name}
-        if self.domain:
-            kwargs['domain'] = str(self.domain)
-        return E(self.element_name, **kwargs)
-
-    @classmethod
-    @read_annotations
-    def _from_xml(cls, element, document):  # @UnusedVariable
-        cls.check_tag(element)
-        return cls(domain=element.get('domain', None),
-                   port=element.attrib['port'])
-
-
-class FromProximal(MultiCompartmentSender):
-
-    element_name = 'FromProximal'
-
-
-class FromDistal(MultiCompartmentSender):
-
-    element_name = 'FromDistal'
