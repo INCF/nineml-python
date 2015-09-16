@@ -73,14 +73,14 @@ class Expression(object):
     @property
     def rhs_str(self):
         try:
-            if self._rhs.is_Boolean:
+            if self.rhs.is_Boolean:
                 expr_str = self._unwrap_bool(self.rhs)
             else:
-                expr_str = str(self._rhs)
+                expr_str = str(self.rhs)
         except AttributeError:
             # For expressions that have simplified to Python objects (e.g.
             # True, False,...)
-            expr_str = str(self._rhs)
+            expr_str = str(self.rhs)
         expr_str = Parser.unescape_random_namespace(expr_str)
         expr_str = expr_str.replace('**', '^')
         return expr_str
@@ -123,7 +123,7 @@ class Expression(object):
     @property
     def rhs_symbols(self):
         try:
-            return self._rhs.free_symbols
+            return self.rhs.free_symbols
         except AttributeError:  # For expressions that have been simplified
             return []
 
@@ -134,7 +134,7 @@ class Expression(object):
     @property
     def rhs_funcs(self):
         try:
-            return (type(f) for f in self._rhs.atoms(sympy.Function)
+            return (type(f) for f in self.rhs.atoms(sympy.Function)
                     if type(f) not in Parser.inline_random_distributions())
         except AttributeError:  # For expressions that have been simplified
             return []
@@ -142,7 +142,7 @@ class Expression(object):
     @property
     def rhs_random_distributions(self):
         try:
-            return (type(f) for f in self._rhs.atoms(sympy.Function)
+            return (type(f) for f in self.rhs.atoms(sympy.Function)
                     if type(f) in Parser.inline_random_distributions())
         except AttributeError:  # For expressions that have been simplified
             return []
@@ -452,7 +452,7 @@ class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
 
     @property
     def lhs(self):
-        return self._name
+        return self.name
 
     @property
     def lhs_atoms(self):
