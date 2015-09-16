@@ -10,4 +10,4 @@ from .component import (Property, Component, Definition,
                         Initial, DynamicsProperties,
                         ConnectionRuleProperties, RandomDistributionProperties,
                         Quantity)
-from .multicomponent import MultiDynamics, MultiCompartment 
+from nineml.user.multi_dynamics import MultiDynamics, MultiCompartment 
