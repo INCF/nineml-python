@@ -17,7 +17,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
 from nineml.utils import (check_list_contain_same_items, invert_dictionary,
-                            assert_no_duplicates)
+                          assert_no_duplicates)
 from .visitors.cloner import (
     DynamicsExpandAliasDefinition, DynamicsCloner)
 from nineml.xmlns import NINEML
