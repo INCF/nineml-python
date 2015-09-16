@@ -125,7 +125,7 @@ class _NamespaceMixin(object):
         self.validate()
 
     def connect_ports(self, src, sink):
-        """Connects the ports of 2 subcomponents.
+        """Connects the ports of 2 sub_dynamics.
 
         The ports can be specified as ``string`` s or |NamespaceAddresses|.
 
@@ -198,9 +198,9 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         :param subnodes: A dictionary mapping namespace-names to sub-
             component_class. [Type: ``{string:|Dynamics|,
             string:|Dynamics|, string:|Dynamics|}`` ] describing the
-            namespace of subcomponents for this component_class.
+            namespace of sub_dynamics for this component_class.
         :param portconnections: A list of pairs, specifying the connections
-            between the ports of the subcomponents in this component_class.
+            between the ports of the sub_dynamics in this component_class.
             These can be `(|NamespaceAddress|, |NamespaceAddress|)' or
             ``(string, string)``.
         :param interface: A shorthand way of specifying the **interface** for
@@ -578,7 +578,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     @property
     def all_components(self):
         """
-        Returns an iterator over this component_class and all subcomponents
+        Returns an iterator over this component_class and all sub_dynamics
         """
         yield self
         for subcomponent in self.subnodes.values():
@@ -664,7 +664,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         return self.flattener is not None
 
     def is_flat(self):
-        """Is this component flat or does it have subcomponents?
+        """Is this component flat or does it have sub_dynamics?
 
         Returns a ``Boolean`` specifying whether this component is flat; i.e.
         has no subcomponent

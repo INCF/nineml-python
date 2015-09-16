@@ -1,7 +1,10 @@
 from itertools import chain
 from . import BaseULObject
 from abc import ABCMeta
-from nineml.abstraction import Dynamics
+from nineml.abstraction import (
+    Dynamics, Alias, TimeDerivative, Regime, AnalogSendPort, AnalogReceivePort,
+    AnalogReducePort, EventSendPort, EventReceivePort, OnEvent, OnCondition,
+    StateAssignment, Trigger, OutputEvent, StateVariable)
 from nineml.reference import resolve_reference, write_reference
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
@@ -13,16 +16,19 @@ from nineml.exceptions import NineMLRuntimeError
 from .port_connections import AnalogPortConnection, EventPortConnection
 
 
-class MultiComponent(Dynamics):
+class MultiDynamicsProperties(DynamicsProperties):
 
-    element_name = "MultiComponent"
-    defining_attributes = ('_name', '_subcomponents', '_port_exposures')
+    element_name = "MultiDynamics"
+    defining_attributes = ('_name', '_sub_dynamics_properties',
+                           '_port_exposures', '_port_connections')
 
-    def __init__(self, name, subcomponents, port_connections,
+    def __init__(self, name, sub_dynamics_properties, port_connections,
                  port_exposures=[]):
-        super(MultiComponent, self).__init__()
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self)
         self._name = name
-        self._subcomponents = dict((c.name, c) for c in subcomponents)
+        self._sub_dynamics_properties = dict((c.name, c)
+                                             for c in sub_dynamics_properties)
         self._port_exposures = dict((pe.name, pe) for pe in port_exposures)
         self._port_connections = []
         for port_connection in port_connections:
@@ -43,8 +49,8 @@ class MultiComponent(Dynamics):
         return self._name
 
     @property
-    def subcomponents(self):
-        return self._subcomponents.itervalues()
+    def sub_dynamics_properties(self):
+        return self._sub_dynamics_properties.itervalues()
 
     @property
     def port_connections(self):
@@ -54,15 +60,15 @@ class MultiComponent(Dynamics):
     def port_exposures(self):
         return self._port_exposures.itervalues()
 
-    def subcomponent(self, name):
-        return self._subcomponents[name]
+    def sub_dynamics_properties_element(self, name):
+        return self._dynamics_properties[name]
 
     def port_exposure(self, name):
         return self._port_exposures[name]
 
     @property
-    def subcomponent_names(self):
-        return self._subcomponents.iterkeys()
+    def sub_component_names(self):
+        return self.sub_dynamics_properties.iterkeys()
 
     @property
     def port_exposure_names(self):
@@ -70,12 +76,14 @@ class MultiComponent(Dynamics):
 
     @property
     def attributes_with_units(self):
-        return chain(*[c.attributes_with_units for c in self.subcomponents])
+        return chain(*[c.attributes_with_units
+                       for c in self.sub_dynamics_properties])
 
     @write_reference
     @annotate_xml
     def to_xml(self, document, **kwargs):
-        members = [c.to_xml(document, **kwargs) for c in self.subcomponents]
+        members = [c.to_xml(document, **kwargs)
+                   for c in self.sub_dynamics_properties]
         members.extend(pe.to_xml(document, **kwargs)
                         for pe in self.port_exposures)
         members.extend(pc.to_xml(document, **kwargs)
@@ -87,10 +95,24 @@ class MultiComponent(Dynamics):
     @read_annotations
     def from_xml(cls, element, document, **kwargs):
         cls.check_tag(element)
-        subcomponents = [SubComponent.from_xml(e, document, **kwargs)
-                         for e in element.findall(NINEML + 'SubComponent')]
-        port_exposures = [PortExposure.from_xml(e, document, **kwargs)
-                          for e in element.findall(NINEML + 'PortExposure')]
+        sub_dynamics_properties = [
+            SubDynamicsProperties.from_xml(e, document, **kwargs)
+            for e in element.findall(NINEML + 'SubDynamics')]
+        port_exposures = [
+            AnalogSendPortExposure.from_xml(e, document, **kwargs)
+            for e in element.findall(NINEML + 'AnalogSendPortExposure')]
+        port_exposures.extend(
+            AnalogReceivePortExposure.from_xml(e, document, **kwargs)
+            for e in element.findall(NINEML + 'AnalogReceivePortExposure'))
+        port_exposures.extend(
+            AnalogReducePortExposure.from_xml(e, document, **kwargs)
+            for e in element.findall(NINEML + 'AnalogReducePortExposure'))
+        port_exposures.extend(
+            EventSendPortExposure.from_xml(e, document, **kwargs)
+            for e in element.findall(NINEML + 'EventSendPortExposure'))
+        port_exposures.extend(
+            EventReceivePortExposure.from_xml(e, document, **kwargs)
+            for e in element.findall(NINEML + 'EventReceivePortExposure'))
         analog_port_connections = [
             AnalogPortConnection.from_xml(e, document, **kwargs)
             for e in element.findall(NINEML + 'AnalogPortConnection')]
@@ -98,61 +120,119 @@ class MultiComponent(Dynamics):
             EventPortConnection.from_xml(e, document, **kwargs)
             for e in element.findall(NINEML + 'EventPortConnection')]
         return cls(name=element.attrib['name'],
-                   subcomponents=subcomponents, port_exposures=port_exposures,
+                   sub_dynamics_properties=sub_dynamics_properties,
+                   port_exposures=port_exposures,
                    port_connections=chain(analog_port_connections,
                                           event_port_connections))
 
 
-class SubComponent(BaseULObject):
+class SubDynamicsProperties(BaseULObject):
 
-    element_name = 'SubComponent'
-    defining_attributes = ('_name', '_component')
+    element_name = 'SubDynamicsProperties'
+    defining_attributes = ('_name', '_dynamics')
 
-    def __init__(self, name, component):
+    def __init__(self, name, dynamics_properties):
         BaseULObject.__init__(self)
         self._name = name
-        self._component = component
+        self._dynamics_properties = dynamics_properties
 
     @property
     def name(self):
         return self._name
 
     @property
-    def component(self):
-        return self._component
+    def dynamics_properties(self):
+        return self._dynamics_properties
 
     @property
     def attributes_with_units(self):
-        return self._component.attributes_with_units
+        return self._dynamics.attributes_with_units
 
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E(self.element_name, self._component.to_xml(document, **kwargs),
+        return E(self.element_name, self._dynamics.to_xml(document, **kwargs),
                  name=self.name)
 
     @classmethod
     @read_annotations
     def from_xml(cls, element, document, **kwargs):
         try:
-            component = DynamicsProperties.from_xml(
+            dynamics_properties = DynamicsProperties.from_xml(
                 expect_single(
                     element.findall(NINEML + 'DynamicsProperties')),
                 document, **kwargs)
         except NineMLRuntimeError:
-            component = MultiComponent.from_xml(
+            dynamics_properties = MultiDynamicsProperties.from_xml(
                 expect_single(
-                    element.findall(NINEML + 'MultiComponent')),
+                    element.findall(NINEML + 'MultiDynamics')),
                 document, **kwargs)
-        return cls(element.attrib['name'], component)
+        return cls(element.attrib['name'], dynamics_properties)
 
 
-class PortExposure(BaseULObject):
+class MultiDynamics(Dynamics):
+    pass
 
-    element_name = 'PortExposure'
+
+class SubDynamics(Dynamics):
+    pass
+
+
+class MultiRegime(Regime):
+    pass
+
+
+class NamespaceStateVariable(StateVariable):
+    pass
+
+
+class NamespaceAlias(Alias):
+    pass
+
+
+class NamespaceTimeDerivative(TimeDerivative):
+    pass
+
+
+class NamespaceOnEvent(OnEvent):
+    pass
+
+
+class NamespaceOnCondition(OnCondition):
+    pass
+
+
+class NamespaceStateAssignment(StateAssignment):
+    pass
+
+
+class NamespaceTrigger(Trigger):
+    pass
+
+
+class NamespaceOutputEvent(OutputEvent):
+    pass
+
+
+class LocalAnalogPortConnection(AnalogPortConnection, Alias):
+
+    def __init__(self):
+        pass
+
+
+class LocalEventPortConnection(EventPortConnection):
+
+    def __init__(self):
+        raise NotImplementedError(
+            "Local event port connections are not currently "
+            "supported")
+
+
+class BasePortExposure(BaseULObject):
+
     defining_attributes = ('_name', '_component', '_port')
 
     def __init__(self, name, component, port):
-        super(PortExposure, self).__init__()
+        super(BasePortExposure, self).__init__()
         self._name = name
         self._component = component
         self._port = port
@@ -171,7 +251,7 @@ class PortExposure(BaseULObject):
 
     @property
     def attributes_with_units(self):
-        return chain(*[c.attributes_with_units for c in self.subcomponents])
+        return chain(*[c.attributes_with_units for c in self.sub_dynamics])
 
     @write_reference
     @annotate_xml
@@ -190,6 +270,30 @@ class PortExposure(BaseULObject):
                    component=element.attrib['component'],
                    port=element.attrib['port'])
 
+
+class AnalogSendPortExposure(BasePortExposure, AnalogSendPort):
+
+    element_name = 'AnalogSendPortExposure'
+
+
+class AnalogReceivePortExposure(BasePortExposure, AnalogReceivePort):
+
+    element_name = 'AnalogReceivePortExposure'
+
+
+class AnalogReducePortExposure(BasePortExposure, AnalogReducePort):
+
+    element_name = 'AnalogReducePortExposure'
+
+
+class EventSendPortExposure(BasePortExposure, EventSendPort):
+
+    element_name = 'EventSendPortExposure'
+
+
+class EventReceivePortExposure(BasePortExposure, EventReceivePort):
+
+    element_name = 'EventReceivePortExposure'
 
 # =============================================================================
 # Code for Multi-compartment tree representations (Experimental)
@@ -407,6 +511,6 @@ class Key(BaseULObject):
         return cls(int(element.attrib['index']), element.attrib['domain'])
 
 
-class Domain(SubComponent):
+class Domain(SubDynamics):
 
     element_name = 'Domain'

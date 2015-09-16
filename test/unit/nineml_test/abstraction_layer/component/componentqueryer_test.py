@@ -201,7 +201,7 @@ class ComponentClassQueryer_test(unittest.TestCase):
 
     def test_recurse_all_components(self):
         # Signature: name
-                # Returns an iterator over this component and all subcomponents
+                # Returns an iterator over this component and all sub_dynamics
 
 
         d = Dynamics(name='D')
