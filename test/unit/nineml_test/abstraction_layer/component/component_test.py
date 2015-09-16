@@ -283,7 +283,7 @@ class ComponentClass_test(unittest.TestCase):
 
     def test_connect_ports(self):
         # Signature: name(self, src, sink)
-                # Connects the ports of 2 subcomponents.
+                # Connects the ports of 2 sub_dynamics.
                 #
                 # The ports can be specified as ``string`` s or ``NamespaceAddresses`` es.
                 #

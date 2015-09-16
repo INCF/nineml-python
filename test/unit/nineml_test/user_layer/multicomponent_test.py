@@ -2,7 +2,7 @@ import os.path
 import unittest
 from nineml import load, Document
 from nineml.user.multicomponent import (
-    MultiComponent, SubComponent, PortExposure, MultiCompartment,
+    MultiDynamics, SubDynamics, PortExposure, MultiCompartment,
     Mapping, Domain, Tree, Mapping)
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, OutputEvent, AnalogSendPort, On,
@@ -16,7 +16,7 @@ examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
                             'xml', 'neurons')
 
 
-class TestMultiComponent(unittest.TestCase):
+class TestMultiDynamics(unittest.TestCase):
 
     def setUp(self): 
 
@@ -76,13 +76,13 @@ class TestMultiComponent(unittest.TestCase):
                                                           'P3': 3})
 
     def test_multicomponent_xml_roundtrip(self):
-        comp1 = MultiComponent(
+        comp1 = MultiDynamics(
             name='test',
-            subcomponents=[
-                SubComponent(
+            sub_dynamics=[
+                SubDynamics(
                     name='a',
                     component=self.a_props),
-                SubComponent(
+                SubDynamics(
                     name='b',
                     component=self.b_props)],
             port_exposures=[

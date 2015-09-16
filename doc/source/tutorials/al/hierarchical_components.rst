@@ -88,7 +88,7 @@ with corresponding code::
 Namespaces & Port Connections:
 ------------------------------
 
-We now define a larger component, which will contain these subcomponents. When
+We now define a larger component, which will contain these sub_dynamics. When
 we create the component, we specify the *namespace* of each subcomponent, which
 allows us to reference them in the future.
 
@@ -128,11 +128,11 @@ Flattening Components
 
 
 
-Provided the number of regimes and subcomponents is relatively low; it is
+Provided the number of regimes and sub_dynamics is relatively low; it is
 possible to take a hierarchical component, and flatten it into a single component
-with no subcomponents. This can be done using the methods in the  ``ComponentFlattener`` class,
+with no sub_dynamics. This can be done using the methods in the  ``ComponentFlattener`` class,
 or the wrapper function ``flatten``. This flattening takes the cross product of
-all the regimes in all the subcomponents, then works out the relevant
+all the regimes in all the sub_dynamics, then works out the relevant
 transitions and flattens the namespaces.
 
 We can test components to see if they are flat using the ``is_flat`` method.

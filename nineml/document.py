@@ -23,7 +23,7 @@ class Document(dict, BaseNineMLObject):
     element_name = 'NineML'
     write_order = ['Population', 'Projection', 'Selection', 'Network',
                    'Dynamics', 'ConnectionRule', 'RandomDistribution',
-                   'DynamicsProperties', 'MultiComponent',
+                   'DynamicsProperties', 'MultiDynamics',
                    'MultiCompartment', 'ConnectionRuleProperties',
                    'RandomDistributionProperties', 'Dimension', 'Unit']
 
