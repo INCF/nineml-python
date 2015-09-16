@@ -1,13 +1,15 @@
 import os.path
 import unittest
 from nineml import load, Document
-from nineml.user.multicomponent import (
-    MultiDynamics, SubDynamics, PortExposure, MultiCompartment,
-    Mapping, Domain, Tree, Mapping)
+from nineml.user.multi_dynamics import (
+    MultiDynamicsProperties, SubDynamicsProperties,
+    AnalogReceivePortExposure)
+#     MultiCompartment,
+#     Mapping, Domain, Tree, Mapping)
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, OutputEvent, AnalogSendPort, On,
     StateAssignment)
-from nineml.values import ArrayValue
+# from nineml.values import ArrayValue
 from nineml.user.port_connections import AnalogPortConnection
 from nineml.user.component import DynamicsProperties
 
@@ -76,17 +78,17 @@ class TestMultiDynamics(unittest.TestCase):
                                                           'P3': 3})
 
     def test_multicomponent_xml_roundtrip(self):
-        comp1 = MultiDynamics(
+        comp1 = MultiDynamicsProperties(
             name='test',
             sub_dynamics=[
-                SubDynamics(
+                SubDynamicsProperties(
                     name='a',
-                    component=self.a_props),
-                SubDynamics(
+                    dynamics_properties=self.a_props),
+                SubDynamicsProperties(
                     name='b',
-                    component=self.b_props)],
+                    dynamics_properties=self.b_props)],
             port_exposures=[
-                PortExposure(
+                AnalogReceivePortExposure(
                     name="b_ARP2",
                     component="b",
                     port="ARP2")],
