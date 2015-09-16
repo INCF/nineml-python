@@ -3,6 +3,7 @@ from . import BaseULObject
 from abc import ABCMeta
 import sympy
 from .component import Property
+from itertools import product
 from nineml.abstraction import (
     Dynamics, Alias, TimeDerivative, Regime, AnalogSendPort, AnalogReceivePort,
     AnalogReducePort, EventSendPort, EventReceivePort, OnEvent, OnCondition,
@@ -160,22 +161,72 @@ class SubDynamicsProperties(BaseULObject):
 class MultiDynamics(Dynamics):
 
     def __init__(self, name, sub_components, port_exposures, port_connections):
+        # =====================================================================
+        # Create the structures unique to MultiDynamics
+        # =====================================================================
         self._sub_components = dict((d.name, d) for d in sub_components)
         self._port_exposures = dict((pe.name, pe) for pe in port_exposures)
-        self._port_connections = []
+        self._analog_port_connections = []
+        self._event_port_connections = []
         for port_connection in port_connections:
             snd_name, rcv_name, snd_port_name, _ = port_connection
             sender = self.sub_component(snd_name).component
             receiver = self.sub_component(rcv_name).component
             if isinstance(port_connection, tuple):
                 if sender.port(snd_port_name).communication_type == 'analog':
-                    PortConnectionClass = AnalogPortConnection
+                    port_connection = AnalogPortConnection(*port_connection)
                 else:
-                    PortConnectionClass = EventPortConnection
-                port_connection = PortConnectionClass(*port_connection)
+                    port_connection = EventPortConnection(*port_connection)
             port_connection.bind_ports(sender, receiver)
-            self._port_connections.append(port_connection)
-        super(MultiDynamics, self).__init__(name)
+            if isinstance(port_connection, AnalogPortConnection):
+                self._analog_port_connections.append(port_connection)
+            else:
+                self._event_port_connections.append(port_connection)
+
+        # =====================================================================
+        # Create the structures required for the Dynamics base class
+        # =====================================================================
+        # Create multi-regimes for each combination of regimes
+        # from across all the sub components
+        regimes = chain(
+            *[MultiRegime(*rs) for rs in product(
+                *[c.regimes for c in sub_components])])
+        # All "true" aliases from all sub_components wrapped by
+        # NamespaceAliases
+        aliases = list(chain(*[c.aliases for c in sub_components]))
+        # Keep a list of all connected analog receive ports
+        connected_receive_ports = set()
+        # Translate port connections into Aliases remapping the names of
+        reduce_ports = {}
+        for port_connection in self.analog_port_connections:
+            receive_name = (port_connection.receive_relationship + '_' +
+                            port_connection.receive_port_name)
+            send_name = (port_connection.send_relationship + '_' +
+                            port_connection.send_port_name)
+            if isinstance(port_connection.receiver, AnalogReducePort):
+                try:
+                    rhs = reduce_ports[receive_name] + sympy.Symbol(send_name)
+                except KeyError:
+                    rhs = sympy.Symbol(send_name)
+            else:
+                if receive_name in connected_receive_ports:
+                    raise NineMLRuntimeError(
+                        "Multiple connections to receive port '{}' in '{} "
+                        "sub-component of '{}'"
+                        .format(port_connection.receive_port_name,
+                                port_connection.receiver_relationship, name))
+                rhs = sympy.Symbol(send_name)
+            aliases.append(Alias(receive_name, rhs))
+            connected_receive_ports.add(receive_name)
+        for exposure in port_exposures:
+            raise NotImplementedError
+        super(MultiDynamics, self).__init__(
+            name=name,
+            parameters=chain(*[c.parameters for c in sub_components]),
+            regimes=regimes,
+            aliases=aliases,
+            constants=chain(*[c.constants for c in sub_components]),
+            state_variables=chain(*[c.aliases for c in sub_components]))
 
     @property
     def sub_components(self):
@@ -186,8 +237,12 @@ class MultiDynamics(Dynamics):
         return self._port_exposures.itervalues()
 
     @property
-    def port_connections(self):
-        return iter(self._port_connections)
+    def analog_port_connections(self):
+        return iter(self._analog_port_connections)
+
+    @property
+    def event_port_connections(self):
+        return iter(self._analog_port_connections)
 
     def sub_component(self, name):
         return self._sub_components[name]
@@ -309,6 +364,37 @@ class NamespaceRegime(NamespaceNamed, Regime):
         return (NamespaceOnEvent(self.sub_component, oc)
                 for oc in self.element.on_conditions)
 
+    def time_derivative(self, name):
+        return NamespaceTimeDerivative(self.sub_component,
+                                       self.element.time_derivative(name))
+
+    def alias(self, name):
+        return NamespaceAlias(self.sub_component, self.element.alias(name))
+
+    def on_event(self, name):
+        return NamespaceOnEvent(self.sub_component,
+                                self.element.on_event(name))
+
+    def on_condition(self, name):
+        return NamespaceOnEvent(self.sub_component,
+                                self.element.on_condition(name))
+
+    @property
+    def num_time_derivatives(self):
+        return self.element.num_time_derivatives
+
+    @property
+    def num_aliases(self):
+        return self.num_element.aliases
+
+    @property
+    def num_on_events(self):
+        return self.element.num_on_events
+
+    @property
+    def num_on_conditions(self):
+        return self.element.num_on_conditions
+
 
 class MultiRegime(Regime):
 
@@ -352,13 +438,32 @@ class NamespaceTransition(NamespaceNamed):
         return (NamespaceOutputEvent(self.sub_component, oe)
                 for oe in self.element.output_events)
 
+    def state_assignment(self, name):
+        return NamespaceStateAssignment(
+            self.sub_component, self.element.state_assignment(name))
+
+    def output_event(self, name):
+        return NamespaceOutputEvent(
+            self.sub_component, self.element.output_event(name))
+
+    @property
+    def num_state_assignments(self):
+        return self.element.num_state_assignments
+
+    @property
+    def num_output_events(self):
+        return self.element.num_output_events
+
 
 class NamespaceTrigger(NamespaceExpression, Trigger):
     pass
 
 
 class NamespaceOutputEvent(NamespaceNamed, OutputEvent):
-    pass
+
+    @property
+    def port_name(self):
+        return self.element.port_name
 
 
 class NamespaceOnEvent(NamespaceTransition, OnEvent):
@@ -385,7 +490,10 @@ class NamespaceAlias(NamespaceNamed, NamespaceExpression, Alias):
 
 class NamespaceTimeDerivative(NamespaceNamed, NamespaceExpression,
                               TimeDerivative):
-    pass
+
+    @property
+    def variable(self):
+        return self.element.variable
 
 
 class NamespaceStateAssignment(NamespaceNamed, NamespaceExpression,
