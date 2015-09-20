@@ -565,6 +565,12 @@ class LocalEventPortConnection(EventPortConnection):
             "supported")
 
 
+class LocalReducePortConnections(Alias):
+
+    def __init__(self, receiver_role, receive_port, senders, send_ports):
+        pass
+
+
 class BasePortExposure(BaseULObject):
 
     defining_attributes = ('_name', '_component', '_port')
