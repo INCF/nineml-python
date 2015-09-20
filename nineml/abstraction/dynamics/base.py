@@ -534,6 +534,10 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         return self._state_variables.iterkeys()
 
     @property
+    def port_names(self):
+        return chain(self.analog_port_names, self.event_port_names)
+
+    @property
     def analog_port_names(self):
         """Returns an iterator over the local analog port objects"""
         return chain(self.analog_send_port_names,
