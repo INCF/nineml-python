@@ -3,11 +3,12 @@ from .base import BaseULObject
 from .network import Network
 from .population import Population, PositionList, Structure
 from .selection import Selection, Concatenate
-from .projection import (
-    Projection, AnalogPortConnection, EventPortConnection)
+from .port_connections import (
+    AnalogPortConnection, EventPortConnection)
+from .projection import Projection
 from .component import (Property, Component, Definition,
                         Prototype, resolve_reference, write_reference,
                         Initial, DynamicsProperties,
                         ConnectionRuleProperties, RandomDistributionProperties,
                         Quantity)
-from nineml.user.multi_dynamics import MultiDynamics, MultiCompartment 
+from .multi_dynamics import MultiDynamics, MultiCompartment

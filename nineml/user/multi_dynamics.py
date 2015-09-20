@@ -166,23 +166,57 @@ class MultiDynamics(Dynamics):
         # =====================================================================
         self._sub_components = dict((d.name, d) for d in sub_components)
         self._port_exposures = dict((pe.name, pe) for pe in port_exposures)
-        self._analog_port_connections = []
-        self._event_port_connections = []
+        self._analog_port_connections = {}
+        self._event_port_connections = {}
+        self._reduce_port_connections = {}
+        # Insert an empty list for each event and reduce port in the combined
+        # model
+        for sub_component in sub_components:
+            self._event_port_connections.update(
+                (in_namespace(p.name, sub_component.name), [])
+                for p in sub_component.event_receive_ports)
+            self._reduce_port_connections.update(
+                (in_namespace(p.name, sub_component.name), [])
+                for p in sub_component.analog_reduce_ports)
+        # Parse port connections (from tuples if required), bind them to the
+        # ports within the subcomponents and append them to their respective
+        # member dictionaries
         for port_connection in port_connections:
-            snd_name, rcv_name, snd_port_name, _ = port_connection
-            sender = self.sub_component(snd_name).component
-            receiver = self.sub_component(rcv_name).component
+            snd_id, rcv_id, snd_port_name, rcv_port_name = port_connection
+            sender = self.sub_component(snd_id).component
+            receiver = self.sub_component(rcv_id).component
             if isinstance(port_connection, tuple):
-                if sender.port(snd_port_name).communication_type == 'analog':
-                    port_connection = AnalogPortConnection(*port_connection)
+                if isinstance(sender.port(snd_port_name), AnalogReceivePort):
+                    port_connection = LocalAnalogPortConnection(
+                        *port_connection)
+                elif isinstance(receiver.port(rcv_port_name),
+                                EventReceivePort):
+                    port_connection = LocalEventPortConnection(
+                        *port_connection)
                 else:
-                    port_connection = EventPortConnection(*port_connection)
-            port_connection.bind_ports(sender, receiver)
-            if isinstance(port_connection, AnalogPortConnection):
-                self._analog_port_connections.append(port_connection)
+                    assert False
+            elif isinstance(port_connection, AnalogPortConnection):
+                port_connection = LocalAnalogPortConnection(*port_connection)
+            elif isinstance(port_connection, EventPortConnection):
+                port_connection = LocalEventPortConnection(*port_connection)
             else:
-                self._event_port_connections.append(port_connection)
-
+                raise NineMLRuntimeError(
+                    "Unrecognised port connection '{}'"
+                    .format(port_connection))
+            port_connection.bind_ports(sender, receiver)
+            rcv_name = in_namespace(rcv_port_name, rcv_id)
+            if isinstance(port_connection, LocalAnalogPortConnection):
+                if rcv_name in self._analog_port_connections:
+                    raise NineMLRuntimeError(
+                        "Multiple connections to receive port '{}' in '{} "
+                        "sub-component of '{}'"
+                        .format(port_connection.receive_port_name,
+                                port_connection.receiver_id, name))
+                self._analog_port_connections[rcv_name] = port_connection
+            elif isinstance(port_connection, EventPortConnection):
+                self._event_port_connections[rcv_name].append(port_connection)
+            else:
+                assert False
         # =====================================================================
         # Create the structures required for the Dynamics base class
         # =====================================================================
@@ -194,30 +228,23 @@ class MultiDynamics(Dynamics):
         # All "true" aliases from all sub_components wrapped by
         # NamespaceAliases
         aliases = list(chain(*[c.aliases for c in sub_components]))
-        # Keep a list of all connected analog receive ports
-        connected_receive_ports = set()
-        # Translate port connections into Aliases remapping the names of
-        reduce_ports = {}
-        for port_connection in self.analog_port_connections:
-            receive_name = (port_connection.receive_relationship + '_' +
-                            port_connection.receive_port_name)
-            send_name = (port_connection.send_relationship + '_' +
-                            port_connection.send_port_name)
-            if isinstance(port_connection.receiver, AnalogReducePort):
-                try:
-                    rhs = reduce_ports[receive_name] + sympy.Symbol(send_name)
-                except KeyError:
-                    rhs = sympy.Symbol(send_name)
-            else:
-                if receive_name in connected_receive_ports:
-                    raise NineMLRuntimeError(
-                        "Multiple connections to receive port '{}' in '{} "
-                        "sub-component of '{}'"
-                        .format(port_connection.receive_port_name,
-                                port_connection.receiver_relationship, name))
-                rhs = sympy.Symbol(send_name)
+        # Translate analog port connections into Aliases remapping the names
+        for (rcv_id, port_name), port_connection in (
+                self._analog_port_connections.iteritems()):
+            receive_name = in_namespace(port_name, rcv_id)
+            send_name = in_namespace(port_connection.send_port_name,
+                                               port_connection.send_id)
+            aliases.append(Alias(receive_name, sympy.Symbol(send_name)))
+        # Translate reduce port connections into Aliases remapping the names
+        for (rcv_id, port_name), port_connections in (
+                self._reduce_port_connections.iteritems()):
+            receive_name = in_namespace(port_name, rcv_id)
+            rhs = 0
+            for port_connection in port_connections:
+                send_name = in_namespace(
+                    port_connection.send_port_name, port_connection.send_id)
+                rhs += sympy.Symbol(send_name)
             aliases.append(Alias(receive_name, rhs))
-            connected_receive_ports.add(receive_name)
         for exposure in port_exposures:
             raise NotImplementedError
         super(MultiDynamics, self).__init__(
@@ -238,11 +265,20 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_port_connections(self):
-        return iter(self._analog_port_connections)
+        return self._analog_port_connections.itervalues()
 
     @property
     def event_port_connections(self):
-        return iter(self._analog_port_connections)
+        return self._analog_port_connections.itervalues()
+
+    @property
+    def reduce_port_connections(self):
+        return self._reduce_port_connections.itervalues()
+
+    @property
+    def port_connections(self):
+        return chain(self.analog_port_connections, self.event_port_connections,
+                     self.reduce_port_connections)
 
     def sub_component(self, name):
         return self._sub_components[name]
@@ -298,14 +334,17 @@ class NamespaceNamed(object):
 
     @property
     def name(self):
-        return self._element.name + self.suffix
+        return self._in_namespace(self._element.name)
 
-    @property
-    def suffix(self):
-        return '_' + self._sub_component.name
+    def _in_namespace(self, name):
+        return in_namespace(name + self._sub_component.name)
 
 
 class NamespaceExpression(object):
+
+    def __init__(self, sub_component, element):
+        self._sub_component = sub_component
+        self._element = element
 
     @property
     def lhs(self):
@@ -319,7 +358,7 @@ class NamespaceExpression(object):
         """Return copy of rhs with all free symols suffixed by the namespace"""
         try:
             return self.element.rhs.xreplace(dict(
-                (s, sympy.Symbol(str(s) + self.suffix))
+                (s, sympy.Symbol(self._in_namespace(s)))
                 for s in self.rhs_symbols))
         except AttributeError:  # If rhs has been simplified to ints/floats
             assert float(self.element.rhs)
@@ -340,6 +379,9 @@ class NamespaceExpression(object):
 
     def rhs_str_substituted(self, name_map={}, funcname_map={}):
         raise NotImplementedError  # Not sure if this should be implemented yet
+
+    def _in_namespace(self, name):
+        return in_namespace(name + self._sub_component.name)
 
 
 class NamespaceRegime(NamespaceNamed, Regime):
@@ -507,8 +549,12 @@ class NamespaceProperty(NamespaceNamed, Property):
 
 class LocalAnalogPortConnection(AnalogPortConnection, Alias):
 
-    def __init__(self):
-        pass
+    def __init__(self, sender_id, receiver_id,
+                 send_port_name, receive_port_name):
+        AnalogPortConnection.__init__(self, sender_id, receiver_id,
+                                      send_port_name, receive_port_name)
+        Alias.__init__(self, in_namespace(receive_port_name, receiver_id),
+                       in_namespace(send_port_name, sender_id))
 
 
 class LocalEventPortConnection(EventPortConnection):
@@ -586,6 +632,10 @@ class EventSendPortExposure(BasePortExposure, EventSendPort):
 class EventReceivePortExposure(BasePortExposure, EventReceivePort):
 
     element_name = 'EventReceivePortExposure'
+
+
+def in_namespace(name, namespace):
+    return name + '_' + namespace
 
 # =============================================================================
 # Code for Multi-compartment tree representations (Experimental)
