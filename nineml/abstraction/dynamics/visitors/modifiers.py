@@ -16,7 +16,7 @@ from ...componentclass.visitors.modifiers import (
 from .base import DynamicsActionVisitor
 
 
-class DynamicPortModifier(ComponentModifier):
+class DynamicsPortModifier(ComponentModifier):
 
     """Utility classes for modifying components"""
 
@@ -56,7 +56,7 @@ class DynamicPortModifier(ComponentModifier):
             raise NineMLRuntimeError('close_all_reduce_ports() on non-flat '
                                      'component_class')
 
-        for arp in component_class.query.analog_reduce_ports:
+        for arp in list(component_class.analog_reduce_ports):
             if exclude and arp.name in exclude:
                 continue
             cls.close_analog_port(component_class=component_class,
@@ -99,7 +99,8 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
 
 
     def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        super(DynamicsRenameSymbol, self).action_componentclass(component_class)
+        super(DynamicsRenameSymbol,
+              self).action_componentclass(component_class)
         self._update_dicts(*component_class.all_member_dicts)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
