@@ -84,13 +84,13 @@ class TestNetwork(unittest.TestCase):
         exc_prj = Projection(
             "Excitation", pre=inpt, post=p1, response=psr,
             plasticity=static_exc, connectivity=all_to_all, delay=(delay, ms),
-            port_connections=[('response', 'post', 'Isyn', 'Isyn'),
-                              ('plasticity', 'response', 'weight', 'weight')])
+            port_connections=[('response', 'Isyn', 'post', 'Isyn'),
+                              ('plasticity', 'weight', 'response', 'weight')])
         inh_prj = Projection(
             "Inhibition", pre=inpt, post=p2, response=psr,
             plasticity=static_inh, connectivity=all_to_all, delay=(delay, ms),
-            port_connections=[('response', 'post', 'Isyn', 'Isyn'),
-                              ('plasticity', 'response', 'weight', 'weight')])
+            port_connections=[('response', 'Isyn', 'post', 'Isyn'),
+                              ('plasticity', 'weight', 'response', 'weight')])
         model = Network("brunel_network")
         model.add(inpt, p1, p2)
         model.add(exc_prj, inh_prj)
