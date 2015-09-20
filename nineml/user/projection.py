@@ -4,7 +4,6 @@ from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from .component import ConnectionRuleProperties, DynamicsProperties
-from ..abstraction import AnalogSendPort
 from copy import copy
 from itertools import chain
 import nineml.units as un
@@ -13,9 +12,9 @@ from nineml.utils import (
 from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
-from .port_connections import AnalogPortConnection, EventPortConnection
-from nineml.exceptions import (handle_xml_exceptions,
-                               NineMLRuntimeError, NineMLMissingElementError)
+from .port_connections import (
+    BasePortConnection, AnalogPortConnection, EventPortConnection)
+from nineml.exceptions import handle_xml_exceptions
 
 
 class Projection(BaseULObject, DocumentLevelObject):

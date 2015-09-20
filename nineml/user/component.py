@@ -2,12 +2,13 @@
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 import collections
+from nineml.base import BaseNineMLObject
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, handle_xml_exceptions,
     NineMLMissingElementError)
 from nineml.xmlns import NINEML, E
 from nineml.reference import (
-    Prototype, Definition, write_reference, resolve_reference)
+    BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_units
 from nineml import units as un
@@ -17,7 +18,6 @@ from . import BaseULObject
 from nineml.document import Document
 from nineml import DocumentLevelObject
 from os import path
-
 
 
 class Definition(BaseReference):
@@ -137,9 +137,9 @@ class Component(BaseULObject, DocumentLevelObject):
                 document=Document(url=url),
                 url=defn_url)
         elif isinstance(definition, ComponentClass):
-            definition = Definition(component_class=definition)
+            definition = Definition(definition)
         elif isinstance(definition, Component):
-            definition = Prototype(component=definition)
+            definition = Prototype(definition)
         elif not (isinstance(definition, Definition) or
                   isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
@@ -321,11 +321,10 @@ class Component(BaseULObject, DocumentLevelObject):
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
         """
-        props_and_initial_values = (self._properties.to_xml(document, **kwargs) +
-                                    [iv.to_xml(document, **kwargs)
-                                     for iv in self.initial_values])
-        element = E(self.element_name, self._definition.to_xml(document, **kwargs),
-                    *props_and_initial_values, name=self.name)
+        element = E(self.element_name,
+                    self._definition.to_xml(document, **kwargs),
+                    *(p.to_xml(document, **kwargs) for p in self.properties),
+                    name=self.name)
         return element
 
     @classmethod
@@ -390,7 +389,7 @@ class Quantity(BaseULObject):
         if isinstance(value, (list, tuple)):
             value = ArrayValue(value)
         elif not isinstance(value, (int, float, SingleValue, ArrayValue,
-                                    ExternalArrayValue, RandomValue)):
+                                    ExternalArrayValue)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference',"
                             "'RandomDistributionProperties', 'ValueList', "
@@ -507,10 +506,10 @@ class Quantity(BaseULObject):
             value = ExternalArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ExternalArrayValue')),
                 document)
-        elif element.find(NINEML + 'RandomValue') is not None:
-            value = RandomDistributionComponent.from_xml(
-                expect_single(element.findall(NINEML + 'RandomValue')),
-                document)
+#         elif element.find(NINEML + 'RandomValue') is not None:
+#             value = RandomDistributionComponent.from_xml(
+#                 expect_single(element.findall(NINEML + 'RandomValue')),
+#                 document)
         else:
             raise NineMLRuntimeError(
                 "Did not find recognised value tag in property (found {})"
@@ -522,12 +521,12 @@ class Quantity(BaseULObject):
                 "{} element '{}' is missing 'units' attribute (found '{}')"
                 .format(element.tag, element.get('name', ''),
                         "', '".join(element.attrib.iterkeys())))
-#         try:
-        units = document[units_str]
-#         except KeyError:
-#             raise NineMLMissingElementError(
-#                 "Did not find definition of '{}' units in the current "
-#                 "document.".format(units_str))
+        try:
+            units = document[units_str]
+        except KeyError:
+            raise NineMLMissingElementError(
+                "Did not find definition of '{}' units in the current "
+                "document.".format(units_str))
         return cls(value=value, units=units)
 
 
