@@ -16,7 +16,8 @@ from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.values import ArrayValue
 from nineml.exceptions import NineMLRuntimeError
-from .port_connections import AnalogPortConnection, EventPortConnection
+from .port_connections import (
+    AnalogPortConnection, EventPortConnection, BasePortConnection)
 
 
 class MultiDynamicsProperties(DynamicsProperties):
@@ -173,50 +174,52 @@ class MultiDynamics(Dynamics):
         # model
         for sub_component in sub_components:
             self._event_port_connections.update(
-                (in_namespace(p.name, sub_component.name), [])
+                (in_namespace(p.name, sub_component.name), {})
                 for p in sub_component.event_receive_ports)
             self._reduce_port_connections.update(
-                (in_namespace(p.name, sub_component.name), [])
+                (in_namespace(p.name, sub_component.name), {})
                 for p in sub_component.analog_reduce_ports)
         # Parse port connections (from tuples if required), bind them to the
         # ports within the subcomponents and append them to their respective
         # member dictionaries
         for port_connection in port_connections:
-            snd_id, rcv_id, snd_port_name, rcv_port_name = port_connection
-            sender = self.sub_component(snd_id).component
-            receiver = self.sub_component(rcv_id).component
             if isinstance(port_connection, tuple):
-                if isinstance(sender.port(snd_port_name), AnalogReceivePort):
-                    port_connection = LocalAnalogPortConnection(
-                        *port_connection)
-                elif isinstance(receiver.port(rcv_port_name),
-                                EventReceivePort):
-                    port_connection = LocalEventPortConnection(
-                        *port_connection)
-                else:
-                    assert False
-            elif isinstance(port_connection, AnalogPortConnection):
-                port_connection = LocalAnalogPortConnection(*port_connection)
-            elif isinstance(port_connection, EventPortConnection):
-                port_connection = LocalEventPortConnection(*port_connection)
-            else:
-                raise NineMLRuntimeError(
-                    "Unrecognised port connection '{}'"
-                    .format(port_connection))
-            port_connection.bind_ports(sender, receiver)
-            rcv_name = in_namespace(rcv_port_name, rcv_id)
-            if isinstance(port_connection, LocalAnalogPortConnection):
+                port_connection = BasePortConnection.from_tuple(
+                    port_connection, self)
+            snd_name = in_namespace(port_connection.receive_port_name,
+                                    port_connection.sender_name)
+            rcv_name = in_namespace(port_connection.receive_port_name,
+                                    port_connection.receiver_name)
+            if isinstance(port_connection.receive_port, AnalogReceivePort):
                 if rcv_name in self._analog_port_connections:
                     raise NineMLRuntimeError(
                         "Multiple connections to receive port '{}' in '{} "
                         "sub-component of '{}'"
                         .format(port_connection.receive_port_name,
                                 port_connection.receiver_id, name))
+                port_connection = LocalAnalogPortConnection(
+                    port_connection.send_port_name,
+                    port_connection.receive_port_name,
+                    sender_name=port_connection.sender_name,
+                    receiver_name=port_connection.receiver_name)
+                port_connection.bind_ports(self)
                 self._analog_port_connections[rcv_name] = port_connection
-            elif isinstance(port_connection, EventPortConnection):
-                self._event_port_connections[rcv_name].append(port_connection)
+            elif isinstance(port_connection.receive_port, EventReceivePort):
+                port_connection = LocalEventPortConnection(
+                    port_connection.send_port_name,
+                    port_connection.receive_port_name,
+                    sender_name=port_connection.sender_name,
+                    receiver_name=port_connection.receiver_name)
+                port_connection.bind_ports(self)
+                self._event_port_connections[
+                    rcv_name][snd_name] = port_connection
+            elif isinstance(port_connection.receive_port, AnalogReducePort):
+                self._reduce_port_connections[
+                    rcv_name][snd_name] = port_connection
             else:
-                assert False
+                raise NineMLRuntimeError(
+                    "Unrecognised port connection type '{}'"
+                    .format(port_connection))
         # =====================================================================
         # Create the structures required for the Dynamics base class
         # =====================================================================
