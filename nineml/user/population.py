@@ -48,6 +48,10 @@ class Population(BaseULObject, DocumentLevelObject):
                         'positions={}'.format(self.positions)
                         if self.positions else ''))
 
+    @property
+    def component_class(self):
+        return self.cell.component_class
+
     def get_components(self):
         """
         Return a list of all components used by the population.
