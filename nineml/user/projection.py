@@ -75,17 +75,8 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._port_connections = []
         for port_connection in port_connections:
             if isinstance(port_connection, tuple):
-                (sender_role, send_port,
-                 receiver_role, receive_port) = port_connection
-                sender = getattr(self, sender_role).component_class
-                if isinstance(sender.port(send_port), AnalogSendPort):
-                    port_connection = AnalogPortConnection(
-                        sender_role=sender_role, receiver_role=receiver_role,
-                        receive_port=receive_port, send_port=send_port)
-                else:
-                    port_connection = EventPortConnection(
-                        sender_role=sender_role, receiver_role=receiver_role,
-                        receive_port=receive_port, send_port=send_port)
+                port_connection = BasePortConnection.from_tuple(
+                    port_connection, self)
             port_connection.bind(self)
             self._port_connections.append(port_connection)
 
