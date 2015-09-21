@@ -281,86 +281,7 @@ class ComponentClass_test(unittest.TestCase):
         pass
         # ====================== #
 
-    def test_connect_ports(self):
-        # Signature: name(self, src, sink)
-                # Connects the ports of 2 sub_dynamics.
-                #
-                # The ports can be specified as ``string`` s or ``NamespaceAddresses`` es.
-                #
-                #
-                # :param src: The source port of one sub-component; this should either an
-                #     event port or analog port, but it *must* be a send port.
-                #
-                # :param sink: The sink port of one sub-component; this should either an
-                #     event port or analog port, but it *must* be either a 'recv' or a
-                #     'reduce' port.
-
-
-        tIaf = TestableComponent('iaf')
-        tCoba = TestableComponent('coba_synapse')
-
-        # Should be fine:
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()})
-        c.connect_ports('iaf.V', 'coba.V')
-
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()},
-                           portconnections=[('iaf.V', 'coba.V')]
-                           )
-
-        # Non existant Ports:
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()})
-        self.assertRaises(
-            NineMLRuntimeError,
-            c.connect_ports, 'iaf.V1', 'coba.V')
-        self.assertRaises(
-            NineMLRuntimeError,
-            c.connect_ports, 'iaf.V', 'coba.V1')
-
-        self.assertRaises(
-            NineMLRuntimeError,
-            Dynamics,
-            name='C1',
-            subnodes={'iaf': tIaf(), 'coba': tCoba()},
-            portconnections=[('iaf.V1', 'coba.V')]
-        )
-
-        self.assertRaises(
-            NineMLRuntimeError,
-            Dynamics,
-            name='C1',
-            subnodes={'iaf': tIaf(), 'coba': tCoba()},
-            portconnections=[('iaf.V', 'coba.V1')]
-        )
-
-        # Connect ports the wronf way around:
-        # [Check the wright way around works:]
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()},
-                           portconnections=[('coba.I', 'iaf.ISyn')]
-                           )
-        # And the wrong way around:
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()})
-        self.assertRaises(
-            NineMLRuntimeError,
-            c.connect_ports, 'iaf.ISyn.', 'coba.I')
-        self.assertRaises(
-            NineMLRuntimeError,
-            c.connect_ports, 'coba.V', 'iaf.V')
-
-        # Error raised on duplicate port-connection:
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()},
-                           )
-
-        c.connect_ports('coba.I', 'iaf.ISyn')
-        self.assertRaises(
-            NineMLRuntimeError,
-            c.connect_ports, 'coba.I', 'iaf.ISyn')
-
+    
     def test_event_ports(self):
         # Signature: name
                 # No Docstring
@@ -419,140 +340,6 @@ class ComponentClass_test(unittest.TestCase):
             ]
         )
         self.assertEquals(len(list(c.event_ports)), 5)
-
-    # These are done in the Testflatten and ComponentFlattener_test
-    # Classes instead.
-    # def test_flattener(self):
-    # def test_is_flat(self):
-    # def test_set_flattener(self):
-    # def test_was_flattened(self):
-    # Hierachical
-    def test_get_node_addr(self):
-        # Signature: name(self)
-                # Get the namespace address of this component
-
-        d = Dynamics(name='D',)
-        e = Dynamics(name='E')
-        f = Dynamics(name='F')
-        g = Dynamics(name='G')
-        b = Dynamics(name='B', subnodes={'d': d, 'e': e})
-        c = Dynamics(name='C', subnodes={'f': f, 'g': g})
-        a = Dynamics(name='A', subnodes={'b': b, 'c': c})
-
-        # Construction of the objects causes cloning to happen:
-        # Therefore we test by looking up and checking that there
-        # are the correct component names:
-        bNew = a.get_subnode('b')
-        cNew = a.get_subnode('c')
-        dNew = a.get_subnode('b.d')
-        eNew = a.get_subnode('b.e')
-        fNew = a.get_subnode('c.f')
-        gNew = a.get_subnode('c.g')
-
-        self.assertEquals(a.get_node_addr(),
-                          NamespaceAddress.create_root())
-        self.assertEquals(bNew.get_node_addr(),
-                          NamespaceAddress('b'))
-        self.assertEquals(cNew.get_node_addr(),
-                          NamespaceAddress('c'))
-        self.assertEquals(dNew.get_node_addr(),
-                          NamespaceAddress('b.d'))
-        self.assertEquals(eNew.get_node_addr(),
-                          NamespaceAddress('b.e'))
-        self.assertEquals(fNew.get_node_addr(),
-                          NamespaceAddress('c.f'))
-        self.assertEquals(gNew.get_node_addr(),
-                          NamespaceAddress('c.g'))
-
-        self.assertEquals(a.name, 'A')
-        self.assertEquals(bNew.name, 'B')
-        self.assertEquals(cNew.name, 'C')
-        self.assertEquals(dNew.name, 'D')
-        self.assertEquals(eNew.name, 'E')
-        self.assertEquals(fNew.name, 'F')
-        self.assertEquals(gNew.name, 'G')
-
-    def test_insert_subnode(self):
-        # Signature: name(self, subnode, namespace)
-                # Insert a subnode into this component
-                #
-                #
-                # :param subnode: An object of type ``Dynamics``.
-                # :param namespace: A `string` specifying the name of the component in
-                #     this components namespace.
-                #
-                # :raises: ``NineMLRuntimeException`` if there is already a subcomponent at
-                #     the same namespace location
-                #
-                # .. note::
-                #
-                #     This method will clone the subnode.
-
-        d = Dynamics(name='D')
-        e = Dynamics(name='E')
-        f = Dynamics(name='F')
-        g = Dynamics(name='G')
-
-        b = Dynamics(name='B')
-        b.insert_subnode(namespace='d', subnode=d)
-        b.insert_subnode(namespace='e', subnode=e)
-
-        c = Dynamics(name='C')
-        c.insert_subnode(namespace='f', subnode=f)
-        c.insert_subnode(namespace='g', subnode=g)
-
-        a = Dynamics(name='A')
-        a.insert_subnode(namespace='b', subnode=b)
-        a.insert_subnode(namespace='c', subnode=c)
-
-        # Construction of the objects causes cloning to happen:
-        # Therefore we test by looking up and checking that there
-        # are the correct component names:
-        bNew = a.get_subnode('b')
-        cNew = a.get_subnode('c')
-        dNew = a.get_subnode('b.d')
-        eNew = a.get_subnode('b.e')
-        fNew = a.get_subnode('c.f')
-        gNew = a.get_subnode('c.g')
-
-        self.assertEquals(a.get_node_addr(),
-                          NamespaceAddress.create_root())
-        self.assertEquals(bNew.get_node_addr(),
-                          NamespaceAddress('b'))
-        self.assertEquals(cNew.get_node_addr(),
-                          NamespaceAddress('c'))
-        self.assertEquals(dNew.get_node_addr(),
-                          NamespaceAddress('b.d'))
-        self.assertEquals(eNew.get_node_addr(),
-                          NamespaceAddress('b.e'))
-        self.assertEquals(fNew.get_node_addr(),
-                          NamespaceAddress('c.f'))
-        self.assertEquals(gNew.get_node_addr(),
-                          NamespaceAddress('c.g'))
-
-        self.assertEquals(a.name, 'A')
-        self.assertEquals(bNew.name, 'B')
-        self.assertEquals(cNew.name, 'C')
-        self.assertEquals(dNew.name, 'D')
-        self.assertEquals(eNew.name, 'E')
-        self.assertEquals(fNew.name, 'F')
-        self.assertEquals(gNew.name, 'G')
-
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'x')
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.')
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.X')
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.b.')
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.b.X')
-
-        # Adding to the same namespace twice:
-        d1 = Dynamics(name='D1')
-        d2 = Dynamics(name='D2')
-        a = Dynamics(name='B')
-
-        a.insert_subnode(namespace='d', subnode=d1)
-        self.assertRaises(
-            NineMLRuntimeError,
-            a.insert_subnode, namespace='d', subnode=d2)
 
     # TESTED IN:
         # test_get_node_addr
@@ -955,3 +742,146 @@ class TestableComponent(object):
 
     # Write is better tested in the round trip tests.
     # def test_write(self):
+    
+
+
+class ComponentClassQuery_test(unittest.TestCase):
+
+    def test_event_send_receive_ports(self):
+        # Signature: name(self)
+                # Get the ``recv`` EventPorts
+        # from nineml.abstraction.component.componentqueryer import
+        # ComponentClassQueryer
+
+        # Check inference of output event ports:
+        c = Dynamics(
+            name='Comp1',
+            regimes=Regime(
+                transitions=[
+                    On('in_ev1', do=OutputEvent('ev_port1')),
+                    On('V < b', do=OutputEvent('ev_port1')),
+                    On('V < c', do=OutputEvent('ev_port2')),
+                ]
+            ),
+        )
+        self.assertEquals(len(list(c.event_receive_ports)), 1)
+        self.assertEquals((list(list(c.event_receive_ports))[0]).name,
+                          'in_ev1')
+
+        self.assertEquals(len(list(c.event_send_ports)), 2)
+        self.assertEquals(set(c.event_send_port_names),
+                          set(['ev_port1', 'ev_port2']))
+
+        # Check inference of output event ports:
+        c = Dynamics(
+            name='Comp1',
+            regimes=[
+                Regime(name='r1',
+                       transitions=[
+                           On('V > a', do=OutputEvent('ev_port1'), to='r2'),
+                           On('in_ev1', do=OutputEvent('ev_port2'))]),
+
+                Regime(name='r2',
+                       transitions=[
+                           On('V > a', do=OutputEvent('ev_port2'), to='r1'),
+                           On('in_ev2', do=OutputEvent('ev_port3'))])
+            ]
+        )
+        self.assertEquals(len(list(c.event_receive_ports)), 2)
+        self.assertEquals(set(c.event_receive_port_names),
+                          set(['in_ev1', 'in_ev2']))
+
+        self.assertEquals(len(list(c.event_send_ports)), 3)
+        self.assertEquals(set(c.event_send_port_names),
+                           set(['ev_port1', 'ev_port2', 'ev_port3']))
+
+        # Check inference of output event ports:
+        c = Dynamics(
+            name='Comp1',
+            regimes=[
+                Regime(name='r1',
+                       transitions=[
+                           On('spikeinput1', do=[]),
+                           On('spikeinput2', do=[
+                               OutputEvent('ev_port1'),
+                               OutputEvent('ev_port2')], to='r2')]),
+
+                Regime(name='r2',
+                       transitions=[
+                           On('V > a', do=OutputEvent('ev_port2')),
+                           On('spikeinput3', do=OutputEvent('ev_port3'),
+                              to='r1')])
+            ]
+        )
+        self.assertEquals(len(list(c.event_receive_ports)), 3)
+        self.assertEquals(set(c.event_receive_port_names),
+                          set(['spikeinput1', 'spikeinput2', 'spikeinput3']))
+
+        self.assertEquals(len(list(c.event_send_ports)), 3)
+        self.assertEquals(set(c.event_send_port_names),
+                          set(['ev_port1', 'ev_port2', 'ev_port3']))
+
+    def test_ports(self):
+        # Signature: name
+                # Return an iterator over all the port (Event & Analog) in the
+                # component
+        # from nineml.abstraction.component.componentqueryer import
+        # ComponentClassQueryer
+
+        c = Dynamics(
+            name='Comp1',
+            regimes=[
+                Regime(name='r1',
+                       transitions=[
+                           On('spikeinput1', do=[]),
+                           On('spikeinput2', do=OutputEvent('ev_port2'),
+                              to='r2')]),
+
+                Regime(name='r2',
+                       transitions=[
+                           On('V > a', do=OutputEvent('ev_port2')),
+                           On('spikeinput3', do=OutputEvent('ev_port3'),
+                              to='r1')])
+            ],
+            aliases=['A:=0', 'C:=0'],
+            analog_ports=[AnalogSendPort('A'), AnalogReceivePort('B'),
+                          AnalogSendPort('C')]
+        )
+
+        ports = list(list(c.ports))
+        port_names = [p.name for p in ports]
+
+        self.assertEquals(len(port_names), 8)
+        self.assertEquals(set(port_names),
+                          set(['A', 'B', 'C', 'spikeinput1', 'spikeinput2',
+                               'spikeinput3', 'ev_port2', 'ev_port3'])
+                          )
+
+    def test_regime(self):
+        # Signature: name(self, name=None)
+                # Find a regime in the component by name
+        # from nineml.abstraction.component.componentqueryer import
+        # ComponentClassQueryer
+
+        c = Dynamics(name='cl',
+                     regimes=[
+                          Regime('dX/dt=1/t',
+                                 name='r1',
+                                 transitions=On('X>X1', do=['X=X0'],
+                                                to='r2')),
+                          Regime('dX/dt=1/t',
+                                 name='r2',
+                                 transitions=On('X>X1', do=['X=X0'],
+                                                to='r3')),
+                          Regime('dX/dt=1/t',
+                                 name='r3',
+                                 transitions=On('X>X1', do=['X=X0'],
+                                                to='r4')),
+                          Regime('dX/dt=1/t',
+                                 name='r4',
+                                 transitions=On('X>X1', do=['X=X0'],
+                                                to='r1'))])
+        self.assertEqual(c.regime(name='r1').name, 'r1')
+        self.assertEqual(c.regime(name='r2').name, 'r2')
+        self.assertEqual(c.regime(name='r3').name, 'r3')
+        self.assertEqual(c.regime(name='r4').name, 'r4')

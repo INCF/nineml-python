@@ -56,68 +56,6 @@ class TestOn(unittest.TestCase):
         self.assertEquals(len(list(tr.state_assignments)), 2)
 
 
-# These are tested in the Dynamics
-# class Dynamics_test(unittest.TestCase):
-#
-#    def test_Constructor(self):
-#        pass
-#
-#
-#    def test_accept_visitor(self):
-# Signature: name(self, visitor, **kwargs)
-# |VISITATION|
-# from nineml.abstraction.component.dynamics import DynamicsBlock
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_aliases(self):
-# Signature: name
-# No Docstring
-# from nineml.abstraction.component.dynamics import DynamicsBlock
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_aliases_map(self):
-# Signature: name
-# No Docstring
-# from nineml.abstraction.component.dynamics import DynamicsBlock
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_regime_map(self):
-# Signature: name
-# No Docstring
-# from nineml.abstraction.component.dynamics import DynamicsBlock
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_regimes(self):
-# Signature: name
-# No Docstring
-# from nineml.abstraction.component.dynamics import DynamicsBlock
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_state_variables(self):
-# Signature: name
-# No Docstring
-# from nineml.abstraction.component.dynamics import DynamicsBlock
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_transitions(self):
-# Signature: name
-# No Docstring
-# from nineml.abstraction.component.dynamics import DynamicsBlock
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-# Testing Skeleton for class: OnCondition
 class OnCondition_test(unittest.TestCase):
 
     def test_accept_visitor(self):
@@ -212,90 +150,6 @@ class OnCondition_test(unittest.TestCase):
             self.assertEquals(return_values[i], python_func(**param_dict))
 
 
-# Tested in Component:
-#    def test_output_events(self):
-# Signature: name
-# Events that happen when this transitions occurs
-# from nineml.abstraction.component.dynamics import OnCondition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_set_source_regime(self):
-# Signature: name(self, source_regime)
-# Internal method, used during component construction.
-#
-# Used internally by the Dynamics objects after all objects
-# have be constructed, in the ``_ResolveTransitionRegimeNames()`` method.
-# This is because when we build Transitions, the Regimes that they refer
-# to generally are not build yet, so are refered to by strings. This
-# method is used to set the source ``Regime`` object. We check that the name
-# of the object set is the same as that previously expected.
-# from nineml.abstraction.component.dynamics import OnCondition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_set_target_regime(self):
-# Signature: name(self, target_regime)
-# Internal method, used during component construction.
-#
-# See ``set_source_regime``
-# from nineml.abstraction.component.dynamics import OnCondition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_source_regime(self):
-# Signature: name
-# Returns the source regime of this transition.
-#
-# .. note::
-#
-# This method will only be available after the Dynamics
-# containing this transition has been built. See ``set_source_regime``
-# from nineml.abstraction.component.dynamics import OnCondition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_source_regime_name(self):
-# Signature: name
-# DO NOT USE: Internal function. Use `source_regime.name` instead.
-#
-# from nineml.abstraction.component.dynamics import OnCondition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#    def test_state_assignments(self):
-# Signature: name
-# An ordered list of StateAssignments that happen when this
-# transitions occurs
-# from nineml.abstraction.component.dynamics import OnCondition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_target_regime(self):
-# Signature: name
-# Returns the target regime of this transition.
-#
-# .. note::
-#
-# This method will only be available after the Dynamics
-# containing this transition has been built. See ``set_source_regime``
-# from nineml.abstraction.component.dynamics import OnCondition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_target_regime_name(self):
-# Signature: name
-# DO NOT USE: Internal function. Use `target_regime.name` instead.
-#
-# from nineml.abstraction.component.dynamics import OnCondition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-# Testing Skeleton for class: OnEvent
 class OnEvent_test(unittest.TestCase):
 
     def test_Constructor(self):
@@ -332,7 +186,6 @@ class OnEvent_test(unittest.TestCase):
         self.assertEquals(OnEvent(' MyEvent2').src_port_name, 'MyEvent2')
 
 
-# Testing Skeleton for class: Regime
 class Regime_test(unittest.TestCase):
 
     def test_Constructor(self):
@@ -360,14 +213,14 @@ class Regime_test(unittest.TestCase):
 
     def test_add_on_condition(self):
         # Signature: name(self, on_condition)
-                # Add an OnCondition transition which leaves this regime
-                #
-                # If the on_condition object has not had its target regime name
-                # set in the constructor, or by calling its ``set_target_regime_name()``,
-                # then the target is assumed to be this regime, and will be set
-                # appropriately.
-                #
-                # The source regime for this transition will be set as this regime.
+        # Add an OnCondition transition which leaves this regime
+        #
+        # If the on_condition object has not had its target regime name
+        # set in the constructor, or by calling its ``set_target_regime_name()``,
+        # then the target is assumed to be this regime, and will be set
+        # appropriately.
+        #
+        # The source regime for this transition will be set as this regime.
 
         r = Regime(name='R1')
         self.assertEquals(set(r.on_conditions), set())
@@ -379,14 +232,14 @@ class Regime_test(unittest.TestCase):
 
     def test_add_on_event(self):
         # Signature: name(self, on_event)
-                # Add an OnEvent transition which leaves this regime
-                #
-                # If the on_event object has not had its target regime name
-                # set in the constructor, or by calling its ``set_target_regime_name()``,
-                # then the target is assumed to be this regime, and will be set
-                # appropriately.
-                #
-                # The source regime for this transition will be set as this regime.
+        # Add an OnEvent transition which leaves this regime
+        #
+        # If the on_event object has not had its target regime name
+        # set in the constructor, or by calling its ``set_target_regime_name()``,
+        # then the target is assumed to be this regime, and will be set
+        # appropriately.
+        #
+        # The source regime for this transition will be set as this regime.
         # from nineml.abstraction.component.dynamics import Regime
         r = Regime(name='R1')
         self.assertEquals(set(r.on_events), set())
@@ -398,8 +251,7 @@ class Regime_test(unittest.TestCase):
 
     def test_get_next_name(self):
         # Signature: name(cls)
-                # Return the next distinct autogenerated name
-
+        # Return the next distinct autogenerated name
 
         n1 = Regime.get_next_name()
         n2 = Regime.get_next_name()
@@ -415,28 +267,15 @@ class Regime_test(unittest.TestCase):
         self.assertEqual(Regime(name=' Hello ').name, 'Hello')
         self.assertEqual(Regime(name=' Hello2 ').name, 'Hello2')
 
-    # def test_on_conditions(self):
-    # Signature: name
-        # Returns all the transitions out of this regime trigger by
-        # conditions
-    # from nineml.abstraction.component.dynamics import Regime
-    #    warnings.warn('Tests not implemented')
-    # raise NotImplementedError()
-    # def test_on_events(self):
-    # Signature: name
-        # Returns all the transitions out of this regime trigger by events
-    # from nineml.abstraction.component.dynamics import Regime
-    #    warnings.warn('Tests not implemented')
-    # raise NotImplementedError()
     def test_time_derivatives(self):
         # Signature: name
-                # Returns the state-variable time-derivatives in this regime.
-                #
-                # .. note::
-                #
-                #     This is not guarenteed to contain the time derivatives for all the
-                #     state-variables specified in the component. If they are not defined,
-                #     they are assumed to be zero in this regime.
+        # Returns the state-variable time-derivatives in this regime.
+        #
+        # .. note::
+        #
+        #     This is not guarenteed to contain the time derivatives for all the
+        #     state-variables specified in the component. If they are not defined,
+        #     they are assumed to be zero in this regime.
 
         r = Regime('dX1/dt=0',
                    'dX2/dt=0',
@@ -457,18 +296,6 @@ class Regime_test(unittest.TestCase):
             Regime, 'X=1')
 
 
-    # def test_transitions(self):
-    # Signature: name
-        # Returns all the transitions leaving this regime.
-        #
-        # Returns an iterator over both the on_events and on_conditions of this
-        # regime
-    # from nineml.abstraction.component.dynamics import Regime
-    #    warnings.warn('Tests not implemented')
-    # raise NotImplementedError()
-
-
-# Testing Skeleton for class: StateVariable
 class StateVariable_test(unittest.TestCase):
 
     def test_accept_visitor(self):
@@ -498,102 +325,3 @@ class StateVariable_test(unittest.TestCase):
 
         self.assertEqual(StateVariable(name=' Hello ').name, 'Hello')
         self.assertEqual(StateVariable(name=' Hello2 ').name, 'Hello2')
-
-
-
-
-
-
-
-# Tested in subclasses:
-
-# class Transition_test(unittest.TestCase):
-#
-#    def test_Constructor(self):
-#        pass
-#
-#
-#    def test_output_events(self):
-# Signature: name
-# Events that happen when this transitions occurs
-# from nineml.abstraction.component.dynamics import Transition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_set_source_regime(self):
-# Signature: name(self, source_regime)
-# Internal method, used during component construction.
-#
-# Used internally by the Dynamics objects after all objects
-# have be constructed, in the ``_ResolveTransitionRegimeNames()`` method.
-# This is because when we build Transitions, the Regimes that they refer
-# to generally are not build yet, so are refered to by strings. This
-# method is used to set the source ``Regime`` object. We check that the name
-# of the object set is the same as that previously expected.
-# from nineml.abstraction.component.dynamics import Transition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_set_target_regime(self):
-# Signature: name(self, target_regime)
-# Internal method, used during component construction.
-#
-# See ``set_source_regime``
-# from nineml.abstraction.component.dynamics import Transition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_source_regime(self):
-# Signature: name
-# Returns the source regime of this transition.
-#
-# .. note::
-#
-# This method will only be available after the Dynamics
-# containing this transition has been built. See ``set_source_regime``
-# from nineml.abstraction.component.dynamics import Transition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_source_regime_name(self):
-# Signature: name
-# DO NOT USE: Internal function. Use `source_regime.name` instead.
-#
-# from nineml.abstraction.component.dynamics import Transition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_state_assignments(self):
-# Signature: name
-# An ordered list of StateAssignments that happen when this
-# transitions occurs
-# from nineml.abstraction.component.dynamics import Transition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_target_regime(self):
-# Signature: name
-# Returns the target regime of this transition.
-#
-# .. note::
-#
-# This method will only be available after the Dynamics
-# containing this transition has been built. See ``set_source_regime``
-# from nineml.abstraction.component.dynamics import Transition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
-#
-#
-#    def test_target_regime_name(self):
-# Signature: name
-# DO NOT USE: Internal function. Use `target_regime.name` instead.
-#
-# from nineml.abstraction.component.dynamics import Transition
-#        warnings.warn('Tests not implemented')
-# raise NotImplementedError()
