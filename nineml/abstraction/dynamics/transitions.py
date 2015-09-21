@@ -45,14 +45,6 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         ExpressionWithSimpleLHS.__init__(self, lhs=lhs, rhs=rhs)
 
     @property
-    def name(self):
-        """
-        This is included to allow State-assignments to be polymorphic with
-        other named structures
-        """
-        return self.lhs
-
-    @property
     def variable(self):
         return self.lhs
 
