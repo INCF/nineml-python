@@ -1,5 +1,3 @@
-
-
 import unittest
 from nineml.exceptions import NineMLMathParseError, NineMLRuntimeError
 from nineml.abstraction import (On, OnCondition, OnEvent, OutputEvent,
@@ -111,8 +109,10 @@ class OnCondition_test(unittest.TestCase):
             ["!(V>Vth)", ("V", "Vth"), ()],
             ["exp(V)>Vth", ("V", "Vth"), ("exp",)],
             ["true", (), ()],
-            ["(V < (Vth+q)) & (t > t_spike)", ("t_spike", "t", "q", "Vth", "V"), ()],
-            ["(V < (Vth+q)) | (t > t_spike)", ("t_spike", "Vth", "q", "V", "t"), ()],
+            ["(V < (Vth+q)) & (t > t_spike)", ("t_spike", "t", "q", "Vth",
+                                               "V"), ()],
+            ["(V < (Vth+q)) | (t > t_spike)", ("t_spike", "Vth", "q", "V",
+                                               "t"), ()],
             ["(true)", (), ()],
             ["!true", (), ()],
             ["!false", (), ()],
@@ -215,16 +215,15 @@ class Regime_test(unittest.TestCase):
         # Signature: name(self, on_condition)
         # Add an OnCondition transition which leaves this regime
         #
-        # If the on_condition object has not had its target regime name
-        # set in the constructor, or by calling its ``set_target_regime_name()``,
-        # then the target is assumed to be this regime, and will be set
+        # If the on_condition object has not had its target regime name set in
+        # the constructor, or by calling its ``set_target_regime_name()``, then
+        # the target is assumed to be this regime, and will be set
         # appropriately.
         #
         # The source regime for this transition will be set as this regime.
 
         r = Regime(name='R1')
         self.assertEquals(set(r.on_conditions), set())
-#         self.assertRaises(NineMLRuntimeError, r.add_on_condition, OnEvent('sp1'))
         r.add(OnCondition('sp1>0'))
         self.assertEquals(len(set(r.on_conditions)), 1)
         self.assertEquals(len(set(r.on_events)), 0)
@@ -234,16 +233,14 @@ class Regime_test(unittest.TestCase):
         # Signature: name(self, on_event)
         # Add an OnEvent transition which leaves this regime
         #
-        # If the on_event object has not had its target regime name
-        # set in the constructor, or by calling its ``set_target_regime_name()``,
-        # then the target is assumed to be this regime, and will be set
-        # appropriately.
+        # If the on_event object has not had its target regime name set in the
+        # constructor, or by calling its ``set_target_regime_name()``, then the
+        # target is assumed to be this regime, and will be set appropriately.
         #
         # The source regime for this transition will be set as this regime.
         # from nineml.abstraction.component.dynamics import Regime
         r = Regime(name='R1')
         self.assertEquals(set(r.on_events), set())
-#         self.assertRaises(NineMLRuntimeError, r.add_on_event, OnCondition('sp1>1'))
         r.add(OnEvent('sp'))
         self.assertEquals(len(set(r.on_events)), 1)
         self.assertEquals(len(set(r.on_conditions)), 0)
@@ -273,9 +270,9 @@ class Regime_test(unittest.TestCase):
         #
         # .. note::
         #
-        #     This is not guarenteed to contain the time derivatives for all the
-        #     state-variables specified in the component. If they are not defined,
-        #     they are assumed to be zero in this regime.
+        #     This is not guarenteed to contain the time derivatives for all
+        #     the state-variables specified in the component. If they are not
+        #     defined, they are assumed to be zero in this regime.
 
         r = Regime('dX1/dt=0',
                    'dX2/dt=0',

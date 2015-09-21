@@ -1,11 +1,9 @@
-
-
-# Automatically Generated Testing Skeleton Template:
-import warnings
 import unittest
 
 
-from nineml.abstraction import AnalogReceivePort, AnalogReducePort, AnalogSendPort, EventReceivePort, EventSendPort
+from nineml.abstraction import (
+    AnalogReceivePort, AnalogReducePort, AnalogSendPort, EventReceivePort,
+    EventSendPort)
 from nineml.exceptions import NineMLRuntimeError
 
 
@@ -43,7 +41,8 @@ class AnalogPort_test(unittest.TestCase):
         )
 
         self.assertEqual(
-            v.visit(AnalogReducePort('V', operator='+'), kwarg1='Hello', kwarg2='Hello2'),
+            v.visit(AnalogReducePort('V', operator='+'), kwarg1='Hello',
+                    kwarg2='Hello2'),
             {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
         )
 
@@ -63,7 +62,6 @@ class AnalogPort_test(unittest.TestCase):
             AnalogReducePort, 'V', operator='-')
 
 
-# Testing Skeleton for class: EventPort
 class EventPort_test(unittest.TestCase):
 
     def test_Constructor(self):
@@ -95,15 +93,3 @@ class EventPort_test(unittest.TestCase):
     def test_name(self):
         self.assertEqual(EventReceivePort('A').name, 'A')
         self.assertEqual(EventSendPort('C').name, 'C')
-
-    def test_mode(self):
-        # Signature: name
-                # The mode of the port. ['send','recv' or 'reduce']
-        # from nineml.abstraction.component.ports import EventPort
-#         warnings.warn('Tests not implemented')
-        pass
-        # raise NotImplementedError()
-
-    def test_operator(self):
-#         warnings.warn('Tests not implemented')
-        pass
