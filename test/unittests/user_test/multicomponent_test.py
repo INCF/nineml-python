@@ -749,7 +749,7 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         self.assertEqual(
             set(a_flat.alias('b_d_D2').rhs_atoms),
             set(['b_c2_cp1', 'b_d_dp2']))
-        
+
     # These are done in the Testflatten and ComponentFlattener_test
     # Classes instead.
     # def test_flattener(self):
