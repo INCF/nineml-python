@@ -1,7 +1,3 @@
-
-
-# Automatically Generated Testing Skeleton Template:
-import warnings
 import unittest
 
 from nineml.abstraction import (
@@ -10,7 +6,7 @@ from nineml.abstraction import (
     NamespaceAddress)
 from nineml.abstraction.dynamics.visitors.cloner import (
     DynamicsClonerPrefixNamespace)
-
+from nineml.user.multicomponent import MultiDynamics
 NSA = NamespaceAddress
 
 
@@ -76,10 +72,10 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         # Test Cloner, 1 level of hierachy
         # Everything should be as before:
-        b = Dynamics(name='B',
-                           subnodes={'c1': c, 'c2': c},
-                           portconnections=[('c1.C1', 'c2.cIn1'),
-                                            ('c2.emit', 'c1.spikein')])
+        b = MultiDynamics(name='B',
+                          sub_components={'c1': c, 'c2': c},
+                          portconnections=[('c1', 'C1', 'c2', 'cIn1'),
+                                           ('c2', 'emit', 'c1', 'spikein')])
 
         b_clone = DynamicsClonerPrefixNamespace().visit(b)
         c1_clone = b_clone.get_subnode('c1')
@@ -87,8 +83,10 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         self.assertEqual(c1_clone.name, 'C')
         self.assertEqual(c2_clone.name, 'C')
-        self.assertEqual(set(c1_clone.alias_names), set(['c1_C1', 'c1_C2', 'c1_C3']))
-        self.assertEqual(set(c2_clone.alias_names), set(['c2_C1', 'c2_C2', 'c2_C3']))
+        self.assertEqual(set(c1_clone.alias_names), set(['c1_C1', 'c1_C2',
+                                                         'c1_C3']))
+        self.assertEqual(set(c2_clone.alias_names), set(['c2_C1', 'c2_C2',
+                                                         'c2_C3']))
 
         # - Regimes and Transitions:
         self.assertEqual(set(c1_clone.regime_names), set(['r1', 'r2']))

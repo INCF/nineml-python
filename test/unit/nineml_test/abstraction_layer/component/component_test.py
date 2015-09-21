@@ -699,7 +699,7 @@ class TestableComponent(object):
         return s
 
     def has_metadata(self):
-        return self.metadata != None
+        return self.metadata is not None
 
     def __call__(self):
         return self.component_functor()
