@@ -510,15 +510,19 @@ class curry:
 
         return self.fun(*(self.pending + args), **kw)
 
+# Matches strings starting with an alphabetic character and ending with an
+# alphanumeric character and allowing alphanumeric+underscore characters in
+# between.
+valid_identifier_re = re.compile(r'[a-zA-Z](\w*[a-zA-Z0-9])?$')
 
-r = re.compile(r"""[a-zA-Z][a-zA-Z0-9_]*$""")
 
-
-def ensure_valid_identifier(tok):
-    if r.match(tok):
-        return
-    else:
-        raise NineMLRuntimeError("Invalid Token name: %s " % tok)
+def ensure_valid_identifier(name):
+    if valid_identifier_re.match(name) is None:
+        raise NineMLRuntimeError(
+            "Invalid identifier '{}'. Identifiers must start with an "
+            "alphabetic character, only contain alphnumeric and "
+            "underscore characters, and end with a alphanumeric character "
+            "i.e. not start or end with an underscore".format(name))
 
 valid_uri_re = re.compile(r'^(?:https?|file)://'  # http:// or https://
                           r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
