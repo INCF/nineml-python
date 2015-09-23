@@ -1116,5 +1116,3 @@ class EventSendPortExposure(BasePortExposure, EventSendPort):
 class EventReceivePortExposure(BasePortExposure, EventReceivePort):
 
     element_name = 'EventReceivePortExposure'
-
-
