@@ -747,14 +747,6 @@ class MultiRegime(Regime):
     def name(self):
         return '__'.join(r.name for r in self.sub_regimes) + '__regime'
 
-    @property
-    def time_derivatives(self):
-        return chain(*[r.time_derivatives for r in self.sub_regimes])
-
-    @property
-    def aliases(self):
-        return chain(*[r.aliases for r in self.sub_regimes])
-
     def lookup_member_dict(self, element):
         """
         Looks up the appropriate member dictionary for objects of type element
@@ -768,82 +760,71 @@ class MultiRegime(Regime):
         return chain(*[
             (getattr(r, n) for n in r.class_to_member_dict.itervalues())
             for r in self.sub_regimes])
-# 
-#     # Regime Properties:
-#     # ------------------
-#     @property
-#     def num_time_derivatives(self):
-#         return len(self._time_derivatives)
-# 
-#     @property
-#     def num_on_events(self):
-#         return len(self._on_events)
-# 
-#     @property
-#     def num_on_conditions(self):
-#         return len(self._on_conditions)
-# 
-#     @property
-#     def num_aliases(self):
-#         return len(self._aliases)
-# 
-#     @property
-#     def time_derivatives(self):
-#         """Returns the state-variable time-derivatives in this regime.
-# 
-#         .. note::
-# 
-#             This is not guaranteed to contain the time derivatives for all the
-#             state-variables specified in the component. If they are not
-#             defined, they are assumed to be zero in this regime.
-# 
-#         """
-#         return self._time_derivatives.itervalues()
-# 
-#     @property
-#     def on_events(self):
-#         """Returns all the transitions out of this regime trigger by events"""
-#         return self._on_events.itervalues()
-# 
-#     @property
-#     def on_conditions(self):
-#         """Returns all the transitions out of this regime trigger by
-#         conditions"""
-#         return self._on_conditions.itervalues()
-# 
-#     @property
-#     def aliases(self):
-#         return self._aliases.itervalues()
-# 
-#     def time_derivative(self, variable):
-#         return self._time_derivatives[variable]
-# 
-#     def on_event(self, port_name):
-#         return self._on_events[port_name]
-# 
-#     def on_condition(self, condition):
-#         if not isinstance(condition, sympy.Basic):
-#             condition = Trigger(condition).rhs
-#         return self._on_conditions[condition]
-# 
-#     def alias(self, name):
-#         return self._aliases[name]
-# 
-#     @property
-#     def time_derivative_variables(self):
-#         return self._time_derivatives.iterkeys()
-# 
-#     @property
-#     def on_event_port_names(self):
-#         return self._on_events.iterkeys()
-# 
-#     @property
-#     def on_condition_triggers(self):
-#         return self._on_conditions.iterkeys()
-# 
-#     @property
-#     def alias_names(self):
-#         return self._aliases.iterkeys()
+
+    # Member Properties:
+    # ------------------
+
+    @property
+    def time_derivatives(self):
+        return chain(*[r.time_derivatives for r in self.sub_regimes])
+
+    @property
+    def aliases(self):
+        return chain(*[r.aliases for r in self.sub_regimes])
+
+    @property
+    def on_events(self):
+        raise NotImplementedError
+
+    @property
+    def on_conditions(self):
+        raise NotImplementedError
+
+    def time_derivative(self, variable):
+        name, comp_name = self.split_namespace(variable)
+        return self.sub_regime(comp_name).time_derivative(name)
+
+    def alias(self, name):
+        name, comp_name = self.split_namespace(name)
+        return self.sub_regime(comp_name).alias(name)
+
+    def on_event(self, port_name):
+        raise NotImplementedError
+
+    def on_condition(self, condition):
+        raise NotImplementedError
+
+    @property
+    def time_derivative_variables(self):
+        return (td.variable for td in self.time_derivatives)
+
+    @property
+    def alias_names(self):
+        return (a.name for a in self.aliases)
+
+    @property
+    def on_event_port_names(self):
+        return (oe.src_port_name for oe in self.on_events)
+
+    @property
+    def on_condition_triggers(self):
+        return (oc.trigger for oc in self.on_conditions)
+
+    @property
+    def num_time_derivatives(self):
+        return len(list(self.time_derivatives))
+
+    @property
+    def num_on_events(self):
+        return len(list(self.on_events))
+
+    @property
+    def num_on_conditions(self):
+        return len(list(self.on_conditions))
+
+    @property
+    def num_aliases(self):
+        return len(list(self.aliases))
 
 
 class NamespaceTransition(NamespaceNamed):
