@@ -71,8 +71,8 @@ class BasePortConnection(BaseULObject):
     def __repr__(self):
         return ("{}(sender={}->{}, receiver={}->{})"
                 .format(self.element_name, self._sender_role,
-                        self.send_port, self._receiver_role,
-                        self.receive_port))
+                        self.send_port_name, self._receiver_role,
+                        self.receive_port_name))
 
     @property
     def sender(self):
@@ -160,6 +160,8 @@ class BasePortConnection(BaseULObject):
             self._sender = getattr(container, self.sender_role)
         except NineMLRuntimeError:
             self._sender = container[self.sender_name]
+        except AttributeError:
+            raise
         try:
             self._receiver = getattr(container, self.receiver_role)
         except NineMLRuntimeError:

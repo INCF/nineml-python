@@ -79,23 +79,12 @@ class TestMultiDynamicsXML(unittest.TestCase):
     def test_multicomponent_xml_roundtrip(self):
         comp1 = MultiDynamicsProperties(
             name='test',
-            sub_components=[
-                SubDynamicsProperties(
-                    name='a',
-                    component=self.a_props),
-                SubDynamicsProperties(
-                    name='b',
-                    component=self.b_props)],
-            port_exposures=[
-                AnalogReceivePortExposure(
-                    name="b_ARP2",
-                    component="b",
-                    port="ARP2")],
-            port_connections=[
-                AnalogPortConnection('a', 'b', 'A1', 'ARP1'),
-                AnalogPortConnection('a', 'b', 'A2', 'ARP2'),
-                AnalogPortConnection('b', 'a', 'A1', 'ARP1'),
-                AnalogPortConnection('b', 'a', 'A3', 'ARP2')])
+            sub_components={'a': self.a_props, 'b': self.b_props},
+            port_exposures=[("b_ARP2", "b", "ARP2")],
+            port_connections=[('a', 'A1', 'b', 'ARP1'),
+                              ('a', 'A2', 'b', 'ARP2'),
+                              ('b', 'A1', 'a', 'ARP1'),
+                              ('b', 'A3', 'a', 'ARP2')])
         xml = Document(comp1, self.a, self.b).to_xml()
         comp2 = load(xml)['test']
         self.assertEquals(comp1, comp2)

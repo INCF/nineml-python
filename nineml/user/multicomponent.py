@@ -43,8 +43,16 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     def __init__(self, name, sub_components, port_connections,
                  port_exposures=[]):
+        if isinstance(sub_components, dict):
+            sub_components = [
+                SubDynamics(n, sc.component_class)
+                for n, sc in sub_components.iteritems()]
+        else:
+            sub_components = [
+                SubDynamics(sc.name, sc.component.component_class)
+                for sc in sub_components]
         component_class = MultiDynamics(
-            name + '_Dynamics', (p.component for p in sub_components),
+            name + '_Dynamics', sub_components,
             port_exposures=port_exposures, port_connections=port_connections)
         super(MultiDynamicsProperties, self).__init__(
             name, definition=component_class,
@@ -198,10 +206,6 @@ class MultiDynamics(Dynamics):
                 for name, dyn in sub_components.iteritems())
         else:
             self._sub_components = dict((d.name, d) for d in sub_components)
-        if port_exposures is not None:
-            self._port_exposures = dict((pe.name, pe) for pe in port_exposures)
-        else:
-            self._port_exposures = {}
         self._analog_port_connections = {}
         self._event_port_connections = {}
         self._reduce_port_connections = {}
@@ -209,11 +213,11 @@ class MultiDynamics(Dynamics):
         # model
         for sub_component in self.sub_components:
             self._event_port_connections.update(
-                (append_namespace(p.name, sub_component.name),
+                (sub_component.append_namespace(p.name),
                  LocalEventPortConnection(p.name, sub_component.name))
                 for p in sub_component.component_class.event_send_ports)
             self._reduce_port_connections.update(
-                (append_namespace(p.name, sub_component.name),
+                (sub_component.append_namespace(p.name),
                  LocalAnalogPortConnection(p.name, sub_component.name))
                 for p in sub_component.component_class.analog_reduce_ports)
         # Parse port connections (from tuples if required), bind them to the
@@ -224,10 +228,10 @@ class MultiDynamics(Dynamics):
                 port_connection = BasePortConnection.from_tuple(
                     port_connection, self)
             port_connection.bind(self)
-            snd_name = append_namespace(port_connection.send_port_name,
-                                        port_connection.sender_name)
-            rcv_name = append_namespace(port_connection.receive_port_name,
-                                        port_connection.receiver_name)
+            snd_name = port_connection.sender.append_namespace(
+                port_connection.send_port_name)
+            rcv_name = port_connection.receiver.append_namespace(
+                port_connection.receive_port_name)
             if isinstance(port_connection.receive_port, AnalogReceivePort):
                 if rcv_name in self._analog_port_connections:
                     raise NineMLRuntimeError(
@@ -236,10 +240,7 @@ class MultiDynamics(Dynamics):
                         .format(port_connection.receive_port_name,
                                 port_connection.receiver_name, name))
                 port_connection = LocalAnalogPortConnection(
-                    port_connection.send_port_name,
-                    port_connection.receive_port_name,
-                    sender_name=port_connection.sender_name,
-                    receiver_name=port_connection.receiver_name)
+                    port_connection)
                 self._analog_port_connections[rcv_name] = port_connection
             elif isinstance(port_connection.receive_port, EventReceivePort):
                 self._event_port_connections[snd_name].add(port_connection)
@@ -272,15 +273,18 @@ class MultiDynamics(Dynamics):
                     exposure = BasePortExposure.from_tuple(exposure, self)
                 exposure.bind(self)
                 if isinstance(exposure, AnalogSendPortExposure):
-                    self._analog_send_port_exposures.append(exposure)
+                    self._analog_send_port_exposures[exposure.name] = exposure
                 elif isinstance(exposure, AnalogReceivePortExposure):
-                    self._analog_receive_port_exposures.append(exposure)
+                    self._analog_receive_port_exposures[
+                        exposure.name] = exposure
                 elif isinstance(exposure, AnalogReducePortExposure):
-                    self._analog_reduce_port_exposures.append(exposure)
+                    self._analog_reduce_port_exposures[
+                        exposure.name] = exposure
                 elif isinstance(exposure, EventSendPortExposure):
-                    self._event_send_port_exposures.append(exposure)
+                    self._event_send_port_exposures[exposure.name] = exposure
                 elif isinstance(exposure, EventSendPortExposure):
-                    self._event_receive_port_exposures.append(exposure)
+                    self._event_receive_port_exposures[
+                        exposure.name] = exposure
                 else:
                     raise NineMLRuntimeError(
                         "Unrecognised port exposure '{}'".format(exposure))
@@ -526,8 +530,7 @@ class SubDynamics(object):
     def name(self):
         return self._name
 
-    @property
-    def suffix(self):
+    def append_namespace(self, name):
         """
         The suffix appended to names within the sub-component to distinguish
         them in the global namespace
@@ -536,7 +539,8 @@ class SubDynamics(object):
         # within the namesapace (and 9ML names are not allowed to start or end
         # in underscores) we append an underscore to each multiple underscore
         # to avoid clash with the delimeter in the suffix
-        return '__' + multiple_underscore_re.sub(r'/1/2_/3', self.name)
+        return (name + '__' +
+                multiple_underscore_re.sub(r'/1/2_/3', self.name))
 
     @property
     def component_class(self):
@@ -592,10 +596,7 @@ class NamespaceNamed(object):
 
     @property
     def name(self):
-        return self._element.name + self._sub_component.suffix
-
-    def _append_namespace(self, name):
-        return name + self._sub_component.suffix
+        return self.sub_component.append_namespace(self._element.name)
 
 
 class NamespaceExpression(object):
@@ -603,6 +604,10 @@ class NamespaceExpression(object):
     def __init__(self, sub_component, element):
         self._sub_component = sub_component
         self._element = element
+
+    @property
+    def sub_component(self):
+        return self._sub_component
 
     @property
     def lhs(self):
@@ -616,7 +621,7 @@ class NamespaceExpression(object):
         """Return copy of rhs with all free symols suffixed by the namespace"""
         try:
             return self.element.rhs.xreplace(dict(
-                (s, sympy.Symbol(self._append_namespace(s)))
+                (s, sympy.Symbol(self.sub_component.append_namespace(s)))
                 for s in self.rhs_symbols))
         except AttributeError:  # If rhs has been simplified to ints/floats
             assert float(self.element.rhs)
@@ -938,12 +943,17 @@ class NamespaceProperty(NamespaceNamed, Property):
 
 class LocalAnalogPortConnection(AnalogPortConnection, Alias):
 
-    def __init__(self, send_port, receive_port,
-                 sender_name, receiver_name):
-        AnalogPortConnection.__init__(self, sender_name, receiver_name,
-                                      send_port, receive_port)
-        Alias.__init__(self, append_namespace(receive_port, receiver_name),
-                       append_namespace(send_port, sender_name))
+    def __init__(self, port_connection):
+        snd_name = port_connection.sender_name
+        rcv_name = port_connection.receiver_name
+        snd_prt_name = port_connection.send_port_name
+        rcv_prt_name = port_connection.receive_port_name
+        AnalogPortConnection.__init__(
+            self, sender_name=snd_name, send_port=snd_prt_name,
+            receiver_name=rcv_name, receive_port=rcv_prt_name)
+        Alias.__init__(
+            self, port_connection.receiver.append_namespace(rcv_prt_name),
+            port_connection.sender.append_namespace(snd_prt_name))
 
 
 class LocalEventPortConnection(object):
@@ -967,10 +977,10 @@ class LocalEventPortConnection(object):
 
 class LocalReducePortConnections(Alias):
 
-    def __init__(self, receive_port, receiver_name):
+    def __init__(self, receive_port, receiver):
         self._receive_port_name = receive_port
-        self._receiver_name = receiver_name
-        self._senders = []
+        self._receiver = receiver
+        self._port_connections = []
 
     def add(self, port_connection):
         self._senders.append(port_connection)
@@ -980,16 +990,20 @@ class LocalReducePortConnections(Alias):
         return self._receive_port_name
 
     @property
-    def receiver_name(self):
-        return self._receiver_name
+    def receiver(self):
+        return self._receiver
 
     @property
-    def senders(self):
-        return iter(self._senders)
+    def receiver_name(self):
+        return self._receiver.name
+
+    @property
+    def port_connections(self):
+        return iter(self._port_connections)
 
     @property
     def name(self):
-        return append_namespace(self.receive_port_name, self.receiver_name)
+        return self._receiver.append_namespace(self.receive_port_name)
 
     @property
     def _name(self):
@@ -1000,8 +1014,8 @@ class LocalReducePortConnections(Alias):
     def rhs(self):
         return reduce(
             operator.add,
-            (sympy.Symbol(append_namespace(pc.send_port_name, pc.sender_name))
-             for pc in self.senders))
+            (sympy.Symbol(pc.sender.append_namespace(pc.send_port_name))
+             for pc in self.port_connections))
 
 
 class BasePortExposure(BaseULObject):
@@ -1072,7 +1086,8 @@ class BasePortExposure(BaseULObject):
     @classmethod
     def from_tuple(cls, tple, container):
         name, component_name, port_name = tple
-        port = container.sub_component(component_name).port(port_name)
+        port = container.sub_component(component_name).component_class.port(
+            port_name)
         if isinstance(port, AnalogSendPort):
             exposure = AnalogSendPortExposure(name, component_name, port_name)
         elif isinstance(port, AnalogReceivePort):
@@ -1092,7 +1107,7 @@ class BasePortExposure(BaseULObject):
 
     def bind(self, container):
         self._component = container[self._component_name]
-        self._port = self._component.port(self._port_name)
+        self._port = self._component.component_class.port(self._port_name)
         self._component_name = None
         self._port_name = None
 
