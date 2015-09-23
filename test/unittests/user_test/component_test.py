@@ -9,7 +9,7 @@ from nineml.document import Document
 voltage = Dimension('voltage', m=1, l=2, t=-3, i=-1)
 mV = Unit(name='mV', dimension=voltage, power=-3)
 
-examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
+examples_dir = os.path.join(os.path.dirname(__file__), '..', '..',
                             'xml', 'neurons')
 
 

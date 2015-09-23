@@ -7,10 +7,11 @@ analysis.
 """
 
 from os.path import dirname, normpath, realpath, exists, join
+import os
 import sys
 import re
 import types
-
+import math
 import itertools
 import hashlib
 import collections
@@ -491,9 +492,10 @@ def restore_sys_path(func):
 
 
 class curry:
-
-    """ http://code.activestate.com/recipes/52549-curry-associating-parameters-with-a-function/ """
-
+    """
+    http://code.activestate.com/recipes/
+    52549-curry-associating-parameters-with-a-function/
+    """
     def __init__(self, fun, *args, **kwargs):
         self.fun = fun
         self.pending = args[:]
@@ -589,3 +591,100 @@ def check_units(units, dimension):
     if base != base_units[dimension]:
         raise ValueError("Units %s are invalid for dimension %s" %
                          (units, dimension))
+
+
+def nearly_equal(float1, float2, places=15):
+    """
+    Determines whether two floating point numbers are nearly equal (to
+    within reasonable rounding errors
+    """
+    mantissa1, exp1 = math.frexp(float1)
+    mantissa2, exp2 = math.frexp(float2)
+    return (round(mantissa1, places) == round(mantissa2, places) and
+            exp1 == exp2)
+
+
+@restore_sys_path
+def load_py_module(filename):
+    """Takes the fully qualified path of a python file,
+    loads it and returns the module object
+    """
+
+    if not os.path.exists(filename):
+        print "CWD:", os.getcwd()
+        raise NineMLRuntimeError('File does not exist %s' % filename)
+
+    dirname, fname = os.path.split(filename)
+    sys.path = [dirname] + sys.path
+
+    module_name = fname.replace('.py', '')
+
+    module = __import__(module_name)
+    return module
+
+
+class TestableComponent(object):
+
+    @classmethod
+    def list_available(cls):
+        """Returns a list of strings, of the available components"""
+        compdir = LocationMgr.getComponentDir()
+        comps = []
+        for fname in os.listdir(compdir):
+            fname, ext = os.path.splitext(fname)
+            if not ext == '.py':
+                continue
+            if fname == '__init__':
+                continue
+            comps.append(fname)
+        return comps
+
+    functor_name = 'get_component'
+    metadata_name = 'ComponentMetaData'
+
+    def __str__(self):
+        s = ('Testable Component from %s [MetaData=%s]' %
+             (self.filename, self.has_metadata))
+        return s
+
+    def has_metadata(self):
+        return self.metadata is not None
+
+    def __call__(self):
+        return self.component_functor()
+
+    def __init__(self, filename):
+        cls = TestableComponent
+
+        # If we recieve a filename like 'iaf', that doesn't
+        # end in '.py', then lets prepend the component directory
+        # and append .py
+        if not filename.endswith('.py'):
+            compdir = LocationMgr.getComponentDir()
+            filename = os.path.join(compdir, '%s.py' % filename)
+
+        self.filename = filename
+        self.mod = load_py_module(filename)
+
+        # Get the component functor:
+        if cls.functor_name not in self.mod.__dict__.keys():
+            err = """Can't load TestableComponnet from %s""" % self.filename
+            err += """Can't find required method: %s""" % cls.functor_name
+            raise NineMLRuntimeError(err)
+
+        self.component_functor = self.mod.__dict__[cls.functor_name]
+
+        # Check the functor will actually return us an object:
+        try:
+            c = self.component_functor()
+        except Exception, e:
+            raise NineMLRuntimeError('component_functor() threw an exception:'
+                                     '{}'.format(e))
+
+        if c.__class__.__name__ != 'Dynamics':
+            raise NineMLRuntimeError('Functor does not return Component Class')
+
+        # Try and get the meta-data
+        self.metadata = None
+        if cls.metadata_name in self.mod.__dict__.keys():
+            self.metadata = self.mod.__dict__[cls.metadata_name]
