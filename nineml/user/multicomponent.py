@@ -2,7 +2,10 @@ from itertools import chain
 from . import BaseULObject
 from abc import ABCMeta
 import sympy
+import re
 from .component import Property
+from copy import copy
+import operator
 from itertools import product
 from nineml.abstraction import (
     Dynamics, Alias, TimeDerivative, Regime, AnalogSendPort, AnalogReceivePort,
@@ -16,13 +19,22 @@ from nineml.utils import expect_single, normalise_parameter_as_list
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.values import ArrayValue
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from ..abstraction import BaseALObject
 from nineml.base import MemberContainerObject
 from nineml.utils import ensure_valid_identifier
 from nineml.annotations import VALIDATE_DIMENSIONS
+
+# Matches multiple underscores, so they can be escaped by appending another
+# underscore (double underscores are used to delimit namespaces).
+multiple_underscore_re = re.compile(r'(.*)(__+)()')
+# Match only double underscores (no more or less)
+double_underscore_re = re.compile(r'(?<!_)__(?!_)')
+# Match more than double underscores to reverse escaping of double underscores
+# in sub-component suffixes by adding an additional underscore.
+more_than_double_underscore_re = re.compile(r'(__)_+')
 
 
 class MultiDynamicsProperties(DynamicsProperties):
@@ -34,9 +46,8 @@ class MultiDynamicsProperties(DynamicsProperties):
     def __init__(self, name, sub_components, port_connections,
                  port_exposures=[]):
         component_class = MultiDynamics(
-            name + '_Dynamics',
-            (p.component_class for p in sub_components),
-            port_exposures, port_connections)
+            name + '_Dynamics', (p.component for p in sub_components),
+            port_exposures=port_exposures, port_connections=port_connections)
         super(MultiDynamicsProperties, self).__init__(
             name, definition=component_class,
             properties=chain(*[p.properties for p in sub_components]))
@@ -141,7 +152,14 @@ class SubDynamicsProperties(BaseULObject):
 
     @property
     def component(self):
+        return self._component
+
+    @property
+    def properties(self):
         return (NamespaceProperty(self, p) for p in self._component.properties)
+
+    def __iter__(self):
+        return self.properties
 
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
@@ -166,8 +184,8 @@ class SubDynamicsProperties(BaseULObject):
 
 class MultiDynamics(Dynamics):
 
-    def __init__(self, name, sub_components, port_exposures, port_connections,
-                 url=None, validate_dimensions=True):
+    def __init__(self, name, sub_components, port_connections,
+                 port_exposures=None, url=None, validate_dimensions=True):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
@@ -176,20 +194,30 @@ class MultiDynamics(Dynamics):
         # =====================================================================
         # Create the structures unique to MultiDynamics
         # =====================================================================
-        self._sub_components = dict((d.name, d) for d in sub_components)
-        self._port_exposures = dict((pe.name, pe) for pe in port_exposures)
+        if isinstance(sub_components, dict):
+            self._sub_components = dict(
+                (name, SubDynamics(name, dyn))
+                for name, dyn in sub_components.iteritems())
+        else:
+            self._sub_components = dict((d.name, d) for d in sub_components)
+        if port_exposures is not None:
+            self._port_exposures = dict((pe.name, pe) for pe in port_exposures)
+        else:
+            self._port_exposures = {}
         self._analog_port_connections = {}
         self._event_port_connections = {}
         self._reduce_port_connections = {}
         # Insert an empty list for each event and reduce port in the combined
         # model
-        for sub_component in sub_components:
+        for sub_component in self.sub_components:
             self._event_port_connections.update(
-                (append_namespace(p.name, sub_component.name), {})
-                for p in sub_component.event_receive_ports)
+                (append_namespace(p.name, sub_component.name),
+                 LocalEventPortConnection(p.name, sub_component.name))
+                for p in sub_component.component_class.event_send_ports)
             self._reduce_port_connections.update(
-                (append_namespace(p.name, sub_component.name), {})
-                for p in sub_component.analog_reduce_ports)
+                (append_namespace(p.name, sub_component.name),
+                 LocalAnalogPortConnection(p.name, sub_component.name))
+                for p in sub_component.component_class.analog_reduce_ports)
         # Parse port connections (from tuples if required), bind them to the
         # ports within the subcomponents and append them to their respective
         # member dictionaries
@@ -197,7 +225,8 @@ class MultiDynamics(Dynamics):
             if isinstance(port_connection, tuple):
                 port_connection = BasePortConnection.from_tuple(
                     port_connection, self)
-            snd_name = append_namespace(port_connection.receive_port_name,
+            port_connection.bind(self)
+            snd_name = append_namespace(port_connection.send_port_name,
                                         port_connection.sender_name)
             rcv_name = append_namespace(port_connection.receive_port_name,
                                         port_connection.receiver_name)
@@ -207,7 +236,7 @@ class MultiDynamics(Dynamics):
                         "Multiple connections to receive port '{}' in '{} "
                         "sub-component of '{}'"
                         .format(port_connection.receive_port_name,
-                                port_connection.receiver_id, name))
+                                port_connection.receiver_name, name))
                 port_connection = LocalAnalogPortConnection(
                     port_connection.send_port_name,
                     port_connection.receive_port_name,
@@ -215,30 +244,22 @@ class MultiDynamics(Dynamics):
                     receiver_name=port_connection.receiver_name)
                 self._analog_port_connections[rcv_name] = port_connection
             elif isinstance(port_connection.receive_port, EventReceivePort):
-                port_connection = LocalEventPortConnection(
-                    port_connection.send_port_name,
-                    port_connection.receive_port_name,
-                    sender_name=port_connection.sender_name,
-                    receiver_name=port_connection.receiver_name)
-                self._event_port_connections[
-                    rcv_name][snd_name] = port_connection
+                self._event_port_connections[snd_name].add(port_connection)
             elif isinstance(port_connection.receive_port, AnalogReducePort):
-                self._reduce_port_connections[
-                    rcv_name][snd_name] = port_connection
+                self._reduce_port_connections[rcv_name].add(port_connection)
             else:
                 raise NineMLRuntimeError(
                     "Unrecognised port connection type '{}'"
                     .format(port_connection))
-            port_connection.bind(self)
         # =====================================================================
         # Create the structures required for the Dynamics base class
         # =====================================================================
         # Create multi-regimes for each combination of regimes
         # from across all the sub components
-        regimes = chain(
-            *[MultiRegime(*rs) for rs in product(
-                *[c.regimes for c in sub_components])])
-        self._regimes = dict((r.name, r) for r in regimes)
+        regime_combins = product(*[sc.regimes for sc in self.sub_components])
+        multi_regimes = (MultiRegime(dict(zip(self.sub_component_names, rc)))
+                         for rc in regime_combins)
+        self._regimes = dict((mr.name, mr) for mr in multi_regimes)
         # =====================================================================
         # Save port exposurs into separate member dictionaries
         # =====================================================================
@@ -247,29 +268,41 @@ class MultiDynamics(Dynamics):
         self._analog_reduce_port_exposures = {}
         self._event_send_port_exposures = {}
         self._event_receive_port_exposures = {}
-        for exposure in port_exposures:
-            if isinstance(exposure, tuple):
-                exposure = BasePortExposure.from_tuple(exposure, self)
-            exposure.bind(self)
-            if isinstance(exposure, AnalogSendPortExposure):
-                self._analog_send_port_exposures.append(exposure)
-            elif isinstance(exposure, AnalogReceivePortExposure):
-                self._analog_receive_port_exposures.append(exposure)
-            elif isinstance(exposure, AnalogReducePortExposure):
-                self._analog_reduce_port_exposures.append(exposure)
-            elif isinstance(exposure, EventSendPortExposure):
-                self._event_send_port_exposures.append(exposure)
-            elif isinstance(exposure, EventSendPortExposure):
-                self._event_receive_port_exposures.append(exposure)
-            else:
-                raise NineMLRuntimeError(
-                    "Unrecognised port exposure '{}'".format(exposure))
+        if port_exposures is not None:
+            for exposure in port_exposures:
+                if isinstance(exposure, tuple):
+                    exposure = BasePortExposure.from_tuple(exposure, self)
+                exposure.bind(self)
+                if isinstance(exposure, AnalogSendPortExposure):
+                    self._analog_send_port_exposures.append(exposure)
+                elif isinstance(exposure, AnalogReceivePortExposure):
+                    self._analog_receive_port_exposures.append(exposure)
+                elif isinstance(exposure, AnalogReducePortExposure):
+                    self._analog_reduce_port_exposures.append(exposure)
+                elif isinstance(exposure, EventSendPortExposure):
+                    self._event_send_port_exposures.append(exposure)
+                elif isinstance(exposure, EventSendPortExposure):
+                    self._event_receive_port_exposures.append(exposure)
+                else:
+                    raise NineMLRuntimeError(
+                        "Unrecognised port exposure '{}'".format(exposure))
         self.annotations[NINEML][VALIDATE_DIMENSIONS] = validate_dimensions
         self.validate()
+
+    def __getitem__(self, name):
+        return self.sub_component(name)
 
     @property
     def sub_components(self):
         return self._sub_components.itervalues()
+
+    @property
+    def sub_component_names(self):
+        return self._sub_components.iterkeys()
+
+    @property
+    def num_sub_components(self):
+        return len(self._sub_components)
 
     @property
     def analog_port_connections(self):
@@ -291,32 +324,23 @@ class MultiDynamics(Dynamics):
     def sub_component(self, name):
         return self._sub_components[name]
 
-    def _strip_namespace(self, name):
-        for sub_component in self.sub_components:
-            if name.endswith(sub_component.name):
-                return sub_component, name[:len(name)]
-        assert False, "'{}' name is not in any namespace".format(name)
-
     # =========================================================================
     # Dynamics members properties and accessors
     # =========================================================================
 
     @property
     def parameters(self):
-        return chain(*[(NamespaceParameter(sc, p) for p in sc.parameters)
-                       for sc in self.sub_components])
+        return chain(*[sc.parameters for sc in self.sub_components])
 
     @property
     def aliases(self):
         return chain(self.analog_port_connections,
                      self.reduce_port_connections,
-                     *[(NamespaceAlias(sc, a) for a in sc.aliases)
-                       for sc in self.sub_components])
+                     *[sc.aliases for sc in self.sub_components])
 
     @property
     def constants(self):
-        return chain(*[(NamespaceConstant(sc, c) for c in sc.constants)
-                       for sc in self.sub_components])
+        return chain(*[sc.constants for sc in self.sub_components])
 
     @property
     def state_variables(self):
@@ -390,12 +414,13 @@ class MultiDynamics(Dynamics):
         return self._event_receive_port_exposures.iterkeys()
 
     def parameter(self, name):
-        sub_component, name = self._strip_namespace(name)
-        return sub_component.component_class.parameter(name)
+        name, comp_name = self.split_namespace(name)
+        return self.sub_component(comp_name).component_class.parameter(name)
 
     def state_variable(self, name):
-        sub_component, name = self._strip_namespace(name)
-        return sub_component.component_class.state_variable(name)
+        name, comp_name = self.split_namespace(name)
+        component_class = self.sub_component(comp_name).component_class
+        return component_class.state_variable(name)
 
     def alias(self, name):
         try:
@@ -404,13 +429,14 @@ class MultiDynamics(Dynamics):
             try:
                 alias = self._reduce_port_connections[name]
             except KeyError:
-                sub_component, name = self._strip_namespace(name)
-                alias = sub_component.component_class.alias(name)
+                name, comp_name = self.split_namespace(name)
+                component_class = self.sub_component(comp_name).component_class
+                alias = component_class.alias(name)
         return alias
 
     def constant(self, name):
-        sub_component, name = self._strip_namespace(name)
-        return sub_component.component_class.constant(name)
+        name, comp_name = self.split_namespace(name)
+        return self.sub_component(comp_name).component_class.constant(name)
 
     def analog_send_port(self, name):
         return self._analog_send_port_exposures[name]
@@ -468,24 +494,64 @@ class MultiDynamics(Dynamics):
         """Returns an iterator over the local |EventReceivePort| objects"""
         return len(self._event_receive_port_exposures)
 
+    def lookup_member_dict(self, element):
+        """
+        Looks up the appropriate member dictionary for objects of type element
+        """
+        dct_name = self.lookup_member_dict_name(element)
+        comp_name = self.split_namespace(element._name)[1]
+        return getattr(self.sub_component[comp_name], dct_name)
+
+    @property
+    def all_member_dicts(self):
+        return chain(
+            *[(getattr(sc.component, n)
+               for n in sc.component.class_to_member_dict.itervalues())
+              for sc in self.sub_components])
+
+    @classmethod
+    def split_namespace(cls, full_name):
+        parts = double_underscore_re.split(full_name)
+        name = '__'.join(parts[:-1])
+        comp_name = parts[-1]
+        comp_name = more_than_double_underscore_re.sub('_', comp_name)
+        return name, comp_name
+
 
 class SubDynamics(object):
 
-    def __init__(self, name, component):
+    def __init__(self, name, component_class):
         self._name = name
-        self._component = component
+        self._component_class = component_class
 
     @property
     def name(self):
         return self._name
 
     @property
-    def component(self):
-        return self._component
+    def suffix(self):
+        """
+        The suffix appended to names within the sub-component to distinguish
+        them in the global namespace
+        """
+        # Since double underscores are used to delimit namespaces from names
+        # within the namesapace (and 9ML names are not allowed to start or end
+        # in underscores) we append an underscore to each multiple underscore
+        # to avoid clash with the delimeter in the suffix
+        return '__' + multiple_underscore_re.sub(r'/1/2_/3', self.name)
+
+    @property
+    def component_class(self):
+        return self._component_class
+
+    @property
+    def parameters(self):
+        return (NamespaceParameter(self, p)
+                for p in self.component_class.parameters)
 
     @property
     def aliases(self):
-        return (NamespaceAlias(self, a) for a in self.component.aliases)
+        return (NamespaceAlias(self, a) for a in self.component_class.aliases)
 
     @property
     def state_variables(self):
@@ -493,8 +559,15 @@ class SubDynamics(object):
                 for v in self.component.state_variables)
 
     @property
+    def constants(self):
+        return (NamespaceConstant(self, p)
+                for p in self.component_class.constants)
+
+    @property
     def regimes(self):
-        return (NamespaceRegime(self, r) for r in self.component.regimes)
+        return (NamespaceRegime(self, r)
+                for r in self.component_class.regimes)
+
 
 # =============================================================================
 # Namespace wrapper objects, which append namespaces to their names and
@@ -521,10 +594,10 @@ class NamespaceNamed(object):
 
     @property
     def name(self):
-        return self._append_namespace(self._element.name)
+        return self._element.name + self._sub_component.suffix
 
     def _append_namespace(self, name):
-        return append_namespace(name + self._sub_component.name)
+        return name + self._sub_component.suffix
 
 
 class NamespaceExpression(object):
@@ -553,22 +626,39 @@ class NamespaceExpression(object):
 
     @rhs.setter
     def rhs(self, rhs):
-        raise NotImplementedError  # Not sure if this should be implemented yet
+        raise NineMLImmutableError(
+            "Cannot change expression in global namespace of "
+            "multi-component element. The multi-component elemnt should either"
+            " be flattened or the substitution should be done in the "
+            "sub-component")
 
     def rhs_name_transform_inplace(self, name_map):
-        raise NotImplementedError  # Not sure if this should be implemented yet
+        raise NineMLImmutableError(
+            "Cannot change expression in global namespace of "
+            "multi-component element. The multi-component elemnt should either"
+            " be flattened or the substitution should be done in the "
+            "sub-component")
 
     def rhs_substituted(self, name_map):
-        raise NotImplementedError  # Not sure if this should be implemented yet
+        raise NineMLImmutableError(
+            "Cannot change expression in global namespace of "
+            "multi-component element. The multi-component elemnt should either"
+            " be flattened or the substitution should be done in the "
+            "sub-component")
 
     def subs(self, old, new):
-        raise NotImplementedError  # Not sure if this should be implemented yet
+        raise NineMLImmutableError(
+            "Cannot change expression in global namespace of "
+            "multi-component element. The multi-component elemnt should either"
+            " be flattened or the substitution should be done in the "
+            "sub-component")
 
     def rhs_str_substituted(self, name_map={}, funcname_map={}):
-        raise NotImplementedError  # Not sure if this should be implemented yet
-
-    def _append_namespace(self, name):
-        return append_namespace(name + self._sub_component.name)
+        raise NineMLImmutableError(
+            "Cannot change expression in global namespace of "
+            "multi-component element. The multi-component elemnt should either"
+            " be flattened or the substitution should be done in the "
+            "sub-component")
 
 
 class NamespaceRegime(NamespaceNamed, Regime):
@@ -627,24 +717,130 @@ class NamespaceRegime(NamespaceNamed, Regime):
 
 class MultiRegime(Regime):
 
-    def __init__(self, *regimes):
-        self._regimes = regimes
+    def __init__(self, sub_regimes_dict):
+        """
+        `sub_regimes_dict` -- a dictionary containing the sub_regimes and
+                              referenced by the names of the sub_components
+                              they respond to
+        """
+        self._sub_regimes = copy(sub_regimes_dict)
 
     @property
-    def regimes(self):
-        return iter(self._regimes)
+    def sub_regimes(self):
+        return self._sub_regimes.itervalues()
+
+    @property
+    def sub_component_names(self):
+        return self._sub_regimes.iterkeys()
+
+    @property
+    def num_sub_regimes(self):
+        return len(self._sub_regimes)
+
+    def sub_regime(self, sub_component_name):
+        return self._sub_regimes[sub_component_name]
 
     @property
     def name(self):
-        return '__'.join(r.name for r in self.regimes) + '__regime'
+        return '__'.join(r.name for r in self.sub_regimes) + '__regime'
 
     @property
     def time_derivatives(self):
-        return chain(*[r.time_derivatives for r in self.regimes])
+        return chain(*[r.time_derivatives for r in self.sub_regimes])
 
     @property
     def aliases(self):
-        return chain(*[r.aliases for r in self.regimes])
+        return chain(*[r.aliases for r in self.sub_regimes])
+
+    def lookup_member_dict(self, element):
+        """
+        Looks up the appropriate member dictionary for objects of type element
+        """
+        dct_name = self.lookup_member_dict_name(element)
+        comp_name = MultiDynamics.split_namespace(element._name)[1]
+        return getattr(self.sub_regime(comp_name), dct_name)
+
+    @property
+    def all_member_dicts(self):
+        return chain(*[
+            (getattr(r, n) for n in r.class_to_member_dict.itervalues())
+            for r in self.sub_regimes])
+# 
+#     # Regime Properties:
+#     # ------------------
+#     @property
+#     def num_time_derivatives(self):
+#         return len(self._time_derivatives)
+# 
+#     @property
+#     def num_on_events(self):
+#         return len(self._on_events)
+# 
+#     @property
+#     def num_on_conditions(self):
+#         return len(self._on_conditions)
+# 
+#     @property
+#     def num_aliases(self):
+#         return len(self._aliases)
+# 
+#     @property
+#     def time_derivatives(self):
+#         """Returns the state-variable time-derivatives in this regime.
+# 
+#         .. note::
+# 
+#             This is not guaranteed to contain the time derivatives for all the
+#             state-variables specified in the component. If they are not
+#             defined, they are assumed to be zero in this regime.
+# 
+#         """
+#         return self._time_derivatives.itervalues()
+# 
+#     @property
+#     def on_events(self):
+#         """Returns all the transitions out of this regime trigger by events"""
+#         return self._on_events.itervalues()
+# 
+#     @property
+#     def on_conditions(self):
+#         """Returns all the transitions out of this regime trigger by
+#         conditions"""
+#         return self._on_conditions.itervalues()
+# 
+#     @property
+#     def aliases(self):
+#         return self._aliases.itervalues()
+# 
+#     def time_derivative(self, variable):
+#         return self._time_derivatives[variable]
+# 
+#     def on_event(self, port_name):
+#         return self._on_events[port_name]
+# 
+#     def on_condition(self, condition):
+#         if not isinstance(condition, sympy.Basic):
+#             condition = Trigger(condition).rhs
+#         return self._on_conditions[condition]
+# 
+#     def alias(self, name):
+#         return self._aliases[name]
+# 
+#     @property
+#     def time_derivative_variables(self):
+#         return self._time_derivatives.iterkeys()
+# 
+#     @property
+#     def on_event_port_names(self):
+#         return self._on_events.iterkeys()
+# 
+#     @property
+#     def on_condition_triggers(self):
+#         return self._on_conditions.iterkeys()
+# 
+#     @property
+#     def alias_names(self):
+#         return self._aliases.iterkeys()
 
 
 class NamespaceTransition(NamespaceNamed):
@@ -744,26 +940,70 @@ class NamespaceProperty(NamespaceNamed, Property):
 
 class LocalAnalogPortConnection(AnalogPortConnection, Alias):
 
-    def __init__(self, sender_id, receiver_id,
-                 send_port_name, receive_port_name):
-        AnalogPortConnection.__init__(self, sender_id, receiver_id,
-                                      send_port_name, receive_port_name)
-        Alias.__init__(self, append_namespace(receive_port_name, receiver_id),
-                       append_namespace(send_port_name, sender_id))
+    def __init__(self, send_port, receive_port,
+                 sender_name, receiver_name):
+        AnalogPortConnection.__init__(self, sender_name, receiver_name,
+                                      send_port, receive_port)
+        Alias.__init__(self, append_namespace(receive_port, receiver_name),
+                       append_namespace(send_port, sender_name))
 
 
-class LocalEventPortConnection(EventPortConnection):
+class LocalEventPortConnection(object):
 
-    def __init__(self):
-        raise NotImplementedError(
-            "Local event port connections are not currently "
-            "supported")
+    def __init__(self, send_port, sender_name):
+        self._send_port_name = send_port
+        self._sender_name = sender_name
+        self._receivers = []
+
+    def add(self, port_connection):
+        self._receivers.append(port_connection)
+
+    @property
+    def send_port_name(self):
+        return self._send_port_name
+
+    @property
+    def receivers(self):
+        return iter(self._receivers)
 
 
 class LocalReducePortConnections(Alias):
 
-    def __init__(self, receiver_role, receive_port, senders, send_ports):
-        pass
+    def __init__(self, receive_port, receiver_name):
+        self._receive_port_name = receive_port
+        self._receiver_name = receiver_name
+        self._senders = []
+
+    def add(self, port_connection):
+        self._senders.append(port_connection)
+
+    @property
+    def receive_port_name(self):
+        return self._receive_port_name
+
+    @property
+    def receiver_name(self):
+        return self._receiver_name
+
+    @property
+    def senders(self):
+        return iter(self._senders)
+
+    @property
+    def name(self):
+        return append_namespace(self.receive_port_name, self.receiver_name)
+
+    @property
+    def _name(self):
+        # Required for duck-typing
+        return self.name
+
+    @property
+    def rhs(self):
+        return reduce(
+            operator.add,
+            (sympy.Symbol(append_namespace(pc.send_port_name, pc.sender_name))
+             for pc in self.senders))
 
 
 class BasePortExposure(BaseULObject):

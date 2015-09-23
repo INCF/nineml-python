@@ -5,7 +5,7 @@ from nineml import read, load
 
 class TestPopulation(unittest.TestCase):
 
-    test_file = os.path.join(os.path.dirname(__file__), '..', '..', '..',
+    test_file = os.path.join(os.path.dirname(__file__), '..', '..',
                              'xml', 'populations', 'simple.xml')
 
     def test_xml_540degree_roundtrip(self):

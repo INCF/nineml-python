@@ -2,7 +2,8 @@ from . import BaseULObject
 from abc import ABCMeta, abstractmethod
 from nineml.xmlns import E
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import (
+    NineMLRuntimeError, NineMLMissingElementError, NineMLDimensionError)
 from nineml.abstraction.ports import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort)
@@ -31,7 +32,7 @@ class BasePortConnection(BaseULObject):
         `receiver_name` -- A reference to the receiving object via its name,
                            which uniquely identifies it within the container
         """
-        super(BasePortConnection, self).__init__()
+        BaseULObject.__init__(self)
         self._send_port_name = send_port
         self._receive_port_name = receive_port
         if sender_role is not None:
@@ -40,20 +41,20 @@ class BasePortConnection(BaseULObject):
                     "Both 'sender_role' ({}) and 'sender_name' ({}) cannot"
                     " be provided to PortConnection __init__"
                     .format(sender_role, sender_name))
-        elif sender_role is None:
-                raise NineMLRuntimeError(
-                    "Either 'sender_role' or 'sender_name' must be "
-                    "provided to PortConnection __init__")
+        elif sender_name is None:
+            raise NineMLRuntimeError(
+                "Either 'sender_role' or 'sender_name' must be "
+                "provided to PortConnection __init__")
         if receiver_role is not None:
             if receiver_name is not None:
                 raise NineMLRuntimeError(
                     "Both 'receiver_role' ({}) and 'receiver_name' ({}) cannot"
                     " be provided to PortConnection __init__"
                     .format(receiver_role, receiver_name))
-        elif receiver_role is None:
-                raise NineMLRuntimeError(
-                    "Either 'receiver_role' or 'receiver_name' must be "
-                    "provided to PortConnection __init__")
+        elif receiver_name is None:
+            raise NineMLRuntimeError(
+                "Either 'receiver_role' or 'receiver_name' must be "
+                "provided to PortConnection __init__")
         self._sender_role = sender_role
         self._sender_name = sender_name
         self._receiver_name = receiver_name
@@ -171,9 +172,21 @@ class BasePortConnection(BaseULObject):
             self._receiver_dynamics = self._receiver.cell.component_class
         except AttributeError:
             self._receiver_dynamics = self._receiver.component_class
-        self._send_port = self._sender_dynamics.port(self.send_port_name)
-        self._receive_port = self._receiver_dynamics.port(
-            self.receive_port_name)
+        try:
+            self._send_port = self._sender_dynamics.port(self.send_port_name)
+        except KeyError:
+            raise NineMLMissingElementError(
+                "Could not bind '{}' send port to '{}' dynamics class in '{}'"
+                .format(self.receive_port_name, self.sender_dynamics.name,
+                        self.sender.name))
+        try:
+            self._receive_port = self._receiver_dynamics.port(
+                self.receive_port_name)
+        except KeyError:
+            raise NineMLMissingElementError(
+                "Could not bind '{}' receive port to '{}' dynamics class in "
+                "'{}'".format(self.receive_port_name,
+                              self.receiver_dynamics.name, self.receiver.name))
         self._check_ports()
 
     @annotate_xml
@@ -246,6 +259,13 @@ class AnalogPortConnection(BasePortConnection):
             raise NineMLRuntimeError(
                 "Send port '{}' must be an AnalogSendPort to be connected with"
                 " an AnalogPortConnection".format(self.receive_port.name))
+        if self.send_port.dimension != self.receive_port.dimension:
+            raise NineMLDimensionError(
+                "Dimensions do not matc in analog port connection: sender port"
+                " '{}' has dimensions of '{}' and receive port '{}' has "
+                "dimensions of '{}'"
+                .format(self.send_port.name, self.send_port.dimension,
+                        self.receive_port.name, self.receive_port.dimension))
 
 
 class EventPortConnection(BasePortConnection):

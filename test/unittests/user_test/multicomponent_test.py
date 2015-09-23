@@ -10,13 +10,14 @@ from nineml.abstraction import (
 from nineml.user.port_connections import AnalogPortConnection
 from nineml.user.component import DynamicsProperties
 from nineml.exceptions import NineMLRuntimeError
+from nineml.utils import TestableComponent
 
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
                             'xml', 'neurons')
 
 
-class TestMultiDynamics(unittest.TestCase):
+class TestMultiDynamicsXML(unittest.TestCase):
 
     def setUp(self):
 
@@ -78,13 +79,13 @@ class TestMultiDynamics(unittest.TestCase):
     def test_multicomponent_xml_roundtrip(self):
         comp1 = MultiDynamicsProperties(
             name='test',
-            sub_dynamics=[
+            sub_components=[
                 SubDynamicsProperties(
                     name='a',
-                    dynamics_properties=self.a_props),
+                    component=self.a_props),
                 SubDynamicsProperties(
                     name='b',
-                    dynamics_properties=self.b_props)],
+                    component=self.b_props)],
             port_exposures=[
                 AnalogReceivePortExposure(
                     name="b_ARP2",
@@ -138,34 +139,35 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
             parameters=['dp1', 'dp2']
         )
 
+        e = MultiDynamics(
+            name='E', sub_components={'a': c, 'b': d},
+            port_connections=[('a', 'C1', 'b', 'dIn1'),
+                              ('a', 'C2', 'b', 'dIn2')])
+
         # Flatten a flat component
         # Everything should be as before:
-        c_flat = flattening.flatten(c)
+        e_flat = e.flatten(c)
 
-        assert c_flat is not c
-
-        self.assertEqual(c_flat.name, 'C')
-        self.assertEqual(set(c_flat.alias_names), set(['C1', 'C2', 'C3']))
+        self.assertEqual(e_flat.name, 'C')
+        self.assertEqual(set(e_flat.alias_names), set(['C1', 'C2', 'C3']))
 
         # - Regimes and Transitions:
-        self.assertEqual(set(c_flat.regime_names), set(['r1', 'r2']))
-        self.assertEqual(len(list(c_flat.regime('r1').on_events)), 1)
-        self.assertEqual(len(list(c_flat.regime('r1').on_conditions)), 1)
-        self.assertEqual(len(list(c_flat.regime('r2').on_events)), 0)
-        self.assertEqual(len(list(c_flat.regime('r2').on_conditions)), 1)
-        self.assertEqual(len(list(c_flat.regime('r2').on_conditions)), 1)
+        self.assertEqual(set(e_flat.regime_names), set(['r1', 'r2']))
+        self.assertEqual(len(list(e_flat.regime('r1').on_events)), 1)
+        self.assertEqual(len(list(e_flat.regime('r1').on_conditions)), 1)
+        self.assertEqual(len(list(e_flat.regime('r2').on_events)), 0)
+        self.assertEqual(len(list(e_flat.regime('r2').on_conditions)), 1)
+        self.assertEqual(len(list(e_flat.regime('r2').on_conditions)), 1)
 
         #  - Ports & Parameters:
         self.assertEqual(
-            set(c_flat.analog_port_names),
+            set(e_flat.analog_port_names),
             set(['cIn2', 'cIn1', 'C1', 'C2']))
         self.assertEqual(
-            set(c_flat.event_port_names),
+            set(e_flat.event_port_names),
             set(['spikein', 'c_emit', 'emit']))
-        self.assertEqual(set(c_flat.parameter_names),
-                         set(['cp1', 'cp2']))
-        self.assertEqual(set(c_flat.state_variable_names),
-                         set(['SV1']))
+        self.assertEqual(set(e_flat.parameter_names), set(['cp1', 'cp2']))
+        self.assertEqual(set(e_flat.state_variable_names), set(['SV1']))
 
     def test_Flattening2(self):
 
@@ -210,11 +212,11 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         b = MultiDynamics(
             name='B',
             sub_components={'c1': c, 'c2': c, 'd': d},
-            portconnections=[
+            port_connections=[
                 ('c1', 'C1', 'c2', 'cIn1'),
                 ('c2', 'emit', 'c1', 'spikein')])
 
-        b_flat = flattening.flatten(b)
+        b_flat = b.flatten(b)
 
         # Name
         self.assertEqual(b_flat.name, 'B')
@@ -366,10 +368,13 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         # ------------------------------ #
 
         # Everything should be as before:
-        b = Dynamics(name='B', subnodes={'c1': c, 'c2': c, 'd': d})
-        a = Dynamics(name='A', subnodes={'b': b, 'c': c})
+        b = MultiDynamics(name='B', sub_components={'c1': c, 'c2': c, 'd': d},
+                          port_connections=[('c1', 'C1', 'c2', 'cIn1'),
+                                            ('c2', 'C1', 'c1', 'cIn1'),
+                                            ('c2', 'C2', 'd', 'dIn2')])
+        a = MultiDynamics(name='A', sub_components={'b': b, 'c': c})
 
-        a_flat = flattening.flatten(a)
+        a_flat = b.flatten(a)
 
         # Name
         self.assertEqual(a_flat.name, 'A')
@@ -460,38 +465,56 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
                 self.assertEquals(on_ev.target_regime, r)
 
         # Check On-Event port names are remapped properly:
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_1_c2_1_d_1_c_1.on_events]), set(
-            ['c_spikein', 'b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_1.on_events]), set(
-            ['c_spikein', 'b_c1_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_1.on_events]), set(
-            ['c_spikein', 'b_c2_spikein', 'b_d_spikein']))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_1_c2_1_d_1_c_1.on_events]),
+                         set(['c_spikein', 'b_c1_spikein', 'b_c2_spikein',
+                              'b_d_spikein']))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_1_c2_2_d_1_c_1.on_events]),
+                         set(['c_spikein', 'b_c1_spikein', 'b_d_spikein']))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_2_c2_1_d_1_c_1.on_events]),
+                         set(['c_spikein', 'b_c2_spikein', 'b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_1.on_events]), set(['c_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_1.on_events]), set(
-            ['c_spikein', 'b_c1_spikein', 'b_c2_spikein']))
+            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_1.on_events]),
+            set(['c_spikein', 'b_d_spikein']))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_1_c2_1_d_2_c_1.on_events]),
+                         set(['c_spikein', 'b_c1_spikein', 'b_c2_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_1.on_events]), set(['c_spikein', 'b_c1_spikein', ]))
+            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_1.on_events]),
+            set(['c_spikein', 'b_c1_spikein', ]))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_1.on_events]), set(['c_spikein', 'b_c2_spikein', ]))
+            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_1.on_events]),
+            set(['c_spikein', 'b_c2_spikein', ]))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_1.on_events]), set(['c_spikein']))
+            set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_1.on_events]),
+            set(['c_spikein']))
 
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_1_c2_1_d_1_c_2.on_events]), set(
-            ['b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_1_c2_1_d_1_c_2.on_events]),
+                         set(['b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_2.on_events]), set(['b_c1_spikein', 'b_d_spikein']))
+            set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_2.on_events]),
+            set(['b_c1_spikein', 'b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_2.on_events]), set(['b_c2_spikein', 'b_d_spikein']))
+            set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_2.on_events]),
+            set(['b_c2_spikein', 'b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_2.on_events]), set(['b_d_spikein']))
+            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_2.on_events]),
+            set(['b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_2.on_events]), set(['b_c1_spikein', 'b_c2_spikein']))
+            set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_2.on_events]),
+            set(['b_c1_spikein', 'b_c2_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_2.on_events]), set(['b_c1_spikein', ]))
+            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_2.on_events]),
+            set(['b_c1_spikein', ]))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_2.on_events]), set(['b_c2_spikein', ]))
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_2.on_events]), set([]))
+            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_2.on_events]),
+            set(['b_c2_spikein', ]))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_2_c2_2_d_2_c_2.on_events]),
+                         set([]))
 
         # ToDo: Check the OnConditions:
 
@@ -561,20 +584,20 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         # ------------------------------ #
 
         # Everything should be as before:
-        b = Dynamics(name='B',
-                           subnodes={'c1': c, 'c2': c, 'd': d},
-                           portconnections=[('c1.C1', 'c2.cIn2'),
-                                            ('c2.C1', 'c1.cIn1')],
-                           )
+        b = MultiDynamics(
+            name='B',
+            sub_components={'c1': c, 'c2': c, 'd': d},
+            port_connections=[('c1', 'C1', 'c2', 'cIn2'),
+                              ('c2', 'C1', 'c1', 'cIn1')])
 
-        a = Dynamics(name='A',
-                           subnodes={'b': b, 'c': c},
-                           portconnections=[('b.c1.C1', 'b.c1.cIn2'),
-                                            ('b.c1.C1', 'b.c2.cIn1'),
-                                            ('b.c1.C2', 'b.d.dIn1')]
-                           )
+        a = MultiDynamics(
+            name='A',
+            sub_components={'b': b, 'c': c},
+            port_connections=[('b', 'c1', 'C1', 'b', 'c1', 'cIn2'),
+                              ('b', 'c1', 'C1', 'b', 'c2', 'cIn1'),
+                              ('b', 'c1', 'C2', 'b', 'd', 'dIn1')])
 
-        a_flat = flattening.flatten(a)
+        a_flat = a.flatten()
 
         # Name
         self.assertEqual(a_flat.name, 'A')
@@ -666,38 +689,55 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
                 self.assertEquals(on_ev.target_regime, r)
 
         # Check On-Event port names are remapped properly:
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_1_c2_1_d_1_c_1.on_events]), set(
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_1_c2_1_d_1_c_1.on_events]), set(
             ['c_spikein', 'b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_1.on_events]), set(
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_1_c2_2_d_1_c_1.on_events]), set(
             ['c_spikein', 'b_c1_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_1.on_events]), set(
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_2_c2_1_d_1_c_1.on_events]), set(
             ['c_spikein', 'b_c2_spikein', 'b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_1.on_events]), set(['c_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_1.on_events]), set(
+            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_1.on_events]),
+            set(['c_spikein', 'b_d_spikein']))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_1_c2_1_d_2_c_1.on_events]), set(
             ['c_spikein', 'b_c1_spikein', 'b_c2_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_1.on_events]), set(['c_spikein', 'b_c1_spikein', ]))
+            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_1.on_events]),
+            set(['c_spikein', 'b_c1_spikein', ]))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_1.on_events]), set(['c_spikein', 'b_c2_spikein', ]))
+            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_1.on_events]),
+            set(['c_spikein', 'b_c2_spikein', ]))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_1.on_events]), set(['c_spikein']))
+            set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_1.on_events]),
+            set(['c_spikein']))
 
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_1_c2_1_d_1_c_2.on_events]), set(
-            ['b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_1_c2_1_d_1_c_2.on_events]),
+                         set(['b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_2.on_events]), set(['b_c1_spikein', 'b_d_spikein']))
+            set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_2.on_events]),
+            set(['b_c1_spikein', 'b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_2.on_events]), set(['b_c2_spikein', 'b_d_spikein']))
+            set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_2.on_events]),
+            set(['b_c2_spikein', 'b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_2.on_events]), set(['b_d_spikein']))
+            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_2.on_events]),
+            set(['b_d_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_2.on_events]), set(['b_c1_spikein', 'b_c2_spikein']))
+            set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_2.on_events]),
+            set(['b_c1_spikein', 'b_c2_spikein']))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_2.on_events]), set(['b_c1_spikein', ]))
+            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_2.on_events]),
+            set(['b_c1_spikein', ]))
         self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_2.on_events]), set(['b_c2_spikein', ]))
-        self.assertEqual(set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_2.on_events]), set([]))
+            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_2.on_events]),
+            set(['b_c2_spikein', ]))
+        self.assertEqual(set([ev.src_port_name
+                              for ev in r_c1_2_c2_2_d_2_c_2.on_events]),
+                         set([]))
 
         # ToDo: Check the OnConditions:
 
@@ -757,50 +797,50 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
     # def test_set_flattener(self):
     # def test_was_flattened(self):
     # Hierachical
-    def test_get_node_addr(self):
-        # Signature: name(self)
-                # Get the namespace address of this component
-
-        d = Dynamics(name='D',)
-        e = Dynamics(name='E')
-        f = Dynamics(name='F')
-        g = Dynamics(name='G')
-        b = Dynamics(name='B', subnodes={'d': d, 'e': e})
-        c = Dynamics(name='C', subnodes={'f': f, 'g': g})
-        a = Dynamics(name='A', subnodes={'b': b, 'c': c})
-
-        # Construction of the objects causes cloning to happen:
-        # Therefore we test by looking up and checking that there
-        # are the correct component names:
-        bNew = a.get_subnode('b')
-        cNew = a.get_subnode('c')
-        dNew = a.get_subnode('b.d')
-        eNew = a.get_subnode('b.e')
-        fNew = a.get_subnode('c.f')
-        gNew = a.get_subnode('c.g')
-
-        self.assertEquals(a.get_node_addr(),
-                          NamespaceAddress.create_root())
-        self.assertEquals(bNew.get_node_addr(),
-                          NamespaceAddress('b'))
-        self.assertEquals(cNew.get_node_addr(),
-                          NamespaceAddress('c'))
-        self.assertEquals(dNew.get_node_addr(),
-                          NamespaceAddress('b.d'))
-        self.assertEquals(eNew.get_node_addr(),
-                          NamespaceAddress('b.e'))
-        self.assertEquals(fNew.get_node_addr(),
-                          NamespaceAddress('c.f'))
-        self.assertEquals(gNew.get_node_addr(),
-                          NamespaceAddress('c.g'))
-
-        self.assertEquals(a.name, 'A')
-        self.assertEquals(bNew.name, 'B')
-        self.assertEquals(cNew.name, 'C')
-        self.assertEquals(dNew.name, 'D')
-        self.assertEquals(eNew.name, 'E')
-        self.assertEquals(fNew.name, 'F')
-        self.assertEquals(gNew.name, 'G')
+#     def test_get_node_addr(self):
+#         # Signature: name(self)
+#                 # Get the namespace address of this component
+# 
+#         d = Dynamics(name='D',)
+#         e = Dynamics(name='E')
+#         f = Dynamics(name='F')
+#         g = Dynamics(name='G')
+#         b = Dynamics(name='B', subnodes={'d': d, 'e': e})
+#         c = Dynamics(name='C', subnodes={'f': f, 'g': g})
+#         a = Dynamics(name='A', subnodes={'b': b, 'c': c})
+# 
+#         # Construction of the objects causes cloning to happen:
+#         # Therefore we test by looking up and checking that there
+#         # are the correct component names:
+#         bNew = a.get_subnode('b')
+#         cNew = a.get_subnode('c')
+#         dNew = a.get_subnode('b.d')
+#         eNew = a.get_subnode('b.e')
+#         fNew = a.get_subnode('c.f')
+#         gNew = a.get_subnode('c.g')
+# 
+#         self.assertEquals(a.get_node_addr(),
+#                           NamespaceAddress.create_root())
+#         self.assertEquals(bNew.get_node_addr(),
+#                           NamespaceAddress('b'))
+#         self.assertEquals(cNew.get_node_addr(),
+#                           NamespaceAddress('c'))
+#         self.assertEquals(dNew.get_node_addr(),
+#                           NamespaceAddress('b.d'))
+#         self.assertEquals(eNew.get_node_addr(),
+#                           NamespaceAddress('b.e'))
+#         self.assertEquals(fNew.get_node_addr(),
+#                           NamespaceAddress('c.f'))
+#         self.assertEquals(gNew.get_node_addr(),
+#                           NamespaceAddress('c.g'))
+# 
+#         self.assertEquals(a.name, 'A')
+#         self.assertEquals(bNew.name, 'B')
+#         self.assertEquals(cNew.name, 'C')
+#         self.assertEquals(dNew.name, 'D')
+#         self.assertEquals(eNew.name, 'E')
+#         self.assertEquals(fNew.name, 'F')
+#         self.assertEquals(gNew.name, 'G')
 
     def test_insert_subnode(self):
         """
@@ -847,20 +887,20 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         fNew = a.get_subnode('c.f')
         gNew = a.get_subnode('c.g')
 
-        self.assertEquals(a.get_node_addr(),
-                          NamespaceAddress.create_root())
-        self.assertEquals(bNew.get_node_addr(),
-                          NamespaceAddress('b'))
-        self.assertEquals(cNew.get_node_addr(),
-                          NamespaceAddress('c'))
-        self.assertEquals(dNew.get_node_addr(),
-                          NamespaceAddress('b.d'))
-        self.assertEquals(eNew.get_node_addr(),
-                          NamespaceAddress('b.e'))
-        self.assertEquals(fNew.get_node_addr(),
-                          NamespaceAddress('c.f'))
-        self.assertEquals(gNew.get_node_addr(),
-                          NamespaceAddress('c.g'))
+#         self.assertEquals(a.get_node_addr(),
+#                           NamespaceAddress.create_root())
+#         self.assertEquals(bNew.get_node_addr(),
+#                           NamespaceAddress('b'))
+#         self.assertEquals(cNew.get_node_addr(),
+#                           NamespaceAddress('c'))
+#         self.assertEquals(dNew.get_node_addr(),
+#                           NamespaceAddress('b.d'))
+#         self.assertEquals(eNew.get_node_addr(),
+#                           NamespaceAddress('b.e'))
+#         self.assertEquals(fNew.get_node_addr(),
+#                           NamespaceAddress('c.f'))
+#         self.assertEquals(gNew.get_node_addr(),
+#                           NamespaceAddress('c.g'))
 
         self.assertEquals(a.name, 'A')
         self.assertEquals(bNew.name, 'B')
@@ -899,7 +939,6 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
                 # :param sink: The sink port of one sub-component; this should either an
                 #     event port or analog port, but it *must* be either a 'recv' or a
                 #     'reduce' port.
-
 
         tIaf = TestableComponent('iaf')
         tCoba = TestableComponent('coba_synapse')
@@ -966,52 +1005,52 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
             NineMLRuntimeError,
             c.connect_ports, 'coba.I', 'iaf.ISyn')
 
-    def test_get_fully_qualified_port_connections(self):
-        # Signature: name(self)
-                # Used by the flattening code.
-                #
-                # This method returns a d list of tuples of the
-                # the fully-qualified port connections
-        # from nineml.abstraction.component.componentqueryer import
-        # ComponentClassQueryer
-
-        # Signature: name(self)
-                # Get the namespace address of this component
-        d = Dynamics(
-            name='D', aliases=['A:=1', 'B:=2'],
-            analog_ports=[AnalogSendPort('A'), AnalogSendPort('B')])
-        e = Dynamics(name='E', analog_ports=[AnalogReceivePort('C')])
-        f = Dynamics(name='F', analog_ports=[AnalogReceivePort('D')])
-        g = Dynamics(name='G', analog_ports=[AnalogReceivePort('E')])
-        b = Dynamics(name='B', subnodes={'d': d, 'e': e},
-                     portconnections=[('d.A', 'e.C')])
-        c = Dynamics(name='C',
-                           aliases=['G:=-1'],
-                           analog_ports=[AnalogSendPort('G')],
-                           subnodes={'f': f, 'g': g},
-                           portconnections=[('G', 'f.D')])
-
-        a = Dynamics(name='A',
-                           subnodes={'b': b, 'c': c},
-                           analog_ports=[AnalogReceivePort('F')],
-                           portconnections=[('b.d.A', 'F')]
-                           )
-
-        bNew = a.get_subnode('b')
-        cNew = a.get_subnode('c')
-        # dNew = a.get_subnode('b.d')
-        # eNew = a.get_subnode('b.e')
-        # fNew = a.get_subnode('c.f')
-        # gNew = a.get_subnode('c.g')
-
-        self.assertEquals(list(a.fully_qualified_port_connections),
-                          [(NamespaceAddress('b.d.A'), NamespaceAddress('F'))])
-
-        self.assertEquals(list(bNew.fully_qualified_port_connections),
-                          [(NamespaceAddress('b.d.A'), NamespaceAddress('b.e.C'))])
-
-        self.assertEquals(list(cNew.fully_qualified_port_connections),
-                          [(NamespaceAddress('c.G'), NamespaceAddress('c.f.D'))])
+#     def test_get_fully_qualified_port_connections(self):
+#         # Signature: name(self)
+#                 # Used by the flattening code.
+#                 #
+#                 # This method returns a d list of tuples of the
+#                 # the fully-qualified port connections
+#         # from nineml.abstraction.component.componentqueryer import
+#         # ComponentClassQueryer
+# 
+#         # Signature: name(self)
+#                 # Get the namespace address of this component
+#         d = Dynamics(
+#             name='D', aliases=['A:=1', 'B:=2'],
+#             analog_ports=[AnalogSendPort('A'), AnalogSendPort('B')])
+#         e = Dynamics(name='E', analog_ports=[AnalogReceivePort('C')])
+#         f = Dynamics(name='F', analog_ports=[AnalogReceivePort('D')])
+#         g = Dynamics(name='G', analog_ports=[AnalogReceivePort('E')])
+#         b = Dynamics(name='B', subnodes={'d': d, 'e': e},
+#                      portconnections=[('d.A', 'e.C')])
+#         c = Dynamics(name='C',
+#                            aliases=['G:=-1'],
+#                            analog_ports=[AnalogSendPort('G')],
+#                            subnodes={'f': f, 'g': g},
+#                            portconnections=[('G', 'f.D')])
+# 
+#         a = Dynamics(name='A',
+#                            subnodes={'b': b, 'c': c},
+#                            analog_ports=[AnalogReceivePort('F')],
+#                            portconnections=[('b.d.A', 'F')]
+#                            )
+# 
+#         bNew = a.get_subnode('b')
+#         cNew = a.get_subnode('c')
+#         # dNew = a.get_subnode('b.d')
+#         # eNew = a.get_subnode('b.e')
+#         # fNew = a.get_subnode('c.f')
+#         # gNew = a.get_subnode('c.g')
+# 
+#         self.assertEquals(list(a.fully_qualified_port_connections),
+#                           [(NamespaceAddress('b.d.A'), NamespaceAddress('F'))])
+# 
+#         self.assertEquals(list(bNew.fully_qualified_port_connections),
+#                           [(NamespaceAddress('b.d.A'), NamespaceAddress('b.e.C'))])
+# 
+#         self.assertEquals(list(cNew.fully_qualified_port_connections),
+#                           [(NamespaceAddress('c.G'), NamespaceAddress('c.f.D'))])
 
     def test_recurse_all_components(self):
         # Signature: name
@@ -1066,187 +1105,187 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
             set(gNew.all_components),
             set([gNew]))
 
-
-class NamespaceAddress_test(unittest.TestCase):
-
-    def test_Constructor(self):
-        pass
-
-    def test_concat(self):
-        # Signature: name(cls, *args)
-                # Concatenates all the Namespace Addresses.
-                #
-                # This method take all the arguments supplied, converts each one into a
-                # namespace object, then, produces a new namespace object which is the
-                # concatentation of all the arugements namespaces.
-                #
-                # For example:
-                #
-                # >>> NamespaceAddress.concat('first.second','third.forth','fifth.sixth')
-                #     NameSpaceAddress: '/first/second/third/forth/fifth/sixth'
-        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
-        self.assertEqual(
-            NSA.concat(NSA('a.b.c'), NSA('d.e.f'), NSA('g.h.i')),
-            NSA('a.b.c.d.e.f.g.h.i'))
-        self.assertEqual(
-            NSA.concat(NSA.create_root(), NSA('a.b.c'), NSA.create_root()),
-            NSA('a.b.c')
-        )
-        self.assertEqual(
-            NSA.concat(NSA.create_root(), NSA.create_root()),
-            NSA.create_root()
-        )
-
-    def test_create_root(self):
-        # Signature: name(cls)
-                # Returns a empty (root) namespace address
-                #
-                #
-                # >>> nineml.abstraction.NamespaceAddress.create_root()
-                # NameSpaceAddress: '//'
-        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
-        self.assertEqual(NSA.create_root().loctuple, ())
-
-    def test_get_local_name(self):
-        # Signature: name(self)
-                # Returns the local reference; i.e. the last field in the
-                # address, as a ``string``
-        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
-        self.assertEqual(
-            NSA('a.b.c.d.e.f.g.h.i').get_local_name(),
-            'i')
-        self.assertEqual(
-            NSA('a.b.lastname').get_local_name(),
-            'lastname')
-        self.assertRaises(
-            NineMLRuntimeError,
-            NSA.create_root().get_local_name,
-        )
-
-    def test_get_parent_addr(self):
-        # Signature: name(self)
-                # Return the address of an namespace higher
-                #
-                # >>> a = NamespaceAddress('level1.level2.level3')
-                # >>> a
-                # NameSpaceAddress: '/level1/level2/level3/'
-                # >>> a.get_parent_addr()
-                # NameSpaceAddress: '/level1/level2/'
-
-        self.assertEqual(
-            NSA('a.b.c.d.e.f.g.h.i').get_parent_addr(),
-            NSA('a.b.c.d.e.f.g.h')
-        )
-
-        self.assertEqual(
-            NSA('a.b.lastname').get_parent_addr(),
-            NSA('a.b')
-        )
-
-        self.assertRaises(
-            NineMLRuntimeError,
-            NSA.create_root().get_local_name,
-        )
-
-    def test_get_subns_addr(self):
-        # Signature: name(self, component_name)
-                # Returns the address of a subcomponent at this address.
-                #
-                # For example:
-                #
-                # >>> a = NamespaceAddress('level1.level2.level3')
-                # >>> a.get_subns_addr('subcomponent')
-                # NameSpaceAddress: '/level1/level2/level3/subcomponent/'
-
-        d = Dynamics(name='D',)
-        e = Dynamics(name='E')
-        f = Dynamics(name='F')
-        g = Dynamics(name='G')
-        b = Dynamics(name='B', subnodes={'atD': d, 'atE': e})
-        c = Dynamics(name='C', subnodes={'atF': f, 'atG': g})
-        a = Dynamics(name='A', subnodes={'atB': b, 'atC': c})
-
-        # Construction of the objects causes cloning to happen:
-        # Therefore we test by looking up and checking that there
-        # are the correct component names:
-        bNew = a.get_subnode('atB')
-        cNew = a.get_subnode('atC')
-        dNew = a.get_subnode('atB.atD')
-        eNew = a.get_subnode('atB.atE')
-        fNew = a.get_subnode('atC.atF')
-        gNew = a.get_subnode('atC.atG')
-
-        self.assertEquals(
-            gNew.get_node_addr().get_subns_addr('MyObject1'),
-            NSA('atC.atG.MyObject1')
-        )
-
-        self.assertEquals(
-            eNew.get_node_addr().get_subns_addr('MyObject2'),
-            NSA('atB.atE.MyObject2')
-        )
-
-        self.assertEquals(
-            bNew.get_node_addr().get_subns_addr('MyObject3'),
-            NSA('atB.MyObject3')
-        )
-
-    def test_getstr(self):
-        # Signature: name(self, join_char='_')
-                # Returns the namespace address as a string.
-                #
-                # :param join_char: The character used to join the levels in the address.
-        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
-
-        self.assertEqual(
-            NSA('a.b.c.d.e.f.g.h.i').getstr('.'),
-            'a.b.c.d.e.f.g.h.i'
-        )
-
-        self.assertEqual(
-            NSA.concat(NSA.create_root(), NSA.create_root(), NSA(
-                       'a.b.c.d.e.f.g.h.i')).getstr('.'),
-            'a.b.c.d.e.f.g.h.i'
-        )
-
-        self.assertEqual(
-            NSA.concat(NSA.create_root(), NSA.create_root(), NSA(
-                       'a.b.c.d.e.f.g.h.i'), NSA.create_root(),).getstr('.'),
-            'a.b.c.d.e.f.g.h.i'
-        )
-
-        self.assertEqual(
-            NSA('a.b.c.d.e.f.g.h.i').getstr('/'),
-            'a/b/c/d/e/f/g/h/i'
-        )
-
-    def test_get_str_prefix(self):
-        # Signature: name(self, join_char='_')
-                # Returns the same as ``getstr``, but prepends the ``join_char`` to
-                # the end of the string, so that the string can be used to prefix
-                # variables.
-                #
-                # :param join_char: The character used to join the levels in the address.
-        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
-
-        self.assertEqual(
-            NSA('a.b.c.d.e.f.g.h.i').get_str_prefix('.'),
-            'a.b.c.d.e.f.g.h.i.'
-        )
-
-        self.assertEqual(
-            NSA.concat(NSA.create_root(), NSA.create_root(),
-                       NSA('a.b.c.d.e.f.g.h.i')).get_str_prefix('.'),
-            'a.b.c.d.e.f.g.h.i.'
-        )
-
-        self.assertEqual(
-            NSA.concat(NSA.create_root(), NSA.create_root(),
-                       NSA('a.b.c.d.e.f.g.h.i'), NSA.create_root(),).get_str_prefix('.'),
-            'a.b.c.d.e.f.g.h.i.'
-        )
-
-        self.assertEqual(
-            NSA('a.b.c.d.e.f.g.h.i').get_str_prefix('/'),
-            'a/b/c/d/e/f/g/h/i/'
-        )
+# 
+# class NamespaceAddress_test(unittest.TestCase):
+# 
+#     def test_Constructor(self):
+#         pass
+# 
+#     def test_concat(self):
+#         # Signature: name(cls, *args)
+#                 # Concatenates all the Namespace Addresses.
+#                 #
+#                 # This method take all the arguments supplied, converts each one into a
+#                 # namespace object, then, produces a new namespace object which is the
+#                 # concatentation of all the arugements namespaces.
+#                 #
+#                 # For example:
+#                 #
+#                 # >>> NamespaceAddress.concat('first.second','third.forth','fifth.sixth')
+#                 #     NameSpaceAddress: '/first/second/third/forth/fifth/sixth'
+#         # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
+#         self.assertEqual(
+#             NSA.concat(NSA('a.b.c'), NSA('d.e.f'), NSA('g.h.i')),
+#             NSA('a.b.c.d.e.f.g.h.i'))
+#         self.assertEqual(
+#             NSA.concat(NSA.create_root(), NSA('a.b.c'), NSA.create_root()),
+#             NSA('a.b.c')
+#         )
+#         self.assertEqual(
+#             NSA.concat(NSA.create_root(), NSA.create_root()),
+#             NSA.create_root()
+#         )
+# 
+#     def test_create_root(self):
+#         # Signature: name(cls)
+#                 # Returns a empty (root) namespace address
+#                 #
+#                 #
+#                 # >>> nineml.abstraction.NamespaceAddress.create_root()
+#                 # NameSpaceAddress: '//'
+#         # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
+#         self.assertEqual(NSA.create_root().loctuple, ())
+# 
+#     def test_get_local_name(self):
+#         # Signature: name(self)
+#                 # Returns the local reference; i.e. the last field in the
+#                 # address, as a ``string``
+#         # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
+#         self.assertEqual(
+#             NSA('a.b.c.d.e.f.g.h.i').get_local_name(),
+#             'i')
+#         self.assertEqual(
+#             NSA('a.b.lastname').get_local_name(),
+#             'lastname')
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             NSA.create_root().get_local_name,
+#         )
+# 
+#     def test_get_parent_addr(self):
+#         # Signature: name(self)
+#                 # Return the address of an namespace higher
+#                 #
+#                 # >>> a = NamespaceAddress('level1.level2.level3')
+#                 # >>> a
+#                 # NameSpaceAddress: '/level1/level2/level3/'
+#                 # >>> a.get_parent_addr()
+#                 # NameSpaceAddress: '/level1/level2/'
+# 
+#         self.assertEqual(
+#             NSA('a.b.c.d.e.f.g.h.i').get_parent_addr(),
+#             NSA('a.b.c.d.e.f.g.h')
+#         )
+# 
+#         self.assertEqual(
+#             NSA('a.b.lastname').get_parent_addr(),
+#             NSA('a.b')
+#         )
+# 
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             NSA.create_root().get_local_name,
+#         )
+# 
+#     def test_get_subns_addr(self):
+#         # Signature: name(self, component_name)
+#                 # Returns the address of a subcomponent at this address.
+#                 #
+#                 # For example:
+#                 #
+#                 # >>> a = NamespaceAddress('level1.level2.level3')
+#                 # >>> a.get_subns_addr('subcomponent')
+#                 # NameSpaceAddress: '/level1/level2/level3/subcomponent/'
+# 
+#         d = Dynamics(name='D',)
+#         e = Dynamics(name='E')
+#         f = Dynamics(name='F')
+#         g = Dynamics(name='G')
+#         b = Dynamics(name='B', subnodes={'atD': d, 'atE': e})
+#         c = Dynamics(name='C', subnodes={'atF': f, 'atG': g})
+#         a = Dynamics(name='A', subnodes={'atB': b, 'atC': c})
+# 
+#         # Construction of the objects causes cloning to happen:
+#         # Therefore we test by looking up and checking that there
+#         # are the correct component names:
+#         bNew = a.get_subnode('atB')
+#         cNew = a.get_subnode('atC')
+#         dNew = a.get_subnode('atB.atD')
+#         eNew = a.get_subnode('atB.atE')
+#         fNew = a.get_subnode('atC.atF')
+#         gNew = a.get_subnode('atC.atG')
+# 
+#         self.assertEquals(
+#             gNew.get_node_addr().get_subns_addr('MyObject1'),
+#             NSA('atC.atG.MyObject1')
+#         )
+# 
+#         self.assertEquals(
+#             eNew.get_node_addr().get_subns_addr('MyObject2'),
+#             NSA('atB.atE.MyObject2')
+#         )
+# 
+#         self.assertEquals(
+#             bNew.get_node_addr().get_subns_addr('MyObject3'),
+#             NSA('atB.MyObject3')
+#         )
+# 
+#     def test_getstr(self):
+#         # Signature: name(self, join_char='_')
+#                 # Returns the namespace address as a string.
+#                 #
+#                 # :param join_char: The character used to join the levels in the address.
+#         # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
+# 
+#         self.assertEqual(
+#             NSA('a.b.c.d.e.f.g.h.i').getstr('.'),
+#             'a.b.c.d.e.f.g.h.i'
+#         )
+# 
+#         self.assertEqual(
+#             NSA.concat(NSA.create_root(), NSA.create_root(), NSA(
+#                        'a.b.c.d.e.f.g.h.i')).getstr('.'),
+#             'a.b.c.d.e.f.g.h.i'
+#         )
+# 
+#         self.assertEqual(
+#             NSA.concat(NSA.create_root(), NSA.create_root(), NSA(
+#                        'a.b.c.d.e.f.g.h.i'), NSA.create_root(),).getstr('.'),
+#             'a.b.c.d.e.f.g.h.i'
+#         )
+# 
+#         self.assertEqual(
+#             NSA('a.b.c.d.e.f.g.h.i').getstr('/'),
+#             'a/b/c/d/e/f/g/h/i'
+#         )
+# 
+#     def test_get_str_prefix(self):
+#         # Signature: name(self, join_char='_')
+#                 # Returns the same as ``getstr``, but prepends the ``join_char`` to
+#                 # the end of the string, so that the string can be used to prefix
+#                 # variables.
+#                 #
+#                 # :param join_char: The character used to join the levels in the address.
+#         # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
+# 
+#         self.assertEqual(
+#             NSA('a.b.c.d.e.f.g.h.i').get_str_prefix('.'),
+#             'a.b.c.d.e.f.g.h.i.'
+#         )
+# 
+#         self.assertEqual(
+#             NSA.concat(NSA.create_root(), NSA.create_root(),
+#                        NSA('a.b.c.d.e.f.g.h.i')).get_str_prefix('.'),
+#             'a.b.c.d.e.f.g.h.i.'
+#         )
+# 
+#         self.assertEqual(
+#             NSA.concat(NSA.create_root(), NSA.create_root(),
+#                        NSA('a.b.c.d.e.f.g.h.i'), NSA.create_root(),).get_str_prefix('.'),
+#             'a.b.c.d.e.f.g.h.i.'
+#         )
+# 
+#         self.assertEqual(
+#             NSA('a.b.c.d.e.f.g.h.i').get_str_prefix('/'),
+#             'a/b/c/d/e/f/g/h/i/'
+#         )

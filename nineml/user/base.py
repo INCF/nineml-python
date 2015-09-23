@@ -10,7 +10,7 @@ class BaseULObject(BaseNineMLObject):
     """
 
     def __init__(self):
-        super(BaseULObject, self).__init__()
+        BaseNineMLObject.__init__(self)
         self.from_reference = None
 
     def set_local_reference(self, document, overwrite=False):
