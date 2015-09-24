@@ -152,19 +152,17 @@ class BasePortConnection(BaseULObject):
                 "Sender object was not identified by its name")
         return self._receiver_name
 
-    def bind(self, container):
+    def bind(self, container, to_roles=False):
         """
         Binds the PortConnection to the components it is connecting
         """
-        try:
+        # If the sender and receiver should be identified by their role
+        # i.e. pre, pos, response, plasticity, etc... or by name
+        if to_roles:
             self._sender = getattr(container, self.sender_role)
-        except NineMLRuntimeError:
-            self._sender = container[self.sender_name]
-        except AttributeError:
-            raise
-        try:
             self._receiver = getattr(container, self.receiver_role)
-        except NineMLRuntimeError:
+        else:
+            self._sender = container[self.sender_name]
             self._receiver = container[self.receiver_name]
         try:
             self._sender_dynamics = self._sender.cell.component_class
@@ -283,3 +281,11 @@ class EventPortConnection(BasePortConnection):
             raise NineMLRuntimeError(
                 "Send port '{}' must be an EventSendPort to be connected with"
                 " an EventPortConnection".format(self.receive_port.name))
+
+    @property
+    def delay(self):
+        """
+        Included for compatibility with code written in
+        nineml.user.multi.component for future versions
+        """
+        return 0.0

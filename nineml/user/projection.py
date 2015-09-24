@@ -74,7 +74,7 @@ class Projection(BaseULObject, DocumentLevelObject):
             if isinstance(port_connection, tuple):
                 port_connection = BasePortConnection.from_tuple(
                     port_connection, self)
-            port_connection.bind(self)
+            port_connection.bind(self, to_roles=True)
             self._port_connections.append(port_connection)
 
     @property
