@@ -1,29 +1,33 @@
 from itertools import chain
-from . import BaseULObject
-import sympy
+from .. import BaseULObject
 import re
-from .component import Property
 from copy import copy
-import operator
 from itertools import product
 from nineml.abstraction import (
-    Dynamics, Alias, TimeDerivative, Regime, AnalogSendPort, AnalogReceivePort,
-    AnalogReducePort, EventSendPort, EventReceivePort, OnEvent, OnCondition,
-    StateAssignment, Trigger, OutputEvent, StateVariable, Constant,
-    Parameter)
+    Dynamics, Regime, AnalogReceivePort, AnalogReducePort, EventReceivePort,
+    StateVariable)
 from nineml.reference import resolve_reference, write_reference
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
-from .port_connections import (
+from nineml.exceptions import NineMLRuntimeError
+from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
-from ..abstraction import BaseALObject
+from nineml.abstraction import BaseALObject
 from nineml.base import MemberContainerObject
 from nineml.utils import ensure_valid_identifier
 from nineml.annotations import VALIDATE_DIMENSIONS
+from .ports import (
+    EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
+    AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
+    LocalReducePortConnections, LocalEventPortConnections,
+    LocalAnalogPortConnection)
+from .namespace import (
+    NamespaceAlias, NamespaceRegime, NamespaceStateVariable, NamespaceConstant,
+    NamespaceParameter, NamespaceProperty)
+
 
 # Matches multiple underscores, so they can be escaped by appending another
 # underscore (double underscores are used to delimit namespaces).
@@ -214,11 +218,11 @@ class MultiDynamics(Dynamics):
         for sub_component in self.sub_components:
             self._event_port_connections.update(
                 (sub_component.append_namespace(p.name),
-                 LocalEventPortConnection(p.name, sub_component.name))
+                 LocalEventPortConnections(p.name, sub_component.name))
                 for p in sub_component.component_class.event_send_ports)
             self._reduce_port_connections.update(
                 (sub_component.append_namespace(p.name),
-                 LocalAnalogPortConnection(p.name, sub_component.name))
+                 LocalReducePortConnections(p.name, sub_component.name))
                 for p in sub_component.component_class.analog_reduce_ports)
         # Parse port connections (from tuples if required), bind them to the
         # ports within the subcomponents and append them to their respective
@@ -577,147 +581,6 @@ class SubDynamics(object):
 # =============================================================================
 
 
-class NamespaceNamed(object):
-    """
-    Abstract base class for wrappers of abstraction layer objects with names
-    """
-
-    def __init__(self, sub_component, element):
-        self._sub_component = sub_component
-        self._element = element
-
-    @property
-    def sub_component(self):
-        return self._sub_component
-
-    @property
-    def element(self):
-        return self._element
-
-    @property
-    def name(self):
-        return self.sub_component.append_namespace(self._element.name)
-
-
-class NamespaceExpression(object):
-
-    def __init__(self, sub_component, element):
-        self._sub_component = sub_component
-        self._element = element
-
-    @property
-    def sub_component(self):
-        return self._sub_component
-
-    @property
-    def lhs(self):
-        return self.name
-
-    def lhs_name_transform_inplace(self, name_map):
-        raise NotImplementedError  # Not sure if this should be implemented yet
-
-    @property
-    def rhs(self):
-        """Return copy of rhs with all free symols suffixed by the namespace"""
-        try:
-            return self.element.rhs.xreplace(dict(
-                (s, sympy.Symbol(self.sub_component.append_namespace(s)))
-                for s in self.rhs_symbols))
-        except AttributeError:  # If rhs has been simplified to ints/floats
-            assert float(self.element.rhs)
-            return self.rhs
-
-    @rhs.setter
-    def rhs(self, rhs):
-        raise NineMLImmutableError(
-            "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
-            " be flattened or the substitution should be done in the "
-            "sub-component")
-
-    def rhs_name_transform_inplace(self, name_map):
-        raise NineMLImmutableError(
-            "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
-            " be flattened or the substitution should be done in the "
-            "sub-component")
-
-    def rhs_substituted(self, name_map):
-        raise NineMLImmutableError(
-            "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
-            " be flattened or the substitution should be done in the "
-            "sub-component")
-
-    def subs(self, old, new):
-        raise NineMLImmutableError(
-            "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
-            " be flattened or the substitution should be done in the "
-            "sub-component")
-
-    def rhs_str_substituted(self, name_map={}, funcname_map={}):
-        raise NineMLImmutableError(
-            "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
-            " be flattened or the substitution should be done in the "
-            "sub-component")
-
-
-class NamespaceRegime(NamespaceNamed, Regime):
-
-    @property
-    def time_derivatives(self):
-        return (NamespaceTimeDerivative(self.sub_component, td)
-                for td in self.element.time_derivatives)
-
-    @property
-    def aliases(self):
-        return (NamespaceAlias(self.sub_component, a)
-                for a in self.element.aliases)
-
-    @property
-    def on_events(self):
-        return (NamespaceOnEvent(self.sub_component, oe)
-                for oe in self.element.on_events)
-
-    @property
-    def on_conditions(self):
-        return (NamespaceOnEvent(self.sub_component, oc)
-                for oc in self.element.on_conditions)
-
-    def time_derivative(self, name):
-        return NamespaceTimeDerivative(self.sub_component,
-                                       self.element.time_derivative(name))
-
-    def alias(self, name):
-        return NamespaceAlias(self.sub_component, self.element.alias(name))
-
-    def on_event(self, name):
-        return NamespaceOnEvent(self.sub_component,
-                                self.element.on_event(name))
-
-    def on_condition(self, name):
-        return NamespaceOnEvent(self.sub_component,
-                                self.element.on_condition(name))
-
-    @property
-    def num_time_derivatives(self):
-        return self.element.num_time_derivatives
-
-    @property
-    def num_aliases(self):
-        return self.num_element.aliases
-
-    @property
-    def num_on_events(self):
-        return self.element.num_on_events
-
-    @property
-    def num_on_conditions(self):
-        return self.element.num_on_conditions
-
-
 class MultiRegime(Regime):
 
     def __init__(self, sub_regimes_dict):
@@ -827,292 +690,5 @@ class MultiRegime(Regime):
         return len(list(self.aliases))
 
 
-class NamespaceTransition(NamespaceNamed):
-
-    @property
-    def target_regime(self):
-        return NamespaceRegime(self.sub_component, self.element.target_regime)
-
-    @property
-    def target_regime_name(self):
-        return self.element.target_regime_name + self.suffix
-
-    @property
-    def state_assignments(self):
-        return (NamespaceStateAssignment(self.sub_component, sa)
-                for sa in self.element.state_assignments)
-
-    @property
-    def output_events(self):
-        return (NamespaceOutputEvent(self.sub_component, oe)
-                for oe in self.element.output_events)
-
-    def state_assignment(self, name):
-        return NamespaceStateAssignment(
-            self.sub_component, self.element.state_assignment(name))
-
-    def output_event(self, name):
-        return NamespaceOutputEvent(
-            self.sub_component, self.element.output_event(name))
-
-    @property
-    def num_state_assignments(self):
-        return self.element.num_state_assignments
-
-    @property
-    def num_output_events(self):
-        return self.element.num_output_events
-
-
-class NamespaceTrigger(NamespaceExpression, Trigger):
+class MultiTransition(object):
     pass
-
-
-class NamespaceOutputEvent(NamespaceNamed, OutputEvent):
-
-    @property
-    def port_name(self):
-        return self.element.port_name
-
-
-class NamespaceOnEvent(NamespaceTransition, OnEvent):
-
-    @property
-    def src_port_name(self):
-        return self.element.src_port_name
-
-
-class NamespaceOnCondition(NamespaceTransition, OnCondition):
-
-    @property
-    def trigger(self):
-        return NamespaceTrigger(self, self.element.trigger)
-
-
-class NamespaceStateVariable(NamespaceNamed, StateVariable):
-    pass
-
-
-class NamespaceAlias(NamespaceNamed, NamespaceExpression, Alias):
-    pass
-
-
-class NamespaceParameter(NamespaceNamed, Parameter):
-    pass
-
-
-class NamespaceConstant(NamespaceNamed, Constant):
-    pass
-
-
-class NamespaceTimeDerivative(NamespaceNamed, NamespaceExpression,
-                              TimeDerivative):
-
-    @property
-    def variable(self):
-        return self.element.variable
-
-
-class NamespaceStateAssignment(NamespaceNamed, NamespaceExpression,
-                               StateAssignment):
-    pass
-
-
-class NamespaceProperty(NamespaceNamed, Property):
-    pass
-
-
-class LocalAnalogPortConnection(AnalogPortConnection, Alias):
-
-    def __init__(self, port_connection):
-        snd_name = port_connection.sender_name
-        rcv_name = port_connection.receiver_name
-        snd_prt_name = port_connection.send_port_name
-        rcv_prt_name = port_connection.receive_port_name
-        AnalogPortConnection.__init__(
-            self, sender_name=snd_name, send_port=snd_prt_name,
-            receiver_name=rcv_name, receive_port=rcv_prt_name)
-        Alias.__init__(
-            self, port_connection.receiver.append_namespace(rcv_prt_name),
-            port_connection.sender.append_namespace(snd_prt_name))
-
-
-class LocalEventPortConnection(object):
-
-    def __init__(self, send_port, sender_name):
-        self._send_port_name = send_port
-        self._sender_name = sender_name
-        self._receivers = []
-
-    def add(self, port_connection):
-        self._receivers.append(port_connection)
-
-    @property
-    def send_port_name(self):
-        return self._send_port_name
-
-    @property
-    def receivers(self):
-        return iter(self._receivers)
-
-
-class LocalReducePortConnections(Alias):
-
-    def __init__(self, receive_port, receiver):
-        self._receive_port_name = receive_port
-        self._receiver = receiver
-        self._port_connections = []
-
-    def add(self, port_connection):
-        self._senders.append(port_connection)
-
-    @property
-    def receive_port_name(self):
-        return self._receive_port_name
-
-    @property
-    def receiver(self):
-        return self._receiver
-
-    @property
-    def receiver_name(self):
-        return self._receiver.name
-
-    @property
-    def port_connections(self):
-        return iter(self._port_connections)
-
-    @property
-    def name(self):
-        return self._receiver.append_namespace(self.receive_port_name)
-
-    @property
-    def _name(self):
-        # Required for duck-typing
-        return self.name
-
-    @property
-    def rhs(self):
-        return reduce(
-            operator.add,
-            (sympy.Symbol(pc.sender.append_namespace(pc.send_port_name))
-             for pc in self.port_connections))
-
-
-class BasePortExposure(BaseULObject):
-
-    defining_attributes = ('_name', '_component', '_port')
-
-    def __init__(self, name, component, port):
-        super(BasePortExposure, self).__init__()
-        self._name = name
-        self._component_name = component
-        self._port_name = port
-        self._component = None
-        self._port = None
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def component(self):
-        if self._component is None:
-            raise NineMLRuntimeError(
-                "Port exposure is not bound")
-        return self._component
-
-    @property
-    def port(self):
-        if self._port is None:
-            raise NineMLRuntimeError(
-                "Port exposure is not bound")
-        return self._port
-
-    @property
-    def component_name(self):
-        try:
-            return self.component.name
-        except NineMLRuntimeError:
-            return self._component_name
-
-    @property
-    def port_name(self):
-        try:
-            return self.port.name
-        except NineMLRuntimeError:
-            return self._port_name
-
-    @property
-    def attributes_with_units(self):
-        return chain(*[c.attributes_with_units for c in self.sub_component])
-
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
-                 name=self.name,
-                 component=self.component_name,
-                 port=self.port_name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        cls.check_tag(element)
-        return cls(name=element.attrib['name'],
-                   component=element.attrib['component'],
-                   port=element.attrib['port'])
-
-    @classmethod
-    def from_tuple(cls, tple, container):
-        name, component_name, port_name = tple
-        port = container.sub_component(component_name).component_class.port(
-            port_name)
-        if isinstance(port, AnalogSendPort):
-            exposure = AnalogSendPortExposure(name, component_name, port_name)
-        elif isinstance(port, AnalogReceivePort):
-            exposure = AnalogReceivePortExposure(name, component_name,
-                                                 port_name)
-        elif isinstance(port, AnalogReducePort):
-            exposure = AnalogReducePortExposure(name, component_name,
-                                                port_name)
-        elif isinstance(port, EventSendPort):
-            exposure = EventSendPortExposure(name, component_name, port_name)
-        elif isinstance(port, EventReceivePort):
-            exposure = EventReceivePortExposure(name, component_name,
-                                                port_name)
-        else:
-            assert False
-        return exposure
-
-    def bind(self, container):
-        self._component = container[self._component_name]
-        self._port = self._component.component_class.port(self._port_name)
-        self._component_name = None
-        self._port_name = None
-
-
-class AnalogSendPortExposure(BasePortExposure, AnalogSendPort):
-
-    element_name = 'AnalogSendPortExposure'
-
-
-class AnalogReceivePortExposure(BasePortExposure, AnalogReceivePort):
-
-    element_name = 'AnalogReceivePortExposure'
-
-
-class AnalogReducePortExposure(BasePortExposure, AnalogReducePort):
-
-    element_name = 'AnalogReducePortExposure'
-
-
-class EventSendPortExposure(BasePortExposure, EventSendPort):
-
-    element_name = 'EventSendPortExposure'
-
-
-class EventReceivePortExposure(BasePortExposure, EventReceivePort):
-
-    element_name = 'EventReceivePortExposure'
