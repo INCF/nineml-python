@@ -3,12 +3,48 @@ A module containing wrappers for abstraction layer elements that
 append the namespace of a sub component to every identifier to avoid
 name clashes in the global scope
 """
+import re
 import sympy
 from ..component import Property
 from nineml.abstraction import (
     Alias, TimeDerivative, Regime, OnEvent, OnCondition, StateAssignment,
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
 from nineml.exceptions import NineMLImmutableError
+
+
+# Matches multiple underscores, so they can be escaped by appending another
+# underscore (double underscores are used to delimit namespaces).
+multiple_underscore_re = re.compile(r'(.*)(__+)()')
+# Match only double underscores (no more or less)
+double_underscore_re = re.compile(r'(?<!_)__(?!_)')
+# Match more than double underscores to reverse escaping of double underscores
+# in sub-component suffixes by adding an additional underscore.
+more_than_double_underscore_re = re.compile(r'(__)_+')
+
+
+def append_namespace(identifier, namespace):
+    """
+    Appends a namespace to an identifier in such a way that it avoids name
+    clashes and the two parts can be split again using 'split_namespace' 
+    """
+    # Since double underscores are used to delimit namespaces from names
+    # within the namesapace (and 9ML names are not allowed to start or end
+    # in underscores) we append an underscore to each multiple underscore
+    # to avoid clash with the delimeter in the suffix
+    return (identifier + '__' +
+            multiple_underscore_re.sub(r'/1/2_/3', namespace))
+
+
+def split_namespace(cls, identifier_in_namespace):
+    """
+    Splits an identifer and a namespace that have been concatenated by
+    'append_namespace'
+    """
+    parts = double_underscore_re.split(identifier_in_namespace)
+    name = '__'.join(parts[:-1])
+    comp_name = parts[-1]
+    comp_name = more_than_double_underscore_re.sub('_', comp_name)
+    return name, comp_name
 
 
 class NamespaceNamed(object):

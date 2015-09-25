@@ -10,6 +10,7 @@ from nineml.xmlns import E
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError
 from ..port_connections import AnalogPortConnection
+from .namespace import append_namespace
 
 
 class LocalAnalogPortConnection(AnalogPortConnection, Alias):
@@ -27,34 +28,12 @@ class LocalAnalogPortConnection(AnalogPortConnection, Alias):
             port_connection.sender.append_namespace(snd_prt_name))
 
 
-class LocalEventPortConnections(object):
-
-    def __init__(self, send_port, sender_name):
-        self._send_port_name = send_port
-        self._sender_name = sender_name
-        self._receivers = []
-
-    def add(self, port_connection):
-        self._receivers.append(port_connection)
-
-    @property
-    def send_port_name(self):
-        return self._send_port_name
-
-    @property
-    def receivers(self):
-        return iter(self._receivers)
-
-
 class LocalReducePortConnections(Alias):
 
-    def __init__(self, receive_port, receiver):
+    def __init__(self, receive_port, receiver, port_connections):
         self._receive_port_name = receive_port
         self._receiver = receiver
-        self._port_connections = []
-
-    def add(self, port_connection):
-        self._senders.append(port_connection)
+        self._port_connections = port_connections
 
     @property
     def receive_port_name(self):

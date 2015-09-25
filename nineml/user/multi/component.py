@@ -1,42 +1,31 @@
 from itertools import chain
 from .. import BaseULObject
-import re
-from copy import copy
-from itertools import product
-from nineml.abstraction import (
-    Dynamics, Regime, AnalogReceivePort, AnalogReducePort, EventReceivePort,
-    StateVariable)
+from collections import defaultdict
+from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
 from nineml.base import MemberContainerObject
 from nineml.utils import ensure_valid_identifier
 from nineml.annotations import VALIDATE_DIMENSIONS
+from nineml.abstraction import (
+    Dynamics, Regime, AnalogReceivePort, AnalogReducePort, EventReceivePort,
+    StateVariable, OnEvent, OnCondition, OutputEvent)
 from .ports import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
     AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
-    LocalReducePortConnections, LocalEventPortConnections,
-    LocalAnalogPortConnection)
+    LocalReducePortConnections, LocalAnalogPortConnection)
 from .namespace import (
     NamespaceAlias, NamespaceRegime, NamespaceStateVariable, NamespaceConstant,
-    NamespaceParameter, NamespaceProperty)
-
-
-# Matches multiple underscores, so they can be escaped by appending another
-# underscore (double underscores are used to delimit namespaces).
-multiple_underscore_re = re.compile(r'(.*)(__+)()')
-# Match only double underscores (no more or less)
-double_underscore_re = re.compile(r'(?<!_)__(?!_)')
-# Match more than double underscores to reverse escaping of double underscores
-# in sub-component suffixes by adding an additional underscore.
-more_than_double_underscore_re = re.compile(r'(__)_+')
+    NamespaceParameter, NamespaceProperty, append_namespace,
+    split_namespace)
 
 
 class MultiDynamicsProperties(DynamicsProperties):
@@ -211,19 +200,10 @@ class MultiDynamics(Dynamics):
         else:
             self._sub_components = dict((d.name, d) for d in sub_components)
         self._analog_port_connections = {}
-        self._event_port_connections = {}
-        self._reduce_port_connections = {}
+        self._event_port_connections = defaultdict(dict)
+        self._reduce_port_connections = defaultdict(dict)
         # Insert an empty list for each event and reduce port in the combined
         # model
-        for sub_component in self.sub_components:
-            self._event_port_connections.update(
-                (sub_component.append_namespace(p.name),
-                 LocalEventPortConnections(p.name, sub_component.name))
-                for p in sub_component.component_class.event_send_ports)
-            self._reduce_port_connections.update(
-                (sub_component.append_namespace(p.name),
-                 LocalReducePortConnections(p.name, sub_component.name))
-                for p in sub_component.component_class.analog_reduce_ports)
         # Parse port connections (from tuples if required), bind them to the
         # ports within the subcomponents and append them to their respective
         # member dictionaries
@@ -232,12 +212,12 @@ class MultiDynamics(Dynamics):
                 port_connection = BasePortConnection.from_tuple(
                     port_connection, self)
             port_connection.bind(self)
-            snd_name = port_connection.sender.append_namespace(
-                port_connection.send_port_name)
-            rcv_name = port_connection.receiver.append_namespace(
-                port_connection.receive_port_name)
+            snd_key = (port_connection.sender_name,
+                       port_connection.send_port_name)
+            rcv_key = (port_connection.receiver_name,
+                       port_connection.receive_port_name)
             if isinstance(port_connection.receive_port, AnalogReceivePort):
-                if rcv_name in self._analog_port_connections:
+                if rcv_key in self._analog_port_connections:
                     raise NineMLRuntimeError(
                         "Multiple connections to receive port '{}' in '{} "
                         "sub-component of '{}'"
@@ -245,24 +225,17 @@ class MultiDynamics(Dynamics):
                                 port_connection.receiver_name, name))
                 port_connection = LocalAnalogPortConnection(
                     port_connection)
-                self._analog_port_connections[rcv_name] = port_connection
+                self._analog_port_connections[rcv_key] = port_connection
             elif isinstance(port_connection.receive_port, EventReceivePort):
-                self._event_port_connections[snd_name].add(port_connection)
+                self._event_port_connections[
+                    snd_key][rcv_key] = port_connection
             elif isinstance(port_connection.receive_port, AnalogReducePort):
-                self._reduce_port_connections[rcv_name].add(port_connection)
+                self._reduce_port_connections[
+                    rcv_key][snd_key] = port_connection
             else:
                 raise NineMLRuntimeError(
                     "Unrecognised port connection type '{}'"
                     .format(port_connection))
-        # =====================================================================
-        # Create the structures required for the Dynamics base class
-        # =====================================================================
-        # Create multi-regimes for each combination of regimes
-        # from across all the sub components
-        regime_combins = product(*[sc.regimes for sc in self.sub_components])
-        multi_regimes = (MultiRegime(dict(zip(self.sub_component_names, rc)))
-                         for rc in regime_combins)
-        self._regimes = dict((mr.name, mr) for mr in multi_regimes)
         # =====================================================================
         # Save port exposurs into separate member dictionaries
         # =====================================================================
@@ -316,11 +289,13 @@ class MultiDynamics(Dynamics):
 
     @property
     def event_port_connections(self):
-        return self._analog_port_connections.itervalues()
+        return chain(*[d.itervalues()
+                       for d in self._event_port_connections.itervalues()])
 
     @property
     def reduce_port_connections(self):
-        return self._reduce_port_connections.itervalues()
+        return chain(*[d.itervalues()
+                       for d in self._reduce_port_connections.itervalues()])
 
     @property
     def port_connections(self):
@@ -340,9 +315,17 @@ class MultiDynamics(Dynamics):
 
     @property
     def aliases(self):
-        return chain(self.analog_port_connections,
-                     self.reduce_port_connections,
-                     *[sc.aliases for sc in self.sub_components])
+        """
+        Chains port connections to analog receive and reduce ports, which
+        are treated simply as aliases in the flattened representation, with
+        all aliases defined in the sub components
+        """
+        return chain(
+            self.analog_port_connections,
+            (LocalReducePortConnections(
+                prt, rcv, self._reduce_port_connections[(prt, rcv)])
+             for prt, rcv in self._reduce_port_connections.iterkeys()),
+            *[sc.aliases for sc in self.sub_components])
 
     @property
     def constants(self):
@@ -352,6 +335,17 @@ class MultiDynamics(Dynamics):
     def state_variables(self):
         return chain(*[(StateVariable(sc, sv) for sv in sc.state_variables)
                        for sc in self.sub_components])
+
+    @property
+    def regimes(self):
+        # Create multi-regimes for each combination of regimes across the
+        # sub components
+        combinations = product(*[sc.regimes for sc in self.sub_components])
+        return (
+            MultiRegime(comb, self._event_send_port_exposures,
+                        self._event_receive_port_exposures,
+                        self._event_port_connections)
+            for comb in combinations)
 
     @property
     def analog_send_ports(self):
@@ -420,11 +414,11 @@ class MultiDynamics(Dynamics):
         return self._event_receive_port_exposures.iterkeys()
 
     def parameter(self, name):
-        name, comp_name = self.split_namespace(name)
+        name, comp_name = split_namespace(name)
         return self.sub_component(comp_name).component_class.parameter(name)
 
     def state_variable(self, name):
-        name, comp_name = self.split_namespace(name)
+        name, comp_name = split_namespace(name)
         component_class = self.sub_component(comp_name).component_class
         return component_class.state_variable(name)
 
@@ -435,13 +429,13 @@ class MultiDynamics(Dynamics):
             try:
                 alias = self._reduce_port_connections[name]
             except KeyError:
-                name, comp_name = self.split_namespace(name)
+                name, comp_name = split_namespace(name)
                 component_class = self.sub_component(comp_name).component_class
                 alias = component_class.alias(name)
         return alias
 
     def constant(self, name):
-        name, comp_name = self.split_namespace(name)
+        name, comp_name = split_namespace(name)
         return self.sub_component(comp_name).component_class.constant(name)
 
     def analog_send_port(self, name):
@@ -505,7 +499,7 @@ class MultiDynamics(Dynamics):
         Looks up the appropriate member dictionary for objects of type element
         """
         dct_name = self.lookup_member_dict_name(element)
-        comp_name = self.split_namespace(element._name)[1]
+        comp_name = split_namespace(element._name)[1]
         return getattr(self.sub_component[comp_name], dct_name)
 
     @property
@@ -514,14 +508,6 @@ class MultiDynamics(Dynamics):
             *[(getattr(sc.component, n)
                for n in sc.component.class_to_member_dict.itervalues())
               for sc in self.sub_components])
-
-    @classmethod
-    def split_namespace(cls, full_name):
-        parts = double_underscore_re.split(full_name)
-        name = '__'.join(parts[:-1])
-        comp_name = parts[-1]
-        comp_name = more_than_double_underscore_re.sub('_', comp_name)
-        return name, comp_name
 
 
 class SubDynamics(object):
@@ -535,16 +521,7 @@ class SubDynamics(object):
         return self._name
 
     def append_namespace(self, name):
-        """
-        The suffix appended to names within the sub-component to distinguish
-        them in the global namespace
-        """
-        # Since double underscores are used to delimit namespaces from names
-        # within the namesapace (and 9ML names are not allowed to start or end
-        # in underscores) we append an underscore to each multiple underscore
-        # to avoid clash with the delimeter in the suffix
-        return (name + '__' +
-                multiple_underscore_re.sub(r'/1/2_/3', self.name))
+        return append_namespace(name, self.name)
 
     @property
     def component_class(self):
@@ -583,32 +560,43 @@ class SubDynamics(object):
 
 class MultiRegime(Regime):
 
-    def __init__(self, sub_regimes_dict):
+    def __init__(self, sub_regimes,
+                 event_send_port_exposures, event_receive_port_exposures,
+                 event_port_connections):
         """
-        `sub_regimes_dict` -- a dictionary containing the sub_regimes and
-                              referenced by the names of the sub_components
-                              they respond to
+        `sub_regimes_dict`       -- a dictionary containing the sub_regimes and
+                                    referenced by the names of the
+                                    sub_components they respond to
+        `event_send_port_exposures`    -- reference to the event send port
+                                          exposures in the MultiDynamics
+        `event_receive_port_exposures` -- reference to the event receive port
+                                          exposures in the MultiDynamics
+        `event_port_connections` -- reference to the event send port
+                                    connections in the MultiDynamics
         """
-        self._sub_regimes = copy(sub_regimes_dict)
+        self._sub_regimes = dict((r.component.name, r) for r in sub_regimes)
+        self._event_send_port_exposures = event_send_port_exposures
+        self._event_receive_port_exposures = event_receive_port_exposures
+        self._event_port_connections = event_port_connections
 
     @property
     def sub_regimes(self):
         return self._sub_regimes.itervalues()
 
     @property
-    def sub_component_names(self):
+    def sub_components(self):
         return self._sub_regimes.iterkeys()
 
     @property
     def num_sub_regimes(self):
         return len(self._sub_regimes)
 
-    def sub_regime(self, sub_component_name):
-        return self._sub_regimes[sub_component_name]
+    def sub_regime(self, sub_component):
+        return self._sub_regimes[sub_component]
 
     @property
     def name(self):
-        return '__'.join(r.name for r in self.sub_regimes) + '__regime'
+        return '_'.join(r.name for r in self.sub_regimes) + '_regime'
 
     def lookup_member_dict(self, element):
         """
@@ -637,18 +625,51 @@ class MultiRegime(Regime):
 
     @property
     def on_events(self):
-        raise NotImplementedError
+        """
+        All OnEvents in sub_regimes that are exposed via an event receive
+        port exposure
+        """
+        all_on_events = chain(*[r.on_events for r in self.sub_regimes])
+        # Zip together all on events with their EventReceivePortExposures,
+        # if present
+        # NB: izip will return an empty list if there is no exposure for the
+        #     on event port or a list of length 1 (containing a tuple of the
+        #     port exposure and the on event that listens to it if there is)
+        #     these lists are then chained to form a list of 2-tuples (ie. not
+        #     a list of lists) containing port exposure and on event pairs
+        exposed_on_events = chain(*[
+            izip((pe for pe in self._event_receive_port_exposures
+                  if oe.port is pe.port), (oe,))
+            for oe in all_on_events])
+        # Group on events by their port exposure and return as an MultiOnEvent
+        key = lambda tple: tple[0]
+        return (
+            MultiOnEvent(prt, grp, self._event_send_port_exposures,
+                         self._event_port_connections)
+            for prt, grp in groupby(sorted(exposed_on_events, key=key),
+                                    key=key))
 
     @property
     def on_conditions(self):
-        raise NotImplementedError
+        """
+        All conditions across all sub-regimes sorted, grouped by their trigger
+        and chained output-event -> on-events
+        """
+        # Group on conditions by their trigger condition and return as an
+        # MultiOnCondition
+        all_on_conds = chain(*[r.on_conditions for r in self.sub_regimes])
+        key = lambda oc: oc.trigger  # Group key for on conditions
+        return (
+            MultiOnCondition(tr, grp, self._event_send_port_exposures,
+                             self._event_port_connections)
+            for tr, grp in groupby(sorted(all_on_conds, key=key), key=key))
 
     def time_derivative(self, variable):
-        name, comp_name = self.split_namespace(variable)
+        name, comp_name = split_namespace(variable)
         return self.sub_regime(comp_name).time_derivative(name)
 
     def alias(self, name):
-        name, comp_name = self.split_namespace(name)
+        name, comp_name = split_namespace(name)
         return self.sub_regime(comp_name).alias(name)
 
     def on_event(self, port_name):
@@ -691,4 +712,93 @@ class MultiRegime(Regime):
 
 
 class MultiTransition(object):
-    pass
+
+    def __init__(self, sub_transitions, event_send_port_exposures,
+                 event_port_connections):
+        self._sub_transitions = dict((t.sub_component.name, t)
+                                     for t in sub_transitions)
+        self._event_send_port_exposures = event_send_port_exposures
+        self._event_port_connections = event_port_connections
+
+    @property
+    def target_regime(self):
+        raise NotImplementedError
+
+    @property
+    def target_regime_name(self):
+        raise NotImplementedError
+
+    @property
+    def sub_transitions(self):
+        return self._sub_transitions
+
+    def sub_transition(self, sub_component):
+        return next(t for t in self._sub_transition
+                    if t.sub_component is sub_component)
+
+    @property
+    def sub_transition_namespaces(self):
+        return self._sub_transitions.iterkeys()
+
+    @property
+    def state_assignments(self):
+        return chain(*[t.state_assignments for t in self.sub_transitions])
+
+    @property
+    def output_events(self):
+        # Return all output events that are exposed by port exposures
+        return (
+            ExposedOutputEvent(pe) for pe in self._event_send_port_exposures
+            if pe.port in self._all_output_event_ports)
+
+    @property
+    def _all_output_event_ports(self):
+        return set(oe.port for oe in chain(*[t.output_events
+                                             for t in self.sub_transitions]))
+
+    def state_assignment(self, name):
+        name, namespace = split_namespace(name)
+        return self._sub_transitions[namespace].state_assignment(name)
+
+    def output_event(self, name):
+        exposure = self._event_send_port_exposures[name]
+        if exposure.port not in self._all_output_event_ports:
+            raise NineMLMissingElementError(
+                "'{}' output events is not present in transition")
+        return ExposedOutputEvent(exposure)
+
+    @property
+    def num_state_assignments(self):
+        return len(list(self.state_assignments))
+
+    @property
+    def num_output_events(self):
+        return len(list(self.output_events))
+
+
+class MultiOnEvent(MultiTransition, OnEvent):
+
+    @property
+    def src_port_name(self):
+        return self.element.src_port_name
+
+
+class MultiOnCondition(MultiTransition, OnCondition):
+
+    def __init__(self, trigger, sub_transitions):
+        MultiTransition.__init__(self, sub_transitions)
+        self._trigger = trigger
+
+    @property
+    def trigger(self):
+        return self._trigger
+
+
+class ExposedOutputEvent(OutputEvent):
+
+    def __init__(self, port_exposure):
+        self._port_exposure = port_exposure
+
+    @property
+    def _name(self):
+        return self._port_exposure.name
