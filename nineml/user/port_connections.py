@@ -75,6 +75,18 @@ class BasePortConnection(BaseULObject):
                         self.receive_port_name))
 
     @property
+    def name(self):
+        return '_'.join((
+            (self.sender_role if self.sender_role is not None
+             else self.sender_name), self.send_port_name,
+            (self.receiver_role if self.receiver_role is not None
+             else self.receiver_name), self.receive_port_name))
+
+    @property
+    def _name(self):
+        return self.name
+
+    @property
     def sender(self):
         if self._sender is None:
             raise NineMLRuntimeError("Ports have not been bound")
