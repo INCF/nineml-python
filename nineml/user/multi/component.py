@@ -25,9 +25,10 @@ from .ports import (
     AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
     LocalReducePortConnections, LocalAnalogPortConnection)
 from .namespace import (
-    NamespaceAlias, NamespaceRegime, NamespaceStateVariable, NamespaceConstant,
-    NamespaceParameter, NamespaceProperty, append_namespace,
-    split_namespace)
+    _NamespaceAlias, _NamespaceRegime, _NamespaceStateVariable,
+    _NamespaceConstant, _NamespaceParameter, _NamespaceProperty,
+    append_namespace, split_namespace, make_regime_name,
+    make_delay_trigger_name)
 
 
 class MultiDynamicsProperties(DynamicsProperties):
@@ -157,7 +158,8 @@ class SubDynamicsProperties(BaseULObject):
 
     @property
     def properties(self):
-        return (NamespaceProperty(self, p) for p in self._component.properties)
+        return (_NamespaceProperty(self, p)
+                for p in self._component.properties)
 
     def __iter__(self):
         return self.properties
@@ -355,9 +357,10 @@ class MultiDynamics(Dynamics):
         # All statevariables in all subcomponents mapped into the container
         # namespace, plus state variables used to trigger local event
         # connections after a delays
-        return chain((StateVariable(delay_trigger_name(pc), dimension=un.time)
+        return chain((StateVariable(make_delay_trigger_name(pc),
+                                    dimension=un.time)
                       for pc in self.nonzero_delay_event_port_connections),
-                     *[(NamespaceStateVariable(sc, sv)
+                     *[(_NamespaceStateVariable(sc, sv)
                         for sv in sc.state_variables)
                        for sc in self.sub_components])
 
@@ -367,9 +370,9 @@ class MultiDynamics(Dynamics):
         # sub components
         combinations = product(*[sc.regimes for sc in self.sub_components])
         return (
-            MultiRegime(comb, self._event_send_port_exposures,
-                        self._event_receive_port_exposures,
-                        self._event_port_connections)
+            _MultiRegime(comb, self._event_send_port_exposures,
+                         self._event_receive_port_exposures,
+                         self._event_port_connections)
             for comb in combinations)
 
     @property
@@ -554,36 +557,36 @@ class SubDynamics(object):
 
     @property
     def parameters(self):
-        return (NamespaceParameter(self, p)
+        return (_NamespaceParameter(self, p)
                 for p in self.component_class.parameters)
 
     @property
     def aliases(self):
-        return (NamespaceAlias(self, a) for a in self.component_class.aliases)
+        return (_NamespaceAlias(self, a) for a in self.component_class.aliases)
 
     @property
     def state_variables(self):
-        return (NamespaceStateVariable(self, v)
+        return (_NamespaceStateVariable(self, v)
                 for v in self.component.state_variables)
 
     @property
     def constants(self):
-        return (NamespaceConstant(self, p)
+        return (_NamespaceConstant(self, p)
                 for p in self.component_class.constants)
 
     @property
     def regimes(self):
-        return (NamespaceRegime(self, r)
+        return (_NamespaceRegime(self, r)
                 for r in self.component_class.regimes)
 
 
 # =============================================================================
-# Namespace wrapper objects, which append namespaces to their names and
+# _Namespace wrapper objects, which append namespaces to their names and
 # expressions
 # =============================================================================
 
 
-class MultiRegime(Regime):
+class _MultiRegime(Regime):
 
     def __init__(self, sub_regimes, parent):
         """
@@ -617,7 +620,7 @@ class MultiRegime(Regime):
 
     @property
     def _name(self):
-        return regime_name(self._sub_regimes)
+        return make_regime_name(self._sub_regimes)
 
     def lookup_member_dict(self, element):
         """
@@ -661,10 +664,10 @@ class MultiRegime(Regime):
             izip((pe for pe in self.parent._event_receive_port_exposures
                   if oe.port is pe.port), (oe,))
             for oe in self._all_sub_on_events])
-        # Group on events by their port exposure and return as an MultiOnEvent
+        # Group on events by their port exposure and return as an _MultiOnEvent
         key = lambda tple: tple[0]
         return (
-            MultiOnEvent(prt, self.with_daisy_chained(grp), self)
+            _MultiOnEvent(prt, self.with_daisy_chained(grp), self)
             for prt, grp in groupby(sorted(exposed_on_events, key=key),
                                     key=key))
 
@@ -679,11 +682,11 @@ class MultiRegime(Regime):
         and chained output-event -> on-events
         """
         # Group on conditions by their trigger condition and return as an
-        # MultiOnCondition
+        # _MultiOnCondition
         all_on_conds = chain(*[r.on_conditions for r in self.sub_regimes])
         key = lambda oc: oc.trigger  # Group key for on conditions
         return (
-            MultiOnCondition(tr, self.with_daisy_chained(grp), self)
+            _MultiOnCondition(tr, self.with_daisy_chained(grp), self)
             for tr, grp in groupby(sorted(all_on_conds, key=key), key=key))
 
     def time_derivative(self, variable):
@@ -759,7 +762,7 @@ class MultiRegime(Regime):
                             yield chained_event
 
 
-class MultiTransition(object):
+class _MultiTransition(object):
     """
     Collects multiple simultaneous transitions into a single transition
     """
@@ -799,7 +802,8 @@ class MultiTransition(object):
         # state-assignments of delay triggers for output events connected to
         # local event port connections with non-zero delay
         return chain(
-            (StateAssignment(delay_trigger_name(pc), 't + {}'.format(pc.delay))
+            (StateAssignment(make_delay_trigger_name(pc),
+                             't + {}'.format(pc.delay))
              for pc in self.parent.parent._nonzero_delay_event_port.connections
              if pc.port in self._all_output_event_ports),
             *[t.state_assignments for t in self.sub_transitions])
@@ -808,7 +812,7 @@ class MultiTransition(object):
     def output_events(self):
         # Return all output events that are exposed by port exposures
         return (
-            ExposedOutputEvent(pe)
+            _ExposedOutputEvent(pe)
             for pe in self.parent.parent._event_send_port_exposures
             if pe.port in self._all_output_event_ports)
 
@@ -827,7 +831,7 @@ class MultiTransition(object):
             raise NineMLMissingElementError(
                 "Output event for '{}' port is not present in transition"
                 .format(name))
-        return ExposedOutputEvent(exposure)
+        return _ExposedOutputEvent(exposure)
 
     @property
     def num_state_assignments(self):
@@ -843,10 +847,10 @@ class MultiTransition(object):
             *[t.output_events for t in self.sub_transitions]))
 
 
-class MultiOnEvent(MultiTransition, OnEvent):
+class _MultiOnEvent(_MultiTransition, OnEvent):
 
     def __init__(self, src_port_name, sub_transitions):
-        MultiTransition.__init__(self, sub_transitions)
+        _MultiTransition.__init__(self, sub_transitions)
         self._src_port_name = src_port_name
 
     @property
@@ -854,10 +858,10 @@ class MultiOnEvent(MultiTransition, OnEvent):
         return self._src_port_name
 
 
-class MultiOnCondition(MultiTransition, OnCondition):
+class _MultiOnCondition(_MultiTransition, OnCondition):
 
     def __init__(self, trigger, sub_transitions):
-        MultiTransition.__init__(self, sub_transitions)
+        _MultiTransition.__init__(self, sub_transitions)
         self._trigger = trigger
 
     @property
@@ -865,7 +869,7 @@ class MultiOnCondition(MultiTransition, OnCondition):
         return self._trigger
 
 
-class ExposedOutputEvent(OutputEvent):
+class _ExposedOutputEvent(OutputEvent):
 
     def __init__(self, port_exposure):
         self._port_exposure = port_exposure
@@ -873,23 +877,3 @@ class ExposedOutputEvent(OutputEvent):
     @property
     def _name(self):
         return self._port_exposure.name
-
-
-def delay_trigger_name(port_conn):
-    """
-    Creates a name for a delay trigger statevariable from a given event port
-    connection object
-    """
-    return '__'.join((
-        (port_conn.sender_role
-         if port_conn.sender_role is not None else port_conn.sender_name),
-        port_conn.send_port_name,
-        (port_conn.receiver_role
-         if port_conn.receiver_role is not None else port_conn.receiver_name),
-        port_conn.receive_port_name))
-    return port_conn.name + '__delay_trigger'
-
-
-def regime_name(self, sub_regimes_dict):
-    sorted_keys = sorted(sub_regimes_dict.iterkeys())
-    return '_'.join(sub_regimes_dict[k] for k in sorted_keys) + '_regime'
