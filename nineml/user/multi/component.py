@@ -20,10 +20,10 @@ from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, AnalogReducePort, EventReceivePort,
     StateVariable, OnEvent, OnCondition, OutputEvent, StateAssignment)
 from nineml.abstraction.dynamics.transitions import Transition
-from .ports import (
+from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
-    AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
-    LocalReducePortConnections, LocalAnalogPortConnection)
+    AnalogReceivePortExposure, AnalogSendPortExposure, _BasePortExposure,
+    _LocalReducePortConnections, _LocalAnalogPortConnection)
 from .namespace import (
     _NamespaceAlias, _NamespaceRegime, _NamespaceStateVariable,
     _NamespaceConstant, _NamespaceParameter, _NamespaceProperty,
@@ -228,7 +228,7 @@ class MultiDynamics(Dynamics):
                         "sub-component of '{}'"
                         .format(port_connection.receive_port_name,
                                 port_connection.receiver_name, name))
-                port_connection = LocalAnalogPortConnection(
+                port_connection = _LocalAnalogPortConnection(
                     port_connection)
                 self._analog_port_connections[rcv_key] = port_connection
             elif isinstance(port_connection.receive_port, EventReceivePort):
@@ -256,7 +256,7 @@ class MultiDynamics(Dynamics):
         if port_exposures is not None:
             for exposure in port_exposures:
                 if isinstance(exposure, tuple):
-                    exposure = BasePortExposure.from_tuple(exposure, self)
+                    exposure = _BasePortExposure.from_tuple(exposure, self)
                 exposure.bind(self)
                 if isinstance(exposure, AnalogSendPortExposure):
                     self._analog_send_port_exposures[exposure.name] = exposure
@@ -343,7 +343,7 @@ class MultiDynamics(Dynamics):
         """
         return chain(
             self.analog_port_connections,
-            (LocalReducePortConnections(
+            (_LocalReducePortConnections(
                 prt, rcv, self._reduce_port_connections[(prt, rcv)])
              for prt, rcv in self._reduce_port_connections.iterkeys()),
             *[sc.aliases for sc in self.sub_components])
