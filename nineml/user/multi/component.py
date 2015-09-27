@@ -19,6 +19,7 @@ from nineml.annotations import VALIDATE_DIMENSIONS
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, AnalogReducePort, EventReceivePort,
     StateVariable, OnEvent, OnCondition, OutputEvent, StateAssignment)
+from nineml.abstraction.dynamics.transitions import Transition
 from .ports import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
     AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
@@ -657,15 +658,13 @@ class MultiRegime(Regime):
         #     these lists are then chained to form a list of 2-tuples (ie. not
         #     a list of lists) containing port exposure and on event pairs
         exposed_on_events = chain(*[
-            izip((pe for pe in self._event_receive_port_exposures
+            izip((pe for pe in self.parent._event_receive_port_exposures
                   if oe.port is pe.port), (oe,))
             for oe in self._all_sub_on_events])
         # Group on events by their port exposure and return as an MultiOnEvent
         key = lambda tple: tple[0]
         return (
-            MultiOnEvent(
-                prt, chain(*[self._with_daisy_chained(oe) for oe in grp]),
-                self)
+            MultiOnEvent(prt, self.with_daisy_chained(grp), self)
             for prt, grp in groupby(sorted(exposed_on_events, key=key),
                                     key=key))
 
@@ -684,9 +683,7 @@ class MultiRegime(Regime):
         all_on_conds = chain(*[r.on_conditions for r in self.sub_regimes])
         key = lambda oc: oc.trigger  # Group key for on conditions
         return (
-            MultiOnCondition(
-                tr, chain(*[self._with_daisy_chained(oc) for oc in grp]),
-                self)
+            MultiOnCondition(tr, self.with_daisy_chained(grp), self)
             for tr, grp in groupby(sorted(all_on_conds, key=key), key=key))
 
     def time_derivative(self, variable):
@@ -735,28 +732,31 @@ class MultiRegime(Regime):
     def num_aliases(self):
         return len(list(self.aliases))
 
-    def _with_daisy_chained(self, sub_on_event):
+    def with_daisy_chained(self, sub_on_events):
         """
         Yields a sub-OnEvent (i.e. an OnEvent in a sub-regime) along with
         all the other sub-OnEvents that are daisy-chained with it via event
         event port connections with zero delay.
         """
-        yield sub_on_event  # Yield the sub event at the start of the chain
-        # Loop through all its output events and yield any daisy chained
-        # events
-        for output_event in sub_on_event.output_events:
-            # Get all receive ports that are activated by this output event
-            # i.e. all zero-delay event port connections that are linked to
-            # this output_event
-            active_ports = set(
-                pc.receive_port for pc in
-                self._zero_delay_event_port_connections[
-                    (output_event.sub_component.name, output_event.name)])
-            # Get all the OnEvent transitions that are connected to this
-            for on_event in self._all_sub_on_events:
-                if on_event.port in active_ports:
-                    for chained_event in self._with_daisy_chained(on_event):
-                        yield chained_event
+        if isinstance(sub_on_events, Transition):
+            sub_on_events = (sub_on_events,)  # wrap single transition in tuple
+        for sub_on_event in sub_on_events:
+            yield sub_on_event  # Yield the sub event at the start of the chain
+            # Loop through all its output events and yield any daisy chained
+            # events
+            for output_event in sub_on_event.output_events:
+                # Get all receive ports that are activated by this output event
+                # i.e. all zero-delay event port connections that are linked to
+                # this output_event
+                active_ports = set(
+                    pc.receive_port for pc in
+                    self.parent._zero_delay_event_port_connections[
+                        (output_event.sub_component.name, output_event.name)])
+                # Get all the OnEvent transitions that are connected to this
+                for on_event in self._all_sub_on_events:
+                    if on_event.port in active_ports:
+                        for chained_event in self.with_daisy_chained(on_event):
+                            yield chained_event
 
 
 class MultiTransition(object):
@@ -786,7 +786,7 @@ class MultiTransition(object):
         return self._sub_transitions
 
     def sub_transition(self, sub_component):
-        return next(t for t in self._sub_transition
+        return next(t for t in self._sub_transitions
                     if t.sub_component is sub_component)
 
     @property
@@ -800,7 +800,7 @@ class MultiTransition(object):
         # local event port connections with non-zero delay
         return chain(
             (StateAssignment(delay_trigger_name(pc), 't + {}'.format(pc.delay))
-             for pc in self._nonzero_delay_connections
+             for pc in self.parent.parent._nonzero_delay_event_port.connections
              if pc.port in self._all_output_event_ports),
             *[t.state_assignments for t in self.sub_transitions])
 
@@ -808,7 +808,8 @@ class MultiTransition(object):
     def output_events(self):
         # Return all output events that are exposed by port exposures
         return (
-            ExposedOutputEvent(pe) for pe in self._event_send_port_exposures
+            ExposedOutputEvent(pe)
+            for pe in self.parent.parent._event_send_port_exposures
             if pe.port in self._all_output_event_ports)
 
     def state_assignment(self, variable):
@@ -821,7 +822,7 @@ class MultiTransition(object):
                 .format(variable))
 
     def output_event(self, name):
-        exposure = self._event_send_port_exposures[name]
+        exposure = self.parent.parent._event_send_port_exposures[name]
         if exposure.port not in self._all_output_event_ports:
             raise NineMLMissingElementError(
                 "Output event for '{}' port is not present in transition"
@@ -850,7 +851,7 @@ class MultiOnEvent(MultiTransition, OnEvent):
 
     @property
     def src_port_name(self):
-        return self.element.src_port_name
+        return self._src_port_name
 
 
 class MultiOnCondition(MultiTransition, OnCondition):
