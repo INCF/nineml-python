@@ -1,7 +1,7 @@
 import os.path
 import unittest
 from nineml import load, Document
-from nineml.user.multicomponent import (
+from nineml.user.multi.component import (
     MultiDynamicsProperties, SubDynamicsProperties, MultiDynamics,
     AnalogReceivePortExposure)
 from nineml.abstraction import (

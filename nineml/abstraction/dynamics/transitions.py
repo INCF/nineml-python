@@ -91,7 +91,7 @@ class OutputEvent(BaseALObject):
         ensure_valid_identifier(self._port_name)
 
     def __hash__(self):
-        return self.port_name
+        return hash(self.port_name)
 
     @property
     def port_name(self):

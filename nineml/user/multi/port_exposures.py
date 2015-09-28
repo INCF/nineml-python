@@ -183,4 +183,4 @@ class _LocalReducePortConnections(Alias):
         return reduce(
             operator.add,
             (sympy.Symbol(pc.sender.append_namespace(pc.send_port_name))
-             for pc in self.port_connections))    
+             for pc in self.port_connections))

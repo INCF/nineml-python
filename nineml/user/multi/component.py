@@ -1,4 +1,5 @@
 from itertools import chain
+from copy import copy
 from .. import BaseULObject
 from collections import defaultdict
 from itertools import product, groupby, izip
@@ -18,7 +19,8 @@ from nineml import units as un
 from nineml.annotations import VALIDATE_DIMENSIONS
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, AnalogReducePort, EventReceivePort,
-    StateVariable, OnEvent, OnCondition, OutputEvent, StateAssignment)
+    StateVariable, OnEvent, OnCondition, OutputEvent, StateAssignment,
+    Trigger)
 from nineml.abstraction.dynamics.transitions import Transition
 from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
@@ -27,8 +29,8 @@ from .port_exposures import (
 from .namespace import (
     _NamespaceAlias, _NamespaceRegime, _NamespaceStateVariable,
     _NamespaceConstant, _NamespaceParameter, _NamespaceProperty,
-    append_namespace, split_namespace, make_regime_name,
-    make_delay_trigger_name)
+    _NamespaceOnCondition, append_namespace, split_namespace, make_regime_name,
+    make_delay_trigger_name, split_multi_regime_name)
 
 
 class MultiDynamicsProperties(DynamicsProperties):
@@ -369,11 +371,7 @@ class MultiDynamics(Dynamics):
         # Create multi-regimes for each combination of regimes across the
         # sub components
         combinations = product(*[sc.regimes for sc in self.sub_components])
-        return (
-            _MultiRegime(comb, self._event_send_port_exposures,
-                         self._event_receive_port_exposures,
-                         self._event_port_connections)
-            for comb in combinations)
+        return (self._create_multi_regime(comb) for comb in combinations)
 
     @property
     def analog_send_ports(self):
@@ -466,6 +464,15 @@ class MultiDynamics(Dynamics):
         name, comp_name = split_namespace(name)
         return self.sub_component(comp_name).component_class.constant(name)
 
+    def regime(self, name):
+        try:
+            sub_regime_names = split_multi_regime_name(name)
+        except TypeError:
+            sub_regime_names = name  # Assume it is already an iterable
+        return self._create_multi_regime(
+            self.sub_component(sc_n).regime(append_namespace(sc_n, r_n))
+            for sc_n, r_n in izip(self._sub_component_keys, sub_regime_names))
+
     def analog_send_port(self, name):
         return self._analog_send_port_exposures[name]
 
@@ -537,6 +544,13 @@ class MultiDynamics(Dynamics):
                for n in sc.component.class_to_member_dict.itervalues())
               for sc in self.sub_components])
 
+    @property
+    def _sub_component_keys(self):
+        return sorted(self.sub_component_names)
+
+    def _create_multi_regime(self, sub_regimes):
+        return _MultiRegime(sub_regimes, self)
+
 
 class SubDynamics(object):
 
@@ -600,7 +614,8 @@ class _MultiRegime(Regime):
         `event_port_connections` -- reference to the event send port
                                     connections in the MultiDynamics
         """
-        self._sub_regimes = dict((r.component.name, r) for r in sub_regimes)
+        self._sub_regimes = dict((r.sub_component.name, r)
+                                 for r in sub_regimes)
         self._parent = parent
 
     @property
@@ -661,7 +676,7 @@ class _MultiRegime(Regime):
         #     these lists are then chained to form a list of 2-tuples (ie. not
         #     a list of lists) containing port exposure and on event pairs
         exposed_on_events = chain(*[
-            izip((pe for pe in self.parent._event_receive_port_exposures
+            izip((pe for pe in self._parent._event_receive_port_exposures
                   if oe.port is pe.port), (oe,))
             for oe in self._all_sub_on_events])
         # Group on events by their port exposure and return as an _MultiOnEvent
@@ -684,10 +699,20 @@ class _MultiRegime(Regime):
         # Group on conditions by their trigger condition and return as an
         # _MultiOnCondition
         all_on_conds = chain(*[r.on_conditions for r in self.sub_regimes])
+        # Get all event connection ports that receive connections with non-zero
+        # delay
+        nonzero_delay_receive_ports = [
+            pc.receive_port
+            for pc in self._parent.nonzero_delay_event_port_connections]
         key = lambda oc: oc.trigger  # Group key for on conditions
-        return (
-            _MultiOnCondition(tr, self.with_daisy_chained(grp), self)
-            for tr, grp in groupby(sorted(all_on_conds, key=key), key=key))
+        # Chain delayed on events and grouped on conditions
+        return chain(
+            (_MultiOnCondition(self.with_daisy_chained(_DelayedOnEvent(oe)),
+                               self)
+             for oe in self._all_sub_on_events
+             if oe.port in nonzero_delay_receive_ports),
+            (_MultiOnCondition(tr, self.with_daisy_chained(grp), self)
+             for tr, grp in groupby(sorted(all_on_conds, key=key), key=key)))
 
     def time_derivative(self, variable):
         name, comp_name = split_namespace(variable)
@@ -767,6 +792,8 @@ class _MultiTransition(object):
     Collects multiple simultaneous transitions into a single transition
     """
 
+    defining_attributes = ('_sub_transitions',)
+
     def __init__(self, sub_transitions, parent):
         self._sub_transitions = dict((t.sub_component.name, t)
                                      for t in sub_transitions)
@@ -778,11 +805,20 @@ class _MultiTransition(object):
 
     @property
     def target_regime(self):
-        raise NotImplementedError
+        sub_regimes = copy(self._parent._sub_regimes)
+        sub_regimes.update(
+            (k, t.target_regime)
+            for k, t in self._sub_transitions.iteritems())
+        return self.parent.parent._create_multi_regime(sub_regimes)
 
     @property
     def target_regime_name(self):
-        raise NotImplementedError
+        sub_regime_names = dict(
+            (k, sr.name) for k, sr in self._parent._sub_regimes.iteritems())
+        sub_regime_names.update(
+            (k, t.target_regime_name)
+            for k, t in self._sub_transitions.iteritems())
+        return make_regime_name(sub_regime_names)
 
     @property
     def sub_transitions(self):
@@ -849,6 +885,8 @@ class _MultiTransition(object):
 
 class _MultiOnEvent(_MultiTransition, OnEvent):
 
+    defining_attributes = ('_sub_regimes', '_src_port_name')
+
     def __init__(self, src_port_name, sub_transitions):
         _MultiTransition.__init__(self, sub_transitions)
         self._src_port_name = src_port_name
@@ -859,6 +897,8 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
 
 
 class _MultiOnCondition(_MultiTransition, OnCondition):
+
+    defining_attributes = ('_sub_regimes', '_trigger')
 
     def __init__(self, trigger, sub_transitions):
         _MultiTransition.__init__(self, sub_transitions)
@@ -871,9 +911,28 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
 
 class _ExposedOutputEvent(OutputEvent):
 
+    defining_attributes = ('_port_exposure')
+
     def __init__(self, port_exposure):
         self._port_exposure = port_exposure
 
     @property
     def _name(self):
         return self._port_exposure.name
+
+
+class _DelayedOnEvent(_NamespaceOnCondition):
+    """
+    OnEvents that are triggered by delayed local connections are represented
+    by OnConditions, which are triggered by a "delay trigger" state variable
+    being passed by the simulation time 't'
+    """
+
+    def __init__(self, on_event, port_connection):
+        self._sub_componet = on_event,
+        self._port_connection = port_connection
+
+    @property
+    def trigger(self):
+        state_var = make_delay_trigger_name(self._port_connection)
+        return Trigger('t > {}'.format(state_var))
