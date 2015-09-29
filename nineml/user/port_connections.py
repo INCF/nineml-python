@@ -70,8 +70,12 @@ class BasePortConnection(BaseULObject):
 
     def __repr__(self):
         return ("{}(sender={}->{}, receiver={}->{})"
-                .format(self.element_name, self._sender_role,
-                        self.send_port_name, self._receiver_role,
+                .format(self.element_name,
+                        (self.sender_name if self.sender_name is not None
+                         else 'role:' + self.sender_role),
+                        self.send_port_name,
+                        (self.receiver_name if self.receiver_name is not None
+                         else 'role:' + self.receiver_role),
                         self.receive_port_name))
 
     @property

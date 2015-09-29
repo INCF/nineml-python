@@ -68,7 +68,7 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
         self.sv_declared.append(state_variable.name)
 
     def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.state_assignments_lhses.append(state_assignment.lhs)
+        self.state_assignments_lhs.append(state_assignment.lhs)
 
 
 class AliasesAreNotRecursiveDynamicsValidator(
@@ -121,9 +121,6 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
                 if r not in connected:
                     add_connected_regimes_recursive(r, connected)
 
-        # Perhaps we have no transition graph; this is OK:
-        if len(self.regimes) == 0:
-            continue
         connected = set()
         add_connected_regimes_recursive(self.regimes[0], connected)
         if len(connected) != len(self.regimes):

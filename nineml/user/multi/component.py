@@ -1,8 +1,8 @@
 from itertools import chain
 from copy import copy
 from .. import BaseULObject
-from collections import defaultdict
-from itertools import product, groupby, izip
+from collections import defaultdict, Iterable
+from itertools import product, groupby, izip, tee
 from nineml.reference import resolve_reference, write_reference
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
@@ -14,7 +14,7 @@ from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
 from nineml.base import MemberContainerObject
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
 from nineml import units as un
 from nineml.annotations import VALIDATE_DIMENSIONS
 from nineml.abstraction import (
@@ -744,13 +744,8 @@ class _MultiRegime(Regime):
         # Group on events by their port exposure and return as an _MultiOnEvent
         key = lambda tple: tple[0]
         return (
-            _MultiOnEvent(prt, self.with_daisy_chained(grp), self)
-            for prt, grp in groupby(sorted(exposed_on_events, key=key),
-                                    key=key))
-
-    @property
-    def _all_sub_on_events(self):
-        return chain(*[r.on_events for r in self.sub_regimes])
+            _MultiOnEvent(grp, self)
+            for _, grp in groupby(sorted(exposed_on_events, key=key), key=key))
 
     @property
     def on_conditions(self):
@@ -769,12 +764,11 @@ class _MultiRegime(Regime):
         key = lambda oc: oc.trigger  # Group key for on conditions
         # Chain delayed on events and grouped on conditions
         return chain(
-            (_MultiOnCondition(self.with_daisy_chained(_DelayedOnEvent(oe)),
-                               self)
+            (_MultiOnCondition(_DelayedOnEvent(oe), self)
              for oe in self._all_sub_on_events
              if oe.src_port_name in nonzero_delay_receive_ports),
-            (_MultiOnCondition(tr, self.with_daisy_chained(grp), self)
-             for tr, grp in groupby(sorted(all_on_conds, key=key), key=key)))
+            (_MultiOnCondition(grp, self)
+             for _, grp in groupby(sorted(all_on_conds, key=key), key=key)))
 
     def time_derivative(self, variable):
         name, comp_name = split_namespace(variable)
@@ -822,16 +816,14 @@ class _MultiRegime(Regime):
     def num_aliases(self):
         return len(list(self.aliases))
 
-    def with_daisy_chained(self, sub_on_events):
+    def daisy_chained_on_events(self, sub_on_events):
         """
         Yields a sub-OnEvent (i.e. an OnEvent in a sub-regime) along with
         all the other sub-OnEvents that are daisy-chained with it via event
         event port connections with zero delay.
         """
-        if isinstance(sub_on_events, Transition):
-            sub_on_events = (sub_on_events,)  # wrap single transition in tuple
+        sub_on_events = normalise_parameter_as_list(sub_on_events)
         for sub_on_event in sub_on_events:
-            yield sub_on_event  # Yield the sub event at the start of the chain
             # Loop through all its output events and yield any daisy chained
             # events
             for output_event in sub_on_event.output_events:
@@ -839,15 +831,21 @@ class _MultiRegime(Regime):
                 # i.e. all zero-delay event port connections that are linked to
                 # this output_event
                 active_ports = set(
-                    pc.receive_port_name for pc in
-                    self._parent._zero_delay_event_port_connections[
+                    (pc.receiver_name, pc.receive_port_name)
+                    for pc in self._parent._zero_delay_event_port_connections[
                         (output_event.sub_component.name,
-                         output_event.element.port_name)])
+                         output_event.element.port_name)].itervalues())
                 # Get all the OnEvent transitions that are connected to this
                 for on_event in self._all_sub_on_events:
-                    if on_event.src_port_name in active_ports:
-                        for chained_event in self.with_daisy_chained(on_event):
-                            yield chained_event
+                    if (on_event.sub_component.name,
+                            on_event.src_port_name) in active_ports:
+                        yield on_event
+                        for chained in self.daisy_chained_on_events(on_event):
+                            yield chained
+
+    @property
+    def _all_sub_on_events(self):
+        return chain(*[r.on_events for r in self.sub_regimes])
 
 
 class _MultiTransition(object):
@@ -858,14 +856,15 @@ class _MultiTransition(object):
     defining_attributes = ('_sub_transitions',)
 
     def __init__(self, sub_transitions, parent):
-        self._sub_transitions = {}
-        for sub_transition in sub_transitions:
-            namespace = sub_transition.sub_component.name
+        self._sub_transitions = dict(
+            (st.sub_component.name, st) for st in sub_transitions)
+        for chained_event in parent.daisy_chained_on_events(sub_transitions):
+            namespace = chained_event.sub_component.name
             if namespace in self._sub_transitions:
                 raise NineMLRuntimeError(
-                    "Transition loop with non-zero delay found in chain "
-                    "beggining with {}".format(sub_transition._name))
-            self._sub_transitions[namespace] = sub_transition
+                    "Transition loop with non-zero delay found in on-event "
+                    "chain beggining with {}".format(chained_event._name))
+            self._sub_transitions[namespace] = chained_event
         self._parent = parent
 
     @property
@@ -943,17 +942,20 @@ class _MultiTransition(object):
 
     @property
     def _all_output_event_ports(self):
-        return set(oe.port for oe in chain(
-            *[t.output_events for t in self.sub_transitions]))
+        return set(oe.port for oe in chain(*[t.output_events
+                                             for t in self.sub_transitions]))
 
 
 class _MultiOnEvent(_MultiTransition, OnEvent):
 
     defining_attributes = ('_sub_regimes', '_src_port_name')
 
-    def __init__(self, src_port_name, sub_transitions, parent):
+    def __init__(self, sub_transitions, parent):
+        sub_transitions = normalise_parameter_as_list(sub_transitions)
+        self._src_port_name = sub_transitions[0].src_port_name
+        assert all(st.src_port_name == self._src_port_name
+                   for st in sub_transitions[1:])
         _MultiTransition.__init__(self, sub_transitions, parent)
-        self._src_port_name = src_port_name
 
     @property
     def src_port_name(self):
@@ -964,9 +966,11 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
 
     defining_attributes = ('_sub_regimes', '_trigger')
 
-    def __init__(self, trigger, sub_transitions, parent):
+    def __init__(self, sub_transitions, parent):
+        sub_transitions = normalise_parameter_as_list(sub_transitions)
+        self._trigger = sub_transitions[0].trigger
+        assert all(st.trigger == self._trigger for st in sub_transitions[1:])
         _MultiTransition.__init__(self, sub_transitions, parent)
-        self._trigger = trigger
 
     @property
     def trigger(self):
