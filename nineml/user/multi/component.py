@@ -1,8 +1,8 @@
 from itertools import chain
 from copy import copy
 from .. import BaseULObject
-from collections import defaultdict, Iterable
-from itertools import product, groupby, izip, tee
+from collections import defaultdict
+from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
 from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
@@ -21,7 +21,6 @@ from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, AnalogReducePort, EventReceivePort,
     StateVariable, OnEvent, OnCondition, OutputEvent, StateAssignment,
     Trigger)
-from nineml.abstraction.dynamics.transitions import Transition
 from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
     AnalogReceivePortExposure, AnalogSendPortExposure, _BasePortExposure,
