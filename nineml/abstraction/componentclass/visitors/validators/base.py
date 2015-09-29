@@ -8,23 +8,7 @@ docstring needed
 from ..base import ComponentActionVisitor
 
 
-class BaseValidator(object):
+class BaseValidator(ComponentActionVisitor):
 
     def get_warnings(self):
         raise NotImplementedError()
-
-
-class PerNamespaceComponentValidator(BaseValidator,
-                                     ComponentActionVisitor):
-
-    def __init__(self, require_explicit_overrides=True):
-        BaseValidator.__init__(self)
-        ComponentActionVisitor.__init__(
-            self, require_explicit_overrides=require_explicit_overrides)
-
-    # Override this function, so we can extract out the
-    # namespace, then propogate this as a parameter.
-    def visit_componentclass(self, component, **kwargs):  # @UnusedVariable
-        namespace = component.get_node_addr()
-        super(PerNamespaceComponentValidator, self).visit_componentclass(
-            component, namespace=namespace)

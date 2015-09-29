@@ -5,7 +5,6 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from collections import defaultdict
-from . import PerNamespaceComponentValidator
 from nineml.exceptions import NineMLRuntimeError, NineMLDimensionError
 from nineml.abstraction.expressions.utils import is_valid_lhs_target
 from nineml.abstraction.expressions import reserved_identifiers
@@ -15,20 +14,20 @@ import sympy
 from sympy import sympify
 from nineml.base import SendPortBase
 from nineml.abstraction.expressions import Expression
-from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
+from .base import BaseValidator
 
 
-class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
+class AliasesAreNotRecursiveComponentValidator(BaseValidator):
 
     """Check that aliases are not self-referential"""
 
     def __init__(self, component_class):
-        PerNamespaceComponentValidator.__init__(
+        BaseValidator.__init__(
             self, require_explicit_overrides=False)
         self.visit(component_class)
 
-    def action_componentclass(self, component_class, namespace):
+    def action_componentclass(self, component_class):
 
         unresolved_aliases = dict((a.lhs, a) for a in component_class.aliases)
 
@@ -42,28 +41,26 @@ class AliasesAreNotRecursiveComponentValidator(PerNamespaceComponentValidator):
                     if not alias_contains_unresolved_symbols(alias)]
 
         while(unresolved_aliases):
-
             resolved_aliases = get_resolved_aliases()
             if resolved_aliases:
                 for r in resolved_aliases:
                     del unresolved_aliases[r.lhs]
 
             else:
-                errmsg = "Unable to resolve all aliases in %s. " % namespace
-                errmsg += "You may have a recursion issue."
-                errmsg += ("Remaining Aliases: %s" %
-                           ','.join(unresolved_aliases.keys()))
-                raise NineMLRuntimeError(errmsg)
+                raise NineMLRuntimeError(
+                    "Unable to resolve all aliases, you may have a recursion "
+                    "issue. Remaining Aliases: {}".format(
+                        ','.join(unresolved_aliases.keys())))
 
 
-class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
+class NoUnresolvedSymbolsComponentValidator(BaseValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
 
     def __init__(self, component_class):
-        PerNamespaceComponentValidator.__init__(
+        BaseValidator.__init__(
             self, require_explicit_overrides=False)
 
         self.available_symbols = defaultdict(list)
@@ -111,23 +108,22 @@ class NoUnresolvedSymbolsComponentValidator(PerNamespaceComponentValidator):
             raise NineMLRuntimeError(err)
         self.available_symbols[namespace].append(symbol)
 
-    def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if alias in self.component_class.aliases:
             self.add_symbol(namespace=namespace, symbol=alias.lhs)
             self.aliases[namespace].append(alias)
 
-    def action_parameter(self, parameter, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace=namespace, symbol=parameter.name)
 
-    def action_constant(self, constant, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace, constant.name)
 
 
-class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
+class NoDuplicatedObjectsComponentValidator(BaseValidator):
 
     def __init__(self, component_class):
-        PerNamespaceComponentValidator.__init__(
-            self, require_explicit_overrides=True)
+        BaseValidator.__init__(self, require_explicit_overrides=True)
         self.all_objects = list()
         self.visit(component_class)
         assert_no_duplicates(self.all_objects)
@@ -145,8 +141,7 @@ class NoDuplicatedObjectsComponentValidator(PerNamespaceComponentValidator):
         self.all_objects.append(constant)
 
 
-class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
-        PerNamespaceComponentValidator):
+class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(BaseValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -154,7 +149,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     """
 
     def __init__(self, component_class):
-        PerNamespaceComponentValidator.__init__(
+        BaseValidator.__init__(
             self, require_explicit_overrides=False)
 
         self.visit(component_class)
@@ -176,11 +171,10 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
         self.check_lhssymbol_is_valid(constant.name)
 
 
-class DimensionalityComponentValidator(PerNamespaceComponentValidator):
+class DimensionalityComponentValidator(BaseValidator):
 
     def __init__(self, component_class):
-        PerNamespaceComponentValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseValidator.__init__(self, require_explicit_overrides=False)
         self.component_class = component_class
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database

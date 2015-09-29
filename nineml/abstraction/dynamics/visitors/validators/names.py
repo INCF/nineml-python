@@ -8,7 +8,7 @@ from nineml.utils import assert_no_duplicates
 from ....componentclass.visitors.validators import (
     LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
-from . import PerNamespaceDynamicsValidator
+from . import BaseDynamicsValidator
 from ..base import DynamicsActionVisitor
 from nineml.exceptions import NineMLRuntimeError
 
@@ -27,23 +27,23 @@ class LocalNameConflictsDynamicsValidator(
     will use names.
     """
 
-    def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace,
                                       symbol=state_variable.name)
 
-    def action_analogreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
 
-    def action_analogreduceport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
 
-    def action_eventreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
 
 
 class DimensionNameConflictsDynamicsValidator(
         DimensionNameConflictsComponentValidator,
-        PerNamespaceDynamicsValidator):
+        BaseDynamicsValidator):
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(state_variable.dimension)
@@ -58,14 +58,14 @@ class DimensionNameConflictsDynamicsValidator(
         self.check_conflicting_dimension(port.dimension)
 
 
-class DuplicateRegimeNamesDynamicsValidator(PerNamespaceDynamicsValidator):
+class DuplicateRegimeNamesDynamicsValidator(BaseDynamicsValidator):
 
     def __init__(self, component_class):
         super(DuplicateRegimeNamesDynamicsValidator, self).__init__(
             require_explicit_overrides=False)
         self.visit(component_class)
 
-    def action_componentclass(self, component_class, namespace):  # @UnusedVariable @IgnorePep8
+    def action_componentclass(self, component_class):  # @UnusedVariable @IgnorePep8
         regime_names = [r.name for r in component_class.regimes]
         assert_no_duplicates(regime_names)
 

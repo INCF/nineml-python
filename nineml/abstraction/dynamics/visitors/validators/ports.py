@@ -7,13 +7,13 @@ docstring needed
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from . import PerNamespaceDynamicsValidator
+from . import BaseDynamicsValidator
 from ....componentclass.visitors.validators.ports import (
     PortConnectionsComponentValidator)
 from ..base import DynamicsActionVisitor
 
 
-class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
+class EventPortsDynamicsValidator(BaseDynamicsValidator):
 
     """
     Check that each OutputEvent and OnEvent has a corresponding EventPort
@@ -64,24 +64,24 @@ class EventPortsDynamicsValidator(PerNamespaceDynamicsValidator):
                     print ('Unable to find events generated for: ', ns,
                            evt_port_name)
 
-    def action_eventsendport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
         assert port.name not in self.event_send_ports[namespace]
         self.event_send_ports[namespace][port.name] = port
 
-    def action_eventreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
         assert port.name not in self.event_receive_ports[namespace]
         self.event_receive_ports[namespace][port.name] = port
 
-    def action_outputevent(self, event_out, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable @IgnorePep8
         self.output_events[namespace].append(event_out.port_name)
 
-    def action_onevent(self, on_event, namespace, **kwargs):  # @UnusedVariable
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.input_events[namespace].append(on_event.src_port_name)
 
 
 # Check that the sub-components stored are all of the
 # right types:
-class OutputAnalogPortsDynamicsValidator(PerNamespaceDynamicsValidator):
+class OutputAnalogPortsDynamicsValidator(BaseDynamicsValidator):
 
     """
     Check that all output AnalogPorts reference a local symbol, either an alias
@@ -111,13 +111,13 @@ class OutputAnalogPortsDynamicsValidator(PerNamespaceDynamicsValidator):
         assert symbol not in self.available_symbols[namespace]
         self.available_symbols[namespace].append(symbol)
 
-    def action_analogsendport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
         self.output_analogports[namespace].append(port.name)
 
-    def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(namespace=namespace, symbol=state_variable.name)
 
-    def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if alias not in chain(*(r.aliases
                                 for r in self.component_class.regimes)):
             self.add_symbol(namespace=namespace, symbol=alias.lhs)
@@ -131,17 +131,17 @@ class PortConnectionsDynamicsValidator(
     each send & recv port only has a single connection.
     """
 
-    def action_analogsendport(self, analogsendport, namespace):
-        self._action_port(analogsendport, namespace)
+    def action_analogsendport(self, analogsendport):
+        self._action_port(analogsendport)
 
-    def action_analogreceiveport(self, analogreceiveport, namespace):
-        self._action_port(analogreceiveport, namespace)
+    def action_analogreceiveport(self, analogreceiveport):
+        self._action_port(analogreceiveport)
 
-    def action_analogreduceport(self, analogreduceport, namespace):
-        self._action_port(analogreduceport, namespace)
+    def action_analogreduceport(self, analogreduceport):
+        self._action_port(analogreduceport)
 
-    def action_eventsendport(self, eventsendport, namespace):
-        self._action_port(eventsendport, namespace)
+    def action_eventsendport(self, eventsendport):
+        self._action_port(eventsendport)
 
-    def action_eventreceiveport(self, eventreceiveport, namespace):
-        self._action_port(eventreceiveport, namespace)
+    def action_eventreceiveport(self, eventreceiveport):
+        self._action_port(eventreceiveport)
