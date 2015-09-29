@@ -21,8 +21,8 @@ class ComponentActionVisitor(ComponentVisitor):
     def visit_componentclass(self, component_class, **kwargs):
         self.action_componentclass(component_class, **kwargs)
         self._scopes.append(component_class)
-        for p in component_class:
-            p.accept_visitor(self, **kwargs)
+        for e in component_class.elements:
+            e.accept_visitor(self, **kwargs)
         popped = self._scopes.pop()
         assert popped is component_class
 

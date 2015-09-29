@@ -18,7 +18,7 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def visit_regime(self, regime, **kwargs):
         self.action_regime(regime, **kwargs)
-        for e in regime:
+        for e in regime.elements:
             e.accept_visitor(self, **kwargs)
 
     def visit_statevariable(self, state_variable, **kwargs):
@@ -54,12 +54,12 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_oncondition(self, on_condition, **kwargs):
         self.action_oncondition(on_condition, **kwargs)
         on_condition.trigger.accept_visitor(self, **kwargs)
-        for e in on_condition:
+        for e in on_condition.elements:
             e.accept_visitor(self, **kwargs)
 
     def visit_onevent(self, on_event, **kwargs):
         self.action_onevent(on_event, **kwargs)
-        for e in on_event:
+        for e in on_event.elements:
             e.accept_visitor(self, **kwargs)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable

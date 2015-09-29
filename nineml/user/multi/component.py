@@ -34,7 +34,7 @@ from .namespace import (
 
 class MultiDynamicsProperties(DynamicsProperties):
 
-    element_name = "MultiDynamics"
+    element_name = "MultiDynamicsProperties"
     defining_attributes = ('_name', '_sub_component_properties',
                            '_port_exposures', '_port_connections')
 
@@ -186,7 +186,130 @@ class SubDynamicsProperties(BaseULObject):
         return cls(element.attrib['name'], dynamics_properties)
 
 
+class SubDynamics(object):
+
+    def __init__(self, name, component_class):
+        self._name = name
+        self._component_class = component_class
+
+    @property
+    def name(self):
+        return self._name
+
+    def append_namespace(self, name):
+        return append_namespace(name, self.name)
+
+    @property
+    def component_class(self):
+        return self._component_class
+
+    @property
+    def parameters(self):
+        return (_NamespaceParameter(self, p)
+                for p in self.component_class.parameters)
+
+    @property
+    def aliases(self):
+        return (_NamespaceAlias(self, a) for a in self.component_class.aliases)
+
+    @property
+    def state_variables(self):
+        return (_NamespaceStateVariable(self, v)
+                for v in self.component_class.state_variables)
+
+    @property
+    def constants(self):
+        return (_NamespaceConstant(self, p)
+                for p in self.component_class.constants)
+
+    @property
+    def regimes(self):
+        return (_NamespaceRegime(self, r)
+                for r in self.component_class.regimes)
+
+    def parameter(self, name):
+        elem_name, _ = split_namespace(name)
+        return _NamespaceParameter(
+            self, self.component_class.parameter(elem_name))
+
+    def alias(self, name):
+        elem_name, _ = split_namespace(name)
+        return _NamespaceAlias(self, self.component_class.alias(elem_name))
+
+    def state_variable(self, variable):
+        elem_name, _ = split_namespace(variable)
+        return _NamespaceStateVariable(
+            self, self.component_class.state_variable(elem_name))
+
+    def constant(self, name):
+        elem_name, _ = split_namespace(name)
+        return _NamespaceConstant(self,
+                                  self.component_class.constant(elem_name))
+
+    def regime(self, name):
+        elem_name, _ = split_namespace(name)
+        return _NamespaceRegime(self, self.component_class.regime(elem_name))
+
+    @property
+    def num_parameters(self):
+        return len(list(self.component_class.parameters))
+
+    @property
+    def num_aliases(self):
+        return len(list(self.component_class.aliases))
+
+    @property
+    def num_state_variables(self):
+        return len(list(self.component_class.state_variables))
+
+    @property
+    def num_constants(self):
+        return len(list(self.component_class.constants))
+
+    @property
+    def num_regimes(self):
+        return len(list(self.component_class.regimes))
+
+    @property
+    def parameter_names(self):
+        return (p.name for p in self.parameters)
+
+    @property
+    def alias_names(self):
+        return (p.name for p in self.aliases)
+
+    @property
+    def state_variable_names(self):
+        return (p.name for p in self.state_variables)
+
+    @property
+    def constant_names(self):
+        return (p.name for p in self.constants)
+
+    @property
+    def regime_names(self):
+        return (p.name for p in self.regimes)
+
+
 class MultiDynamics(Dynamics):
+
+    element_name = 'MultiDynamics'
+    defining_attributes = (
+        '_name', '_sub_components', '_analog_port_connections',
+        '_zero_delay_event_port_connections',
+        '_nonzero_delay_event_port_connections',
+        '_reduce_port_connections', '_analog_send_port_exposures',
+        '_analog_receive_port_exposures', '_analog_reduce_port_exposures',
+        '_event_send_port_exposures', '_event_receive_port_exposures')
+    class_to_members = {
+        'SubDynamics': 'sub_components',
+        'AnalogPortConnection': 'analog_port_connections',
+        'EventPortConnection': 'event_port_connections',
+        'AnalogSendPortExposure': 'analog_send_ports',
+        'AnalogReceivePortExposure': 'analog_receive_ports',
+        'AnalogReducePortExposure': 'analog_reduce_ports',
+        'EventSendPortExposure': 'event_send_ports',
+        'EventReceivePortExposure': 'event_receive_ports'}
 
     def __init__(self, name, sub_components, port_connections,
                  port_exposures=None, url=None, validate_dimensions=True):
@@ -205,8 +328,7 @@ class MultiDynamics(Dynamics):
         else:
             self._sub_components = dict((d.name, d) for d in sub_components)
         self._analog_port_connections = {}
-        self._zero_delay_event_port_connections = defaultdict(dict)
-        self._nonzero_delay_event_port_connections = defaultdict(dict)
+        self._event_port_connections = defaultdict(dict)
         self._reduce_port_connections = defaultdict(dict)
         # Insert an empty list for each event and reduce port in the combined
         # model
@@ -233,12 +355,8 @@ class MultiDynamics(Dynamics):
                     port_connection)
                 self._analog_port_connections[rcv_key] = port_connection
             elif isinstance(port_connection.receive_port, EventReceivePort):
-                if port_connection.delay:
-                    self._nonzero_delay_event_port_connections[
-                        snd_key][rcv_key] = port_connection
-                else:
-                    self._zero_delay_event_port_connections[
-                        snd_key][rcv_key] = port_connection
+                self._event_port_connections[
+                    snd_key][rcv_key] = port_connection
             elif isinstance(port_connection.receive_port, AnalogReducePort):
                 self._reduce_port_connections[
                     rcv_key][snd_key] = port_connection
@@ -299,20 +417,16 @@ class MultiDynamics(Dynamics):
 
     @property
     def event_port_connections(self):
-        return chain(self.zero_delay_event_port_connections,
-                     self.nonzero_delay_event_port_connecttions)
+        return chain(*(d.itervalues()
+                       for d in self._event_port_connections.itervalues()))
 
     @property
     def zero_delay_event_port_connections(self):
-        return chain(*[
-            d.itervalues()
-            for d in self._zero_delay_event_port_connections.itervalues()])
+        return (pc for pc in self.event_port_connections if pc.delay == 0.0)
 
     @property
     def nonzero_delay_event_port_connections(self):
-        return chain(*[
-            d.itervalues()
-            for d in self._nonzero_delay_event_port_connections.itervalues()])
+        return (pc for pc in self.event_port_connections if pc.delay != 0.0)
 
     @property
     def reduce_port_connections(self):
@@ -361,9 +475,7 @@ class MultiDynamics(Dynamics):
         return chain((StateVariable(make_delay_trigger_name(pc),
                                     dimension=un.time)
                       for pc in self.nonzero_delay_event_port_connections),
-                     *[(_NamespaceStateVariable(sc, sv)
-                        for sv in sc.state_variables)
-                       for sc in self.sub_components])
+                     *(sc.state_variables for sc in self.sub_components))
 
     @property
     def regimes(self):
@@ -528,20 +640,25 @@ class MultiDynamics(Dynamics):
         """Returns an iterator over the local |EventReceivePort| objects"""
         return len(self._event_receive_port_exposures)
 
-    def lookup_member_dict(self, element):
-        """
-        Looks up the appropriate member dictionary for objects of type element
-        """
-        dct_name = self.lookup_member_dict_name(element)
-        comp_name = split_namespace(element._name)[1]
-        return getattr(self.sub_component[comp_name], dct_name)
+#     def lookup_member_dict(self, element):
+#         """
+#         Looks up the appropriate member dictionary for objects of type element
+#         """
+#         dct_name = self.lookup_members_name(element)
+#         comp_name = split_namespace(element._name)[1]
+#         return getattr(self.sub_component[comp_name], dct_name)
+#
+#     @property
+#     def all_member_dicts(self):
+#         return chain(
+#             *[(getattr(sc.component_class, n)
+#                for n in sc.component_class.class_to_members.itervalues())
+#               for sc in self.sub_components])
 
     @property
-    def all_member_dicts(self):
-        return chain(
-            *[(getattr(sc.component_class, n)
-               for n in sc.component_class.class_to_member_dict.itervalues())
-              for sc in self.sub_components])
+    def elements(self):
+        return chain(*(getattr(self, name)
+                       for name in Dynamics.class_to_members.itervalues()))
 
     @property
     def _sub_component_keys(self):
@@ -549,111 +666,6 @@ class MultiDynamics(Dynamics):
 
     def _create_multi_regime(self, sub_regimes):
         return _MultiRegime(sub_regimes, self)
-
-
-class SubDynamics(object):
-
-    def __init__(self, name, component_class):
-        self._name = name
-        self._component_class = component_class
-
-    @property
-    def name(self):
-        return self._name
-
-    def append_namespace(self, name):
-        return append_namespace(name, self.name)
-
-    @property
-    def component_class(self):
-        return self._component_class
-
-    @property
-    def parameters(self):
-        return (_NamespaceParameter(self, p)
-                for p in self.component_class.parameters)
-
-    @property
-    def aliases(self):
-        return (_NamespaceAlias(self, a) for a in self.component_class.aliases)
-
-    @property
-    def state_variables(self):
-        return (_NamespaceStateVariable(self, v)
-                for v in self.component.state_variables)
-
-    @property
-    def constants(self):
-        return (_NamespaceConstant(self, p)
-                for p in self.component_class.constants)
-
-    @property
-    def regimes(self):
-        return (_NamespaceRegime(self, r)
-                for r in self.component_class.regimes)
-
-    def parameter(self, name):
-        elem_name, _ = split_namespace(name)
-        return _NamespaceParameter(
-            self, self.component_class.parameter(elem_name))
-
-    def alias(self, name):
-        elem_name, _ = split_namespace(name)
-        return _NamespaceAlias(self, self.component_class.alias(elem_name))
-
-    def state_variable(self, variable):
-        elem_name, _ = split_namespace(variable)
-        return _NamespaceStateVariable(
-            self, self.component.state_variable(elem_name))
-
-    def constant(self, name):
-        elem_name, _ = split_namespace(name)
-        return _NamespaceConstant(self,
-                                  self.component_class.constant(elem_name))
-
-    def regime(self, name):
-        elem_name, _ = split_namespace(name)
-        return _NamespaceRegime(self, self.component_class.regime(elem_name))
-
-    @property
-    def num_parameters(self):
-        return len(list(self.component_class.parameters))
-
-    @property
-    def num_aliases(self):
-        return len(list(self.component_class.aliases))
-
-    @property
-    def num_state_variables(self):
-        return len(list(self.component.state_variables))
-
-    @property
-    def num_constants(self):
-        return len(list(self.component_class.constants))
-
-    @property
-    def num_regimes(self):
-        return len(list(self.component_class.regimes))
-
-    @property
-    def parameter_names(self):
-        return (p.name for p in self.parameters)
-
-    @property
-    def alias_names(self):
-        return (p.name for p in self.aliases)
-
-    @property
-    def state_variable_names(self):
-        return (p.name for p in self.state_variables)
-
-    @property
-    def constant_names(self):
-        return (p.name for p in self.constants)
-
-    @property
-    def regime_names(self):
-        return (p.name for p in self.regimes)
 
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and
@@ -702,14 +714,14 @@ class _MultiRegime(Regime):
         """
         Looks up the appropriate member dictionary for objects of type element
         """
-        dct_name = self.lookup_member_dict_name(element)
+        dct_name = self.lookup_members_name(element)
         comp_name = MultiDynamics.split_namespace(element._name)[1]
         return getattr(self.sub_regime(comp_name), dct_name)
 
     @property
     def all_member_dicts(self):
         return chain(*[
-            (getattr(r, n) for n in r.class_to_member_dict.itervalues())
+            (getattr(r, n) for n in r.class_to_members.itervalues())
             for r in self.sub_regimes])
 
     # Member Properties:
@@ -831,9 +843,10 @@ class _MultiRegime(Regime):
                 # this output_event
                 active_ports = set(
                     (pc.receiver_name, pc.receive_port_name)
-                    for pc in self._parent._zero_delay_event_port_connections[
+                    for pc in self._parent._event_port_connections[
                         (output_event.sub_component.name,
-                         output_event.element.port_name)].itervalues())
+                         output_event.element.port_name)].itervalues()
+                    if pc.delay == 0.0)
                 # Get all the OnEvent transitions that are connected to this
                 for on_event in self._all_sub_on_events:
                     if (on_event.sub_component.name,
@@ -884,7 +897,7 @@ class _MultiTransition(object):
 
     @property
     def sub_transitions(self):
-        return self._sub_transitions
+        return self._sub_transitions.itervalues()
 
     def sub_transition(self, sub_component):
         return next(t for t in self._sub_transitions
@@ -902,7 +915,8 @@ class _MultiTransition(object):
         return chain(
             (StateAssignment(make_delay_trigger_name(pc),
                              't + {}'.format(pc.delay))
-             for pc in self.parent.parent._nonzero_delay_event_port.connections
+             for pc in
+                 self._parent._parent.nonzero_delay_event_port_connections
              if pc.port in self._all_output_event_ports),
             *[t.state_assignments for t in self.sub_transitions])
 
@@ -911,7 +925,7 @@ class _MultiTransition(object):
         # Return all output events that are exposed by port exposures
         return (
             _ExposedOutputEvent(pe)
-            for pe in self.parent.parent._event_send_port_exposures
+            for pe in self._parent._parent.event_send_ports
             if pe.port in self._all_output_event_ports)
 
     def state_assignment(self, variable):
@@ -924,7 +938,7 @@ class _MultiTransition(object):
                 .format(variable))
 
     def output_event(self, name):
-        exposure = self.parent.parent._event_send_port_exposures[name]
+        exposure = self.parent.parent.event_send_port(name)
         if exposure.port not in self._all_output_event_ports:
             raise NineMLMissingElementError(
                 "Output event for '{}' port is not present in transition"

@@ -81,9 +81,9 @@ class BasePortConnection(BaseULObject):
     @property
     def name(self):
         return '_'.join((
-            (self.sender_role if self.sender_role is not None
+            (self.sender_role if self._sender_role is not None
              else self.sender_name), self.send_port_name,
-            (self.receiver_role if self.receiver_role is not None
+            (self.receiver_role if self._receiver_role is not None
              else self.receiver_name), self.receive_port_name))
 
     @property

@@ -38,15 +38,15 @@ class Dynamics(ComponentClass):
                             '_analog_reduce_ports', '_event_send_ports',
                             '_event_receive_ports', '_regimes',
                             '_state_variables'))
-    class_to_member_dict = dict(
-        tuple(ComponentClass.class_to_member_dict.iteritems()) +
-        ((AnalogSendPort, '_analog_send_ports'),
-         (AnalogReceivePort, '_analog_receive_ports'),
-         (AnalogReducePort, '_analog_reduce_ports'),
-         (EventSendPort, '_event_send_ports'),
-         (EventReceivePort, '_event_receive_ports'),
-         (Regime, '_regimes'),
-         (StateVariable, '_state_variables')))
+    class_to_members = dict(
+        tuple(ComponentClass.class_to_members.iteritems()) +
+        (('AnalogSendPort', 'analog_send_ports'),
+         ('AnalogReceivePort', 'analog_receive_ports'),
+         ('AnalogReducePort', 'analog_reduce_ports'),
+         ('EventSendPort', 'event_send_ports'),
+         ('EventReceivePort', 'event_receive_ports'),
+         ('Regime', 'regimes'),
+         ('StateVariable', 'state_variables')))
 
     send_port_dicts = ('_analog_send_ports', '_event_send_ports')
     receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',

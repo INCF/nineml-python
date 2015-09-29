@@ -84,8 +84,8 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
     __metaclass__ = ABCMeta  # Abstract base class
 
     defining_attributes = ('_name', '_parameters', '_aliases', '_constants')
-    class_to_member_dict = {Parameter: '_parameters', Alias: '_aliases',
-                            Constant: '_constants'}
+    class_to_members = {'Parameter': 'parameters', 'Alias': 'aliases',
+                        'Constant': 'constants'}
 
     def __init__(self, name, parameters=None, aliases=None, constants=None,
                  url=None):
