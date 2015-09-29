@@ -794,9 +794,9 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
 #         e = Dynamics(name='E')
 #         f = Dynamics(name='F')
 #         g = Dynamics(name='G')
-#         b = Dynamics(name='B', subnodes={'d': d, 'e': e})
-#         c = Dynamics(name='C', subnodes={'f': f, 'g': g})
-#         a = Dynamics(name='A', subnodes={'b': b, 'c': c})
+#         b = Dynamics(name='B', sub_components={'d': d, 'e': e})
+#         c = Dynamics(name='C', sub_components={'f': f, 'g': g})
+#         a = Dynamics(name='A', sub_components={'b': b, 'c': c})
 # 
 #         # Construction of the objects causes cloning to happen:
 #         # Therefore we test by looking up and checking that there
@@ -917,7 +917,7 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
 
     def test_connect_ports(self):
         # Signature: name(self, src, sink)
-                # Connects the ports of 2 sub_dynamics.
+                # Connects the ports of 2 sub_components.
                 #
                 # The ports can be specified as ``string`` s or ``NamespaceAddresses`` es.
                 #
@@ -933,66 +933,66 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         tCoba = TestableComponent('coba_synapse')
 
         # Should be fine:
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()})
-        c.connect_ports('iaf.V', 'coba.V')
+        c = MultiDynamics(name='C1',
+                          sub_components={'iaf': tIaf(), 'coba': tCoba()},
+                          port_connections=[('iaf', 'V', 'coba', 'V')])
 
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()},
-                           portconnections=[('iaf.V', 'coba.V')]
-                           )
+        c = MultiDynamics(name='C1',
+                          sub_components={'iaf': tIaf(), 'coba': tCoba()},
+                          port_connections=[('iaf', 'V', 'coba', 'V')])
 
         # Non existant Ports:
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()})
+        c = MultiDynamics(name='C1',
+                          sub_components={'iaf': tIaf(), 'coba': tCoba()})
         self.assertRaises(
             NineMLRuntimeError,
-            c.connect_ports, 'iaf.V1', 'coba.V')
+            c.connect_ports, 'iaf', 'V1', 'coba', 'V')
         self.assertRaises(
             NineMLRuntimeError,
-            c.connect_ports, 'iaf.V', 'coba.V1')
+            c.connect_ports, 'iaf', 'V', 'coba', 'V1')
 
         self.assertRaises(
             NineMLRuntimeError,
-            Dynamics,
+            MultiDynamics,
             name='C1',
-            subnodes={'iaf': tIaf(), 'coba': tCoba()},
-            portconnections=[('iaf.V1', 'coba.V')]
-        )
+            sub_components={'iaf': tIaf(), 'coba': tCoba()},
+            port_connections=[('iaf', 'V1', 'coba', 'V')])
 
         self.assertRaises(
             NineMLRuntimeError,
-            Dynamics,
+            MultiDynamics,
             name='C1',
-            subnodes={'iaf': tIaf(), 'coba': tCoba()},
-            portconnections=[('iaf.V', 'coba.V1')]
-        )
+            sub_components={'iaf': tIaf(), 'coba': tCoba()},
+            port_connections=[('iaf', 'V', 'coba', 'V1')])
 
-        # Connect ports the wronf way around:
+        # Connect ports the wrong way around:
         # [Check the wright way around works:]
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()},
-                           portconnections=[('coba.I', 'iaf.ISyn')]
-                           )
+        c = MultiDynamics(name='C1',
+                          sub_components={'iaf': tIaf(), 'coba': tCoba()},
+                          port_connections=[('coba', 'I', 'iaf', 'ISyn')])
         # And the wrong way around:
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()})
         self.assertRaises(
             NineMLRuntimeError,
-            c.connect_ports, 'iaf.ISyn.', 'coba.I')
+            MultiDynamics,
+            name='C1',
+            sub_components={'iaf': tIaf(), 'coba': tCoba()},
+            port_connections=[('iaf', 'ISyn', 'coba', 'I')])
         self.assertRaises(
             NineMLRuntimeError,
-            c.connect_ports, 'coba.V', 'iaf.V')
+            MultiDynamics,
+            name='C1',
+            sub_components={'iaf': tIaf(), 'coba': tCoba()},
+            port_connections=[('coba', 'V', 'iaf', 'V')])
 
         # Error raised on duplicate port-connection:
-        c = Dynamics(name='C1',
-                           subnodes={'iaf': tIaf(), 'coba': tCoba()},
+        c = MultiDynamics(name='C1',
+                           sub_components={'iaf': tIaf(), 'coba': tCoba()},
                            )
 
-        c.connect_ports('coba.I', 'iaf.ISyn')
+        c.connect_ports('coba', 'I', 'iaf', 'ISyn')
         self.assertRaises(
             NineMLRuntimeError,
-            c.connect_ports, 'coba.I', 'iaf.ISyn')
+            c.connect_ports, 'coba', 'I', 'iaf', 'ISyn')
 
 #     def test_get_fully_qualified_port_connections(self):
 #         # Signature: name(self)
@@ -1011,18 +1011,18 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
 #         e = Dynamics(name='E', analog_ports=[AnalogReceivePort('C')])
 #         f = Dynamics(name='F', analog_ports=[AnalogReceivePort('D')])
 #         g = Dynamics(name='G', analog_ports=[AnalogReceivePort('E')])
-#         b = Dynamics(name='B', subnodes={'d': d, 'e': e},
-#                      portconnections=[('d.A', 'e.C')])
+#         b = Dynamics(name='B', sub_components={'d': d, 'e': e},
+#                      port_connections=[('d', 'A', 'e', 'C')])
 #         c = Dynamics(name='C',
 #                            aliases=['G:=-1'],
 #                            analog_ports=[AnalogSendPort('G')],
-#                            subnodes={'f': f, 'g': g},
-#                            portconnections=[('G', 'f.D')])
+#                            sub_components={'f': f, 'g': g},
+#                            port_connections=[('G', 'f.D')])
 # 
 #         a = Dynamics(name='A',
-#                            subnodes={'b': b, 'c': c},
+#                            sub_components={'b': b, 'c': c},
 #                            analog_ports=[AnalogReceivePort('F')],
-#                            portconnections=[('b.d.A', 'F')]
+#                            port_connections=[('b.d.A', 'F')]
 #                            )
 # 
 #         bNew = a.get_subnode('b')
@@ -1043,7 +1043,7 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
 
 #     def test_recurse_all_components(self):
 #         # Signature: name
-#                 # Returns an iterator over this component and all sub_dynamics
+#                 # Returns an iterator over this component and all sub_components
 # 
 #         d = Dynamics(name='D')
 #         e = Dynamics(name='E')
@@ -1190,9 +1190,9 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
 #         e = Dynamics(name='E')
 #         f = Dynamics(name='F')
 #         g = Dynamics(name='G')
-#         b = Dynamics(name='B', subnodes={'atD': d, 'atE': e})
-#         c = Dynamics(name='C', subnodes={'atF': f, 'atG': g})
-#         a = Dynamics(name='A', subnodes={'atB': b, 'atC': c})
+#         b = MultiDynamics(name='B', sub_components={'atD': d, 'atE': e})
+#         c = MultiDynamics(name='C', sub_components={'atF': f, 'atG': g})
+#         a = MultiDynamics(name='A', sub_components={'atB': b, 'atC': c})
 # 
 #         # Construction of the objects causes cloning to happen:
 #         # Therefore we test by looking up and checking that there

@@ -260,7 +260,8 @@ class _NamespaceOutputEvent(OutputEvent):
 
     @property
     def port_name(self):
-        return append_namespace(self.element.port_name)
+        return append_namespace(self.element.port_name,
+                                self.sub_component.name)
 
 
 class _NamespaceStateVariable(_NamespaceNamed, StateVariable):

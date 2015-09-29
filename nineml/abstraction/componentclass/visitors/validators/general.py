@@ -70,35 +70,32 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
         self.visit(component_class)
 
         # Check Aliases:
-        for ns, aliases in self.aliases.iteritems():
-            for alias in aliases:
-                for rhs_atom in alias.rhs_symbol_names:
-                    if rhs_atom in reserved_identifiers:
-                        continue
-                    if rhs_atom not in self.available_symbols[ns]:
-                        raise NineMLRuntimeError(
-                            "Unresolved Symbol in Alias: {} [{}]"
-                            .format(rhs_atom, alias))
+        for alias in self.aliases:
+            for rhs_atom in alias.rhs_symbol_names:
+                if rhs_atom in reserved_identifiers:
+                    continue
+                if rhs_atom not in self.available_symbols:
+                    raise NineMLRuntimeError(
+                        "Unresolved Symbol in Alias: {} [{}]"
+                        .format(rhs_atom, alias))
 
         # Check TimeDerivatives:
-        for ns, timederivatives in self.time_derivatives.iteritems():
-            for timederivative in timederivatives:
-                for rhs_atom in timederivative.rhs_symbol_names:
-                    if (rhs_atom not in self.available_symbols[ns] and
-                            rhs_atom not in reserved_identifiers):
-                        raise NineMLRuntimeError(
-                            "Unresolved Symbol in Time Derivative: {} [{}]"
-                            .format(rhs_atom, timederivative))
+        for timederivative in self.time_derivatives:
+            for rhs_atom in timederivative.rhs_symbol_names:
+                if (rhs_atom not in self.available_symbols and
+                        rhs_atom not in reserved_identifiers):
+                    raise NineMLRuntimeError(
+                        "Unresolved Symbol in Time Derivative: {} [{}]"
+                        .format(rhs_atom, timederivative))
 
         # Check StateAssignments
-        for ns, state_assignments in self.state_assignments.iteritems():
-            for state_assignment in state_assignments:
-                for rhs_atom in state_assignment.rhs_symbol_names:
-                    if (rhs_atom not in self.available_symbols[ns] and
-                            rhs_atom not in reserved_identifiers):
-                        raise NineMLRuntimeError(
-                            'Unresolved Symbol in Assignment: {} [{}]'
-                            .format(rhs_atom, state_assignment))
+        for state_assignment in self.state_assignments:
+            for rhs_atom in state_assignment.rhs_symbol_names:
+                if (rhs_atom not in self.available_symbols and
+                        rhs_atom not in reserved_identifiers):
+                    raise NineMLRuntimeError(
+                        'Unresolved Symbol in Assignment: {} [{}]'
+                        .format(rhs_atom, state_assignment))
 
     def add_symbol(self, symbol):
         if symbol in self.available_symbols:
