@@ -470,7 +470,7 @@ class MultiDynamics(Dynamics):
         except TypeError:
             sub_regime_names = name  # Assume it is already an iterable
         return self._create_multi_regime(
-            self.sub_component(sc_n).regime(append_namespace(sc_n, r_n))
+            self.sub_component(sc_n).regime(append_namespace(r_n, sc_n))
             for sc_n, r_n in izip(self._sub_component_keys, sub_regime_names))
 
     def analog_send_port(self, name):
@@ -540,8 +540,8 @@ class MultiDynamics(Dynamics):
     @property
     def all_member_dicts(self):
         return chain(
-            *[(getattr(sc.component, n)
-               for n in sc.component.class_to_member_dict.itervalues())
+            *[(getattr(sc.component_class, n)
+               for n in sc.component_class.class_to_member_dict.itervalues())
               for sc in self.sub_components])
 
     @property
@@ -593,6 +593,68 @@ class SubDynamics(object):
         return (_NamespaceRegime(self, r)
                 for r in self.component_class.regimes)
 
+    def parameter(self, name):
+        elem_name, _ = split_namespace(name)
+        return _NamespaceParameter(
+            self, self.component_class.parameter(elem_name))
+
+    def alias(self, name):
+        elem_name, _ = split_namespace(name)
+        return _NamespaceAlias(self, self.component_class.alias(elem_name))
+
+    def state_variable(self, variable):
+        elem_name, _ = split_namespace(variable)
+        return _NamespaceStateVariable(
+            self, self.component.state_variable(elem_name))
+
+    def constant(self, name):
+        elem_name, _ = split_namespace(name)
+        return _NamespaceConstant(self,
+                                  self.component_class.constant(elem_name))
+
+    def regime(self, name):
+        elem_name, _ = split_namespace(name)
+        return _NamespaceRegime(self, self.component_class.regime(elem_name))
+
+    @property
+    def num_parameters(self):
+        return len(list(self.component_class.parameters))
+
+    @property
+    def num_aliases(self):
+        return len(list(self.component_class.aliases))
+
+    @property
+    def num_state_variables(self):
+        return len(list(self.component.state_variables))
+
+    @property
+    def num_constants(self):
+        return len(list(self.component_class.constants))
+
+    @property
+    def num_regimes(self):
+        return len(list(self.component_class.regimes))
+
+    @property
+    def parameter_names(self):
+        return (p.name for p in self.parameters)
+
+    @property
+    def alias_names(self):
+        return (p.name for p in self.aliases)
+
+    @property
+    def state_variable_names(self):
+        return (p.name for p in self.state_variables)
+
+    @property
+    def constant_names(self):
+        return (p.name for p in self.constants)
+
+    @property
+    def regime_names(self):
+        return (p.name for p in self.regimes)
 
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and
@@ -702,7 +764,7 @@ class _MultiRegime(Regime):
         # Get all event connection ports that receive connections with non-zero
         # delay
         nonzero_delay_receive_ports = [
-            pc.receive_port
+            pc.receive_port.name
             for pc in self._parent.nonzero_delay_event_port_connections]
         key = lambda oc: oc.trigger  # Group key for on conditions
         # Chain delayed on events and grouped on conditions
@@ -710,7 +772,7 @@ class _MultiRegime(Regime):
             (_MultiOnCondition(self.with_daisy_chained(_DelayedOnEvent(oe)),
                                self)
              for oe in self._all_sub_on_events
-             if oe.port in nonzero_delay_receive_ports),
+             if oe.src_port_name in nonzero_delay_receive_ports),
             (_MultiOnCondition(tr, self.with_daisy_chained(grp), self)
              for tr, grp in groupby(sorted(all_on_conds, key=key), key=key)))
 
@@ -777,12 +839,13 @@ class _MultiRegime(Regime):
                 # i.e. all zero-delay event port connections that are linked to
                 # this output_event
                 active_ports = set(
-                    pc.receive_port for pc in
-                    self.parent._zero_delay_event_port_connections[
-                        (output_event.sub_component.name, output_event.name)])
+                    pc.receive_port_name for pc in
+                    self._parent._zero_delay_event_port_connections[
+                        (output_event.sub_component.name,
+                         output_event.element.port_name)])
                 # Get all the OnEvent transitions that are connected to this
                 for on_event in self._all_sub_on_events:
-                    if on_event.port in active_ports:
+                    if on_event.src_port_name in active_ports:
                         for chained_event in self.with_daisy_chained(on_event):
                             yield chained_event
 
@@ -795,12 +858,14 @@ class _MultiTransition(object):
     defining_attributes = ('_sub_transitions',)
 
     def __init__(self, sub_transitions, parent):
-        self._sub_transitions = dict((t.sub_component.name, t)
-                                     for t in sub_transitions)
-        if len(self._sub_transitions) != len(sub_transitions):
-            raise NineMLRuntimeError(
-                "Transition loop with non-zero delay found in transitions: {}"
-                .format(", ".join(t._name for t in sub_transitions)))
+        self._sub_transitions = {}
+        for sub_transition in sub_transitions:
+            namespace = sub_transition.sub_component.name
+            if namespace in self._sub_transitions:
+                raise NineMLRuntimeError(
+                    "Transition loop with non-zero delay found in chain "
+                    "beggining with {}".format(sub_transition._name))
+            self._sub_transitions[namespace] = sub_transition
         self._parent = parent
 
     @property
@@ -809,15 +874,14 @@ class _MultiTransition(object):
         sub_regimes.update(
             (k, t.target_regime)
             for k, t in self._sub_transitions.iteritems())
-        return self.parent.parent._create_multi_regime(sub_regimes)
+        return self._parent._parent._create_multi_regime(
+            sub_regimes.itervalues())
 
     @property
     def target_regime_name(self):
-        sub_regime_names = dict(
-            (k, sr.name) for k, sr in self._parent._sub_regimes.iteritems())
+        sub_regime_names = copy(self._parent._sub_regimes)
         sub_regime_names.update(
-            (k, t.target_regime_name)
-            for k, t in self._sub_transitions.iteritems())
+            (k, t.target_regime) for k, t in self._sub_transitions.iteritems())
         return make_regime_name(sub_regime_names)
 
     @property
@@ -887,8 +951,8 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
 
     defining_attributes = ('_sub_regimes', '_src_port_name')
 
-    def __init__(self, src_port_name, sub_transitions):
-        _MultiTransition.__init__(self, sub_transitions)
+    def __init__(self, src_port_name, sub_transitions, parent):
+        _MultiTransition.__init__(self, sub_transitions, parent)
         self._src_port_name = src_port_name
 
     @property
@@ -900,8 +964,8 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
 
     defining_attributes = ('_sub_regimes', '_trigger')
 
-    def __init__(self, trigger, sub_transitions):
-        _MultiTransition.__init__(self, sub_transitions)
+    def __init__(self, trigger, sub_transitions, parent):
+        _MultiTransition.__init__(self, sub_transitions, parent)
         self._trigger = trigger
 
     @property

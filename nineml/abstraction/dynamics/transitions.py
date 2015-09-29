@@ -164,7 +164,12 @@ class Transition(BaseALObject, MemberContainerObject):
             (oe.port_name, oe)
             for oe in normalise_parameter_as_list(output_events))
 
-        self._target_regime = target_regime
+        if isinstance(target_regime, basestring):
+            self._target_regime = None
+            self._target_regime_name = target_regime
+        else:
+            self._target_regime = target_regime
+            self._target_regime_name = None
         self._source_regime = None
 
     def _find_element(self, element):
@@ -180,17 +185,17 @@ class Transition(BaseALObject, MemberContainerObject):
             containing this transition has been built. See
             ``set_source_regime``
         """
-        if type(self._target_regime).__name__ != 'Regime':
+        if self._target_regime is None:
             raise NineMLRuntimeError(
                 "Target regime ({}) has not been set (use 'validate()' "
                 "of Dynamics first)."
-                .format(self._target_regime))
+                .format(self.target_regime_name))
         return self._target_regime
 
     @property
     def target_regime_name(self):
-        if isinstance(self._target_regime, basestring):
-            name = self._target_regime
+        if self._target_regime is None:
+            name = self._target_regime_name
         else:
             name = self.target_regime.name
         return name
@@ -205,10 +210,11 @@ class Transition(BaseALObject, MemberContainerObject):
             containing this transition has been built. See
             ``set_source_regime``
         """
-        if type(self._target_regime).__name__ != 'Regime':
+        if self._source_regime is None:
             raise NineMLRuntimeError(
-                "Pre regime has not been set for transition. It needs "
-                "to be added to a regime first.")
+                "Source regime has not been set (use 'validate()' "
+                "of Dynamics first)."
+                .format(self.target_regime_name))
         return self._source_regime
 
     def set_target_regime(self, regime):
@@ -220,8 +226,9 @@ class Transition(BaseALObject, MemberContainerObject):
             containing this transition has been built. See
             ``set_source_regime``
         """
-        assert type(regime).__name__ == 'Regime'
+        assert regime.element_name == 'Regime'
         self._target_regime = regime
+        self._target_regime_name = None
 
     def set_source_regime(self, regime):
         """Returns the target regime of this transition.
@@ -232,7 +239,7 @@ class Transition(BaseALObject, MemberContainerObject):
             containing this transition has been built. See
             ``set_source_regime``
         """
-        assert type(regime).__name__ == 'Regime'
+        assert regime.element_name == 'Regime'
         self._source_regime = regime
 
     @property

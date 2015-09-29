@@ -696,19 +696,19 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         for regime in self.regimes:
             for trans in regime.transitions:
                 trans.set_source_regime(regime)
-                target = trans._target_regime
-                if not isinstance(target, Regime):
-                    if target is None:
-                        target = regime  # to same regime
-                    else:
-                        try:
-                            target = self.regime(target)  # Lookup by name
-                        except KeyError:
-                            raise NineMLRuntimeError(
-                                "Can't find regime '{}' referenced from '{}' "
-                                "transition"
-                                .format(trans.target_regime, trans._name))
-                    trans.set_target_regime(target)
+                target = trans.target_regime_name
+                if target is None:
+                    target = regime  # to same regime
+                else:
+                    try:
+                        target = self.regime(target)  # Lookup by name
+                    except KeyError:
+                        self.regime(target)
+                        raise NineMLRuntimeError(
+                            "Can't find regime '{}' referenced from '{}' "
+                            "transition".format(trans.target_regime,
+                                                trans._name))
+                trans.set_target_regime(target)
 
     def to_xml(self, document, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
