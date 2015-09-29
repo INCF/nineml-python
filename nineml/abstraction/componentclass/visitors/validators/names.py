@@ -7,12 +7,12 @@ docstring needed
 
 from nineml.exceptions import NineMLRuntimeError
 from collections import defaultdict
-from base import PerNamespaceComponentValidator
+from base import BaseValidator
 
 
 # Check that the sub-components stored are all of the
 # right types:
-class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
+class LocalNameConflictsComponentValidator(BaseValidator):
 
     """
     Check for conflicts between Aliases, StateVariables, Parameters, and
@@ -23,7 +23,7 @@ class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
     """
 
     def __init__(self, component_class):
-        PerNamespaceComponentValidator.__init__(
+        BaseValidator.__init__(
             self, require_explicit_overrides=False)
         self.symbols = defaultdict(list)
         self.component_class = component_class
@@ -35,26 +35,26 @@ class LocalNameConflictsComponentValidator(PerNamespaceComponentValidator):
             raise NineMLRuntimeError(err)
         self.symbols[namespace].append(symbol)
 
-    def action_parameter(self, parameter, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace,
                                       symbol=parameter.name)
 
-    def action_alias(self, alias, namespace, **kwargs):  # @UnusedVariable
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         # Exclude aliases defined within sub scopes (as they should match the
         # outer scope anyway)
         if alias in self.component_class.aliases:
             self.check_conflicting_symbol(namespace=namespace,
                                           symbol=alias.lhs)
 
-    def action_constant(self, constant, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(namespace=namespace,
                                       symbol=constant.name)
 
 
-class DimensionNameConflictsComponentValidator(PerNamespaceComponentValidator):
+class DimensionNameConflictsComponentValidator(BaseValidator):
 
     def __init__(self, component_class):
-        PerNamespaceComponentValidator.__init__(
+        BaseValidator.__init__(
             self, require_explicit_overrides=False)
         self.dimensions = {}
         self.visit(component_class)

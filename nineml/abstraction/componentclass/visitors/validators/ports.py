@@ -5,20 +5,19 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from collections import defaultdict
-from . import PerNamespaceComponentValidator
+from .base import BaseValidator
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction.componentclass.namespace import NamespaceAddress
+# from nineml.abstraction.componentclass.namespace import NamespaceAddress
 
 
-class PortConnectionsComponentValidator(PerNamespaceComponentValidator):
+class PortConnectionsComponentValidator(BaseValidator):
 
     """Check that all the port connections point to a port, and that
     each send & recv port only has a single connection.
     """
 
     def __init__(self, component_class):
-        PerNamespaceComponentValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseValidator.__init__(self, require_explicit_overrides=False)
 
         self.ports = defaultdict(list)
         self.portconnections = list()
@@ -65,18 +64,17 @@ class PortConnectionsComponentValidator(PerNamespaceComponentValidator):
                         "Port was 'recv' and specified twice: %s" % (sink))
                 connected_recv_ports.add(self.ports[sink])
 
-    def _action_port(self, port, namespace):
-        port_address = NamespaceAddress.concat(namespace, port.name)
-        if port_address in self.ports:
-            raise NineMLRuntimeError(
-                'Duplicated Name for port found: %s' % port_address)
-        self.ports[port_address] = port
+    def _action_port(self, port):
+        pass
+#         port_address = NamespaceAddress.concat(namespace, port.name)
+#         if port_address in self.ports:
+#             raise NineMLRuntimeError(
+#                 'Duplicated Name for port found: %s' % port_address)
+#         self.ports[port_address] = port
 
-    def action_componentclass(self, component_class, namespace):
-        for src, sink in component_class.portconnections:
-            full_src = NamespaceAddress.concat(namespace, src)
-            full_sink = NamespaceAddress.concat(namespace, sink)
-
-            # print 'Adding Port:',full_src
-            # print 'Adding Port:',full_sink
-            self.portconnections.append((full_src, full_sink))
+    def action_componentclass(self, component_class):
+        pass
+#         for src, sink in component_class.port_connections:
+#             # print 'Adding Port:',full_src
+#             # print 'Adding Port:',full_sink
+#             self.portconnections.append((src, sink))

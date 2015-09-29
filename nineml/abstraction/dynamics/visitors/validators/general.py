@@ -4,7 +4,6 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
 from nineml.utils import assert_no_duplicates
 from ....componentclass.visitors.validators import (
@@ -13,71 +12,67 @@ from ....componentclass.visitors.validators import (
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
     DimensionalityComponentValidator)
-from . import PerNamespaceDynamicsValidator
+from . import BaseDynamicsValidator
 from nineml import units as un
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(
-        PerNamespaceDynamicsValidator):
+        BaseDynamicsValidator):
 
     """ Check all variables used in TimeDerivative blocks are defined
         as  StateVariables.
     """
 
     def __init__(self, component_class):
-        PerNamespaceDynamicsValidator.__init__(
+        BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
-        self.sv_declared = defaultdict(list)
-        self.time_derivatives_used = defaultdict(list)
+        self.sv_declared = []
+        self.time_derivatives_used = []
 
         self.visit(component_class)
 
-        for namespace, time_derivatives in self.time_derivatives_used.\
-                                                                   iteritems():
-            for td in time_derivatives:
-                if td not in self.sv_declared[namespace]:
-                    err = 'StateVariable not declared: %s' % td
-                    raise NineMLRuntimeError(err)
+        for td in self.time_derivatives:
+            if td not in self.sv_declared:
+                err = 'StateVariable not declared: %s' % td
+                raise NineMLRuntimeError(err)
 
-    def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.sv_declared[namespace].append(state_variable.name)
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.sv_declared.append(state_variable.name)
 
-    def action_timederivative(self, timederivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.time_derivatives_used[namespace].append(
+    def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.time_derivatives_used.append(
             timederivative.variable)
 
 
 class StateAssignmentsAreOnStateVariablesDynamicsValidator(
-        PerNamespaceDynamicsValidator):
+        BaseDynamicsValidator):
 
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
 
     def __init__(self, component_class):
-        PerNamespaceDynamicsValidator.__init__(
+        BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
-        self.sv_declared = defaultdict(list)
-        self.state_assignments_lhses = defaultdict(list)
+        self.sv_declared = []
+        self.state_assignments_lhs = []
 
         self.visit(component_class)
 
-        for namespace, state_assignments_lhs in self.state_assignments_lhses.\
-                                                                   iteritems():
-            for sa in state_assignments_lhs:
-                if sa not in self.sv_declared[namespace]:
-                    err = 'Not Assigning to state-variable: {}'.format(sa)
-                    raise NineMLRuntimeError(err)
+        for sa in self.state_assignments_lhs:
+            if sa not in self.sv_declared:
+                raise NineMLRuntimeError(
+                    "Not Assigning to state-variable: {}".format(sa))
 
-    def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.sv_declared[namespace].append(state_variable.name)
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.sv_declared.append(state_variable.name)
 
-    def action_stateassignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.state_assignments_lhses[namespace].append(state_assignment.lhs)
+    def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.state_assignments_lhses.append(state_assignment.lhs)
 
 
 class AliasesAreNotRecursiveDynamicsValidator(
         AliasesAreNotRecursiveComponentValidator,
-        PerNamespaceDynamicsValidator):
+        BaseDynamicsValidator):
 
     """Check that aliases are not self-referential"""
 
@@ -86,36 +81,36 @@ class AliasesAreNotRecursiveDynamicsValidator(
 
 class NoUnresolvedSymbolsDynamicsValidator(
         NoUnresolvedSymbolsComponentValidator,
-        PerNamespaceDynamicsValidator):
+        BaseDynamicsValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
 
-    def action_analogreceiveport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.available_symbols[namespace].append(port.name)
+    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.available_symbols.append(port.name)
 
-    def action_analogreduceport(self, port, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.available_symbols[namespace].append(port.name)
+    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.available_symbols.append(port.name)
 
-    def action_statevariable(self, state_variable, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.add_symbol(namespace=namespace, symbol=state_variable.name)
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.add_symbol(symbol=state_variable.name)
 
-    def action_timederivative(self, time_derivative, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.time_derivatives[namespace].append(time_derivative)
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.time_derivatives.append(time_derivative)
 
-    def action_stateassignment(self, state_assignment, namespace, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.state_assignments[namespace].append(state_assignment)
+    def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.state_assignments.append(state_assignment)
 
 
-class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
+class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
 
     def __init__(self, component_class):
-        PerNamespaceDynamicsValidator.__init__(
+        BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
 
-        self.connected_regimes_from_regime = defaultdict(set)
-        self.regimes_in_namespace = defaultdict(set)
+        self.connected_regimes_from_regime = set()
+        self.regimes = set()
 
         self.visit(component_class)
 
@@ -125,7 +120,7 @@ class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
                 if r not in connected:
                     add_connected_regimes_recursive(r, connected)
 
-        for namespace, regimes in self.regimes_in_namespace.iteritems():
+        for namespace, regimes in self.regimes.iteritems():
 
             # Perhaps we have no transition graph; this is OK:
             if len(regimes) == 0:
@@ -133,13 +128,13 @@ class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
 
             connected = set()
             add_connected_regimes_recursive(regimes[0], connected)
-            if len(connected) != len(self.regimes_in_namespace[namespace]):
+            if len(connected) != len(self.regimes[namespace]):
                 raise NineMLRuntimeError("Transition graph contains islands")
 
-    def action_componentclass(self, component_class, namespace):
-        self.regimes_in_namespace[namespace] = list(component_class.regimes)
+    def action_componentclass(self, component_class):
+        self.regimes = list(component_class.regimes)
 
-    def action_regime(self, regime, namespace):  # @UnusedVariable
+    def action_regime(self, regime):  # @UnusedVariable
         for transition in regime.transitions:
             self.connected_regimes_from_regime[regime].add(
                 transition.target_regime)
@@ -149,7 +144,7 @@ class RegimeGraphDynamicsValidator(PerNamespaceDynamicsValidator):
 
 class NoDuplicatedObjectsDynamicsValidator(
         NoDuplicatedObjectsComponentValidator,
-        PerNamespaceDynamicsValidator):
+        BaseDynamicsValidator):
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         self.all_objects.append(regime)
@@ -192,14 +187,14 @@ class NoDuplicatedObjectsDynamicsValidator(
 
 
 class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
-        PerNamespaceDynamicsValidator):
+        BaseDynamicsValidator):
 
     def __init__(self, component_class):
-        PerNamespaceDynamicsValidator.__init__(
+        BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.visit(component_class)
 
-    def action_regime(self, regime, namespace, **kwargs):  # @UnusedVariable
+    def action_regime(self, regime, **kwargs):  # @UnusedVariable
         event_triggers = [on_event.src_port_name
                           for on_event in regime.on_events]
         assert_no_duplicates(event_triggers)
@@ -207,7 +202,7 @@ class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
 
 class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
         CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
-        PerNamespaceDynamicsValidator):
+        BaseDynamicsValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -225,7 +220,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
 
 
 class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
-                                      PerNamespaceDynamicsValidator):
+                                      BaseDynamicsValidator):
 
     def __init__(self, component_class):
         if not component_class.subnodes:  # Assumes that subnodes are alread checked @IgnorePep8

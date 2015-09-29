@@ -7,7 +7,6 @@ components definitions of interface and dynamics
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction.componentclass.namespace import NamespaceAddress
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction.componentclass import (
@@ -16,7 +15,7 @@ from .regimes import StateVariable, Regime
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
-from nineml.utils import (check_list_contain_same_items, invert_dictionary,
+from nineml.utils import (check_list_contain_same_items,
                           assert_no_duplicates)
 from .visitors.cloner import (
     DynamicsExpandAliasDefinition, DynamicsCloner)
@@ -24,132 +23,7 @@ from nineml.xmlns import NINEML
 from nineml.annotations import VALIDATE_DIMENSIONS
 
 
-class _NamespaceMixin(object):
-
-    """ A mixin class that provides the hierarchical structure for
-    (sub) components.
-    """
-
-    def __init__(self, subnodes=None, portconnections=None):
-        """Constructor - For parameter descriptions, see the
-        Dynamics.__init__() method
-        """
-
-        # Prevent dangers with default arguments.
-        subnodes = subnodes or {}
-        portconnections = portconnections or []
-
-        # Initialise class variables:
-        self._parentmodel = None
-        self.subnodes = {}
-        self._portconnections = []
-
-        # Add the parameters using class methods:
-        for namespace, subnode in subnodes.iteritems():
-            self.insert_subnode(subnode=subnode, namespace=namespace)
-
-        for src, sink in portconnections:
-            self.connect_ports(src, sink)
-
-    # Parenting:
-    def set_parent_model(self, parentmodel):
-        """Sets the parent component for this component"""
-        assert not self._parentmodel
-        self._parentmodel = parentmodel
-
-    def get_parent_model(self):
-        """Gets the parent component for this component"""
-        return self._parentmodel
-
-    def validate(self):
-        """ Over-ridden in mix'ed class"""
-        raise NotImplementedError()
-
-    def get_node_addr(self):
-        """Get the namespace address of this component"""
-        parent = self.get_parent_model()
-        if not parent:
-            return NamespaceAddress.create_root()
-        else:
-            contained_namespace = invert_dictionary(parent.subnodes)[self]
-            return parent.get_node_addr().get_subns_addr(contained_namespace)
-
-    def get_subnode(self, addr):
-        """Gets a subnode from this component recursively."""
-        namespace_addr = NamespaceAddress(addr)
-
-        # Look up the first name in the namespace
-        if len(namespace_addr.loctuple) == 0:
-            return self
-
-        local_namespace_ref = namespace_addr.loctuple[0]
-        if local_namespace_ref not in self.subnodes:
-            err = "Attempted to lookup node: %s\n" % local_namespace_ref
-            err += "Doesn't exist in this namespace: %s" % self.subnodes.keys()
-            raise NineMLRuntimeError(err)
-
-        subnode = self.subnodes[local_namespace_ref]
-        addr_in_subnode = NamespaceAddress(namespace_addr.loctuple[1:])
-        return subnode.get_subnode(addr=addr_in_subnode)
-
-    def insert_subnode(self, namespace, subnode):
-        """Insert a subnode into this component
-
-        :param subnode: An object of type ``Dynamics``.
-        :param namespace: A `string` specifying the name of the component in
-            this components namespace.
-
-        :raises: ``NineMLRuntimeException`` if there is already a subcomponent
-                  at the same namespace location
-
-        .. note::
-
-            This method will clone the subnode.
-
-        """
-        if not isinstance(namespace, basestring):
-            err = 'Invalid namespace: %s' % type(subnode)
-            raise NineMLRuntimeError(err)
-
-        if not isinstance(subnode, Dynamics):
-            err = 'Attempting to insert invalid '
-            err += 'object as subcomponent: %s' % type(subnode)
-            raise NineMLRuntimeError(err)
-
-        if namespace in self.subnodes:
-            err = 'Key already exists in namespace: %s' % namespace
-            raise NineMLRuntimeError(err)
-        self.subnodes[namespace] = DynamicsCloner().visit(subnode)
-        self.subnodes[namespace].set_parent_model(self)
-
-        self.validate()
-
-    def connect_ports(self, src, sink):
-        """Connects the ports of 2 sub_dynamics.
-
-        The ports can be specified as ``string`` s or |NamespaceAddresses|.
-
-
-        :param src: The source port of one sub-component; this should either an
-            |EventPort| or |AnalogPort|, but it *must* be a send port.
-
-        :param sink: The sink port of one sub-component; this should either an
-            |EventPort| or |AnalogPort|, but it *must* be either a 'recv' or a
-            'reduce' port.
-
-        """
-
-        connection = (NamespaceAddress(src), NamespaceAddress(sink))
-        self._portconnections.append(connection)
-
-        self.validate()
-
-    @property
-    def portconnections(self):
-        return self._portconnections
-
-
-class Dynamics(ComponentClass, _NamespaceMixin):
+class Dynamics(ComponentClass):
 
     """A Dynamics object represents a *component* in NineML.
 
@@ -179,11 +53,9 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                           '_event_send_ports')
 
     def __init__(self, name, parameters=None, analog_ports=[],
-                 event_ports=[],
-                 subnodes=None,
-                 portconnections=None, regimes=None,
-                 aliases=None, state_variables=None,
-                 constants=None, validate_dimensions=True, url=None):
+                 event_ports=[], regimes=None, aliases=None,
+                 state_variables=None, constants=None,
+                 validate_dimensions=True, url=None):
         """Constructs a Dynamics
 
         :param name: The name of the component_class.
@@ -195,14 +67,6 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         :param event_ports: A list of |EventPorts| objects, which will be the
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
-        :param subnodes: A dictionary mapping namespace-names to sub-
-            component_class. [Type: ``{string:|Dynamics|,
-            string:|Dynamics|, string:|Dynamics|}`` ] describing the
-            namespace of sub_dynamics for this component_class.
-        :param portconnections: A list of pairs, specifying the connections
-            between the ports of the sub_dynamics in this component_class.
-            These can be `(|NamespaceAddress|, |NamespaceAddress|)' or
-            ``(string, string)``.
         :param interface: A shorthand way of specifying the **interface** for
             this component_class; |Parameters|, |AnalogPorts| and |EventPorts|.
             ``interface`` takes a list of these objects, and automatically
@@ -315,13 +179,6 @@ class Dynamics(ComponentClass, _NamespaceMixin):
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.event_out_port_names:
                 self._event_send_ports[pname] = EventSendPort(name=pname)
-
-        # Call namespace mixin constructor
-        _NamespaceMixin.__init__(
-            self, subnodes=subnodes, portconnections=portconnections)
-
-        # Store flattening Information:
-        self._flattener = None
 
         self.annotations[NINEML][VALIDATE_DIMENSIONS] = validate_dimensions
         # Is the finished component_class valid?:
@@ -640,36 +497,6 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         """
         return (a for a in self.aliases
                 if a.name in self.analog_send_port_names)
-
-    @property
-    def flattener(self):
-        """
-        If this component was made by flattening other components, return the
-        |ComponentFlattener| object. This is useful for finding initial-regimes
-        """
-        return self._flattener
-
-    def set_flattener(self, flattener):
-        """Specifies the flattening object used to create this component, if
-        this component was flattened from a hierarchical component"""
-        if not flattener:
-            raise NineMLRuntimeError('Setting flattener to None??')
-        if self.flattener:
-            raise NineMLRuntimeError('Trying to change flattener')
-        self._flattener = flattener
-
-    def was_flattened(self):
-        """Returns ``True`` if this component was created by flattening another
-        component"""
-        return self.flattener is not None
-
-    def is_flat(self):
-        """Is this component flat or does it have sub_dynamics?
-
-        Returns a ``Boolean`` specifying whether this component is flat; i.e.
-        has no subcomponent
-        """
-        return len(self.subnodes) == 0
 
     # -------------------------- #
 

@@ -15,8 +15,6 @@ class DynamicsActionVisitor(ComponentActionVisitor):
     def visit_componentclass(self, component_class, **kwargs):
         super(DynamicsActionVisitor, self).visit_componentclass(
             component_class, **kwargs)
-        for subnode in component_class.subnodes.values():
-            subnode.accept_visitor(self, **kwargs)
 
     def visit_regime(self, regime, **kwargs):
         self.action_regime(regime, **kwargs)
@@ -102,4 +100,3 @@ class DynamicsActionVisitor(ComponentActionVisitor):
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.check_pass()
-
