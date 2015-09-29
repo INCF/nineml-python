@@ -7,7 +7,6 @@ docstring needed
 from collections import defaultdict
 from .base import BaseValidator
 from nineml.exceptions import NineMLRuntimeError
-# from nineml.abstraction.componentclass.namespace import NamespaceAddress
 
 
 class PortConnectionsComponentValidator(BaseValidator):
@@ -65,16 +64,7 @@ class PortConnectionsComponentValidator(BaseValidator):
                 connected_recv_ports.add(self.ports[sink])
 
     def _action_port(self, port):
-        pass
-#         port_address = NamespaceAddress.concat(namespace, port.name)
-#         if port_address in self.ports:
-#             raise NineMLRuntimeError(
-#                 'Duplicated Name for port found: %s' % port_address)
-#         self.ports[port_address] = port
-
-    def action_componentclass(self, component_class):
-        pass
-#         for src, sink in component_class.port_connections:
-#             # print 'Adding Port:',full_src
-#             # print 'Adding Port:',full_sink
-#             self.portconnections.append((src, sink))
+        if port.name in self.ports:
+            raise NineMLRuntimeError(
+                'Duplicated Name for port found: %s' % port.name)
+        self.ports[port.name] = port

@@ -25,10 +25,10 @@ Building larger components out of smaller components has several advantages:
 
 
 
-We look at the IAF with 2 synapse example in more detail. The following figure shows a
-cartoon of an iaf neuron with a refractory period. Orange boxes denote regimes,
-yellow ovals denote transitions and the ports are shown on the right-hand-side.
-Parameters have been omitted.
+We look at the IAF with 2 synapse example in more detail. The following figure
+shows a cartoon of an iaf neuron with a refractory period. Orange boxes denote
+regimes, yellow ovals denote transitions and the ports are shown on the
+right-hand-side. Parameters have been omitted.
 
 .. image:: /_static/images/iaf_component_im.png
 
@@ -44,14 +44,13 @@ The corresponding code to generate this component is::
                                        to="refractoryregime"),],
               ),
 
-    r2 = al.Regime( name = "refractoryregime",
-                    time_derivatives = ["dV/dt = 0"],
-    iaf = al.ComponentClass( 
-                            name = "iaf",
-                            dynamics = al.Dynamics( regimes = [r1,r2] ),
-                            analog_ports = [ al.SendPort("V"), al.ReducePort("ISyn", reduce_op="+") ],  
-                             event_ports = [ al.SendEventPort('spikeoutput') ],
-                            )
+    r2 = al.Regime(name="refractoryregime",
+                   time_derivatives=["dV/dt = 0"],
+    iaf = al.Dynamics( 
+        name = "iaf",
+        dynamics = al.Dynamics( regimes = [r1,r2] ),
+        analog_ports=[al.SendPort("V"), al.ReducePort("ISyn", reduce_op="+")],  
+        event_ports=[al.SendEventPort('spikeoutput')])
 
 
 
@@ -62,41 +61,41 @@ Similarly, we can define a synapse component:
 
 with corresponding code::
 
-    coba = al.ComponentClass( 
-                             name = "CobaSyn",
-                             dynamics = 
-                                al.Dynamics(
-                                    aliases = ["I:=g*(vrev-V)", ],
-                                    regimes = [
-                                      al.Regime(
-                                         name = "cobadefaultregime",
-                                         time_derivatives = ["dg/dt = -g/tau",],
-                                         transitions = [
-                                             al.On(al.InputEvent('spikeinput'), do=["g=g+q"]),
-                                             ],
-                                         )
-                                        ],
-                                    state_variables = [ al.StateVariable('g') ]
-                                    ),
-                             
-                             analog_ports = [ al.RecvPort("V"), al.SendPort("I"), ],
-                             event_ports = [al.RecvEventPort('spikeinput') ],
-                             parameters = [ al.Parameter(p) for p in ['tau','q','vrev']  ]
-                             )
+    coba = al.Dynamics( 
+         name = "CobaSyn",
+         dynamics = 
+            al.Dynamics(
+                aliases = ["I:=g*(vrev-V)", ],
+                regimes = [
+                  al.Regime(
+                     name = "cobadefaultregime",
+                     time_derivatives = ["dg/dt = -g/tau",],
+                     transitions = [
+                         al.On(al.InputEvent('spikeinput'), do=["g=g+q"]),
+                         ],
+                     )
+                    ],
+                state_variables = [ al.StateVariable('g') ]
+                ),
+         
+         analog_ports = [ al.RecvPort("V"), al.SendPort("I"), ],
+         event_ports = [al.RecvEventPort('spikeinput') ],
+         parameters = [ al.Parameter(p) for p in ['tau','q','vrev']  ]
+         )
 
 
-Namespaces & Port Connections:
+Multi-Dynamics
 ------------------------------
 
 We now define a larger component, which will contain these sub_dynamics. When
-we create the component, we specify the *namespace* of each subcomponent, which
+we create the component, we specify the name of each subcomponent, which
 allows us to reference them in the future.
 
 We also need to specify that the voltage send port from the iaf needs to be
 connected to the voltage receive ports of the synapse. Similarly we need to
 connect the current port from the synapses into the current reduce port on the
 iaf neuron. These connections are shown in red on the diagram, and correspond to
-the ``connect_port`` method calls in the code.
+the arguments corresponding to the `port_connections` argument.
 
 
 In a diagram:
@@ -107,33 +106,12 @@ In a diagram:
 In code::
 
     # Create a model, composed of an iaf neuron, and 
-    iaf_2coba_comp = al.ComponentClass( name="iaf_2coba", 
-                                        subnodes = {"iaf" : get_iaf(), 
+    iaf_2coba_comp = al.MultiDynamics(name="iaf_2coba", 
+                                      sub_dynamics={"iaf" : get_iaf(), 
                                                     "coba_excit" : get_coba(), 
-                                                    "coba_inhib" : get_coba()} 
-                                      )
-    
-    iaf_2coba_comp.connect_ports( "iaf.V", "coba_excit.V" )
-    iaf_2coba_comp.connect_ports( "iaf.V", "coba_inhib.V" )
-    iaf_2coba_comp.connect_ports( "coba_excit.I", "iaf.ISyn" )
-    iaf_2coba_comp.connect_ports( "coba_inhib.I", "iaf.ISyn" )
-
-
-
-
-
-
-Flattening Components
----------------------
-
-
-
-Provided the number of regimes and sub_dynamics is relatively low; it is
-possible to take a hierarchical component, and flatten it into a single component
-with no sub_dynamics. This can be done using the methods in the  ``ComponentFlattener`` class,
-or the wrapper function ``flatten``. This flattening takes the cross product of
-all the regimes in all the sub_dynamics, then works out the relevant
-transitions and flattens the namespaces.
-
-We can test components to see if they are flat using the ``is_flat`` method.
-
+                                                    "coba_inhib" : get_coba()},
+                                      port_connections=[
+                                          ("iaf", "V", "coba_excit", "V"),
+                                          ("iaf", "V", "coba_inhib", "V"),
+                                          ("coba_excit", "I", "iaf", "ISyn"),
+                                          ("coba_inhib", "I", "iaf", "ISyn")]

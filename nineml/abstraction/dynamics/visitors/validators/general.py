@@ -4,6 +4,7 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
 from nineml.utils import assert_no_duplicates
 from ....componentclass.visitors.validators import (
@@ -31,10 +32,10 @@ class TimeDerivativesAreDeclaredDynamicsValidator(
 
         self.visit(component_class)
 
-        for td in self.time_derivatives:
+        for td in self.time_derivatives_used:
             if td not in self.sv_declared:
-                err = 'StateVariable not declared: %s' % td
-                raise NineMLRuntimeError(err)
+                raise NineMLRuntimeError(
+                    "StateVariable not declared: %s".format(td))
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.sv_declared.append(state_variable.name)
@@ -109,8 +110,8 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
         BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
 
-        self.connected_regimes_from_regime = set()
-        self.regimes = set()
+        self.connected_regimes_from_regime = defaultdict(set)
+        self.regimes = set
 
         self.visit(component_class)
 
@@ -120,16 +121,13 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
                 if r not in connected:
                     add_connected_regimes_recursive(r, connected)
 
-        for namespace, regimes in self.regimes.iteritems():
-
-            # Perhaps we have no transition graph; this is OK:
-            if len(regimes) == 0:
-                continue
-
-            connected = set()
-            add_connected_regimes_recursive(regimes[0], connected)
-            if len(connected) != len(self.regimes[namespace]):
-                raise NineMLRuntimeError("Transition graph contains islands")
+        # Perhaps we have no transition graph; this is OK:
+        if len(self.regimes) == 0:
+            continue
+        connected = set()
+        add_connected_regimes_recursive(self.regimes[0], connected)
+        if len(connected) != len(self.regimes):
+            raise NineMLRuntimeError("Transition graph contains islands")
 
     def action_componentclass(self, component_class):
         self.regimes = list(component_class.regimes)
