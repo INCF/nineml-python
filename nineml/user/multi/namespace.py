@@ -36,7 +36,7 @@ def append_namespace(identifier, namespace):
     # within the namesapace (and 9ML names are not allowed to start or end
     # in underscores) we append an underscore to each multiple underscore
     # to avoid clash with the delimeter in the suffix
-    return (identifier + '__' +
+    return (str(identifier) + '__' +
             multiple_underscore_re.sub(r'\1\2_\3', namespace))
 
 
@@ -76,9 +76,10 @@ def split_delay_trigger_name(name):
 
 def make_regime_name(sub_regimes_dict):
     sorted_keys = sorted(sub_regimes_dict.iterkeys())
-    return '___'.join(multiple_underscore_re.sub(r'\1\2__\3',
-                                                 sub_regimes_dict[k].name)
-                      for k in sorted_keys) + '___regime'
+    return '___'.join(
+        multiple_underscore_re.sub(r'\1\2__\3',
+                                   sub_regimes_dict[k].element.name)
+        for k in sorted_keys) + '___regime'
 
 
 def split_multi_regime_name(name):
@@ -142,8 +143,8 @@ class _NamespaceExpression(object):
         """Return copy of rhs with all free symols suffixed by the namespace"""
         try:
             return self.element.rhs.xreplace(dict(
-                (s, sympy.Symbol(self.sub_component.append_namespace(s)))
-                for s in self._rhs.free_symbols))
+                (s, sympy.Symbol(append_namespace(s, self.sub_component.name)))
+                for s in self.element.rhs.free_symbols))
         except AttributeError:  # If rhs has been simplified to ints/floats
             assert float(self.element.rhs)
             return self.rhs
@@ -193,7 +194,8 @@ class _NamespaceTransition(_NamespaceNamed):
 
     @property
     def target_regime_name(self):
-        return self.element.target_regime_name + self.suffix
+        return append_namespace(self.element.target_regime_name,
+                                self.sub_component.name)
 
     @property
     def state_assignments(self):
@@ -233,18 +235,32 @@ class _NamespaceOnCondition(_NamespaceTransition, OnCondition):
 
     @property
     def trigger(self):
-        return _NamespaceTrigger(self, self.element.trigger)
+        return _NamespaceTrigger(self.sub_component, self.element.trigger)
 
 
 class _NamespaceTrigger(_NamespaceExpression, Trigger):
     pass
 
 
-class _NamespaceOutputEvent(_NamespaceNamed, OutputEvent):
+class _NamespaceOutputEvent(OutputEvent):
+
+    defining_attributes = ('_sub_component', '_element')
+
+    def __init__(self, sub_component, element):
+        self._sub_component = sub_component
+        self._element = element
+
+    @property
+    def sub_component(self):
+        return self._sub_component
+
+    @property
+    def element(self):
+        return self._element
 
     @property
     def port_name(self):
-        return self.element.port_name
+        return append_namespace(self.element.port_name)
 
 
 class _NamespaceStateVariable(_NamespaceNamed, StateVariable):
