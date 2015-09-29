@@ -117,8 +117,8 @@ class Transition(BaseALObject, MemberContainerObject):
 
     defining_attributes = ('_state_assignments', '_output_events',
                            'target_regime_name')
-    class_to_member_dict = {StateAssignment: '_state_assignments',
-                            OutputEvent: '_output_events'}
+    class_to_members = {'StateAssignment': 'state_assignments',
+                        'OutputEvent': 'output_events'}
 
     def __init__(self, state_assignments=None, output_events=None,
                  target_regime=None):

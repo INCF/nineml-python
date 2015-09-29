@@ -152,15 +152,22 @@ class MemberContainerObject(object):
     An abstract base class for handling the manipulation of member objects
     (which are stored in dictionaries that can be detected by member type).
 
-    Deriving classes are expected to have the 'class_to_member_dict' class
+    Deriving classes are expected to have the 'class_to_members' class
     attribute
     """
 
     def __init__(self):
         self._indices = defaultdict(dict)
 
-    def __iter__(self):
-        return chain(*(d.itervalues() for d in self.all_member_dicts))
+    @property
+    def elements(self):
+        """
+        Iterates through all the core member elements of the container. For
+        core 9ML objects this will be the same as those iterated by the
+        __iter__ magic method, where as for 9ML extensions.
+        """
+        return chain(*(getattr(self, members_name)
+                       for members_name in self.class_to_members.itervalues()))
 
     def add(self, element):
         dct = self.lookup_member_dict(element)
@@ -218,8 +225,9 @@ class MemberContainerObject(object):
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
         """
-        dct = self._indices[self.lookup_member_dict_name(element)
-                            if key is None else key]
+        if key is None:
+            key = self.lookup_members_name(element)
+        dct = self._indices[key]
         try:
             index = dct[element]
         except KeyError:
@@ -239,34 +247,25 @@ class MemberContainerObject(object):
         """
         Looks up the appropriate member dictionary for objects of type element
         """
-        return getattr(self, self.lookup_member_dict_name(element))
+        return getattr(self, '_' + self.lookup_members_name(element))
 
-    def lookup_member_dict_name(self, element):
+    def lookup_members_name(self, element):
         """
         Looks up the appropriate member dictionary name for objects of type
         element
         """
         # Try quick lookup by class type
         try:
-            return self.class_to_member_dict[type(element)]
+            return self.class_to_members[element.element_name]
         except KeyError:
-            # Iterate through and find by isinstance lookup
-            try:
-                l = [d for clss, d in self.class_to_member_dict.iteritems()
-                     if isinstance(element, clss)]
-                assert len(l) < 2, ("Multiple base classes found for '{}' type"
-                                    .format(type(element)))
-                return l[0]
-            except IndexError:
-                raise NineMLInvalidElementTypeException(
-                    "Could not get member dict for element of type "
-                    "'{}' from '{}' class" .format(type(element).__name__,
-                                                   type(self).__name__))
+            raise NineMLInvalidElementTypeException(
+                "Could not get member dict for element of type '{}' in '{}' "
+                "container".format(element.element_name, type(self).__name__))
 
     @property
     def all_member_dicts(self):
-        return (getattr(self, n)
-                for n in self.class_to_member_dict.itervalues())
+        return (getattr(self, '_' + n)
+                for n in self.class_to_members.itervalues())
 
 
 class SendPortBase(object):

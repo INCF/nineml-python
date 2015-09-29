@@ -150,10 +150,10 @@ class Regime(BaseALObject, MemberContainerObject):
 
     defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
                            'name', '_aliases')
-    class_to_member_dict = {TimeDerivative: '_time_derivatives',
-                            OnEvent: '_on_events',
-                            OnCondition: '_on_conditions',
-                            Alias: '_aliases'}
+    class_to_members = {'TimeDerivative': 'time_derivatives',
+                        'OnEvent': 'on_events',
+                        'OnCondition': 'on_conditions',
+                        'Alias': 'aliases'}
 
     _n = 0
 

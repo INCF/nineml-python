@@ -78,6 +78,6 @@ class ComponentCloner(ComponentVisitor):
             assert isinstance(source, MemberContainerObject)
             for s in source:
                 d = destination.lookup_member_dict(s)[s._name]
-                key = source.lookup_member_dict_name(s)
+                key = source.lookup_members_name(s)
                 index = source.index_of(s)
                 destination._indices[key][d] = index

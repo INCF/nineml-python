@@ -186,6 +186,13 @@ class _NamespaceExpression(object):
             "sub-component")
 
 
+class _NamespaceDimensioned(object):
+
+    @property
+    def dimension(self):
+        return self._element._dimension
+
+
 class _NamespaceTransition(_NamespaceNamed):
 
     @property
@@ -264,15 +271,19 @@ class _NamespaceOutputEvent(OutputEvent):
                                 self.sub_component.name)
 
 
-class _NamespaceStateVariable(_NamespaceNamed, StateVariable):
+class _NamespaceStateVariable(_NamespaceNamed, _NamespaceDimensioned,
+                              StateVariable):
     pass
 
 
 class _NamespaceAlias(_NamespaceNamed, _NamespaceExpression, Alias):
-    pass
+
+    @property
+    def lhs(self):
+        return self.name
 
 
-class _NamespaceParameter(_NamespaceNamed, Parameter):
+class _NamespaceParameter(_NamespaceNamed, _NamespaceDimensioned, Parameter):
     pass
 
 
@@ -285,12 +296,16 @@ class _NamespaceTimeDerivative(_NamespaceNamed, _NamespaceExpression,
 
     @property
     def variable(self):
-        return self.element.variable
+        return append_namespace(self.element.variable,
+                                self._sub_component.name)
 
 
 class _NamespaceStateAssignment(_NamespaceNamed, _NamespaceExpression,
                                 StateAssignment):
-    pass
+
+    @property
+    def lhs(self):
+        return self.name
 
 
 class _NamespaceProperty(_NamespaceNamed, Property):
