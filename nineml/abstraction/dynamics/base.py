@@ -449,25 +449,6 @@ class Dynamics(ComponentClass):
         return extractor.expressions
 
     @property
-    def fully_qualified_port_connections(self):
-        """Used by the flattening code.
-
-        This method returns a list of tuples of the
-        the fully-qualified port connections.
-        For example,
-        [("a.b.C","d.e.F"),("g.h.I","j.k.L"), ..., ("u.W","x.y.Z") ]
-        but note that it is not ``string`` objects that are returned, but
-        NamespaceAddress objects.
-        """
-        namespace = self.get_node_addr()
-        conns = []
-        for src, sink in self.portconnections:
-            src_new = namespace.get_subns_addr(src)
-            sink_new = namespace.get_subns_addr(sink)
-            conns.append((src_new, sink_new))
-        return conns
-
-    @property
     def transitions(self):
         return self.all_transitions()
 

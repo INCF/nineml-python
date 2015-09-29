@@ -831,89 +831,89 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
 #         self.assertEquals(fNew.name, 'F')
 #         self.assertEquals(gNew.name, 'G')
 
-    def test_insert_subnode(self):
-        """
-        Signature: name(self, subnode, namespace)
-        Insert a subnode into this component
-
-
-        :param subnode: An object of type ``Dynamics``.
-        :param namespace: A `string` specifying the name of the component in
-            this components namespace.
-
-        :raises: ``NineMLRuntimeException`` if there is already a subcomponent
-            at the same namespace location
-
-        .. note::
-
-        This method will clone the subnode.
-        """
-
-        d = Dynamics(name='D')
-        e = Dynamics(name='E')
-        f = Dynamics(name='F')
-        g = Dynamics(name='G')
-
-        b = Dynamics(name='B')
-        b.insert_subnode(namespace='d', subnode=d)
-        b.insert_subnode(namespace='e', subnode=e)
-
-        c = Dynamics(name='C')
-        c.insert_subnode(namespace='f', subnode=f)
-        c.insert_subnode(namespace='g', subnode=g)
-
-        a = Dynamics(name='A')
-        a.insert_subnode(namespace='b', subnode=b)
-        a.insert_subnode(namespace='c', subnode=c)
-
-        # Construction of the objects causes cloning to happen:
-        # Therefore we test by looking up and checking that there
-        # are the correct component names:
-        bNew = a.get_subnode('b')
-        cNew = a.get_subnode('c')
-        dNew = a.get_subnode('b.d')
-        eNew = a.get_subnode('b.e')
-        fNew = a.get_subnode('c.f')
-        gNew = a.get_subnode('c.g')
-
-#         self.assertEquals(a.get_node_addr(),
-#                           NamespaceAddress.create_root())
-#         self.assertEquals(bNew.get_node_addr(),
-#                           NamespaceAddress('b'))
-#         self.assertEquals(cNew.get_node_addr(),
-#                           NamespaceAddress('c'))
-#         self.assertEquals(dNew.get_node_addr(),
-#                           NamespaceAddress('b.d'))
-#         self.assertEquals(eNew.get_node_addr(),
-#                           NamespaceAddress('b.e'))
-#         self.assertEquals(fNew.get_node_addr(),
-#                           NamespaceAddress('c.f'))
-#         self.assertEquals(gNew.get_node_addr(),
-#                           NamespaceAddress('c.g'))
-
-        self.assertEquals(a.name, 'A')
-        self.assertEquals(bNew.name, 'B')
-        self.assertEquals(cNew.name, 'C')
-        self.assertEquals(dNew.name, 'D')
-        self.assertEquals(eNew.name, 'E')
-        self.assertEquals(fNew.name, 'F')
-        self.assertEquals(gNew.name, 'G')
-
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'x')
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.')
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.X')
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.b.')
-        self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.b.X')
-
-        # Adding to the same namespace twice:
-        d1 = Dynamics(name='D1')
-        d2 = Dynamics(name='D2')
-        a = Dynamics(name='B')
-
-        a.insert_subnode(namespace='d', subnode=d1)
-        self.assertRaises(
-            NineMLRuntimeError,
-            a.insert_subnode, namespace='d', subnode=d2)
+#     def test_insert_subnode(self):
+#         """
+#         Signature: name(self, subnode, namespace)
+#         Insert a subnode into this component
+# 
+# 
+#         :param subnode: An object of type ``Dynamics``.
+#         :param namespace: A `string` specifying the name of the component in
+#             this components namespace.
+# 
+#         :raises: ``NineMLRuntimeException`` if there is already a subcomponent
+#             at the same namespace location
+# 
+#         .. note::
+# 
+#         This method will clone the subnode.
+#         """
+# 
+#         d = Dynamics(name='D')
+#         e = Dynamics(name='E')
+#         f = Dynamics(name='F')
+#         g = Dynamics(name='G')
+# 
+#         b = Dynamics(name='B')
+#         b.insert_subnode(namespace='d', subnode=d)
+#         b.insert_subnode(namespace='e', subnode=e)
+# 
+#         c = Dynamics(name='C')
+#         c.insert_subnode(namespace='f', subnode=f)
+#         c.insert_subnode(namespace='g', subnode=g)
+# 
+#         a = Dynamics(name='A')
+#         a.insert_subnode(namespace='b', subnode=b)
+#         a.insert_subnode(namespace='c', subnode=c)
+# 
+#         # Construction of the objects causes cloning to happen:
+#         # Therefore we test by looking up and checking that there
+#         # are the correct component names:
+#         bNew = a.get_subnode('b')
+#         cNew = a.get_subnode('c')
+#         dNew = a.get_subnode('b.d')
+#         eNew = a.get_subnode('b.e')
+#         fNew = a.get_subnode('c.f')
+#         gNew = a.get_subnode('c.g')
+# 
+# #         self.assertEquals(a.get_node_addr(),
+# #                           NamespaceAddress.create_root())
+# #         self.assertEquals(bNew.get_node_addr(),
+# #                           NamespaceAddress('b'))
+# #         self.assertEquals(cNew.get_node_addr(),
+# #                           NamespaceAddress('c'))
+# #         self.assertEquals(dNew.get_node_addr(),
+# #                           NamespaceAddress('b.d'))
+# #         self.assertEquals(eNew.get_node_addr(),
+# #                           NamespaceAddress('b.e'))
+# #         self.assertEquals(fNew.get_node_addr(),
+# #                           NamespaceAddress('c.f'))
+# #         self.assertEquals(gNew.get_node_addr(),
+# #                           NamespaceAddress('c.g'))
+# 
+#         self.assertEquals(a.name, 'A')
+#         self.assertEquals(bNew.name, 'B')
+#         self.assertEquals(cNew.name, 'C')
+#         self.assertEquals(dNew.name, 'D')
+#         self.assertEquals(eNew.name, 'E')
+#         self.assertEquals(fNew.name, 'F')
+#         self.assertEquals(gNew.name, 'G')
+# 
+#         self.assertRaises(NineMLRuntimeError, a.get_subnode, 'x')
+#         self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.')
+#         self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.X')
+#         self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.b.')
+#         self.assertRaises(NineMLRuntimeError, a.get_subnode, 'a.b.X')
+# 
+#         # Adding to the same namespace twice:
+#         d1 = Dynamics(name='D1')
+#         d2 = Dynamics(name='D2')
+#         a = Dynamics(name='B')
+# 
+#         a.insert_subnode(namespace='d', subnode=d1)
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             a.insert_subnode, namespace='d', subnode=d2)
 
     def test_connect_ports(self):
         # Signature: name(self, src, sink)
@@ -1041,58 +1041,58 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
 #         self.assertEquals(list(cNew.fully_qualified_port_connections),
 #                           [(NamespaceAddress('c.G'), NamespaceAddress('c.f.D'))])
 
-    def test_recurse_all_components(self):
-        # Signature: name
-                # Returns an iterator over this component and all sub_dynamics
-
-        d = Dynamics(name='D')
-        e = Dynamics(name='E')
-        f = Dynamics(name='F')
-        g = Dynamics(name='G')
-
-        b = Dynamics(name='B')
-        b.insert_subnode(namespace='d', subnode=d)
-        b.insert_subnode(namespace='e', subnode=e)
-
-        c = Dynamics(name='C')
-        c.insert_subnode(namespace='f', subnode=f)
-        c.insert_subnode(namespace='g', subnode=g)
-
-        a = Dynamics(name='A')
-        a.insert_subnode(namespace='b', subnode=b)
-        a.insert_subnode(namespace='c', subnode=c)
-
-        # Construction of the objects causes cloning to happen:
-        # Therefore we test by looking up and checking that there
-        # are the correct component names:
-        bNew = a.get_subnode('b')
-        cNew = a.get_subnode('c')
-        dNew = a.get_subnode('b.d')
-        eNew = a.get_subnode('b.e')
-        fNew = a.get_subnode('c.f')
-        gNew = a.get_subnode('c.g')
-
-        self.assertEquals(
-            set(a.all_components),
-            set([a, bNew, cNew, dNew, eNew, fNew, gNew]))
-        self.assertEquals(
-            set(bNew.all_components),
-            set([bNew, dNew, eNew]))
-        self.assertEquals(
-            set(cNew.all_components),
-            set([cNew, fNew, gNew]))
-        self.assertEquals(
-            set(dNew.all_components),
-            set([dNew]))
-        self.assertEquals(
-            set(eNew.all_components),
-            set([eNew]))
-        self.assertEquals(
-            set(fNew.all_components),
-            set([fNew]))
-        self.assertEquals(
-            set(gNew.all_components),
-            set([gNew]))
+#     def test_recurse_all_components(self):
+#         # Signature: name
+#                 # Returns an iterator over this component and all sub_dynamics
+# 
+#         d = Dynamics(name='D')
+#         e = Dynamics(name='E')
+#         f = Dynamics(name='F')
+#         g = Dynamics(name='G')
+# 
+#         b = Dynamics(name='B')
+#         b.insert_subnode(namespace='d', subnode=d)
+#         b.insert_subnode(namespace='e', subnode=e)
+# 
+#         c = Dynamics(name='C')
+#         c.insert_subnode(namespace='f', subnode=f)
+#         c.insert_subnode(namespace='g', subnode=g)
+# 
+#         a = Dynamics(name='A')
+#         a.insert_subnode(namespace='b', subnode=b)
+#         a.insert_subnode(namespace='c', subnode=c)
+# 
+#         # Construction of the objects causes cloning to happen:
+#         # Therefore we test by looking up and checking that there
+#         # are the correct component names:
+#         bNew = a.get_subnode('b')
+#         cNew = a.get_subnode('c')
+#         dNew = a.get_subnode('b.d')
+#         eNew = a.get_subnode('b.e')
+#         fNew = a.get_subnode('c.f')
+#         gNew = a.get_subnode('c.g')
+# 
+#         self.assertEquals(
+#             set(a.all_components),
+#             set([a, bNew, cNew, dNew, eNew, fNew, gNew]))
+#         self.assertEquals(
+#             set(bNew.all_components),
+#             set([bNew, dNew, eNew]))
+#         self.assertEquals(
+#             set(cNew.all_components),
+#             set([cNew, fNew, gNew]))
+#         self.assertEquals(
+#             set(dNew.all_components),
+#             set([dNew]))
+#         self.assertEquals(
+#             set(eNew.all_components),
+#             set([eNew]))
+#         self.assertEquals(
+#             set(fNew.all_components),
+#             set([fNew]))
+#         self.assertEquals(
+#             set(gNew.all_components),
+#             set([gNew]))
 
 # 
 # class NamespaceAddress_test(unittest.TestCase):

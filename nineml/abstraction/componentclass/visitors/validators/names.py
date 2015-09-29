@@ -25,30 +25,27 @@ class LocalNameConflictsComponentValidator(BaseValidator):
     def __init__(self, component_class):
         BaseValidator.__init__(
             self, require_explicit_overrides=False)
-        self.symbols = defaultdict(list)
+        self.symbols = []
         self.component_class = component_class
         self.visit(component_class)
 
-    def check_conflicting_symbol(self, namespace, symbol):
-        if symbol in self.symbols[namespace]:
-            err = 'Duplication of symbol found: %s in %s' % (symbol, namespace)
-            raise NineMLRuntimeError(err)
-        self.symbols[namespace].append(symbol)
+    def check_conflicting_symbol(self, symbol):
+        if symbol in self.symbols:
+            raise NineMLRuntimeError(
+                "Duplication of symbol found: {}".format(symbol))
+        self.symbols.append(symbol)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(namespace=namespace,
-                                      symbol=parameter.name)
+        self.check_conflicting_symbol(symbol=parameter.name)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         # Exclude aliases defined within sub scopes (as they should match the
         # outer scope anyway)
         if alias in self.component_class.aliases:
-            self.check_conflicting_symbol(namespace=namespace,
-                                          symbol=alias.lhs)
+            self.check_conflicting_symbol(symbol=alias.lhs)
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(namespace=namespace,
-                                      symbol=constant.name)
+        self.check_conflicting_symbol(symbol=constant.name)
 
 
 class DimensionNameConflictsComponentValidator(BaseValidator):

@@ -28,17 +28,16 @@ class LocalNameConflictsDynamicsValidator(
     """
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(namespace=namespace,
-                                      symbol=state_variable.name)
+        self.check_conflicting_symbol(symbol=state_variable.name)
 
     def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
+        self.check_conflicting_symbol(symbol=port.name)
 
     def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
+        self.check_conflicting_symbol(symbol=port.name)
 
     def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(namespace=namespace, symbol=port.name)
+        self.check_conflicting_symbol(symbol=port.name)
 
 
 class DimensionNameConflictsDynamicsValidator(

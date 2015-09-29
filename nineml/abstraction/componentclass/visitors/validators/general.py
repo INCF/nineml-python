@@ -4,7 +4,6 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError, NineMLDimensionError
 from nineml.abstraction.expressions.utils import is_valid_lhs_target
 from nineml.abstraction.expressions import reserved_identifiers
@@ -63,10 +62,10 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
         BaseValidator.__init__(
             self, require_explicit_overrides=False)
 
-        self.available_symbols = defaultdict(list)
-        self.aliases = defaultdict(list)
-        self.time_derivatives = defaultdict(list)
-        self.state_assignments = defaultdict(list)
+        self.available_symbols = []
+        self.aliases = []
+        self.time_derivatives = []
+        self.state_assignments = []
         self.component_class = component_class
         self.visit(component_class)
 
@@ -77,9 +76,9 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
                     if rhs_atom in reserved_identifiers:
                         continue
                     if rhs_atom not in self.available_symbols[ns]:
-                        err = ('Unresolved Symbol in Alias: %s [%s]' %
-                               (rhs_atom, alias))
-                        raise NineMLRuntimeError(err)
+                        raise NineMLRuntimeError(
+                            "Unresolved Symbol in Alias: {} [{}]"
+                            .format(rhs_atom, alias))
 
         # Check TimeDerivatives:
         for ns, timederivatives in self.time_derivatives.iteritems():
@@ -97,27 +96,26 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
                 for rhs_atom in state_assignment.rhs_symbol_names:
                     if (rhs_atom not in self.available_symbols[ns] and
                             rhs_atom not in reserved_identifiers):
-                        err = ('Unresolved Symbol in Assignment: %s [%s]' %
-                               (rhs_atom, state_assignment))
-                        raise NineMLRuntimeError(err)
+                        raise NineMLRuntimeError(
+                            'Unresolved Symbol in Assignment: {} [{}]'
+                            .format(rhs_atom, state_assignment))
 
-    def add_symbol(self, namespace, symbol):
-        if symbol in self.available_symbols[namespace]:
-            err = ("Duplicate Symbol: [%s] found in namespace: %s" %
-                   (symbol, namespace))
-            raise NineMLRuntimeError(err)
-        self.available_symbols[namespace].append(symbol)
+    def add_symbol(self, symbol):
+        if symbol in self.available_symbols:
+            raise NineMLRuntimeError(
+                "Duplicate Symbol '{}' found".format(symbol))
+        self.available_symbols.append(symbol)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if alias in self.component_class.aliases:
-            self.add_symbol(namespace=namespace, symbol=alias.lhs)
-            self.aliases[namespace].append(alias)
+            self.add_symbol(symbol=alias.lhs)
+            self.aliases.append(alias)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.add_symbol(namespace=namespace, symbol=parameter.name)
+        self.add_symbol(symbol=parameter.name)
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.add_symbol(namespace, constant.name)
+        self.add_symbol(constant.name)
 
 
 class NoDuplicatedObjectsComponentValidator(BaseValidator):

@@ -4,7 +4,6 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from nineml.abstraction.componentclass.namespace import NamespaceAddress
 from ...componentclass.visitors.cloner import (
     ComponentExpandPortDefinition, ComponentExpandAliasDefinition,
     ComponentCloner)
@@ -61,10 +60,7 @@ class DynamicsCloner(ComponentCloner):
                 s.accept_visitor(self, **kwargs)
                 for s in component_class.state_variables],
             constants=[c.accept_visitor(self, **kwargs)
-                       for c in component_class.constants],
-            subnodes=dict([(k, v.accept_visitor(self, **kwargs))
-                           for (k, v) in component_class.subnodes.iteritems()]),
-            portconnections=component_class.portconnections[:])
+                       for c in component_class.constants])
         self.copy_indices(component_class, cc)
         return cc
 
@@ -161,59 +157,3 @@ class DynamicsCloner(ComponentCloner):
         )
         self.copy_indices(on_event, oe, **kwargs)
         return oe
-
-
-# TODO: TGC 4/15 should just merge functionality into cloner I think.
-class DynamicsClonerPrefixNamespace(DynamicsCloner):
-
-    """
-    A visitor that walks over a hierarchical component_class, and prefixes every
-    variable with the namespace that that variable is in. This is preparation
-    for flattening
-    """
-
-    def visit_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        prefix = component_class.get_node_addr().get_str_prefix()
-        if prefix == '_':
-            prefix = ''
-        prefix_excludes = ['t']
-        kwargs = {'prefix': prefix, 'prefix_excludes': prefix_excludes}
-
-        port_connections = []
-        for src, sink in component_class.portconnections:
-            # To calculate the new address of the ports, we take of the 'local'
-            # port address, i.e. the parent address, then add the prefixed
-            # string:
-            src_new = NamespaceAddress.concat(
-                src.get_parent_addr(),
-                NamespaceAddress.concat(
-                    component_class.get_node_addr(),
-                    src.get_parent_addr()).get_str_prefix() +
-                self.prefix_variable(src.get_local_name()))
-            sink_new = NamespaceAddress.concat(
-                sink.get_parent_addr(), NamespaceAddress.concat(
-                    component_class.get_node_addr(),
-                    sink.get_parent_addr()).get_str_prefix() +
-                self.prefix_variable(sink.get_local_name()))
-            port_connections.append((src_new, sink_new))
-        return component_class.__class__(
-            name=component_class.name,
-            parameters=[p.accept_visitor(self, **kwargs)
-                        for p in component_class.parameters],
-            analog_ports=[p.accept_visitor(self, **kwargs)
-                          for p in component_class.analog_ports],
-            event_ports=[p.accept_visitor(self, **kwargs)
-                         for p in component_class.event_ports],
-            regimes=[r.accept_visitor(self, **kwargs)
-                     for r in component_class.regimes],
-            aliases=[
-                a.accept_visitor(self, **kwargs)
-                for a in component_class.aliases],
-            state_variables=[
-                s.accept_visitor(self, **kwargs)
-                for s in component_class.state_variables],
-            constants=[c.accept_visitor(self, **kwargs)
-                       for c in component_class.constants],
-            subnodes=dict([(k, v.accept_visitor(self, **kwargs))
-                           for (k, v) in component_class.subnodes.iteritems()]),
-            portconnections=port_connections)
