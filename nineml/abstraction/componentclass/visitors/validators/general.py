@@ -84,9 +84,13 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
             for rhs_atom in timederivative.rhs_symbol_names:
                 if (rhs_atom not in self.available_symbols and
                         rhs_atom not in reserved_identifiers):
-                    raise NineMLRuntimeError(
-                        "Unresolved Symbol in Time Derivative: {} [{}]"
-                        .format(rhs_atom, timederivative))
+                    try:
+                        raise NineMLRuntimeError(
+                            "Unresolved Symbol in Time Derivative: {} [{}]"
+                            .format(rhs_atom, timederivative))
+                    except:
+                        td = list(timederivative.rhs_symbol_names)
+                        print td
 
         # Check StateAssignments
         for state_assignment in self.state_assignments:
@@ -188,7 +192,7 @@ class DimensionalityComponentValidator(BaseValidator):
             element = None
             for scope in reversed(self._scopes):
                 try:
-                    element = scope[name]
+                    element = scope.element(name)
                 except KeyError:
                     pass
             if element is None:
@@ -279,7 +283,9 @@ class DimensionalityComponentValidator(BaseValidator):
               isinstance(expr, sympy.Rational)):
             dims = 1
         else:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Unrecognised type {} of expression '{}'"
+                .format(type(expr), expr))
         return dims
 
     def _compare_dimensionality(self, dimension, reference, element, ref_name):
@@ -290,7 +296,7 @@ class DimensionalityComponentValidator(BaseValidator):
                     ref_name, sympify(reference), reference.name))))
 
     def _check_send_port(self, port):
-        element = self.component_class[port.name]
+        element = self.component_class.element(port.name)
         try:
             if element.dimension != port.dimension:
                 raise NineMLDimensionError(self._construct_error_message(

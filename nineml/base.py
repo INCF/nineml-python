@@ -27,6 +27,8 @@ class BaseNineMLObject(object):
         if not (isinstance(other, self.__class__) or
                 isinstance(self, other.__class__)):
             return False
+        if self.defining_attributes != other.defining_attributes:
+            return False
         for name in self.defining_attributes:
             self_elem = getattr(self, name)
             other_elem = getattr(other, name)
@@ -159,16 +161,6 @@ class MemberContainerObject(object):
     def __init__(self):
         self._indices = defaultdict(dict)
 
-    @property
-    def elements(self):
-        """
-        Iterates through all the core member elements of the container. For
-        core 9ML objects this will be the same as those iterated by the
-        __iter__ magic method, where as for 9ML extensions.
-        """
-        return chain(*(getattr(self, members_name)
-                       for members_name in self.class_to_members.itervalues()))
-
     def add(self, element):
         dct = self.lookup_member_dict(element)
         if element._name in dct:
@@ -188,14 +180,29 @@ class MemberContainerObject(object):
                 "found in member dictionary (use 'ignore_missing' option "
                 "to ignore)".format(element._name))
 
+    @property
+    def elements(self):
+        """
+        Iterates through all the core member elements of the container. For
+        core 9ML objects this will be the same as those iterated by the
+        __iter__ magic method, where as for 9ML extensions.
+        """
+        return chain(*(getattr(self, members_name)
+                       for members_name in self.class_to_members.itervalues()))
+
     def __getitem__(self, name):
+        raise NotImplementedError
+
+    def element(self, name):
         """
         Looks a member item by "name" (identifying characteristic)
         """
         for dct in self.all_member_dicts:
             try:
                 elem = dct[name]
-                if not isinstance(elem, SendPortBase):  # Ignore send ports
+                # Ignore send ports as they otherwise mask aliases/state
+                # variables
+                if not isinstance(elem, SendPortBase):
                     return elem
             except KeyError:
                 pass

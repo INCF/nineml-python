@@ -6,7 +6,6 @@ docstring needed
 """
 
 from nineml.exceptions import NineMLRuntimeError
-from collections import defaultdict
 from base import BaseValidator
 
 

@@ -296,11 +296,10 @@ class MultiDynamics(Dynamics):
     element_name = 'MultiDynamics'
     defining_attributes = (
         '_name', '_sub_components', '_analog_port_connections',
-        '_zero_delay_event_port_connections',
-        '_nonzero_delay_event_port_connections',
-        '_reduce_port_connections', '_analog_send_port_exposures',
-        '_analog_receive_port_exposures', '_analog_reduce_port_exposures',
-        '_event_send_port_exposures', '_event_receive_port_exposures')
+        '_event_port_connections', '_reduce_port_connections',
+        '_analog_send_port_exposures', '_analog_receive_port_exposures',
+        '_analog_reduce_port_exposures', '_event_send_port_exposures',
+        '_event_receive_port_exposures')
     class_to_members = {
         'SubDynamics': 'sub_components',
         'AnalogPortConnection': 'analog_port_connections',
@@ -353,6 +352,7 @@ class MultiDynamics(Dynamics):
                                 port_connection.receiver_name, name))
                 port_connection = _LocalAnalogPortConnection(
                     port_connection)
+                port_connection.bind(self)
                 self._analog_port_connections[rcv_key] = port_connection
             elif isinstance(port_connection.receive_port, EventReceivePort):
                 self._event_port_connections[
@@ -458,6 +458,9 @@ class MultiDynamics(Dynamics):
         """
         return chain(
             self.analog_port_connections,
+            (p.alias for p in self.analog_send_ports),
+            (p.alias for p in self.analog_receive_ports),
+            (p.alias for p in self.analog_reduce_ports),
             (_LocalReducePortConnections(
                 prt, rcv, self._reduce_port_connections[(prt, rcv)])
              for prt, rcv in self._reduce_port_connections.iterkeys()),
@@ -551,13 +554,12 @@ class MultiDynamics(Dynamics):
         return self._event_receive_port_exposures.iterkeys()
 
     def parameter(self, name):
-        name, comp_name = split_namespace(name)
-        return self.sub_component(comp_name).component_class.parameter(name)
+        _, comp_name = split_namespace(name)
+        return self.sub_component(comp_name).parameter(name)
 
     def state_variable(self, name):
-        name, comp_name = split_namespace(name)
-        component_class = self.sub_component(comp_name).component_class
-        return component_class.state_variable(name)
+        _, comp_name = split_namespace(name)
+        return self.sub_component(comp_name).state_variable(name)
 
     def alias(self, name):
         try:
@@ -566,9 +568,8 @@ class MultiDynamics(Dynamics):
             try:
                 alias = self._reduce_port_connections[name]
             except KeyError:
-                name, comp_name = split_namespace(name)
-                component_class = self.sub_component(comp_name).component_class
-                alias = component_class.alias(name)
+                _, comp_name = split_namespace(name)
+                alias = self.sub_component(comp_name).alias(name)
         return alias
 
     def constant(self, name):
@@ -674,6 +675,8 @@ class MultiDynamics(Dynamics):
 
 
 class _MultiRegime(Regime):
+
+    defining_attributes = ('_sub_regimes', '_parent')
 
     def __init__(self, sub_regimes, parent):
         """

@@ -105,18 +105,14 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
     def __init__(self, component_class):
         BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
-
         self.connected_regimes_from_regime = defaultdict(set)
         self.regimes = set
-
         self.visit(component_class)
-
-        def add_connected_regimes_recursive(regime, connected):
+        def add_connected_regimes_recursive(regime, connected):  # @IgnorePep8
             connected.add(regime)
             for r in self.connected_regimes_from_regime[regime]:
                 if r not in connected:
                     add_connected_regimes_recursive(r, connected)
-
         connected = set()
         add_connected_regimes_recursive(self.regimes[0], connected)
         if len(connected) != len(self.regimes):
@@ -214,9 +210,8 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
                                       BaseDynamicsValidator):
 
     def __init__(self, component_class):
-        if not component_class.subnodes:  # Assumes that subnodes are alread checked @IgnorePep8
-            super(DimensionalityDynamicsValidator,
-                  self).__init__(component_class)
+        super(DimensionalityDynamicsValidator,
+              self).__init__(component_class)
 
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(timederivative)

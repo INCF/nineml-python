@@ -10,6 +10,7 @@ from nineml.abstraction import (
     Alias, TimeDerivative, Regime, OnEvent, OnCondition, StateAssignment,
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
 from nineml.exceptions import NineMLImmutableError
+from nineml.abstraction.expressions import reserved_identifiers
 
 
 # Matches multiple underscores, so they can be escaped by appending another
@@ -144,7 +145,8 @@ class _NamespaceExpression(object):
         try:
             return self.element.rhs.xreplace(dict(
                 (s, sympy.Symbol(append_namespace(s, self.sub_component.name)))
-                for s in self.element.rhs.free_symbols))
+                for s in self.element.rhs.free_symbols
+                if str(s) not in reserved_identifiers))
         except AttributeError:  # If rhs has been simplified to ints/floats
             assert float(self.element.rhs)
             return self.rhs

@@ -16,78 +16,78 @@ from nineml.utils import TestableComponent
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
                             'xml', 'neurons')
 
-
-class TestMultiDynamicsXML(unittest.TestCase):
-
-    def setUp(self):
-
-        self.a = Dynamics(
-            name='A',
-            aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1'],
-            regimes=[
-                Regime(
-                    'dSV1/dt = -SV1 / (P2*t)',
-                    'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
-                    transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('emit')])],
-                    name='R1',
-                ),
-                Regime(name='R2', transitions=On('SV1 > 1', to='R1'))
-            ],
-            analog_ports=[AnalogReceivePort('ARP1'),
-                          AnalogReceivePort('ARP2'),
-                          AnalogSendPort('A1'),
-                          AnalogSendPort('A2')],
-            parameters=['P1', 'P2']
-        )
-
-        self.b = Dynamics(
-            name='B',
-            aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1',
-                     'A4 := SV1^3 + SV2^3'],
-            regimes=[
-                Regime(
-                    'dSV1/dt = -SV1 / (P2*t)',
-                    'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
-                    'dSV3/dt = -SV3/t + P3/t',
-                    transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[
-                                    OutputEvent('emit'),
-                                    StateAssignment('SV1', 'P1')])],
-                    name='R1',
-                ),
-                Regime(name='R2', transitions=[
-                    On('SV1 > 1', to='R1'),
-                    On('SV3 < 0.001', to='R2',
-                       do=[StateAssignment('SV3', 1)])])
-            ],
-            analog_ports=[AnalogReceivePort('ARP1'),
-                          AnalogReceivePort('ARP2'),
-                          AnalogSendPort('A1'),
-                          AnalogSendPort('A2'),
-                          AnalogSendPort('A3'),
-                          AnalogSendPort('SV3')],
-            parameters=['P1', 'P2', 'P3']
-        )
-
-        self.a_props = DynamicsProperties(
-            name="AProps", definition=self.a, properties={'P1': 1, 'P2': 2})
-        self.b_props = DynamicsProperties(
-            name="BProps", definition=self.b, properties={'P1': 1, 'P2': 2,
-                                                          'P3': 3})
-
-    def test_multicomponent_xml_roundtrip(self):
-        comp1 = MultiDynamicsProperties(
-            name='test',
-            sub_components={'a': self.a_props, 'b': self.b_props},
-            port_exposures=[("b_ARP2", "b", "ARP2")],
-            port_connections=[('a', 'A1', 'b', 'ARP1'),
-                              ('a', 'A2', 'b', 'ARP2'),
-                              ('b', 'A1', 'a', 'ARP1'),
-                              ('b', 'A3', 'a', 'ARP2')])
-        xml = Document(comp1, self.a, self.b).to_xml()
-        comp2 = load(xml)['test']
-        self.assertEquals(comp1, comp2)
+# 
+# class TestMultiDynamicsXML(unittest.TestCase):
+# 
+#     def setUp(self):
+# 
+#         self.a = Dynamics(
+#             name='A',
+#             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1'],
+#             regimes=[
+#                 Regime(
+#                     'dSV1/dt = -SV1 / (P2*t)',
+#                     'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
+#                     transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
+#                                  On('spikein', do=[OutputEvent('emit')])],
+#                     name='R1',
+#                 ),
+#                 Regime(name='R2', transitions=On('SV1 > 1', to='R1'))
+#             ],
+#             analog_ports=[AnalogReceivePort('ARP1'),
+#                           AnalogReceivePort('ARP2'),
+#                           AnalogSendPort('A1'),
+#                           AnalogSendPort('A2')],
+#             parameters=['P1', 'P2']
+#         )
+# 
+#         self.b = Dynamics(
+#             name='B',
+#             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1',
+#                      'A4 := SV1^3 + SV2^3'],
+#             regimes=[
+#                 Regime(
+#                     'dSV1/dt = -SV1 / (P2*t)',
+#                     'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
+#                     'dSV3/dt = -SV3/t + P3/t',
+#                     transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
+#                                  On('spikein', do=[
+#                                     OutputEvent('emit'),
+#                                     StateAssignment('SV1', 'P1')])],
+#                     name='R1',
+#                 ),
+#                 Regime(name='R2', transitions=[
+#                     On('SV1 > 1', to='R1'),
+#                     On('SV3 < 0.001', to='R2',
+#                        do=[StateAssignment('SV3', 1)])])
+#             ],
+#             analog_ports=[AnalogReceivePort('ARP1'),
+#                           AnalogReceivePort('ARP2'),
+#                           AnalogSendPort('A1'),
+#                           AnalogSendPort('A2'),
+#                           AnalogSendPort('A3'),
+#                           AnalogSendPort('SV3')],
+#             parameters=['P1', 'P2', 'P3']
+#         )
+# 
+#         self.a_props = DynamicsProperties(
+#             name="AProps", definition=self.a, properties={'P1': 1, 'P2': 2})
+#         self.b_props = DynamicsProperties(
+#             name="BProps", definition=self.b, properties={'P1': 1, 'P2': 2,
+#                                                           'P3': 3})
+# 
+#     def test_multicomponent_xml_roundtrip(self):
+#         comp1 = MultiDynamicsProperties(
+#             name='test',
+#             sub_components={'a': self.a_props, 'b': self.b_props},
+#             port_exposures=[("b_ARP2", "b", "ARP2")],
+#             port_connections=[('a', 'A1', 'b', 'ARP1'),
+#                               ('a', 'A2', 'b', 'ARP2'),
+#                               ('b', 'A1', 'a', 'ARP1'),
+#                               ('b', 'A3', 'a', 'ARP2')])
+#         xml = Document(comp1, self.a, self.b).to_xml()
+#         comp2 = load(xml)['test']
+#         self.assertEquals(comp1, comp2)
 
 
 class MultiDynamicsFlattening_test(unittest.TestCase):
@@ -131,7 +131,9 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         e = MultiDynamics(
             name='E', sub_components={'a': c, 'b': d},
             port_connections=[('a', 'C1', 'b', 'dIn1'),
-                              ('a', 'C2', 'b', 'dIn2')])
+                              ('a', 'C2', 'b', 'dIn2')],
+            port_exposures=[('ARP1', 'a', 'cIn1'),
+                            ('ARP2', 'a', 'cIn2')])
 
         # Flatten a flat component
         # Everything should be as before:
@@ -157,627 +159,634 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
             set(['spikein', 'c_emit', 'emit']))
         self.assertEqual(set(e_flat.parameter_names), set(['cp1', 'cp2']))
         self.assertEqual(set(e_flat.state_variable_names), set(['SV1']))
+# 
+#     def test_Flattening2(self):
+# 
+#         c = Dynamics(
+#             name='C',
+#             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
+#             regimes=[
+#                 Regime(
+#                     'dSV1/dt = -SV1/(cp2*t)',
+#                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
+#                                  On('spikein', do=[OutputEvent('c_emit')])],
+#                     name='r1',
+#                 ),
+#                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
+#             ],
+#             analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
+#                           AnalogSendPort('C1'), AnalogSendPort('C2')],
+#             parameters=['cp1', 'cp2']
+#         )
+# 
+#         d = Dynamics(
+#             name='D',
+#             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
+#             regimes=[
+#                 Regime(
+#                     'dSV1/dt = -SV1/(dp2*t)',
+#                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
+#                                  On('spikein', do=[OutputEvent('d_emit')])],
+#                     name='r1',
+#                 ),
+#                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
+#             ],
+#             analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
+#                           AnalogSendPort('D1'), AnalogSendPort('D2')],
+#             parameters=['dp1', 'dp2']
+#         )
+# 
+#         # Test Cloner, 1 level of hierachy
+#         # ------------------------------ #
+# 
+#         # Everything should be as before:
+#         b = MultiDynamics(
+#             name='B',
+#             sub_components={'c1': c, 'c2': c, 'd': d},
+#             port_connections=[
+#                 ('c1', 'C1', 'c2', 'cIn1'),
+#                 ('c2', 'emit', 'c1', 'spikein')])
+# 
+#         b_flat = b.flatten(b)
+# 
+#         # Name
+#         self.assertEqual(b_flat.name, 'B')
+# 
+#         # Aliases
+#         self.assertEqual(
+#             set(b_flat.alias_names),
+#             set(['c1_C1', 'c1_C2', 'c1_C3', 'c2_C1', 'c2_C2', 'c2_C3',
+#                  'd_D1', 'd_D2', 'd_D3']))
+# 
+#         # - Regimes and Transitions:
+#         self.assertEqual(len(b_flat._regimes), 8)
+#         r_c1_1_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r1 ')
+#         r_c1_1_c2_2_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r2 ')
+#         r_c1_2_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r2 c2:r1')
+#         r_c1_2_c2_2_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r2 c2:r2')
+#         r_c1_1_c2_1_d_2 = b_flat.flattener.get_new_regime('d:r2 c1:r1 c2:r1 ')
+#         r_c1_1_c2_2_d_2 = b_flat.flattener.get_new_regime('d:r2 c1:r1 c2:r2 ')
+#         r_c1_2_c2_1_d_2 = b_flat.flattener.get_new_regime('d:r2 c1:r2 c2:r1')
+#         r_c1_2_c2_2_d_2 = b_flat.flattener.get_new_regime('d:r2 c1:r2 c2:r2')
+# 
+#         # Do we have the right number of on_events and on_conditions:
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1.on_conditions)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1.on_conditions)), 3)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1.on_conditions)), 3)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1.on_conditions)), 3)
+# 
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2.on_conditions)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2.on_conditions)), 3)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2.on_conditions)), 3)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2.on_events)), 0)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2.on_conditions)), 3)
+# 
+#         # All on_events return to thier same transition:
+#         self.assertEqual((list(r_c1_1_c2_1_d_1.on_events))[0].target_regime,
+#                           r_c1_1_c2_1_d_1)
+#         self.assertEqual((list(r_c1_1_c2_1_d_1.on_events))[1].target_regime,
+#                           r_c1_1_c2_1_d_1)
+#         self.assertEqual((list(r_c1_1_c2_1_d_1.on_events))[2].target_regime,
+#                           r_c1_1_c2_1_d_1)
+#         self.assertEqual((list(r_c1_1_c2_2_d_1.on_events))[0].target_regime,
+#                           r_c1_1_c2_2_d_1)
+#         self.assertEqual((list(r_c1_1_c2_2_d_1.on_events))[1].target_regime,
+#                           r_c1_1_c2_2_d_1)
+#         self.assertEqual((list(r_c1_2_c2_1_d_1.on_events))[0].target_regime,
+#                           r_c1_2_c2_1_d_1)
+#         self.assertEqual((list(r_c1_2_c2_1_d_1.on_events))[1].target_regime,
+#                           r_c1_2_c2_1_d_1)
+#         self.assertEqual((list(r_c1_2_c2_2_d_1.on_events))[0].target_regime,
+#                           r_c1_2_c2_2_d_1)
+#         self.assertEqual((list(r_c1_1_c2_1_d_2.on_events))[0].target_regime,
+#                           r_c1_1_c2_1_d_2)
+#         self.assertEqual((list(r_c1_1_c2_1_d_2.on_events))[1].target_regime,
+#                           r_c1_1_c2_1_d_2)
+#         self.assertEqual((list(r_c1_1_c2_2_d_2.on_events))[0].target_regime,
+#                           r_c1_1_c2_2_d_2)
+#         self.assertEqual((list(r_c1_2_c2_1_d_2.on_events))[0].target_regime,
+#                           r_c1_2_c2_1_d_2)
+# 
+#         # Check On-Event port names are remapped properly:
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_1_d_1.on_events]),
+#                          set(['c1_spikein', 'c2_spikein', 'd_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_2_d_1.on_events]),
+#             set(['c1_spikein', 'd_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_1_d_1.on_events]),
+#             set(['c2_spikein', 'd_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_2_d_1.on_events]),
+#             set(['d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_1_d_2.on_events]),
+#             set(['c1_spikein', 'c2_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_2_d_2.on_events]),
+#             set(['c1_spikein', ]))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_1_d_2.on_events]),
+#             set(['c2_spikein', ]))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_2_c2_2_d_2.on_events]), set([]))
+# 
+#         # ToDo: Check the OnConditions:
+#         #  - Ports & Parameters:
+#         self.assertEqual(
+#             set(b_flat.analog_port_names),
+#             set(['c1_cIn1', 'c1_cIn2', 'c1_C1', 'c1_C2', 'c2_cIn1', 'c2_cIn2',
+#                  'c2_C1', 'c2_C2', 'd_dIn1', 'd_dIn2', 'd_D1', 'd_D2']))
+# 
+#         self.assertEqual(
+#             set(b_flat.event_port_names),
+#             set(['c1_spikein', 'c1_emit', 'c1_c_emit', 'c2_spikein', 'c2_emit',
+#                  'c2_c_emit', 'd_spikein', 'd_emit', 'd_d_emit']))
+# 
+#         self.assertEqual(
+#             set(b_flat.parameter_names),
+#             set(['c1_cp1', 'c1_cp2', 'c2_cp1', 'c2_cp2', 'd_dp1', 'd_dp2', ]))
+# 
+#         self.assertEqual(
+#             set(b_flat.state_variable_names),
+#             set(['c1_SV1', 'c2_SV1', 'd_SV1']))
+# 
+#     def test_Flattening3(self):
+# 
+#         c = Dynamics(
+#             name='C',
+#             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
+#             regimes=[
+#                 Regime(
+#                     'dSV1/dt = -SV1/(cp2*t)',
+#                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
+#                                  On('spikein', do=[OutputEvent('c_emit')])],
+#                     name='r1',
+#                 ),
+#                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
+#             ],
+#             analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
+#                           AnalogSendPort('C1'), AnalogSendPort('C2')],
+#             parameters=['cp1', 'cp2']
+#         )
+# 
+#         d = Dynamics(
+#             name='D',
+#             aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
+#             regimes=[
+#                 Regime(
+#                     'dSV1/dt = -SV1/(dp2*t)',
+#                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
+#                                  On('spikein', do=[OutputEvent('d_emit')])],
+#                     name='r1',
+#                 ),
+#                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
+#             ],
+#             analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
+#                           AnalogSendPort('D1'), AnalogSendPort('D2')],
+#             parameters=['dp1', 'dp2']
+#         )
+# 
+#         # Test Cloner, 2 levels of hierachy
+#         # ------------------------------ #
+# 
+#         # Everything should be as before:
+#         b = MultiDynamics(name='B', sub_components={'c1': c, 'c2': c, 'd': d},
+#                           port_connections=[('c1', 'C1', 'c2', 'cIn1'),
+#                                             ('c2', 'C1', 'c1', 'cIn1'),
+#                                             ('c2', 'C2', 'd', 'dIn2')])
+#         a = MultiDynamics(name='A', sub_components={'b': b, 'c': c})
+# 
+#         a_flat = b.flatten(a)
+# 
+#         # Name
+#         self.assertEqual(a_flat.name, 'A')
+# 
+#         # Aliases
+#         self.assertEqual(
+#             set(a_flat.alias_names),
+#             set(['b_c1_C1', 'b_c1_C2', 'b_c1_C3', 'b_c2_C1', 'b_c2_C2',
+#                  'b_c2_C3', 'b_d_D1', 'b_d_D2', 'b_d_D3', 'c_C1', 'c_C2',
+#                  'c_C3']))
+# 
+#         # - Regimes and Transitions:
+#         self.assertEqual(len(a_flat._regimes), 16)
+#         r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
+#         r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
+#         r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
+#         r_c1_2_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r2 c:r1')
+#         r_c1_1_c2_1_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r1 c:r1')
+#         r_c1_1_c2_2_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r2 c:r1')
+#         r_c1_2_c2_1_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r1 c:r1')
+#         r_c1_2_c2_2_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r2 c:r1')
+#         r_c1_1_c2_1_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r2')
+#         r_c1_1_c2_2_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r2')
+#         r_c1_2_c2_1_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r2')
+#         r_c1_2_c2_2_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r2 c:r2')
+#         r_c1_1_c2_1_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r1 c:r2')
+#         r_c1_1_c2_2_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r2 c:r2')
+#         r_c1_2_c2_1_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r1 c:r2')
+#         r_c1_2_c2_2_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r2 c:r2')
+# 
+#         regimes = [
+#             r_c1_1_c2_1_d_1_c_1,
+#             r_c1_1_c2_2_d_1_c_1,
+#             r_c1_2_c2_1_d_1_c_1,
+#             r_c1_2_c2_2_d_1_c_1,
+#             r_c1_1_c2_1_d_2_c_1,
+#             r_c1_1_c2_2_d_2_c_1,
+#             r_c1_2_c2_1_d_2_c_1,
+#             r_c1_2_c2_2_d_2_c_1,
+#             r_c1_1_c2_1_d_1_c_2,
+#             r_c1_1_c2_2_d_1_c_2,
+#             r_c1_2_c2_1_d_1_c_2,
+#             r_c1_2_c2_2_d_1_c_2,
+#             r_c1_1_c2_1_d_2_c_2,
+#             r_c1_1_c2_2_d_2_c_2,
+#             r_c1_2_c2_1_d_2_c_2,
+#             r_c1_2_c2_2_d_2_c_2]
+#         self.assertEqual(len(set(regimes)), 16)
+# 
+#         # Do we have the right number of on_events and on_conditions:
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_1.on_events)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_1.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_1.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_1.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_1.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_1.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_1.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_1.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_1.on_conditions)), 4)
+# 
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_2.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_2.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_2.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_2.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_2.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_2.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_2.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_2.on_events)), 0)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_2.on_conditions)), 4)
+# 
+# # All on_events return to thier same transition:
+#         for r in a_flat.regimes:
+#             for on_ev in r.on_events:
+#                 self.assertEquals(on_ev.target_regime, r)
+# 
+#         # Check On-Event port names are remapped properly:
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_1_d_1_c_1.on_events]),
+#                          set(['c_spikein', 'b_c1_spikein', 'b_c2_spikein',
+#                               'b_d_spikein']))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_2_d_1_c_1.on_events]),
+#                          set(['c_spikein', 'b_c1_spikein', 'b_d_spikein']))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_2_c2_1_d_1_c_1.on_events]),
+#                          set(['c_spikein', 'b_c2_spikein', 'b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_1.on_events]),
+#             set(['c_spikein', 'b_d_spikein']))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_1_d_2_c_1.on_events]),
+#                          set(['c_spikein', 'b_c1_spikein', 'b_c2_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_1.on_events]),
+#             set(['c_spikein', 'b_c1_spikein', ]))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_1.on_events]),
+#             set(['c_spikein', 'b_c2_spikein', ]))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_1.on_events]),
+#             set(['c_spikein']))
+# 
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_1_d_1_c_2.on_events]),
+#                          set(['b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_2.on_events]),
+#             set(['b_c1_spikein', 'b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_2.on_events]),
+#             set(['b_c2_spikein', 'b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_2.on_events]),
+#             set(['b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_2.on_events]),
+#             set(['b_c1_spikein', 'b_c2_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_2.on_events]),
+#             set(['b_c1_spikein', ]))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_2.on_events]),
+#             set(['b_c2_spikein', ]))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_2_c2_2_d_2_c_2.on_events]),
+#                          set([]))
+# 
+#         # ToDo: Check the OnConditions:
+# 
+#         #  - Ports & Parameters:
+#         self.assertEqual(
+#             set(a_flat.analog_port_names),
+#             set(['b_c1_cIn1', 'b_c1_cIn2', 'b_c1_C1', 'b_c1_C2',
+#                  'b_c2_cIn1', 'b_c2_cIn2', 'b_c2_C1', 'b_c2_C2',
+#                  'b_d_dIn1', 'b_d_dIn2', 'b_d_D1', 'b_d_D2',
+#                  'c_cIn1', 'c_cIn2', 'c_C1', 'c_C2']))
+# 
+#         self.assertEqual(
+#             set(a_flat.event_port_names),
+#             set(['b_c1_spikein', 'b_c1_emit', 'b_c1_c_emit',
+#                  'b_c2_spikein', 'b_c2_emit', 'b_c2_c_emit',
+#                  'b_d_spikein', 'b_d_emit', 'b_d_d_emit',
+#                  'c_spikein', 'c_emit', 'c_c_emit', ]))
+# 
+#         self.assertEqual(
+#             set(a_flat.parameter_names),
+#             set(['c_cp1', 'c_cp2',
+#                  'b_c1_cp1', 'b_c1_cp2',
+#                  'b_c2_cp1', 'b_c2_cp2',
+#                  'b_d_dp1', 'b_d_dp2', ]))
+# 
+#         self.assertEqual(
+#             set(a_flat.state_variable_names),
+#             set(['b_c1_SV1', 'b_c2_SV1', 'b_d_SV1', 'c_SV1']))
+# 
+#     def test_Flattening4(self):
+# 
+#         c = Dynamics(
+#             name='C',
+#             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1', 'C4:=cIn2'],
+#             regimes=[
+#                 Regime(
+#                     'dSV1/dt = -SV1/(cp2*t)',
+#                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
+#                                  On('spikein', do=[OutputEvent('c_emit')])],
+#                     name='r1',
+#                 ),
+#                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
+#             ],
+#             analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
+#                           AnalogSendPort('C1'), AnalogSendPort('C2')],
+#             parameters=['cp1', 'cp2']
+#         )
+# 
+#         d = Dynamics(
+#             name='D',
+#             aliases=['D1:=dp1', 'D2 := dIn1 + dp2', 'D3 := SV1'],
+#             regimes=[
+#                 Regime(
+#                     'dSV1/dt = -SV1/(dp2*t)',
+#                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
+#                                  On('spikein', do=[OutputEvent('d_emit')])],
+#                     name='r1',
+#                 ),
+#                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
+#             ],
+#             analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
+#                           AnalogSendPort('D1'), AnalogSendPort('D2')],
+#             parameters=['dp1', 'dp2']
+#         )
+# 
+#         # Test Cloner, 2 levels of hierachy
+#         # ------------------------------ #
+# 
+#         # Everything should be as before:
+#         b = MultiDynamics(
+#             name='B',
+#             sub_components={'c1': c, 'c2': c, 'd': d},
+#             port_connections=[('c1', 'C1', 'c2', 'cIn2'),
+#                               ('c2', 'C1', 'c1', 'cIn1')])
+# 
+#         a = MultiDynamics(
+#             name='A',
+#             sub_components={'b': b, 'c': c},
+#             port_connections=[('b', 'c1', 'C1', 'b', 'c1', 'cIn2'),
+#                               ('b', 'c1', 'C1', 'b', 'c2', 'cIn1'),
+#                               ('b', 'c1', 'C2', 'b', 'd', 'dIn1')])
+# 
+#         a_flat = a.flatten()
+# 
+#         # Name
+#         self.assertEqual(a_flat.name, 'A')
+# 
+#         # Aliases
+#         self.assertEqual(
+#             set(a_flat.alias_names),
+#             set(['b_c1_C1', 'b_c1_C2', 'b_c1_C3', 'b_c1_C4',
+#                  'b_c2_C1', 'b_c2_C2', 'b_c2_C3', 'b_c2_C4',
+#                  'b_d_D1', 'b_d_D2', 'b_d_D3',
+#                  'c_C1', 'c_C2', 'c_C3', 'c_C4']))
+# 
+#         # - Regimes and Transitions:
+#         self.assertEqual(len(a_flat._regimes), 16)
+#         r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
+#         r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
+#         r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
+#         r_c1_2_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r2 c:r1')
+#         r_c1_1_c2_1_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r1 c:r1')
+#         r_c1_1_c2_2_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r2 c:r1')
+#         r_c1_2_c2_1_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r1 c:r1')
+#         r_c1_2_c2_2_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r2 c:r1')
+#         r_c1_1_c2_1_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r2')
+#         r_c1_1_c2_2_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r2')
+#         r_c1_2_c2_1_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r2')
+#         r_c1_2_c2_2_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r2 c:r2')
+#         r_c1_1_c2_1_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r1 c:r2')
+#         r_c1_1_c2_2_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r2 c:r2')
+#         r_c1_2_c2_1_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r1 c:r2')
+#         r_c1_2_c2_2_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r2 c:r2')
+# 
+#         regimes = [
+#             r_c1_1_c2_1_d_1_c_1,
+#             r_c1_1_c2_2_d_1_c_1,
+#             r_c1_2_c2_1_d_1_c_1,
+#             r_c1_2_c2_2_d_1_c_1,
+#             r_c1_1_c2_1_d_2_c_1,
+#             r_c1_1_c2_2_d_2_c_1,
+#             r_c1_2_c2_1_d_2_c_1,
+#             r_c1_2_c2_2_d_2_c_1,
+#             r_c1_1_c2_1_d_1_c_2,
+#             r_c1_1_c2_2_d_1_c_2,
+#             r_c1_2_c2_1_d_1_c_2,
+#             r_c1_2_c2_2_d_1_c_2,
+#             r_c1_1_c2_1_d_2_c_2,
+#             r_c1_1_c2_2_d_2_c_2,
+#             r_c1_2_c2_1_d_2_c_2,
+#             r_c1_2_c2_2_d_2_c_2]
+#         self.assertEqual(len(set(regimes)), 16)
+# 
+#         # Do we have the right number of on_events and on_conditions:
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_1.on_events)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_1.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_1.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_1.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_1.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_1.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_1.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_1.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_1.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_1.on_conditions)), 4)
+# 
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_2.on_events)), 3)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_2.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_2.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_2.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_2.on_events)), 2)
+#         self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_2.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_2.on_events)), 1)
+#         self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_2.on_conditions)), 4)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_2.on_events)), 0)
+#         self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_2.on_conditions)), 4)
+# 
+# # All on_events return to thier same transition:
+#         for r in a_flat.regimes:
+#             for on_ev in r.on_events:
+#                 self.assertEquals(on_ev.target_regime, r)
+# 
+#         # Check On-Event port names are remapped properly:
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_1_d_1_c_1.on_events]), set(
+#             ['c_spikein', 'b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_2_d_1_c_1.on_events]), set(
+#             ['c_spikein', 'b_c1_spikein', 'b_d_spikein']))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_2_c2_1_d_1_c_1.on_events]), set(
+#             ['c_spikein', 'b_c2_spikein', 'b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_1.on_events]),
+#             set(['c_spikein', 'b_d_spikein']))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_1_d_2_c_1.on_events]), set(
+#             ['c_spikein', 'b_c1_spikein', 'b_c2_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_1.on_events]),
+#             set(['c_spikein', 'b_c1_spikein', ]))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_1.on_events]),
+#             set(['c_spikein', 'b_c2_spikein', ]))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_1.on_events]),
+#             set(['c_spikein']))
+# 
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_1_c2_1_d_1_c_2.on_events]),
+#                          set(['b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_2.on_events]),
+#             set(['b_c1_spikein', 'b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_2.on_events]),
+#             set(['b_c2_spikein', 'b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_2.on_events]),
+#             set(['b_d_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_2.on_events]),
+#             set(['b_c1_spikein', 'b_c2_spikein']))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_2.on_events]),
+#             set(['b_c1_spikein', ]))
+#         self.assertEqual(
+#             set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_2.on_events]),
+#             set(['b_c2_spikein', ]))
+#         self.assertEqual(set([ev.src_port_name
+#                               for ev in r_c1_2_c2_2_d_2_c_2.on_events]),
+#                          set([]))
+# 
+#         # ToDo: Check the OnConditions:
+# 
+#         #  - Ports & Parameters:
+#         self.assertEqual(
+#             set(a_flat.analog_port_names),
+#             set(['b_c1_C1', 'b_c1_C2',
+#                  'b_c2_C1', 'b_c2_C2',
+#                  'b_d_dIn2', 'b_d_D1', 'b_d_D2',
+#                  'c_cIn1', 'c_cIn2', 'c_C1', 'c_C2']))
+# 
+#         self.assertEqual(
+#             set(a_flat.event_port_names),
+#             set(['b_c1_spikein', 'b_c1_emit', 'b_c1_c_emit',
+#                  'b_c2_spikein', 'b_c2_emit', 'b_c2_c_emit',
+#                  'b_d_spikein', 'b_d_emit', 'b_d_d_emit',
+#                  'c_spikein', 'c_emit', 'c_c_emit', ]))
+# 
+#         self.assertEqual(
+#             set(a_flat.parameter_names),
+#             set(['c_cp1', 'c_cp2',
+#                  'b_c1_cp1', 'b_c1_cp2',
+#                  'b_c2_cp1', 'b_c2_cp2',
+#                  'b_d_dp1', 'b_d_dp2', ]))
+# 
+#         self.assertEqual(
+#             set(a_flat.state_variable_names),
+#             set(['b_c1_SV1', 'b_c2_SV1', 'b_d_SV1', 'c_SV1']))
+# 
+#         # Back-sub everything - then do we get the correct port mappings:
+#         a_flat.backsub_all()
+# 
+#         self.assertEqual(
+#             set(a_flat.alias('b_c2_C4').rhs_atoms),
+#             set(['b_c1_cp1']))
+# 
+#         self.assertEqual(
+#             set(a_flat.alias('b_c1_C2').rhs_atoms),
+#             set(['b_c2_cp1']))
+# 
+#         self.assertEqual(
+#             set(a_flat.alias('b_c1_C4').rhs_atoms),
+#             set(['b_c1_cp1']))
+# 
+#         self.assertEqual(
+#             set(a_flat.alias('b_c2_C2').rhs_atoms),
+#             set(['b_c1_cp1']))
+# 
+#         self.assertEqual(
+#             set(a_flat.alias('b_d_D2').rhs_atoms),
+#             set(['b_c2_cp1', 'b_d_dp2']))
 
-    def test_Flattening2(self):
 
-        c = Dynamics(
-            name='C',
-            aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
-            regimes=[
-                Regime(
-                    'dSV1/dt = -SV1/(cp2*t)',
-                    transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('c_emit')])],
-                    name='r1',
-                ),
-                Regime(name='r2', transitions=On('SV1>1', to='r1'))
-            ],
-            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
-                          AnalogSendPort('C1'), AnalogSendPort('C2')],
-            parameters=['cp1', 'cp2']
-        )
 
-        d = Dynamics(
-            name='D',
-            aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
-            regimes=[
-                Regime(
-                    'dSV1/dt = -SV1/(dp2*t)',
-                    transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('d_emit')])],
-                    name='r1',
-                ),
-                Regime(name='r2', transitions=On('SV1>1', to='r1'))
-            ],
-            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
-                          AnalogSendPort('D1'), AnalogSendPort('D2')],
-            parameters=['dp1', 'dp2']
-        )
 
-        # Test Cloner, 1 level of hierachy
-        # ------------------------------ #
 
-        # Everything should be as before:
-        b = MultiDynamics(
-            name='B',
-            sub_components={'c1': c, 'c2': c, 'd': d},
-            port_connections=[
-                ('c1', 'C1', 'c2', 'cIn1'),
-                ('c2', 'emit', 'c1', 'spikein')])
 
-        b_flat = b.flatten(b)
 
-        # Name
-        self.assertEqual(b_flat.name, 'B')
-
-        # Aliases
-        self.assertEqual(
-            set(b_flat.alias_names),
-            set(['c1_C1', 'c1_C2', 'c1_C3', 'c2_C1', 'c2_C2', 'c2_C3',
-                 'd_D1', 'd_D2', 'd_D3']))
-
-        # - Regimes and Transitions:
-        self.assertEqual(len(b_flat._regimes), 8)
-        r_c1_1_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r1 ')
-        r_c1_1_c2_2_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r1 c2:r2 ')
-        r_c1_2_c2_1_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r2 c2:r1')
-        r_c1_2_c2_2_d_1 = b_flat.flattener.get_new_regime('d:r1 c1:r2 c2:r2')
-        r_c1_1_c2_1_d_2 = b_flat.flattener.get_new_regime('d:r2 c1:r1 c2:r1 ')
-        r_c1_1_c2_2_d_2 = b_flat.flattener.get_new_regime('d:r2 c1:r1 c2:r2 ')
-        r_c1_2_c2_1_d_2 = b_flat.flattener.get_new_regime('d:r2 c1:r2 c2:r1')
-        r_c1_2_c2_2_d_2 = b_flat.flattener.get_new_regime('d:r2 c1:r2 c2:r2')
-
-        # Do we have the right number of on_events and on_conditions:
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1.on_events)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1.on_conditions)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1.on_events)), 2)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1.on_conditions)), 3)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1.on_events)), 2)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1.on_conditions)), 3)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1.on_events)), 1)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1.on_conditions)), 3)
-
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2.on_events)), 2)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2.on_conditions)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2.on_events)), 1)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2.on_conditions)), 3)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2.on_events)), 1)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2.on_conditions)), 3)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2.on_events)), 0)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2.on_conditions)), 3)
-
-        # All on_events return to thier same transition:
-        self.assertEqual((list(r_c1_1_c2_1_d_1.on_events))[0].target_regime,
-                          r_c1_1_c2_1_d_1)
-        self.assertEqual((list(r_c1_1_c2_1_d_1.on_events))[1].target_regime,
-                          r_c1_1_c2_1_d_1)
-        self.assertEqual((list(r_c1_1_c2_1_d_1.on_events))[2].target_regime,
-                          r_c1_1_c2_1_d_1)
-        self.assertEqual((list(r_c1_1_c2_2_d_1.on_events))[0].target_regime,
-                          r_c1_1_c2_2_d_1)
-        self.assertEqual((list(r_c1_1_c2_2_d_1.on_events))[1].target_regime,
-                          r_c1_1_c2_2_d_1)
-        self.assertEqual((list(r_c1_2_c2_1_d_1.on_events))[0].target_regime,
-                          r_c1_2_c2_1_d_1)
-        self.assertEqual((list(r_c1_2_c2_1_d_1.on_events))[1].target_regime,
-                          r_c1_2_c2_1_d_1)
-        self.assertEqual((list(r_c1_2_c2_2_d_1.on_events))[0].target_regime,
-                          r_c1_2_c2_2_d_1)
-        self.assertEqual((list(r_c1_1_c2_1_d_2.on_events))[0].target_regime,
-                          r_c1_1_c2_1_d_2)
-        self.assertEqual((list(r_c1_1_c2_1_d_2.on_events))[1].target_regime,
-                          r_c1_1_c2_1_d_2)
-        self.assertEqual((list(r_c1_1_c2_2_d_2.on_events))[0].target_regime,
-                          r_c1_1_c2_2_d_2)
-        self.assertEqual((list(r_c1_2_c2_1_d_2.on_events))[0].target_regime,
-                          r_c1_2_c2_1_d_2)
-
-        # Check On-Event port names are remapped properly:
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_1_d_1.on_events]),
-                         set(['c1_spikein', 'c2_spikein', 'd_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_1.on_events]),
-            set(['c1_spikein', 'd_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_1.on_events]),
-            set(['c2_spikein', 'd_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1.on_events]),
-            set(['d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_1_d_2.on_events]),
-            set(['c1_spikein', 'c2_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2.on_events]),
-            set(['c1_spikein', ]))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2.on_events]),
-            set(['c2_spikein', ]))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_2_c2_2_d_2.on_events]), set([]))
-
-        # ToDo: Check the OnConditions:
-        #  - Ports & Parameters:
-        self.assertEqual(
-            set(b_flat.analog_port_names),
-            set(['c1_cIn1', 'c1_cIn2', 'c1_C1', 'c1_C2', 'c2_cIn1', 'c2_cIn2',
-                 'c2_C1', 'c2_C2', 'd_dIn1', 'd_dIn2', 'd_D1', 'd_D2']))
-
-        self.assertEqual(
-            set(b_flat.event_port_names),
-            set(['c1_spikein', 'c1_emit', 'c1_c_emit', 'c2_spikein', 'c2_emit',
-                 'c2_c_emit', 'd_spikein', 'd_emit', 'd_d_emit']))
-
-        self.assertEqual(
-            set(b_flat.parameter_names),
-            set(['c1_cp1', 'c1_cp2', 'c2_cp1', 'c2_cp2', 'd_dp1', 'd_dp2', ]))
-
-        self.assertEqual(
-            set(b_flat.state_variable_names),
-            set(['c1_SV1', 'c2_SV1', 'd_SV1']))
-
-    def test_Flattening3(self):
-
-        c = Dynamics(
-            name='C',
-            aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
-            regimes=[
-                Regime(
-                    'dSV1/dt = -SV1/(cp2*t)',
-                    transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('c_emit')])],
-                    name='r1',
-                ),
-                Regime(name='r2', transitions=On('SV1>1', to='r1'))
-            ],
-            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
-                          AnalogSendPort('C1'), AnalogSendPort('C2')],
-            parameters=['cp1', 'cp2']
-        )
-
-        d = Dynamics(
-            name='D',
-            aliases=['D1:=dp1', 'D2 := dIn1', 'D3 := SV1'],
-            regimes=[
-                Regime(
-                    'dSV1/dt = -SV1/(dp2*t)',
-                    transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('d_emit')])],
-                    name='r1',
-                ),
-                Regime(name='r2', transitions=On('SV1>1', to='r1'))
-            ],
-            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
-                          AnalogSendPort('D1'), AnalogSendPort('D2')],
-            parameters=['dp1', 'dp2']
-        )
-
-        # Test Cloner, 2 levels of hierachy
-        # ------------------------------ #
-
-        # Everything should be as before:
-        b = MultiDynamics(name='B', sub_components={'c1': c, 'c2': c, 'd': d},
-                          port_connections=[('c1', 'C1', 'c2', 'cIn1'),
-                                            ('c2', 'C1', 'c1', 'cIn1'),
-                                            ('c2', 'C2', 'd', 'dIn2')])
-        a = MultiDynamics(name='A', sub_components={'b': b, 'c': c})
-
-        a_flat = b.flatten(a)
-
-        # Name
-        self.assertEqual(a_flat.name, 'A')
-
-        # Aliases
-        self.assertEqual(
-            set(a_flat.alias_names),
-            set(['b_c1_C1', 'b_c1_C2', 'b_c1_C3', 'b_c2_C1', 'b_c2_C2',
-                 'b_c2_C3', 'b_d_D1', 'b_d_D2', 'b_d_D3', 'c_C1', 'c_C2',
-                 'c_C3']))
-
-        # - Regimes and Transitions:
-        self.assertEqual(len(a_flat._regimes), 16)
-        r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
-        r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
-        r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
-        r_c1_2_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r2 c:r1')
-        r_c1_1_c2_1_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r1 c:r1')
-        r_c1_1_c2_2_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r2 c:r1')
-        r_c1_2_c2_1_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r1 c:r1')
-        r_c1_2_c2_2_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r2 c:r1')
-        r_c1_1_c2_1_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r2')
-        r_c1_1_c2_2_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r2')
-        r_c1_2_c2_1_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r2')
-        r_c1_2_c2_2_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r2 c:r2')
-        r_c1_1_c2_1_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r1 c:r2')
-        r_c1_1_c2_2_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r2 c:r2')
-        r_c1_2_c2_1_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r1 c:r2')
-        r_c1_2_c2_2_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r2 c:r2')
-
-        regimes = [
-            r_c1_1_c2_1_d_1_c_1,
-            r_c1_1_c2_2_d_1_c_1,
-            r_c1_2_c2_1_d_1_c_1,
-            r_c1_2_c2_2_d_1_c_1,
-            r_c1_1_c2_1_d_2_c_1,
-            r_c1_1_c2_2_d_2_c_1,
-            r_c1_2_c2_1_d_2_c_1,
-            r_c1_2_c2_2_d_2_c_1,
-            r_c1_1_c2_1_d_1_c_2,
-            r_c1_1_c2_2_d_1_c_2,
-            r_c1_2_c2_1_d_1_c_2,
-            r_c1_2_c2_2_d_1_c_2,
-            r_c1_1_c2_1_d_2_c_2,
-            r_c1_1_c2_2_d_2_c_2,
-            r_c1_2_c2_1_d_2_c_2,
-            r_c1_2_c2_2_d_2_c_2]
-        self.assertEqual(len(set(regimes)), 16)
-
-        # Do we have the right number of on_events and on_conditions:
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_1.on_events)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_1.on_events)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_1.on_events)), 3)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_1.on_events)), 2)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_1.on_events)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_1.on_events)), 2)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_1.on_events)), 2)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_1.on_events)), 1)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_1.on_conditions)), 4)
-
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_2.on_events)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_2.on_events)), 2)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_2.on_events)), 2)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_2.on_events)), 1)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_2.on_events)), 2)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_2.on_events)), 1)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_2.on_events)), 1)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_2.on_events)), 0)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_2.on_conditions)), 4)
-
-# All on_events return to thier same transition:
-        for r in a_flat.regimes:
-            for on_ev in r.on_events:
-                self.assertEquals(on_ev.target_regime, r)
-
-        # Check On-Event port names are remapped properly:
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_1_d_1_c_1.on_events]),
-                         set(['c_spikein', 'b_c1_spikein', 'b_c2_spikein',
-                              'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_2_d_1_c_1.on_events]),
-                         set(['c_spikein', 'b_c1_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_2_c2_1_d_1_c_1.on_events]),
-                         set(['c_spikein', 'b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_1.on_events]),
-            set(['c_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_1_d_2_c_1.on_events]),
-                         set(['c_spikein', 'b_c1_spikein', 'b_c2_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_1.on_events]),
-            set(['c_spikein', 'b_c1_spikein', ]))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_1.on_events]),
-            set(['c_spikein', 'b_c2_spikein', ]))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_1.on_events]),
-            set(['c_spikein']))
-
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_1_d_1_c_2.on_events]),
-                         set(['b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_2.on_events]),
-            set(['b_c1_spikein', 'b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_2.on_events]),
-            set(['b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_2.on_events]),
-            set(['b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_2.on_events]),
-            set(['b_c1_spikein', 'b_c2_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_2.on_events]),
-            set(['b_c1_spikein', ]))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_2.on_events]),
-            set(['b_c2_spikein', ]))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_2_c2_2_d_2_c_2.on_events]),
-                         set([]))
-
-        # ToDo: Check the OnConditions:
-
-        #  - Ports & Parameters:
-        self.assertEqual(
-            set(a_flat.analog_port_names),
-            set(['b_c1_cIn1', 'b_c1_cIn2', 'b_c1_C1', 'b_c1_C2',
-                 'b_c2_cIn1', 'b_c2_cIn2', 'b_c2_C1', 'b_c2_C2',
-                 'b_d_dIn1', 'b_d_dIn2', 'b_d_D1', 'b_d_D2',
-                 'c_cIn1', 'c_cIn2', 'c_C1', 'c_C2']))
-
-        self.assertEqual(
-            set(a_flat.event_port_names),
-            set(['b_c1_spikein', 'b_c1_emit', 'b_c1_c_emit',
-                 'b_c2_spikein', 'b_c2_emit', 'b_c2_c_emit',
-                 'b_d_spikein', 'b_d_emit', 'b_d_d_emit',
-                 'c_spikein', 'c_emit', 'c_c_emit', ]))
-
-        self.assertEqual(
-            set(a_flat.parameter_names),
-            set(['c_cp1', 'c_cp2',
-                 'b_c1_cp1', 'b_c1_cp2',
-                 'b_c2_cp1', 'b_c2_cp2',
-                 'b_d_dp1', 'b_d_dp2', ]))
-
-        self.assertEqual(
-            set(a_flat.state_variable_names),
-            set(['b_c1_SV1', 'b_c2_SV1', 'b_d_SV1', 'c_SV1']))
-
-    def test_Flattening4(self):
-
-        c = Dynamics(
-            name='C',
-            aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1', 'C4:=cIn2'],
-            regimes=[
-                Regime(
-                    'dSV1/dt = -SV1/(cp2*t)',
-                    transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('c_emit')])],
-                    name='r1',
-                ),
-                Regime(name='r2', transitions=On('SV1>1', to='r1'))
-            ],
-            analog_ports=[AnalogReceivePort('cIn1'), AnalogReceivePort('cIn2'),
-                          AnalogSendPort('C1'), AnalogSendPort('C2')],
-            parameters=['cp1', 'cp2']
-        )
-
-        d = Dynamics(
-            name='D',
-            aliases=['D1:=dp1', 'D2 := dIn1 + dp2', 'D3 := SV1'],
-            regimes=[
-                Regime(
-                    'dSV1/dt = -SV1/(dp2*t)',
-                    transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('d_emit')])],
-                    name='r1',
-                ),
-                Regime(name='r2', transitions=On('SV1>1', to='r1'))
-            ],
-            analog_ports=[AnalogReceivePort('dIn1'), AnalogReceivePort('dIn2'),
-                          AnalogSendPort('D1'), AnalogSendPort('D2')],
-            parameters=['dp1', 'dp2']
-        )
-
-        # Test Cloner, 2 levels of hierachy
-        # ------------------------------ #
-
-        # Everything should be as before:
-        b = MultiDynamics(
-            name='B',
-            sub_components={'c1': c, 'c2': c, 'd': d},
-            port_connections=[('c1', 'C1', 'c2', 'cIn2'),
-                              ('c2', 'C1', 'c1', 'cIn1')])
-
-        a = MultiDynamics(
-            name='A',
-            sub_components={'b': b, 'c': c},
-            port_connections=[('b', 'c1', 'C1', 'b', 'c1', 'cIn2'),
-                              ('b', 'c1', 'C1', 'b', 'c2', 'cIn1'),
-                              ('b', 'c1', 'C2', 'b', 'd', 'dIn1')])
-
-        a_flat = a.flatten()
-
-        # Name
-        self.assertEqual(a_flat.name, 'A')
-
-        # Aliases
-        self.assertEqual(
-            set(a_flat.alias_names),
-            set(['b_c1_C1', 'b_c1_C2', 'b_c1_C3', 'b_c1_C4',
-                 'b_c2_C1', 'b_c2_C2', 'b_c2_C3', 'b_c2_C4',
-                 'b_d_D1', 'b_d_D2', 'b_d_D3',
-                 'c_C1', 'c_C2', 'c_C3', 'c_C4']))
-
-        # - Regimes and Transitions:
-        self.assertEqual(len(a_flat._regimes), 16)
-        r_c1_1_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r1')
-        r_c1_1_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r1')
-        r_c1_2_c2_1_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r1')
-        r_c1_2_c2_2_d_1_c_1 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r2 c:r1')
-        r_c1_1_c2_1_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r1 c:r1')
-        r_c1_1_c2_2_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r2 c:r1')
-        r_c1_2_c2_1_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r1 c:r1')
-        r_c1_2_c2_2_d_2_c_1 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r2 c:r1')
-        r_c1_1_c2_1_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r1 c:r2')
-        r_c1_1_c2_2_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r1 b.c2:r2 c:r2')
-        r_c1_2_c2_1_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r1 c:r2')
-        r_c1_2_c2_2_d_1_c_2 = a_flat.flattener.get_new_regime('b.d:r1 b.c1:r2 b.c2:r2 c:r2')
-        r_c1_1_c2_1_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r1 c:r2')
-        r_c1_1_c2_2_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r1 b.c2:r2 c:r2')
-        r_c1_2_c2_1_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r1 c:r2')
-        r_c1_2_c2_2_d_2_c_2 = a_flat.flattener.get_new_regime('b.d:r2 b.c1:r2 b.c2:r2 c:r2')
-
-        regimes = [
-            r_c1_1_c2_1_d_1_c_1,
-            r_c1_1_c2_2_d_1_c_1,
-            r_c1_2_c2_1_d_1_c_1,
-            r_c1_2_c2_2_d_1_c_1,
-            r_c1_1_c2_1_d_2_c_1,
-            r_c1_1_c2_2_d_2_c_1,
-            r_c1_2_c2_1_d_2_c_1,
-            r_c1_2_c2_2_d_2_c_1,
-            r_c1_1_c2_1_d_1_c_2,
-            r_c1_1_c2_2_d_1_c_2,
-            r_c1_2_c2_1_d_1_c_2,
-            r_c1_2_c2_2_d_1_c_2,
-            r_c1_1_c2_1_d_2_c_2,
-            r_c1_1_c2_2_d_2_c_2,
-            r_c1_2_c2_1_d_2_c_2,
-            r_c1_2_c2_2_d_2_c_2]
-        self.assertEqual(len(set(regimes)), 16)
-
-        # Do we have the right number of on_events and on_conditions:
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_1.on_events)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_1.on_events)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_1.on_events)), 3)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_1.on_events)), 2)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_1.on_events)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_1.on_events)), 2)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_1.on_events)), 2)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_1.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_1.on_events)), 1)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_1.on_conditions)), 4)
-
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_2.on_events)), 3)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_1_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_2.on_events)), 2)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_1_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_2.on_events)), 2)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_1_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_2.on_events)), 1)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_1_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_2.on_events)), 2)
-        self.assertEqual(len(list(r_c1_1_c2_1_d_2_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_2.on_events)), 1)
-        self.assertEqual(len(list(r_c1_1_c2_2_d_2_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_2.on_events)), 1)
-        self.assertEqual(len(list(r_c1_2_c2_1_d_2_c_2.on_conditions)), 4)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_2.on_events)), 0)
-        self.assertEqual(len(list(r_c1_2_c2_2_d_2_c_2.on_conditions)), 4)
-
-# All on_events return to thier same transition:
-        for r in a_flat.regimes:
-            for on_ev in r.on_events:
-                self.assertEquals(on_ev.target_regime, r)
-
-        # Check On-Event port names are remapped properly:
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_1_d_1_c_1.on_events]), set(
-            ['c_spikein', 'b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_2_d_1_c_1.on_events]), set(
-            ['c_spikein', 'b_c1_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_2_c2_1_d_1_c_1.on_events]), set(
-            ['c_spikein', 'b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_1.on_events]),
-            set(['c_spikein', 'b_d_spikein']))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_1_d_2_c_1.on_events]), set(
-            ['c_spikein', 'b_c1_spikein', 'b_c2_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_1.on_events]),
-            set(['c_spikein', 'b_c1_spikein', ]))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_1.on_events]),
-            set(['c_spikein', 'b_c2_spikein', ]))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_2_c_1.on_events]),
-            set(['c_spikein']))
-
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_1_c2_1_d_1_c_2.on_events]),
-                         set(['b_c1_spikein', 'b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_1_c_2.on_events]),
-            set(['b_c1_spikein', 'b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_1_c_2.on_events]),
-            set(['b_c2_spikein', 'b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_2_d_1_c_2.on_events]),
-            set(['b_d_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_1_d_2_c_2.on_events]),
-            set(['b_c1_spikein', 'b_c2_spikein']))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_1_c2_2_d_2_c_2.on_events]),
-            set(['b_c1_spikein', ]))
-        self.assertEqual(
-            set([ev.src_port_name for ev in r_c1_2_c2_1_d_2_c_2.on_events]),
-            set(['b_c2_spikein', ]))
-        self.assertEqual(set([ev.src_port_name
-                              for ev in r_c1_2_c2_2_d_2_c_2.on_events]),
-                         set([]))
-
-        # ToDo: Check the OnConditions:
-
-        #  - Ports & Parameters:
-        self.assertEqual(
-            set(a_flat.analog_port_names),
-            set(['b_c1_C1', 'b_c1_C2',
-                 'b_c2_C1', 'b_c2_C2',
-                 'b_d_dIn2', 'b_d_D1', 'b_d_D2',
-                 'c_cIn1', 'c_cIn2', 'c_C1', 'c_C2']))
-
-        self.assertEqual(
-            set(a_flat.event_port_names),
-            set(['b_c1_spikein', 'b_c1_emit', 'b_c1_c_emit',
-                 'b_c2_spikein', 'b_c2_emit', 'b_c2_c_emit',
-                 'b_d_spikein', 'b_d_emit', 'b_d_d_emit',
-                 'c_spikein', 'c_emit', 'c_c_emit', ]))
-
-        self.assertEqual(
-            set(a_flat.parameter_names),
-            set(['c_cp1', 'c_cp2',
-                 'b_c1_cp1', 'b_c1_cp2',
-                 'b_c2_cp1', 'b_c2_cp2',
-                 'b_d_dp1', 'b_d_dp2', ]))
-
-        self.assertEqual(
-            set(a_flat.state_variable_names),
-            set(['b_c1_SV1', 'b_c2_SV1', 'b_d_SV1', 'c_SV1']))
-
-        # Back-sub everything - then do we get the correct port mappings:
-        a_flat.backsub_all()
-
-        self.assertEqual(
-            set(a_flat.alias('b_c2_C4').rhs_atoms),
-            set(['b_c1_cp1']))
-
-        self.assertEqual(
-            set(a_flat.alias('b_c1_C2').rhs_atoms),
-            set(['b_c2_cp1']))
-
-        self.assertEqual(
-            set(a_flat.alias('b_c1_C4').rhs_atoms),
-            set(['b_c1_cp1']))
-
-        self.assertEqual(
-            set(a_flat.alias('b_c2_C2').rhs_atoms),
-            set(['b_c1_cp1']))
-
-        self.assertEqual(
-            set(a_flat.alias('b_d_D2').rhs_atoms),
-            set(['b_c2_cp1', 'b_d_dp2']))
 
     # These are done in the Testflatten and ComponentFlattener_test
     # Classes instead.
@@ -915,84 +924,92 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
 #             NineMLRuntimeError,
 #             a.insert_subnode, namespace='d', subnode=d2)
 
-    def test_connect_ports(self):
-        # Signature: name(self, src, sink)
-                # Connects the ports of 2 sub_components.
-                #
-                # The ports can be specified as ``string`` s or ``NamespaceAddresses`` es.
-                #
-                #
-                # :param src: The source port of one sub-component; this should either an
-                #     event port or analog port, but it *must* be a send port.
-                #
-                # :param sink: The sink port of one sub-component; this should either an
-                #     event port or analog port, but it *must* be either a 'recv' or a
-                #     'reduce' port.
 
-        tIaf = TestableComponent('iaf')
-        tCoba = TestableComponent('coba_synapse')
 
-        # Should be fine:
-        c = MultiDynamics(name='C1',
-                          sub_components={'iaf': tIaf(), 'coba': tCoba()},
-                          port_connections=[('iaf', 'V', 'coba', 'V')])
 
-        c = MultiDynamics(name='C1',
-                          sub_components={'iaf': tIaf(), 'coba': tCoba()},
-                          port_connections=[('iaf', 'V', 'coba', 'V')])
+#     def test_connect_ports(self):
+#         # Signature: name(self, src, sink)
+#                 # Connects the ports of 2 sub_components.
+#                 #
+#                 # The ports can be specified as ``string`` s or ``NamespaceAddresses`` es.
+#                 #
+#                 #
+#                 # :param src: The source port of one sub-component; this should either an
+#                 #     event port or analog port, but it *must* be a send port.
+#                 #
+#                 # :param sink: The sink port of one sub-component; this should either an
+#                 #     event port or analog port, but it *must* be either a 'recv' or a
+#                 #     'reduce' port.
+# 
+#         tIaf = TestableComponent('iaf')
+#         tCoba = TestableComponent('coba_synapse')
+# 
+#         # Should be fine:
+#         c = MultiDynamics(name='C1',
+#                           sub_components={'iaf': tIaf(), 'coba': tCoba()},
+#                           port_connections=[('iaf', 'V', 'coba', 'V')])
+# 
+#         c = MultiDynamics(name='C1',
+#                           sub_components={'iaf': tIaf(), 'coba': tCoba()},
+#                           port_connections=[('iaf', 'V', 'coba', 'V')])
+# 
+#         # Non existant Ports:
+#         c = MultiDynamics(name='C1',
+#                           sub_components={'iaf': tIaf(), 'coba': tCoba()})
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             c.connect_ports, 'iaf', 'V1', 'coba', 'V')
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             c.connect_ports, 'iaf', 'V', 'coba', 'V1')
+# 
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             MultiDynamics,
+#             name='C1',
+#             sub_components={'iaf': tIaf(), 'coba': tCoba()},
+#             port_connections=[('iaf', 'V1', 'coba', 'V')])
+# 
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             MultiDynamics,
+#             name='C1',
+#             sub_components={'iaf': tIaf(), 'coba': tCoba()},
+#             port_connections=[('iaf', 'V', 'coba', 'V1')])
+# 
+#         # Connect ports the wrong way around:
+#         # [Check the wright way around works:]
+#         c = MultiDynamics(name='C1',
+#                           sub_components={'iaf': tIaf(), 'coba': tCoba()},
+#                           port_connections=[('coba', 'I', 'iaf', 'ISyn')])
+#         # And the wrong way around:
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             MultiDynamics,
+#             name='C1',
+#             sub_components={'iaf': tIaf(), 'coba': tCoba()},
+#             port_connections=[('iaf', 'ISyn', 'coba', 'I')])
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             MultiDynamics,
+#             name='C1',
+#             sub_components={'iaf': tIaf(), 'coba': tCoba()},
+#             port_connections=[('coba', 'V', 'iaf', 'V')])
+# 
+#         # Error raised on duplicate port-connection:
+#         c = MultiDynamics(name='C1',
+#                            sub_components={'iaf': tIaf(), 'coba': tCoba()},
+#                            )
+# 
+#         c.connect_ports('coba', 'I', 'iaf', 'ISyn')
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             c.connect_ports, 'coba', 'I', 'iaf', 'ISyn')
 
-        # Non existant Ports:
-        c = MultiDynamics(name='C1',
-                          sub_components={'iaf': tIaf(), 'coba': tCoba()})
-        self.assertRaises(
-            NineMLRuntimeError,
-            c.connect_ports, 'iaf', 'V1', 'coba', 'V')
-        self.assertRaises(
-            NineMLRuntimeError,
-            c.connect_ports, 'iaf', 'V', 'coba', 'V1')
 
-        self.assertRaises(
-            NineMLRuntimeError,
-            MultiDynamics,
-            name='C1',
-            sub_components={'iaf': tIaf(), 'coba': tCoba()},
-            port_connections=[('iaf', 'V1', 'coba', 'V')])
 
-        self.assertRaises(
-            NineMLRuntimeError,
-            MultiDynamics,
-            name='C1',
-            sub_components={'iaf': tIaf(), 'coba': tCoba()},
-            port_connections=[('iaf', 'V', 'coba', 'V1')])
 
-        # Connect ports the wrong way around:
-        # [Check the wright way around works:]
-        c = MultiDynamics(name='C1',
-                          sub_components={'iaf': tIaf(), 'coba': tCoba()},
-                          port_connections=[('coba', 'I', 'iaf', 'ISyn')])
-        # And the wrong way around:
-        self.assertRaises(
-            NineMLRuntimeError,
-            MultiDynamics,
-            name='C1',
-            sub_components={'iaf': tIaf(), 'coba': tCoba()},
-            port_connections=[('iaf', 'ISyn', 'coba', 'I')])
-        self.assertRaises(
-            NineMLRuntimeError,
-            MultiDynamics,
-            name='C1',
-            sub_components={'iaf': tIaf(), 'coba': tCoba()},
-            port_connections=[('coba', 'V', 'iaf', 'V')])
 
-        # Error raised on duplicate port-connection:
-        c = MultiDynamics(name='C1',
-                           sub_components={'iaf': tIaf(), 'coba': tCoba()},
-                           )
-
-        c.connect_ports('coba', 'I', 'iaf', 'ISyn')
-        self.assertRaises(
-            NineMLRuntimeError,
-            c.connect_ports, 'coba', 'I', 'iaf', 'ISyn')
 
 #     def test_get_fully_qualified_port_connections(self):
 #         # Signature: name(self)

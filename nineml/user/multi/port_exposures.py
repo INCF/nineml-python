@@ -8,7 +8,7 @@ from nineml.abstraction import (
 from nineml.reference import resolve_reference, write_reference
 from nineml.xmlns import E
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
 from ..port_connections import AnalogPortConnection
 
 
@@ -21,7 +21,7 @@ class _BasePortExposure(BaseULObject):
         self._name = name
         self._component_name = component
         self._port_name = port
-        self._component = None
+        self._sub_component = None
         self._port = None
 
     @property
@@ -29,11 +29,11 @@ class _BasePortExposure(BaseULObject):
         return self._name
 
     @property
-    def component(self):
-        if self._component is None:
+    def sub_component(self):
+        if self._sub_component is None:
             raise NineMLRuntimeError(
                 "Port exposure is not bound")
-        return self._component
+        return self._sub_component
 
     @property
     def port(self):
@@ -43,11 +43,11 @@ class _BasePortExposure(BaseULObject):
         return self._port
 
     @property
-    def component_name(self):
+    def sub_component_name(self):
         try:
-            return self.component.name
+            return self.sub_component.name
         except NineMLRuntimeError:
-            return self._component_name
+            return self._sub_component_name
 
     @property
     def port_name(self):
@@ -65,7 +65,7 @@ class _BasePortExposure(BaseULObject):
     def to_xml(self, document, **kwargs):  # @UnusedVariable
         return E(self.element_name,
                  name=self.name,
-                 component=self.component_name,
+                 sub_component=self.sub_component_name,
                  port=self.port_name)
 
     @classmethod
@@ -100,25 +100,97 @@ class _BasePortExposure(BaseULObject):
         return exposure
 
     def bind(self, container):
-        self._component = container[self._component_name]
-        self._port = self._component.component_class.port(self._port_name)
+        self._sub_component = container[self._component_name]
+        self._port = self._sub_component.component_class.port(self._port_name)
         self._component_name = None
         self._port_name = None
 
 
-class AnalogSendPortExposure(_BasePortExposure, AnalogSendPort):
+class _BaseAnalogPortExposure(_BasePortExposure):
+
+    def lhs_name_transform_inplace(self, name_map):
+        raise NineMLImmutableError(
+            "Cannot rename LHS of Alias '{}' because it is a analog port "
+            "exposure".format(self.lhs))
+
+    @property
+    def dimension(self):
+        return self.port.dimension
+
+    def set_dimension(self, dimension):
+        raise NineMLImmutableError(
+            "Cannot set dimension of port exposure (need to change the "
+            "dimension of the referenced port).")
+
+
+class PortExposureAlias(Alias):
+
+    def __init__(self, exposure):
+        self._exposure = exposure
+
+    @property
+    def _name(self):
+        return self.lhs
+
+    @property
+    def exposure(self):
+        return self._exposure
+
+
+class SendPortExposureAlias(PortExposureAlias):
+
+    element_name = 'SendPortExposureAlias'
+
+    @property
+    def lhs(self):
+        return self.exposure.name
+
+    @property
+    def rhs(self):
+        return sympy.Symbol(
+            self.exposure.sub_component.append_namespace(
+                self.exposure.port_name))
+
+
+class ReceivePortExposureAlias(PortExposureAlias):
+
+    element_name = 'ReceivePortExposureAlias'
+
+    @property
+    def lhs(self):
+        return self.exposure.sub_component.append_namespace(
+            self.exposure.port_name)
+
+    @property
+    def rhs(self):
+        return sympy.Symbol(self.exposure.name)
+
+
+class AnalogSendPortExposure(_BaseAnalogPortExposure, AnalogSendPort):
 
     element_name = 'AnalogSendPortExposure'
 
+    @property
+    def alias(self):
+        return SendPortExposureAlias(self)
 
-class AnalogReceivePortExposure(_BasePortExposure, AnalogReceivePort):
+
+class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
 
     element_name = 'AnalogReceivePortExposure'
 
+    @property
+    def alias(self):
+        return ReceivePortExposureAlias(self)
 
-class AnalogReducePortExposure(_BasePortExposure, AnalogReducePort):
+
+class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
 
     element_name = 'AnalogReducePortExposure'
+
+    @property
+    def alias(self):
+        return ReceivePortExposureAlias(self)
 
 
 class EventSendPortExposure(_BasePortExposure, EventSendPort):
@@ -141,9 +213,19 @@ class _LocalAnalogPortConnection(AnalogPortConnection, Alias):
         AnalogPortConnection.__init__(
             self, sender_name=snd_name, send_port=snd_prt_name,
             receiver_name=rcv_name, receive_port=rcv_prt_name)
-        Alias.__init__(
-            self, port_connection.receiver.append_namespace(rcv_prt_name),
-            port_connection.sender.append_namespace(snd_prt_name))
+
+    @property
+    def lhs(self):
+        return self.receiver.append_namespace(self.receive_port_name)
+
+    @property
+    def rhs(self):
+        return sympy.Symbol(self.sender.append_namespace(self.send_port_name))
+
+    def lhs_name_transform_inplace(self, name_map):
+        raise NineMLImmutableError(
+            "Cannot rename LHS of Alias '{}' because it is a local "
+            "AnalogPortConnection".format(self.lhs))
 
 
 class _LocalReducePortConnections(Alias):
