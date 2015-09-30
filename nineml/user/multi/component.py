@@ -291,6 +291,21 @@ class SubDynamics(object):
     def regime_names(self):
         return (p.name for p in self.regimes)
 
+    def element(self, name):
+        try:
+            return self.parameter(name)
+        except KeyError:
+            try:
+                return self.state_variable(name)
+            except KeyError:
+                try:
+                    return self.alias(name)
+                except KeyError:
+                    try:
+                        return self.regime(name)
+                    except KeyError:
+                        return self.constant(name)
+
 
 class MultiDynamics(Dynamics):
 
