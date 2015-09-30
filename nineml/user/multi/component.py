@@ -9,7 +9,8 @@ from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
+from nineml.exceptions import (
+    NineMLRuntimeError, NineMLMissingElementError, NineMLNamespaceError)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
@@ -297,9 +298,9 @@ class MultiDynamics(Dynamics):
     defining_attributes = (
         '_name', '_sub_components', '_analog_port_connections',
         '_event_port_connections', '_reduce_port_connections',
-        '_analog_send_port_exposures', '_analog_receive_port_exposures',
-        '_analog_reduce_port_exposures', '_event_send_port_exposures',
-        '_event_receive_port_exposures')
+        '_analog_send_ports', '_analog_receive_ports',
+        '_analog_reduce_ports', '_event_send_ports',
+        '_event_receive_ports')
     class_to_members = {
         'SubDynamics': 'sub_components',
         'AnalogPortConnection': 'analog_port_connections',
@@ -367,28 +368,28 @@ class MultiDynamics(Dynamics):
         # =====================================================================
         # Save port exposurs into separate member dictionaries
         # =====================================================================
-        self._analog_send_port_exposures = {}
-        self._analog_receive_port_exposures = {}
-        self._analog_reduce_port_exposures = {}
-        self._event_send_port_exposures = {}
-        self._event_receive_port_exposures = {}
+        self._analog_send_ports = {}
+        self._analog_receive_ports = {}
+        self._analog_reduce_ports = {}
+        self._event_send_ports = {}
+        self._event_receive_ports = {}
         if port_exposures is not None:
             for exposure in port_exposures:
                 if isinstance(exposure, tuple):
                     exposure = _BasePortExposure.from_tuple(exposure, self)
                 exposure.bind(self)
                 if isinstance(exposure, AnalogSendPortExposure):
-                    self._analog_send_port_exposures[exposure.name] = exposure
+                    self._analog_send_ports[exposure.name] = exposure
                 elif isinstance(exposure, AnalogReceivePortExposure):
-                    self._analog_receive_port_exposures[
+                    self._analog_receive_ports[
                         exposure.name] = exposure
                 elif isinstance(exposure, AnalogReducePortExposure):
-                    self._analog_reduce_port_exposures[
+                    self._analog_reduce_ports[
                         exposure.name] = exposure
                 elif isinstance(exposure, EventSendPortExposure):
-                    self._event_send_port_exposures[exposure.name] = exposure
+                    self._event_send_ports[exposure.name] = exposure
                 elif isinstance(exposure, EventSendPortExposure):
-                    self._event_receive_port_exposures[
+                    self._event_receive_ports[
                         exposure.name] = exposure
                 else:
                     raise NineMLRuntimeError(
@@ -488,31 +489,6 @@ class MultiDynamics(Dynamics):
         return (self._create_multi_regime(comb) for comb in combinations)
 
     @property
-    def analog_send_ports(self):
-        """Returns an iterator over the local |AnalogSendPort| objects"""
-        return self._analog_send_port_exposures.itervalues()
-
-    @property
-    def analog_receive_ports(self):
-        """Returns an iterator over the local |AnalogReceivePort| objects"""
-        return self._analog_receive_port_exposures.itervalues()
-
-    @property
-    def analog_reduce_ports(self):
-        """Returns an iterator over the local |AnalogReducePort| objects"""
-        return self._analog_reduce_port_exposures.itervalues()
-
-    @property
-    def event_send_ports(self):
-        """Returns an iterator over the local |EventSendPort| objects"""
-        return self._event_send_port_exposures.itervalues()
-
-    @property
-    def event_receive_ports(self):
-        """Returns an iterator over the local |EventReceivePort| objects"""
-        return self._event_receive_port_exposures.itervalues()
-
-    @property
     def parameter_names(self):
         return (p.name for p in self.parameters)
 
@@ -527,31 +503,6 @@ class MultiDynamics(Dynamics):
     @property
     def state_variable_names(self):
         return (sv.name for sv in self.state_variables)
-
-    @property
-    def analog_send_port_names(self):
-        """Returns an iterator over the local |AnalogSendPort| names"""
-        return self._analog_send_port_exposures.iterkeys()
-
-    @property
-    def analog_receive_port_names(self):
-        """Returns an iterator over the local |AnalogReceivePort| names"""
-        return self._analog_receive_port_exposures.iterkeys()
-
-    @property
-    def analog_reduce_port_names(self):
-        """Returns an iterator over the local |AnalogReducePort| names"""
-        return self._analog_reduce_port_exposures.iterkeys()
-
-    @property
-    def event_send_port_names(self):
-        """Returns an iterator over the local |EventSendPort| names"""
-        return self._event_send_port_exposures.iterkeys()
-
-    @property
-    def event_receive_port_names(self):
-        """Returns an iterator over the local |EventReceivePort| names"""
-        return self._event_receive_port_exposures.iterkeys()
 
     def parameter(self, name):
         _, comp_name = split_namespace(name)
@@ -585,21 +536,6 @@ class MultiDynamics(Dynamics):
             self.sub_component(sc_n).regime(append_namespace(r_n, sc_n))
             for sc_n, r_n in izip(self._sub_component_keys, sub_regime_names))
 
-    def analog_send_port(self, name):
-        return self._analog_send_port_exposures[name]
-
-    def analog_receive_port(self, name):
-        return self._analog_receive_port_exposures[name]
-
-    def analog_reduce_port(self, name):
-        return self._analog_reduce_port_exposures[name]
-
-    def event_send_port(self, name):
-        return self._event_send_port_exposures[name]
-
-    def event_receive_port(self, name):
-        return self._event_receive_port_exposures[name]
-
     @property
     def num_parameters(self):
         return len(list(self.parameters))
@@ -617,49 +553,16 @@ class MultiDynamics(Dynamics):
         return len(list(self.state_variables))
 
     @property
-    def num_analog_send_ports(self):
-        """Returns an iterator over the local |AnalogSendPort| objects"""
-        return len(self._analog_send_port_exposures)
-
-    @property
-    def num_analog_receive_ports(self):
-        """Returns an iterator over the local |AnalogReceivePort| objects"""
-        return len(self._analog_receive_port_exposures)
-
-    @property
-    def num_analog_reduce_ports(self):
-        """Returns an iterator over the local |AnalogReducePort| objects"""
-        return len(self._analog_reduce_port_exposures)
-
-    @property
-    def num_event_send_ports(self):
-        """Returns an iterator over the local |EventSendPort| objects"""
-        return len(self._event_send_port_exposures)
-
-    @property
-    def num_event_receive_ports(self):
-        """Returns an iterator over the local |EventReceivePort| objects"""
-        return len(self._event_receive_port_exposures)
-
-#     def lookup_member_dict(self, element):
-#         """
-#         Looks up the appropriate member dictionary for objects of type element
-#         """
-#         dct_name = self.lookup_members_name(element)
-#         comp_name = split_namespace(element._name)[1]
-#         return getattr(self.sub_component[comp_name], dct_name)
-#
-#     @property
-#     def all_member_dicts(self):
-#         return chain(
-#             *[(getattr(sc.component_class, n)
-#                for n in sc.component_class.class_to_members.itervalues())
-#               for sc in self.sub_components])
-
-    @property
     def elements(self):
         return chain(*(getattr(self, name)
                        for name in Dynamics.class_to_members.itervalues()))
+
+    def element(self, name):
+        try:
+            _, comp_name = split_namespace(name)
+            return self.sub_component(comp_name).element(name)
+        except NineMLNamespaceError:
+            return super(MultiDynamics, self).element(name)
 
     @property
     def _sub_component_keys(self):
@@ -680,15 +583,11 @@ class _MultiRegime(Regime):
 
     def __init__(self, sub_regimes, parent):
         """
-        `sub_regimes_dict`       -- a dictionary containing the sub_regimes and
-                                    referenced by the names of the
-                                    sub_components they respond to
-        `event_send_port_exposures`    -- reference to the event send port
-                                          exposures in the MultiDynamics
-        `event_receive_port_exposures` -- reference to the event receive port
-                                          exposures in the MultiDynamics
-        `event_port_connections` -- reference to the event send port
-                                    connections in the MultiDynamics
+        `sub_regimes_dict` -- a dictionary containing the sub_regimes and
+                              referenced by the names of the
+                              sub_components they respond to
+        `parent`           -- the MultiDynamics object that generates the
+                              MultiRegime
         """
         self._sub_regimes = dict((r.sub_component.name, r)
                                  for r in sub_regimes)
@@ -752,7 +651,7 @@ class _MultiRegime(Regime):
         #     these lists are then chained to form a list of 2-tuples (ie. not
         #     a list of lists) containing port exposure and on event pairs
         exposed_on_events = chain(*[
-            izip((pe for pe in self._parent._event_receive_port_exposures
+            izip((pe for pe in self._parent._event_receive_ports
                   if oe.port is pe.port), (oe,))
             for oe in self._all_sub_on_events])
         # Group on events by their port exposure and return as an _MultiOnEvent

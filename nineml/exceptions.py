@@ -22,6 +22,10 @@ class NineMLUnitMismatchError(ValueError):
     pass
 
 
+class NineMLNamespaceError(ValueError):
+    pass
+
+
 class NineMLMissingElementError(KeyError):
     pass
 
