@@ -289,7 +289,9 @@ class _NamespaceAlias(_NamespaceNamed, _NamespaceExpression, Alias):
 
 
 class _NamespaceParameter(_NamespaceNamed, _NamespaceDimensioned, Parameter):
-    pass
+
+    def _sympy_(self):
+        return sympy.Symbol(self.name)
 
 
 class _NamespaceConstant(_NamespaceNamed, Constant):
