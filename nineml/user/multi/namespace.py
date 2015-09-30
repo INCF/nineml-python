@@ -9,7 +9,7 @@ from ..component import Property
 from nineml.abstraction import (
     Alias, TimeDerivative, Regime, OnEvent, OnCondition, StateAssignment,
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
-from nineml.exceptions import NineMLImmutableError
+from nineml.exceptions import NineMLImmutableError, NineMLNamespaceError
 from nineml.abstraction.expressions import reserved_identifiers
 
 
@@ -47,6 +47,9 @@ def split_namespace(identifier_in_namespace):
     'append_namespace'
     """
     parts = double_underscore_re.split(identifier_in_namespace)
+    if len(parts) < 2:
+        raise NineMLNamespaceError(
+            "Identifier '{}' does not belong to a sub-namespace")
     name = '__'.join(parts[:-1])
     comp_name = parts[-1]
     comp_name = more_than_double_underscore_re.sub('_\1', comp_name)
