@@ -609,16 +609,22 @@ class _MultiRegime(Regime):
         `parent`           -- the MultiDynamics object that generates the
                               MultiRegime
         """
-        self._sub_regimes = dict((r.sub_component.name, r)
+        self._sub_regimes = dict((r.sub_component.name, copy(r))
                                  for r in sub_regimes)
+        # Set the parent of the sub regimes to the multi regime to get hashing
+        # of the generated namespace objects to work (i.e. equivalent
+        # namespace objects generated from the property generators of the same
+        # MultiRegime will have the same hash values, but the equivalent object
+        # in a different multi regime will have a different hash object
+        for sub_regime in self.sub_regimes:
+            sub_regime._parent = self
         self._parent = parent
 
     def __hash__(self):
         # Since a new MultiRegime will be created each time it is accessed from
         # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
         # with equivalence between the same MultiRegime
-        return (reduce(operator.xor, (hash(sr) for sr in self.sub_regimes)) ^
-                hash(self._parent))
+        return hash(self.name) ^ hash(self._parent)
 
     @property
     def sub_regimes(self):
@@ -774,7 +780,7 @@ class _MultiRegime(Regime):
                     (pc.receiver_name, pc.receive_port_name)
                     for pc in self._parent._event_port_connections[
                         (output_event.sub_component.name,
-                         output_event.element.port_name)].itervalues()
+                         output_event.relative_port_name)].itervalues()
                     if pc.delay == 0.0)
                 # Get all the OnEvent transitions that are connected to this
                 for on_event in self._all_sub_on_events:
@@ -905,6 +911,15 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
                    for st in sub_transitions[1:])
         _MultiTransition.__init__(self, sub_transitions, parent)
 
+    def __hash__(self):
+        # Since a new MultiRegime will be created each time it is accessed from
+        # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
+        # with equivalence between the same MultiRegime
+        return hash(self._src_port_name) ^ hash(self._parent)
+
+    def __repr__(self):
+        return '_MultiOnEvent({})'.format(self.src_port_name)
+
     @property
     def src_port_name(self):
         return self._src_port_name
@@ -919,6 +934,15 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
         self._trigger = sub_transitions[0].trigger
         assert all(st.trigger == self._trigger for st in sub_transitions[1:])
         _MultiTransition.__init__(self, sub_transitions, parent)
+
+    def __repr__(self):
+        return '_MultiOnCondition({})'.format(self.trigger.rhs)
+
+    def __hash__(self):
+        # Since a new MultiRegime will be created each time it is accessed from
+        # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
+        # with equivalence between the same MultiRegime
+        return hash(self.trigger.rhs) ^ hash(self._parent)
 
     @property
     def trigger(self):
