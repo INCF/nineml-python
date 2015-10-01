@@ -284,19 +284,23 @@ def assert_no_duplicates(lst, error_func=None):
     lst = list(lst)
     if len(lst) != len(set(lst)):
         # Find the duplication:
-        seen_items = []
+        seen_hashes = []
+        duplicate_hashes = []
         duplicates = []
         for item in lst:
-            if item in seen_items:
-                if item not in duplicates:
-                    duplicates.append(next(i for i in lst if i == item))
+            hsh = hash(item)
+            if hsh in seen_hashes:
+                if hsh not in duplicate_hashes:
+                    duplicate_hashes.append(hsh)
+                    duplicates.append(next(i for i in lst
+                                           if hash(i) == hsh))
                 duplicates.append(item)
             else:
-                seen_items.append(item)
+                seen_hashes.append(hsh)
         _dispatch_error_func(
             error_func,
-            "Unxpected duplications:\n{}\n\n Found in list:\n {}"
-            .format(', '.join(str(d) for d in duplicates), str(lst)))
+            "Unxpected duplications:\n{}\nFound in list:\n {}"
+            .format(repr(duplicates), repr(lst)))
 
 
 def invert_dictionary(dct):

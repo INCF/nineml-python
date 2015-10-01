@@ -93,15 +93,15 @@ def split_multi_regime_name(name):
 
 class _NamespaceObject(object):
 
-    defining_attributes = ('_sub_component', '_element')
+    defining_attributes = ('_sub_component', '_object')
 
     def __init__(self, sub_component, element, parent):
         self._sub_component = sub_component
-        self._element = element
+        self._object = element
         self._parent = parent
 
     def __hash__(self):
-        return (hash(self.sub_component) ^ hash(self._element)
+        return (hash(self.sub_component) ^ hash(self._object)
                 ^ hash(self._parent))
 
     @property
@@ -116,7 +116,7 @@ class _NamespaceNamed(_NamespaceObject):
 
     @property
     def name(self):
-        return self.sub_component.append_namespace(self._element.name)
+        return self.sub_component.append_namespace(self._object.name)
 
     @property
     def _name(self):
@@ -124,14 +124,14 @@ class _NamespaceNamed(_NamespaceObject):
 
     @property
     def relative_name(self):
-        return self._element.name
+        return self._object.name
 
 
 class _NamespaceExpression(_NamespaceObject):
 
     @property
     def lhs(self):
-        return self._element.lhs
+        return self._object.lhs
 
     def lhs_name_transform_inplace(self, name_map):
         raise NineMLImmutableError(
@@ -144,12 +144,12 @@ class _NamespaceExpression(_NamespaceObject):
     def rhs(self):
         """Return copy of rhs with all free symols suffixed by the namespace"""
         try:
-            return self._element.rhs.xreplace(dict(
+            return self._object.rhs.xreplace(dict(
                 (s, sympy.Symbol(append_namespace(s, self.sub_component.name)))
-                for s in self._element.rhs.free_symbols
+                for s in self._object.rhs.free_symbols
                 if str(s) not in reserved_identifiers))
         except AttributeError:  # If rhs has been simplified to ints/floats
-            assert float(self._element.rhs)
+            assert float(self._object.rhs)
             return self.rhs
 
     @rhs.setter
@@ -193,7 +193,7 @@ class _NamespaceDimensioned(object):
 
     @property
     def dimension(self):
-        return self._element._dimension
+        return self._object._dimension
 
 
 class _NamespaceTransition(_NamespaceNamed):
@@ -201,46 +201,46 @@ class _NamespaceTransition(_NamespaceNamed):
     @property
     def target_regime(self):
         return _NamespaceRegime(self.sub_component,
-                                self._element.target_regime,
+                                self._object.target_regime,
                                 self._parent._parent)
 
     @property
     def target_regime_name(self):
-        return append_namespace(self._element.target_regime_name,
+        return append_namespace(self._object.target_regime_name,
                                 self.sub_component.name)
 
     @property
     def state_assignments(self):
         return (_NamespaceStateAssignment(self.sub_component, sa, self)
-                for sa in self._element.state_assignments)
+                for sa in self._object.state_assignments)
 
     @property
     def output_events(self):
         return (_NamespaceOutputEvent(self.sub_component, oe, self)
-                for oe in self._element.output_events)
+                for oe in self._object.output_events)
 
     def state_assignment(self, name):
         return _NamespaceStateAssignment(
-            self.sub_component, self._element.state_assignment(name), self)
+            self.sub_component, self._object.state_assignment(name), self)
 
     def output_event(self, name):
         return _NamespaceOutputEvent(
-            self.sub_component, self._element.output_event(name), self)
+            self.sub_component, self._object.output_event(name), self)
 
     @property
     def num_state_assignments(self):
-        return self._element.num_state_assignments
+        return self._object.num_state_assignments
 
     @property
     def num_output_events(self):
-        return self._element.num_output_events
+        return self._object.num_output_events
 
 
 class _NamespaceOnEvent(_NamespaceTransition, OnEvent):
 
     @property
     def src_port_name(self):
-        return self._element.src_port_name
+        return self._object.src_port_name
 
 
 class _NamespaceOnCondition(_NamespaceTransition, OnCondition):
@@ -248,19 +248,23 @@ class _NamespaceOnCondition(_NamespaceTransition, OnCondition):
     @property
     def trigger(self):
         return _NamespaceTrigger(self.sub_component,
-                                 self._element.trigger, self)
+                                 self._object.trigger, self)
 
 
 class _NamespaceTrigger(_NamespaceExpression, Trigger):
     pass
 
 
-class _NamespaceOutputEvent(_NamespaceObject):
+class _NamespaceOutputEvent(_NamespaceObject, OutputEvent):
 
     @property
     def port_name(self):
-        return append_namespace(self._element.port_name,
+        return append_namespace(self._object.port_name,
                                 self.sub_component.name)
+
+    @property
+    def relative_port_name(self):
+        return self._object.port_name
 
 
 class _NamespaceStateVariable(_NamespaceNamed, _NamespaceDimensioned,
@@ -290,7 +294,7 @@ class _NamespaceTimeDerivative(_NamespaceNamed, _NamespaceExpression,
 
     @property
     def variable(self):
-        return append_namespace(self._element.variable,
+        return append_namespace(self._object.variable,
                                 self._sub_component.name)
 
 
@@ -311,52 +315,52 @@ class _NamespaceRegime(_NamespaceNamed, Regime):
     @property
     def time_derivatives(self):
         return (_NamespaceTimeDerivative(self.sub_component, td, self)
-                for td in self._element.time_derivatives)
+                for td in self._object.time_derivatives)
 
     @property
     def aliases(self):
         return (_NamespaceAlias(self.sub_component, a, self)
-                for a in self._element.aliases)
+                for a in self._object.aliases)
 
     @property
     def on_events(self):
         return (_NamespaceOnEvent(self.sub_component, oe, self)
-                for oe in self._element.on_events)
+                for oe in self._object.on_events)
 
     @property
     def on_conditions(self):
         return (_NamespaceOnCondition(self.sub_component, oc, self)
-                for oc in self._element.on_conditions)
+                for oc in self._object.on_conditions)
 
     def time_derivative(self, name):
         return _NamespaceTimeDerivative(self.sub_component,
-                                        self._element.time_derivative(name),
+                                        self._object.time_derivative(name),
                                         self)
 
     def alias(self, name):
-        return _NamespaceAlias(self.sub_component, self._element.alias(name),
+        return _NamespaceAlias(self.sub_component, self._object.alias(name),
                                self)
 
     def on_event(self, name):
         return _NamespaceOnEvent(self.sub_component,
-                                 self._element.on_event(name), self)
+                                 self._object.on_event(name), self)
 
     def on_condition(self, name):
         return _NamespaceOnCondition(self.sub_component,
-                                     self._element.on_condition(name), self)
+                                     self._object.on_condition(name), self)
 
     @property
     def num_time_derivatives(self):
-        return self._element.num_time_derivatives
+        return self._object.num_time_derivatives
 
     @property
     def num_aliases(self):
-        return self.num_element.aliases
+        return self.num_object.aliases
 
     @property
     def num_on_events(self):
-        return self._element.num_on_events
+        return self._object.num_on_events
 
     @property
     def num_on_conditions(self):
-        return self._element.num_on_conditions
+        return self._object.num_on_conditions

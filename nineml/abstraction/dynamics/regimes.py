@@ -119,6 +119,9 @@ class TimeDerivative(ODE, BaseALObject):
         return "TimeDerivative( d%s/dt = %s )" % \
             (self.variable, self.rhs)
 
+    def str(self):
+        return 'd-{}/dt := {}'.format(self.variable, self.rhs)
+
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_timederivative(self, **kwargs)
