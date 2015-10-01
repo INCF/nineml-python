@@ -177,11 +177,16 @@ class DimensionalityComponentValidator(BaseValidator):
         self.component_class = component_class
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database
-        for a in component_class.attributes_with_dimension:
-            if not isinstance(a, SendPortBase):
-                self._dimensions[a] = sympify(a.dimension)
-        for a in component_class.attributes_with_units:
-            self._dimensions[a] = sympify(a.units.dimension)
+        for e in component_class.elements:
+            if not isinstance(e, SendPortBase):
+                try:
+                    self._dimensions[e] = sympify(e.dimension)
+                except AttributeError:
+                    pass
+                try:
+                    self._dimensions[e] = sympify(e.units.dimension)
+                except AttributeError:
+                    pass
         self.visit(component_class)
 
     def _get_dimensions(self, element):

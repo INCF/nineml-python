@@ -227,6 +227,10 @@ class _LocalAnalogPortConnection(AnalogPortConnection, Alias):
             "Cannot rename LHS of Alias '{}' because it is a local "
             "AnalogPortConnection".format(self.lhs))
 
+    @property
+    def _name(self):
+        return self.lhs
+
 
 class _LocalReducePortConnections(Alias):
 

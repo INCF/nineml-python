@@ -257,9 +257,6 @@ class Regime(BaseALObject, MemberContainerObject):
     def _find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)
 
-    def __hash__(self):
-        return hash(self.name)
-
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, self.name)
 

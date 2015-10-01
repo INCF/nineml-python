@@ -10,7 +10,6 @@ from os.path import dirname, normpath, realpath, exists, join
 import os
 import sys
 import re
-import types
 import math
 import itertools
 import hashlib
@@ -272,7 +271,7 @@ def filter_discrete_types(lst, acceptedtypes):
     return res
 
 
-def assert_no_duplicates(lst, msg=None):
+def assert_no_duplicates(lst, error_func=None):
     """Check for duplicates in a sequence.
 
     This function checks that a list contains no duplicates, by casting the
@@ -285,16 +284,19 @@ def assert_no_duplicates(lst, msg=None):
     lst = list(lst)
     if len(lst) != len(set(lst)):
         # Find the duplication:
-        seen_items = set()
-        for i in lst:
-            if i in seen_items:
-                duplication = i
-                break
+        seen_items = []
+        duplicates = []
+        for item in lst:
+            if item in seen_items:
+                if item not in duplicates:
+                    duplicates.append(next(i for i in lst if i == item))
+                duplicates.append(item)
             else:
-                seen_items.add(i)
-        _dispatch_error_func(msg,
-                             "Unxpected duplication found: %s \n in %s" %
-                             (str(i), str(lst)))
+                seen_items.append(item)
+        _dispatch_error_func(
+            error_func,
+            "Unxpected duplications:\n{}\n\n Found in list:\n {}"
+            .format(', '.join(str(d) for d in duplicates), str(lst)))
 
 
 def invert_dictionary(dct):

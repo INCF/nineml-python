@@ -90,9 +90,6 @@ class OutputEvent(BaseALObject):
         self._port_name = port_name.strip()
         ensure_valid_identifier(self._port_name)
 
-    def __hash__(self):
-        return hash(self.port_name)
-
     @property
     def port_name(self):
         '''Returns the name of the port'''
