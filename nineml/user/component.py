@@ -263,10 +263,6 @@ class Component(BaseULObject, DocumentLevelObject):
         return set(p for p in chain(self.properties, self.initial_values)
                    if p.units is not None)
 
-    def __hash__(self):
-        return (hash(self.__class__) ^ hash(self.name) ^
-                hash(self.component_class) ^ hash(self.properties))
-
     def __repr__(self):
         return ('%s(name="%s", component_class="%s")' %
                 (self.__class__.__name__, self.name,

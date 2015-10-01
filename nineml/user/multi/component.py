@@ -1,6 +1,7 @@
 from itertools import chain
 from copy import copy
 from .. import BaseULObject
+import operator
 from collections import defaultdict
 from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
@@ -206,50 +207,54 @@ class SubDynamics(object):
 
     @property
     def parameters(self):
-        return (_NamespaceParameter(self, p)
+        return (_NamespaceParameter(self, p, self)
                 for p in self.component_class.parameters)
 
     @property
     def aliases(self):
-        return (_NamespaceAlias(self, a) for a in self.component_class.aliases)
+        return (_NamespaceAlias(self, a, self)
+                for a in self.component_class.aliases)
 
     @property
     def state_variables(self):
-        return (_NamespaceStateVariable(self, v)
+        return (_NamespaceStateVariable(self, v, self)
                 for v in self.component_class.state_variables)
 
     @property
     def constants(self):
-        return (_NamespaceConstant(self, p)
+        return (_NamespaceConstant(self, p, self)
                 for p in self.component_class.constants)
 
     @property
     def regimes(self):
-        return (_NamespaceRegime(self, r)
+        return (_NamespaceRegime(self, r, self)
                 for r in self.component_class.regimes)
 
     def parameter(self, name):
         elem_name, _ = split_namespace(name)
         return _NamespaceParameter(
-            self, self.component_class.parameter(elem_name))
+            self, self.component_class.parameter(elem_name), self)
 
     def alias(self, name):
         elem_name, _ = split_namespace(name)
-        return _NamespaceAlias(self, self.component_class.alias(elem_name))
+        return _NamespaceAlias(self, self.component_class.alias(elem_name),
+                               self)
 
     def state_variable(self, variable):
         elem_name, _ = split_namespace(variable)
         return _NamespaceStateVariable(
-            self, self.component_class.state_variable(elem_name))
+            self, self.component_class.state_variable(elem_name), self)
 
     def constant(self, name):
         elem_name, _ = split_namespace(name)
         return _NamespaceConstant(self,
-                                  self.component_class.constant(elem_name))
+                                  self.component_class.constant(elem_name),
+                                  self)
 
     def regime(self, name):
         elem_name, _ = split_namespace(name)
-        return _NamespaceRegime(self, self.component_class.regime(elem_name))
+        return _NamespaceRegime(self, self.component_class.regime(elem_name),
+                                self)
 
     @property
     def num_parameters(self):
@@ -608,6 +613,13 @@ class _MultiRegime(Regime):
                                  for r in sub_regimes)
         self._parent = parent
 
+    def __hash__(self):
+        # Since a new MultiRegime will be created each time it is accessed from
+        # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
+        # with equivalence between the same MultiRegime
+        return (reduce(operator.xor, (hash(sr) for sr in self.sub_regimes)) ^
+                hash(self._parent))
+
     @property
     def sub_regimes(self):
         return self._sub_regimes.itervalues()
@@ -782,8 +794,6 @@ class _MultiTransition(object):
     Collects multiple simultaneous transitions into a single transition
     """
 
-    defining_attributes = ('_sub_transitions',)
-
     def __init__(self, sub_transitions, parent):
         self._sub_transitions = dict(
             (st.sub_component.name, st) for st in sub_transitions)
@@ -795,6 +805,14 @@ class _MultiTransition(object):
                     "chain beggining with {}".format(chained_event._name))
             self._sub_transitions[namespace] = chained_event
         self._parent = parent
+
+    def __hash__(self):
+        # Since a new MultiRegime will be created each time it is accessed from
+        # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
+        # with equivalence between the same MultiRegime
+        return (reduce(operator.xor,
+                       (hash(st) for st in self.sub_transitions)) ^
+                hash(self._parent))
 
     @property
     def target_regime(self):
@@ -878,7 +896,7 @@ class _MultiTransition(object):
 
 class _MultiOnEvent(_MultiTransition, OnEvent):
 
-    defining_attributes = ('_sub_regimes', '_src_port_name')
+    defining_attributes = ('_sub_transitions', '_src_port_name')
 
     def __init__(self, sub_transitions, parent):
         sub_transitions = normalise_parameter_as_list(sub_transitions)
@@ -894,7 +912,7 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
 
 class _MultiOnCondition(_MultiTransition, OnCondition):
 
-    defining_attributes = ('_sub_regimes', '_trigger')
+    defining_attributes = ('_sub_transitions', '_trigger')
 
     def __init__(self, sub_transitions, parent):
         sub_transitions = normalise_parameter_as_list(sub_transitions)
