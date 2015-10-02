@@ -266,7 +266,7 @@ def filter_discrete_types(lst, acceptedtypes):
     for obj in lst:
         obj_type = filter_expect_single(
             acceptedtypes, lambda at: isinstance(obj, at),
-            error_func='%s could not be mapped to a single type' % obj)
+            error_func='{} could not be mapped to a single type'.format(obj))
         res[obj_type].append(obj)
     return res
 

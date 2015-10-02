@@ -91,7 +91,7 @@ def split_multi_regime_name(name):
     parts = triple_underscore_re.split(name)[:-1]
     if not parts:
         raise NineMLNamespaceError(
-            "'{}' is not a multi-regime name")
+            "'{}' is not a multi-regime name".format(name))
     return [more_than_triple_underscore_re.sub('_\1', p) for p in parts]
 
 
@@ -244,7 +244,11 @@ class _NamespaceOnEvent(_NamespaceTransition, OnEvent):
 
     @property
     def src_port_name(self):
-        return self._object.src_port_name
+        return self.sub_component.append_namespace(self._object.src_port_name)
+
+    @property
+    def port(self):
+        return self._object.port
 
 
 class _NamespaceOnCondition(_NamespaceTransition, OnCondition):
@@ -265,6 +269,10 @@ class _NamespaceOutputEvent(_NamespaceObject, OutputEvent):
     def port_name(self):
         return append_namespace(self._object.port_name,
                                 self.sub_component.name)
+
+    @property
+    def port(self):
+        return self._object.port
 
     @property
     def relative_port_name(self):

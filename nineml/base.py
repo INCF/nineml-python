@@ -230,9 +230,6 @@ class MemberContainerObject(object):
 #         return chain(*(self._member_names_iter(et, as_container=as_container)
 #                        for et in as_container.class_to_member))
 
-    def __getitem__(self, name):
-        raise NotImplementedError
-
     def __contains__(self, element):
         """
         Checks whether the element belongs to the container object or any sub-

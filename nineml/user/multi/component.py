@@ -1,6 +1,7 @@
 from itertools import chain
 from copy import copy
 from .. import BaseULObject
+import sympy
 import operator
 from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
@@ -9,8 +10,9 @@ from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
+from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLMissingElementError, NineMLNamespaceError)
+    NineMLRuntimeError, NineMLMissingElementError)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
@@ -387,7 +389,7 @@ class MultiDynamics(Dynamics):
                         exposure.name] = exposure
                 elif isinstance(exposure, EventSendPortExposure):
                     self._event_send_ports[exposure.name] = exposure
-                elif isinstance(exposure, EventSendPortExposure):
+                elif isinstance(exposure, EventReceivePortExposure):
                     self._event_receive_ports[
                         exposure.name] = exposure
                 else:
@@ -398,6 +400,9 @@ class MultiDynamics(Dynamics):
 
     def __getitem__(self, name):
         return self.sub_component(name)
+
+    def flatten(self):
+        return DynamicsCloner().visit(self)
 
     def __repr__(self):
         return "<multi.MultiDynamics {}>".format(self.name)
@@ -496,6 +501,10 @@ class MultiDynamics(Dynamics):
     @property
     def state_variable_names(self):
         return (sv.name for sv in self.state_variables)
+
+    @property
+    def regime_names(self):
+        return (r.name for r in self.regimes)
 
     @property
     def analog_port_connection_names(self):
@@ -705,22 +714,13 @@ class _MultiRegime(Regime):
         All OnEvents in sub_regimes that are exposed via an event receive
         port exposure
         """
-        # Zip together all on events with their EventReceivePortExposures,
-        # if present
-        # NB: izip will return an empty list if there is no exposure for the
-        #     on event port or a list of length 1 (containing a tuple of the
-        #     port exposure and the on event that listens to it if there is)
-        #     these lists are then chained to form a list of 2-tuples (ie. not
-        #     a list of lists) containing port exposure and on event pairs
-        exposed_on_events = chain(*[
-            izip((pe for pe in self._parent._event_receive_ports
-                  if oe.port is pe.port), (oe,))
-            for oe in self._all_sub_on_events])
-        # Group on events by their port exposure and return as an _MultiOnEvent
-        key = lambda tple: tple[0]
-        return (
-            _MultiOnEvent(grp, self)
-            for _, grp in groupby(sorted(exposed_on_events, key=key), key=key))
+        list_of_args = []
+        for port_exposure in self._parent.event_receive_ports:
+            exposed_on_events = [oe for oe in self._all_sub_on_events
+                                 if oe.port is port_exposure.port]
+            if exposed_on_events:
+                list_of_args.append((port_exposure, exposed_on_events))
+        return (_MultiOnEvent(pe, oes, self) for pe, oes in list_of_args)
 
     @property
     def on_conditions(self):
@@ -730,7 +730,7 @@ class _MultiRegime(Regime):
         """
         # Group on conditions by their trigger condition and return as an
         # _MultiOnCondition
-        all_on_conds = chain(*[r.on_conditions for r in self.sub_regimes])
+        all_on_conds = list(self._all_sub_on_conds)
         # Get all event connection ports that receive connections with non-zero
         # delay
         nonzero_delay_receive_ports = [
@@ -739,7 +739,7 @@ class _MultiRegime(Regime):
         key = lambda oc: oc.trigger  # Group key for on conditions
         # Chain delayed on events and grouped on conditions
         return chain(
-            (_MultiOnCondition(_DelayedOnEvent(oe), self)
+            (_MultiOnCondition((_DelayedOnEvent(oe),), self)
              for oe in self._all_sub_on_events
              if oe.src_port_name in nonzero_delay_receive_ports),
             (_MultiOnCondition(grp, self)
@@ -754,10 +754,21 @@ class _MultiRegime(Regime):
         return self.sub_regime(comp_name).alias(name)
 
     def on_event(self, port_name):
-        raise NotImplementedError
+        port_exposure = self._parent.event_receive_port(port_name)
+        sub_on_events = [oe for oe in self._all_sub_on_events
+                         if oe.src_port_name == port_exposure.local_port_name]
+        if not sub_on_events:
+            raise KeyError(
+                "No OnEvent for receive port '{}'".format(port_name))
+        return _MultiOnEvent(port_exposure, sub_on_events, self)
 
     def on_condition(self, condition):
-        raise NotImplementedError
+        sub_conds = [oc for oc in self._all_sub_on_conds
+                     if oc.trigger.rhs == sympy.sympify(condition)]
+        if not sub_conds:
+            raise KeyError(
+                "No OnCondition with trigger condition '{}'".format(condition))
+        return _MultiOnCondition(sub_conds, self)
 
     @property
     def time_derivative_variables(self):
@@ -826,6 +837,10 @@ class _MultiRegime(Regime):
     def _all_sub_on_events(self):
         return chain(*[r.on_events for r in self.sub_regimes])
 
+    @property
+    def _all_sub_on_conds(self):
+        return chain(*[r.on_conditions for r in self.sub_regimes])
+
 
 class _MultiTransition(object):
     """
@@ -890,7 +905,7 @@ class _MultiTransition(object):
                              't + {}'.format(pc.delay))
              for pc in
                  self._parent._parent.nonzero_delay_event_port_connections
-             if pc.port in self._all_output_event_ports),
+             if pc.port in self._sub_output_event_ports),
             *[t.state_assignments for t in self.sub_transitions])
 
     @property
@@ -899,7 +914,7 @@ class _MultiTransition(object):
         return (
             _ExposedOutputEvent(pe)
             for pe in self._parent._parent.event_send_ports
-            if pe.port in self._all_output_event_ports)
+            if pe.port in self._sub_output_event_ports)
 
     def state_assignment(self, variable):
         try:
@@ -911,8 +926,8 @@ class _MultiTransition(object):
                 .format(variable))
 
     def output_event(self, name):
-        exposure = self.parent.parent.event_send_port(name)
-        if exposure.port not in self._all_output_event_ports:
+        exposure = self._parent._parent.event_send_port(name)
+        if exposure.port not in self._sub_output_event_ports:
             raise NineMLMissingElementError(
                 "Output event for '{}' port is not present in transition"
                 .format(name))
@@ -927,7 +942,15 @@ class _MultiTransition(object):
         return len(list(self.output_events))
 
     @property
-    def _all_output_event_ports(self):
+    def state_assignment_variables(self):
+        return (sa.variable for sa in self.state_assignments)
+
+    @property
+    def output_event_port_names(self):
+        return (oe.port_name for oe in self.output_events)
+
+    @property
+    def _sub_output_event_ports(self):
         return set(oe.port for oe in chain(*[t.output_events
                                              for t in self.sub_transitions]))
 
@@ -936,25 +959,29 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
 
     defining_attributes = ('_sub_transitions', '_src_port_name')
 
-    def __init__(self, sub_transitions, parent):
+    def __init__(self, port_exposure, sub_transitions, parent):
         sub_transitions = normalise_parameter_as_list(sub_transitions)
-        self._src_port_name = sub_transitions[0].src_port_name
-        assert all(st.src_port_name == self._src_port_name
-                   for st in sub_transitions[1:])
+        self._port_exposure = port_exposure
+        assert all(st.src_port_name == self._port_exposure.local_port_name
+                   for st in sub_transitions)
         _MultiTransition.__init__(self, sub_transitions, parent)
 
     def __hash__(self):
         # Since a new MultiRegime will be created each time it is accessed from
         # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
         # with equivalence between the same MultiRegime
-        return hash(self._src_port_name) ^ hash(self._parent)
+        return hash(self.src_port_name) ^ hash(self._parent)
 
     def __repr__(self):
         return '_MultiOnEvent({})'.format(self.src_port_name)
 
     @property
     def src_port_name(self):
-        return self._src_port_name
+        return self._port_exposure.name
+
+    @property
+    def port(self):
+        return self._port_exposure
 
 
 class _MultiOnCondition(_MultiTransition, OnCondition):
@@ -990,7 +1017,15 @@ class _ExposedOutputEvent(OutputEvent):
 
     @property
     def _name(self):
+        return self.port_name
+
+    @property
+    def port_name(self):
         return self._port_exposure.name
+
+    @property
+    def port(self):
+        return self._port_exposure
 
 
 class _DelayedOnEvent(_NamespaceOnCondition):
