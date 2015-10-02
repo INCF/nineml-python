@@ -11,7 +11,7 @@ from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction.componentclass import (
     ComponentClass, Parameter)
-from .regimes import StateVariable, Regime
+from .regimes import StateVariable
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
@@ -38,15 +38,15 @@ class Dynamics(ComponentClass):
                             '_analog_reduce_ports', '_event_send_ports',
                             '_event_receive_ports', '_regimes',
                             '_state_variables'))
-    class_to_members = dict(
-        tuple(ComponentClass.class_to_members.iteritems()) +
-        (('AnalogSendPort', 'analog_send_ports'),
-         ('AnalogReceivePort', 'analog_receive_ports'),
-         ('AnalogReducePort', 'analog_reduce_ports'),
-         ('EventSendPort', 'event_send_ports'),
-         ('EventReceivePort', 'event_receive_ports'),
-         ('Regime', 'regimes'),
-         ('StateVariable', 'state_variables')))
+    class_to_member = dict(
+        tuple(ComponentClass.class_to_member.iteritems()) +
+        (('AnalogSendPort', 'analog_send_port'),
+         ('AnalogReceivePort', 'analog_receive_port'),
+         ('AnalogReducePort', 'analog_reduce_port'),
+         ('EventSendPort', 'event_send_port'),
+         ('EventReceivePort', 'event_receive_port'),
+         ('Regime', 'regime'),
+         ('StateVariable', 'state_variable')))
 
     send_port_dicts = ('_analog_send_ports', '_event_send_ports')
     receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',

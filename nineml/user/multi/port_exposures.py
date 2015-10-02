@@ -9,7 +9,7 @@ from nineml.reference import resolve_reference, write_reference
 from nineml.xmlns import E
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
-from ..port_connections import AnalogPortConnection
+from .namespace import append_namespace
 
 
 class _BasePortExposure(BaseULObject):
@@ -203,53 +203,25 @@ class EventReceivePortExposure(_BasePortExposure, EventReceivePort):
     element_name = 'EventReceivePortExposure'
 
 
-class _LocalAnalogPortConnection(AnalogPortConnection, Alias):
+class _LocalAnalogPortConnections(Alias):
 
-    def __init__(self, port_connection):
-        snd_name = port_connection.sender_name
-        rcv_name = port_connection.receiver_name
-        snd_prt_name = port_connection.send_port_name
-        rcv_prt_name = port_connection.receive_port_name
-        AnalogPortConnection.__init__(
-            self, sender_name=snd_name, send_port=snd_prt_name,
-            receiver_name=rcv_name, receive_port=rcv_prt_name)
-
-    @property
-    def lhs(self):
-        return self.receiver.append_namespace(self.receive_port_name)
-
-    @property
-    def rhs(self):
-        return sympy.Symbol(self.sender.append_namespace(self.send_port_name))
-
-    def lhs_name_transform_inplace(self, name_map):
-        raise NineMLImmutableError(
-            "Cannot rename LHS of Alias '{}' because it is a local "
-            "AnalogPortConnection".format(self.lhs))
-
-    @property
-    def _name(self):
-        return self.lhs
-
-
-class _LocalReducePortConnections(Alias):
-
-    def __init__(self, receive_port, receiver, port_connections):
+    def __init__(self, receive_port, receiver, port_connections, parent):
         self._receive_port_name = receive_port
-        self._receiver = receiver
+        self._receiver_name = receiver
         self._port_connections = port_connections
+        self._parent = parent
+
+    def __hash__(self):
+        return (hash(self._receive_port_name) ^ hash(self._receiver_name) ^
+                hash(self._parent))
 
     @property
     def receive_port_name(self):
         return self._receive_port_name
 
     @property
-    def receiver(self):
-        return self._receiver
-
-    @property
     def receiver_name(self):
-        return self._receiver.name
+        return self._receiver_name
 
     @property
     def port_connections(self):
@@ -257,7 +229,7 @@ class _LocalReducePortConnections(Alias):
 
     @property
     def name(self):
-        return self._receiver.append_namespace(self.receive_port_name)
+        return self.lhs
 
     @property
     def _name(self):
@@ -265,8 +237,17 @@ class _LocalReducePortConnections(Alias):
         return self.name
 
     @property
+    def lhs(self):
+        return append_namespace(self.receive_port_name, self.receiver_name)
+
+    @property
     def rhs(self):
         return reduce(
             operator.add,
             (sympy.Symbol(pc.sender.append_namespace(pc.send_port_name))
-             for pc in self.port_connections))
+             for pc in self.port_connections), 0)
+
+    def lhs_name_transform_inplace(self, name_map):
+        raise NineMLImmutableError(
+            "Cannot rename LHS of Alias '{}' because it is a local "
+            "AnalogPortConnection".format(self.lhs))

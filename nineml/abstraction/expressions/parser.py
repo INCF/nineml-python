@@ -166,10 +166,7 @@ class Parser(object):
     def valid_identifier(cls, expr, safe_symbols=set([])):
         if expr in reserved_identifiers - safe_symbols:
             return False
-        try:
-            return cls._valid_identifier_re.match(expr)
-        except:
-            raise
+        return cls._valid_identifier_re.match(expr)
 
     @classmethod
     def _escape(self, s):
