@@ -545,13 +545,12 @@ class MultiDynamics(Dynamics):
                 # An alias that is actually a local analog port connection
                 alias = _LocalAnalogPortConnections(
                     name, comp_name,
-                    self._analog_port_connections[(local, comp_name)].values(),
+                    self._analog_port_connections[(comp_name, local)].values(),
                     self)
             except KeyError:
                 # An alias of a sub component
-                alias = self.sub_component(comp_name).component_class.alias(
-                    local)
-        except NineMLNamespaceError:
+                alias = self.sub_component(comp_name).alias(name)
+        except KeyError:
             try:
                 alias = self.analog_receive_port_exposure(name).alias
             except KeyError:
