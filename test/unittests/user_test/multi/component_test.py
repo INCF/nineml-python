@@ -101,7 +101,9 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
                 Regime(
                     'dSV1/dt = -SV1/(cp2*t)',
                     transitions=[On('SV1>cp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('c_emit')])],
+                                 On('spikein',
+                                    do=[OutputEvent('emit'),
+                                        StateAssignment('SV1', '10')])],
                     name='r1',
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
@@ -118,7 +120,7 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
                 Regime(
                     'dSV1/dt = -SV1/(dp2*t)',
                     transitions=[On('SV1>dp1', do=[OutputEvent('emit')]),
-                                 On('spikein', do=[OutputEvent('d_emit')])],
+                                 On('spikein', do=[OutputEvent('emit')])],
                     name='r1',
                 ),
                 Regime(name='r2', transitions=On('SV1>1', to='r1'))
@@ -133,35 +135,75 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
             port_connections=[('a', 'C1', 'b', 'dIn1'),
                               ('a', 'C2', 'b', 'dIn2')],
             port_exposures=[('ARP1', 'a', 'cIn1'),
-                            ('ARP2', 'a', 'cIn2')])
+                            ('ARP2', 'a', 'cIn2'),
+                            ('ERP1', 'a', 'spikein'),
+                            ('ESP1', 'a', 'emit')])
 
-        # Flatten a flat component
-        # Everything should be as before:
-        e_flat = e.flatten(c)
-
-        self.assertEqual(e_flat.name, 'C')
-        self.assertEqual(set(e_flat.alias_names), set(['C1', 'C2', 'C3']))
-
+        self.assertEqual(e.name, 'E')
+        self.assertEqual(set(e.event_receive_port_names), set(['ERP1']))
+        self.assertEqual(set(e.event_send_port_names), set(['ESP1']))
+        self.assertEqual(set(e.alias_names),
+                         set(['C1__a', 'C2__a', 'C3__a', 'D1__b', 'D2__b',
+                              'D3__b', 'cIn1__a', 'cIn2__a', 'dIn1__b',
+                              'dIn2__b']))
         # - Regimes and Transitions:
-        self.assertEqual(set(e_flat.regime_names), set(['r1', 'r2']))
-        self.assertEqual(len(list(e_flat.regime('r1').on_events)), 1)
-        self.assertEqual(len(list(e_flat.regime('r1').on_conditions)), 1)
-        self.assertEqual(len(list(e_flat.regime('r2').on_events)), 0)
-        self.assertEqual(len(list(e_flat.regime('r2').on_conditions)), 1)
-        self.assertEqual(len(list(e_flat.regime('r2').on_conditions)), 1)
-
+        self.assertEqual(set(e.regime_names),
+                         set(['r1___r1___regime', 'r1___r2___regime',
+                              'r2___r1___regime', 'r2___r2___regime']))
+        # =====================================================================
+        # Regime a=1, b=2
+        # =====================================================================
+        r11 = e.regime('r1___r1___regime')
+        self.assertEqual(r11.num_on_conditions, 2)
+        self.assertEqual(r11.num_on_events, 1)
+        oe1 = r11.on_event('ERP1')
+        self.assertEqual(oe1.num_output_events, 1)
+        out1 = oe1.output_event('ESP1')
+        self.assertEqual(out1.port, e.event_send_port('ESP1'))
+        self.assertEqual(oe1.num_state_assignments, 1)
+        self.assertEqual(list(oe1.state_assignments)[0].rhs, 10)
+        self.assertEqual(r11.num_on_conditions, 2)
+        oc1 = r11.on_condition('SV1__a > cp1__a')
+        self.assertEqual(oc1.num_output_events, 1)
+        out1 = oc1.output_event('ESP1')
+        self.assertEqual(out1.port, e.event_send_port('ESP1'))
+        self.assertEqual(oc1.num_state_assignments, 0)
+        oc2 = r11.on_condition('SV1__b > dp1__b')
+        self.assertEqual(oc2.num_output_events, 0)
+        self.assertEqual(oc2.num_state_assignments, 0)
+        # =====================================================================
+        # Regime a=1, b=2
+        # =====================================================================
+        r12 = e.regime('r1___r2___regime')
+        self.assertEqual(r12.num_on_conditions, 2)
+        oc1 = r12.on_condition('SV1__a > cp1__a')
+        oc2 = r12.on_condition('SV1__b > 1')
+        self.assertEqual(set(oc1.output_event_port_names), set(('ESP1',)))
+        self.assertEqual(oc2.num_output_events, 0)
+        self.assertEqual(oc2.target_regime, r11)
+        self.assertEqual(r12.num_on_events, 1)
+        self.assertEqual(r12.on_event('ERP1').port.port,
+                         c.event_receive_port('spikein'))
+        # =====================================================================
+        # Regime a=2, b=1
+        # =====================================================================
+        r21 = e.regime('r2___r1___regime')
+        self.assertEqual(r21.num_on_conditions, 2)
+        oc1 = r21.on_condition('SV1__a > 1')
+        oc2 = r21.on_condition('SV1__b > dp1__b')
+        self.assertEqual(oc1.num_output_events, 0)
+        self.assertEqual(oc2.num_output_events, 0)
+        self.assertEqual(oc1.target_regime, r11)
+        self.assertEqual(r21.num_on_events, 0)
         #  - Ports & Parameters:
-        self.assertEqual(
-            set(e_flat.analog_port_names),
-            set(['cIn2', 'cIn1', 'C1', 'C2']))
-        self.assertEqual(
-            set(e_flat.event_port_names),
-            set(['spikein', 'c_emit', 'emit']))
-        self.assertEqual(set(e_flat.parameter_names), set(['cp1', 'cp2']))
-        self.assertEqual(set(e_flat.state_variable_names), set(['SV1']))
-# 
+        self.assertEqual(set(e.analog_receive_port_names),
+                         set(['ARP1', 'ARP2']))
+        self.assertEqual(set(e.parameter_names),
+                         set(['cp1__a', 'cp2__a', 'dp1__b', 'dp2__b']))
+        self.assertEqual(set(e.state_variable_names),
+                         set(['SV1__a', 'SV1__b']))
+
 #     def test_Flattening2(self):
-# 
 #         c = Dynamics(
 #             name='C',
 #             aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],

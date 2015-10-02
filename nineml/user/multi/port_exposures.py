@@ -14,7 +14,7 @@ from .namespace import append_namespace
 
 class _BasePortExposure(BaseULObject):
 
-    defining_attributes = ('_name', '_component', '_port')
+    defining_attributes = ('_name', '_sub_component', '_port')
 
     def __init__(self, name, component, port):
         super(_BasePortExposure, self).__init__()
@@ -55,6 +55,10 @@ class _BasePortExposure(BaseULObject):
             return self.port.name
         except NineMLRuntimeError:
             return self._port_name
+
+    @property
+    def local_port_name(self):
+        return append_namespace(self.port_name, self.sub_component_name)
 
     @property
     def attributes_with_units(self):

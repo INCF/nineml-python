@@ -14,7 +14,6 @@ from ...exceptions import (NineMLRuntimeError,
 from .visitors.cloner import DynamicsCloner
 from nineml.base import MemberContainerObject
 from nineml.utils import normalise_parameter_as_list
-from .visitors.queriers import DynamicsElementFinder
 
 
 class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
@@ -31,6 +30,8 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
     The left-hand-side symbol must be a state-variable of the component.
 
     """
+
+    element_name = 'StateAssignment'
 
     def __init__(self, lhs, rhs):
         """StateAssignment Constructor
@@ -71,6 +72,7 @@ class OutputEvent(BaseALObject):
     the component.
     """
 
+    element_name = 'OutputEvent'
     defining_attributes = ('port_name',)
 
     def accept_visitor(self, visitor, **kwargs):
@@ -88,12 +90,24 @@ class OutputEvent(BaseALObject):
         """
         super(OutputEvent, self).__init__()
         self._port_name = port_name.strip()
+        self._port = None
         ensure_valid_identifier(self._port_name)
 
     @property
     def port_name(self):
         '''Returns the name of the port'''
-        return self._port_name
+        if self._port is not None:
+            name = self._port.name
+        else:
+            name = self._port_name
+        return name
+
+    @property
+    def port(self):
+        if self._port is None:
+            raise NineMLRuntimeError(
+                "Cannot access port as output event has not been bound")
+        return self._port
 
     def __str__(self):
         return 'OutputEvent( port: %s )' % self.port_name
@@ -108,6 +122,10 @@ class OutputEvent(BaseALObject):
         other named structures
         """
         return self.port_name
+
+    def bind(self, component_class):
+        self._port = component_class.event_send_port(self.port_name)
+        self._port_name = None
 
 
 class Transition(BaseALObject, MemberContainerObject):
@@ -260,6 +278,10 @@ class Transition(BaseALObject, MemberContainerObject):
         return self._state_assignments.iterkeys()
 
     @property
+    def output_event_port_names(self):
+        return self._output_events.iterkeys()
+
+    @property
     def output_events(self):
         """|Events| that happen when this transitions occurs"""
         return self._output_events.itervalues()
@@ -287,9 +309,14 @@ class Transition(BaseALObject, MemberContainerObject):
                 "Could not remove element of type '{}' to {} class"
                 .format(element.__class__.__name__, self.__class__.__name__))
 
+    def bind(self, component_class):
+        for output_event in self.output_events:
+            output_event.bind(component_class)
+
 
 class OnEvent(Transition):
 
+    element_name = "OnEvent"
     defining_attributes = (Transition.defining_attributes + ('src_port_name',))
 
     def accept_visitor(self, visitor, **kwargs):
@@ -310,11 +337,19 @@ class OnEvent(Transition):
                             output_events=output_events,
                             target_regime=target_regime)
         self._src_port_name = src_port_name.strip()
+        self._port = None
         ensure_valid_identifier(self._src_port_name)
 
     @property
     def src_port_name(self):
         return self._src_port_name
+
+    @property
+    def port(self):
+        if self._port is None:
+            raise NineMLRuntimeError(
+                "OnEvent is not bound to a component class")
+        return self._port
 
     def __repr__(self):
         return """OnEvent( %s )""" % self.src_port_name
@@ -327,9 +362,15 @@ class OnEvent(Transition):
         """
         return self.src_port_name
 
+    def bind(self, component_class):
+        super(OnEvent, self).bind(component_class)
+        self._port = component_class.event_receive_port(self.src_port_name)
+        self._port_name = None
+
 
 class OnCondition(Transition):
 
+    element_name = "OnCondition"
     defining_attributes = (Transition.defining_attributes + ('trigger',))
 
     def accept_visitor(self, visitor, **kwargs):
@@ -348,18 +389,14 @@ class OnCondition(Transition):
             parameters.
         """
         if isinstance(trigger, Trigger):
-            self._trigger = DynamicsCloner().visit(trigger)
-        elif isinstance(trigger, basestring):
-            self._trigger = Trigger(rhs=trigger)
-        else:
-            assert False
-
+            trigger = trigger.rhs
+        self._trigger = Trigger(rhs=trigger)
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
                             target_regime=target_regime)
 
     def __repr__(self):
-        return 'OnCondition( %s )' % self.trigger.rhs
+        return 'OnCondition({})'.format(self.trigger.rhs)
 
     @property
     def trigger(self):
@@ -375,6 +412,8 @@ class OnCondition(Transition):
 
 
 class Trigger(BaseALObject, Expression):
+
+    element_name = 'Trigger'
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -404,3 +443,6 @@ class Trigger(BaseALObject, Expression):
     @property
     def _name(self):
         return self.rhs
+
+
+from .visitors.queriers import DynamicsElementFinder

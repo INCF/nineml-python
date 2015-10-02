@@ -17,8 +17,6 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      EventSendPort)
 from nineml.utils import (check_list_contain_same_items,
                           assert_no_duplicates)
-from .visitors.cloner import (
-    DynamicsExpandAliasDefinition, DynamicsCloner)
 from nineml.xmlns import NINEML
 from nineml.annotations import VALIDATE_DIMENSIONS
 
@@ -181,13 +179,12 @@ class Dynamics(ComponentClass):
                 self._event_send_ports[pname] = EventSendPort(name=pname)
 
         self.annotations[NINEML][VALIDATE_DIMENSIONS] = validate_dimensions
+        for transition in self.all_transitions():
+            transition.bind(self)
         # Is the finished component_class valid?:
         self.validate()
 
     # -------------------------- #
-
-    def __copy__(self, memo=None):  # @UnusedVariable
-        return DynamicsCloner().visit(self)
 
     def rename_symbol(self, old_symbol, new_symbol):
         DynamicsRenameSymbol(self, old_symbol, new_symbol)
@@ -540,5 +537,6 @@ from .visitors.queriers import (DynamicsElementFinder,
                                 DynamicsExpressionExtractor,
                                 DynamicsDimensionResolver)
 from .visitors.modifiers import (
-    DynamicsRenameSymbol, DynamicsAssignIndices)
+    DynamicsRenameSymbol, DynamicsAssignIndices,
+    DynamicsExpandAliasDefinition)
 from .visitors.xml import DynamicsXMLLoader, DynamicsXMLWriter

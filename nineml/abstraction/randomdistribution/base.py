@@ -16,9 +16,6 @@ class RandomDistribution(ComponentClass):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
 
-    def __copy__(self, memo=None):  # @UnusedVariable
-        return RandomDistributionCloner().visit(self)
-
     def rename_symbol(self, old_symbol, new_symbol):
         RandomDistributionRenameSymbol(self, old_symbol, new_symbol)
 

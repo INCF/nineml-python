@@ -7,13 +7,44 @@ This file contains utility classes for modifying components.
 
 import sympy
 from ..base import Parameter
-from .cloner import DynamicsExpandPortDefinition
+from ...componentclass.visitors.modifiers import (
+    ComponentExpandPortDefinition, ComponentExpandAliasDefinition)
 from ...ports import AnalogSendPort, AnalogReducePort, AnalogReceivePort
 from nineml.utils import filter_expect_single
 from nineml.exceptions import NineMLRuntimeError
 from ...componentclass.visitors.modifiers import (
     ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices)
 from .base import DynamicsActionVisitor
+
+
+class DynamicsExpandPortDefinition(DynamicsActionVisitor,
+                                   ComponentExpandPortDefinition):
+
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
+        assignment.name_transform_inplace(self.namemap)
+
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        time_derivative.name_transform_inplace(self.namemap)
+
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        trigger.rhs_name_transform_inplace(self.namemap)
+
+
+class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
+                                    ComponentExpandAliasDefinition):
+
+    """ An action-class that walks over a component_class, and expands an alias in
+    Assignments, Aliases, TimeDerivatives and Conditions
+    """
+
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
+        assignment.name_transform_inplace(self.namemap)
+
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        time_derivative.name_transform_inplace(self.namemap)
+
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
+        trigger.rhs_name_transform_inplace(self.namemap)        
 
 
 class DynamicsPortModifier(ComponentModifier):
