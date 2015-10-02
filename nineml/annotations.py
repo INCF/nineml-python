@@ -78,10 +78,7 @@ def annotate_xml(to_xml):
         else:
             obj = self
         elem = to_xml(self, document_or_obj, **kwargs)
-        try:
-            elem.append(obj.annotations.to_xml(**kwargs))
-        except:
-            raise
+        elem.append(obj.annotations.to_xml(**kwargs))
         return elem
     return annotate_to_xml
 

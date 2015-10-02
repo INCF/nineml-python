@@ -49,7 +49,8 @@ def split_namespace(identifier_in_namespace):
     parts = double_underscore_re.split(identifier_in_namespace)
     if len(parts) < 2:
         raise NineMLNamespaceError(
-            "Identifier '{}' does not belong to a sub-namespace")
+            "Identifier '{}' does not belong to a sub-namespace"
+            .format(identifier_in_namespace))
     name = '__'.join(parts[:-1])
     comp_name = parts[-1]
     comp_name = more_than_double_underscore_re.sub('_\1', comp_name)
@@ -88,6 +89,9 @@ def make_regime_name(sub_regimes_dict):
 
 def split_multi_regime_name(name):
     parts = triple_underscore_re.split(name)[:-1]
+    if not parts:
+        raise NineMLNamespaceError(
+            "'{}' is not a multi-regime name")
     return [more_than_triple_underscore_re.sub('_\1', p) for p in parts]
 
 

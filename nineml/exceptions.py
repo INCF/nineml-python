@@ -22,7 +22,7 @@ class NineMLUnitMismatchError(ValueError):
     pass
 
 
-class NineMLNamespaceError(ValueError):
+class NineMLNamespaceError(KeyError):
     pass
 
 

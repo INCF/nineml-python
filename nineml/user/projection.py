@@ -57,10 +57,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
         assert isinstance(name, basestring)
-        try:
-            assert isinstance(delay, Quantity)
-        except:
-            raise
+        assert isinstance(delay, Quantity)
         self.name = name
         assert pre.name != post.name
         self._pre = pre

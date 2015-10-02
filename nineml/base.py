@@ -1,4 +1,5 @@
 from itertools import chain
+import operator
 from collections import defaultdict
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLInvalidElementTypeException)
@@ -70,11 +71,8 @@ class BaseNineMLObject(object):
                                                             type(other))
         else:
             for attr_name in self.__class__.defining_attributes:
-                try:
-                    self_attr = getattr(self, attr_name)
-                    other_attr = getattr(other, attr_name)
-                except:
-                    raise
+                self_attr = getattr(self, attr_name)
+                other_attr = getattr(other, attr_name)
                 if self_attr != other_attr:
                     result += "\n{}Attribute '{}': ".format(indent, attr_name)
                     result += self._unwrap_mismatch(self_attr, other_attr,
@@ -154,7 +152,7 @@ class MemberContainerObject(object):
     An abstract base class for handling the manipulation of member objects
     (which are stored in dictionaries that can be detected by member type).
 
-    Deriving classes are expected to have the 'class_to_members' class
+    Deriving classes are expected to have the 'class_to_member' class
     attribute
     """
 
@@ -162,7 +160,7 @@ class MemberContainerObject(object):
         self._indices = defaultdict(dict)
 
     def add(self, element):
-        dct = self.lookup_member_dict(element)
+        dct = self._member_dict(element)
         if element._name in dct:
             raise NineMLRuntimeError(
                 "Could not add '{}' {} to component class as it clashes with "
@@ -171,7 +169,7 @@ class MemberContainerObject(object):
         dct[element._name] = element
 
     def remove(self, element):
-        dct = self.lookup_member_dict(element)
+        dct = self._member_dict(element)
         try:
             del dct[element._name]
         except KeyError:
@@ -180,26 +178,34 @@ class MemberContainerObject(object):
                 "found in member dictionary (use 'ignore_missing' option "
                 "to ignore)".format(element._name))
 
-    @property
-    def elements(self):
+    def _update_member_key(self, old_key, new_key, element_type):
+        """
+        Updates the member key for a given element_type
+        """
+        member_dict = self._member_dict(element_type)
+        member_dict[new_key] = member_dict.pop(old_key)
+
+    def elements(self, as_container=None):
         """
         Iterates through all the core member elements of the container. For
         core 9ML objects this will be the same as those iterated by the
         __iter__ magic method, where as for 9ML extensions.
         """
-        return chain(*(getattr(self, members_name)
-                       for members_name in self.class_to_members.itervalues()))
+        if as_container is None:
+            as_container = self
+        return chain(*(self._members_iter(et, as_container=as_container)
+                       for et in as_container.class_to_member))
 
-    def __getitem__(self, name):
-        raise NotImplementedError
-
-    def element(self, name):
+    def element(self, name, as_container=None):
         """
         Looks a member item by "name" (identifying characteristic)
         """
-        for dct in self.all_member_dicts:
+        if as_container is None:
+            as_container = self
+        for element_type in as_container.class_to_member:
             try:
-                elem = dct[name]
+                elem = self._member_accessor(element_type,
+                                             as_container=as_container)(name)
                 # Ignore send ports as they otherwise mask aliases/state
                 # variables
                 if not isinstance(elem, SendPortBase):
@@ -209,38 +215,61 @@ class MemberContainerObject(object):
         raise KeyError("'{}' was not found in '{}' {} object"
                        .format(name, self._name, type(self).__name__))
 
+    def num_elements(self, as_container=None):
+        if as_container is None:
+            as_container = self
+        return reduce(operator.add,
+                      *(self._num_members(et, as_container=as_container)
+                        for et in as_container.class_to_member))
+
+# Some of these do not meet the stereotypical *_names format, e.g.
+# time_derivative_variables, could change these to *_keys instead
+#     def element_names(self, as_container=None):
+#         if as_container is None:
+#             as_container = self
+#         return chain(*(self._member_names_iter(et, as_container=as_container)
+#                        for et in as_container.class_to_member))
+
+    def __getitem__(self, name):
+        raise NotImplementedError
+
     def __contains__(self, element):
         """
-        Comprehensively checks whether the element belongs to this component
-        class or not. Useful for asserts and unit tests.
+        Checks whether the element belongs to the container object or any sub-
+        containers. Useful for asserts and unit tests.
         """
         if isinstance(element, basestring):
-            for dct in self.all_member_dicts:  # Lookup via name
-                if element in dct:
+            for type_name in self.class_to_member:
+                if element in self._member_dict(type_name):
                     return True
+                for member in self._members_iter(type_name):
+                    if (isinstance(member, MemberContainerObject) and
+                            element in member):
+                        return True
             return False
         else:
             return self._find_element(element)  # Lookup via full-search
 
-    def index_of(self, element, key=None):
+    def index_of(self, element, key=None, as_container=None):
         """
         Returns the index of an element amongst others of its type. The indices
         are generated on demand but then remembered to allow them to be
-        referred to again.
+        referred to again. The `key` argument can be provided to manually
+        override the types with which the element is grouped, which allows the
+        indexing of elements within supersets of various types.
 
-        This function is meant to be useful in code-generation, where an
+        This function can be useful during code-generation from 9ML, where the
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
         """
+        if as_container is None:
+            as_container = self
         if key is None:
-            key = self.lookup_members_name(element)
+            key = accessor_name_from_type(as_container, element)
         dct = self._indices[key]
         try:
             index = dct[element]
         except KeyError:
-            if key is None:
-                assert element in self, ("'{}' is not a member of '{}'"
-                                         .format(element._name, self._name))
             # Get the first index ascending from 0 not in the set
             try:
                 index = next(iter(sorted(
@@ -250,29 +279,75 @@ class MemberContainerObject(object):
             dct[element] = index
         return index
 
-    def lookup_member_dict(self, element):
-        """
-        Looks up the appropriate member dictionary for objects of type element
-        """
-        return getattr(self, '_' + self.lookup_members_name(element))
+    # =========================================================================
+    # Each member element_name is associated with a member accessor by the
+    # class attribute 'class_to_member' dictionary. From this name accessors
+    # for the set of members of this type, and their names and length, can be
+    # derrived from the stereotypical naming structure used
+    # =========================================================================
 
-    def lookup_members_name(self, element):
-        """
-        Looks up the appropriate member dictionary name for objects of type
-        element
-        """
-        # Try quick lookup by class type
-        try:
-            return self.class_to_members[element.element_name]
-        except KeyError:
-            raise NineMLInvalidElementTypeException(
-                "Could not get member dict for element of type '{}' in '{}' "
-                "container".format(element.element_name, type(self).__name__))
+    def _member_accessor(self, element_type, as_container=None):
+        if as_container is None:
+            as_container = self
+        return getattr(self, accessor_name_from_type(as_container,
+                                                     element_type))
 
-    @property
-    def all_member_dicts(self):
-        return (getattr(self, '_' + n)
-                for n in self.class_to_members.itervalues())
+    def _members_iter(self, element_type, as_container=None):
+        """
+        Looks up the name of values iterator from the element_name of the
+        element argument.
+        """
+        if as_container is None:
+            as_container = self
+        return getattr(
+            self, pluralise(accessor_name_from_type(as_container,
+                                                    element_type)))
+
+#     def _member_names_iter(self, element_type, as_container=None):
+#         if as_container is None:
+#             as_container = self
+#         return getattr(
+#             self, (accessor_name_from_type(as_container, element_type)
+#                    + '_names'))
+
+    def _num_members(self, element_type, as_container=None):
+        if as_container is None:
+            as_container = self
+        return getattr(
+            self, ('num_' +
+                   pluralise(accessor_name_from_type(as_container,
+                                                     element_type))))
+
+    def _member_dict(self, element_type):
+        return getattr(
+            self, '_' + pluralise(accessor_name_from_type(
+                self, element_type)))
+
+
+def accessor_name_from_type(container_type, element_type):
+    """
+    Looks up the name of the accessor method from the element_name of the
+    element argument for a given container type
+    """
+    if isinstance(element_type, basestring):
+        element_type = element_type
+    else:
+        element_type = element_type.element_name
+    try:
+        return container_type.class_to_member[element_type]
+    except KeyError:
+        raise NineMLInvalidElementTypeException(
+            "Could not get member attr for element of type '{}' in '{}' "
+            "container".format(element_type.element_name,
+                               container_type.__name__))
+
+
+def pluralise(word):
+    if word.endswith('s'):
+        word = word + 'es'
+    else:
+        word = word + 's'
+    return word
 
 
 class SendPortBase(object):

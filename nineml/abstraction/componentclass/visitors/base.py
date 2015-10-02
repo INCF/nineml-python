@@ -20,8 +20,16 @@ class ComponentActionVisitor(ComponentVisitor):
 
     def visit_componentclass(self, component_class, **kwargs):
         self.action_componentclass(component_class, **kwargs)
+        try:
+            # This is used for 9ML extensions that extend a component class,
+            # such as MultiDynamics, so that they are searched in the manner
+            # of the core class (i.e. accessing the core class' members)
+            # rather than the extension class.
+            container_type = component_class.core_type
+        except AttributeError:
+            container_type = component_class
         self._scopes.append(component_class)
-        for e in component_class.elements:
+        for e in component_class.elements(as_container=container_type):
             e.accept_visitor(self, **kwargs)
         popped = self._scopes.pop()
         assert popped is component_class
