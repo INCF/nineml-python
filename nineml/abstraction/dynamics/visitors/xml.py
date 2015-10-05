@@ -167,8 +167,14 @@ class DynamicsXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
+        try:
+            as_container = component_class.core_type
+        except AttributeError:
+            as_container = None
         return E('Dynamics',
-                 *self._sort(e.accept_visitor(self) for e in component_class),
+                 *self._sort(e.accept_visitor(self)
+                             for e in component_class.elements(
+                                 as_container=as_container)),
                  name=component_class.name)
 
     @annotate_xml
