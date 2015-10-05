@@ -41,24 +41,27 @@ class MultiDynamicsProperties(DynamicsProperties):
     defining_attributes = ('_name', '_sub_component_properties',
                            '_port_exposures', '_port_connections')
 
-    def __init__(self, name, sub_components, port_connections,
+    def __init__(self, name, sub_dynamics_properties, port_connections,
                  port_exposures=[]):
-        if isinstance(sub_components, dict):
-            sub_components = [
+        if isinstance(sub_dynamics_properties, dict):
+            sub_dynamics = [
                 SubDynamics(n, sc.component_class)
-                for n, sc in sub_components.iteritems()]
+                for n, sc in sub_dynamics_properties.iteritems()]
+            sub_dynamics_properties = [
+                SubDynamicsProperties(n, p)
+                for n, p in sub_dynamics_properties.iteritems()]
         else:
-            sub_components = [
+            sub_dynamics = [
                 SubDynamics(sc.name, sc.component.component_class)
-                for sc in sub_components]
+                for sc in sub_dynamics_properties]
         component_class = MultiDynamics(
-            name + '_Dynamics', sub_components,
+            name + '_Dynamics', sub_dynamics,
             port_exposures=port_exposures, port_connections=port_connections)
         super(MultiDynamicsProperties, self).__init__(
             name, definition=component_class,
-            properties=chain(*[p.properties for p in sub_components]))
+            properties=chain(*[p.properties for p in sub_dynamics_properties]))
         self._sub_component_properties = dict(
-            (p.name, p) for p in sub_components)
+            (p.name, p) for p in sub_dynamics_properties)
 
     @property
     def name(self):
@@ -69,18 +72,21 @@ class MultiDynamicsProperties(DynamicsProperties):
         return self._sub_component_properties.itervalues()
 
     @property
-    def port_connections(self):
-        return iter(self._port_connections)
+    def port_exposures(self):
+        return self.component_class.ports
 
     @property
-    def port_exposures(self):
-        return self._port_exposures.itervalues()
+    def port_connections(self):
+        return self.component_class.port_connections
 
     def sub_component(self, name):
         return self._sub_component_properties[name]
 
     def port_exposure(self, name):
-        return self._port_exposures[name]
+        return self.component_class.port(name)
+
+    def port_connection(self, name):
+        return self.component_class.port_connection(name)
 
     @property
     def sub_component_names(self):
@@ -88,18 +94,18 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     @property
     def port_exposure_names(self):
-        return self._port_exposures.iterkeys()
+        return self.component_class.port_exposure_names
 
     @property
     def attributes_with_units(self):
         return chain(*[c.attributes_with_units
-                       for c in self.sub_component])
+                       for c in self.sub_components])
 
     @write_reference
     @annotate_xml
     def to_xml(self, document, **kwargs):
         members = [c.to_xml(document, **kwargs)
-                   for c in self.sub_component_properties]
+                   for c in self.sub_components]
         members.extend(pe.to_xml(document, **kwargs)
                         for pe in self.port_exposures)
         members.extend(pc.to_xml(document, **kwargs)
@@ -145,7 +151,7 @@ class MultiDynamicsProperties(DynamicsProperties):
 class SubDynamicsProperties(BaseULObject):
 
     element_name = 'SubDynamicsProperties'
-    defining_attributes = ('_name', '_dynamics')
+    defining_attributes = ('_name', '_component')
 
     def __init__(self, name, component):
         BaseULObject.__init__(self)
@@ -167,6 +173,13 @@ class SubDynamicsProperties(BaseULObject):
 
     def __iter__(self):
         return self.properties
+
+    def append_namespace(self, name):
+        return append_namespace(name, self.name)
+
+    @property
+    def attributes_with_units(self):
+        return set(p for p in self.properties if p.units is not None)
 
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
@@ -918,8 +931,8 @@ class _MultiTransition(object):
 
     def state_assignment(self, variable):
         try:
-            next(sa for sa in self.state_assignments
-                 if sa.variable == variable)
+            return next(sa for sa in self.state_assignments
+                        if sa.variable == variable)
         except StopIteration:
             raise NineMLMissingElementError(
                 "No state assignment for variable '{}' found in transition"

@@ -99,7 +99,7 @@ class _NamespaceObject(object):
 
     defining_attributes = ('_sub_component', '_object')
 
-    def __init__(self, sub_component, element, parent):
+    def __init__(self, sub_component, element, parent=None):
         self._sub_component = sub_component
         self._object = element
         self._parent = parent
@@ -154,7 +154,7 @@ class _NamespaceExpression(_NamespaceObject):
                 if str(s) not in reserved_identifiers))
         except AttributeError:  # If rhs has been simplified to ints/floats
             assert float(self._object.rhs)
-            return self.rhs
+            return self._object.rhs
 
     @rhs.setter
     def rhs(self, rhs):
@@ -319,7 +319,10 @@ class _NamespaceStateAssignment(_NamespaceNamed, _NamespaceExpression,
 
 
 class _NamespaceProperty(_NamespaceNamed, Property):
-    pass
+
+    @property
+    def quantity(self):
+        return self._object.quantity
 
 
 class _NamespaceRegime(_NamespaceNamed, Regime):

@@ -127,7 +127,7 @@ class _BaseAnalogPortExposure(_BasePortExposure):
             "dimension of the referenced port).")
 
 
-class PortExposureAlias(Alias):
+class _PortExposureAlias(Alias):
 
     def __init__(self, exposure):
         self._exposure = exposure
@@ -141,9 +141,9 @@ class PortExposureAlias(Alias):
         return self._exposure
 
 
-class SendPortExposureAlias(PortExposureAlias):
+class _SendPortExposureAlias(_PortExposureAlias):
 
-    element_name = 'SendPortExposureAlias'
+    element_name = '_SendPortExposureAlias'
 
     @property
     def lhs(self):
@@ -156,9 +156,9 @@ class SendPortExposureAlias(PortExposureAlias):
                 self.exposure.port_name))
 
 
-class ReceivePortExposureAlias(PortExposureAlias):
+class _ReceivePortExposureAlias(_PortExposureAlias):
 
-    element_name = 'ReceivePortExposureAlias'
+    element_name = '_ReceivePortExposureAlias'
 
     @property
     def lhs(self):
@@ -176,7 +176,7 @@ class AnalogSendPortExposure(_BaseAnalogPortExposure, AnalogSendPort):
 
     @property
     def alias(self):
-        return SendPortExposureAlias(self)
+        return _SendPortExposureAlias(self)
 
 
 class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
@@ -185,7 +185,7 @@ class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
 
     @property
     def alias(self):
-        return ReceivePortExposureAlias(self)
+        return _ReceivePortExposureAlias(self)
 
 
 class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
@@ -194,7 +194,7 @@ class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
 
     @property
     def alias(self):
-        return ReceivePortExposureAlias(self)
+        return _ReceivePortExposureAlias(self)
 
 
 class EventSendPortExposure(_BasePortExposure, EventSendPort):
