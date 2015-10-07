@@ -83,13 +83,9 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
             for rhs_atom in timederivative.rhs_symbol_names:
                 if (rhs_atom not in self.available_symbols and
                         rhs_atom not in reserved_identifiers):
-                    try:
-                        raise NineMLRuntimeError(
-                            "Unresolved Symbol in Time Derivative: {} [{}]"
-                            .format(rhs_atom, timederivative))
-                    except:
-                        td = list(timederivative.rhs_symbol_names)
-                        print td
+                    raise NineMLRuntimeError(
+                        "Unresolved Symbol in Time Derivative: {} [{}]"
+                        .format(rhs_atom, timederivative))
 
         # Check StateAssignments
         for state_assignment in self.state_assignments:
@@ -174,18 +170,9 @@ class DimensionalityComponentValidator(BaseValidator):
     def __init__(self, component_class):
         BaseValidator.__init__(self, require_explicit_overrides=False)
         self.component_class = component_class
-        try:
-            self._core_type = component_class.core_type
-        except AttributeError:
-            self._core_type = type(component_class)
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database
-        try:
-            # See comments in ComponentActionVisitor vist_componentclass
-            container_type = component_class.core_type
-        except AttributeError:
-            container_type = component_class
-        for e in component_class.elements(as_container=container_type):
+        for e in component_class.elements(as_class=self.class_to_visit):
             if not isinstance(e, SendPortBase):
                 try:
                     self._dimensions[e] = sympify(e.dimension)
@@ -205,13 +192,12 @@ class DimensionalityComponentValidator(BaseValidator):
             element = None
             for scope in reversed(self._scopes):
                 try:
-                    element = scope.element(
-                        name, as_container=self._core_type)
+                    element = scope.element(name, as_class=self.class_to_visit)
                 except KeyError:
                     pass
             if element is None:
                 element = scope.element(
-                    name, as_container=self._core_type)
+                    name, as_class=self.class_to_visit)
                 raise NineMLRuntimeError(
                     "Did not find '{}' in '{}' dynamics class (scopes: {})"
                     .format(name, self.component_class.name,

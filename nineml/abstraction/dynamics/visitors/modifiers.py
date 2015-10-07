@@ -209,15 +209,15 @@ class DynamicsAssignIndices(ComponentAssignIndices,
                             DynamicsActionVisitor):
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
-        for elem in regime:
+        for elem in regime.elements():
             regime.index_of(elem)
         for trans in regime.transitions:
             self.component_class.index_of(trans, 'Transition')
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
-        for elem in on_condition:
+        for elem in on_condition.elements():
             on_condition.index_of(elem)
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        for elem in on_event:
+        for elem in on_event.elements():
             on_event.index_of(elem)

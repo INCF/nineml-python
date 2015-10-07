@@ -7,13 +7,18 @@ docstring needed
 
 
 from ...componentclass.visitors import (
-    ComponentActionVisitor, ComponentElementFinder)
+    ComponentVisitor, ComponentActionVisitor)
+from ..base import ConnectionRule
 
 
+class ConnectionRuleVisitor(ComponentVisitor):
 
-class ConnectionRuleActionVisitor(ComponentActionVisitor):
+    class_to_visit = ConnectionRule
+
+
+class ConnectionRuleActionVisitor(ComponentActionVisitor,
+                                  ConnectionRuleVisitor):
 
     def visit_componentclass(self, component_class, **kwargs):
         super(ConnectionRuleActionVisitor, self).visit_componentclass(
             component_class, **kwargs)
-

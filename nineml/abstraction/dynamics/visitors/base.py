@@ -7,10 +7,16 @@ docstring needed
 
 
 # from itertools import chain
-from ...componentclass.visitors import ComponentActionVisitor
+from ...componentclass.visitors import ComponentVisitor, ComponentActionVisitor
+from ..base import Dynamics
 
 
-class DynamicsActionVisitor(ComponentActionVisitor):
+class DynamicsVisitor(ComponentVisitor):
+
+    class_to_visit = Dynamics
+
+
+class DynamicsActionVisitor(ComponentActionVisitor, DynamicsVisitor):
 
     def visit_componentclass(self, component_class, **kwargs):
         super(DynamicsActionVisitor, self).visit_componentclass(

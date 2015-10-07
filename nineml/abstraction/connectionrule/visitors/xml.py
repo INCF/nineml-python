@@ -10,9 +10,10 @@ from nineml.annotations import read_annotations
 from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 from nineml.exceptions import handle_xml_exceptions
+from .base import ConnectionRuleVisitor
 
 
-class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
+class ConnectionRuleXMLLoader(ComponentClassXMLLoader, ConnectionRuleVisitor):
 
     """This class is used by XMLReader interny.
 

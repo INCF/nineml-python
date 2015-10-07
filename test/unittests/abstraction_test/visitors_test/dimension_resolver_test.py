@@ -27,7 +27,7 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
 
     def test_dimension_resolutions(self):
         self.assertEquals(self.a.dimension_of('P1'), un.voltage)
-        self.assertEquals(self.a.dimension_of(self.a['P1']), un.voltage)
+        self.assertEquals(self.a.dimension_of(self.a.element('P1')), un.voltage)
         self.assertEquals(self.a.dimension_of('SV1'), un.dimensionless)
         self.assertEquals(self.a.dimension_of('A1'), un.current)
         self.assertEquals(self.a.dimension_of('A2'), un.charge)

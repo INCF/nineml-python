@@ -2,12 +2,9 @@ import unittest
 
 from nineml.abstraction import (
     Dynamics as Dynamics, Regime, On, OutputEvent,
-    AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
-    NamespaceAddress)
-from nineml.abstraction.dynamics.visitors.cloner import (
-    DynamicsClonerPrefixNamespace)
-from nineml.user.multicomponent import MultiDynamics
-NSA = NamespaceAddress
+    AnalogSendPort as SendPort, AnalogReceivePort as RecvPort)
+from nineml.user.multi.component import MultiDynamics
+from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 
 
 # Testing Skeleton for class: DynamicsClonerPrefixNamespace
@@ -44,7 +41,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         # Test Cloner, no hierachy
         # Everything should be as before:
-        c_clone = DynamicsClonerPrefixNamespace().visit(c)
+        c_clone = DynamicsCloner().visit(c)
 
         self.assertEqual(c_clone.name, 'C')
         self.assertEqual(set(c_clone.alias_names), set(['C1', 'C2', 'C3']))
@@ -79,7 +76,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
                           port_connections=[('c1', 'C1', 'c2', 'cIn1'),
                                             ('c2', 'emit', 'c1', 'spikein')])
 
-        b_clone = DynamicsClonerPrefixNamespace().visit(b)
+        b_clone = DynamicsCloner().visit(b)
         c1_clone = b_clone.get_subnode('c1')
         c2_clone = b_clone.get_subnode('c2')
 
@@ -135,13 +132,6 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
             set(c2_clone.state_variable_names),
             set(['c2_SV1']))
 
-        # - Port Connections:
-        self.assertEqual(
-            set(b_clone.portconnections),
-            set([(NSA('c1.c1_C1'), NSA('c2.c2_cIn1')),
-                 (NSA('c2.c2_emit'), NSA('c1.c1_spikein'))])
-        )
-
         del b_clone
         del c1_clone
         del c2_clone
@@ -151,7 +141,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
                      subnodes={'b1': b, 'b2': b, 'c3': c},
                      port_connections=[('b1.c1.emit', 'c3.spikein'),
                                        ('c3.C2', 'b1.c2.cIn2')])
-        a_clone = DynamicsClonerPrefixNamespace().visit(a)
+        a_clone = DynamicsCloner().visit(a)
 
         b1_clone = a_clone.get_subnode('b1')
         b2_clone = a_clone.get_subnode('b2')
@@ -296,21 +286,3 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
         self.assertEqual(set(b2_clone.event_port_names), set([]))
         self.assertEqual(set(b2_clone.parameter_names), set([]))
         self.assertEqual(set(b2_clone.state_variable_names), set([]))
-
-        # Port Connections
-        self.assertEqual(
-            set(b1_clone.portconnections),
-            set([
-                (NSA('c1.b1_c1_C1'), NSA('c2.b1_c2_cIn1')),
-                (NSA('c2.b1_c2_emit'), NSA('c1.b1_c1_spikein'))]))
-        self.assertEqual(
-            set(b2_clone.portconnections),
-            set([
-                (NSA('c1.b2_c1_C1'), NSA('c2.b2_c2_cIn1')),
-                (NSA('c2.b2_c2_emit'), NSA('c1.b2_c1_spikein'))]))
-
-        self.assertEqual(
-            set(a_clone.portconnections),
-            set([
-                (NSA('b1.c1.b1_c1_emit'), NSA('c3.c3_spikein')),
-                (NSA('c3.c3_C2'), NSA('b1.c2.b1_c2_cIn2'))]))

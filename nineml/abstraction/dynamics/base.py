@@ -11,7 +11,6 @@ from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction.componentclass import (
     ComponentClass, Parameter)
-from .regimes import StateVariable
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
@@ -530,6 +529,8 @@ def inf_check(l1, l2, desc):
     check_list_contain_same_items(l1, l2, desc1='Declared',
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
+# Import visitor modules and those which import visitor modules
+from .regimes import StateVariable
 from .visitors.validators import DynamicsValidator
 from .visitors import DynamicsInterfaceInferer
 from .visitors.queriers import (DynamicsElementFinder,

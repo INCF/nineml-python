@@ -193,7 +193,7 @@ class ComponentDimensionResolver(ComponentActionVisitor):
 
     def dimension_of(self, element):
         if isinstance(element, basestring):
-            element = self.component_class[element]
+            element = self.component_class.element(element)
         return Dimension.from_sympy(self._flatten(element))
 
     def _flatten(self, expr, **kwargs):  # @UnusedVariable
@@ -228,7 +228,7 @@ class ComponentDimensionResolver(ComponentActionVisitor):
         element = None
         for scope in reversed(self._scopes):
             try:
-                element = scope[name]
+                element = scope.element(name)
             except KeyError:
                 pass
         if element is None:

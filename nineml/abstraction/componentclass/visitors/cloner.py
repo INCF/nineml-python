@@ -6,7 +6,7 @@ docstring needed
 """
 from ...expressions.utils import is_builtin_symbol
 from .base import ComponentActionVisitor, ComponentVisitor
-from nineml.base import MemberContainerObject
+from nineml.base import MemberContainerObject, accessor_name_from_type
 from ..base import Parameter, Constant, Alias
 
 
@@ -45,8 +45,8 @@ class ComponentCloner(ComponentVisitor):
     def copy_indices(self, source, destination, **kwargs):  # @UnusedVariable
         if source == destination:  # a work around until I remove NSs
             assert isinstance(source, MemberContainerObject)
-            for s in source:
-                d = destination.lookup_member_dict(s)[s._name]
-                key = source.lookup_members_name(s)
-                index = source.index_of(s)
+            for s in source.elements():
+                d = destination._member_dict(s)[s._name]
+                key = accessor_name_from_type(source, s)
+                index = source.index_of(source, s)
                 destination._indices[key][d] = index
