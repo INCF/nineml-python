@@ -178,12 +178,16 @@ class MemberContainerObject(object):
                 "found in member dictionary (use 'ignore_missing' option "
                 "to ignore)".format(element._name))
 
-    def _update_member_key(self, old_key, new_key, element_type):
+    def _update_member_key(self, old_key, new_key):
         """
         Updates the member key for a given element_type
         """
-        member_dict = self._member_dict(element_type)
-        member_dict[new_key] = member_dict.pop(old_key)
+        for element_type in self.class_to_member:
+            member_dict = self._member_dict(element_type)
+            try:
+                member_dict[new_key] = member_dict.pop(old_key)
+            except KeyError:
+                pass
 
     def elements(self, as_class=None):
         """
@@ -330,7 +334,7 @@ class MemberContainerObject(object):
                 self, element_type)))
 
 
-def accessor_name_from_type(container_type, element_type):
+def accessor_name_from_type(class_type, element_type):
     """
     Looks up the name of the accessor method from the element_name of the
     element argument for a given container type
@@ -338,11 +342,11 @@ def accessor_name_from_type(container_type, element_type):
     if not isinstance(element_type, basestring):
         element_type = element_type.element_name
     try:
-        return container_type.class_to_member[element_type]
+        return class_type.class_to_member[element_type]
     except KeyError:
         raise NineMLInvalidElementTypeException(
             "Could not get member attr for element of type '{}' for object "
-            "'{}' container".format(element_type, container_type))
+            "'{}' container".format(element_type, class_type))
 
 
 def pluralise(word):

@@ -44,7 +44,7 @@ class DynamicsExpandAliasDefinition(DynamicsActionVisitor,
         time_derivative.name_transform_inplace(self.namemap)
 
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        trigger.rhs_name_transform_inplace(self.namemap)        
+        trigger.rhs_name_transform_inplace(self.namemap)
 
 
 class DynamicsPortModifier(ComponentModifier):
@@ -128,18 +128,13 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
     StateVariables, Aliases, Ports
     """
 
-
-    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        super(DynamicsRenameSymbol,
-              self).action_componentclass(component_class)
-        self._update_dicts(*component_class.all_member_dicts)
-
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         if regime.name == self.old_symbol_name:
             regime._name = self.new_symbol_name
-        self._update_dicts(*regime.all_member_dicts)
+        regime._update_member_key(
+            self.old_symbol_name, self.new_symbol_name)
         # Update the on condition trigger keys, which can't be updated via
-        # the _update_dicts method
+        # the _update_member_key method
         for trigger in regime.on_condition_triggers:
             if sympy.Symbol(self.old_symbol_name) in trigger.free_symbols:
                 new_trigger = trigger.xreplace(
@@ -194,15 +189,17 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         if on_condition._target_regime == self.old_symbol_name:
             on_condition._target_regime = self.new_symbol_name
-        self._update_dicts(*on_condition.all_member_dicts)
+        on_condition._update_member_key(
+            self.old_symbol_name, self.new_symbol_name)
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         if on_event.src_port_name == self.old_symbol_name:
             on_event._src_port_name = self.new_symbol_name
             self.note_rhs_changed(on_event)
-        if on_event._target_regime == self.old_symbol_name:
-            on_event._target_regime = self.new_symbol_name
-        self._update_dicts(*on_event.all_member_dicts)
+        if on_event._target_regime.name == self.old_symbol_name:
+            on_event._target_regime._name = self.new_symbol_name
+        on_event._update_member_key(
+            self.old_symbol_name, self.new_symbol_name)
 
 
 class DynamicsAssignIndices(ComponentAssignIndices,
