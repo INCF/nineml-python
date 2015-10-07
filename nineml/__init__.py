@@ -21,4 +21,4 @@ from abstraction import (
 from .user import (
     Selection, Population, Projection, Property, Definition, Component,
     DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
-    Network, MultiDynamics)
+    Network, MultiDynamics, MultiDynamicsProperties)

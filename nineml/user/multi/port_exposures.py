@@ -78,7 +78,7 @@ class _BasePortExposure(BaseULObject):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         return cls(name=element.attrib['name'],
-                   component=element.attrib['component'],
+                   component=element.attrib['sub_component'],
                    port=element.attrib['port'])
 
     @classmethod

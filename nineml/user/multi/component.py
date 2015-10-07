@@ -38,8 +38,7 @@ from .namespace import (
 class MultiDynamicsProperties(DynamicsProperties):
 
     element_name = "MultiDynamicsProperties"
-    defining_attributes = ('_name', '_sub_component_properties',
-                           '_port_exposures', '_port_connections')
+    defining_attributes = ('_name', 'component_class')
 
     def __init__(self, name, sub_dynamics_properties, port_connections,
                  port_exposures=[]):
@@ -119,7 +118,7 @@ class MultiDynamicsProperties(DynamicsProperties):
         cls.check_tag(element)
         sub_component_properties = [
             SubDynamicsProperties.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'SubDynamics')]
+            for e in element.findall(NINEML + 'SubDynamicsProperties')]
         port_exposures = [
             AnalogSendPortExposure.from_xml(e, document, **kwargs)
             for e in element.findall(NINEML + 'AnalogSendPortExposure')]
@@ -142,7 +141,7 @@ class MultiDynamicsProperties(DynamicsProperties):
             EventPortConnection.from_xml(e, document, **kwargs)
             for e in element.findall(NINEML + 'EventPortConnection')]
         return cls(name=element.attrib['name'],
-                   sub_component_properties=sub_component_properties,
+                   sub_dynamics_properties=sub_component_properties,
                    port_exposures=port_exposures,
                    port_connections=chain(analog_port_connections,
                                           event_port_connections))
@@ -202,7 +201,10 @@ class SubDynamicsProperties(BaseULObject):
         return cls(element.attrib['name'], dynamics_properties)
 
 
-class SubDynamics(object):
+class SubDynamics(BaseULObject):
+
+    element_name = 'SubDynamics'
+    defining_attributes = ('_name', '_component_class')
 
     def __init__(self, name, component_class):
         self._name = name
@@ -530,7 +532,10 @@ class MultiDynamics(Dynamics):
                        for d in self._event_port_connections.itervalues()))
 
     def sub_component(self, name):
-        return self._sub_components[name]
+        try:
+            return self._sub_components[name]
+        except:
+            raise
 
     def analog_port_connection(self, name):
         try:
