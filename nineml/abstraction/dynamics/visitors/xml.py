@@ -180,7 +180,8 @@ class DynamicsXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_regime(self, regime):
         return E('Regime', name=regime.name,
-                 *self._sort(e.accept_visitor(self) for e in regime))
+                 *self._sort(e.accept_visitor(self)
+                             for e in regime.elements()))
 
     @annotate_xml
     def visit_statevariable(self, state_variable):
@@ -232,7 +233,8 @@ class DynamicsXMLWriter(ComponentClassXMLWriter):
     def visit_oncondition(self, on_condition):
         return E('OnCondition', on_condition.trigger.accept_visitor(self),
                  target_regime=on_condition._target_regime.name,
-                 *self._sort(e.accept_visitor(self) for e in on_condition))
+                 *self._sort(e.accept_visitor(self)
+                             for e in on_condition.elements()))
 
     @annotate_xml
     def visit_trigger(self, trigger):
@@ -242,4 +244,5 @@ class DynamicsXMLWriter(ComponentClassXMLWriter):
     def visit_onevent(self, on_event):
         return E('OnEvent', port=on_event.src_port_name,
                  target_regime=on_event.target_regime.name,
-                 *self._sort(e.accept_visitor(self) for e in on_event))
+                 *self._sort(e.accept_visitor(self)
+                             for e in on_event.elements()))

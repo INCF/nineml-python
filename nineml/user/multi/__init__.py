@@ -1,1 +1,1 @@
-from .component import MultiDynamics
+from .component import MultiDynamics, MultiDynamicsProperties
