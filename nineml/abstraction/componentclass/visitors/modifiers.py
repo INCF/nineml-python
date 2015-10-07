@@ -61,9 +61,6 @@ class ComponentRenameSymbol(ComponentActionVisitor):
         self.new_symbol_name = new_symbol_name
         self.namemap = {old_symbol_name: new_symbol_name}
 
-        if not component_class.is_flat():
-            raise NineMLRuntimeError('Rename Symbol called on non-flat model')
-
         self.lhs_changes = []
         self.rhs_changes = []
         self.port_changes = []
@@ -131,5 +128,5 @@ class ComponentAssignIndices(ComponentActionVisitor):
         self.visit(component_class)
 
     def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        for elem in component_class:
+        for elem in component_class.elements():
             component_class.index_of(elem)

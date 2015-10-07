@@ -90,7 +90,6 @@ class MultiDynamicsXML_test(unittest.TestCase):
                               ('b', 'A1', 'a', 'ARP1'),
                               ('b', 'A3', 'a', 'ARP2')])
         xml = Document(comp1, self.a, self.b).to_xml()
-        print etree.tostring(xml, pretty_print=True)
         comp2 = load(xml)['test']
         if comp1 != comp2:
             print comp2.find_mismatch(comp1)

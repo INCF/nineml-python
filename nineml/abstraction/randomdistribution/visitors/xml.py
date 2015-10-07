@@ -9,9 +9,11 @@ from nineml.xmlns import E
 from nineml.annotations import read_annotations
 from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
+from .base import RandomDistributionVisitor
 
 
-class RandomDistributionXMLLoader(ComponentClassXMLLoader):
+class RandomDistributionXMLLoader(ComponentClassXMLLoader,
+                                  RandomDistributionVisitor):
 
     """This class is used by XMLReader interny.
 
@@ -34,7 +36,8 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader):
         (("RandomDistribution", load_randomdistributionclass),))
 
 
-class RandomDistributionXMLWriter(ComponentClassXMLWriter):
+class RandomDistributionXMLWriter(ComponentClassXMLWriter,
+                                  RandomDistributionVisitor):
 
     # Maintains order of elements between writes
     write_order = ['Parameters', 'Alias', 'Constant', 'Annotations']

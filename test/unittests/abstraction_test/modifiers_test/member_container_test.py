@@ -108,19 +108,20 @@ class MemberContainer_test(unittest.TestCase):
                         .state_assignment('SV3') in self.b)
 
     def test_getitem(self):
-        self.assertIs(self.a.alias('A1'), self.a['A1'])
-        self.assertIs(self.a.parameter('P2'), self.a['P2'])
-        self.assertIs(self.b.state_variable('SV2'), self.b['SV2'])
-        self.assertIsNot(self.a.state_variable('SV2'), self.b['SV2'])
-        self.assertIsNot(self.a.analog_send_port('A1'), self.a['A1'])
-        self.assertIs(self.b.regime('R2'), self.b['R2'])
-        self.assertIs(self.b['R1'].time_derivative('SV3'), self.b['R1']['SV3'])
+        self.assertIs(self.a.alias('A1'), self.a.element('A1'))
+        self.assertIs(self.a.parameter('P2'), self.a.element('P2'))
+        self.assertIs(self.b.state_variable('SV2'), self.b.element('SV2'))
+        self.assertIsNot(self.a.state_variable('SV2'), self.b.element('SV2'))
+        self.assertIsNot(self.a.analog_send_port('A1'), self.a.element('A1'))
+        self.assertIs(self.b.regime('R2'), self.b.element('R2'))
+        self.assertIs(self.b.element('R1').time_derivative('SV3'),
+                      self.b.element('R1').element('SV3'))
 
     def test_indexof(self):
-        self.assertEqual(self.a.index_of(self.a['A1']),
-                         self.a.index_of(self.a['A1']))
-        self.assertNotEqual(self.a.index_of(self.a['A1']),
-                            self.a.index_of(self.a['A2']))
+        self.assertEqual(self.a.index_of(self.a.element('A1')),
+                         self.a.index_of(self.a.element('A1')))
+        self.assertNotEqual(self.a.index_of(self.a.element('A1')),
+                            self.a.index_of(self.a.element('A2')))
         r1 = self.a.regime('R1')
         self.assertEqual(r1.index_of(r1.time_derivative('SV2')),
                          r1.index_of(r1.time_derivative('SV2')))

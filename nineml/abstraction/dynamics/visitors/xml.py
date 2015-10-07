@@ -15,11 +15,12 @@ from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
 from ..transitions import (
     OnEvent, OnCondition, StateAssignment, OutputEvent, Trigger)
 from ..regimes import Regime, StateVariable, TimeDerivative
+from .base import DynamicsVisitor
 from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
-class DynamicsXMLLoader(ComponentClassXMLLoader):
+class DynamicsXMLLoader(ComponentClassXMLLoader, DynamicsVisitor):
 
     """This class is used by XMLReader interny.
 
@@ -156,7 +157,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
          ("OutputEvent", load_outputevent)))
 
 
-class DynamicsXMLWriter(ComponentClassXMLWriter):
+class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
 
     # Maintains order of elements between writes
     write_order = ['Parameter', 'EventReceivePort', 'AnalogReceivePort',
@@ -167,14 +168,10 @@ class DynamicsXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
-        try:
-            as_container = component_class.core_type
-        except AttributeError:
-            as_container = None
         return E('Dynamics',
                  *self._sort(e.accept_visitor(self)
                              for e in component_class.elements(
-                                 as_container=as_container)),
+                                 as_class=self.class_to_visit)),
                  name=component_class.name)
 
     @annotate_xml

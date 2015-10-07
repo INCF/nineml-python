@@ -6,7 +6,13 @@ docstring needed
 """
 
 
-from ...componentclass.visitors import ComponentActionVisitor
+from ...componentclass.visitors import ComponentVisitor, ComponentActionVisitor
+from ..base import RandomDistribution
+
+
+class RandomDistributionVisitor(ComponentVisitor):
+
+    class_to_visit = RandomDistribution
 
 
 class RandomDistributionActionVisitor(ComponentActionVisitor):
