@@ -647,6 +647,19 @@ class MultiDynamics(Dynamics):
     def _create_multi_regime(self, sub_regimes):
         return _MultiRegime(sub_regimes, self)
 
+    def validate(self):
+        exposed_ports = [pe.port for pe in self.analog_receive_ports]
+        connected_ports = [pc.receive_port
+                           for pc in self.analog_port_connections]
+        for sub_component in self.sub_components:
+            for port in sub_component.component_class.analog_receive_ports:
+                if port not in chain(exposed_ports, connected_ports):
+                    raise NineMLRuntimeError(
+                        "Analog receive port '{}' in sub component '{}' was "
+                        "not connected via a port-connection or exposed via a "
+                        "port-exposure".format(port.name, sub_component.name))
+        super(MultiDynamics, self).validate()
+
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and
 # expressions
