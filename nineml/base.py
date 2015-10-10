@@ -147,7 +147,7 @@ class DocumentLevelObject(object):
         nineml.write(self, fname)  # Calls nineml.document.Document.write
 
 
-class MemberContainerObject(object):
+class ContainerObject(object):
     """
     An abstract base class for handling the manipulation of member objects
     (which are stored in dictionaries that can be detected by member type).
@@ -196,7 +196,7 @@ class MemberContainerObject(object):
         __iter__ magic method, where as for 9ML extensions.
         """
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         return chain(*(self._members_iter(et, as_class=as_class)
                        for et in as_class.class_to_member))
 
@@ -205,30 +205,30 @@ class MemberContainerObject(object):
         Looks a member item by "name" (identifying characteristic)
         """
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         for element_type in as_class.class_to_member:
             try:
-                elem = self._member_accessor(element_type,
-                                             as_class=as_class)(name)
-                # Ignore send ports as they otherwise mask aliases/state
-                # variables
+                elem = self._member_accessor(
+                    element_type, as_class=as_class)(name)
+                # Ignore send ports as they otherwise mask
+                # aliases/state variables
                 if not isinstance(elem, SendPortBase):
                     return elem
             except KeyError:
                 pass
         raise KeyError("'{}' was not found in '{}' {} object"
-                       .format(name, self._name, type(self).__name__))
+                       .format(name, self._name, as_class.__name__))
 
     def num_elements(self, as_class=None):
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         return reduce(operator.add,
                       *(self._num_members(et, as_class=as_class)
                         for et in as_class.class_to_member))
 
     def element_names(self, as_class=None):
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         for element_type in as_class.class_to_member:
             # Some of these do not meet the stereotypical *_names format, e.g.
             # time_derivative_variables, could change these to *_keys instead
@@ -239,22 +239,48 @@ class MemberContainerObject(object):
             except AttributeError:
                 pass
 
+    def __getitem__(self, name):
+        """
+        Looks a member item by "name" (identifying characteristic) in any of
+        of the base classes in the same order as the MRO.
+        """
+        # Loop through all base classes to see if the name fits any member
+        # of any base class
+        for cls in type(self).__mro__:
+            if hasattr(cls, 'class_to_member'):
+                try:
+                    return self.element(name, as_class=cls)
+                except KeyError:
+                    pass
+        raise KeyError("'{}' was not found in '{}' {} object"
+                       .format(name, self._name, type(self).__name__))
+
     def __contains__(self, element):
         """
         Checks whether the element belongs to the container object or any sub-
-        containers. Useful for asserts and unit tests.
+        containers. The element can either be a string representing a named
+        object or an element that is meant to equal an element within the
+        container.
         """
         if isinstance(element, basestring):
-            for type_name in self.class_to_member:
-                if element in self._member_dict(type_name):
-                    return True
-                for member in self._members_iter(type_name):
-                    if (isinstance(member, MemberContainerObject) and
-                            element in member):
-                        return True
+            for cls in type(self).__mro__:
+                try:
+                    for type_name in cls.class_to_member:
+                        if element in self._member_dict(type_name):
+                            return True
+                        for member in self._members_iter(type_name):
+                            if (isinstance(member, ContainerObject) and
+                                    element in member):
+                                return True
+                except AttributeError:
+                    pass
             return False
         else:
             return self._find_element(element)  # Lookup via full-search
+
+    def __iter__(self):
+        raise ValueError("'{}' {} container is not iterable"
+                         .format(self.name, type(self).__name__))
 
     def index_of(self, element, key=None, as_class=None):
         """
@@ -269,7 +295,7 @@ class MemberContainerObject(object):
         referenced elsewhere in the code).
         """
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         if key is None:
             key = accessor_name_from_type(as_class, element)
         dct = self._indices[key]
@@ -294,7 +320,7 @@ class MemberContainerObject(object):
 
     def _member_accessor(self, element_type, as_class=None):
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         return getattr(self, accessor_name_from_type(as_class,
                                                      element_type))
 
@@ -304,14 +330,14 @@ class MemberContainerObject(object):
         element argument.
         """
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         return getattr(
             self, pluralise(accessor_name_from_type(as_class,
                                                     element_type)))
 
     def _member_names_iter(self, element_type, as_class=None):
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         try:
             return getattr(
                 self, (accessor_name_from_type(as_class, element_type)
@@ -322,7 +348,7 @@ class MemberContainerObject(object):
 
     def _num_members(self, element_type, as_class=None):
         if as_class is None:
-            as_class = self
+            as_class = type(self)
         return getattr(
             self, ('num_' +
                    pluralise(accessor_name_from_type(as_class,

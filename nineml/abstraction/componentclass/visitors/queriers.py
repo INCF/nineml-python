@@ -148,11 +148,11 @@ class ComponentElementFinder(ComponentActionVisitor):
         pass
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        if self.element is parameter:
+        if self.element == parameter:
             self._found()
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        if self.element is alias:
+        if self.element == alias:
             self._found()
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
@@ -228,13 +228,13 @@ class ComponentDimensionResolver(ComponentActionVisitor):
         element = None
         for scope in reversed(self._scopes):
             try:
-                element = scope.element(name)
+                element = scope.element(name, as_class=self.class_to_visit)
             except KeyError:
                 pass
         if element is None:
             raise KeyError(
                 "'{}' element was not found in component class '{}'"
-                .format(element.name, self.component_class.name))
+                .format(sym, self.component_class.name))
         return element
 
     def _flatten_symbol(self, sym):

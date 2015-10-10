@@ -18,7 +18,7 @@ import collections
 from .exceptions import internal_error
 from .exceptions import NineMLRuntimeError
 from .xmlns import NINEML
-from nineml.base import MemberContainerObject
+from nineml.base import ContainerObject
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
@@ -463,7 +463,7 @@ def ensure_iterable(expected_list):
     if isinstance(expected_list, dict):
         raise TypeError("Expected a list, got a dictionary ({})"
                         .format(expected_list))
-    elif isinstance(expected_list, (basestring, MemberContainerObject)):
+    elif isinstance(expected_list, (basestring, ContainerObject)):
         lst = [expected_list]
     elif isinstance(expected_list, collections.Iterable):
         lst = list(expected_list)

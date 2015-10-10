@@ -296,6 +296,10 @@ class _NamespaceParameter(_NamespaceNamed, _NamespaceDimensioned, Parameter):
     def _sympy_(self):
         return sympy.Symbol(self.name)
 
+    @property
+    def constraints(self):
+        return self._object.constraints
+
 
 class _NamespaceConstant(_NamespaceNamed, Constant):
     pass
@@ -307,6 +311,11 @@ class _NamespaceTimeDerivative(_NamespaceNamed, _NamespaceExpression,
     @property
     def variable(self):
         return append_namespace(self._object.variable,
+                                self._sub_component.name)
+
+    @property
+    def dependent_variable(self):
+        return append_namespace(self._object.dependent_variable,
                                 self._sub_component.name)
 
 
