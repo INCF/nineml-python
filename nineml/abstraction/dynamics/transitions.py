@@ -12,7 +12,7 @@ from ..expressions import Expression, ExpressionWithSimpleLHS
 from ...exceptions import (NineMLRuntimeError,
                            NineMLInvalidElementTypeException)
 from .visitors.cloner import DynamicsCloner
-from nineml.base import MemberContainerObject
+from nineml.base import ContainerObject
 from nineml.utils import normalise_parameter_as_list
 
 
@@ -128,7 +128,7 @@ class OutputEvent(BaseALObject):
         self._port_name = None
 
 
-class Transition(BaseALObject, MemberContainerObject):
+class Transition(BaseALObject, ContainerObject):
 
     defining_attributes = ('_state_assignments', '_output_events',
                            'target_regime_name')
@@ -163,7 +163,7 @@ class Transition(BaseALObject, MemberContainerObject):
 
         """
         BaseALObject.__init__(self)
-        MemberContainerObject.__init__(self)
+        ContainerObject.__init__(self)
 
         # Load state-assignment objects as strings or StateAssignment objects
         state_assignments = state_assignments or []
@@ -439,10 +439,6 @@ class Trigger(BaseALObject, Expression):
         negated = copy(self)
         negated.negate()
         return negated
-
-    @property
-    def _name(self):
-        return self.rhs
 
 
 from .visitors.queriers import DynamicsElementFinder

@@ -16,7 +16,7 @@ from nineml.exceptions import (
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
-from nineml.base import MemberContainerObject
+from nineml.base import ContainerObject
 from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
 from nineml import units as un
 from nineml.annotations import VALIDATE_DIMENSIONS
@@ -338,7 +338,7 @@ class MultiDynamics(Dynamics):
         self._name = name
         BaseALObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
-        MemberContainerObject.__init__(self)
+        ContainerObject.__init__(self)
         # =====================================================================
         # Create the structures unique to MultiDynamics
         # =====================================================================
@@ -348,6 +348,33 @@ class MultiDynamics(Dynamics):
                 for name, dyn in sub_components.iteritems())
         else:
             self._sub_components = dict((d.name, d) for d in sub_components)
+        # Save port exposurs into separate member dictionaries
+        self._analog_send_ports = {}
+        self._analog_receive_ports = {}
+        self._analog_reduce_ports = {}
+        self._event_send_ports = {}
+        self._event_receive_ports = {}
+        if port_exposures is not None:
+            for exposure in port_exposures:
+                if isinstance(exposure, tuple):
+                    exposure = _BasePortExposure.from_tuple(exposure, self)
+                exposure.bind(self)
+                if isinstance(exposure, AnalogSendPortExposure):
+                    self._analog_send_ports[exposure.name] = exposure
+                elif isinstance(exposure, AnalogReceivePortExposure):
+                    self._analog_receive_ports[
+                        exposure.name] = exposure
+                elif isinstance(exposure, AnalogReducePortExposure):
+                    self._analog_reduce_ports[
+                        exposure.name] = exposure
+                elif isinstance(exposure, EventSendPortExposure):
+                    self._event_send_ports[exposure.name] = exposure
+                elif isinstance(exposure, EventReceivePortExposure):
+                    self._event_receive_ports[
+                        exposure.name] = exposure
+                else:
+                    raise NineMLRuntimeError(
+                        "Unrecognised port exposure '{}'".format(exposure))
         self._analog_port_connections = {}
         self._event_port_connections = {}
         # Insert an empty list for each event and reduce port in the combined
@@ -381,40 +408,8 @@ class MultiDynamics(Dynamics):
                                 port_connection.receiver_name, name))
                 self._analog_port_connections[
                     rcv_key][snd_key] = port_connection
-        # =====================================================================
-        # Save port exposurs into separate member dictionaries
-        # =====================================================================
-        self._analog_send_ports = {}
-        self._analog_receive_ports = {}
-        self._analog_reduce_ports = {}
-        self._event_send_ports = {}
-        self._event_receive_ports = {}
-        if port_exposures is not None:
-            for exposure in port_exposures:
-                if isinstance(exposure, tuple):
-                    exposure = _BasePortExposure.from_tuple(exposure, self)
-                exposure.bind(self)
-                if isinstance(exposure, AnalogSendPortExposure):
-                    self._analog_send_ports[exposure.name] = exposure
-                elif isinstance(exposure, AnalogReceivePortExposure):
-                    self._analog_receive_ports[
-                        exposure.name] = exposure
-                elif isinstance(exposure, AnalogReducePortExposure):
-                    self._analog_reduce_ports[
-                        exposure.name] = exposure
-                elif isinstance(exposure, EventSendPortExposure):
-                    self._event_send_ports[exposure.name] = exposure
-                elif isinstance(exposure, EventReceivePortExposure):
-                    self._event_receive_ports[
-                        exposure.name] = exposure
-                else:
-                    raise NineMLRuntimeError(
-                        "Unrecognised port exposure '{}'".format(exposure))
         self.annotations[NINEML][VALIDATE_DIMENSIONS] = validate_dimensions
         self.validate()
-
-    def __getitem__(self, name):
-        return self.sub_component(name)
 
     def flatten(self):
         return DynamicsCloner().visit(self)
@@ -532,10 +527,7 @@ class MultiDynamics(Dynamics):
                        for d in self._event_port_connections.itervalues()))
 
     def sub_component(self, name):
-        try:
-            return self._sub_components[name]
-        except:
-            raise
+        return self._sub_components[name]
 
     def analog_port_connection(self, name):
         try:
@@ -657,7 +649,8 @@ class MultiDynamics(Dynamics):
                     raise NineMLRuntimeError(
                         "Analog receive port '{}' in sub component '{}' was "
                         "not connected via a port-connection or exposed via a "
-                        "port-exposure".format(port.name, sub_component.name))
+                        "port-exposure in MultiDynamics object '{}'"
+                        .format(port.name, sub_component.name, self.name))
         super(MultiDynamics, self).validate()
 
 # =============================================================================
@@ -678,6 +671,8 @@ class _MultiRegime(Regime):
         `parent`           -- the MultiDynamics object that generates the
                               MultiRegime
         """
+        BaseALObject.__init__(self)
+        ContainerObject.__init__(self)
         self._sub_regimes = dict((r.sub_component.name, copy(r))
                                  for r in sub_regimes)
         # Set the parent of the sub regimes to the multi regime to get hashing
@@ -873,12 +868,14 @@ class _MultiRegime(Regime):
         return chain(*[r.on_conditions for r in self.sub_regimes])
 
 
-class _MultiTransition(object):
+class _MultiTransition(BaseALObject, ContainerObject):
     """
     Collects multiple simultaneous transitions into a single transition
     """
 
     def __init__(self, sub_transitions, parent):
+        BaseALObject.__init__(self)
+        ContainerObject.__init__(self)
         self._sub_transitions = dict(
             (st.sub_component.name, st) for st in sub_transitions)
         for chained_event in parent.daisy_chained_on_events(sub_transitions):

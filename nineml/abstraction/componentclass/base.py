@@ -10,7 +10,7 @@ This module provides the base class for these.
 from abc import ABCMeta
 import sympy
 from .. import BaseALObject
-from nineml.base import MemberContainerObject
+from nineml.base import ContainerObject
 from nineml.utils import (
     filter_discrete_types, ensure_valid_identifier,
     normalise_parameter_as_list, assert_no_duplicates)
@@ -78,7 +78,7 @@ class Parameter(BaseALObject):
         return sympy.Symbol(self.name)
 
 
-class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
+class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     __metaclass__ = ABCMeta  # Abstract base class
@@ -93,7 +93,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
         self._name = name
         BaseALObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
-        MemberContainerObject.__init__(self)
+        ContainerObject.__init__(self)
 
         # Turn any strings in the parameter list into Parameters:
         if parameters is None:

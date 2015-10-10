@@ -5,8 +5,8 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from ...expressions.utils import is_builtin_symbol
-from .base import ComponentActionVisitor, ComponentVisitor
-from nineml.base import MemberContainerObject, accessor_name_from_type
+from .base import ComponentVisitor
+from nineml.base import ContainerObject, accessor_name_from_type
 from ..base import Parameter, Constant, Alias
 
 
@@ -44,7 +44,7 @@ class ComponentCloner(ComponentVisitor):
 
     def copy_indices(self, source, destination, **kwargs):  # @UnusedVariable
         if source == destination:  # a work around until I remove NSs
-            assert isinstance(source, MemberContainerObject)
+            assert isinstance(source, ContainerObject)
             for s in source.elements():
                 d = destination._member_dict(s)[s._name]
                 key = accessor_name_from_type(source, s)

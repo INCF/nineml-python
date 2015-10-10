@@ -13,7 +13,7 @@ from nineml.exceptions import NineMLRuntimeError
 from ..expressions import ODE
 from .. import BaseALObject
 from nineml.units import dimensionless, Dimension
-from nineml.base import MemberContainerObject
+from nineml.base import ContainerObject
 from ..expressions import Alias
 from .transitions import OnEvent, OnCondition, Trigger
 from .visitors.queriers import DynamicsElementFinder
@@ -143,7 +143,7 @@ class TimeDerivative(ODE, BaseALObject):
         return TimeDerivative(variable=variable, rhs=rhs)
 
 
-class Regime(BaseALObject, MemberContainerObject):
+class Regime(BaseALObject, ContainerObject):
 
     """
     A Regime is something that contains |TimeDerivatives|, has temporal extent,
@@ -190,7 +190,7 @@ class Regime(BaseALObject, MemberContainerObject):
 
         """
         BaseALObject.__init__(self)
-        MemberContainerObject.__init__(self)
+        ContainerObject.__init__(self)
         valid_kwargs = ('name', 'transitions', 'time_derivatives', 'aliases')
         for arg in kwargs:
             if arg not in valid_kwargs:
