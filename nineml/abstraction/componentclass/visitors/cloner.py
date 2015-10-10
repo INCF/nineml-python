@@ -48,5 +48,5 @@ class ComponentCloner(ComponentVisitor):
             for s in source.elements():
                 d = destination._member_dict(s)[s._name]
                 key = accessor_name_from_type(source, s)
-                index = source.index_of(source, s)
+                index = source.index_of(s)
                 destination._indices[key][d] = index
