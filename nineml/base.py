@@ -282,7 +282,7 @@ class ContainerObject(object):
         raise ValueError("'{}' {} container is not iterable"
                          .format(self.name, type(self).__name__))
 
-    def index_of(self, element, key=None, as_class=None):
+    def index_of(self, element, key=None):
         """
         Returns the index of an element amongst others of its type. The indices
         are generated on demand but then remembered to allow them to be
@@ -294,10 +294,17 @@ class ContainerObject(object):
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
         """
-        if as_class is None:
-            as_class = type(self)
         if key is None:
-            key = accessor_name_from_type(as_class, element)
+            for cls in type(self).__mro__:
+                if hasattr(cls, 'class_to_member'):
+                    try:
+                        key = accessor_name_from_type(cls, element)
+                    except NineMLInvalidElementTypeException:
+                        pass
+            if key is None:
+                raise NineMLInvalidElementTypeException(
+                    "Could not find member of type {} in {} or its base "
+                    "classes".format(type(element), type(self)))
         dct = self._indices[key]
         try:
             index = dct[element]
