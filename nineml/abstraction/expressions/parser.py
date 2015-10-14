@@ -136,12 +136,13 @@ class Parser(object):
 
     @classmethod
     def _func_to_op(self, expr):
-        if isinstance(expr, sympy.Function):
-            args = (self._func_to_op(a) for a in expr.args)
+        """Maps functions to SymPy operators (i.e. 'pow')"""
+        if expr.args:
+            args = [self._func_to_op(a) for a in expr.args]
             try:
                 expr = self._func_to_op_map[type(expr)](*args)
             except KeyError:
-                expr = expr.__class__(*args)
+                expr = type(expr)(*args)
         return expr
 
     @classmethod
