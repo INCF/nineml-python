@@ -614,11 +614,15 @@ class Dynamics(ComponentClass, _NamespaceMixin):
     def all_transitions(self):
         return chain(*(r.transitions for r in self.regimes))
 
-    def all_on_conditions(self):
-        return chain(*(r.on_conditions for r in self.regimes))
+    def all_on_conditions(self, trigger=None):
+        return chain(*((oc for oc in r.on_conditions
+                        if trigger is None or oc.trigger == trigger)
+                       for r in self.regimes))
 
-    def all_on_events(self):
-        return chain(*(r.on_events for r in self.regimes))
+    def all_on_events(self, event_port=None):
+        return chain(*((oe for oe in r.on_events
+                        if event_port is None or oe.port == event_port)
+                       for r in self.regimes))
 
     def all_time_derivatives(self, state_variable=None):
         return chain(*((td for td in r.time_derivatives
