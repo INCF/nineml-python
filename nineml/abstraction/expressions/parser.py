@@ -137,12 +137,17 @@ class Parser(object):
     @classmethod
     def _func_to_op(self, expr):
         """Maps functions to SymPy operators (i.e. 'pow')"""
-        if expr.args:
-            args = [self._func_to_op(a) for a in expr.args]
-            try:
-                expr = self._func_to_op_map[type(expr)](*args)
-            except KeyError:
-                expr = type(expr)(*args)
+        try:
+            if expr.args:
+                args = [self._func_to_op(a) for a in expr.args]
+                try:
+                    expr = self._func_to_op_map[type(expr)](*args)
+                except KeyError:
+                    expr = type(expr)(*args)
+        except (AttributeError, TypeError):
+            # for expr that have been converted to basic python types such as
+            # int/floats/bools or sympy functions such as sin/cos/tan/etc...
+            pass
         return expr
 
     @classmethod
