@@ -9,6 +9,7 @@ from nineml.xmlns import E
 from nineml.annotations import read_annotations
 from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
+from nineml.exceptions import handle_xml_exceptions
 
 
 class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
@@ -22,6 +23,7 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
+    @handle_xml_exceptions
     def load_connectionruleclass(self, element, **kwargs):  # @UnusedVariable
         block_names = ('Parameter',)
         blocks = self._load_blocks(element, block_names=block_names)

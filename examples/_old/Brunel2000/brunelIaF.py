@@ -2,10 +2,10 @@
 
 """
 
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 from nineml.units import voltage, time, resistance, current
 
-model = al.DynamicsClass(
+model = al.Dynamics(
     name="BrunelIaF",
     regimes=[
         al.Regime(

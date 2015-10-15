@@ -12,7 +12,6 @@ from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction.componentclass import (
     ComponentClass, Parameter)
-from nineml.annotations import annotate_xml, read_annotations
 from .regimes import StateVariable, Regime
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
@@ -22,7 +21,7 @@ from nineml.utils import (check_list_contain_same_items, invert_dictionary,
 from .visitors.cloner import (
     DynamicsExpandAliasDefinition, DynamicsCloner)
 from nineml.xmlns import NINEML
-from nineml.annotations import NO_DIMENSION_CHECK
+from nineml.annotations import VALIDATE_DIMENSIONS
 
 
 class _NamespaceMixin(object):

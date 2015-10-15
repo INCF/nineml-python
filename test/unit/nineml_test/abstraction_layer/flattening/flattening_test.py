@@ -1,6 +1,3 @@
-<<<<<<< Upstream, based on origin/xml_exception_handling
-=======
-
 
 import unittest
 from nineml.abstraction import (Regime, On, OutputEvent,
@@ -671,4 +668,3 @@ class ComponentFlattener_test(unittest.TestCase):
         #        )
 
         # c_flat = nineml.abstraction.flattening.flatten(comp)
->>>>>>> 07ef173 Renamed Component to DynamicsProperties

@@ -23,15 +23,11 @@ class ConnectionRule(ComponentClass):
     def __init__(self, name, standard_library, parameters=None):
         super(ConnectionRule, self).__init__(
             name, parameters)
-<<<<<<< Upstream, based on origin/xml_exception_handling
-        self.standard_library = standard_library
-=======
         self._standard_library = standard_library
 
     @property
     def standard_library(self):
         return self._standard_library
->>>>>>> 75b55b2 added standard library property to connection rules
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

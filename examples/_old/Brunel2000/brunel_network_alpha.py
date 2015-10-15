@@ -12,7 +12,7 @@ June 2014
 
 from __future__ import division
 from math import exp
-import nineml.user_layer as nineml
+import nineml.user as nineml
 from nineml.document import Document
 from nineml.units import ms, mV, nA, unitless, Hz, Mohm
 
@@ -83,9 +83,9 @@ def build_model(g, eta):
     all_cells = nineml.Selection("All neurons",
                                  nineml.Concatenate(exc_cells, inh_cells))
 
-    one_to_one = nineml.ConnectionRule("OneToOne", "OneToOne.xml")
-    random_exc = nineml.ConnectionRule("RandomExc", "RandomFanIn.xml", {"number": (Ce, unitless)})
-    random_inh = nineml.ConnectionRule("RandomInh", "RandomFanIn.xml", {"number": (Ci, unitless)})
+    one_to_one = nineml.ConnectionRuleProperties("OneToOne", "OneToOne.xml")
+    random_exc = nineml.ConnectionRuleProperties("RandomExc", "RandomFanIn.xml", {"number": (Ce, unitless)})
+    random_inh = nineml.ConnectionRuleProperties("RandomInh", "RandomFanIn.xml", {"number": (Ci, unitless)})
 
     static_ext = nineml.ConnectionType("ExternalPlasticity", "StaticConnection.xml",
                                        initial_values={"weight": (Jext, nA)})

@@ -1,19 +1,14 @@
 # encoding: utf-8
 from itertools import chain
-from lxml import etree
 from abc import ABCMeta, abstractmethod
 import collections
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError,
-    handle_xml_exceptions)
-from nineml.xmlns import NINEML, E, nineml_namespace
-from nineml.reference import (
-    Reference, Prototype, Definition, write_reference, resolve_reference)
+    NineMLUnitMismatchError, NineMLRuntimeError, handle_xml_exceptions)
+from nineml.xmlns import NINEML, E
 from nineml.reference import (
     Prototype, Definition, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_units
-from nineml.units import Unit, unitless
 from nineml import units as un
 from ..abstraction import ComponentClass
 from .values import SingleValue, ArrayValue, ExternalArrayValue
@@ -308,34 +303,6 @@ class Component(BaseULObject, DocumentLevelObject):
         Document(*to_write).write(fname)
 
 
-    def __init__(self, name=None, document=None, component_class=None,
-                 url=None):
-        if component_class is None:
-            assert name is not None and document is not None
-            super(Definition, self).__init__(name, document, url)
-        else:
-            self.url = component_class.url
-            self._referred_to = component_class
-
-    @property
-    def component_class(self):
-        return self._referred_to
-
-
-class Prototype(Definition):
-
-    element_name = "Prototype"
-
-    def __init__(self, name=None, document=None, component=None,
-                 url=None):
-        super(Prototype, self).__init__(name=name, document=document,
-                                        component_class=component, url=url)
-
-    @property
-    def component(self):
-        return self._referred_to
-
-
 class Quantity(BaseULObject):
 
     """
@@ -364,14 +331,14 @@ class Quantity(BaseULObject):
                             "'ExternalValueList'"
                             .format(value.__class__.__name__))
         if units is None:
-            units = unitless
+            units = un.unitless
         elif isinstance(units, basestring):
             try:
                 units = getattr(un, units)
             except AttributeError:
                 raise NineMLRuntimeError(
                     "Did not find unit '{}' in units module".format(units))
-        if not isinstance(units, Unit):
+        if not isinstance(units, un.Unit):
             raise NineMLRuntimeError(
                 "Units ({}) must of type <Unit>".format(units))
         super(Quantity, self).__init__()
