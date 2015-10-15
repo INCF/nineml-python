@@ -14,7 +14,6 @@ import math
 import itertools
 import hashlib
 import collections
-
 from .exceptions import internal_error
 from .exceptions import NineMLRuntimeError
 from .xmlns import NINEML
