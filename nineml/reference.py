@@ -111,19 +111,30 @@ class Reference(BaseReference):
 
 class Definition(BaseReference):
 
-    """
-    Base class for model components that are defined in the abstraction layer.
-    """
     element_name = "Definition"
+
+    def __init__(self, name=None, document=None, component_class=None,
+                 url=None):
+        if component_class is None:
+            assert name is not None and document is not None
+            super(Definition, self).__init__(name, document, url)
+        else:
+            self.url = component_class.url
+            self._referred_to = component_class
 
     @property
     def component_class(self):
         return self._referred_to
 
 
-class Prototype(BaseReference):
+class Prototype(Definition):
 
     element_name = "Prototype"
+
+    def __init__(self, name=None, document=None, component=None,
+                 url=None):
+        super(Prototype, self).__init__(name=name, document=document,
+                                        component_class=component, url=url)
 
     @property
     def component(self):
@@ -131,7 +142,7 @@ class Prototype(BaseReference):
 
 
 def resolve_reference(from_xml):
-    def resolving_from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+    def resolving_from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
         if element.tag == NINEML + Reference.element_name:
             reference = Reference.from_xml(element, document)
             ul_object = reference.user_object

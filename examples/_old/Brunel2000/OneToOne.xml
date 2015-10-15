@@ -1,0 +1,4 @@
+
+<NineML xmlns="http://nineml.net/9ML/1.0">
+  <ConnectionRule name="OneToOne" standard_library="OneToOne" />
+</NineML>

@@ -358,3 +358,11 @@ class Regime(BaseALObject, MemberContainerObject):
     @property
     def name(self):
         return self._name
+
+    def no_time_derivatives(self, state_variables):
+        """
+        Returns the state variables from the list provided that don't have
+        time derivatives in the current regime
+        """
+        return (sv for sv in state_variables
+                if sv.name not in self.time_derivative_variables)

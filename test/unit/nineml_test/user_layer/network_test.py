@@ -56,10 +56,10 @@ class TestNetwork(unittest.TestCase):
         synapse_initial_values = {"A": (0.0, nA), "B": (0.0, nA)}
 
         celltype = DynamicsProperties("nrn",
-                                          path.join(self.xml_dir,
-                                                    'BrunelIaF.xml'),
-                                          properties=neuron_parameters,
-                                          initial_values=neuron_initial_values)
+                                      path.join(self.xml_dir,
+                                                'BrunelIaF.xml'),
+                                      properties=neuron_parameters,
+                                      initial_values=neuron_initial_values)
         ext_stim = DynamicsProperties("stim",
                                           path.join(self.xml_dir,
                                                     "Poisson.xml"),

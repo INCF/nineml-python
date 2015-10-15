@@ -83,7 +83,7 @@ class Network(BaseULObject, DocumentLevelObject):
     @handle_xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
         cls.check_tag(element)
-        populations = []
+        populations = {}
         for pop_elem in element.findall(NINEML + 'Population'):
             pop = Population.from_xml(pop_elem, document)
             populations[pop.name] = pop
