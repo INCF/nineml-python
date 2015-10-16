@@ -93,7 +93,7 @@ class Document(dict, BaseNineMLObject):
 
     @property
     def elements(self):
-        return dict(self.iteritems())  # Ensures all elements are loaded
+        return self.itervalues()
 
     def itervalues(self):
         for v in super(Document, self).itervalues():
