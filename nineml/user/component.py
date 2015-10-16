@@ -289,9 +289,10 @@ class Component(BaseULObject, DocumentLevelObject):
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
                 raise NineMLRuntimeError(
-                    "Dimensions for '{}' property ('{}') don't match that of "
-                    "componentclass class ('{}')."
-                    .format(param.name, prop_dimension, param_dimension))
+                    "Dimensions for '{}' property, {}, in '{}' don't match "
+                    "that of its definition in '{}', {}."
+                    .format(param.name, prop_dimension, self.name,
+                            self.component_class.name, param_dimension))
 
     @write_reference
     @annotate_xml
@@ -348,6 +349,9 @@ class Component(BaseULObject, DocumentLevelObject):
                 comp_type = RandomDistribution
             elif isinstance(component_class, ConnectionRuleClass):
                 comp_type = ConnectionRule
+            else:
+                raise NineMLRuntimeError(
+                    "Unrecognised definition {}".format(definition))
         return comp_type
 
     @property
@@ -460,8 +464,9 @@ class Quantity(BaseULObject):
         if self.is_random():
             return self._value.componentclass
         else:
-            raise NineMLRuntimeError("Cannot access random randomdistribution for "
-                                     "componentclass or single value types")
+            raise NineMLRuntimeError(
+                "Cannot access random randomdistribution"
+                "for componentclass or single value types")
 
     def set_units(self, units):
         if units.dimension != self.units.dimension:

@@ -35,7 +35,9 @@ class BaseReference(BaseNineMLObject):
 
     def __repr__(self):
             return ('{}(name="{}"{})'
-                    .format(self.__class__.__name__, self._referred_to.name,
+                    .format(self.__class__.__name__,
+                            (self._referred_to.name if self._referred_to
+                             else ''),
                             ' in "{}"'.format(self.url) if self.url else ''))
 
     @annotate_xml
