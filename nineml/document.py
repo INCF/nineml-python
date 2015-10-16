@@ -246,7 +246,8 @@ class Document(dict, BaseNineMLObject):
     @classmethod
     def from_xml(cls, element, url=None):
         if element.tag != NINEML + cls.element_name:
-            raise Exception("Not a NineML root ('{}')".format(element.tag))
+            raise Exception("'{}' document does not have a NineML root ('{}')"
+                            .format(url, element.tag))
         # Initialise the document
         elements = []
         # Loop through child elements, determine the class needed to extract

@@ -258,7 +258,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
             arg_dims = self._flatten_dims(expr.args[0], element)
             if arg_dims != 1:
                 raise NineMLDimensionError(self._construct_error_message(
-                    "Dimensionless arguments required for function",
+                    "Dimensionless arguments required for function in ",
                     arg_dims, element=element, expr=expr))
             dims = 1
         elif type(expr).__name__ in ('Pi',):
@@ -271,8 +271,10 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
         if dimension - sympify(reference) != 0:
             raise NineMLDimensionError(self._construct_error_message(
                 "Dimension of", dimension, element=element,
-                postamble=(" match that declared for '{}', {} ('{}')".format(
-                    ref_name, sympify(reference), reference.name))))
+                postamble=(" match that declared for '{}', {} ('{}') "
+                           "in component class '{}'"
+                           .format(ref_name, sympify(reference),
+                                   reference.name, self.componentclass.name))))
 
     def _check_send_port(self, port):
         element = self.componentclass[port.name]
@@ -309,7 +311,7 @@ class DimensionalityComponentValidator(PerNamespaceComponentValidator):
                 '{}={}'.format(a, self._get_dimensions(a)) for a in symbols))
         if postamble is not None:
             msg += postamble
-        return msg
+        return msg + "in component class '{}'".format(self.componentclass.name)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self._get_dimensions(alias)  # Check if dimensions can be resolved

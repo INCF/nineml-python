@@ -89,9 +89,11 @@ class ComponentClassXMLLoader(object):
             # Strip namespace
             tag = t.tag[len(NINEML):] if t.tag.startswith(NINEML) else t.tag
             if tag not in blocks:
-                err = "Unexpected block tag: %s " % tag
-                err += '\n Expected: %s' % ','.join(blocks)
-                raise NineMLRuntimeError(err)
+                raise NineMLRuntimeError(
+                    "Unexpected element {} was found in {} block in '{}'"
+                    " (expected tags are: '{}')"
+                    .format(tag, element.tag[len(NINEML):], self.document.url,
+                            "', '".join(blocks)))
             loaded_objects[tag].append(self._get_loader(tag)(self, t))
         return loaded_objects
 

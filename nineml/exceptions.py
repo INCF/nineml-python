@@ -58,6 +58,8 @@ def handle_xml_exceptions(from_xml):
         try:
             return from_xml(cls, element, *args, **kwargs)
         except KeyError, e:
+            if isinstance(e, NineMLMissingElementError):
+                raise
             try:
                 element_name = cls.element_name  # UL classes
                 url = args[0].url  # should be a Document class
