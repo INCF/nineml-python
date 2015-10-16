@@ -78,6 +78,7 @@ class Population(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         layout_elem = element.find(NINEML + 'Layout')
@@ -186,6 +187,7 @@ class PositionList(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         if element is None:
             return None

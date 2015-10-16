@@ -185,6 +185,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):  # @UnusedVariable
         XMLLoader = getattr(nineml.abstraction,
                             ComponentClassXMLLoader.read_class_type(element) +

@@ -42,6 +42,7 @@ class SingleValue(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, _):
         check_tag(element, cls)
         return cls(float(element.text))
@@ -73,6 +74,7 @@ class ArrayValue(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         rows = []
         for row_xml in element.findall(NINEML + ArrayValueRow.element_name):
@@ -109,6 +111,7 @@ class ArrayValueRow(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, _):
         return cls(index=element.attrib["index"], value=element.text)
 
@@ -138,6 +141,7 @@ class ExternalArrayValue(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, _):
         return cls(url=element.attrib["url"],
                    mimetype=element.attrib["mimetype"],
@@ -186,6 +190,7 @@ class StringValue(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element):
         """
         Parse an XML ElementTree structure and return a string value.

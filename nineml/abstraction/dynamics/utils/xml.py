@@ -29,6 +29,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
+    @handle_xml_exceptions
     def load_componentclass(self, element):
 
         blocks = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
@@ -39,7 +40,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
 
         dynamicsblock = expect_single(subnodes["Dynamics"])
         return DynamicsClass(
-            name=element.get('name'),
+            name=element.attrib['name'],
             parameters=subnodes["Parameter"],
             analog_ports=chain(subnodes["AnalogSendPort"],
                                subnodes["AnalogReceivePort"],
@@ -51,33 +52,39 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
             portconnections=subnodes["ConnectPorts"])
 
     @read_annotations
+    @handle_xml_exceptions
     def load_eventsendport(self, element):
-        return EventSendPort(name=element.get('name'))
+        return EventSendPort(name=element.attrib['name'])
 
     @read_annotations
+    @handle_xml_exceptions
     def load_eventreceiveport(self, element):
-        return EventReceivePort(name=element.get('name'))
+        return EventReceivePort(name=element.attrib['name'])
 
     @read_annotations
+    @handle_xml_exceptions
     def load_analogsendport(self, element):
         return AnalogSendPort(
-            name=element.get("name"),
-            dimension=self.document[element.get('dimension')])
+            name=element.attrib['name'],
+            dimension=self.document[element.attrib['dimension']])
 
     @read_annotations
+    @handle_xml_exceptions
     def load_analogreceiveport(self, element):
         return AnalogReceivePort(
-            name=element.get("name"),
-            dimension=self.document[element.get('dimension')])
+            name=element.attrib['name'],
+            dimension=self.document[element.attrib['dimension']])
 
     @read_annotations
+    @handle_xml_exceptions
     def load_analogreduceport(self, element):
         return AnalogReducePort(
-            name=element.get('name'),
-            dimension=self.document[element.get('dimension')],
-            operator=element.get("operator"))
+            name=element.attrib['name'],
+            dimension=self.document[element.attrib['dimension']],
+            operator=element.attrib['operator'])
 
     @read_annotations
+    @handle_xml_exceptions
     def load_dynamicsblock(self, element):
         subblocks = ('Regime', 'Alias', 'StateVariable', 'Constant')
         subnodes = self._load_blocks(element, blocks=subblocks)
@@ -87,32 +94,36 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
                              constants=subnodes["Constant"])
 
     @read_annotations
+    @handle_xml_exceptions
     def load_regime(self, element):
         subblocks = ('TimeDerivative', 'OnCondition', 'OnEvent')
         subnodes = self._load_blocks(element, blocks=subblocks)
         transitions = subnodes["OnEvent"] + subnodes['OnCondition']
-        return Regime(name=element.get('name'),
+        return Regime(name=element.attrib['name'],
                       time_derivatives=subnodes["TimeDerivative"],
                       transitions=transitions)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_statevariable(self, element):
-        name = element.get("name")
-        dimension = self.document[element.get('dimension')]
+        name = element.attrib['name']
+        dimension = self.document[element.attrib['dimension']]
         return StateVariable(name=name, dimension=dimension)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_timederivative(self, element):
-        variable = element.get("variable")
+        variable = element.attrib['variable']
         expr = self.load_single_internmaths_block(element)
         return TimeDerivative(variable=variable,
                               rhs=expr)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_oncondition(self, element):
         subblocks = ('Trigger', 'StateAssignment', 'OutputEvent')
         subnodes = self._load_blocks(element, blocks=subblocks)
-        target_regime = element.get('target_regime')
+        target_regime = element.attrib['target_regime']
         trigger = expect_single(subnodes["Trigger"])
         return OnCondition(trigger=trigger,
                            state_assignments=subnodes["StateAssignment"],
@@ -120,11 +131,12 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
                            target_regime=target_regime)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_onevent(self, element):
         subblocks = ('StateAssignment', 'OutputEvent')
         subnodes = self._load_blocks(element, blocks=subblocks)
-        target_regime = element.get('target_regime')
-        return OnEvent(src_port_name=element.get('port'),
+        target_regime = element.attrib['target_regime']
+        return OnEvent(src_port_name=element.attrib['port'],
                        state_assignments=subnodes["StateAssignment"],
                        output_events=subnodes["OutputEvent"],
                        target_regime=target_regime)
@@ -135,14 +147,16 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         return self.load_single_internmaths_block(element)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_stateassignment(self, element):
-        lhs = element.get('variable')
+        lhs = element.attrib['variable']
         rhs = self.load_single_internmaths_block(element)
         return StateAssignment(lhs=lhs, rhs=rhs)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_outputevent(self, element):
-        port_name = element.get('port')
+        port_name = element.attrib['port']
         return OutputEvent(port_name=port_name)
 
     tag_to_loader = {

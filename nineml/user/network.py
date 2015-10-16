@@ -73,6 +73,7 @@ class Network(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         populations = []

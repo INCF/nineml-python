@@ -7,9 +7,9 @@ Exceptions specific to the 9ML library
 
 
 def handle_xml_exceptions(from_xml):
-    def from_xml_with_exception_handling(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
+    def from_xml_with_exception_handling(cls, element, *args, **kwargs):  # @UnusedVariable @IgnorePep8
         try:
-            return from_xml(cls, element, document, **kwargs)
+            return from_xml(cls, element, *args, **kwargs)
         except KeyError, e:
             raise NineMLXMLAttributeError(
                 "{} XML element{} is missing a {} attribute (found '{}')"

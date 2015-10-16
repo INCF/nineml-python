@@ -23,15 +23,17 @@ class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
+    @handle_xml_exceptions
     def load_componentclass(self, element):
         subblocks = ('Parameter', 'ConnectionRule')
         children = self._load_blocks(element, blocks=subblocks)
         connectionruleblock = expect_single(children["ConnectionRule"])
-        return ConnectionRuleClass(name=element.get('name'),
+        return ConnectionRuleClass(name=element.attrib['name'],
                                    parameters=children["Parameter"],
                                    connectionruleblock=connectionruleblock)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_connectionruleblock(self, element):
         subblocks = ()
         children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8

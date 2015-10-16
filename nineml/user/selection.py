@@ -65,6 +65,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         # The only supported op at this stage
@@ -117,6 +118,7 @@ class Concatenate(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         # Load references and indices from xml
         items = ((e.attrib['index'],

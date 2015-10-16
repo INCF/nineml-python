@@ -24,15 +24,17 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
+    @handle_xml_exceptions
     def load_componentclass(self, element):
         subblocks = ('Parameter', 'RandomDistribution')
         children = self._load_blocks(element, blocks=subblocks)
         randomdistributionblock = expect_single(children["RandomDistribution"])
-        return RandomDistributionClass(name=element.get('name'),
+        return RandomDistributionClass(name=element.attrib['name'],
                                  parameters=children["Parameter"],
                                  randomdistributionblock=randomdistributionblock)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_randomdistributionblock(self, element):
         subblocks = ()
         children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8

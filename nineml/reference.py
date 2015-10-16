@@ -47,6 +47,7 @@ class BaseReference(BaseNineMLObject):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (

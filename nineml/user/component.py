@@ -311,6 +311,7 @@ class Component(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         """docstring missing"""
         if element.tag != NINEML + cls.element_name:
@@ -489,6 +490,7 @@ class Quantity(BaseULObject):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         if element.find(NINEML + 'SingleValue') is not None:
             value = SingleValue.from_xml(
@@ -565,11 +567,12 @@ class Property(Quantity):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         quantity = Quantity.from_xml(element, document)
         try:
-            name = element.get('name')
+            name = element.attrib['name']
         except KeyError:
             raise Exception("Property did not have a name")
         return cls(name=name, value=quantity.value, units=quantity.units)

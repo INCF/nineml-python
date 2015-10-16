@@ -36,24 +36,27 @@ class ComponentClassXMLLoader(object):
         self.document = document
 
     def load_connectports(self, element):
-        return element.get('source'), element.get('sink')
+        return element.attrib['source'], element.attrib['sink']
 
     @read_annotations
+    @handle_xml_exceptions
     def load_parameter(self, element):
-        return Parameter(name=element.get('name'),
-                         dimension=self.document[element.get('dimension')])
+        return Parameter(name=element.attrib['name'],
+                         dimension=self.document[element.attrib['dimension']])
 
     @read_annotations
+    @handle_xml_exceptions
     def load_alias(self, element):
-        name = element.get("name")
+        name = element.attrib['name']
         rhs = self.load_single_internmaths_block(element)
         return Alias(lhs=name, rhs=rhs)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_constant(self, element):
-        return Constant(name=element.get('name'),
+        return Constant(name=element.attrib['name'],
                         value=float(element.text),
-                        units=self.document[element.get('units')])
+                        units=self.document[element.attrib['units']])
 
     def load_single_internmaths_block(self, element, checkOnlyBlock=True):
         if checkOnlyBlock:
@@ -163,7 +166,7 @@ class ComponentClassXMLReader(object):
 
         """
 
-        filename = include_element.get('file')
+        filename = include_element.attrib['file']
 
         # Load the new XML
         included_xml = cls._load_nested_xml(
