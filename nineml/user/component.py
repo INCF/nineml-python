@@ -5,7 +5,8 @@ from abc import ABCMeta
 import collections
 from nineml.reference import BaseReference
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError)
+    NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError,
+    handle_xml_exceptions)
 from nineml.xmlns import nineml_namespace
 from operator import and_
 from nineml.xmlns import NINEML, E

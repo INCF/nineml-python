@@ -11,6 +11,7 @@ from ..base import RandomDistributionClass, RandomDistributionBlock
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
+from nineml.exceptions import handle_xml_exceptions
 
 
 class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
@@ -29,9 +30,10 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
         subblocks = ('Parameter', 'RandomDistribution')
         children = self._load_blocks(element, blocks=subblocks)
         randomdistributionblock = expect_single(children["RandomDistribution"])
-        return RandomDistributionClass(name=element.attrib['name'],
-                                 parameters=children["Parameter"],
-                                 randomdistributionblock=randomdistributionblock)
+        return RandomDistributionClass(
+            name=element.attrib['name'],
+            parameters=children["Parameter"],
+            randomdistributionblock=randomdistributionblock)
 
     @read_annotations
     @handle_xml_exceptions

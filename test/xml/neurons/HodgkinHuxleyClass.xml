@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
+  <Dimension name="dimensionless"/>
   <Dimension name="per_time" t="-1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
   <Dimension name="conductanceDensity" m="-1" l="-4" t="3" i="2"/>
@@ -10,8 +11,6 @@
   <Dimension name="temperature" k="1"/>
   <Dimension name="per_time_voltage" m="-1" l="-2" t="2" i="1"/>
   <ComponentClass name="HodgkinHuxleyClass">
-    <Annotations>
-      <Description>This class is a </Description></Annotations>
     <Parameter name="m_alpha_A" dimension="per_time_voltage"/>
     <Parameter name="m_alpha_V0" dimension="voltage"/>
     <Parameter name="m_alpha_K" dimension="voltage"/>
@@ -50,9 +49,9 @@
     <Dynamics>
       <Annotations><Description>Dynamics are used to describe components that are added to the differential equation solver</Description></Annotations>
       <StateVariable name="v" dimension="voltage"/>
-      <StateVariable name="m"/>
-      <StateVariable name="h"/>
-      <StateVariable name="n"/>
+      <StateVariable name="m" dimension="dimensionless"/>
+      <StateVariable name="h" dimension="dimensionless"/>
+      <StateVariable name="n" dimension="dimensionless"/>
       <Regime name="single">
         <TimeDerivative variable="v">
           <MathInline>(iNa + iK + iLeak + iSynapse / surfaceArea) / C</MathInline>
@@ -67,13 +66,13 @@
           <MathInline>(n_inf - n) / n_tau</MathInline>
           <Annotations><Description>And time-derivatives too</Description></Annotations>
         </TimeDerivative>
-        <OnEvent port="incomingSpike">
+        <OnEvent port="incomingSpike" target_regime="single">
           <StateAssignment variable="v">
             <Annotations><Description>Even State assignments can be annotated</Description></Annotations>
             <MathInline>v + spikeImpulse</MathInline>
           </StateAssignment>
         </OnEvent>
-        <OnCondition>
+        <OnCondition target_regime="single">
           <Trigger>
             <MathInline>v &gt; vThreshold</MathInline>
           </Trigger>

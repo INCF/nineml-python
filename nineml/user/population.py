@@ -5,6 +5,7 @@ from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single, check_tag
 from nineml.annotations import annotate_xml, read_annotations
+from nineml.exceptions import handle_xml_exceptions
 
 
 class Population(BaseULObject, DocumentLevelObject):

@@ -20,7 +20,8 @@ from nineml.utils import (
 from ..expressions import Alias, Constant
 from ...units import dimensionless, Dimension
 from nineml import DocumentLevelObject
-from nineml.exceptions import NineMLInvalidElementTypeException
+from nineml.exceptions import (
+    NineMLInvalidElementTypeException, handle_xml_exceptions)
 
 
 class Parameter(BaseALObject):

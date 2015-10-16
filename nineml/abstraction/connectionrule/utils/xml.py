@@ -10,6 +10,7 @@ from nineml.xmlns import E
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
+from nineml.exceptions import handle_xml_exceptions
 
 
 class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):

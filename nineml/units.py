@@ -5,6 +5,7 @@ from sympy import Symbol
 from nineml.xmlns import E
 from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
+from nineml.exceptions import handle_xml_exceptions
 
 
 class Dimension(BaseNineMLObject, DocumentLevelObject):

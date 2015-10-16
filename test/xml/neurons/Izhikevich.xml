@@ -26,7 +26,7 @@
         <TimeDerivative variable="V">
           <MathInline>const1*V*V + const2*V + const3 - U + iSyn/C</MathInline>
         </TimeDerivative>
-        <OnCondition>
+        <OnCondition target_regime="subthresholdRegime">
           <Trigger>
             <MathInline>V &gt; theta</MathInline>
           </Trigger>

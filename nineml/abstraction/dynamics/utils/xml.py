@@ -16,6 +16,7 @@ from ..transitions import OnEvent, OnCondition, StateAssignment, OutputEvent
 from ..regimes import Regime, StateVariable, TimeDerivative
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
+from nineml.exceptions import handle_xml_exceptions
 
 
 class DynamicsClassXMLLoader(ComponentClassXMLLoader):

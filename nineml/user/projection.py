@@ -13,6 +13,7 @@ from ..exceptions import NineMLRuntimeError
 from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
+from nineml.exceptions import handle_xml_exceptions
 
 
 class Projection(BaseULObject, DocumentLevelObject):

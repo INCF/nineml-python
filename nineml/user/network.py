@@ -9,6 +9,7 @@ from nineml.annotations import annotate_xml, read_annotations
 from nineml.xmlns import E, NINEML
 from nineml.utils import check_tag
 import nineml
+from nineml.exceptions import handle_xml_exceptions
 
 
 class Network(BaseULObject):

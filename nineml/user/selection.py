@@ -5,6 +5,7 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.utils import expect_single, check_tag
 from nineml import DocumentLevelObject
+from nineml.exceptions import handle_xml_exceptions
 
 
 def find_difference(this, that):

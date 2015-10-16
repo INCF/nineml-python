@@ -3,6 +3,7 @@ from . import BaseULObject
 from nineml.xmlns import E, NINEML
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import check_tag
+from nineml.exceptions import handle_xml_exceptions
 
 
 class BaseValue(BaseULObject):
