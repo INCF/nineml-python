@@ -270,7 +270,7 @@ def filter_discrete_types(lst, acceptedtypes):
     return res
 
 
-def assert_no_duplicates(lst, error_func=None):
+def assert_no_duplicates(lst, msg=None):
     """Check for duplicates in a sequence.
 
     This function checks that a list contains no duplicates, by casting the
@@ -290,9 +290,9 @@ def assert_no_duplicates(lst, error_func=None):
                 break
             else:
                 seen_items.add(i)
-        _dispatch_error_func(error_func,
+        _dispatch_error_func(msg,
                              "Unxpected duplication found: %s \n in %s" %
-                             (str(i),  str(lst)))
+                             (str(i), str(lst)))
 
 
 def invert_dictionary(dct):

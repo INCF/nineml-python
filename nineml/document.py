@@ -44,13 +44,15 @@ class Document(dict, BaseNineMLObject):
     def add(self, element):
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
             raise NineMLRuntimeError(
-                "Could not add {} as it is not a document level NineML "
-                "object ('{}') ".format(element.element_name,
-                                        "', '".join(self.top_level_types)))
+                "Could not add {} to document '{}' as it is not a document "
+                "level NineML " "object ('{}')"
+                .format(element.element_name, self.url,
+                        "', '".join(self.top_level_types)))
         if element.name in self:
             raise NineMLRuntimeError(
                 "Could not add element '{}' as an element with that name "
-                "already exists in the document".format(element.name))
+                "already exists in the document '{}'"
+                .format(element.name, self.url))
         self[element.name] = element
 
     def remove(self, element):
