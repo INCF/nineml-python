@@ -44,8 +44,8 @@ class Document(dict, BaseNineMLObject):
     def add(self, element):
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
             raise NineMLRuntimeError(
-                "Could not add {} to document '{}' as it is not a document "
-                "level NineML " "object ('{}')"
+                "Could not add {} to document '{}' as it is not a 'document "
+                "level NineML object' ('{}')"
                 .format(element.element_name, self.url,
                         "', '".join(self.top_level_types)))
         if element.name in self:
