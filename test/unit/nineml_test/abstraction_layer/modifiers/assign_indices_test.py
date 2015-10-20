@@ -1,7 +1,7 @@
 from copy import copy
 import unittest
 from nineml.abstraction.dynamics import (
-    DynamicsClass, Regime, On, OutputEvent)
+    Dynamics, Regime, On, OutputEvent)
 from nineml.abstraction.ports import AnalogSendPort, AnalogReceivePort
 
 
@@ -9,7 +9,7 @@ class DynamicsAssignIndices_test(unittest.TestCase):
 
     def test_after_cloning(self):
 
-        a = DynamicsClass(
+        a = Dynamics(
             name='A',
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1'],
             regimes=[

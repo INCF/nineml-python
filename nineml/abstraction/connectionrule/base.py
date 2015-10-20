@@ -29,12 +29,12 @@ class ConnectionRuleBlock(MainBlock):
         return visitor.visit_connectionruleblock(self, **kwargs)
 
 
-class ConnectionRuleClass(ComponentClass):
+class ConnectionRule(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_main_block')
 
     def __init__(self, name, connectionruleblock, parameters=None):
-        super(ConnectionRuleClass, self).__init__(
+        super(ConnectionRule, self).__init__(
             name, parameters, main_block=connectionruleblock)
 
     def accept_visitor(self, visitor, **kwargs):

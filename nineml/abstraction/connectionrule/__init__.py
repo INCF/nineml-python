@@ -1,2 +1,2 @@
-from .base import ConnectionRuleClass
+from .base import ConnectionRule
 from .utils import ConnectionRuleClassXMLLoader, ConnectionRuleClassXMLWriter

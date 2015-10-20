@@ -15,7 +15,7 @@ import exceptions
 import units
 from .units import Unit, Dimension
 from abstraction import (
-    DynamicsClass, ConnectionRuleClass, RandomDistributionClass,
+    Dynamics, ConnectionRule, RandomDistribution,
     ComponentClass)
 from user import (
     DynamicsComponent, ConnectionRuleComponent, RandomDistributionComponent, Selection, Population,

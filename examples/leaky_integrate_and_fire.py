@@ -1,9 +1,9 @@
 from nineml.abstraction import (
-    DynamicsClass, Regime, OutputEvent, On, StateAssignment, StateVariable)
+    Dynamics, Regime, OutputEvent, On, StateAssignment, StateVariable)
 from nineml.abstraction import units as un
 
 
-c = DynamicsClass(
+c = Dynamics(
     name='leakyIAF',
     regimes=[
         Regime('dv/dt = (g * (vRest - v) + iSyn) /cm',

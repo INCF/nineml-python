@@ -14,7 +14,7 @@ from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from nineml.units import Unit, unitless
 from ..abstraction import (
-    ComponentClass, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
+    ComponentClass, Dynamics, ConnectionRule, RandomDistribution)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
@@ -345,11 +345,11 @@ class Component(BaseULObject, DocumentLevelObject):
             comp_type = type(definition.component)  # If Prototype
         except AttributeError:
             component_class = definition.component_class
-            if isinstance(component_class, DynamicsClass):
+            if isinstance(component_class, Dynamics):
                 comp_type = DynamicsComponent
-            elif isinstance(component_class, RandomDistributionClass):
+            elif isinstance(component_class, RandomDistribution):
                 comp_type = RandomDistributionComponent
-            elif isinstance(component_class, ConnectionRuleClass):
+            elif isinstance(component_class, ConnectionRule):
                 comp_type = ConnectionRuleComponent
             else:
                 raise NineMLRuntimeError(

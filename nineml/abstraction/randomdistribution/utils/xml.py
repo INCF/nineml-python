@@ -7,7 +7,7 @@ docstring needed
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import RandomDistributionClass, RandomDistributionBlock
+from ..base import RandomDistribution, RandomDistributionBlock
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
@@ -30,7 +30,7 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
         subblocks = ('Parameter', 'RandomDistribution')
         children = self._load_blocks(element, blocks=subblocks)
         randomdistributionblock = expect_single(children["RandomDistribution"])
-        return RandomDistributionClass(
+        return RandomDistribution(
             name=element.attrib['name'],
             parameters=children["Parameter"],
             randomdistributionblock=randomdistributionblock)

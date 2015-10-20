@@ -1,7 +1,7 @@
 import nineml.abstraction as al
 from nineml.units import current, A, s
 
-model = al.DynamicsClass(
+model = al.Dynamics(
     name="StaticConnection",
     regimes=[
         al.Regime(

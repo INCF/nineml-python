@@ -14,12 +14,12 @@ class RandomDistributionBlock(MainBlock):
         return visitor.visit_randomdistributionblock(self, **kwargs)
 
 
-class RandomDistributionClass(ComponentClass):
+class RandomDistribution(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_main_block')
 
     def __init__(self, name, randomdistributionblock, parameters=None):
-        super(RandomDistributionClass, self).__init__(
+        super(RandomDistribution, self).__init__(
             name, parameters, main_block=randomdistributionblock)
 
     def accept_visitor(self, visitor, **kwargs):

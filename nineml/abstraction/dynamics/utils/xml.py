@@ -8,7 +8,7 @@ from itertools import chain
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import DynamicsClass, DynamicsBlock
+from ..base import Dynamics, DynamicsBlock
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
                       AnalogReceivePort, AnalogReducePort)
@@ -40,7 +40,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
         subnodes = self._load_blocks(element, blocks=blocks)
 
         dynamicsblock = expect_single(subnodes["Dynamics"])
-        return DynamicsClass(
+        return Dynamics(
             name=element.attrib['name'],
             parameters=subnodes["Parameter"],
             analog_ports=chain(subnodes["AnalogSendPort"],

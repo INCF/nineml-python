@@ -1,7 +1,7 @@
 import nineml.abstraction as al
 from nineml.units import current, time
 
-model = al.DynamicsClass(
+model = al.Dynamics(
     name="AlphaPSR",
     aliases=["Isyn := A"],
     regimes=[

@@ -29,7 +29,7 @@ class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
         subblocks = ('Parameter', 'ConnectionRule')
         children = self._load_blocks(element, blocks=subblocks)
         connectionruleblock = expect_single(children["ConnectionRule"])
-        return ConnectionRuleClass(name=element.attrib['name'],
+        return ConnectionRule(name=element.attrib['name'],
                                    parameters=children["Parameter"],
                                    connectionruleblock=connectionruleblock)
 
@@ -61,4 +61,4 @@ class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
         return E('ConnectionRule',
                  standardLibrary=connectionrule.standard_library)
 
-from ..base import ConnectionRuleClass, ConnectionRuleBlock
+from ..base import ConnectionRule, ConnectionRuleBlock

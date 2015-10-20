@@ -1,7 +1,7 @@
 from __future__ import division
 import unittest
 from nineml.abstraction import (
-    Parameter, Constant, DynamicsClass, Regime, On, OutputEvent, StateVariable,
+    Parameter, Constant, Dynamics, Regime, On, OutputEvent, StateVariable,
     StateAssignment)
 from nineml.abstraction.ports import AnalogSendPort, AnalogReceivePort
 from nineml import units as un
@@ -12,7 +12,7 @@ class Dimensionality_test(unittest.TestCase):
 
     def test_good_model(self):
 
-        DynamicsClass(
+        Dynamics(
             name='A',
             aliases=['A1:=P1 * SV2', 'A2 := ARP1 + SV2', 'A3 := SV1'],
             state_variables=[
@@ -47,7 +47,7 @@ class Dimensionality_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLDimensionError,
-            DynamicsClass,
+            Dynamics,
             name='A',
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage)],
@@ -61,7 +61,7 @@ class Dimensionality_test(unittest.TestCase):
         )
         self.assertRaises(
             NineMLDimensionError,
-            DynamicsClass,
+            Dynamics,
             name='A',
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage)],
@@ -76,7 +76,7 @@ class Dimensionality_test(unittest.TestCase):
         )
         self.assertRaises(
             NineMLDimensionError,
-            DynamicsClass,
+            Dynamics,
             name='A',
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage)],
@@ -93,7 +93,7 @@ class Dimensionality_test(unittest.TestCase):
         )
         self.assertRaises(
             NineMLDimensionError,
-            DynamicsClass,
+            Dynamics,
             name='A',
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage)],
@@ -113,7 +113,7 @@ class Dimensionality_test(unittest.TestCase):
 
         self.assertRaises(
             NineMLDimensionError,
-            DynamicsClass,
+            Dynamics,
             name='A',
             state_variables=[StateVariable('SV1', dimension=un.voltage)],
             regimes=[
@@ -126,7 +126,7 @@ class Dimensionality_test(unittest.TestCase):
         )
         self.assertRaises(
             NineMLDimensionError,
-            DynamicsClass,
+            Dynamics,
             name='A',
             state_variables=[StateVariable('SV1', dimension=un.voltage)],
             regimes=[
@@ -139,7 +139,7 @@ class Dimensionality_test(unittest.TestCase):
         )
         self.assertRaises(
             NineMLDimensionError,
-            DynamicsClass,
+            Dynamics,
             name='A',
             state_variables=[StateVariable('SV1', dimension=un.voltage)],
             regimes=[
