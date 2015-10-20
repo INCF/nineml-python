@@ -259,7 +259,7 @@ class Delay(Quantity):
             value.
 
     Numerical values may either be numbers, or a component that generates
-    numbers, e.g. a RandomDistribution instance.
+    numbers, e.g. a RandomDistributionComponent instance.
     """
     element_name = 'Delay'
 

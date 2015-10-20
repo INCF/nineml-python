@@ -17,7 +17,7 @@ from ..componentclass import ComponentClass, MainBlock
 
 class ConnectionRuleBlock(MainBlock):
 
-    element_name = 'ConnectionRule'
+    element_name = 'ConnectionRuleComponent'
     defining_attributes = ('standard_library',)
 
     def __init__(self, standard_library):

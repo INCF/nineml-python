@@ -18,5 +18,5 @@ from abstraction import (
     DynamicsClass, ConnectionRuleClass, RandomDistributionClass,
     ComponentClass)
 from user import (
-    Dynamics, ConnectionRule, RandomDistribution, Selection, Population,
+    DynamicsComponent, ConnectionRuleComponent, RandomDistributionComponent, Selection, Population,
     Projection, Property, Definition, Component)

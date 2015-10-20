@@ -70,7 +70,7 @@ inh_connection_type = nineml.ConnectionType(
     reference=exc_connection_type.name,
     parameters={'weight': (0.2, "nS")})
 
-intra_column_connector = nineml.ConnectionRule(
+intra_column_connector = nineml.ConnectionRuleComponent(
     name="local random connections",
     definition=catalog + "connectionrules/fixed_probability.xml",
     parameters={'p_connect': (0.1, "dimensionless")})
@@ -93,7 +93,7 @@ inner_inh2all = nineml.Projection(
 
 column.add(inner_exc2all, inner_inh2all)
 
-inter_column_connector = nineml.ConnectionRule(
+inter_column_connector = nineml.ConnectionRuleComponent(
     name="lateral random connections",
     reference=intra_column_connector.name,
     parameters={'p_connect': (0.05, "dimensionless")})

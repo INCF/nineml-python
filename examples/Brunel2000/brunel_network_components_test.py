@@ -45,7 +45,7 @@ p1 = nineml.Population("Exc", 1, celltype, positions=None)
 p2 = nineml.Population("Inh", 1, celltype, positions=None)
 input = nineml.Population("Ext", 1, ext_stim, positions=None)
 
-all_to_all = nineml.ConnectionRule("AllToAll", "AllToAll.xml")
+all_to_all = nineml.ConnectionRuleComponent("AllToAll", "AllToAll.xml")
 
 static_exc = nineml.ConnectionType("ExcitatoryPlasticity", "StaticConnection.xml",
                                    initial_values={"weight": (Je, nA)})

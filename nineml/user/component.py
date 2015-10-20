@@ -346,11 +346,11 @@ class Component(BaseULObject, DocumentLevelObject):
         except AttributeError:
             component_class = definition.component_class
             if isinstance(component_class, DynamicsClass):
-                comp_type = Dynamics
+                comp_type = DynamicsComponent
             elif isinstance(component_class, RandomDistributionClass):
-                comp_type = RandomDistribution
+                comp_type = RandomDistributionComponent
             elif isinstance(component_class, ConnectionRuleClass):
-                comp_type = ConnectionRule
+                comp_type = ConnectionRuleComponent
             else:
                 raise NineMLRuntimeError(
                     "Unrecognised definition {}".format(definition))
@@ -403,7 +403,7 @@ class Quantity(BaseULObject):
     is a (name, value) pair.
 
     Numerical values may either be numbers, or a componentclass that generates
-    numbers, e.g. a RandomDistribution instance.
+    numbers, e.g. a RandomDistributionComponent instance.
     """
     __metaclass__ = ABCMeta  # Abstract base class
     element_name = 'Quantity'
@@ -545,7 +545,7 @@ class Property(Quantity):
     is a (name, value) pair.
 
     Numerical values may either be numbers, or a componentclass that generates
-    numbers, e.g. a RandomDistribution instance.
+    numbers, e.g. a RandomDistributionComponent instance.
     """
     element_name = "Property"
 
@@ -665,7 +665,7 @@ class InitialValueSet(PropertySet):
         return cls(*initial_values)
 
 
-class Dynamics(Component):
+class DynamicsComponent(Component):
 
     def check_initial_values(self):
         for var in self.definition.componentclass.state_variables:
@@ -677,14 +677,14 @@ class Dynamics(Component):
             check_units(initial_value.units, var.dimension)
 
 
-class ConnectionRule(Component):
+class ConnectionRuleComponent(Component):
     """
     docstring needed
     """
     pass
 
 
-class RandomDistribution(Component):
+class RandomDistributionComponent(Component):
     """
     Component representing a random number randomdistribution, e.g. normal, gamma,
     binomial.

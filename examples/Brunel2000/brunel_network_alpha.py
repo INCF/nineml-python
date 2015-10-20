@@ -55,7 +55,7 @@ def build_model(g, eta):
                                            Vreset=(10.0, mV),
                                            R=(1.5, Mohm))  # units??
     psr_parameters = nineml.PropertySet(tau_syn=(tau_syn, ms))
-    #v_init = nineml.RandomDistribution("uniform(rest,threshold)",
+    #v_init = nineml.RandomDistributionComponent("uniform(rest,threshold)",
     #                                   "catalog/randomdistributions/uniform_distribution.xml",  # hack - this file doesn't exist
     #                                   {'lowerBound': (0.0, "dimensionless"),
     #                                    'upperBound': (theta, "dimensionless")})
@@ -66,7 +66,7 @@ def build_model(g, eta):
 
     celltype = nineml.SpikingNodeType("nrn", "BrunelIaF.xml", neuron_parameters, initial_values=neuron_initial_values)
 
-    #tpoisson_init = nineml.RandomDistribution("exponential(beta)",
+    #tpoisson_init = nineml.RandomDistributionComponent("exponential(beta)",
     #                                          "catalog/randomdistributions/exponential_distribution.xml",
     #                                          {"beta": (1000.0/input_rate, "dimensionless")})
     tpoisson_init = 5.0
@@ -83,9 +83,9 @@ def build_model(g, eta):
     all_cells = nineml.Selection("All neurons",
                                  nineml.Concatenate(exc_cells, inh_cells))
 
-    one_to_one = nineml.ConnectionRule("OneToOne", "OneToOne.xml")
-    random_exc = nineml.ConnectionRule("RandomExc", "RandomFanIn.xml", {"number": (Ce, unitless)})
-    random_inh = nineml.ConnectionRule("RandomInh", "RandomFanIn.xml", {"number": (Ci, unitless)})
+    one_to_one = nineml.ConnectionRuleComponent("OneToOne", "OneToOne.xml")
+    random_exc = nineml.ConnectionRuleComponent("RandomExc", "RandomFanIn.xml", {"number": (Ce, unitless)})
+    random_inh = nineml.ConnectionRuleComponent("RandomInh", "RandomFanIn.xml", {"number": (Ci, unitless)})
 
     static_ext = nineml.ConnectionType("ExternalPlasticity", "StaticConnection.xml",
                                        initial_values={"weight": (Jext, nA)})
