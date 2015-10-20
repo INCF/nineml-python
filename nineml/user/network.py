@@ -9,7 +9,7 @@ from nineml.annotations import annotate_xml, read_annotations
 from nineml.xmlns import E, NINEML
 from nineml.utils import check_tag
 import nineml
-from nineml.exceptions import handle_xml_exceptions
+from nineml.exceptions import handle_xml_exceptions, NineMLRuntimeError
 
 
 class Network(BaseULObject):
@@ -101,7 +101,14 @@ class Network(BaseULObject):
 
     @classmethod
     def read(self, filename):
-        document = nineml.read(filename)
+        if isinstance(filename, basestring):
+            document = nineml.read(filename)
+        elif isinstance(filename, Document):
+            document = filename
+        else:
+            raise NineMLRuntimeError(
+                "Unrecognised argument type {}, can be either filename or "
+                "Document".format(filename))
         return Network(
             name='root',
             populations=dict((p.name, p) for p in document.populations),
