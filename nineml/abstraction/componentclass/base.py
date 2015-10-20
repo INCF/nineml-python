@@ -190,7 +190,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, MemberContainerObject):
     def from_xml(cls, element, document):  # @UnusedVariable
         XMLLoader = getattr(nineml.abstraction,
                             ComponentClassXMLLoader.read_class_type(element) +
-                            'ClassXMLLoader')
+                            'XMLLoader')
         return XMLLoader(document).load_componentclass(element)
 
     def lookup_member_dict_name(self, element):
@@ -225,7 +225,7 @@ class MainBlock(BaseALObject, MemberContainerObject):
 
     defining_attributes = ('_aliases', '_constants')
     class_to_member_dict = {Alias: '_aliases',
-                        Constant: '_constants'}
+                            Constant: '_constants'}
 
     def __init__(self, aliases=None, constants=None):
         """DynamicsBlock object constructor

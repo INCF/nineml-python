@@ -14,7 +14,7 @@ from ...componentclass.utils.xml import (
 from nineml.exceptions import handle_xml_exceptions
 
 
-class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
+class RandomDistributionXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -49,7 +49,7 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
     }
 
 
-class RandomDistributionClassXMLWriter(ComponentClassXMLWriter):
+class RandomDistributionXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, componentclass):

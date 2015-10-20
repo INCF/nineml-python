@@ -2,7 +2,7 @@ from ...componentclass.utils import ComponentClassInterfaceInferer
 from .visitors import RandomDistributionActionVisitor
 
 
-class RandomDistributionClassInterfaceInferer(ComponentClassInterfaceInferer,
+class RandomDistributionInterfaceInferer(ComponentClassInterfaceInferer,
                                         RandomDistributionActionVisitor):
 
     """

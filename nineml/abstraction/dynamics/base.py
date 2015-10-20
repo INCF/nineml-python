@@ -248,7 +248,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
         self._event_receive_ports = self._event_send_ports = self.subnodes = {}
 
         # EventPort, StateVariable and Parameter Inference:
-        inferred_struct = DynamicsClassInterfaceInferer(self)
+        inferred_struct = DynamicsInterfaceInferer(self)
 
         # Check any supplied parameters match:
         if parameters is not None:
@@ -648,7 +648,7 @@ def inf_check(l1, l2, desc):
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
 from .validators import DynamicsValidator
-from .utils import DynamicsClassInterfaceInferer
+from .utils import DynamicsInterfaceInferer
 from .utils.visitors import (DynamicsElementFinder,
                              DynamicsRequiredDefinitions)
 from .utils.modifiers import (

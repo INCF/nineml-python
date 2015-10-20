@@ -19,7 +19,7 @@ from ...componentclass.utils.xml import (
 from nineml.exceptions import handle_xml_exceptions
 
 
-class DynamicsClassXMLLoader(ComponentClassXMLLoader):
+class DynamicsXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -179,7 +179,7 @@ class DynamicsClassXMLLoader(ComponentClassXMLLoader):
     }
 
 
-class DynamicsClassXMLWriter(ComponentClassXMLWriter):
+class DynamicsXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, componentclass):

@@ -33,8 +33,8 @@ from .ports import (AnalogSendPort, AnalogReceivePort,
 from nineml.abstraction.dynamics.utils import flattener as flattening
 from .connectionrule import ConnectionRule
 from .randomdistribution import RandomDistribution
-from .dynamics import DynamicsClassXMLLoader, DynamicsClassXMLWriter
+from .dynamics import DynamicsXMLLoader, DynamicsXMLWriter
 from .randomdistribution import (
-    RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter)
-from .connectionrule import (ConnectionRuleClassXMLLoader,
-                             ConnectionRuleClassXMLWriter)
+    RandomDistributionXMLLoader, RandomDistributionXMLWriter)
+from .connectionrule import (ConnectionRuleXMLLoader,
+                             ConnectionRuleXMLWriter)

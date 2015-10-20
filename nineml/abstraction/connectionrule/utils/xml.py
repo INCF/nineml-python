@@ -13,7 +13,7 @@ from ...componentclass.utils.xml import (
 from nineml.exceptions import handle_xml_exceptions
 
 
-class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
+class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -47,7 +47,7 @@ class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
     }
 
 
-class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
+class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, componentclass):
