@@ -607,7 +607,7 @@ class Property(Quantity):
             name = element.attrib['name']
         except KeyError:
             raise Exception("Property did not have a name")
-        return cls(name=name, value=quantity.value, units=quantity.units)
+        return cls(name=name, value=quantity._value, units=quantity.units)
 
 
 class InitialValue(Property):

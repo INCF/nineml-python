@@ -240,10 +240,7 @@ class Document(dict, BaseNineMLObject):
 
     def write(self, filename):
         doc = self.to_xml()
-        with open(filename, 'w') as f:
-            etree.ElementTree(doc).write(f, encoding="UTF-8",
-                                         pretty_print=True,
-                                         xml_declaration=True)
+        write_xml(doc, filename)
 
     @classmethod
     def from_xml(cls, element, url=None):
@@ -348,6 +345,14 @@ def write(document, filename):
     if not isinstance(document, Document):
         document = Document(document)
     document.write(filename)
+
+
+def write_xml(doc, filename):
+    with open(filename, 'w') as f:
+            etree.ElementTree(doc).write(f, encoding="UTF-8",
+                                         pretty_print=True,
+                                         xml_declaration=True)
+
 
 import nineml.user
 import nineml.abstraction
