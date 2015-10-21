@@ -30,8 +30,9 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
         children = self._load_blocks(element, blocks=subblocks)
         connectionruleblock = expect_single(children["ConnectionRule"])
         return ConnectionRule(name=element.attrib['name'],
-                                   parameters=children["Parameter"],
-                                   connectionruleblock=connectionruleblock)
+                              parameters=children["Parameter"],
+                              connectionruleblock=connectionruleblock,
+                              url=self.document.url)
 
     @read_annotations
     @handle_xml_exceptions

@@ -19,6 +19,12 @@ class Annotations(defaultdict, DocumentLevelObject):
         # Create an infinite (on request) tree of defaultdicts
         super(Annotations, self).__init__(self._dict_tree, *args, **kwargs)
 
+    # FIXME: Disabled Annotations deepcopy because it was causing problems.
+    #        Need to rework the annotations so that it doesn't use nested
+    #        defaultdicts (not a very good idea)
+    def __deepcopy__(self, memo):  # @UnusedVariable
+        return Annotations()
+
     def __repr__(self):
         return ("Annotations({})"
                 .format(', '.join('{}={}'.format(k, v)

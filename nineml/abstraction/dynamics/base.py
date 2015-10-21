@@ -174,7 +174,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                  dynamicsblock=None, subnodes=None,
                  portconnections=None, regimes=None,
                  aliases=None, state_variables=None,
-                 constants=None):
+                 constants=None, url=None):
         """Constructs a Dynamics
 
         :param name: The name of the componentclass.
@@ -224,7 +224,7 @@ class Dynamics(ComponentClass, _NamespaceMixin):
                                           state_variables=state_variables,
                                           constants=constants)
         ComponentClass.__init__(self, name, parameters,
-                                main_block=dynamicsblock)
+                                main_block=dynamicsblock, url=url)
         self._query = DynamicsQueryer(self)
 
         # Ensure analog_ports is a list not an iterator

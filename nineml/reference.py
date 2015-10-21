@@ -57,6 +57,6 @@ class BaseReference(BaseNineMLObject):
                 NINEML, cls.element_name, element.tag))
         name = element.text
         url = element.attrib.get("url", None)
-        return cls(name, document, url)
+        return cls(name=name, document=document, url=url)
 
 from .document import read

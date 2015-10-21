@@ -33,9 +33,9 @@ class ConnectionRule(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_main_block')
 
-    def __init__(self, name, connectionruleblock, parameters=None):
+    def __init__(self, name, connectionruleblock, parameters=None, url=None):
         super(ConnectionRule, self).__init__(
-            name, parameters, main_block=connectionruleblock)
+            name, parameters, main_block=connectionruleblock, url=url)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

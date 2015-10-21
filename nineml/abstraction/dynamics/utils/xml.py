@@ -50,7 +50,8 @@ class DynamicsXMLLoader(ComponentClassXMLLoader):
                               subnodes["EventReceivePort"]),
             dynamicsblock=dynamicsblock,
             subnodes=dict(subnodes['Subnode']),
-            portconnections=subnodes["ConnectPorts"])
+            portconnections=subnodes["ConnectPorts"],
+            url=self.document.url)
 
     @read_annotations
     @handle_xml_exceptions

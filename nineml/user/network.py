@@ -56,6 +56,12 @@ class Network(BaseULObject):
                 raise Exception("Networks may only contain Populations, "
                                 "Projections, or Selections")
 
+    @property
+    def elements(self):
+        return chain(self.populations.itervalues(),
+                     self.projections.itervalues(),
+                     self.selections.itervalues())
+
     def get_components(self):
         components = []
         for p in chain(self.populations.values(), self.projections.values()):

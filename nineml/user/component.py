@@ -13,6 +13,7 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from nineml.units import Unit, unitless
+from nineml import units as un
 from ..abstraction import (
     ComponentClass, Dynamics, ConnectionRule, RandomDistribution)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
@@ -131,12 +132,12 @@ class Component(BaseULObject, DocumentLevelObject):
         if isinstance(definition, basestring):
             definition = Definition(
                 name=path.basename(definition).replace(".xml", ""),
-                document=Document(url=definition),
+                document=Document(url=url),
                 url=definition)
         elif isinstance(definition, ComponentClass):
-            definition = Definition(definition.name, Document(definition))
+            definition = Definition(component_class=definition)
         elif isinstance(definition, Component):
-            definition = Prototype(definition.name, Document(definition))
+            definition = Prototype(component=definition)
         elif not (isinstance(definition, Definition) or
                   isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
@@ -173,7 +174,8 @@ class Component(BaseULObject, DocumentLevelObject):
         depending on how the componentclass is defined.
         """
         defn = self.definition
-        while not isinstance(defn, Definition):
+        # Dereference chains of Prototypes until we get a Definition object
+        while isinstance(defn, Prototype):
             defn = defn.component.definition
         return defn.component_class
 
@@ -274,8 +276,8 @@ class Component(BaseULObject, DocumentLevelObject):
         if diff_a:
             msg.append("User properties of '{}' contain the following "
                        "parameters that are not present in the definition of "
-                       "'{}': {}"(self.name, self.component_class.name,
-                                  ",".join(diff_a)))
+                       "'{}': {}".format(self.name, self.component_class.name,
+                                         ",".join(diff_a)))
         if diff_b:
             msg.append("Definition of '{}' contains the following parameters "
                        "that are not present in the user properties of '{}': "
@@ -380,14 +382,28 @@ class Definition(BaseReference):
     """
     element_name = "Definition"
 
+    def __init__(self, name=None, document=None, component_class=None,
+                 url=None):
+        if component_class is None:
+            assert name is not None and document is not None
+            super(Definition, self).__init__(name, document, url)
+        else:
+            self.url = component_class.url
+            self._referred_to = component_class
+
     @property
     def component_class(self):
         return self._referred_to
 
 
-class Prototype(BaseReference):
+class Prototype(Definition):
 
     element_name = "Prototype"
+
+    def __init__(self, name=None, document=None, component=None,
+                 url=None):
+        super(Prototype, self).__init__(name=name, document=document,
+                                        component_class=component, url=url)
 
     @property
     def component(self):
@@ -412,15 +428,23 @@ class Quantity(BaseULObject):
 
     def __init__(self, value, units=None):
         if not isinstance(value, (int, float, SingleValue, ArrayValue,
-                                  ExternalArrayValue)):
+                                  ExternalArrayValue,
+                                  RandomDistributionComponent)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference', 'Component', 'ValueList', "
                             "'ExternalValueList'"
                             .format(value.__class__.__name__))
         if units is None:
             units = unitless
+        elif isinstance(units, basestring):
+            try:
+                units = getattr(un, units)
+            except AttributeError:
+                raise NineMLRuntimeError(
+                    "Did not find unit '{}' in units module".format(units))
         if not isinstance(units, Unit):
-            raise Exception("Units ({}) must of type <Unit>".format(units))
+            raise NineMLRuntimeError(
+                "Units ({}) must of type <Unit>".format(units))
         super(Quantity, self).__init__()
         if isinstance(value, (int, float)):
             value = SingleValue(value)
@@ -428,13 +452,13 @@ class Quantity(BaseULObject):
         self.units = units
 
     def __hash__(self):
-        return hash(self.value) ^ hash(self.units)
+        return hash(self._value) ^ hash(self.units)
 
     def is_single(self):
         return isinstance(self._value, SingleValue)
 
     def is_random(self):
-        return False
+        return isinstance(self._value, RandomDistributionComponent)
 
     def is_array(self):
         return (isinstance(self._value, ArrayValue) or
@@ -464,7 +488,7 @@ class Quantity(BaseULObject):
     @property
     def random_distribution(self):
         if self.is_random():
-            return self._value.componentclass
+            return self._value
         else:
             raise NineMLRuntimeError(
                 "Cannot access random randomdistribution"
@@ -512,12 +536,12 @@ class Quantity(BaseULObject):
             value = ArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ArrayValue')),
                 document)
-        elif element.find(NINEML + 'ComponentValue') is not None:
-            value = ArrayValue.from_xml(
-                expect_single(element.findall(NINEML + 'ArrayValue')),
+        elif element.find(NINEML + 'Component') is not None:
+            value = RandomDistributionComponent.from_xml(
+                expect_single(element.findall(NINEML + 'Component')),
                 document)
         else:
-            raise Exception(
+            raise NineMLRuntimeError(
                 "Did not find recognised value tag in property (found {})"
                 .format(', '.join(c.tag for c in element.getchildren())))
         try:
@@ -627,7 +651,7 @@ class PropertySet(dict):
                 self[name] = parameter  # again, should perhaps copy
 
     def get_random_distributions(self):
-        return [p.value for p in self.values() if p.is_random()]
+        return [p.random_distribution for p in self.values() if p.is_random()]
 
     def to_xml(self):
         # serialization is in alphabetical order

@@ -33,7 +33,8 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader):
         return RandomDistribution(
             name=element.attrib['name'],
             parameters=children["Parameter"],
-            randomdistributionblock=randomdistributionblock)
+            randomdistributionblock=randomdistributionblock,
+            url=self.document.url)
 
     @read_annotations
     @handle_xml_exceptions

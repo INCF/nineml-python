@@ -18,9 +18,10 @@ class RandomDistribution(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_main_block')
 
-    def __init__(self, name, randomdistributionblock, parameters=None):
+    def __init__(self, name, randomdistributionblock, parameters=None,
+                 url=None):
         super(RandomDistribution, self).__init__(
-            name, parameters, main_block=randomdistributionblock)
+            name, parameters, main_block=randomdistributionblock, url=url)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

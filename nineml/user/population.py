@@ -93,7 +93,8 @@ class Population(BaseULObject, DocumentLevelObject):
             cell_component = cell.find(NINEML + 'Reference')
         return cls(name=element.attrib['name'],
                    size=int(element.find(NINEML + 'Size').text),
-                   cell=Component.from_xml(cell_component, document), **kwargs)
+                   cell=Component.from_xml(cell_component, document),
+                   url=document.url, **kwargs)
 
 
 class PositionList(BaseULObject, DocumentLevelObject):
