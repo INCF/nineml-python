@@ -1,6 +1,6 @@
 from nineml import units as un
-from nineml import abstraction as al  # @Reimport
-from lxml import etree
+from nineml import abstraction as al, user as ul
+from nineml.xmlns import E, etree
 
 
 def create_adaptive_exponential():
@@ -63,7 +63,30 @@ def create_adaptive_exponential():
     return aeIF
 
 
+def parameterise_adaptive_exponential():
+
+    comp = ul.DynamicsComponent(
+        name='SampleAdExpIF',
+        definition=create_adaptive_exponential(),
+        properties=[ul.Property('C_m', 1, un.pF),
+                    ul.Property('g_L', 0.1, un.nS),
+                    ul.Property('E_L', -65, un.mV),
+                    ul.Property('Delta', 1, un.mV),
+                    ul.Property('V_T', -58, un.mV),
+                    ul.Property('S', 0.1),
+                    ul.Property('tspike', 0.5, un.ms),
+                    ul.Property('trefractory', 0.25, un.ms),
+                    ul.Property('tau_w', 4, un.ms),
+                    ul.Property('a', 1, un.per_mV),
+                    ul.Property('b', 2)],
+        initial_values=[ul.Initial('V', -70, un.mV),
+                        ul.Initial('w', 0.1, un.mV)])
+    return comp
+
+
 if __name__ == '__main__':
     print etree.tostring(
-        create_adaptive_exponential().to_xml(),
+        E.NineML(
+            create_adaptive_exponential().to_xml(),
+            parameterise_adaptive_exponential().to_xml()),
         encoding="UTF-8", pretty_print=True, xml_declaration=True)

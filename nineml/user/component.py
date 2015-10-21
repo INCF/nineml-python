@@ -153,12 +153,14 @@ class Component(BaseULObject, DocumentLevelObject):
             raise TypeError(
                 "properties must be a PropertySet, dict of properties or an "
                 "iterable of properties (not '{}')".format(properties))
-        if isinstance(initial_values, InitialValueSet):
+        if isinstance(initial_values, InitialSet):
             self._initial_values = initial_values
         elif isinstance(initial_values, dict):
-            self._initial_values = InitialValueSet(**initial_values)
+            self._initial_values = InitialSet(**initial_values)
+        elif isinstance(initial_values, collections.Iterable):
+            self._initial_values = InitialSet(*initial_values)
         else:
-            raise TypeError("initial_values must be an InitialValueSet or a "
+            raise TypeError("initial_values must be an InitialSet or a "
                             "dict, not a %s" % type(initial_values))
         self.check_properties()
         try:
@@ -232,7 +234,7 @@ class Component(BaseULObject, DocumentLevelObject):
         """
         # Recursively retrieves initial values defined in prototypes and
         # updates them with properties defined locally
-        vals = InitialValueSet()
+        vals = InitialSet()
         if isinstance(self.definition, Prototype):
             vals.update(self.definition.component.initial_values)
         vals.update(self._initial_values)
@@ -326,8 +328,8 @@ class Component(BaseULObject, DocumentLevelObject):
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
             element.findall(NINEML + Property.element_name), document)
-        initial_values = InitialValueSet.from_xml(
-            element.findall(NINEML + InitialValue.element_name), document)
+        initial_values = InitialSet.from_xml(
+            element.findall(NINEML + Initial.element_name), document)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
             definition = Definition.from_xml(definition_element, document)
@@ -610,7 +612,7 @@ class Property(Quantity):
         return cls(name=name, value=quantity._value, units=quantity.units)
 
 
-class InitialValue(Property):
+class Initial(Property):
 
     """
     temporary, longer-term plan is to use SEDML or something similar
@@ -665,27 +667,27 @@ class PropertySet(dict):
         return cls(*properties)
 
 
-class InitialValueSet(PropertySet):
+class InitialSet(PropertySet):
 
     def __init__(self, *ivs, **kwivs):
         """
-        `*ivs` - should be InitialValue instances
+        `*ivs` - should be Initial instances
         `**kwivs` - should be name=(value,units)
         """
         dict.__init__(self)
         for iv in ivs:
             self[iv.name] = iv  # should perhaps do a copy
         for name, (value, units) in kwivs.items():
-            self[name] = InitialValue(name, value, units)
+            self[name] = Initial(name, value, units)
 
     def __repr__(self):
-        return "InitialValueSet(%s)" % dict(self)
+        return "InitialSet(%s)" % dict(self)
 
     @classmethod
     def from_xml(cls, elements, document):
         initial_values = []
         for iv_element in elements:
-            initial_values.append(InitialValue.from_xml(iv_element, document))
+            initial_values.append(Initial.from_xml(iv_element, document))
         return cls(*initial_values)
 
 

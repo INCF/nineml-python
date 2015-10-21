@@ -1,6 +1,6 @@
 from nineml import units as un
-from nineml import abstraction as al  # @Reimport
-from lxml import etree
+from nineml import abstraction as al, user as ul  # @Reimport
+from nineml.xmlns import etree, E
 
 
 def create_izhikevich():
@@ -91,7 +91,49 @@ def create_izhikevich_fast_spiking():
     return izhi_fs
 
 
+def parameterise_izhikevich():
+
+    comp = ul.DynamicsComponent(
+        name='SampleIzhikevich',
+        definition=create_izhikevich(),
+        properties=[ul.Property('a', 0.2, un.per_ms),
+                    ul.Property('b', 0.025, un.per_ms),
+                    ul.Property('c', -75, un.mV),
+                    ul.Property('d', 0.2, un.mV / un.ms),
+                    ul.Property('theta', -50, un.mV),
+                    ul.Property('alpha', 0.04, un.unitless / (un.mV * un.ms)),
+                    ul.Property('beta', 5, un.per_ms),
+                    ul.Property('zeta', 140.0, un.mV / un.ms),
+                    ul.Property('C_m', 1.0, un.pF)],
+        initial_values=[ul.Initial('V', -70, un.mV),
+                        ul.Initial('U', -1.625, un.mV / un.ms)])
+    return comp
+
+
+def parameterise_izhikevich_fast_spiking():
+
+    comp = ul.DynamicsComponent(
+        name='SampleIzhikevichFastSpiking',
+        definition=create_izhikevich_fast_spiking(),
+        properties=[ul.Property('a', 0.2, un.per_ms),
+                    ul.Property('b', 0.025, un.nS / un.mV ** 2),
+                    ul.Property('c', -45, un.mV),
+                    ul.Property('k', 1, un.nS / un.mV),
+                    ul.Property('Vpeak', 25, un.mV),
+                    ul.Property('Vb', -55, un.mV),
+                    ul.Property('Cm', 20, un.pF),
+                    ul.Property('Vr', -55, un.mV),
+                    ul.Property('Vt', -40, un.mV)],
+        initial_values=[ul.Initial('V', -70, un.mV),
+                        ul.Initial('U', -1.625, un.mV / un.ms)])
+    return comp
+
+
 if __name__ == '__main__':
     print etree.tostring(
-        create_izhikevich().to_xml(),
+        E.NineML(
+            create_izhikevich().to_xml(),
+            parameterise_izhikevich().to_xml(),
+            create_izhikevich_fast_spiking().to_xml(),
+            parameterise_izhikevich_fast_spiking().to_xml()),
         encoding="UTF-8", pretty_print=True, xml_declaration=True)
