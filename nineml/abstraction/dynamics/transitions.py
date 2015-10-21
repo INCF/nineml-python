@@ -384,3 +384,7 @@ class Trigger(BaseALObject, Expression):
         negated = copy(self)
         negated.negate()
         return negated
+
+    @property
+    def _name(self):
+        return self.rhs

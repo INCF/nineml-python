@@ -347,11 +347,11 @@ def write(document, filename):
     document.write(filename)
 
 
-def write_xml(doc, filename):
+def write_xml(xml, filename):
     with open(filename, 'w') as f:
-            etree.ElementTree(doc).write(f, encoding="UTF-8",
-                                         pretty_print=True,
-                                         xml_declaration=True)
+        etree.ElementTree(xml).write(f, encoding="UTF-8",
+                                     pretty_print=True,
+                                     xml_declaration=True)
 
 
 import nineml.user
