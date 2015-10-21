@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<NineML xmlns="http://nineml.incf.org/9ML/0.3">
+  <ComponentClass name="RandomFanIn">
+    <Parameter name="N"/>
+    <ConnectionRule>
+      <English>
+        For each postsynaptic index j, create connections to N indices from the
+        presynaptic set, selected randomly with replacement
+      </English>
+      <Inline-CSA xmlns="http://software.incf.org/software/inline-csa/1.0">
+	lambda N: random(fanIn=N)
+      </Inline-CSA>
+      <CSA xmlns="http://software.incf.org/software/csa/1.0">
+	<bind>
+	  <closure/>
+	  <bvar><ci>N</ci></bvar>
+	  <apply>
+	    <random_fanIn/>
+	    <ci>N</ci>
+	  </apply>
+	</bind>
+      </CSA>
+    </ConnectionRule>
+  </ComponentClass>
+</NineML>

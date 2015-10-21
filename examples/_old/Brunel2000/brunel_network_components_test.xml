@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<nineml:NineML xmlns:nineml="http://nineml.net/9ML/1.0">
+  <nineml:Unit symbol="Hz" dimension="per_time" power="0"/>
+  <nineml:Dimension name="per_time" t="-1"/>
+  <nineml:Population name="Exc">
+    <nineml:Number>1</nineml:Number>
+    <nineml:Cell>
+      <nineml:Component name="nrn">
+        <nineml:Definition url="BrunelIaF.xml">BrunelIaF</nineml:Definition>
+        <nineml:Property units="Mohm" name="R">
+          <nineml:SingleValue>1.5</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Property units="mV" name="Vreset">
+          <nineml:SingleValue>10.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Property units="ms" name="tau">
+          <nineml:SingleValue>20.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Property units="ms" name="tau_rp">
+          <nineml:SingleValue>2.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Property units="mV" name="theta">
+          <nineml:SingleValue>20.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Initial units="mV" name="V">
+          <nineml:SingleValue>0.0</nineml:SingleValue>
+        </nineml:Initial>
+        <nineml:Initial units="ms" name="t_rpend">
+          <nineml:SingleValue>0.0</nineml:SingleValue>
+        </nineml:Initial>
+      </nineml:Component>
+    </nineml:Cell>
+  </nineml:Population>
+  <nineml:Projection name="Excitation">
+    <nineml:Source>
+      <nineml:Reference>Ext</nineml:Reference>
+    </nineml:Source>
+    <nineml:Destination>
+      <nineml:Reference>Exc</nineml:Reference>
+      <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
+    </nineml:Destination>
+    <nineml:Connectivity>
+      <nineml:Component name="AllToAll">
+        <nineml:Definition url="AllToAll.xml">AllToAll</nineml:Definition>
+      </nineml:Component>
+    </nineml:Connectivity>
+    <nineml:Response>
+      <nineml:Component name="syn">
+        <nineml:Definition url="AlphaPSR.xml">AlphaPSR</nineml:Definition>
+        <nineml:Property units="ms" name="tau_syn">
+          <nineml:SingleValue>0.5</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Initial units="nA" name="A">
+          <nineml:SingleValue>0.0</nineml:SingleValue>
+        </nineml:Initial>
+        <nineml:Initial units="nA" name="B">
+          <nineml:SingleValue>0.0</nineml:SingleValue>
+        </nineml:Initial>
+      </nineml:Component>
+      <nineml:FromPlasticity send_port="weight" receive_port="q"/>
+    </nineml:Response>
+    <nineml:Plasticity>
+      <nineml:Component name="ExcitatoryPlasticity">
+        <nineml:Definition url="StaticConnection.xml">StaticConnection</nineml:Definition>
+        <nineml:Initial units="nA" name="weight">
+          <nineml:SingleValue>2.4</nineml:SingleValue>
+        </nineml:Initial>
+      </nineml:Component>
+    </nineml:Plasticity>
+    <nineml:Delay units="ms">
+      <nineml:SingleValue>1.5</nineml:SingleValue>
+    </nineml:Delay>
+  </nineml:Projection>
+  <nineml:Unit symbol="nA" dimension="current" power="-9"/>
+  <nineml:Unit symbol="mV" dimension="voltage" power="-3"/>
+  <nineml:Dimension i="-2" t="-3" m="1" l="2" name="resistance"/>
+  <nineml:Dimension i="1" name="current"/>
+  <nineml:Population name="Ext">
+    <nineml:Number>1</nineml:Number>
+    <nineml:Cell>
+      <nineml:Component name="stim">
+        <nineml:Definition url="Poisson.xml">Poisson</nineml:Definition>
+        <nineml:Property units="Hz" name="rate">
+          <nineml:SingleValue>50.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Initial units="ms" name="t_next">
+          <nineml:SingleValue>0.5</nineml:SingleValue>
+        </nineml:Initial>
+      </nineml:Component>
+    </nineml:Cell>
+  </nineml:Population>
+  <nineml:Projection name="Inhibition">
+    <nineml:Source>
+      <nineml:Reference>Ext</nineml:Reference>
+    </nineml:Source>
+    <nineml:Destination>
+      <nineml:Reference>Inh</nineml:Reference>
+      <nineml:FromResponse send_port="Isyn" receive_port="Isyn"/>
+    </nineml:Destination>
+    <nineml:Connectivity>
+      <nineml:Component name="AllToAll">
+        <nineml:Definition url="AllToAll.xml">AllToAll</nineml:Definition>
+      </nineml:Component>
+    </nineml:Connectivity>
+    <nineml:Response>
+      <nineml:Component name="syn">
+        <nineml:Definition url="AlphaPSR.xml">AlphaPSR</nineml:Definition>
+        <nineml:Property units="ms" name="tau_syn">
+          <nineml:SingleValue>0.5</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Initial units="nA" name="A">
+          <nineml:SingleValue>0.0</nineml:SingleValue>
+        </nineml:Initial>
+        <nineml:Initial units="nA" name="B">
+          <nineml:SingleValue>0.0</nineml:SingleValue>
+        </nineml:Initial>
+      </nineml:Component>
+      <nineml:FromPlasticity send_port="weight" receive_port="q"/>
+    </nineml:Response>
+    <nineml:Plasticity>
+      <nineml:Component name="InhibitoryPlasticity">
+        <nineml:Definition url="StaticConnection.xml">StaticConnection</nineml:Definition>
+        <nineml:Initial units="nA" name="weight">
+          <nineml:SingleValue>-12.0</nineml:SingleValue>
+        </nineml:Initial>
+      </nineml:Component>
+    </nineml:Plasticity>
+    <nineml:Delay units="ms">
+      <nineml:SingleValue>1.5</nineml:SingleValue>
+    </nineml:Delay>
+  </nineml:Projection>
+  <nineml:Population name="Inh">
+    <nineml:Number>1</nineml:Number>
+    <nineml:Cell>
+      <nineml:Component name="nrn">
+        <nineml:Definition url="BrunelIaF.xml">BrunelIaF</nineml:Definition>
+        <nineml:Property units="Mohm" name="R">
+          <nineml:SingleValue>1.5</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Property units="mV" name="Vreset">
+          <nineml:SingleValue>10.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Property units="ms" name="tau">
+          <nineml:SingleValue>20.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Property units="ms" name="tau_rp">
+          <nineml:SingleValue>2.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Property units="mV" name="theta">
+          <nineml:SingleValue>20.0</nineml:SingleValue>
+        </nineml:Property>
+        <nineml:Initial units="mV" name="V">
+          <nineml:SingleValue>0.0</nineml:SingleValue>
+        </nineml:Initial>
+        <nineml:Initial units="ms" name="t_rpend">
+          <nineml:SingleValue>0.0</nineml:SingleValue>
+        </nineml:Initial>
+      </nineml:Component>
+    </nineml:Cell>
+  </nineml:Population>
+  <nineml:Dimension i="-1" t="-3" m="1" l="2" name="voltage"/>
+  <nineml:Unit symbol="ms" dimension="time" power="-3"/>
+  <nineml:Dimension name="time" t="1"/>
+  <nineml:Unit symbol="Mohm" dimension="resistance" power="6"/>
+</nineml:NineML>
