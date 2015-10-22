@@ -65,7 +65,6 @@ def create_izhikevich_fast_spiking():
             al.Parameter('Cm', un.capacitance)],
         analog_ports=[
             al.AnalogReducePort('iSyn', un.current, operator="+"),
-            al.AnalogReducePort('iExt', un.current, operator="+"),
             al.AnalogSendPort('U', un.current),
             al.AnalogSendPort('V', un.voltage)],
         event_ports=[
@@ -87,7 +86,7 @@ def create_izhikevich_fast_spiking():
                 'dV/dt = V_deriv',
                 transitions=[al.On('V > Vb', to="subthreshold")],
                 name="subVb")],
-        aliases=["V_deriv := (k * (V - Vr) * (V - Vt) - U + iExt + iSyn) / Cm"])  # @IgnorePep8
+        aliases=["V_deriv := (k * (V - Vr) * (V - Vt) - U + iSyn) / Cm"])  # @IgnorePep8
     return izhi_fs
 
 
