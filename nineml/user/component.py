@@ -707,7 +707,10 @@ class ConnectionRuleComponent(Component):
     """
     docstring needed
     """
-    pass
+
+    @property
+    def standard_library(self):
+        return self.component_class.standard_library
 
 
 class RandomDistributionComponent(Component):
@@ -719,4 +722,7 @@ class RandomDistributionComponent(Component):
 
         example goes here
     """
-    pass
+
+    @property
+    def standard_library(self):
+        return self.component_class.standard_library

@@ -59,6 +59,10 @@ class ConnectionRule(ComponentClass):
     def validate(self):
         ConnectionRuleValidator.validate_componentclass(self)
 
+    @property
+    def standard_library(self):
+        return self._main_block.standard_library
+
 from .utils.cloner import ConnectionRuleCloner
 from .utils.modifiers import (
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)

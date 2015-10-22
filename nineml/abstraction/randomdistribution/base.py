@@ -45,6 +45,10 @@ class RandomDistribution(ComponentClass):
     def validate(self):
         RandomDistributionValidator.validate_componentclass(self)
 
+    @property
+    def standard_library(self):
+        return self._main_block.standard_library
+
 from .utils.cloner import RandomDistributionCloner
 from .utils.modifiers import(
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
