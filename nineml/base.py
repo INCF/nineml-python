@@ -85,8 +85,9 @@ class BaseNineMLObject(object):
             result += s.find_mismatch(o, indent=indent + '  ')
         elif isinstance(s, dict):
             if set(s.keys()) != set(o.keys()):
-                result += ('keys do not match ({} and {})'
-                           .format(set(s.keys()), set(o.keys())))
+                result += ('keys do not match:\n{}  {}\n{}  {})'
+                           .format(indent, set(s.keys()), indent,
+                                   set(o.keys())))
             else:
                 for k in s:
                     if s[k] != o[k]:

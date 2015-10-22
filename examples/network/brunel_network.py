@@ -60,7 +60,7 @@ def create_brunel(g, eta, name=None):
     # Initial Values
     v_init = nineml.user.RandomDistributionComponent(
         "uniform_rest_to_threshold",
-        ninemlcatalog.lookup("randomdistribution/Uniform",
+        ninemlcatalog.load("randomdistribution/Uniform",
                              'UniformDistribution'),
         {'minimum': (0.0, unitless),
          'maximum': (theta, unitless)})
@@ -70,7 +70,7 @@ def create_brunel(g, eta, name=None):
     synapse_initial_values = {"a": (0.0, nA), "b": (0.0, nA)}
     tpoisson_init = nineml.user.RandomDistributionComponent(
         "exponential_beta",
-        ninemlcatalog.lookup("randomdistribution/Exponential",
+        ninemlcatalog.load("randomdistribution/Exponential",
                              'ExponentialDistribution'),
         {"rate": (1000.0 / input_rate, unitless)})
 #     tpoisson_init = 5.0
@@ -78,24 +78,24 @@ def create_brunel(g, eta, name=None):
     # Dynamics components
     celltype = nineml.user.SpikingNodeType(
         "nrn",
-        ninemlcatalog.lookup('neuron/LeakyIntegrateAndFire',
+        ninemlcatalog.load('neuron/LeakyIntegrateAndFire',
                              'LeakyIntegrateAndFire'),
         neuron_parameters, initial_values=neuron_initial_values)
     ext_stim = nineml.user.SpikingNodeType(
         "stim",
-        ninemlcatalog.lookup('input/Poisson', 'Poisson'),
+        ninemlcatalog.load('input/Poisson', 'Poisson'),
         nineml.user.PropertySet(rate=(input_rate, Hz)),
         initial_values={"t_next": (tpoisson_init, ms)})
     psr = nineml.user.SynapseType(
         "syn",
-        ninemlcatalog.lookup('postsynapticresponse/Alpha', 'Alpha'),
+        ninemlcatalog.load('postsynapticresponse/Alpha', 'Alpha'),
         psr_parameters,
         initial_values=synapse_initial_values)
 
     # Connecion rules
-    one_to_one_class = ninemlcatalog.lookup(
+    one_to_one_class = ninemlcatalog.load(
         '/connectionrule/OneToOne', 'OneToOne')
-    random_fan_in_class = ninemlcatalog.lookup(
+    random_fan_in_class = ninemlcatalog.load(
         '/connectionrule/RandomFanIn', 'RandomFanIn')
 
     # Populations
@@ -115,7 +115,7 @@ def create_brunel(g, eta, name=None):
         response=psr,
         plasticity=nineml.user.ConnectionType(
             "ExternalPlasticity",
-            ninemlcatalog.lookup("plasticity/Static", 'Static'),
+            ninemlcatalog.load("plasticity/Static", 'Static'),
             properties={"weight": (Jext, nA)}),
         port_connections=[
             nineml.user.PortConnection(
@@ -131,7 +131,7 @@ def create_brunel(g, eta, name=None):
         response=psr,
         plasticity=nineml.user.ConnectionType(
             "ExcitatoryPlasticity",
-            ninemlcatalog.lookup("plasticity/Static", 'Static'),
+            ninemlcatalog.load("plasticity/Static", 'Static'),
             properties={"weight": (Je, nA)}),
         port_connections=[
             nineml.user.PortConnection(
@@ -147,7 +147,7 @@ def create_brunel(g, eta, name=None):
         response=psr,
         plasticity=nineml.user.ConnectionType(
             "InhibitoryPlasticity",
-            ninemlcatalog.lookup("plasticity/Static", 'Static'),
+            ninemlcatalog.load("plasticity/Static", 'Static'),
             properties={"weight": (Ji, nA)}),
         port_connections=[
             nineml.user.PortConnection(

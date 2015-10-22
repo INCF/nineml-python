@@ -52,7 +52,7 @@ def create_izhikevich_fast_spiking():
     Abstraction Layer of Python API.
     """
     izhi_fs = al.Dynamics(
-        name='IzhikevichFS',
+        name='IzhikevichFastSpiking',
         parameters=[
             al.Parameter('a', un.per_time),
             al.Parameter('b', un.conductance / (un.voltage ** 2)),
@@ -91,8 +91,9 @@ def create_izhikevich_fast_spiking():
     return izhi_fs
 
 
-def parameterise_izhikevich():
-
+def parameterise_izhikevich(definition=None):
+    if definition is None:
+        definition = create_izhikevich()
     comp = ul.DynamicsComponent(
         name='SampleIzhikevich',
         definition=create_izhikevich(),
@@ -110,8 +111,9 @@ def parameterise_izhikevich():
     return comp
 
 
-def parameterise_izhikevich_fast_spiking():
-
+def parameterise_izhikevich_fast_spiking(definition=None):
+    if definition is None:
+        definition = create_izhikevich_fast_spiking()
     comp = ul.DynamicsComponent(
         name='SampleIzhikevichFastSpiking',
         definition=create_izhikevich_fast_spiking(),
@@ -130,10 +132,68 @@ def parameterise_izhikevich_fast_spiking():
 
 
 if __name__ == '__main__':
-    print etree.tostring(
-        E.NineML(
-            create_izhikevich().to_xml(),
-            parameterise_izhikevich().to_xml(),
-            create_izhikevich_fast_spiking().to_xml(),
-            parameterise_izhikevich_fast_spiking().to_xml()),
-        encoding="UTF-8", pretty_print=True, xml_declaration=True)
+    import argparse
+    try:
+        import ninemlcatalog
+        catalog_path = 'neuron/Izhikevich'
+    except ImportError:
+        ninemlcatalog = None
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', type=str, default='print',
+                        help=("The mode to run this script, can be 'print', "
+                              "'compare' or 'save', which correspond to "
+                              "printing the models, comparing the models with "
+                              "the version in the catalog, or overwriting the "
+                              "version in the catalog with this version "
+                              "respectively"))
+    args = parser.parse_args()
+
+    if args.mode == 'print':
+        print etree.tostring(
+            E.NineML(
+                create_izhikevich().to_xml(),
+                parameterise_izhikevich().to_xml(),
+                create_izhikevich_fast_spiking().to_xml(),
+                parameterise_izhikevich_fast_spiking().to_xml()),
+            encoding="UTF-8", pretty_print=True, xml_declaration=True)
+    elif args.mode == 'compare':
+        if ninemlcatalog is None:
+            raise Exception(
+                "NineML catalog is not installed")
+        local_version = create_izhikevich()
+        catalog_version = ninemlcatalog.load(catalog_path,
+                                               local_version.name)
+        mismatch = local_version.find_mismatch(catalog_version)
+        if mismatch:
+            print ("Local version of Izhikevich model differs from catalog "
+                   "version:\n{}".format(mismatch))
+        else:
+            print "Local version of Izhikevich model matches catalog version"
+        local_version = create_izhikevich_fast_spiking()
+        catalog_version = ninemlcatalog.load(catalog_path,
+                                               local_version.name)
+        mismatch = local_version.find_mismatch(catalog_version)
+        if mismatch:
+            print ("Local version of Izhikevich Fast Spiking model differs "
+                   "from catalog version:\n{}".format(mismatch))
+        else:
+            print ("Local version of Izhikevich Fast Spiking model matches "
+                   "catalog version")
+    elif args.mode == 'save':
+        if ninemlcatalog is None:
+            raise Exception(
+                "NineML catalog is not installed")
+        dynamics = create_izhikevich()
+        ninemlcatalog.save(dynamics, catalog_path, dynamics.name)
+        params = parameterise_izhikevich(
+            ninemlcatalog.load(catalog_path, dynamics.name))
+        ninemlcatalog.save(params, catalog_path, params.name)
+        print "Saved '{}' and '{}' to catalog".format(dynamics.name,
+                                                      params.name)
+        dynamics = create_izhikevich_fast_spiking()
+        ninemlcatalog.save(dynamics, catalog_path, dynamics.name)
+        params = parameterise_izhikevich_fast_spiking(
+            ninemlcatalog.load(catalog_path, dynamics.name))
+        ninemlcatalog.save(params, catalog_path, params.name)
+        print "Saved '{}' and '{}' to catalog".format(dynamics.name,
+                                                      params.name)

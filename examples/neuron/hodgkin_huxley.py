@@ -11,18 +11,18 @@ def create_hodgkin_huxley():
     """
     aliases = [
         "q10 := 3.0**((celsius - qfactor)/tendegrees)",  # temperature correction factor @IgnorePep8
-        "alpha_m := m_alpha_A*(V-m_alpha_V0)/(exp(-(V-m_alpha_V0)/m_alpha_K) - 1.0)",  # @IgnorePep8
-        "beta_m := m_beta_A*exp(-(V-m_beta_V0)/m_beta_K)",
-        "mtau := 1.0/(q10*(alpha_m + beta_m))",
-        "minf := alpha_m/(alpha_m + beta_m)",
-        "alpha_h := h_alpha_A*exp(-(V-h_alpha_V0)/h_alpha_K)",
-        "beta_h := h_beta_A/(exp(-(V-h_beta_V0)/h_beta_K) + 1.0)",
-        "htau := 1.0/(q10*(alpha_h + beta_h))",
-        "hinf := alpha_h/(alpha_h + beta_h)",
-        "alpha_n := n_alpha_A*(V-n_alpha_V0)/(exp(-(V-n_alpha_V0)/n_alpha_K) - 1.0)",  # @IgnorePep8
-        "beta_n := n_beta_A*exp(-(V-n_beta_V0)/n_beta_K)",
-        "ntau := 1.0/(q10*(alpha_n + beta_n))",
-        "ninf := alpha_n/(alpha_n + beta_n)",
+        "m_alpha := m_alpha_A*(V-m_alpha_V0)/(exp(-(V-m_alpha_V0)/m_alpha_K) - 1.0)",  # @IgnorePep8
+        "m_beta := m_beta_A*exp(-(V-m_beta_V0)/m_beta_K)",
+        "mtau := 1.0/(q10*(m_alpha + m_beta))",
+        "minf := m_alpha/(m_alpha + m_beta)",
+        "h_alpha := h_alpha_A*exp(-(V-h_alpha_V0)/h_alpha_K)",
+        "h_beta := h_beta_A/(exp(-(V-h_beta_V0)/h_beta_K) + 1.0)",
+        "htau := 1.0/(q10*(h_alpha + h_beta))",
+        "hinf := h_alpha/(h_alpha + h_beta)",
+        "n_alpha := n_alpha_A*(V-n_alpha_V0)/(exp(-(V-n_alpha_V0)/n_alpha_K) - 1.0)",  # @IgnorePep8
+        "n_beta := n_beta_A*exp(-(V-n_beta_V0)/n_beta_K)",
+        "ntau := 1.0/(q10*(n_alpha + n_beta))",
+        "ninf := n_alpha/(n_alpha + n_beta)",
         "gna := gnabar*m*m*m*h",
         "gk := gkbar*n*n*n*n",
         "ina := gna*(ena - V)",
@@ -33,7 +33,7 @@ def create_hodgkin_huxley():
         "dn/dt = (ninf-n)/ntau",
         "dm/dt = (minf-m)/mtau",
         "dh/dt = (hinf-h)/htau",
-        "dV/dt = (ina + ik + il + Isyn)/C",
+        "dV/dt = (ina + ik + il + isyn)/C",
         transitions=al.On("V > v_threshold", do=al.SpikeOutputEvent())
     )
 
@@ -77,7 +77,7 @@ def create_hodgkin_huxley():
         al.Parameter('n_beta_K', un.voltage)]
 
     analog_ports = [al.AnalogSendPort("V", un.voltage),
-                    al.AnalogReducePort("Isyn", un.current, operator="+")]
+                    al.AnalogReducePort("isyn", un.current, operator="+")]
 
     dyn = al.Dynamics("HodgkinHuxley",
                       parameters=parameters,
@@ -88,8 +88,9 @@ def create_hodgkin_huxley():
     return dyn
 
 
-def parameterise_hodgkin_huxley():
-
+def parameterise_hodgkin_huxley(definition=None):
+    if definition is None:
+        definition = create_hodgkin_huxley()
     comp = ul.DynamicsComponent(
         name='SampleHodgkinHuxley',
         definition=create_hodgkin_huxley(),
@@ -130,9 +131,51 @@ def parameterise_hodgkin_huxley():
                         ul.Initial('h', 0.9)])
     return comp
 
+
 if __name__ == '__main__':
-    print etree.tostring(
-        E.NineML(
-            create_hodgkin_huxley().to_xml(),
-            parameterise_hodgkin_huxley().to_xml()),
-        encoding="UTF-8", pretty_print=True, xml_declaration=True)
+    import argparse
+    try:
+        import ninemlcatalog
+        catalog_path = 'neuron/HodgkinHuxley'
+    except ImportError:
+        ninemlcatalog = None
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', type=str, default='print',
+                        help=("The mode to run this script, can be 'print', "
+                              "'compare' or 'save', which correspond to "
+                              "printing the models, comparing the models with "
+                              "the version in the catalog, or overwriting the "
+                              "version in the catalog with this version "
+                              "respectively"))
+    args = parser.parse_args()
+
+    if args.mode == 'print':
+        print etree.tostring(
+            E.NineML(
+                create_hodgkin_huxley().to_xml(),
+                parameterise_hodgkin_huxley().to_xml()),
+            encoding="UTF-8", pretty_print=True, xml_declaration=True)
+    elif args.mode == 'compare':
+        if ninemlcatalog is None:
+            raise Exception(
+                "NineML catalog is not installed")
+        local_version = create_hodgkin_huxley()
+        catalog_version = ninemlcatalog.load(catalog_path,
+                                               local_version.name)
+        mismatch = local_version.find_mismatch(catalog_version)
+        if mismatch:
+            print ("Local version differs from catalog version:\n{}"
+                   .format(mismatch))
+        else:
+            print "Local version matches catalog version"
+    elif args.mode == 'save':
+        if ninemlcatalog is None:
+            raise Exception(
+                "NineML catalog is not installed")
+        dynamics = create_hodgkin_huxley()
+        ninemlcatalog.save(dynamics, catalog_path, dynamics.name)
+        params = parameterise_hodgkin_huxley(
+            ninemlcatalog.load(catalog_path, dynamics.name))
+        ninemlcatalog.save(params, catalog_path, params.name)
+        print "Saved '{}' and '{}' to catalog".format(dynamics.name,
+                                                      params.name)

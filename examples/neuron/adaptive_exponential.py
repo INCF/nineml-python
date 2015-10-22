@@ -29,7 +29,7 @@ def create_adaptive_exponential():
     ## a, b    # adaptation parameters [muS, nA]
     """
     aeIF = al.Dynamics(
-        name="aeIF",
+        name="AdaptiveExpIntegrateAndFire",
         parameters=[
             al.Parameter('C_m', un.capacitance),
             al.Parameter('g_L', un.conductance),
@@ -63,11 +63,12 @@ def create_adaptive_exponential():
     return aeIF
 
 
-def parameterise_adaptive_exponential():
-
+def parameterise_adaptive_exponential(definition=None):
+    if definition is None:
+        definition = create_adaptive_exponential()
     comp = ul.DynamicsComponent(
-        name='SampleAdExpIF',
-        definition=create_adaptive_exponential(),
+        name='SampleAdaptiveExpIntegrateAndFire',
+        definition=definition,
         properties=[ul.Property('C_m', 1, un.pF),
                     ul.Property('g_L', 0.1, un.nS),
                     ul.Property('E_L', -65, un.mV),
@@ -85,8 +86,49 @@ def parameterise_adaptive_exponential():
 
 
 if __name__ == '__main__':
-    print etree.tostring(
-        E.NineML(
-            create_adaptive_exponential().to_xml(),
-            parameterise_adaptive_exponential().to_xml()),
-        encoding="UTF-8", pretty_print=True, xml_declaration=True)
+    import argparse
+    try:
+        import ninemlcatalog
+        catalog_path = 'neuron/AdaptiveExpIntegrateAndFire'
+    except ImportError:
+        ninemlcatalog = None
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', type=str, default='print',
+                        help=("The mode to run this script, can be 'print', "
+                              "'compare' or 'save', which correspond to "
+                              "printing the models, comparing the models with "
+                              "the version in the catalog, or overwriting the "
+                              "version in the catalog with this version "
+                              "respectively"))
+    args = parser.parse_args()
+
+    if args.mode == 'print':
+        print etree.tostring(
+            E.NineML(
+                create_adaptive_exponential().to_xml(),
+                parameterise_adaptive_exponential().to_xml()),
+            encoding="UTF-8", pretty_print=True, xml_declaration=True)
+    elif args.mode == 'compare':
+        if ninemlcatalog is None:
+            raise Exception(
+                "NineML catalog is not installed")
+        local_version = create_adaptive_exponential()
+        catalog_version = ninemlcatalog.load(catalog_path,
+                                               local_version.name)
+        mismatch = local_version.find_mismatch(catalog_version)
+        if mismatch:
+            print ("Local version differs from catalog version:\n{}"
+                   .format(mismatch))
+        else:
+            print "Local version matches catalog version"
+    elif args.mode == 'save':
+        if ninemlcatalog is None:
+            raise Exception(
+                "NineML catalog is not installed")
+        dynamics = create_adaptive_exponential()
+        ninemlcatalog.save(dynamics, catalog_path, dynamics.name)
+        params = parameterise_adaptive_exponential(
+            ninemlcatalog.load(catalog_path, dynamics.name))
+        ninemlcatalog.save(params, catalog_path, params.name)
+        print "Saved '{}' and '{}' to catalog".format(dynamics.name,
+                                                      params.name)
