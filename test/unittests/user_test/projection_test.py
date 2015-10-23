@@ -65,14 +65,14 @@ class TestProjection(unittest.TestCase):
             size=1,
             cell=DynamicsProperties(
                 name="PreDynamicsProps", definition=self.pre_dynamics,
-                properties={'P1': (1, un.ms), 'P2': (-65, un.mV)}))
+                properties={'P1': 1 * un.ms, 'P2': -65 * un.mV}))
 
         self.post = Population(
             name="PostPopulation",
             size=1,
             cell=DynamicsProperties(
                 name="PostDynamicsProps", definition=self.post_dynamics,
-                properties={'P1': (1, un.ms), 'P2': (1, un.uF)}))
+                properties={'P1': 1 * un.ms, 'P2': 1 * un.uF}))
 
         self.one_to_one = ConnectionRule(
             name="OneToOne",
@@ -84,11 +84,11 @@ class TestProjection(unittest.TestCase):
             response=DynamicsProperties(
                 name="ResponseProps",
                 definition=self.response_dynamics,
-                properties={'P1': (10, un.ms), 'P2': (1, un.nA)}),
+                properties={'P1': 10 * un.ms, 'P2': 1 * un.nA}),
             connectivity=ConnectionRuleProperties(
                 name="ConnectionRuleProps",
                 definition=self.one_to_one),
-            delay=(1, un.ms))
+            delay=1 * un.ms)
 
     def test_xml_roundtrip(self):
         document = Document(un.ms, un.nA)

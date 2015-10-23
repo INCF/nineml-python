@@ -1,19 +1,17 @@
 # encoding: utf-8
 from itertools import chain
 from abc import ABCMeta, abstractmethod
-import collections
-from nineml.base import BaseNineMLObject
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, handle_xml_exceptions,
     NineMLMissingElementError)
 from nineml.xmlns import NINEML, E
+from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.utils import expect_single, check_units
-from nineml import units as un
+from nineml.utils import check_units, expect_single
 from ..abstraction import ComponentClass
-from .values import SingleValue, ArrayValue, ExternalArrayValue
+from nineml.units import Quantity
 from . import BaseULObject
 from nineml.document import Document
 from nineml import DocumentLevelObject
@@ -308,6 +306,21 @@ class Component(BaseULObject, DocumentLevelObject):
     def used_units(self):
         return set(p.units for p in self.properties.itervalues())
 
+    def write(self, fname):
+        """
+        Writes the top-level NineML object to file in XML.
+        """
+        to_write = [self]
+        # Also write the component class definition to file if cannot be
+        # referenced from a separate url
+        if self.definition.url is None:
+            to_write.append(self.component_class)
+        Document(*to_write).write(fname)
+
+    def get_random_distributions(self):
+        return [p.value.distribution for p in self.properties
+                if p.value.element_name == 'RandomValue']        
+
     # Property is declared last so as not to overwrite the 'property' decorator
     def property(self, name):
         try:
@@ -319,16 +332,6 @@ class Component(BaseULObject, DocumentLevelObject):
                 raise NineMLMissingElementError(
                     "No property named '{}' in component class".format(name))
 
-    def write(self, fname):
-        """
-        Writes the top-level NineML object to file in XML.
-        """
-        to_write = [self]
-        # Also write the component class definition to file if cannot be
-        # referenced from a separate url
-        if self.definition.url is None:
-            to_write.append(self.component_class)
-        Document(*to_write).write(fname)
 
 
 class Property(BaseULObject):
@@ -407,10 +410,12 @@ class Initial(Property):
 
 
 class DynamicsProperties(Component):
-
     """
     Container for the set of properties for a component_class.
     """
+    element_name = 'DynamicsProperties'
+    defining_attributes = ('name', 'component_class', '_properties',
+                           '_initial_values')
 
     def __init__(self, name, definition, properties={}, initial_values={},
                  url=None, check_initial_values=False):

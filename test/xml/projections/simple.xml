@@ -17,17 +17,25 @@
     <Response>
       <DynamicsProperties name="AMPA">
         <Definition name="DoubleExpCondSynapse" url="../postsynapticresponses/DoubleExpCondSynapse.xml"/>
-        <Property name="gBar" units="S">
-          <SingleValue>2.6e-3</SingleValue>
+        <Property name="gBar">
+          <Quantity units="S">
+            <SingleValue>2.6e-3</SingleValue>
+          </Quantity>
         </Property>        
-        <Property name="tau1" units="ms">
-          <SingleValue>0.03</SingleValue>
+        <Property name="tau1">
+          <Quantity units="ms">
+            <SingleValue>0.03</SingleValue>
+          </Quantity>
         </Property>
-        <Property name="tau2" units="ms">
-          <SingleValue>0.05</SingleValue>
+        <Property name="tau2">
+          <Quantity units="ms">
+            <SingleValue>0.05</SingleValue>
+          </Quantity>
         </Property>
-        <Property name="eReversal" units="mV">
-          <SingleValue>-0.1</SingleValue>
+        <Property name="eReversal">
+          <Quantity units="mV">
+            <SingleValue>-0.1</SingleValue>
+          </Quantity>
         </Property>
       </DynamicsProperties>
       <FromSource send_port="spikeOutput" receive_port="spike"/>

@@ -1,12 +1,17 @@
+# encoding: utf-8
 from __future__ import division
 import re
 import operator
 from sympy import Symbol
 import sympy
+import math
 from nineml.xmlns import E
 from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import handle_xml_exceptions, NineMLRuntimeError
+from nineml.exceptions import (
+    handle_xml_exceptions, NineMLRuntimeError, NineMLMissingElementError, NineMLDimensionError)
+from nineml.values import (
+    BaseValue, SingleValue, ArrayValue, RandomDistributionValue)
 
 
 class Dimension(BaseNineMLObject, DocumentLevelObject):
@@ -30,7 +35,8 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
             assert len(dimensions) == 7, "Incorrect dimension length"
             self._dims = tuple(dimensions)
         else:
-            self._dims = tuple(kwargs.pop(d, 0) for d in self.dimension_symbols)
+            self._dims = tuple(kwargs.pop(d, 0)
+                               for d in self.dimension_symbols)
         assert not len(kwargs), "Unrecognised kwargs ({})".format(kwargs)
 
     def __hash__(self):
@@ -69,7 +75,8 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         """
         return reduce(
             operator.mul,
-            (Symbol(n) ** p for n, p in zip(self.dimension_symbols, self._dims)))
+            (Symbol(n) ** p
+             for n, p in zip(self.dimension_symbols, self._dims)))
 
     @property
     def m(self):
@@ -147,15 +154,11 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     def __mul__(self, other):
         "self * other"
-        if other == 1:
-            other = dimensionless
         return Dimension(self.make_name([self.name, other.name]),
                          dimensions=tuple(s + o for s, o in zip(self, other)))
 
     def __truediv__(self, other):
         "self / expr"
-        if other == 1:
-            other = dimensionless
         return Dimension(self.make_name([self.name], [other.name]),
                          dimensions=tuple(s - o for s, o in zip(self, other)))
 
@@ -168,8 +171,6 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return self.__mul__(other)
 
     def __rtruediv__(self, other):
-        if other == 1:
-            other = dimensionless
         return other.__truediv__(self)
 
     def __div__(self, other):
@@ -359,23 +360,25 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
 
     def __mul__(self, other):
         "self * other"
-        if other == 1:
-            other = unitless
-        assert (self.offset == 0 and
-                other.offset == 0), "Can't multiply units with nonzero offsets"
-        return Unit(Dimension.make_name([self.name, other.name]),
-                    dimension=self.dimension * other.dimension,
-                    power=(self.power + other.power))
+        try:
+            assert (self.offset == 0 and other.offset == 0), (
+                "Can't multiply units with nonzero offsets")
+            return Unit(Dimension.make_name([self.name, other.name]),
+                        dimension=self.dimension * other.dimension,
+                        power=(self.power + other.power))
+        except AttributeError:
+            return Quantity(float(other), self)
 
     def __truediv__(self, other):
         "self / expr"
-        if other == 1:
-            other = unitless
-        assert (self.offset == 0 and
-                other.offset == 0), "Can't divide units with nonzero offsets"
-        return Unit(Dimension.make_name([self.name], [other.name]),
-                    dimension=self.dimension / other.dimension,
-                    power=(self.power - other.power))
+        try:
+            assert (self.offset == 0 and other.offset == 0), (
+                "Can't divide units with nonzero offsets")
+            return Unit(Dimension.make_name([self.name], [other.name]),
+                        dimension=self.dimension / other.dimension,
+                        power=(self.power - other.power))
+        except AttributeError:
+            return Quantity(1.0 / float(other), self.units)
 
     def __pow__(self, power):
         "self ** expr"
@@ -388,15 +391,210 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         return self.__mul__(other)
 
     def __rtruediv__(self, other):
-        if other == 1:
-            other = unitless
-        return other.__truediv__(self)
+        try:
+            return other.__truediv__(self)
+        except NotImplementedError:
+            return Quantity(float(other), unitless / self)
 
     def __div__(self, other):
         return self.__truediv__(other)
 
     def __rdiv__(self, other):
         return self.__rtruediv__(other)
+
+
+class Quantity(BaseNineMLObject):
+
+    """
+    Representation of a numerical- or string-valued parameter.
+
+    A numerical parameter is a (name, value, units) triplet, a string parameter
+    is a (name, value) pair.
+
+    Numerical values may either be numbers, or a component_class that generates
+    numbers, e.g. a RandomDistribution instance.
+    """
+    element_name = 'Quantity'
+    defining_attributes = ("value", "units")
+
+    def __init__(self, value, units=None):
+        super(Quantity, self).__init__()
+        if not isinstance(value, (SingleValue, ArrayValue,
+                                  RandomDistributionValue)):
+            try:
+                # Convert value from float
+                value = SingleValue(float(value))
+            except TypeError:
+                # Convert value from iterable
+                value = ArrayValue(value)
+        if units is None:
+            units = unitless
+        if not isinstance(units, Unit):
+            raise Exception("Units ({}) must of type <Unit>".format(units))
+        if isinstance(value, (int, float)):
+            value = SingleValue(value)
+        self._value = value
+        self.units = units
+
+    def __hash__(self):
+        return hash(self.value) ^ hash(self.units)
+
+    def __iter__(self):
+        """For conveniently expanding quantities like a tuple"""
+        return (self.value, self.units)
+
+    @property
+    def value(self):
+        return self._value
+
+    def __getitem__(self, index):
+        if self.is_array():
+            return self._value.values[index]
+        elif self.is_single():
+            return self._value.value
+        else:
+            raise NineMLRuntimeError(
+                "Cannot get item from random distribution")
+
+    def set_units(self, units):
+        if units.dimension != self.units.dimension:
+            raise NineMLRuntimeError(
+                "Can't change dimension of quantity from '{}' to '{}'"
+                .format(self.units.dimension, units.dimension))
+        self.units = units
+
+    def __repr__(self):
+        units = self.units.name
+        if u"µ" in units:
+            units = units.replace(u"µ", "u")
+        return ("{}(value={}, units={})"
+                .format(self.element_name, self.value, units))
+
+    @annotate_xml
+    def to_xml(self, document, **kwargs):  # @UnusedVariable
+        return E(self.element_name,
+                 self._value.to_xml(document, **kwargs),
+                 units=self.units.name)
+
+    @classmethod
+    @read_annotations
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+        cls.check_tag(element)
+        value = BaseValue.from_parent_xml(element, document, **kwargs)
+        try:
+            units_str = element.attrib['units']
+        except KeyError:
+            raise NineMLRuntimeError(
+                "{} element '{}' is missing 'units' attribute (found '{}')"
+                .format(element.tag, element.get('name', ''),
+                        "', '".join(element.attrib.iterkeys())))
+        try:
+            units = document[units_str]
+        except KeyError:
+            raise NineMLMissingElementError(
+                "Did not find definition of '{}' units in the current "
+                "document.".format(units_str))
+        return cls(value=value, units=units)
+
+    def __add__(self, qty):
+        return Quantity(self.value + self._scaled_value(qty), self.units)
+
+    def __sub__(self, qty):
+        return Quantity(self.value - self._scaled_value(qty), self.units)
+
+    def __mul__(self, qty):
+        try:
+            return Quantity(self.value * qty.value, self.units * qty.units)
+        except AttributeError:
+            return Quantity(self.value, self.units * qty)  # If qty is a Unit
+
+    def __truediv__(self, qty):
+        try:
+            return Quantity(self.value / qty.value, self.units / qty.units)
+        except AttributeError:
+            return Quantity(self.value, self.units / qty)  # If qty is a Unit
+
+    def __div__(self, qty):
+        return self.__truediv__(qty)
+
+    def __pow__(self, power):
+        return Quantity(self.value ** power, self.units ** power)
+
+    def __radd__(self, qty):
+        return self.__add__(qty)
+
+    def __rsub__(self, qty):
+        return self._scaled_value(qty) - self._value
+
+    def __rmul__(self, qty):
+        return self.__mul__(qty)
+
+    def __rtruediv__(self, qty):
+        return qty.__truediv__(self._value)
+
+    def __rdiv__(self, qty):
+        return self.__rtruediv__(qty)
+
+    def __neg__(self):
+        return Quantity(-self._value, self.units)
+
+    def __abs__(self):
+        return Quantity(abs(self._value), self.units)
+
+    def _scaled_value(self, qty):
+        try:
+            if qty.units.dimension != self.units.dimension:
+                raise NineMLDimensionError(
+                    "Cannot scale value as dimensions do not match ('{}' and "
+                    "'{}')".format(self.units.dimension.name,
+                                   qty.units.dimension.name))
+            return qty.value * 10 ** (self.units.power - qty.units.power)
+        except AttributeError:
+            if self.units == unitless:
+                return float(qty.value)
+            else:
+                raise NineMLDimensionError(
+                    "Can only add/subtract numbers from dimensionless "
+                    "quantities")
+
+    @classmethod
+    def parse_quantity(cls, qty):
+        """
+        Parses ints and floats as dimensionless quantities and
+        python-quantities Quantity objects into 9ML Quantity objects
+        """
+        if not isinstance(qty, cls):
+            if isinstance(qty, (int, float)):
+                value = float(qty)
+                units = unitless
+            else:
+                # Assume it is a python quantities quantity and convert to
+                # 9ML quantity
+                try:
+                    unit_name = str(qty.units).split()[1].replace(
+                        '/', '_per_').replace('**', '').replace('*', '_')
+                    if unit_name.startswith('_per_'):
+                        unit_name = unit_name[1:]  # strip leading underscore
+                    powers = dict(
+                        (cls._pq_si_to_dim[type(u).__name__], p)
+                        for u, p in
+                        qty.units.simplified._dimensionality.iteritems())
+                    dimension = Dimension(unit_name + 'Dimension', **powers)
+                    units = Unit(
+                        unit_name, dimension=dimension,
+                        power=int(math.log10(float(qty.units.simplified))))
+                    value = float(qty)
+                except AttributeError:
+                    raise NineMLRuntimeError(
+                        "Cannot '{}' to nineml.Quantity (can only convert "
+                        "quantities.Quantity and numeric objects)"
+                        .format(qty))
+            qty = Quantity(value, units)
+        return qty
+
+    _pq_si_to_dim = {'UnitMass': 'm', 'UnitLength': 'l', 'UnitTime': 't',
+                     'UnitCurrent': 'i', 'UnitLuminousIntensity': 'j',
+                     'UnitSubstance': 'n', 'UnitTemperature': 'k'}
 
 
 # ----------------- #

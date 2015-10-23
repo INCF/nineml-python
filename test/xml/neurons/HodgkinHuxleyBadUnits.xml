@@ -6,14 +6,20 @@
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <DynamicsProperties name="HodgkinHuxleyBadUnits">
     <Prototype name="HodgkinHuxley" url="./HodgkinHuxley.xml"/>
-    <Property name="m_alpha_A" units="ms">
-      <SingleValue>0.5</SingleValue>
+    <Property name="m_alpha_A">
+      <Quantity units="ms">
+        <SingleValue>0.5</SingleValue>
+      </Quantity>
     </Property>
-    <Property name="m_alpha_V0" units="mV">
-      <SingleValue>-20.0</SingleValue>
+    <Property name="m_alpha_V0">
+      <Quantity units="mV">
+        <SingleValue>-20.0</SingleValue>
+      </Quantity>
     </Property>
-    <Property name="m_alpha_K" units="mV">
-      <SingleValue>5.0</SingleValue>
+    <Property name="m_alpha_K">
+      <Quantity units="mV">
+        <SingleValue>5.0</SingleValue>
+      </Quantity>
     </Property>
   </DynamicsProperties>
 </NineML>

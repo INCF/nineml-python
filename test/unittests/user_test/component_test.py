@@ -20,14 +20,22 @@ class TestComponent(unittest.TestCase):
         document1 = read(test_file)
         xml = document1.to_xml()
         document2 = load(xml, read_from=test_file)
-        self.assertEquals(document1, document2)
+        if document1 != document2:
+            mismatch = document1.find_mismatch(document2)
+        else:
+            mismatch = ''
+        self.assertEquals(document1, document2, mismatch)
 
     def test_prototype_xml_540degree_roundtrip(self):
         test_file = os.path.join(examples_dir, 'HodgkinHuxleyModified.xml')
         document1 = read(test_file)
         xml = document1.to_xml()
         document2 = load(xml, read_from=test_file)
-        self.assertEquals(document1, document2)
+        if document1 != document2:
+            mismatch = document1.find_mismatch(document2)
+        else:
+            mismatch = ''
+        self.assertEquals(document1, document2, mismatch)
 
     def test_mismatch_dimension(self):
         document = read(os.path.join(examples_dir,
