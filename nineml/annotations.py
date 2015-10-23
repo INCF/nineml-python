@@ -59,8 +59,8 @@ def read_annotations(from_xml):
             annotations = Annotations()
         if (cls.__class__.__name__ == 'DynamicsXMLLoader' and
                 VALIDATE_DIMENSIONS in annotations[NINEML]):
-            # FIXME: Hack until I work out how to let other 9ML objects ignore
-            #        this kwarg TGC 6/15
+            # FIXME: Hack until I work out the best way to let other 9ML
+            #        objects ignore this kwarg TGC 6/15
             kwargs['validate_dimensions'] = (
                 annotations[NINEML][VALIDATE_DIMENSIONS] == 'True')
         nineml_object = from_xml(cls, element, *args, **kwargs)

@@ -28,7 +28,7 @@ class TestNetwork(unittest.TestCase):
     """
 
     xml_dir = path.normpath(path.join(src_dir, '..', '..', '..',
-                                      'examples', 'Brunel2000'))
+                                      'examples', '_old', 'Brunel2000'))
 
     def test_xml_roundtrip(self):
 

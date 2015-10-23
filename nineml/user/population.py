@@ -60,9 +60,9 @@ class Population(BaseULObject, DocumentLevelObject):
         if self.cell:
             components.append(self.cell)
             components.extend(
-                self.cell.property_set.get_random_distributions())
+                self.cell.get_random_distributions())
             components.extend(
-                self.cell.initial_value_set.get_random_distributions())
+                self.cell.get_random_distributions())
         if self.positions is not None:
             components.extend(self.positions.get_components())
         return components

@@ -70,7 +70,8 @@ class ConnectionRule(ComponentClass):
     @classmethod
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return ConnectionRuleXMLLoader(document).load_connectionruleclass(
-            element)
+            element, **kwargs)
+
 
 from .visitors.cloner import ConnectionRuleCloner
 from .visitors.modifiers import (

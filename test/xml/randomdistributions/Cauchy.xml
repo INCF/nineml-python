@@ -1,8 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
-  <RandomDistribution name="CauchyDistribution">
+  <RandomDistribution name="CauchyDistribution" standard_library="http://www.uncertml.org/distributions/cauchy.xml">
     <Parameter name="location"/>
     <Parameter name="scale"/>
-    <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/cauchy.xml"/>
   </RandomDistribution>
 </NineML>

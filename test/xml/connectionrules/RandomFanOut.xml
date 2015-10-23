@@ -3,4 +3,3 @@
     <Parameter name="probability" dimension="dimensionless"/>
   </ConnectionRule>
 </NineML>
-

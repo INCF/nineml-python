@@ -44,20 +44,30 @@
   </Dynamics>
   <DynamicsProperties name="Izhikevich">
     <Definition name="IzhikevichClass"/>
-    <Property name="a" units="per_ms">
-      <SingleValue>0.02</SingleValue>
+    <Property name="a">
+      <Quantity units="per_ms">
+        <SingleValue>0.02</SingleValue>
+      </Quantity>
     </Property>
-    <Property name="b" units="per_ms">
-      <SingleValue>0.2</SingleValue>
+    <Property name="b">
+      <Quantity units="per_ms">
+        <SingleValue>0.2</SingleValue>
+      </Quantity>
     </Property>
-    <Property name="c" units="mV">
-      <SingleValue>-65.0</SingleValue>
+    <Property name="c">
+      <Quantity units="mV">
+        <SingleValue>-65.0</SingleValue>
+      </Quantity>
     </Property>
-    <Property name="d" units="mV_per_ms">
-      <SingleValue>8</SingleValue>
+    <Property name="d">
+      <Quantity units="mV_per_ms">
+        <SingleValue>8</SingleValue>
+      </Quantity>
     </Property>
-    <Property name="theta" units="mV">
-      <SingleValue>-40.0</SingleValue>
+    <Property name="theta">
+      <Quantity units="mV">
+        <SingleValue>-40.0</SingleValue>
+      </Quantity>
     </Property>
   </DynamicsProperties>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>

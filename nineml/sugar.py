@@ -1,7 +1,11 @@
+"""
+A collection of objects that are not part of the offical 9ML specification but
+can be used as shorthand when drafting 9ML models in Python.
+"""
 from nineml.utils import filter_discrete_types
 from nineml.exceptions import NineMLRuntimeError
-from .transitions import (OutputEvent, Trigger, StateAssignment, OnEvent,
-                          OnCondition)
+from nineml.abstraction.dynamics.transitions import (
+    OutputEvent, Trigger, StateAssignment, OnEvent, OnCondition)
 from nineml.abstraction.expressions.utils import is_single_symbol
 
 

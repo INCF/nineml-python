@@ -11,7 +11,6 @@ from nineml.abstraction.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ...exceptions import (NineMLRuntimeError,
                            NineMLInvalidElementTypeException)
-from .visitors.cloner import DynamicsCloner
 from nineml.base import ContainerObject
 from nineml.utils import normalise_parameter_as_list
 

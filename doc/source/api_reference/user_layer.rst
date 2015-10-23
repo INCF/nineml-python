@@ -74,12 +74,12 @@ Properties and physical quantities
 
 .. autoclass:: RandomDistribution
 
-.. autoclass:: InitialValue
+.. autoclass:: Initial
 
 .. autoclass:: PropertySet
    :members: complete, get_random_distributions
 
-.. autoclass:: InitialValueSet
+.. autoclass:: InitialSet
    :members: complete, get_random_distributions
 
 Populations
