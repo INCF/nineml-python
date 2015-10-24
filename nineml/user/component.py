@@ -14,7 +14,7 @@ from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject
 from nineml.document import Document
-from nineml import DocumentLevelObject
+from nineml.base import DocumentLevelObject, ContainerObject
 from os import path
 
 
@@ -80,7 +80,7 @@ class Prototype(Definition):
         return self.component.component_class
 
 
-class Component(BaseULObject, DocumentLevelObject):
+class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     """
     Base class for model components.
 

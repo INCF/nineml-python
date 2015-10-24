@@ -5,7 +5,7 @@ import sympy
 import operator
 from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
-from nineml import DocumentLevelObject
+from nineml.base import DocumentLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single
 from nineml.user import DynamicsProperties

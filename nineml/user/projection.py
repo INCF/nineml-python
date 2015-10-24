@@ -9,7 +9,7 @@ from itertools import chain
 from nineml.utils import (
     expect_single, expect_none_or_single)
 from .component import Quantity
-from nineml import DocumentLevelObject
+from nineml.base import DocumentLevelObject
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 

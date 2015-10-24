@@ -5,9 +5,8 @@ from lxml import etree
 import collections
 from nineml.xmlns import NINEML, E
 from nineml.annotations import Annotations
-from . import BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
-from nineml import DocumentLevelObject
+from nineml.base import BaseNineMLObject, DocumentLevelObject
 import contextlib
 
 
