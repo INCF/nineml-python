@@ -388,6 +388,8 @@ def accessor_name_from_type(class_type, element_type):
 def pluralise(word):
     if word.endswith('s'):
         word = word + 'es'
+    elif word.endswith('y'):
+        word = word[:-1] + 'ies'
     else:
         word = word + 's'
     return word
