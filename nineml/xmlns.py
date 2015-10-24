@@ -7,7 +7,7 @@ docstring goes here
 from lxml import etree  # @UnusedImport
 from lxml.builder import ElementMaker
 
-nineml_namespace = 'http://nineml.net/9ML/1.0'
+nineml_namespace = 'http://nineml.net/9ML/2.0'
 NINEML = '{' + nineml_namespace + '}'
 MATHML = "{http://www.w3.org/1998/Math/MathML}"
 UNCERTML = "{http://www.uncertml.org/2.0}"
