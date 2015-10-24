@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<NineML xmlns="http://nineml.net/9ML/1.0">
+<NineML xmlns="http://nineml.net/9ML/2.0">
   <Dimension name="per_time" t="-1"/>
   <Dimension name="per_time_voltage" m="-1" l="-2" t="2" i="1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>

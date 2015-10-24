@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<nineml:NineML xmlns:nineml="http://nineml.net/9ML/1.0">
+<nineml:NineML xmlns:nineml="http://nineml.net/9ML/2.0">
   <nineml:Unit symbol="Hz" dimension="per_time" power="0"/>
   <nineml:Dimension name="per_time" t="-1"/>
   <nineml:Population name="Exc">
