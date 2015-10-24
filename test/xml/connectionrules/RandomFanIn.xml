@@ -1,4 +1,4 @@
-<NineML xmlns="http://nineml.net/9ML/1.0">
+<NineML xmlns="http://nineml.net/9ML/2.0">
   <ConnectionRule name="RandomFanIn"  standard_library="http://nineml.net/connectionrules/RandomFanIn">
     <Parameter name="probability" dimension="dimensionless"/>    
   </ConnectionRule>

@@ -1,4 +1,4 @@
-<NineML xmlns="http://nineml.net/9ML/1.0">
+<NineML xmlns="http://nineml.net/9ML/2.0">
   <ConnectionRule name="Explicit" standard_library="http://nineml.net/connectionrules/Explicit">
     <Parameter name="sourceIndices" dimension="dimensionless"/>
     <Parameter name="destinationIndices" dimension="dimensionless"/>   

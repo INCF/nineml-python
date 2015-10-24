@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<NineML xmlns="http://nineml.net/9ML/1.0">
+<NineML xmlns="http://nineml.net/9ML/2.0">
   <RandomDistribution name="ParetoDistribution" standard_library="http://www.uncertml.org/distributions/pareto.xml">
     <Parameter name="scale"/>
     <Parameter name="shape"/>
