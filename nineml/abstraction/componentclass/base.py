@@ -16,7 +16,7 @@ from nineml.utils import (
     normalise_parameter_as_list, assert_no_duplicates)
 from ..expressions import Alias, Constant
 from ...units import dimensionless, Dimension
-from nineml import DocumentLevelObject
+from nineml.base import DocumentLevelObject
 
 
 class Parameter(BaseALObject):

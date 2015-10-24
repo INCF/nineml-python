@@ -1,6 +1,6 @@
 import os
 from operator import and_
-from . import BaseNineMLObject
+from .base import BaseNineMLObject
 from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError, handle_xml_exceptions

@@ -1,4 +1,4 @@
-from .. import BaseNineMLObject
+from ..base import BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
 from nineml.reference import Reference
 

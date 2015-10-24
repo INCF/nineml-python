@@ -1,5 +1,5 @@
 from __future__ import division
-from . import BaseNineMLObject
+from .base import BaseNineMLObject
 from nineml.xmlns import E, NINEML
 from abc import ABCMeta, abstractmethod
 from nineml.annotations import read_annotations, annotate_xml

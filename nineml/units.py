@@ -6,7 +6,7 @@ from sympy import Symbol
 import sympy
 import math
 from nineml.xmlns import E
-from nineml import BaseNineMLObject, DocumentLevelObject
+from nineml.base import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
     handle_xml_exceptions, NineMLRuntimeError, NineMLMissingElementError, NineMLDimensionError)

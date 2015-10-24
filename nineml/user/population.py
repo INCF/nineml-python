@@ -2,7 +2,7 @@ from itertools import chain
 from . import BaseULObject
 from .component import (resolve_reference, write_reference, DynamicsProperties,
                         RandomDistributionProperties, Component)
-from nineml import DocumentLevelObject
+from nineml.base import DocumentLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single
 from nineml.annotations import annotate_xml, read_annotations

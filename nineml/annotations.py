@@ -1,7 +1,7 @@
 from copy import copy
 from collections import defaultdict
 from nineml.xmlns import E, NINEML
-from nineml import DocumentLevelObject
+from nineml.base import DocumentLevelObject
 from itertools import chain
 
 
