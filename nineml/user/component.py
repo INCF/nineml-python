@@ -110,6 +110,8 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     defining_attributes = ('name', 'component_class', '_properties')
     children = ("Property", "Definition", 'Prototype')
 
+    class_to_member = {'Property': 'property'}
+
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
     def __init__(self, name, definition, properties={}, url=None):
@@ -120,6 +122,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         """
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, url)
+        ContainerObject.__init__(self)
         self._name = name
         if isinstance(definition, basestring):
             if "#" in definition:
@@ -180,27 +183,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     @property
     def definition(self):
         return self._definition
-
-    @property
-    def properties(self):
-        """
-        The set of component_class properties (parameter values).
-        """
-        # Recursively retrieves properties defined in prototypes and updates
-        # them with properties defined locally
-        if isinstance(self.definition, Prototype):
-            return (
-                self._properties[p.name] if p.name in self._properties else p
-                for p in self.definition.component.properties)
-        else:
-            return self._properties.itervalues()
-
-    @property
-    def property_names(self):
-        if isinstance(self.definition, Prototype):
-            return (p.name for p in self.properties)
-        else:
-            return self._properties.iterkeys()
 
     def set(self, prop):
         try:
@@ -319,7 +301,32 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     def get_random_distributions(self):
         return [p.value.distribution for p in self.properties
-                if p.value.element_name == 'RandomValue']        
+                if p.value.element_name == 'RandomValue']
+
+    @property
+    def properties(self):
+        """
+        The set of component_class properties (parameter values).
+        """
+        # Recursively retrieves properties defined in prototypes and updates
+        # them with properties defined locally
+        if isinstance(self.definition, Prototype):
+            return (
+                self._properties[p.name] if p.name in self._properties else p
+                for p in self.definition.component.properties)
+        else:
+            return self._properties.itervalues()
+
+    @property
+    def property_names(self):
+        if isinstance(self.definition, Prototype):
+            return (p.name for p in self.properties)
+        else:
+            return self._properties.iterkeys()
+
+    @property
+    def num_properties(self):
+        return len(list(self.properties))
 
     # Property is declared last so as not to overwrite the 'property' decorator
     def property(self, name):
@@ -331,7 +338,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             except AttributeError:
                 raise NineMLMissingElementError(
                     "No property named '{}' in component class".format(name))
-
 
 
 class Property(BaseULObject):
@@ -416,6 +422,9 @@ class DynamicsProperties(Component):
     element_name = 'DynamicsProperties'
     defining_attributes = ('name', 'component_class', '_properties',
                            '_initial_values')
+    class_to_member = dict(
+        tuple(Component.class_to_member.iteritems()) +
+        (('Initial', 'initial_value'),))
 
     def __init__(self, name, definition, properties={}, initial_values={},
                  url=None, check_initial_values=False):
@@ -452,6 +461,14 @@ class DynamicsProperties(Component):
 
     def initial_value(self, name):
         return self._initial_values[name]
+
+    @property
+    def initial_value_names(self):
+        return self._initial_values.iterkeys()
+
+    @property
+    def num_initial_values(self):
+        return len(self._initial_values)
 
     @property
     def attributes_with_units(self):
