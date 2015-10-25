@@ -1,13 +1,11 @@
 # encoding: utf-8
 from . import BaseULObject
-from nineml.reference import resolve_reference, write_reference, Reference
-from nineml.xmlns import NINEML, E
+from nineml.reference import resolve_reference, write_reference
+from nineml.xmlns import E, from_child_xml
 from nineml.annotations import read_annotations, annotate_xml
 from .component import ConnectionRuleProperties, DynamicsProperties
 from copy import copy
 from itertools import chain
-from nineml.utils import (
-    expect_single, expect_none_or_single, from_child_xml)
 from .population import Population
 from .component import Quantity
 from nineml.base import DocumentLevelObject
@@ -169,7 +167,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                                       allow_reference=True, **kwargs)
         port_connections = from_child_xml(
             element, (AnalogPortConnection, EventPortConnection),
-            document, multiple=True, **kwargs)
+            document, multiple=True, allow_none=True, **kwargs)
         # Get Delay
         delay = from_child_xml(element, Quantity, document, within='Delay',
                                **kwargs)

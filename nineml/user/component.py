@@ -9,7 +9,8 @@ from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.utils import check_units, from_child_xml
+from nineml.utils import check_units
+from nineml.xmlns import from_child_xml
 from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject
@@ -281,7 +282,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                                 "defintion or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
         properties = from_child_xml(element, Property, document, multiple=True,
-                                    **kwargs)
+                                    allow_none=True, **kwargs)
         return cls(name, definition, properties=properties, url=document.url)
 
     @property
@@ -507,9 +508,10 @@ class DynamicsProperties(Component):
                                 "defintion or a prototype")
             definition = Prototype.from_xml(prototype_element, document)
         properties = from_child_xml(element, Property, document, multiple=True,
-                                    **kwargs)
+                                    allow_none=True, **kwargs)
         initial_values = from_child_xml(element, Initial, document,
-                                        multiple=True, **kwargs)
+                                        multiple=True, allow_none=True,
+                                        **kwargs)
         return cls(name, definition, properties=properties,
                    initial_values=initial_values, url=document.url)
 

@@ -3,7 +3,7 @@ from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.xmlns import extract_xmlns, E
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.utils import from_child_xml
+from nineml.xmlns import from_child_xml
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import handle_xml_exceptions
 from .population import Population

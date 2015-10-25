@@ -15,83 +15,8 @@ import itertools
 import hashlib
 import collections
 from .exceptions import internal_error
-from .exceptions import NineMLRuntimeError, NineMLXMLBlockError
-from .xmlns import extract_xmlns
+from .exceptions import NineMLRuntimeError
 from nineml.base import ContainerObject
-from nineml.reference import Reference
-
-
-def from_child_xml(element, child_classes, document, multiple=False,
-                   allow_reference=False, allow_none=False, within=None,
-                   unprocessed=set(), **kwargs):
-    # Ensure child_classes is an iterable
-    if isinstance(child_classes, type):
-        child_classes = (child_classes,)
-    assert child_classes, "No child classes supplied"
-    # Get the namespace of the element (i.e. NineML version)
-    xmlns = extract_xmlns(element.tag)
-    # Get the name of the element for error messages if present
-    try:
-        elem_name = element.name + ' ' + element.element_name
-    except AttributeError:
-        elem_name = element.name
-    # Get the parent element of the child elements to parse. For example the
-    # in Projection elements where pre and post synaptic population references
-    # are enclosed within 'Pre' or 'Post' tags respectively
-    if within:
-        within_elems = element.findall(xmlns + within)
-        if len(within_elems) == 1:
-            parent = within_elems[0]
-        elif not within_elems:
-            raise NineMLXMLBlockError(
-                "Did not find {} block within {} element in '{}'"
-                .format(within, elem_name, document.url))
-        else:
-            raise NineMLXMLBlockError(
-                "Found unexpected multiple {} blocks within {} in '{}'"
-                .format(within, elem_name, document.url))
-    else:
-        parent = element
-    # Get the name of the parent and child classes for error messages
-    try:
-        parent_name = parent.name + ' ' + parent.element_name
-    except AttributeError:
-        parent_name = parent.element_name
-    # Get the list of child class names for error messages
-    child_cls_names = "', '".join(c.element_name for c in child_classes)
-    # Append all child classes
-    children = []
-    if allow_reference != 'only':
-        for child_cls in child_classes:
-            for child_elem in parent.findall(xmlns + child_cls.element_name):
-                children.append(child_cls.from_xml(child_elem, document,
-                                                   **kwargs))
-                unprocessed.discard(child_elem)
-    if allow_reference:
-        for ref_elem in parent.findall(xmlns + Reference.element_name):
-            ref = Reference.from_xml(ref_elem, document, **kwargs)
-            if isinstance(ref.user_object, child_classes):
-                children.append(ref.user_object)
-                unprocessed.discard(ref_elem)
-    if not children:
-        if allow_none:
-            result = [] if multiple else None
-        else:
-            raise NineMLXMLBlockError(
-                "Did not find and child blocks with the tag{s} "
-                "'{child_cls_names}'in the {parent_name} in '{url}'"
-                .format(child_cls_names=child_cls_names,
-                        s=len(child_classes), parent_name=parent_name,
-                        url=document.url))
-    elif multiple:
-        result = children
-    elif len(children) == 1:
-        result = children[0]  # Expect single
-    else:
-        raise NineMLXMLBlockError(
-            "Multiple children of types '{}' found within {} in '{}'"
-            .format(child_cls_names, parent_name, document.url))
-    return result
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):

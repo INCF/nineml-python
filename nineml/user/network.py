@@ -9,7 +9,7 @@ from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.xmlns import E
 from nineml.base import DocumentLevelObject
-from nineml.utils import from_child_xml
+from nineml.xmlns import from_child_xml
 import nineml
 from nineml.exceptions import handle_xml_exceptions, NineMLRuntimeError
 
@@ -100,13 +100,13 @@ class Network(BaseULObject, DocumentLevelObject):
     def from_xml(cls, element, document, **kwargs):
         populations = from_child_xml(element, Population, document,
                                      multiple=True, allow_reference='only',
-                                     **kwargs)
+                                     allow_none=True, **kwargs)
         projections = from_child_xml(element, Projection, document,
                                      multiple=True, allow_reference='only',
-                                     **kwargs)
+                                     allow_none=True, **kwargs)
         selections = from_child_xml(element, Selection, document,
                                      multiple=True, allow_reference='only',
-                                     **kwargs)
+                                     allow_none=True, **kwargs)
         network = cls(name=element.attrib["name"], populations=populations,
                       projections=projections, selections=selections)
         return network

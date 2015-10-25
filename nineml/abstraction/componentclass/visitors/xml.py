@@ -83,9 +83,10 @@ class ComponentClassXMLLoader(object):
         nineml_xmlns = extract_xmlns(element.tag)
         # Get the element name if present for error messages
         try:
-            elem_name = element.name + ' ' + element.element_name
-        except AttributeError:
-            elem_name = element.element_name
+            elem_name = (element.attrib['name'] + ' ' +
+                         element.tag[len(nineml_xmlns):])
+        except KeyError:
+            elem_name = element.tag[len(nineml_xmlns):]
         # Initialise loaded objects with empty lists
         loaded_objects = dict((block, []) for block in block_names)
         for t in element.iterchildren(tag=etree.Element):

@@ -13,7 +13,8 @@ from operator import itemgetter
 import numpy
 import nineml
 from nineml.exceptions import NineMLRuntimeError, handle_xml_exceptions
-from nineml.utils import nearly_equal, from_child_xml
+from nineml.utils import nearly_equal
+from nineml.xmlns import from_child_xml
 
 
 class BaseValue(BaseNineMLObject):
