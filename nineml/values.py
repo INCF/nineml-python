@@ -1,6 +1,6 @@
 from __future__ import division
 from .base import BaseNineMLObject
-from nineml.xmlns import E, NINEML
+from nineml.xmlns import E, extract_xmlns
 from abc import ABCMeta, abstractmethod
 from nineml.annotations import read_annotations, annotate_xml
 from urllib import urlopen
@@ -10,12 +10,10 @@ import sympy
 import itertools
 from itertools import izip
 from operator import itemgetter
-from nineml.reference import Reference
 import numpy
 import nineml
 from nineml.exceptions import NineMLRuntimeError, handle_xml_exceptions
-from nineml.utils import nearly_equal
-from nineml.xmlns import from_child_xml
+from nineml.utils import nearly_equal, from_child_xml
 
 
 class BaseValue(BaseNineMLObject):
@@ -231,6 +229,7 @@ class ArrayValue(BaseValue):
     @read_annotations
     @handle_xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+        xmlns = extract_xmlns(element.tag)
         if element.tag == 'ExternalArrayValue':
             url = element.attrib["url"]
             with contextlib.closing(urlopen(url)) as f:
@@ -241,7 +240,7 @@ class ArrayValue(BaseValue):
                                 element.attrib["columnName"]))
         else:
             rows = [(int(e.attrib['index']), float(e.attrib['value']))
-                    for e in element.findall(NINEML + 'ArrayValueRow')]
+                    for e in element.findall(xmlns + 'ArrayValueRow')]
             sorted_rows = sorted(rows, key=itemgetter(0))
             indices, values = zip(*sorted_rows)
             if indices[0] < 0:

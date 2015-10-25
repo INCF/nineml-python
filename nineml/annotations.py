@@ -3,6 +3,7 @@ from collections import defaultdict
 from nineml.xmlns import E, NINEML
 from nineml.base import DocumentLevelObject
 from itertools import chain
+from xmlns import extract_xmlns
 
 
 class Annotations(defaultdict, DocumentLevelObject):
@@ -47,8 +48,9 @@ class Annotations(defaultdict, DocumentLevelObject):
 
 def read_annotations(from_xml):
     def annotate_from_xml(cls, element, *args, **kwargs):
+        xmlns = extract_xmlns(element.tag)
         annot_elem = expect_none_or_single(
-            element.findall(NINEML + Annotations.element_name))
+            element.findall(xmlns + Annotations.element_name))
         if annot_elem is not None:
             # Extract the annotations
             annotations = Annotations.from_xml(annot_elem)

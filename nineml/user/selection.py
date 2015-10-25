@@ -1,11 +1,12 @@
 from operator import itemgetter
 from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference, Reference
-from nineml.xmlns import NINEML, E
+from nineml.xmlns import extract_xmlns, E
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.utils import expect_single
+from nineml.utils import from_child_xml
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import handle_xml_exceptions
+from .population import Population
 
 
 def find_difference(this, that):
@@ -121,10 +122,12 @@ class Concatenate(BaseULObject):
     @read_annotations
     @handle_xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+        xmlns = extract_xmlns(element.tag)
         # Load references and indices from xml
         items = ((e.attrib['index'],
-                  Reference.from_xml(e.find(NINEML + 'Reference'), document))
-                 for e in element.findall(NINEML + 'Item'))
+                  from_child_xml(e, Population, document,
+                                 allow_reference='only', **kwargs))
+                 for e in element.findall(xmlns + 'Item'))
         # Sort by 'index' attribute
         indices, items = zip(*sorted(items, key=itemgetter(0)))
         indices = [int(i) for i in indices]
