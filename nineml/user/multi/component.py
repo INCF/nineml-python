@@ -173,7 +173,9 @@ class SubDynamicsProperties(BaseULObject):
                  name=self.name)
 
     @classmethod
+    @resolve_reference
     @read_annotations
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):
         dynamics_properties = from_child_xml(
             element, (DynamicsProperties, MultiDynamicsProperties), document,

@@ -219,6 +219,7 @@ class BasePortConnection(BaseULObject):
 
     @classmethod
     @read_annotations
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         return cls(send_port=element.attrib['send_port'],
