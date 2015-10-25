@@ -7,7 +7,8 @@ from .component import ConnectionRuleProperties, DynamicsProperties
 from copy import copy
 from itertools import chain
 from nineml.utils import (
-    expect_single, expect_none_or_single)
+    expect_single, expect_none_or_single, from_child_xml)
+from .population import Population
 from .component import Quantity
 from nineml.base import DocumentLevelObject
 from .port_connections import (
@@ -151,45 +152,27 @@ class Projection(BaseULObject, DocumentLevelObject):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         # Get Name
-        name = element.get('name')
+        name = element.attrib['name']
         # Get Pre
-        pre = Reference.from_xml(
-            expect_single(
-                expect_single(element.findall(NINEML + 'Pre'))
-                .findall(
-                    NINEML + 'Reference')), document, **kwargs).user_object
-        post = Reference.from_xml(
-            expect_single(
-                expect_single(element.findall(NINEML + 'Post'))
-                .findall(
-                    NINEML + 'Reference')), document, **kwargs).user_object
-        response = DynamicsProperties.from_xml(
-            expect_single(
-                expect_single(element.findall(NINEML + 'Response'))
-                .findall(NINEML + 'DynamicsProperties')), document, **kwargs)
-        plasticity = expect_none_or_single(
-            element.findall(NINEML + 'Plasticity'))
-        if plasticity is not None:
-            plasticity = DynamicsProperties.from_xml(
-                expect_single(
-                    plasticity.findall(
-                        NINEML + 'DynamicsProperties')), document, **kwargs)
-        connectivity = ConnectionRuleProperties.from_xml(
-            expect_single(
-                expect_single(element.findall(NINEML + 'Connectivity'))
-                .findall(
-                    NINEML + 'ConnectionRuleProperties')), document, **kwargs)
-        analog_port_connections = [
-            AnalogPortConnection.from_xml(pc, document, **kwargs)
-            for pc in element.findall(NINEML + 'AnalogPortConnection')]
-        event_port_connections = [
-            EventPortConnection.from_xml(pc, document, **kwargs)
-            for pc in element.findall(NINEML + 'EventPortConnection')]
+        pre = from_child_xml(element, Population, document,
+                             allow_reference='only', within='Pre', **kwargs)
+        post = from_child_xml(element, Population, document,
+                              allow_reference='only', within='Post', **kwargs)
+        response = from_child_xml(element, DynamicsProperties, document,
+                                  allow_reference=True, within='Response',
+                                  **kwargs)
+        plasticity = from_child_xml(element, DynamicsProperties, document,
+                                    allow_reference=True, within='Plasticity',
+                                    allow_none=True, **kwargs)
+        connectivity = from_child_xml(element, ConnectionRuleProperties,
+                                      document, within='Connectivity',
+                                      allow_reference=True, **kwargs)
+        port_connections = from_child_xml(
+            element, (AnalogPortConnection, EventPortConnection),
+            document, multiple=True, **kwargs)
         # Get Delay
-        delay = Quantity.from_xml(
-            expect_single(
-                expect_single(element.findall(NINEML + 'Delay'))
-                .findall(NINEML + 'Quantity')), document, **kwargs)
+        delay = from_child_xml(element, Quantity, document, within='Delay',
+                               **kwargs)
         return cls(name=name,
                    pre=pre,
                    post=post,
@@ -197,6 +180,5 @@ class Projection(BaseULObject, DocumentLevelObject):
                    plasticity=plasticity,
                    connectivity=connectivity,
                    delay=delay,
-                   port_connections=chain(analog_port_connections,
-                                          event_port_connections),
+                   port_connections=port_connections,
                    url=document.url)

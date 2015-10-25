@@ -70,8 +70,8 @@ class Selection(BaseULObject, DocumentLevelObject):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         # The only supported op at this stage
-        op = Concatenate.from_xml(
-            expect_single(element.findall(NINEML + 'Concatenate')), document)
+        op = from_child_xml(
+            element, Concatenate, document, **kwargs)
         return cls(element.attrib['name'], op, url=document.url)
 
     def evaluate(self):

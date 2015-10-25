@@ -4,7 +4,7 @@ from .component import (resolve_reference, write_reference, DynamicsProperties,
                         RandomDistributionProperties, Component)
 from nineml.base import DocumentLevelObject
 from nineml.xmlns import NINEML, E
-from nineml.utils import expect_single
+from nineml.utils import from_child_xml
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import handle_xml_exceptions
 
@@ -74,7 +74,8 @@ class Population(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, **kwargs):  # @UnusedVariable
-        positions = [self.positions.to_xml(document, **kwargs)] if self.positions else []
+        positions = ([self.positions.to_xml(document, **kwargs)]
+                     if self.positions else [])
         return E(self.element_name,
                  E.Size(str(self.size)),
                  E.Cell(self.cell.to_xml(document, **kwargs)),
@@ -93,14 +94,11 @@ class Population(BaseULObject, DocumentLevelObject):
             kwargs['positions'] = RandomDistributionProperties.from_xml(
                 layout_elem, document)
             kwargs['url'] = document.url
-        cell = expect_single(element.findall(NINEML + 'Cell'))
-        cell_component = cell.find(NINEML + 'DynamicsProperties')
-        if cell_component is None:
-            cell_component = cell.find(NINEML + 'Reference')
+        cell = from_child_xml(element, DynamicsProperties, document,
+                              allow_reference=True, within='Cell', **kwargs)
         return cls(name=element.attrib['name'],
                    size=int(element.find(NINEML + 'Size').text),
-                   cell=DynamicsProperties.from_xml(cell_component, document),
-                   url=document.url, **kwargs)
+                   cell=cell, url=document.url, **kwargs)
 
 
 class PositionList(BaseULObject, DocumentLevelObject):

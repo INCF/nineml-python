@@ -7,12 +7,12 @@ from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
 from nineml.base import DocumentLevelObject
 from nineml.xmlns import NINEML, E
-from nineml.utils import expect_single
+from nineml.utils import from_child_xml
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLMissingElementError)
+    NineMLRuntimeError, NineMLMissingElementError, handle_xml_exceptions)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
@@ -114,37 +114,25 @@ class MultiDynamicsProperties(DynamicsProperties):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document, **kwargs):
-        cls.check_tag(element)
-        sub_component_properties = [
-            SubDynamicsProperties.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'SubDynamicsProperties')]
-        port_exposures = [
-            AnalogSendPortExposure.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'AnalogSendPortExposure')]
-        port_exposures.extend(
-            AnalogReceivePortExposure.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'AnalogReceivePortExposure'))
-        port_exposures.extend(
-            AnalogReducePortExposure.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'AnalogReducePortExposure'))
-        port_exposures.extend(
-            EventSendPortExposure.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'EventSendPortExposure'))
-        port_exposures.extend(
-            EventReceivePortExposure.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'EventReceivePortExposure'))
-        analog_port_connections = [
-            AnalogPortConnection.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'AnalogPortConnection')]
-        event_port_connections = [
-            EventPortConnection.from_xml(e, document, **kwargs)
-            for e in element.findall(NINEML + 'EventPortConnection')]
+        sub_component_properties = from_child_xml(
+            element, SubDynamicsProperties, document, multiple=True,
+            **kwargs)
+        port_exposures = from_child_xml(
+            element,
+            (AnalogSendPortExposure, AnalogReceivePortExposure,
+             AnalogReducePortExposure, EventSendPortExposure,
+             EventReceivePortExposure), document, multiple=True,
+            allow_none=True, **kwargs)
+        port_connections = from_child_xml(
+            element,
+            (AnalogPortConnection, EventPortConnection), document,
+            multiple=True, allow_none=True, **kwargs)
         return cls(name=element.attrib['name'],
                    sub_dynamics_properties=sub_component_properties,
                    port_exposures=port_exposures,
-                   port_connections=chain(analog_port_connections,
-                                          event_port_connections))
+                   port_connections=port_connections)
 
 
 class SubDynamicsProperties(BaseULObject):
@@ -189,15 +177,11 @@ class SubDynamicsProperties(BaseULObject):
     @read_annotations
     def from_xml(cls, element, document, **kwargs):
         try:
-            dynamics_properties = DynamicsProperties.from_xml(
-                expect_single(
-                    element.findall(NINEML + 'DynamicsProperties')),
-                document, **kwargs)
+            dynamics_properties = from_child_xml(
+                element, DynamicsProperties, document, **kwargs)
         except NineMLRuntimeError:
-            dynamics_properties = MultiDynamicsProperties.from_xml(
-                expect_single(
-                    element.findall(NINEML + 'MultiDynamics')),
-                document, **kwargs)
+            dynamics_properties = from_child_xml(
+                element, MultiDynamicsProperties, document, **kwargs)
         return cls(element.attrib['name'], dynamics_properties)
 
 
