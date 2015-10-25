@@ -6,13 +6,13 @@ import operator
 from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
 from nineml.base import DocumentLevelObject
-from nineml.xmlns import NINEML, E
-from nineml.utils import from_child_xml
+from nineml.xmlns import NINEML, E, from_child_xml
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLMissingElementError, handle_xml_exceptions)
+    NineMLRuntimeError, NineMLMissingElementError, handle_xml_exceptions,
+    NineMLXMLBlockError)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
@@ -176,12 +176,9 @@ class SubDynamicsProperties(BaseULObject):
     @classmethod
     @read_annotations
     def from_xml(cls, element, document, **kwargs):
-        try:
-            dynamics_properties = from_child_xml(
-                element, DynamicsProperties, document, **kwargs)
-        except NineMLRuntimeError:
-            dynamics_properties = from_child_xml(
-                element, MultiDynamicsProperties, document, **kwargs)
+        dynamics_properties = from_child_xml(
+            element, (DynamicsProperties, MultiDynamicsProperties), document,
+            allow_reference=True, **kwargs)
         return cls(element.attrib['name'], dynamics_properties)
 
 

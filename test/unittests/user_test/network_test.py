@@ -63,9 +63,9 @@ class TestNetwork(unittest.TestCase):
             properties={'tau_syn': tau_syn},
             initial_values={"A": 0.0 * nA, "B": 0.0 * nA})
 
-        p1 = Population("Exc", 1, celltype, positions=None)
-        p2 = Population("Inh", 1, celltype, positions=None)
-        inpt = Population("Ext", 1, ext_stim, positions=None)
+        p1 = Population("Exc", 1, celltype)
+        p2 = Population("Inh", 1, celltype)
+        inpt = Population("Ext", 1, ext_stim)
 
         all_to_all = ConnectionRuleProperties(
             "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})

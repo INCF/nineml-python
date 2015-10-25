@@ -3,7 +3,7 @@ from . import BaseULObject
 from .component import resolve_reference, write_reference, DynamicsProperties
 from nineml.base import DocumentLevelObject
 from nineml.xmlns import NINEML, E
-from nineml.utils import from_child_xml
+from nineml.xmlns import from_child_xml
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import handle_xml_exceptions
 
