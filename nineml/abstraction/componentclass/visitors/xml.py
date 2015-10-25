@@ -4,16 +4,13 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-import os
-from urllib2 import urlopen
 from lxml import etree
-from itertools import chain
 from nineml.xml import E
 from . import ComponentVisitor
 from ...expressions import Alias, Constant
 from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.utils import expect_single, filter_expect_single
+from nineml.utils import expect_single
 from nineml.xml import NINEML, MATHML, extract_xmlns
 from nineml.exceptions import NineMLRuntimeError
 

@@ -54,7 +54,6 @@ class BaseReference(BaseNineMLObject):
         return element
 
     @classmethod
-    @xml_exceptions
     @read_annotations
     @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable

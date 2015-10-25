@@ -1,7 +1,7 @@
 # encoding: utf-8
 from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference
-from nineml.xml import E, from_child_xml
+from nineml.xml import E, from_child_xml, xml_exceptions
 from nineml.annotations import read_annotations, annotate_xml
 from .component import ConnectionRuleProperties, DynamicsProperties
 from copy import copy

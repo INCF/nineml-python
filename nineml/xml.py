@@ -114,8 +114,11 @@ def from_child_xml(element, child_classes, document, multiple=False,
 
 def xml_exceptions(from_xml):
     def from_xml_with_exception_handling(cls, element, *args, **kwargs):  # @UnusedVariable @IgnorePep8
+        # Keep track of which blocks were processed within the element
+        unprocessed = set(element.getchildren())
         try:
-            return from_xml(cls, element, *args, **kwargs)
+            return from_xml(cls, element, *args, unprocessed=unprocessed,
+                            **kwargs)
         except KeyError, e:
             if isinstance(e, NineMLMissingElementError):
                 raise
@@ -135,4 +138,22 @@ def xml_exceptions(from_xml):
                         (" '" + element.attrib['name'] + "'"
                          if 'name' in element.attrib else ''),
                         url, e, "', '".join(element.attrib.iterkeys())))
+        except TypeError:
+            raise
+        # If there were blocks that were unprocessed in the element
+        # and if decorating UL classmethod (not AL method which already handles
+        # unrecognised blocks (NB: args = [] for AL visitor methods)
+        if unprocessed and args:
+            xmlns = extract_xmlns(element.tag)
+            try:
+                elem_name = (element.attrib['name'] + ' ' +
+                             element.tag[len(xmlns):])
+            except KeyError:
+                elem_name = element.tag[len(xmlns):]
+            raise NineMLXMLBlockError(
+                "The following unrecognised block{s} '{remaining}' within "
+                "{elem_name} in '{url}'"
+                .format(s=('s' if len(unprocessed) > 1 else ''),
+                        remaining=unprocessed, elem_name=elem_name,
+                        url=args[0].url))
     return from_xml_with_exception_handling
