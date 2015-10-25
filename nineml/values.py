@@ -14,7 +14,8 @@ from nineml.reference import Reference
 import numpy
 import nineml
 from nineml.exceptions import NineMLRuntimeError, handle_xml_exceptions
-from nineml.utils import expect_single, expect_none_or_single, nearly_equal
+from nineml.utils import nearly_equal
+from nineml.xmlns import from_child_xml
 
 
 class BaseValue(BaseNineMLObject):
@@ -28,28 +29,9 @@ class BaseValue(BaseNineMLObject):
     @classmethod
     @read_annotations
     def from_parent_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        if element.find(NINEML + 'SingleValue') is not None:
-            value = SingleValue.from_xml(
-                expect_single(element.findall(NINEML + 'SingleValue')),
-                document)
-        elif element.find(NINEML + 'ArrayValue') is not None:
-            value = ArrayValue.from_xml(
-                expect_single(element.findall(NINEML + 'ArrayValue')),
-                document)
-        elif element.find(NINEML + 'ExternalArrayValue') is not None:
-            value = ArrayValue.from_xml(
-                expect_single(element.findall(NINEML + 'ExternalArrayValue')),
-                document)
-        elif element.find(NINEML + 'RandomDistributionValue') is not None:
-            value = RandomDistributionValue.from_xml(
-                expect_single(
-                    element.findall(NINEML + 'RandomDistributionValue')),
-                document)
-        else:
-            raise NineMLRuntimeError(
-                "Did not find recognised value tag in property (found {})"
-                .format(', '.join(c.tag for c in element.getchildren())))
-        return value
+        return from_child_xml(
+            element, (SingleValue, ArrayValue, RandomDistributionValue),
+            document, allow_reference=True, **kwargs)
 
 
 class SingleValue(BaseValue):
@@ -104,7 +86,6 @@ class SingleValue(BaseValue):
     @read_annotations
     @handle_xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        cls.check_tag(element)
         return cls(float(element.text))
 
     # =========================================================================
@@ -464,13 +445,7 @@ class RandomDistributionValue(BaseValue):
     @read_annotations
     @handle_xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        rd_elem = expect_none_or_single(
-            element.findall(NINEML + 'RandomDistributionProperties'))
-        if rd_elem is None:
-            distribution = Reference.from_xml(
-                expect_single(element.findall(NINEML +
-                                              'Reference'))).user_object
-        else:
-            distribution = nineml.user.RandomDistributionProperties.from_xml(
-                rd_elem, document)
+        distribution = from_child_xml(
+            element, nineml.user.RandomDistributionProperties,
+            document, allow_reference=True, **kwargs)
         return cls(distribution, port_name=element.attrib["port"])

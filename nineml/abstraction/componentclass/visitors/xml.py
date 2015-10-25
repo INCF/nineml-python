@@ -14,7 +14,7 @@ from ...expressions import Alias, Constant
 from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.utils import expect_single, filter_expect_single
-from nineml.xmlns import NINEML, MATHML, nineml_namespace
+from nineml.xmlns import NINEML, MATHML, extract_xmlns
 from nineml.exceptions import NineMLRuntimeError
 
 
@@ -54,6 +54,7 @@ class ComponentClassXMLLoader(object):
                         units=self.document[element.attrib['units']])
 
     def load_single_internmaths_block(self, element, checkOnlyBlock=True):
+        nineml_xmlns = extract_xmlns(element.tag)
         if checkOnlyBlock:
             elements = list(element.iterchildren(tag=etree.Element))
             if len(elements) != 1:
@@ -61,10 +62,10 @@ class ComponentClassXMLLoader(object):
                     "Unexpected tags found '{}'"
                     .format("', '".join(e.tag for e in elements)))
         assert (len(element.findall(MATHML + "MathML")) +
-                len(element.findall(NINEML + "MathInline"))) == 1
+                len(element.findall(nineml_xmlns + "MathInline"))) == 1
         if element.find(NINEML + "MathInline") is not None:
             mblock = expect_single(
-                element.findall(NINEML + 'MathInline')).text.strip()
+                element.findall(nineml_xmlns + 'MathInline')).text.strip()
         elif element.find(MATHML + "MathML") is not None:
             mblock = self.load_mathml(
                 expect_single(element.find(MATHML + "MathML")))
@@ -78,16 +79,24 @@ class ComponentClassXMLLoader(object):
         """
         Creates a dictionary that maps class-types to instantiated objects
         """
+        # Get the XMLNS (i.e. NineML version)
+        nineml_xmlns = extract_xmlns(element.tag)
+        # Get the element name if present for error messages
+        try:
+            elem_name = element.name + ' ' + element.element_name
+        except AttributeError:
+            elem_name = element.element_name
         # Initialise loaded objects with empty lists
         loaded_objects = dict((block, []) for block in block_names)
-
         for t in element.iterchildren(tag=etree.Element):
             # Strip namespace
-            tag = t.tag[len(NINEML):] if t.tag.startswith(NINEML) else t.tag
+            tag = (t.tag[len(nineml_xmlns):]
+                   if t.tag.startswith(nineml_xmlns) else t.tag)
             if tag not in block_names:
-                err = "Unexpected block tag: %s " % tag
-                err += '\n Expected: %s' % ','.join(block_names)
-                raise NineMLRuntimeError(err)
+                raise NineMLRuntimeError(
+                    "Unexpected block tag {} within {} in '{}', expected: {}"
+                    .format(tag, elem_name, self.document.url,
+                            ','.join(block_names)))
             try:
                 loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
             except KeyError, e:

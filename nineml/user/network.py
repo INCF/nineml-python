@@ -7,9 +7,9 @@ from copy import copy
 from . import BaseULObject
 from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.xmlns import E, NINEML
+from nineml.xmlns import E
 from nineml.base import DocumentLevelObject
-from nineml.reference import Reference
+from nineml.utils import from_child_xml
 import nineml
 from nineml.exceptions import handle_xml_exceptions, NineMLRuntimeError
 
@@ -97,24 +97,16 @@ class Network(BaseULObject, DocumentLevelObject):
     @resolve_reference
     @read_annotations
     @handle_xml_exceptions
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
-        cls.check_tag(element)
-        populations = []
-        projections = []
-        selections = []
-        for elem in element.findall(NINEML + 'Reference'):
-            ref = Reference.from_xml(elem, document, **kwargs)
-            obj = ref.user_object
-            if isinstance(obj, Population):
-                populations.append(obj)
-            elif isinstance(obj, Projection):
-                projections.append(obj)
-            elif isinstance(obj, Selection):
-                selections.append(obj)
-            else:
-                raise NineMLRuntimeError(
-                    "Unrecognised object {} in '{}' Network"
-                    .format(type(obj), element.attrib['name']))
+    def from_xml(cls, element, document, **kwargs):
+        populations = from_child_xml(element, Population, document,
+                                     multiple=True, allow_reference='only',
+                                     **kwargs)
+        projections = from_child_xml(element, Projection, document,
+                                     multiple=True, allow_reference='only',
+                                     **kwargs)
+        selections = from_child_xml(element, Selection, document,
+                                     multiple=True, allow_reference='only',
+                                     **kwargs)
         network = cls(name=element.attrib["name"], populations=populations,
                       projections=projections, selections=selections)
         return network

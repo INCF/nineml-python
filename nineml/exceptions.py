@@ -14,23 +14,23 @@ class NineMLDimensionError(NineMLRuntimeError):
     pass
 
 
-class NineMLMathParseError(ValueError):
+class NineMLMathParseError(ValueError, NineMLRuntimeError):
     pass
 
 
-class NineMLUnitMismatchError(ValueError):
+class NineMLUnitMismatchError(ValueError, NineMLRuntimeError):
     pass
 
 
-class NineMLNamespaceError(KeyError):
+class NineMLNamespaceError(KeyError, NineMLRuntimeError):
     pass
 
 
-class NineMLMissingElementError(KeyError):
+class NineMLMissingElementError(KeyError, NineMLRuntimeError):
     pass
 
 
-class NineMLInvalidElementTypeException(TypeError):
+class NineMLInvalidElementTypeException(TypeError, NineMLRuntimeError):
     pass
 
 
@@ -38,7 +38,15 @@ class NineMLImmutableError(NineMLRuntimeError):
     pass
 
 
-class NineMLXMLAttributeError(NineMLRuntimeError):
+class NineMLXMLError(NineMLRuntimeError):
+    pass
+
+
+class NineMLXMLAttributeError(NineMLXMLError):
+    pass
+
+
+class NineMLXMLBlockError(NineMLXMLError):
     pass
 
 
