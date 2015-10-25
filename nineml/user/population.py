@@ -78,7 +78,7 @@ class Population(BaseULObject, DocumentLevelObject):
                               allow_reference=True, within='Cell', **kwargs)
         return cls(name=element.attrib['name'],
                    size=int(element.find(NINEML + 'Size').text),
-                   cell=cell, url=document.url, **kwargs)
+                   cell=cell, url=document.url)
 
 
 def qstr(obj):
