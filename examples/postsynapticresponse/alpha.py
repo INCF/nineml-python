@@ -1,5 +1,5 @@
 from nineml import units as un, user as ul, abstraction as al
-from nineml.xmlns import etree, E
+from nineml.xml import etree, E
 
 
 def create_alpha():

@@ -2,15 +2,14 @@
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, handle_xml_exceptions,
-    NineMLMissingElementError)
-from nineml.xmlns import NINEML, E
+    NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError)
+from nineml.xml import NINEML, E
 from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import check_units
-from nineml.xmlns import from_child_xml
+from nineml.xml import from_child_xml, xml_exceptions
 from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject
@@ -268,7 +267,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         """docstring missing"""
         name = element.attrib.get("name", None)
@@ -396,7 +395,7 @@ class Property(BaseULObject):
 
     @classmethod
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         name = element.attrib['name']
@@ -494,7 +493,7 @@ class DynamicsProperties(Component):
     @classmethod
     @resolve_reference
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         """docstring missing"""
         name = element.attrib.get("name", None)

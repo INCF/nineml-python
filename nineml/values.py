@@ -1,6 +1,6 @@
 from __future__ import division
 from .base import BaseNineMLObject
-from nineml.xmlns import E, extract_xmlns
+from nineml.xml import E, extract_xmlns
 from abc import ABCMeta, abstractmethod
 from nineml.annotations import read_annotations, annotate_xml
 from urllib import urlopen
@@ -12,9 +12,9 @@ from itertools import izip
 from operator import itemgetter
 import numpy
 import nineml
-from nineml.exceptions import NineMLRuntimeError, handle_xml_exceptions
+from nineml.exceptions import NineMLRuntimeError
 from nineml.utils import nearly_equal
-from nineml.xmlns import from_child_xml
+from nineml.xml import from_child_xml, xml_exceptions
 
 
 class BaseValue(BaseNineMLObject):
@@ -83,7 +83,7 @@ class SingleValue(BaseValue):
 
     @classmethod
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return cls(float(element.text))
 
@@ -228,7 +228,7 @@ class ArrayValue(BaseValue):
 
     @classmethod
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         xmlns = extract_xmlns(element.tag)
         if element.tag == 'ExternalArrayValue':
@@ -443,7 +443,7 @@ class RandomDistributionValue(BaseValue):
 
     @classmethod
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         distribution = from_child_xml(
             element, nineml.user.RandomDistributionProperties,
