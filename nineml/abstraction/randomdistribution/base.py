@@ -1,6 +1,4 @@
 from ..componentclass import ComponentClass
-from nineml.annotations import read_annotations, annotate_xml
-from nineml.exceptions import handle_xml_exceptions
 
 
 class RandomDistribution(ComponentClass):
@@ -55,7 +53,6 @@ class RandomDistribution(ComponentClass):
         return RandomDistributionXMLLoader(
             document).load_randomdistributionclass(element)
 
-from .visitors.cloner import RandomDistributionCloner
 from .visitors.modifiers import(
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
 from .visitors.queriers import (RandomDistributionRequiredDefinitions,

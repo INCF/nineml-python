@@ -16,7 +16,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      EventSendPort)
 from nineml.utils import (check_list_contain_same_items,
                           assert_no_duplicates)
-from nineml.xmlns import NINEML
+from nineml.xml import NINEML
 from nineml.annotations import VALIDATE_DIMENSIONS
 
 

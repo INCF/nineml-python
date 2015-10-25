@@ -1,11 +1,10 @@
 from operator import itemgetter
 from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference, Reference
-from nineml.xmlns import extract_xmlns, E
+from nineml.xml import extract_xmlns, E
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.xmlns import from_child_xml
+from nineml.xml import from_child_xml, xml_exceptions
 from nineml.base import DocumentLevelObject
-from nineml.exceptions import handle_xml_exceptions
 from .population import Population
 
 
@@ -67,7 +66,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         # The only supported op at this stage
@@ -120,7 +119,7 @@ class Concatenate(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         xmlns = extract_xmlns(element.tag)
         # Load references and indices from xml

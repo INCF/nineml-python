@@ -1,6 +1,6 @@
 from nineml import abstraction as al, user as ul
 from nineml import units as un
-from nineml.xmlns import etree, E
+from nineml.xml import etree, E
 
 
 def create_leaky_integrate_and_fire():

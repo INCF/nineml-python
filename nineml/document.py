@@ -3,7 +3,7 @@ from itertools import chain
 from urllib import urlopen
 from lxml import etree
 import collections
-from nineml.xmlns import NINEML, E
+from nineml.xml import NINEML, E
 from nineml.annotations import Annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
 from nineml.base import BaseNineMLObject, DocumentLevelObject

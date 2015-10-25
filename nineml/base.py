@@ -3,7 +3,7 @@ import operator
 from collections import defaultdict
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLInvalidElementTypeException)
-from nineml.xmlns import NINEML
+from nineml.xml import NINEML
 
 
 class BaseNineMLObject(object):

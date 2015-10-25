@@ -1,9 +1,9 @@
 import os
 from operator import and_
 from .base import BaseNineMLObject
-from nineml.xmlns import NINEML, E
+from nineml.xml import E, NINEML, NINEML_V1, xml_exceptions
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLRuntimeError, handle_xml_exceptions
+from nineml.exceptions import NineMLRuntimeError
 from nineml.document import Document
 
 
@@ -54,13 +54,10 @@ class BaseReference(BaseNineMLObject):
         return element
 
     @classmethod
-    @handle_xml_exceptions
+    @xml_exceptions
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        if element.tag != NINEML + cls.element_name:
-            raise Exception("Expecting tag name %s%s, actual tag name %s" % (
-                NINEML, cls.element_name, element.tag))
         name = element.attrib["name"]
         url = element.attrib.get("url", None)
         return cls(name=name, document=document, url=url)
@@ -114,7 +111,8 @@ class Reference(BaseReference):
 
 def resolve_reference(from_xml):
     def resolving_from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
-        if element.tag == NINEML + Reference.element_name:
+        if element.tag in (NINEML + Reference.element_name,
+                           NINEML_V1 + Reference.element_name):
             reference = Reference.from_xml(element, document)
             ul_object = reference.user_object
         else:

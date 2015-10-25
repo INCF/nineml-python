@@ -6,7 +6,7 @@ from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
 from nineml.reference import resolve_reference, write_reference
-from nineml.xmlns import E
+from nineml.xml import E
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
 from .namespace import append_namespace

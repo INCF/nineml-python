@@ -6,7 +6,9 @@ docstring goes here
 """
 from lxml import etree  # @UnusedImport
 from lxml.builder import ElementMaker
-from nineml.exceptions import NineMLXMLError, NineMLXMLBlockError
+from nineml.exceptions import (
+    NineMLXMLError, NineMLXMLAttributeError, NineMLXMLBlockError,
+    NineMLMissingElementError)
 import re
 import nineml
 
@@ -108,3 +110,29 @@ def from_child_xml(element, child_classes, document, multiple=False,
             "Multiple children of types '{}' found within {} in '{}'"
             .format(child_cls_names, parent_name, document.url))
     return result
+
+
+def xml_exceptions(from_xml):
+    def from_xml_with_exception_handling(cls, element, *args, **kwargs):  # @UnusedVariable @IgnorePep8
+        try:
+            return from_xml(cls, element, *args, **kwargs)
+        except KeyError, e:
+            if isinstance(e, NineMLMissingElementError):
+                raise
+            try:
+                element_name = cls.element_name  # UL classes
+                url = args[0].url  # should be a Document class
+            except AttributeError:
+                # AL classes, relies on naming convention of load methods
+                # to get the name of the element
+                name_parts = from_xml.__name__[5:].split('_')
+                element_name = ''.join(p.capitalize() for p in name_parts)
+                url = cls.document.url
+            raise NineMLXMLAttributeError(
+                "{} XML element{} in '{}' is missing the {} attribute "
+                "(found '{}' attributes)"
+                .format(element_name,
+                        (" '" + element.attrib['name'] + "'"
+                         if 'name' in element.attrib else ''),
+                        url, e, "', '".join(element.attrib.iterkeys())))
+    return from_xml_with_exception_handling

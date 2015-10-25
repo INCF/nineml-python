@@ -5,11 +5,10 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.annotations import annotate_xml
-from nineml.xmlns import E
+from nineml.xml import E, xml_exceptions
 from nineml.annotations import read_annotations
 from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
-from nineml.exceptions import handle_xml_exceptions
 from .base import ConnectionRuleVisitor
 
 
@@ -24,7 +23,7 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader, ConnectionRuleVisitor):
     """
 
     @read_annotations
-    @handle_xml_exceptions
+    @xml_exceptions
     def load_connectionruleclass(self, element, **kwargs):  # @UnusedVariable
         block_names = ('Parameter',)
         blocks = self._load_blocks(element, block_names=block_names)

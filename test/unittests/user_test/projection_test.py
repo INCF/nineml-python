@@ -6,7 +6,7 @@ from nineml.abstraction import (
     ConnectionRule)
 from nineml.user import (
     Population, DynamicsProperties, Projection, ConnectionRuleProperties)
-from nineml.xmlns import NINEML
+from nineml.xml import NINEML
 from nineml import units as un, Document
 
 

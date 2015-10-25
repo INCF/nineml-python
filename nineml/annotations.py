@@ -1,9 +1,9 @@
 from copy import copy
 from collections import defaultdict
-from nineml.xmlns import E, NINEML
+from nineml.xml import E, NINEML
 from nineml.base import DocumentLevelObject
 from itertools import chain
-from xmlns import extract_xmlns
+from nineml.xml import extract_xmlns
 
 
 class Annotations(defaultdict, DocumentLevelObject):
