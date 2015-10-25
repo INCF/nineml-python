@@ -478,6 +478,7 @@ class Quantity(BaseNineMLObject):
 
     @classmethod
     @read_annotations
+    @xml_exceptions
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         value = BaseValue.from_parent_xml(element, document, **kwargs)
