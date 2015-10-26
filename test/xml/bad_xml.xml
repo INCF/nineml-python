@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NineML xmlns="http://nineml.net/9ML/2.0">
+    <Population name="BadBlock">
+        <Size>10</Size>
+        <Cell>
+            <Reference name="HodgkinHuxley" url="./neurons/HodgkinHuxley.xml"/>
+        </Cell>
+        <BadBlock/>
+    </Population>
+    <Population name="BadAttribute">
+        <Size>10</Size>
+        <Cell bad_attribute="test">
+            <Reference name="HodgkinHuxley" url="./neurons/HodgkinHuxley.xml"/>
+        </Cell>
+        <BadBlock/>
+    </Population>
+    <Population name="MissingAttribute">
+        <Size>10</Size>
+        <Cell>
+            <Reference/>
+        </Cell>
+        <BadBlock/>
+    </Population>
+    <Population name="MissingBlock1">
+        <Size>10</Size>
+    </Population>
+    <Population name="MissingBlock2">
+        <Cell>
+            <Reference name="HodgkinHuxley" url="./neurons/HodgkinHuxley.xml"/>
+        </Cell>
+        <BadBlock/>
+    </Population>    
+</NineML>

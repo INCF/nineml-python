@@ -3,7 +3,7 @@ from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.xml import extract_xmlns, E
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.xml import from_child_xml, xml_exceptions
+from nineml.xml import from_child_xml, unprocessed_xml
 from nineml.base import DocumentLevelObject
 from .population import Population
 
@@ -66,7 +66,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         # The only supported op at this stage
@@ -119,7 +119,7 @@ class Concatenate(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         xmlns = extract_xmlns(element.tag)
         # Load references and indices from xml

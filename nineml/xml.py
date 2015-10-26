@@ -36,7 +36,7 @@ def extract_xmlns(tag_name):
 
 def from_child_xml(element, child_classes, document, multiple=False,
                    allow_reference=False, allow_none=False, within=None,
-                   unprocessed=set(), **kwargs):
+                   unprocessed_blocks=set(), **kwargs):
     # Ensure child_classes is an iterable
     if isinstance(child_classes, type):
         child_classes = (child_classes,)
@@ -82,7 +82,7 @@ def from_child_xml(element, child_classes, document, multiple=False,
             for child_elem in parent.findall(xmlns + child_cls.element_name):
                 children.append(child_cls.from_xml(child_elem, document,
                                                    **kwargs))
-                unprocessed.discard(child_elem)
+                unprocessed_blocks.discard(child_elem)
     if allow_reference:
         for ref_elem in parent.findall(
                 xmlns + nineml.reference.Reference.element_name):
@@ -90,7 +90,7 @@ def from_child_xml(element, child_classes, document, multiple=False,
                                                       **kwargs)
             if isinstance(ref.user_object, child_classes):
                 children.append(ref.user_object)
-                unprocessed.discard(ref_elem)
+                unprocessed_blocks.discard(ref_elem)
     if not children:
         if allow_none:
             result = [] if multiple else None
@@ -112,48 +112,50 @@ def from_child_xml(element, child_classes, document, multiple=False,
     return result
 
 
-def xml_exceptions(from_xml):
-    def from_xml_with_exception_handling(cls, element, *args, **kwargs):  # @UnusedVariable @IgnorePep8
+def get_xml_attr(element, name, document, unprocessed_attrs=set(), **kwargs):  # @UnusedVariable @IgnorePep8
+    try:
+        attr = element.attrib[name]
+    except KeyError, e:
+        raise NineMLXMLAttributeError(
+            "{} in '{}' is missing the '{}' attribute (found '{}' attributes)"
+            .format(identify_element(element), document.url, e,
+                    "', '".join(element.attrib.iterkeys())))
+    unprocessed_attrs.discard(name)
+    return attr
+
+
+def identify_element(element):
+    # Get the namespace of the element (i.e. NineML version)
+    xmlns = extract_xmlns(element.tag)
+    # Get the name of the element for error messages if present
+    try:
+        elem_name = element.attrib['name'] + ' ' + element.tag[len(xmlns):]
+    except KeyError:
+        elem_name = element.tag[len(xmlns):]
+    return elem_name
+
+
+def unprocessed_xml(from_xml):
+    def from_xml_with_exception_handling(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
         # Keep track of which blocks were processed within the element
-        unprocessed = set(element.getchildren())
-        try:
-            return from_xml(cls, element, *args, unprocessed=unprocessed,
-                            **kwargs)
-        except KeyError, e:
-            if isinstance(e, NineMLMissingElementError):
-                raise
-            try:
-                element_name = cls.element_name  # UL classes
-                url = args[0].url  # should be a Document class
-            except AttributeError:
-                # AL classes, relies on naming convention of load methods
-                # to get the name of the element
-                name_parts = from_xml.__name__[5:].split('_')
-                element_name = ''.join(p.capitalize() for p in name_parts)
-                url = cls.document.url
-            raise NineMLXMLAttributeError(
-                "{} XML element{} in '{}' is missing the {} attribute "
-                "(found '{}' attributes)"
-                .format(element_name,
-                        (" '" + element.attrib['name'] + "'"
-                         if 'name' in element.attrib else ''),
-                        url, e, "', '".join(element.attrib.iterkeys())))
-        except TypeError:
-            raise
+        unprocessed_blocks = set(element.getchildren())
+        unprocessed_attrs = set(element.attrb.iterkeys())
+        return from_xml(cls, element, document, unprocessed=unprocessed_blocks,
+                        unprocessed_attrs, **kwargs)
         # If there were blocks that were unprocessed in the element
-        # and if decorating UL classmethod (not AL method which already handles
-        # unrecognised blocks (NB: args = [] for AL visitor methods)
-        if unprocessed and args:
-            xmlns = extract_xmlns(element.tag)
-            try:
-                elem_name = (element.attrib['name'] + ' ' +
-                             element.tag[len(xmlns):])
-            except KeyError:
-                elem_name = element.tag[len(xmlns):]
+        if unprocessed_blocks:
             raise NineMLXMLBlockError(
                 "The following unrecognised block{s} '{remaining}' within "
                 "{elem_name} in '{url}'"
-                .format(s=('s' if len(unprocessed) > 1 else ''),
-                        remaining=unprocessed, elem_name=elem_name,
-                        url=args[0].url))
+                .format(s=('s' if len(unprocessed_blocks) > 1 else ''),
+                        remaining="', '".join(b.tag
+                                              for b in unprocessed_blocks),
+                        elem_name=identify_element(element), url=document.url))
+        if unprocessed_attrs:
+            raise NineMLXMLAttributeError(
+                "The following unrecognised attributes{s} '{remaining}' within"
+                " {elem_name} in '{url}'"
+                .format(s=('s' if len(unprocessed_attrs) > 1 else ''),
+                        remaining="', '".join(unprocessed_attrs),
+                        elem_name=identify_element(element), url=document.url))
     return from_xml_with_exception_handling
