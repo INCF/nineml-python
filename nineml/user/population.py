@@ -2,7 +2,7 @@ from itertools import chain
 from . import BaseULObject
 from .component import resolve_reference, write_reference, DynamicsProperties
 from nineml.base import DocumentLevelObject
-from nineml.xml import NINEML, E, xml_exceptions, from_child_xml
+from nineml.xml import NINEML, E, unprocessed_xml, from_child_xml
 from nineml.annotations import annotate_xml, read_annotations
 
 
@@ -72,7 +72,7 @@ class Population(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):
         cell = from_child_xml(element, DynamicsProperties, document,
                               allow_reference=True, within='Cell', **kwargs)

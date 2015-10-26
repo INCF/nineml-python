@@ -5,7 +5,7 @@ import operator
 from sympy import Symbol
 import sympy
 import math
-from nineml.xml import E, xml_exceptions
+from nineml.xml import E, unprocessed_xml
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
@@ -144,7 +144,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     @classmethod
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         kwargs = dict(element.attrib)
         name = kwargs.pop('name')
@@ -350,7 +350,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
 
     @classmethod
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         name = element.attrib['symbol']
         dimension = document[element.attrib['dimension']]
@@ -478,7 +478,7 @@ class Quantity(BaseNineMLObject):
 
     @classmethod
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         value = BaseValue.from_parent_xml(element, document, **kwargs)

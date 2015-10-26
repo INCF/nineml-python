@@ -6,7 +6,7 @@ import operator
 from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
 from nineml.base import DocumentLevelObject
-from nineml.xml import NINEML, E, from_child_xml, xml_exceptions
+from nineml.xml import NINEML, E, from_child_xml, unprocessed_xml
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
@@ -113,7 +113,7 @@ class MultiDynamicsProperties(DynamicsProperties):
     @classmethod
     @resolve_reference
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):
         sub_component_properties = from_child_xml(
             element, SubDynamicsProperties, document, multiple=True,
@@ -175,7 +175,7 @@ class SubDynamicsProperties(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):
         dynamics_properties = from_child_xml(
             element, (DynamicsProperties, MultiDynamicsProperties), document,

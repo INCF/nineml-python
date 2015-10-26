@@ -9,7 +9,7 @@ from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.xml import E
 from nineml.base import DocumentLevelObject
-from nineml.xml import from_child_xml, xml_exceptions
+from nineml.xml import from_child_xml, unprocessed_xml
 import nineml
 from nineml.exceptions import NineMLRuntimeError
 
@@ -96,7 +96,7 @@ class Network(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):
         populations = from_child_xml(element, Population, document,
                                      multiple=True, allow_reference='only',

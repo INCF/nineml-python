@@ -1,6 +1,6 @@
 from . import BaseULObject
 from abc import ABCMeta, abstractmethod
-from nineml.xml import E, xml_exceptions
+from nineml.xml import E, unprocessed_xml
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLMissingElementError, NineMLDimensionError)
@@ -219,7 +219,7 @@ class BasePortConnection(BaseULObject):
 
     @classmethod
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         return cls(send_port=element.attrib['send_port'],

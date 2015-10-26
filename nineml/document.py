@@ -173,8 +173,11 @@ class Document(dict, BaseNineMLObject):
                 .format(unloaded.cls.__name__, unloaded.name,
                         "\n".join('{}(name={})'.format(u.cls.__name__, u.name)
                                   for u in self._loading)))
+        # Keep track of the document-level elements that are in the process of
+        # being loaded to catch circular references
         self._loading.append(unloaded)
         elem = unloaded.cls.from_xml(unloaded.xml, self)
+        # Remove current element from "loading" stack as it has been loaded
         assert self._loading[-1] is unloaded
         self._loading.pop()
         assert isinstance(unloaded.name, basestring)

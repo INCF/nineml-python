@@ -9,7 +9,7 @@ from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import check_units
-from nineml.xml import from_child_xml, xml_exceptions
+from nineml.xml import from_child_xml, unprocessed_xml
 from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject
@@ -267,7 +267,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     @classmethod
     @resolve_reference
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         """docstring missing"""
         name = element.attrib.get("name", None)
@@ -395,7 +395,7 @@ class Property(BaseULObject):
 
     @classmethod
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         name = element.attrib['name']
@@ -493,7 +493,7 @@ class DynamicsProperties(Component):
     @classmethod
     @resolve_reference
     @read_annotations
-    @xml_exceptions
+    @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         """docstring missing"""
         name = element.attrib.get("name", None)
