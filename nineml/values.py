@@ -1,6 +1,6 @@
 from __future__ import division
 from .base import BaseNineMLObject
-from nineml.xml import E, extract_xmlns
+from nineml.xml import E, extract_xmlns, get_xml_attr
 from abc import ABCMeta, abstractmethod
 from nineml.annotations import read_annotations, annotate_xml
 from urllib import urlopen
@@ -232,15 +232,19 @@ class ArrayValue(BaseValue):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         xmlns = extract_xmlns(element.tag)
         if element.tag == 'ExternalArrayValue':
-            url = element.attrib["url"]
+            url = get_xml_attr(element, 'url', document, **kwargs)
             with contextlib.closing(urlopen(url)) as f:
                 # FIXME: Should use a non-numpy version of this load function
                 values = numpy.loadtxt(f)
-            return cls(values, (element.attrib["url"],
-                                element.attrib["mimetype"],
-                                element.attrib["columnName"]))
+            return cls(values, (get_xml_attr(element, 'url', document,
+                                             **kwargs),
+                                get_xml_attr(element, 'mimetype', document,
+                                             **kwargs),
+                                get_xml_attr(element, 'columnName', document,
+                                             **kwargs)))
         else:
-            rows = [(int(e.attrib['index']), float(e.attrib['value']))
+            rows = [(get_xml_attr(e, 'index', document, dtype=int, **kwargs),
+                     get_xml_attr(e, 'value', document, dtype=float, **kwargs))
                     for e in element.findall(xmlns + 'ArrayValueRow')]
             sorted_rows = sorted(rows, key=itemgetter(0))
             indices, values = zip(*sorted_rows)
@@ -448,4 +452,4 @@ class RandomDistributionValue(BaseValue):
         distribution = from_child_xml(
             element, nineml.user.RandomDistributionProperties,
             document, allow_reference=True, **kwargs)
-        return cls(distribution, port_name=element.attrib["port"])
+        return cls(distribution, port_name=get_xml_attr(element, 'port', document, **kwargs))

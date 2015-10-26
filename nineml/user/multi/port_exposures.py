@@ -6,7 +6,7 @@ from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
 from nineml.reference import resolve_reference, write_reference
-from nineml.xml import E, unprocessed_xml
+from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
 from .namespace import append_namespace
@@ -78,9 +78,9 @@ class _BasePortExposure(BaseULObject):
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
-        return cls(name=element.attrib['name'],
-                   component=element.attrib['sub_component'],
-                   port=element.attrib['port'])
+        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
+                   component=get_xml_attr(element, 'sub_component', document, **kwargs),
+                   port=get_xml_attr(element, 'port', document, **kwargs))
 
     @classmethod
     def from_tuple(cls, tple, container):

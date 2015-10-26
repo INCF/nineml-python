@@ -20,7 +20,10 @@ class TestPopulation(unittest.TestCase):
     def test_bad_attribute(self):
         self.assertRaises(NineMLXMLAttributeError,
                           self.doc.__getitem__,
-                          'BadAttribute')
+                          'BadAttribute1')
+        self.assertRaises(NineMLXMLAttributeError,
+                          self.doc.__getitem__,
+                          'BadAttribute2')
 
     def test_missing_attribute(self):
         self.assertRaises(NineMLXMLAttributeError,

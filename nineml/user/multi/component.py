@@ -6,7 +6,7 @@ import operator
 from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
 from nineml.base import DocumentLevelObject
-from nineml.xml import NINEML, E, from_child_xml, unprocessed_xml
+from nineml.xml import NINEML, E, from_child_xml, unprocessed_xml, get_xml_attr
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
@@ -128,7 +128,7 @@ class MultiDynamicsProperties(DynamicsProperties):
             element,
             (AnalogPortConnection, EventPortConnection), document,
             multiple=True, allow_none=True, **kwargs)
-        return cls(name=element.attrib['name'],
+        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
                    sub_dynamics_properties=sub_component_properties,
                    port_exposures=port_exposures,
                    port_connections=port_connections)
@@ -180,7 +180,7 @@ class SubDynamicsProperties(BaseULObject):
         dynamics_properties = from_child_xml(
             element, (DynamicsProperties, MultiDynamicsProperties), document,
             allow_reference=True, **kwargs)
-        return cls(element.attrib['name'], dynamics_properties)
+        return cls(get_xml_attr(element, 'name', document, **kwargs), dynamics_properties)
 
 
 class SubDynamics(BaseULObject):

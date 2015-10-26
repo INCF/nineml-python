@@ -1,6 +1,6 @@
 from . import BaseULObject
 from abc import ABCMeta, abstractmethod
-from nineml.xml import E, unprocessed_xml
+from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLMissingElementError, NineMLDimensionError)
@@ -222,12 +222,20 @@ class BasePortConnection(BaseULObject):
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
-        return cls(send_port=element.attrib['send_port'],
-                   receive_port=element.attrib['receive_port'],
-                   sender_role=element.get('sender_role', None),
-                   receiver_role=element.get('receiver_role', None),
-                   sender_name=element.get('sender_name', None),
-                   receiver_name=element.get('receiver_name', None))
+        return cls(send_port=get_xml_attr(element, 'send_port',
+                                          document, **kwargs),
+                   receive_port=get_xml_attr(element, 'receive_port', document,
+                                             **kwargs),
+                   sender_role=get_xml_attr(element, 'sender_role', document,
+                                            default=None, **kwargs),
+                   receiver_role=get_xml_attr(element, 'receiver_role',
+                                              document, default=None,
+                                              **kwargs),
+                   sender_name=get_xml_attr(element, 'sender_name', document,
+                                            default=None, **kwargs),
+                   receiver_name=get_xml_attr(element, 'receiver_name',
+                                              document, default=None,
+                                              **kwargs))
 
     @abstractmethod
     def _check_ports(self):

@@ -47,23 +47,24 @@ class Annotations(defaultdict, DocumentLevelObject):
 
 def read_annotations(from_xml):
     def annotate_from_xml(cls, element, *args, **kwargs):
-        xmlns = extract_xmlns(element.tag)
+        nineml_xmlns = extract_xmlns(element.tag)
         annot_elem = expect_none_or_single(
-            element.findall(xmlns + Annotations.element_name))
+            element.findall(nineml_xmlns + Annotations.element_name))
         if annot_elem is not None:
             # Extract the annotations
             annotations = Annotations.from_xml(annot_elem)
             # Get a copy of the element with the annotations stripped
             element = copy(element)
-            element.remove(element.find(NINEML + Annotations.element_name))
+            element.remove(element.find(nineml_xmlns +
+                                        Annotations.element_name))
         else:
             annotations = Annotations()
         if (cls.__class__.__name__ == 'DynamicsXMLLoader' and
-                VALIDATE_DIMENSIONS in annotations[NINEML]):
+                VALIDATE_DIMENSIONS in annotations[nineml_xmlns]):
             # FIXME: Hack until I work out the best way to let other 9ML
             #        objects ignore this kwarg TGC 6/15
             kwargs['validate_dimensions'] = (
-                annotations[NINEML][VALIDATE_DIMENSIONS] == 'True')
+                annotations[nineml_xmlns][VALIDATE_DIMENSIONS] == 'True')
         nineml_object = from_xml(cls, element, *args, **kwargs)
         nineml_object.annotations.update(annotations.iteritems())
         return nineml_object

@@ -11,8 +11,9 @@ from ...expressions import Alias, Constant
 from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.utils import expect_single
-from nineml.xml import NINEML, MATHML, extract_xmlns
-from nineml.exceptions import NineMLRuntimeError
+from nineml.xml import (NINEML, MATHML, extract_xmlns, get_xml_attr,
+                        identify_element)
+from nineml.exceptions import NineMLXMLBlockError
 
 
 class ComponentClassXMLLoader(object):
@@ -30,32 +31,36 @@ class ComponentClassXMLLoader(object):
             document = Document()
         self.document = document
 
-    def load_connectports(self, element, **kwargs):  # @UnusedVariable
-        return element.attrib['source'], element.attrib['sink']
-
     @read_annotations
     def load_parameter(self, element, **kwargs):  # @UnusedVariable
-        return Parameter(name=element.attrib['name'],
-                         dimension=self.document[element.attrib['dimension']])
+        return Parameter(name=get_xml_attr(element, 'name', self.document,
+                                           **kwargs),
+                         dimension=self.document[
+                             get_xml_attr(element, 'dimension', self.document,
+                                          **kwargs)])
 
     @read_annotations
     def load_alias(self, element, **kwargs):  # @UnusedVariable
-        name = element.attrib["name"]
+        name = get_xml_attr(element, 'name', self.document, **kwargs)
         rhs = self.load_single_internmaths_block(element)
         return Alias(lhs=name, rhs=rhs)
 
     @read_annotations
     def load_constant(self, element, **kwargs):  # @UnusedVariable
-        return Constant(name=element.attrib['name'],
-                        value=float(element.attrib['value']),
-                        units=self.document[element.attrib['units']])
+        return Constant(name=get_xml_attr(element, 'name', self.document,
+                                          **kwargs),
+                        value=get_xml_attr(element, 'value', self.document,
+                                           dtype=float, **kwargs),
+                        units=self.document[
+                            get_xml_attr(element, 'units', self.document,
+                                         **kwargs)])
 
     def load_single_internmaths_block(self, element, checkOnlyBlock=True):
         nineml_xmlns = extract_xmlns(element.tag)
         if checkOnlyBlock:
             elements = list(element.iterchildren(tag=etree.Element))
             if len(elements) != 1:
-                raise NineMLRuntimeError(
+                raise NineMLXMLBlockError(
                     "Unexpected tags found '{}'"
                     .format("', '".join(e.tag for e in elements)))
         assert (len(element.findall(MATHML + "MathML")) +
@@ -78,12 +83,6 @@ class ComponentClassXMLLoader(object):
         """
         # Get the XMLNS (i.e. NineML version)
         nineml_xmlns = extract_xmlns(element.tag)
-        # Get the element name if present for error messages
-        try:
-            elem_name = (element.attrib['name'] + ' ' +
-                         element.tag[len(nineml_xmlns):])
-        except KeyError:
-            elem_name = element.tag[len(nineml_xmlns):]
         # Initialise loaded objects with empty lists
         loaded_objects = dict((block, []) for block in block_names)
         for t in element.iterchildren(tag=etree.Element):
@@ -91,19 +90,11 @@ class ComponentClassXMLLoader(object):
             tag = (t.tag[len(nineml_xmlns):]
                    if t.tag.startswith(nineml_xmlns) else t.tag)
             if tag not in block_names:
-                raise NineMLRuntimeError(
-                    "Unexpected block tag {} within {} in '{}', expected: {}"
-                    .format(tag, elem_name, self.document.url,
+                raise NineMLXMLBlockError(
+                    "Unexpected block {} within {} in '{}', expected: {}"
+                    .format(tag, identify_element(element), self.document.url,
                             ','.join(block_names)))
-            try:
-                loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
-            except KeyError, e:
-                raise NineMLRuntimeError(
-                    "Missing '{}' attribute in {}{} block in '{}' document"
-                    .format(e.message,
-                            ("'{}' ".format(t.attrib['name'])
-                             if 'name' in t.attrib else ''), tag,
-                            self.document.url))
+            loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
         return loaded_objects
 
     tag_to_loader = {

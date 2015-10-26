@@ -1,7 +1,7 @@
 # encoding: utf-8
 from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference
-from nineml.xml import E, from_child_xml, unprocessed_xml
+from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
 from nineml.annotations import read_annotations, annotate_xml
 from .component import ConnectionRuleProperties, DynamicsProperties
 from copy import copy
@@ -151,7 +151,7 @@ class Projection(BaseULObject, DocumentLevelObject):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
         # Get Name
-        name = element.attrib['name']
+        name = get_xml_attr(element, 'name', document, **kwargs)
         # Get Pre
         pre = from_child_xml(element, Population, document,
                              allow_reference='only', within='Pre', **kwargs)
