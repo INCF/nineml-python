@@ -9,8 +9,9 @@ from . import ComponentVisitor
 from ...expressions import Alias, Constant
 from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.xml import (E, strip_xmlns, extract_xmlns, get_xml_attr,
-                        identify_element, unprocessed_xml)
+from nineml.xml import (
+    E, strip_xmlns, extract_xmlns, get_xml_attr, identify_element,
+    unprocessed_xml, ALL_NINEML, NINEMLv1)
 from nineml.exceptions import NineMLXMLBlockError
 from nineml.abstraction.expressions import Expression
 
@@ -49,24 +50,30 @@ class ComponentClassXMLLoader(object):
     @read_annotations
     @unprocessed_xml
     def load_constant(self, element, **kwargs):  # @UnusedVariable
-        return Constant(name=get_xml_attr(element, 'name', self.document,
-                                          **kwargs),
-                        value=get_xml_attr(element, 'value', self.document,
-                                           dtype=float, **kwargs),
-                        units=self.document[
-                            get_xml_attr(element, 'units', self.document,
-                                         **kwargs)])
+        xmlns = extract_xmlns(element.tag)
+        if xmlns == NINEMLv1:
+            value = float(element.text)
+        else:
+            value = get_xml_attr(element, 'value', self.document,
+                                 dtype=float, **kwargs),
+        return Constant(
+            name=get_xml_attr(element, 'name', self.document, **kwargs),
+            value=value,
+            units=self.document[
+                get_xml_attr(element, 'units', self.document, **kwargs)])
 
     def load_expression(self, element, **kwargs):
         return get_xml_attr(element, 'MathInline', self.document,
                             in_block=True, dtype=Expression, **kwargs)
 
-    def _load_blocks(self, element, block_names, unprocessed=None, **kwargs):  # @UnusedVariable @IgnorePep8
+    def _load_blocks(self, element, block_names, unprocessed=None,
+                     prev_block_names={}, ignore=[], **kwargs):  # @UnusedVariable @IgnorePep8
         """
         Creates a dictionary that maps class-types to instantiated objects
         """
-        # Get the XMLNS (i.e. NineML version)
-        nineml_xmlns = extract_xmlns(element.tag)
+        # Get the XML namespace (i.e. NineML version)
+        xmlns = extract_xmlns(element.tag)
+        assert xmlns in ALL_NINEML
         # Initialise loaded objects with empty lists
         loaded_objects = dict((block, []) for block in block_names)
         for t in element.iterchildren(tag=etree.Element):
@@ -74,14 +81,15 @@ class ComponentClassXMLLoader(object):
             if unprocessed:
                 unprocessed[0].discard(t)
             # Strip namespace
-            tag = (t.tag[len(nineml_xmlns):]
-                   if t.tag.startswith(nineml_xmlns) else t.tag)
-            if tag not in block_names:
-                raise NineMLXMLBlockError(
-                    "Unexpected block {} within {} in '{}', expected: {}"
-                    .format(tag, identify_element(element), self.document.url,
-                            ','.join(block_names)))
-            loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
+            tag = (t.tag[len(xmlns):]
+                   if t.tag.startswith(xmlns) else t.tag)
+            if (xmlns, tag) not in ignore:
+                if tag not in block_names:
+                    raise NineMLXMLBlockError(
+                        "Unexpected block {} within {} in '{}', expected: {}"
+                        .format(tag, identify_element(element),
+                                self.document.url, ','.join(block_names)))
+                loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
         return loaded_objects
 
     tag_to_loader = {

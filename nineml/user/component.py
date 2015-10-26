@@ -8,12 +8,14 @@ from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import check_units
-from nineml.xml import from_child_xml, unprocessed_xml, get_xml_attr, E
+from nineml.xml import (
+    from_child_xml, unprocessed_xml, get_xml_attr, E, extract_xmlns, NINEMLv1)
 from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject
 from nineml.document import Document
 from nineml.base import DocumentLevelObject, ContainerObject
+from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
 from os import path
 
 
@@ -389,10 +391,18 @@ class Property(BaseULObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        cls.check_tag(element)
         name = get_xml_attr(element, 'name', document, **kwargs)
-        quantity = from_child_xml(
-            element, Quantity, document, **kwargs)
+        if extract_xmlns(element.tag) == NINEMLv1:
+            value = from_child_xml(
+                element,
+                (SingleValue, ArrayValue, RandomDistributionComponent),
+                document, **kwargs)
+            units = document[
+                get_xml_attr(element, 'units', document, **kwargs)]
+            quantity = Quantity(value, units)
+        else:
+            quantity = from_child_xml(
+                element, Quantity, document, **kwargs)
         return cls(name=name, quantity=quantity)
 
     def set_units(self, units):
@@ -529,6 +539,29 @@ class RandomDistributionProperties(Component):
     def standard_library(self):
         return self.component_class.standard_library
 
-
     def get_element_name(self):
         return self.element_name
+
+
+class DynamicsComponent(DynamicsProperties):
+    """
+    An extension of DynamicsProperties for v1 compatibility
+    """
+
+    element_name = "Component"
+
+
+class ConnectionRuleComponent(ConnectionRuleProperties):
+    """
+    An extension of DynamicsProperties for v1 compatibility
+    """
+
+    element_name = "Component"
+
+
+class RandomDistributionComponent(RandomDistributionProperties):
+    """
+    An extension of DynamicsProperties for v1 compatibility
+    """
+
+    element_name = "Component"

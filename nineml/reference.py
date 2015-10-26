@@ -1,7 +1,8 @@
 import os
 from operator import and_
 from .base import BaseNineMLObject
-from nineml.xml import E, ALL_NINEML, unprocessed_xml, get_xml_attr
+from nineml.xml import (
+    E, ALL_NINEML, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError
 from nineml.document import Document
@@ -57,7 +58,11 @@ class BaseReference(BaseNineMLObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        name = get_xml_attr(element, 'name', document, **kwargs)
+        xmlns = extract_xmlns(element.tag)
+        if xmlns == NINEMLv1:
+            name = element.text
+        else:
+            name = get_xml_attr(element, 'name', document, **kwargs)
         url = get_xml_attr(element, 'url', document, default=None, **kwargs)
         return cls(name=name, document=document, url=url)
 

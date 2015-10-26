@@ -7,7 +7,8 @@ docstring needed
 from itertools import chain
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
-from nineml.xml import E, get_xml_attr, unprocessed_xml
+from nineml.xml import (
+    E, get_xml_attr, unprocessed_xml, NINEMLv1, extract_xmlns)
 from ..base import Dynamics
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
@@ -35,9 +36,16 @@ class DynamicsXMLLoader(ComponentClassXMLLoader, DynamicsVisitor):
     def load_dynamics(self, element, **kwargs):  # @UnusedVariable
         block_names = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
                        'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
-                       'Dynamics', 'Regime', 'Alias', 'StateVariable',
-                       'Constant')
-        blocks = self._load_blocks(element, block_names=block_names, **kwargs)
+                       'Regime', 'Alias', 'StateVariable', 'Constant')
+        blocks = self._load_blocks(element, block_names=block_names,
+                                   ignore=[(NINEMLv1, 'Dynamics')], **kwargs)
+        if extract_xmlns(element.tag) == NINEMLv1:
+            dyn_elem = expect_single(element.findall(NINEMLv1 + 'Dynamics'))
+            dyn_blocks = self._load_blocks(
+                dyn_elem,
+                block_names=('Regime', 'Alias', 'StateVariable', 'Constant'),
+                **kwargs)
+            blocks.update(dyn_blocks)
         dyn_kwargs = dict((k, v) for k, v in kwargs.iteritems()
                           if k in ('validate_dimensions', 'url'))
         return Dynamics(
