@@ -3,9 +3,11 @@ from itertools import chain
 from urllib import urlopen
 from lxml import etree
 import collections
-from nineml.xml import E, ALL_NINEML, extract_xmlns, strip_xmlns
+from nineml.xml import (
+    E, ALL_NINEML, extract_xmlns, strip_xmlns, NINEMLv1, from_child_xml)
 from nineml.annotations import Annotations
-from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
+from nineml.exceptions import (
+    NineMLRuntimeError, NineMLMissingElementError, NineMLXMLError)
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 import contextlib
 
@@ -22,6 +24,7 @@ class Document(dict, BaseNineMLObject):
     element_name = 'NineML'
     write_order = ['Population', 'Projection', 'Selection', 'Network',
                    'Dynamics', 'ConnectionRule', 'RandomDistribution',
+                   'ComponentClass', 'Component',  # For v1.0
                    'DynamicsProperties', 'MultiDynamicsProperties',
                    'MultiCompartment', 'ConnectionRuleProperties',
                    'RandomDistributionProperties', 'Dimension', 'Unit']
@@ -64,11 +67,14 @@ class Document(dict, BaseNineMLObject):
     def remove(self, element):
         if not isinstance(element, DocumentLevelObject):
             raise NineMLRuntimeError(
-                "Could not remove {} as it is not a document level NineML "
-                "object ('{}') ".format(
-                    element.element_name, "', '".join(self.write_order)))
-        name = element.name
-        del self[name]
+                "Could not remove {} from document as it is not a document "
+                "level NineML object ('{}') ".format(element.element_name))
+        try:
+            del self[element.name]
+        except KeyError:
+            raise NineMLMissingElementError(
+                "Could not find '{}' element to remove from document '{}'"
+                .format(element.name, self.url))
 
     def __eq__(self, other):
         # Ensure all objects are loaded
@@ -255,16 +261,16 @@ class Document(dict, BaseNineMLObject):
         write_xml(doc, filename)
 
     @classmethod
-    def from_xml(cls, element, url=None):
-        xmlns = extract_xmlns(element)
+    def from_xml(cls, element, url=None, **kwargs):
+        xmlns = extract_xmlns(element.tag)
         if xmlns not in ALL_NINEML:
-            raise NineMLRuntimeError(
+            raise NineMLXMLError(
                 "Unrecognised XML namespace '{}', can be one of '{}'"
                 .format(xmlns[1:-1],
                         "', '".join(ns[1:-1] for ns in ALL_NINEML)))
         if element.tag[len(xmlns):] != cls.element_name:
-            raise Exception("'{}' document does not have a NineML root ('{}')"
-                            .format(url, element.tag))
+            raise NineMLXMLError("'{}' document does not have a NineML root "
+                                 "('{}')".format(url, element.tag))
         # Initialise the document
         elements = []
         # Loop through child elements, determine the class needed to extract
@@ -290,11 +296,37 @@ class Document(dict, BaseNineMLObject):
                             "'{}' element does not correspond to a recognised "
                             "document-level object".format(child_cls.__name__))
                 except AttributeError:
-                    raise NineMLRuntimeError(
-                        "Did not find matching NineML class for '{}' "
-                        "element".format(element_name))
+                    # Check for v1 document-level objects
+                    if (xmlns, element_name) == (NINEMLv1, 'ComponentClass'):
+                        if child.findall(NINEMLv1 + 'Dynamics'):
+                            child_cls = nineml.Dynamics
+                        elif child.findall(NINEMLv1 + 'ConnectionRule'):
+                            child_cls = nineml.ConnectionRule
+                        elif child.findall(NINEMLv1 + 'RandomDistribution'):
+                            child_cls = nineml.RandomDistribution
+                        else:
+                            raise NineMLXMLError(
+                                "No type defining block in ComponentClass")
+                    elif (xmlns, element_name) == (NINEMLv1, 'Component'):
+                        definition = from_child_xml(
+                            child,
+                            (nineml.user.Definition, nineml.user.Prototype),
+                            self, **kwargs)
+                        cc = definition.component_class
+                        if isinstance(cc, nineml.Dynamics):
+                            child_cls = nineml.DynamicsProperties
+                        elif isinstance(cc, nineml.ConnectionRule):
+                            child_cls = nineml.ConnectionRuleProperties
+                        elif isinstance(cc, nineml.RandomDistribution):
+                            child_cls = nineml.RandomDistributionProperties
+                        else:
+                            assert False
+                    else:
+                        raise NineMLXMLError(
+                            "Did not find matching NineML class for '{}' "
+                            "element".format(element_name))
                 if not issubclass(child_cls, DocumentLevelObject):
-                    raise NineMLRuntimeError(
+                    raise NineMLXMLError(
                         "'{}' is not a valid top-level NineML element"
                         .format(element_name))
             else:
@@ -309,11 +341,11 @@ class Document(dict, BaseNineMLObject):
                 except KeyError:
                     name = child.attrib['symbol']
             except KeyError:
-                raise NineMLRuntimeError(
+                raise NineMLXMLError(
                     "Missing 'name' (or 'symbol') attribute from document "
                     "level object '{}'".format(child))
             if name in elements:
-                raise NineMLRuntimeError(
+                raise NineMLXMLError(
                     "Duplicate identifier '{ob1}:{name}'in NineML file '{url}'"
                     .format(name=name, ob1=elements[name].cls.element_name,
                             ob2=child_cls.element_name, url=url or ''))

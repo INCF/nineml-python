@@ -15,8 +15,8 @@ import nineml
 nineml_ns = 'http://nineml.net/9ML/2.0'
 nineml_v1_ns = 'http://nineml.net/9ML/1.0'
 NINEML = '{' + nineml_ns + '}'
-NINEML_V1 = '{' + nineml_v1_ns + '}'
-ALL_NINEML = (NINEML, NINEML_V1)
+NINEMLv1 = '{' + nineml_v1_ns + '}'
+ALL_NINEML = (NINEML, NINEMLv1)
 MATHML = "{http://www.w3.org/1998/Math/MathML}"
 UNCERTML = "{http://www.uncertml.org/2.0}"
 
@@ -148,7 +148,7 @@ def get_xml_attr(element, name, document, unprocessed=None, in_block=False,
                 return kwargs['default']
             except KeyError:
                 raise NineMLXMLAttributeError(
-                    "{} in '{}' is missing the '{}' attribute (found '{}' "
+                    "{} in '{}' is missing the {} attribute (found '{}' "
                     "attributes)".format(
                         identify_element(element), document.url, e,
                         "', '".join(element.attrib.iterkeys())))
@@ -182,13 +182,13 @@ def unprocessed_xml(from_xml):
         # Get the document object for error messages
         if args:
             document = args[0]  # if UL classmethod
+            # Check the tag of the element matches the class names
+            assert element.tag in (xmlns + cls.element_name
+                                   for xmlns in ALL_NINEML), (
+                "Found '{}' element, expected '{}'".format(element.tag,
+                                                           cls.element_name))
         else:
             document = cls.document  # if AL visitor method
-        # Check the tag of the element matches the class names
-        assert element.tag in (xmlns + cls.element_name
-                               for xmlns in ALL_NINEML), (
-            "Found '{}' element, expected '{}'".format(element.tag,
-                                                       cls.element_name))
         # Keep track of which blocks and attributes were processed within the
         # element
         unprocessed = (set(e for e in element.getchildren()

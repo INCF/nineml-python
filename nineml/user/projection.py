@@ -1,14 +1,18 @@
 # encoding: utf-8
 from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference
-from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
+from nineml.xml import (
+    E, from_child_xml, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
 from nineml.annotations import read_annotations, annotate_xml
-from .component import ConnectionRuleProperties, DynamicsProperties
+from .component import (
+    ConnectionRuleProperties, DynamicsProperties, DynamicsComponent,
+    ConnectionRuleComponent)
 from copy import copy
 from itertools import chain
 from .population import Population
 from .component import Quantity
 from nineml.base import DocumentLevelObject
+from nineml.utils import expect_single
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 
@@ -149,29 +153,67 @@ class Projection(BaseULObject, DocumentLevelObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        cls.check_tag(element)
         # Get Name
         name = get_xml_attr(element, 'name', document, **kwargs)
+        xmlns = extract_xmlns(element.tag)
+        if xmlns == NINEMLv1:
+            pre_within = 'Source'
+            post_within = 'Destination'
+            dyn_cls = DynamicsComponent
+            con_cls = ConnectionRuleComponent
+        else:
+            pre_within = 'Pre'
+            post_within = 'Post'
+            dyn_cls = DynamicsProperties
+            con_cls = ConnectionRuleProperties
         # Get Pre
         pre = from_child_xml(element, Population, document,
-                             allow_reference='only', within='Pre', **kwargs)
+                             allow_reference='only', within=pre_within,
+                             **kwargs)
         post = from_child_xml(element, Population, document,
-                              allow_reference='only', within='Post', **kwargs)
-        response = from_child_xml(element, DynamicsProperties, document,
+                              allow_reference='only', within=post_within,
+                              **kwargs)
+        response = from_child_xml(element, dyn_cls, document,
                                   allow_reference=True, within='Response',
                                   **kwargs)
-        plasticity = from_child_xml(element, DynamicsProperties, document,
+        plasticity = from_child_xml(element, dyn_cls, document,
                                     allow_reference=True, within='Plasticity',
                                     allow_none=True, **kwargs)
-        connectivity = from_child_xml(element, ConnectionRuleProperties,
+        connectivity = from_child_xml(element, con_cls,
                                       document, within='Connectivity',
                                       allow_reference=True, **kwargs)
-        port_connections = from_child_xml(
-            element, (AnalogPortConnection, EventPortConnection),
-            document, multiple=True, allow_none=True, **kwargs)
         # Get Delay
         delay = from_child_xml(element, Quantity, document, within='Delay',
                                **kwargs)
+        if xmlns == NINEMLv1:
+            connect_map = {'Source': pre, 'Destination': post,
+                           'Plasticity': plasticity, 'Response': response}
+            port_connections = []
+            for receive_name in cls.version1_nodes:
+                receive_elem = expect_single(
+                    element.findall(NINEMLv1 + receive_name))
+                try:
+                    receive_dyn = connect_map[receive_name].cell
+                except AttributeError:
+                    receive_dyn = connect_map[receive_name]
+                for send_name in cls.version1_nodes:
+                    try:
+                        send_dyn = connect_map[receive_name].cell
+                    except AttributeError:
+                        send_dyn = connect_map[receive_name]
+                    for from_elem in receive_elem.findall(NINEMLv1 + 'From' +
+                                                          send_name):
+                        send_port_name = get_xml_attr(
+                            from_elem, 'send_port', document, **kwargs)
+                        receive_port_name = get_xml_attr(
+                            from_elem, 'receive_port', document, **kwargs)
+                        receive_port = receive_dyn.port(receive_port_name)
+                        send_port = send_dyn.port(send_port_name)
+
+        else:
+            port_connections = from_child_xml(
+                element, (AnalogPortConnection, EventPortConnection),
+                document, multiple=True, allow_none=True, **kwargs)
         return cls(name=name,
                    pre=pre,
                    post=post,
@@ -181,3 +223,5 @@ class Projection(BaseULObject, DocumentLevelObject):
                    delay=delay,
                    port_connections=port_connections,
                    url=document.url)
+
+    version1_nodes = ('Source', 'Destination', 'Response', 'Plasticity')

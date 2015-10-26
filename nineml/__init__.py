@@ -7,15 +7,14 @@ A Python library for working with 9ML model descriptions.
 
 __version__ = "0.2dev"
 
-from document import read, write, load, Document
+from .document import read, write, load, Document
 from . import abstraction
 from . import user
 from . import exceptions
 from . import units
 from .units import Unit, Dimension
 from abstraction import (
-    Dynamics, ConnectionRule, RandomDistribution,
-    ComponentClass)
+    Dynamics, ConnectionRule, RandomDistribution)
 from .user import (
     Selection, Population, Projection, Property, Definition, Component,
     DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,

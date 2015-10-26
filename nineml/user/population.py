@@ -1,8 +1,10 @@
 from itertools import chain
 from . import BaseULObject
-from .component import resolve_reference, write_reference, DynamicsProperties
+from .component import (
+    resolve_reference, write_reference, DynamicsProperties, DynamicsComponent)
 from nineml.base import DocumentLevelObject
-from nineml.xml import E, unprocessed_xml, from_child_xml, get_xml_attr
+from nineml.xml import (
+    E, unprocessed_xml, from_child_xml, get_xml_attr, extract_xmlns, NINEMLv1)
 from nineml.annotations import annotate_xml, read_annotations
 
 
@@ -74,7 +76,11 @@ class Population(BaseULObject, DocumentLevelObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):
-        cell = from_child_xml(element, DynamicsProperties, document,
+        if extract_xmlns(element.tag) == NINEMLv1:
+            cell_cls = DynamicsComponent
+        else:
+            cell_cls = DynamicsProperties
+        cell = from_child_xml(element, cell_cls, document,
                               allow_reference=True, within='Cell', **kwargs)
         return cls(name=get_xml_attr(element, 'name', document, **kwargs),
                    size=get_xml_attr(element, 'Size', document, in_block=True,
