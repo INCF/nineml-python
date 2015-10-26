@@ -7,19 +7,23 @@
         </Cell>
         <BadBlock/>
     </Population>
-    <Population name="BadAttribute">
+    <Population name="BadAttribute1" bad_attribute="test">
+        <Size>10</Size>
+        <Cell>
+            <Reference name="HodgkinHuxley" url="./neurons/HodgkinHuxley.xml"/>
+        </Cell>
+    </Population>
+    <Population name="BadAttribute2">
         <Size>10</Size>
         <Cell bad_attribute="test">
             <Reference name="HodgkinHuxley" url="./neurons/HodgkinHuxley.xml"/>
         </Cell>
-        <BadBlock/>
-    </Population>
+    </Population>    
     <Population name="MissingAttribute">
         <Size>10</Size>
         <Cell>
             <Reference/>
         </Cell>
-        <BadBlock/>
     </Population>
     <Population name="MissingBlock1">
         <Size>10</Size>
@@ -28,6 +32,5 @@
         <Cell>
             <Reference name="HodgkinHuxley" url="./neurons/HodgkinHuxley.xml"/>
         </Cell>
-        <BadBlock/>
     </Population>    
 </NineML>

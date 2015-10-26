@@ -5,7 +5,7 @@ import operator
 from sympy import Symbol
 import sympy
 import math
-from nineml.xml import E, unprocessed_xml
+from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
@@ -146,11 +146,12 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        kwargs = dict(element.attrib)
-        name = kwargs.pop('name')
-        kwargs = dict((k, int(v)) for k, v in kwargs.items())
-        kwargs['url'] = document.url
-        return cls(name, **kwargs)
+        name = get_xml_attr(element, 'name', document, **kwargs)
+        # Get the attributes corresponding to the dimension symbols
+        dim_args = dict((s, get_xml_attr(element, s, document, default=0,
+                                         dtype=int, **kwargs))
+                         for s in cls.dimension_symbols)
+        return cls(name, url=document.url, **dim_args)
 
     def __mul__(self, other):
         "self * other"
@@ -352,10 +353,13 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        name = element.attrib['symbol']
-        dimension = document[element.attrib['dimension']]
-        power = int(element.get('power', 0))
-        offset = float(element.attrib.get('name', 0.0))
+        name = get_xml_attr(element, 'symbol', document, **kwargs)
+        dimension = document[get_xml_attr(element, 'dimension', document,
+                                          **kwargs)]
+        power = get_xml_attr(element, 'power', document, dtype=int,
+                             default=0, **kwargs)
+        offset = get_xml_attr(element, 'offset', document, dtype=float,
+                              default=0.0, **kwargs)
         return cls(name, dimension, power, offset=offset, url=document.url)
 
     def __mul__(self, other):
@@ -483,7 +487,7 @@ class Quantity(BaseNineMLObject):
         cls.check_tag(element)
         value = BaseValue.from_parent_xml(element, document, **kwargs)
         try:
-            units_str = element.attrib['units']
+            units_str = get_xml_attr(element, 'units', document, **kwargs)
         except KeyError:
             raise NineMLRuntimeError(
                 "{} element '{}' is missing 'units' attribute (found '{}')"

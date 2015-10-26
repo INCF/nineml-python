@@ -3,13 +3,13 @@ from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError)
-from nineml.xml import NINEML, E
+from nineml.xml import NINEML, E, get_xml_attr
 from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import check_units
-from nineml.xml import from_child_xml, unprocessed_xml
+from nineml.xml import from_child_xml, unprocessed_xml, get_xml_attr
 from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject
@@ -270,16 +270,9 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         """docstring missing"""
-        name = element.attrib.get("name", None)
-        definition_element = element.find(NINEML + Definition.element_name)
-        if definition_element is not None:
-            definition = Definition.from_xml(definition_element, document)
-        else:
-            prototype_element = element.find(NINEML + "Prototype")
-            if prototype_element is None:
-                raise Exception("A component_class must contain either a "
-                                "defintion or a prototype")
-            definition = Prototype.from_xml(prototype_element, document)
+        name = get_xml_attr(element, "name", document, **kwargs)
+        definition = from_child_xml(element, (Definition, Prototype), document,
+                                    **kwargs)
         properties = from_child_xml(element, Property, document, multiple=True,
                                     allow_none=True, **kwargs)
         return cls(name, definition, properties=properties, url=document.url)
@@ -398,7 +391,7 @@ class Property(BaseULObject):
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         cls.check_tag(element)
-        name = element.attrib['name']
+        name = get_xml_attr(element, 'name', document, **kwargs)
         quantity = from_child_xml(
             element, Quantity, document, **kwargs)
         return cls(name=name, quantity=quantity)
@@ -496,16 +489,9 @@ class DynamicsProperties(Component):
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         """docstring missing"""
-        name = element.attrib.get("name", None)
-        definition_element = element.find(NINEML + Definition.element_name)
-        if definition_element is not None:
-            definition = Definition.from_xml(definition_element, document)
-        else:
-            prototype_element = element.find(NINEML + "Prototype")
-            if prototype_element is None:
-                raise Exception("A component_class must contain either a "
-                                "defintion or a prototype")
-            definition = Prototype.from_xml(prototype_element, document)
+        name = get_xml_attr(element, "name", document, **kwargs)
+        definition = from_child_xml(element, (Definition, Prototype), document,
+                                    **kwargs)
         properties = from_child_xml(element, Property, document, multiple=True,
                                     allow_none=True, **kwargs)
         initial_values = from_child_xml(element, Initial, document,

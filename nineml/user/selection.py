@@ -1,9 +1,9 @@
 from operator import itemgetter
 from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference, Reference
-from nineml.xml import extract_xmlns, E
+from nineml.xml import extract_xmlns, E, get_xml_attr
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.xml import from_child_xml, unprocessed_xml
+from nineml.xml import from_child_xml, unprocessed_xml, get_xml_attr
 from nineml.base import DocumentLevelObject
 from .population import Population
 
@@ -68,11 +68,11 @@ class Selection(BaseULObject, DocumentLevelObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        cls.check_tag(element)
         # The only supported op at this stage
         op = from_child_xml(
             element, Concatenate, document, **kwargs)
-        return cls(element.attrib['name'], op, url=document.url)
+        return cls(get_xml_attr(element, 'name', document, **kwargs), op,
+                   url=document.url)
 
     def evaluate(self):
         assert isinstance(self.operation, Concatenate), \
@@ -121,12 +121,17 @@ class Concatenate(BaseULObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        xmlns = extract_xmlns(element.tag)
+        items = []
         # Load references and indices from xml
-        items = ((e.attrib['index'],
-                  from_child_xml(e, Population, document,
-                                 allow_reference='only', **kwargs))
-                 for e in element.findall(xmlns + 'Item'))
+        for it_elem in element.findall(extract_xmlns(element.tag) + 'Item'):
+            items.append((
+                get_xml_attr(it_elem, 'index', document, dtype=int, **kwargs),
+                from_child_xml(it_elem, Population, document,
+                               allow_reference='only', **kwargs)))
+            try:
+                kwargs['unprocessed'][0].discard(it_elem)
+            except KeyError:
+                pass
         # Sort by 'index' attribute
         indices, items = zip(*sorted(items, key=itemgetter(0)))
         indices = [int(i) for i in indices]
@@ -176,7 +181,7 @@ class Concatenate(BaseULObject):
 #         cls.check_tag(element)
 #         select_element = element.find(NINEML + 'select')
 #         assert len(select_element) == 1
-#         return cls(element.attrib["name"],
+#         return cls(get_xml_attr(element, 'name', document, **kwargs),
 #                    Operator.from_xml(select_element.getchildren()[0]))
 #
 #     def evaluate(self, group):
