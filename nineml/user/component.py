@@ -3,13 +3,12 @@ from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError)
-from nineml.xml import NINEML, E, get_xml_attr
 from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import check_units
-from nineml.xml import from_child_xml, unprocessed_xml, get_xml_attr
+from nineml.xml import from_child_xml, unprocessed_xml, get_xml_attr, E
 from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject

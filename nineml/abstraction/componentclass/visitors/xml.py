@@ -5,15 +5,14 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from lxml import etree
-from nineml.xml import E
 from . import ComponentVisitor
 from ...expressions import Alias, Constant
 from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.utils import expect_single
-from nineml.xml import (NINEML, MATHML, extract_xmlns, get_xml_attr,
-                        identify_element)
+from nineml.xml import (E, NINEML, extract_xmlns, get_xml_attr,
+                        identify_element, unprocessed_xml)
 from nineml.exceptions import NineMLXMLBlockError
+from nineml.abstraction.expressions import Expression
 
 
 class ComponentClassXMLLoader(object):
@@ -32,6 +31,7 @@ class ComponentClassXMLLoader(object):
         self.document = document
 
     @read_annotations
+    @unprocessed_xml
     def load_parameter(self, element, **kwargs):  # @UnusedVariable
         return Parameter(name=get_xml_attr(element, 'name', self.document,
                                            **kwargs),
@@ -40,12 +40,14 @@ class ComponentClassXMLLoader(object):
                                           **kwargs)])
 
     @read_annotations
+    @unprocessed_xml
     def load_alias(self, element, **kwargs):  # @UnusedVariable
         name = get_xml_attr(element, 'name', self.document, **kwargs)
-        rhs = self.load_single_internmaths_block(element)
+        rhs = self.load_expression(element, **kwargs)
         return Alias(lhs=name, rhs=rhs)
 
     @read_annotations
+    @unprocessed_xml
     def load_constant(self, element, **kwargs):  # @UnusedVariable
         return Constant(name=get_xml_attr(element, 'name', self.document,
                                           **kwargs),
@@ -55,29 +57,11 @@ class ComponentClassXMLLoader(object):
                             get_xml_attr(element, 'units', self.document,
                                          **kwargs)])
 
-    def load_single_internmaths_block(self, element, checkOnlyBlock=True):
-        nineml_xmlns = extract_xmlns(element.tag)
-        if checkOnlyBlock:
-            elements = list(element.iterchildren(tag=etree.Element))
-            if len(elements) != 1:
-                raise NineMLXMLBlockError(
-                    "Unexpected tags found '{}'"
-                    .format("', '".join(e.tag for e in elements)))
-        assert (len(element.findall(MATHML + "MathML")) +
-                len(element.findall(nineml_xmlns + "MathInline"))) == 1
-        if element.find(NINEML + "MathInline") is not None:
-            mblock = expect_single(
-                element.findall(nineml_xmlns + 'MathInline')).text.strip()
-        elif element.find(MATHML + "MathML") is not None:
-            mblock = self.load_mathml(
-                expect_single(element.find(MATHML + "MathML")))
-        return mblock
+    def load_expression(self, element, **kwargs):
+        return get_xml_attr(element, 'MathInline', self.document,
+                            in_block=True, dtype=Expression, **kwargs)
 
-    def load_mathml(self, mathml):
-        raise NotImplementedError("MathML is not currently supported but is "
-                                  "planned in future versions")
-
-    def _load_blocks(self, element, block_names):
+    def _load_blocks(self, element, block_names, unprocessed=None, **kwargs):  # @UnusedVariable @IgnorePep8
         """
         Creates a dictionary that maps class-types to instantiated objects
         """
@@ -86,6 +70,9 @@ class ComponentClassXMLLoader(object):
         # Initialise loaded objects with empty lists
         loaded_objects = dict((block, []) for block in block_names)
         for t in element.iterchildren(tag=etree.Element):
+            # Used in unprocessed_xml decorator
+            if unprocessed:
+                unprocessed[0].discard(t)
             # Strip namespace
             tag = (t.tag[len(nineml_xmlns):]
                    if t.tag.startswith(nineml_xmlns) else t.tag)
