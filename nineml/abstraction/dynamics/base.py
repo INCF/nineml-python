@@ -16,7 +16,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      EventSendPort)
 from nineml.utils import (check_list_contain_same_items,
                           assert_no_duplicates)
-from nineml.xml import NINEML
+from nineml.xml import nineml_ns
 from nineml.annotations import VALIDATE_DIMENSIONS
 
 
@@ -177,7 +177,7 @@ class Dynamics(ComponentClass):
             for pname in inferred_struct.event_out_port_names:
                 self._event_send_ports[pname] = EventSendPort(name=pname)
 
-        self.annotations[NINEML][VALIDATE_DIMENSIONS] = validate_dimensions
+        self.annotations[nineml_ns][VALIDATE_DIMENSIONS] = validate_dimensions
         for transition in self.all_transitions():
             transition.bind(self)
         # Is the finished component_class valid?:
@@ -213,7 +213,7 @@ class Dynamics(ComponentClass):
 
     def validate(self, validate_dimensions=None):
         if validate_dimensions is None:
-            validate_dimensions = self.annotations[NINEML].get(
+            validate_dimensions = self.annotations[nineml_ns].get(
                 VALIDATE_DIMENSIONS, True)
         self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self, validate_dimensions)

@@ -37,11 +37,11 @@
   <Unit symbol="Hz" dimension="per_time" power="0"/>
   <Unit symbol="ms" dimension="time" power="-3"/>
   <Unit symbol="per_ms" dimension="per_time" power="3"/>
-  <Unit symbol="min" dimension="time" power="0" scale="60"/>
+  <!--<Unit symbol="min" dimension="time" power="0" scale="60"/>
   <Unit symbol="per_min" dimension="per_time" power="0" scale="0.01666666667"/>
   <Unit symbol="hour" dimension="time" power="0" scale="3600"/>
   <Unit symbol="per_hour" dimension="per_time" power="0"
-    scale="0.00027777777778"/>
+    scale="0.00027777777778"/>-->
   <Unit symbol="m" dimension="length" power="0"/>
   <Unit symbol="cm" dimension="length" power="-2"/>
   <Unit symbol="um" dimension="length" power="-6"/>

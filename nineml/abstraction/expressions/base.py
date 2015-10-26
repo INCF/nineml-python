@@ -62,13 +62,19 @@ class Expression(object):
 
     @rhs.setter
     def rhs(self, rhs):
-        self._rhs = Parser().parse(rhs)  # Maybe this parser could be reused??
+        if isinstance(rhs, Expression):
+            self._rhs = rhs.rhs
+        else:
+            self._rhs = Parser().parse(rhs)
 
     def __str__(self):
         return self.rhs_str
 
     def __repr__(self):
         return "{}('{}')".format(self.__class__.__name__, self.rhs_str)
+
+    def _sympy_(self):
+        return self.rhs
 
     @property
     def rhs_str(self):

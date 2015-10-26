@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.annotations import annotate_xml
-from nineml.xml import E
+from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.annotations import read_annotations
 from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
@@ -24,9 +24,10 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader,
     """
 
     @read_annotations
-    def load_randomdistributionclass(self, element):
+    @unprocessed_xml
+    def load_randomdistributionclass(self, element, **kwargs):
         block_names = ('Parameter',)
-        blocks = self._load_blocks(element, block_names=block_names)
+        blocks = self._load_blocks(element, block_names=block_names, **kwargs)
         return RandomDistribution(
             name=get_xml_attr(element, 'name', self.document, **kwargs),
             parameters=blocks["Parameter"])

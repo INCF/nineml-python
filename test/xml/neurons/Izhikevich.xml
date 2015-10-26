@@ -11,7 +11,7 @@
     <AnalogReducePort name="iSyn" dimension="current" operator="+"/>
     <AnalogSendPort name="U" dimension="voltage_per_time"/>
     <AnalogSendPort name="V" dimension="voltage"/>
-    <EventSendPort name="spikeOutput" mode="send"/>
+    <EventSendPort name="spikeOutput"/>
     <!-- Suggested addition Wednesday morning...-->
     <StateVariable name="V" dimension="voltage"/>
     <StateVariable name="U" dimension="voltage_per_time"/>

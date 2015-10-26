@@ -33,6 +33,8 @@ class Document(dict, BaseNineMLObject):
         BaseNineMLObject.__init__(self, annotations=kwargs.pop('annotations',
                                                                None))
         self._url = kwargs.pop('url', None)
+        if self.url:
+            self._url = os.path.normpath(self.url)
         assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
                                   .format("', '".join(kwargs.iterkeys())))
         for element in elements:
@@ -263,6 +265,8 @@ class Document(dict, BaseNineMLObject):
         # them and add them to the dictionary
         annotations = None
         for child in element.getchildren():
+            if isinstance(child, etree._Comment):
+                continue
             if child.tag.startswith(NINEML):
                 element_name = child.tag[len(NINEML):]
                 if element_name == Annotations.element_name:

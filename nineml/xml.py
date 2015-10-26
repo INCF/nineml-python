@@ -16,6 +16,7 @@ nineml_ns = 'http://nineml.net/9ML/2.0'
 nineml_v1_ns = 'http://nineml.net/9ML/1.0'
 NINEML = '{' + nineml_ns + '}'
 NINEML_V1 = '{' + nineml_v1_ns + '}'
+ALL_NINEML = (NINEML, NINEML_V1)
 MATHML = "{http://www.w3.org/1998/Math/MathML}"
 UNCERTML = "{http://www.uncertml.org/2.0}"
 
@@ -158,20 +159,27 @@ def identify_element(element):
     xmlns = extract_xmlns(element.tag)
     # Get the name of the element for error messages if present
     try:
-        elem_name = element.attrib['name'] + ' ' + element.tag[len(xmlns):]
+        elem_name = "'{}' {}".format(element.get('name',
+                                                 element.attrib['symbol']),
+                                     element.tag[len(xmlns):])
     except KeyError:
         elem_name = element.tag[len(xmlns):]
     return elem_name
 
 
 def unprocessed_xml(from_xml):
-    def from_xml_with_exception_handling(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
+    def from_xml_with_exception_handling(cls, element, *args, **kwargs):  # @UnusedVariable @IgnorePep8
         # Keep track of which blocks and attributes were processed within the
         # element
-        unprocessed = (set(element.getchildren()),
+        if args:
+            document = args[0]  # if UL classmethod
+        else:
+            document = cls.document  # if AL visitor method
+        unprocessed = (set(e for e in element.getchildren()
+                           if not isinstance(e, etree._Comment)),
                        set(element.attrib.iterkeys()))
         try:
-            obj = from_xml(cls, element, document, unprocessed=unprocessed,
+            obj = from_xml(cls, element, *args, unprocessed=unprocessed,
                            **kwargs)
         except TypeError:
             raise
@@ -182,7 +190,7 @@ def unprocessed_xml(from_xml):
                 "Found unrecognised block{s} '{remaining}' within "
                 "{elem_name} in '{url}'"
                 .format(s=('s' if len(blocks) > 1 else ''),
-                        remaining="', '".join(b.tag for b in blocks),
+                        remaining="', '".join(str(b.tag) for b in blocks),
                         elem_name=identify_element(element), url=document.url))
         if attrs:
             raise NineMLXMLAttributeError(
