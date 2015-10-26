@@ -1,6 +1,6 @@
 from copy import copy
 from collections import defaultdict
-from nineml.xml import E, NINEML, extract_xmlns
+from nineml.xml import E, NINEML, extract_xmlns, strip_xmlns
 from nineml.base import DocumentLevelObject
 from itertools import chain
 
@@ -9,6 +9,12 @@ class Annotations(defaultdict, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
+    # FIXME: Annotations class needs a lot of work, will probably implement
+    #        generic reader/writer to nested basic name=value pairs, which
+    #        will be applied to 9ML namespaced annotations and can be
+    #        associated with other namespacees through kwargs. Annotation
+    #        namespaces with more involved loaders could provide them through
+    #        kwargs also. TGC 11/15
 
     element_name = 'Annotations'
 
@@ -40,7 +46,7 @@ class Annotations(defaultdict, DocumentLevelObject):
     def from_xml(cls, element):
         children = {}
         for child in element.getchildren():
-            children[child.tag[len(NINEML):]] = child.text
+            children[strip_xmlns(child.tag)] = child.text
         kwargs = {NINEML: children}
         return cls(**kwargs)
 

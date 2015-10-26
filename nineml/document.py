@@ -3,7 +3,7 @@ from itertools import chain
 from urllib import urlopen
 from lxml import etree
 import collections
-from nineml.xml import NINEML, E
+from nineml.xml import E, ALL_NINEML, extract_xmlns, strip_xmlns
 from nineml.annotations import Annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
 from nineml.base import BaseNineMLObject, DocumentLevelObject
@@ -256,7 +256,13 @@ class Document(dict, BaseNineMLObject):
 
     @classmethod
     def from_xml(cls, element, url=None):
-        if element.tag != NINEML + cls.element_name:
+        xmlns = extract_xmlns(element)
+        if xmlns not in ALL_NINEML:
+            raise NineMLRuntimeError(
+                "Unrecognised XML namespace '{}', can be one of '{}'"
+                .format(xmlns[1:-1],
+                        "', '".join(ns[1:-1] for ns in ALL_NINEML)))
+        if element.tag[len(xmlns):] != cls.element_name:
             raise Exception("'{}' document does not have a NineML root ('{}')"
                             .format(url, element.tag))
         # Initialise the document
@@ -267,8 +273,8 @@ class Document(dict, BaseNineMLObject):
         for child in element.getchildren():
             if isinstance(child, etree._Comment):
                 continue
-            if child.tag.startswith(NINEML):
-                element_name = child.tag[len(NINEML):]
+            if child.tag.startswith(xmlns):
+                element_name = child.tag[len(xmlns):]
                 if element_name == Annotations.element_name:
                     assert annotations is None, \
                         "Multiple annotations tags found"
@@ -330,7 +336,7 @@ class Document(dict, BaseNineMLObject):
         """Sorts the element into a consistent, logical order before write"""
         return sorted(
             elements,
-            key=lambda e: self.write_order.index(e.tag[len(NINEML):]))
+            key=lambda e: self.write_order.index(strip_xmlns(e.tag)))
 
 
 def load(root_element, read_from=None):
