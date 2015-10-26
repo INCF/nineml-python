@@ -1,7 +1,7 @@
 import os
 from operator import and_
 from .base import BaseNineMLObject
-from nineml.xml import E, NINEML, NINEML_V1, unprocessed_xml, get_xml_attr
+from nineml.xml import E, ALL_NINEML, unprocessed_xml, get_xml_attr
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError
 from nineml.document import Document
@@ -110,8 +110,7 @@ class Reference(BaseReference):
 
 def resolve_reference(from_xml):
     def resolving_from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
-        if element.tag in (NINEML + Reference.element_name,
-                           NINEML_V1 + Reference.element_name):
+        if element.tag in (ns + Reference.element_name for ns in ALL_NINEML):
             reference = Reference.from_xml(element, document)
             ul_object = reference.user_object
         else:

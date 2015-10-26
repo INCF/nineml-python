@@ -21,22 +21,26 @@ MATHML = "{http://www.w3.org/1998/Math/MathML}"
 UNCERTML = "{http://www.uncertml.org/2.0}"
 
 # Extracts the xmlns from an lxml element tag
-xmlns_re = re.compile(r'(\{.*\}).*')
+xmlns_re = re.compile(r'(\{.*\})(.*)')
 
 E = ElementMaker(namespace=nineml_ns, nsmap={None: nineml_ns})
 
 
 def extract_xmlns(tag_name):
-    xmlns = xmlns_re.match(tag_name).group(1)
-    if xmlns not in (NINEML, NINEML_V1, MATHML, UNCERTML):
-        raise NineMLXMLError(
-            "Unrecognised namespace '{}'".format(xmlns[1:-1]))
-    return xmlns
+    return xmlns_re.match(tag_name).group(1)
+
+
+def strip_xmlns(tag_name):
+    return xmlns_re.match(tag_name).group(2)
 
 
 def from_child_xml(element, child_classes, document, multiple=False,
                    allow_reference=False, allow_none=False, within=None,
                    unprocessed=None, **kwargs):
+    """
+    Loads a child element from the element, matching the tag name to the
+    appropriate class and calling its 'from_xml' method
+    """
     # Ensure child_classes is an iterable
     if isinstance(child_classes, type):
         child_classes = (child_classes,)
@@ -114,6 +118,9 @@ def from_child_xml(element, child_classes, document, multiple=False,
 
 def get_xml_attr(element, name, document, unprocessed=None, in_block=False,
                  dtype=str, **kwargs):  # @UnusedVariable @IgnorePep8
+    """
+    Gets an attribute from an xml element with exception handling
+    """
     xmlns = extract_xmlns(element.tag)
     if in_block:
         found = element.findall(xmlns + name)
@@ -155,6 +162,9 @@ def get_xml_attr(element, name, document, unprocessed=None, in_block=False,
 
 
 def identify_element(element):
+    """
+    Identifies an XML element for use in error messages
+    """
     # Get the namespace of the element (i.e. NineML version)
     xmlns = extract_xmlns(element.tag)
     # Get the name of the element for error messages if present
@@ -169,22 +179,27 @@ def identify_element(element):
 
 def unprocessed_xml(from_xml):
     def from_xml_with_exception_handling(cls, element, *args, **kwargs):  # @UnusedVariable @IgnorePep8
-        # Keep track of which blocks and attributes were processed within the
-        # element
+        # Get the document object for error messages
         if args:
             document = args[0]  # if UL classmethod
         else:
             document = cls.document  # if AL visitor method
+        # Check the tag of the element matches the class names
+        assert element.tag in (xmlns + cls.element_name
+                               for xmlns in ALL_NINEML), (
+            "Found '{}' element, expected '{}'".format(element.tag,
+                                                       cls.element_name))
+        # Keep track of which blocks and attributes were processed within the
+        # element
         unprocessed = (set(e for e in element.getchildren()
                            if not isinstance(e, etree._Comment)),
                        set(element.attrib.iterkeys()))
-        try:
-            obj = from_xml(cls, element, *args, unprocessed=unprocessed,
-                           **kwargs)
-        except TypeError:
-            raise
+        # The decorated method
+        obj = from_xml(cls, element, *args, unprocessed=unprocessed,
+                       **kwargs)
+        # Check to see if there were blocks that were unprocessed in the
+        # element
         blocks, attrs = unprocessed
-        # If there were blocks that were unprocessed in the element
         if blocks:
             raise NineMLXMLBlockError(
                 "Found unrecognised block{s} '{remaining}' within "

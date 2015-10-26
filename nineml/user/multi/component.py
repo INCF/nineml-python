@@ -6,7 +6,8 @@ import operator
 from itertools import product, groupby, izip
 from nineml.reference import resolve_reference, write_reference
 from nineml.base import DocumentLevelObject
-from nineml.xml import NINEML, E, from_child_xml, unprocessed_xml, get_xml_attr
+from nineml.xml import (
+    nineml_ns, E, from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
@@ -390,7 +391,7 @@ class MultiDynamics(Dynamics):
                                 port_connection.receiver_name, name))
                 self._analog_port_connections[
                     rcv_key][snd_key] = port_connection
-        self.annotations[NINEML][VALIDATE_DIMENSIONS] = validate_dimensions
+        self.annotations[nineml_ns][VALIDATE_DIMENSIONS] = validate_dimensions
         self.validate()
 
     def flatten(self):

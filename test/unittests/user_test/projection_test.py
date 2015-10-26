@@ -6,7 +6,7 @@ from nineml.abstraction import (
     ConnectionRule)
 from nineml.user import (
     Population, DynamicsProperties, Projection, ConnectionRuleProperties)
-from nineml.xml import NINEML
+from nineml.xml import nineml_ns
 from nineml import units as un, Document
 
 
@@ -76,7 +76,7 @@ class TestProjection(unittest.TestCase):
 
         self.one_to_one = ConnectionRule(
             name="OneToOne",
-            standard_library=(NINEML + 'connectionrules/OneToOne'))
+            standard_library=(nineml_ns + '/connectionrules/OneToOne'))
 
         self.projection = Projection(
             name="Projection",

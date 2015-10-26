@@ -9,7 +9,7 @@ from . import ComponentVisitor
 from ...expressions import Alias, Constant
 from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.xml import (E, NINEML, extract_xmlns, get_xml_attr,
+from nineml.xml import (E, strip_xmlns, extract_xmlns, get_xml_attr,
                         identify_element, unprocessed_xml)
 from nineml.exceptions import NineMLXMLBlockError
 from nineml.abstraction.expressions import Expression
@@ -119,7 +119,7 @@ class ComponentClassXMLWriter(ComponentVisitor):
         """Sorts the element into a consistent, logical order before write"""
         return sorted(
             elements,
-            key=lambda e: self.write_order.index(e.tag[len(NINEML):]))
+            key=lambda e: self.write_order.index(strip_xmlns(e.tag)))
 
 
 from nineml.document import Document
