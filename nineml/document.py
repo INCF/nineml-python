@@ -4,7 +4,7 @@ from urllib import urlopen
 from lxml import etree
 import collections
 from nineml.xml import (
-    E, ALL_NINEML, extract_xmlns, strip_xmlns, NINEMLv1, from_child_xml)
+    E, ALL_NINEML, extract_xmlns, strip_xmlns, NINEMLv1, get_element_maker)
 from nineml.annotations import Annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLMissingElementError, NineMLXMLError)
@@ -31,7 +31,7 @@ class Document(dict, BaseNineMLObject):
                    'RandomDistributionProperties', 'Dimension', 'Unit']
 
     # A tuple to hold the unresolved elements
-    _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls')
+    _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls kwargs')
 
     def __init__(self, *elements, **kwargs):
         BaseNineMLObject.__init__(self, annotations=kwargs.pop('annotations',
@@ -184,7 +184,7 @@ class Document(dict, BaseNineMLObject):
         # Keep track of the document-level elements that are in the process of
         # being loaded to catch circular references
         self._loading.append(unloaded)
-        elem = unloaded.cls.from_xml(unloaded.xml, self)
+        elem = unloaded.cls.from_xml(unloaded.xml, self, **unloaded.kwargs)
         # Remove current element from "loading" stack as it has been loaded
         assert self._loading[-1] is unloaded
         self._loading.pop()
@@ -249,15 +249,15 @@ class Document(dict, BaseNineMLObject):
                          " of units")
                 a.set_units(std_units)
 
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, E=E, **kwargs):  # @UnusedVariable
         self.standardize_units()
         return E(
             self.element_name,
             *self._sort(c.to_xml(self, as_reference=False)
                         for c in self.itervalues()))
 
-    def write(self, filename, **kwargs):
-        doc = self.to_xml(**kwargs)
+    def write(self, filename, version=2.0, **kwargs):
+        doc = self.to_xml(E=get_element_maker(version), **kwargs)
         write_xml(doc, filename)
 
     @classmethod
@@ -284,7 +284,7 @@ class Document(dict, BaseNineMLObject):
                 if element_name == Annotations.element_name:
                     assert annotations is None, \
                         "Multiple annotations tags found"
-                    annotations = Annotations.from_xml(child)
+                    annotations = Annotations.from_xml(child, **kwargs)
                     continue
                 try:
                     # Note that all `DocumentLevelObjects` need to be imported
@@ -329,7 +329,7 @@ class Document(dict, BaseNineMLObject):
                     "Duplicate identifier '{ob1}:{name}'in NineML file '{url}'"
                     .format(name=name, ob1=elements[name].cls.element_name,
                             ob2=child_cls.element_name, url=url or ''))
-            elements.append(cls._Unloaded(name, child, child_cls))
+            elements.append(cls._Unloaded(name, child, child_cls, kwargs))
         document = cls(*elements, url=url, annotations=annotations)
         return document
 
@@ -351,7 +351,7 @@ class Document(dict, BaseNineMLObject):
             key=lambda e: self.write_order.index(strip_xmlns(e.tag)))
 
 
-def load(root_element, read_from=None):
+def load(root_element, read_from=None, **kwargs):
     """
     Loads the lib9ml object model from a root lxml.etree.Element
 
@@ -359,10 +359,10 @@ def load(root_element, read_from=None):
     read_from    -- specifies the url, which the xml should be considered to
                     have been read from in order to resolve relative references
     """
-    return Document.from_xml(root_element, url=read_from)
+    return Document.from_xml(root_element, url=read_from, **kwargs)
 
 
-def read(url, relative_to=None):
+def read(url, relative_to=None, **kwargs):
     """
     Read a NineML file and parse its child elements
 
@@ -371,10 +371,10 @@ def read(url, relative_to=None):
     """
     xml, url = read_xml(url, relative_to=relative_to)
     root = xml.getroot()
-    return load(root, url)
+    return load(root, url, **kwargs)
 
 
-def write(document, filename):
+def write(document, filename, **kwargs):
     """
     Provided for symmetry with read method, takes a nineml.document.Document
     object and writes it to the specified file
@@ -382,7 +382,7 @@ def write(document, filename):
     # Encapsulate the NineML element in a document if it is not already
     if not isinstance(document, Document):
         document = Document(document)
-    document.write(filename)
+    document.write(filename, **kwargs)
 
 
 def read_xml(url, relative_to):

@@ -24,6 +24,21 @@ UNCERTML = "{http://www.uncertml.org/2.0}"
 xmlns_re = re.compile(r'(\{.*\})(.*)')
 
 E = ElementMaker(namespace=nineml_ns, nsmap={None: nineml_ns})
+Ev1 = ElementMaker(namespace=nineml_v1_ns, nsmap={None: nineml_v1_ns})
+
+
+def get_element_maker(version):
+    if isinstance(version, int):
+        version = float(version)
+    version = str(version)
+    if str(version) == '1.0':
+        element_maker = Ev1
+    elif str(version) == '2.0':
+        element_maker = E
+    else:
+        raise NineMLRuntimeError(
+            "Unrecognised 9ML version {} (1.0".format(version))
+    return element_maker
 
 
 def extract_xmlns(tag_name):

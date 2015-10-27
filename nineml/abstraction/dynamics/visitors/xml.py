@@ -205,14 +205,14 @@ class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
             e.accept_visitor(self)
             for e in component_class.elements(as_class=self.class_to_visit))
         if self.xmlns == NINEMLv1:
-            elems = [e for e in child_elems
-                     if e.tag[len(NINEMLv1):] not in self.v1_in_main_block]
-            elems.append(
+            v1_elems = [e for e in child_elems
+                        if e.tag[len(NINEMLv1):] not in self.v1_in_main_block]
+            v1_elems.append(
                 self.E('Dynamics',
                        *(e for e in child_elems
                          if e.tag[len(NINEMLv1):] in self.v1_in_main_block)))
             xml = self.E('ComponentClass',
-                         *elems, name=component_class.name)
+                         *v1_elems, name=component_class.name)
         else:
             xml = self.E(component_class.element_name,
                          *child_elems,

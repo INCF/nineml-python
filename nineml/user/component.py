@@ -499,9 +499,16 @@ class Property(BaseULObject):
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
-                 self._quantity.to_xml(document, E=E, **kwargs),
-                 name=self.name)
+        if E._namespace == NINEMLv1:
+            xml = E(self.element_name,
+                    self._value.to_xml(document, E=E, **kwargs),
+                    name=self.name,
+                    units=self.units.name)
+        else:
+            xml = E(self.element_name,
+                    self._quantity.to_xml(document, E=E, **kwargs),
+                    name=self.name)
+        return xml
 
     @classmethod
     @read_annotations
