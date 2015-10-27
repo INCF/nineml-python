@@ -34,13 +34,11 @@ class Population(BaseULObject, DocumentLevelObject):
 
     def __str__(self):
         return ("Population '{}' of size {} with dynamics '{}'"
-                .format(self.name, self.size, self.cell.name, self.positions))
+                .format(self.name, self.size, self.cell.name))
 
     def __repr__(self):
-        return ("Population(name='{}', size={}, cell={}{})"
-                .format(self.name, self.size, self.cell.name,
-                        'positions={}'.format(self.positions)
-                        if self.positions else ''))
+        return ("Population(name='{}', size={}, cell={})"
+                .format(self.name, self.size, self.cell.name))
 
     @property
     def component_class(self):
@@ -86,6 +84,92 @@ class Population(BaseULObject, DocumentLevelObject):
                    size=get_xml_attr(element, 'Size', document, in_block=True,
                                      dtype=int, **kwargs),
                    cell=cell, url=document.url)
+
+    def port(self, name):
+        return self.cell.port(name)
+
+    @property
+    def ports(self):
+        return self.cell.ports
+
+    @property
+    def port_names(self):
+        return self.cell.port_names
+
+    @property
+    def num_ports(self):
+        return self.cell.num_ports
+
+    def analog_receive_port(self, name):
+        return self.cell.analog_receive_port(name)
+
+    @property
+    def analog_receive_ports(self):
+        return self.cell.analog_receive_ports
+
+    @property
+    def analog_receive_port_names(self):
+        return self.cell.analog_receive_port_names
+
+    @property
+    def num_analog_receive_ports(self):
+        return self.cell.num_analog_receive_ports
+
+    def analog_send_port(self, name):
+        return self.cell.analog_send_port(name)
+
+    @property
+    def analog_send_ports(self):
+        return self.cell.analog_send_ports
+
+    @property
+    def analog_send_port_names(self):
+        return self.cell.analog_send_port_names
+
+    @property
+    def num_analog_send_ports(self):
+        return self.cell.num_analog_send_ports
+
+    def analog_reduce_port(self, name):
+        return self.cell.analog_reduce_port(name)
+
+    @property
+    def analog_reduce_ports(self):
+        return self.cell.analog_reduce_ports
+
+    @property
+    def analog_reduce_port_names(self):
+        return self.cell.analog_reduce_port_names
+
+    @property
+    def num_analog_reduce_ports(self):
+        return self.cell.num_analog_reduce_ports
+
+    def event_receive_port(self, name):
+        return self.cell.event_receive_port(name)
+
+    @property
+    def event_receive_ports(self):
+        return self.cell.event_receive_ports
+
+    @property
+    def event_receive_port_names(self):
+        return self.cell.event_receive_port_names
+
+    @property
+    def num_event_receive_ports(self):
+        return self.cell.num_event_receive_ports
+
+    def event_send_port(self, name):
+        return self.cell.event_send_port(name)
+
+    @property
+    def event_send_ports(self):
+        return self.cell.event_send_ports
+
+    @property
+    def event_send_port_names(self):
+        return self.cell.event_send_port_names
 
 
 def qstr(obj):

@@ -16,6 +16,6 @@ from .units import Unit, Dimension
 from abstraction import (
     Dynamics, ConnectionRule, RandomDistribution)
 from .user import (
-    Selection, Population, Projection, Property, Definition, Component,
+    Selection, Population, Projection, Property, Definition,
     DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
     Network, MultiDynamics, MultiDynamicsProperties)

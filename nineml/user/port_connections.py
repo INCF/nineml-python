@@ -177,28 +177,17 @@ class BasePortConnection(BaseULObject):
             self._sender = container[self.sender_name]
             self._receiver = container[self.receiver_name]
         try:
-            self._sender_dynamics = self._sender.cell.component_class
-        except AttributeError:
-            self._sender_dynamics = self._sender.component_class
-        try:
-            self._receiver_dynamics = self._receiver.cell.component_class
-        except AttributeError:
-            self._receiver_dynamics = self._receiver.component_class
-        try:
-            self._send_port = self._sender_dynamics.port(self.send_port_name)
+            self._send_port = self.sender.port(self.send_port_name)
         except KeyError:
             raise NineMLMissingElementError(
-                "Could not bind '{}' send port to '{}' dynamics class in '{}'"
-                .format(self.receive_port_name, self.sender_dynamics.name,
-                        self.sender.name))
+                "Could not bind to missing send port, '{}', in '{}'"
+                .format(self.receive_port_name, self.sender.name))
         try:
-            self._receive_port = self._receiver_dynamics.port(
-                self.receive_port_name)
+            self._receive_port = self._receiver.port(self.receive_port_name)
         except KeyError:
             raise NineMLMissingElementError(
-                "Could not bind '{}' receive port to '{}' dynamics class in "
-                "'{}'".format(self.receive_port_name,
-                              self.receiver_dynamics.name, self.receiver.name))
+                "Could not bind to missing receive port, '{}', in '{}'"
+                .format(self.receive_port_name, self.receiver.name))
         self._check_ports()
 
     @annotate_xml

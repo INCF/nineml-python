@@ -15,7 +15,7 @@ from nineml.units import Quantity
 from . import BaseULObject
 from nineml.document import Document
 from nineml.base import DocumentLevelObject, ContainerObject
-from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
+from nineml.values import SingleValue, ArrayValue
 from os import path
 
 
@@ -296,6 +296,92 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     def get_random_distributions(self):
         return [p.value.distribution for p in self.properties
                 if p.value.element_name == 'RandomValue']
+
+    def port(self, name):
+        return self.component_class.port(name)
+
+    @property
+    def ports(self):
+        return self.component_class.ports
+
+    @property
+    def port_names(self):
+        return self.component_class.port_names
+
+    @property
+    def num_ports(self):
+        return self.component_class.num_ports
+
+    def analog_receive_port(self, name):
+        return self.component_class.analog_receive_port(name)
+
+    @property
+    def analog_receive_ports(self):
+        return self.component_class.analog_receive_ports
+
+    @property
+    def analog_receive_port_names(self):
+        return self.component_class.analog_receive_port_names
+
+    @property
+    def num_analog_receive_ports(self):
+        return self.component_class.num_analog_receive_ports
+
+    def analog_send_port(self, name):
+        return self.component_class.analog_send_port(name)
+
+    @property
+    def analog_send_ports(self):
+        return self.component_class.analog_send_ports
+
+    @property
+    def analog_send_port_names(self):
+        return self.component_class.analog_send_port_names
+
+    @property
+    def num_analog_send_ports(self):
+        return self.component_class.num_analog_send_ports
+
+    def analog_reduce_port(self, name):
+        return self.component_class.analog_reduce_port(name)
+
+    @property
+    def analog_reduce_ports(self):
+        return self.component_class.analog_reduce_ports
+
+    @property
+    def analog_reduce_port_names(self):
+        return self.component_class.analog_reduce_port_names
+
+    @property
+    def num_analog_reduce_ports(self):
+        return self.component_class.num_analog_reduce_ports
+
+    def event_receive_port(self, name):
+        return self.component_class.event_receive_port(name)
+
+    @property
+    def event_receive_ports(self):
+        return self.component_class.event_receive_ports
+
+    @property
+    def event_receive_port_names(self):
+        return self.component_class.event_receive_port_names
+
+    @property
+    def num_event_receive_ports(self):
+        return self.component_class.num_event_receive_ports
+
+    def event_send_port(self, name):
+        return self.component_class.event_send_port(name)
+
+    @property
+    def event_send_ports(self):
+        return self.component_class.event_send_ports
+
+    @property
+    def event_send_port_names(self):
+        return self.component_class.event_send_port_names
 
     @property
     def properties(self):
