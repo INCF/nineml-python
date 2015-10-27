@@ -63,10 +63,10 @@ class Population(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):
+    def to_xml(self, document, E=E, **kwargs):
         return E(self.element_name,
                  E.Size(str(self.size)),
-                 E.Cell(self.cell.to_xml(document, **kwargs)),
+                 E.Cell(self.cell.to_xml(document, E=E, **kwargs)),
                  name=self.name)
 
     @classmethod

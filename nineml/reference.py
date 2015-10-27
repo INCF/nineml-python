@@ -47,7 +47,7 @@ class BaseReference(BaseNineMLObject):
                     .format(self.__class__.__name__, self._referred_to.name,
                             ' in "{}"'.format(self.url) if self.url else ''))
 
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         kwargs = {'name': self._referred_to.name}
         if self.url:
             kwargs['url'] = self.url
@@ -113,8 +113,8 @@ class Reference(BaseReference):
         return self._referred_to
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):
-        return super(Reference, self).to_xml(document, **kwargs)
+    def to_xml(self, document, E=E, **kwargs):
+        return super(Reference, self).to_xml(document, E=E, **kwargs)
 
 
 def resolve_reference(from_xml):
@@ -131,7 +131,7 @@ def resolve_reference(from_xml):
 def write_reference(to_xml):
     def unresolving_to_xml(self, document, as_reference=True, **kwargs):
         if self.from_reference is not None and as_reference:
-            xml = self.from_reference.to_xml(document, **kwargs)
+            xml = self.from_reference.to_xml(document, E=E, **kwargs)
         else:
             xml = to_xml(self, document, **kwargs)
         return xml

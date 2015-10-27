@@ -133,7 +133,7 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         as_ref_kwargs = copy(kwargs)
         as_ref_kwargs['as_reference'] = True
         members = []
@@ -141,13 +141,13 @@ class Projection(BaseULObject, DocumentLevelObject):
             pop.set_local_reference(document, overwrite=False)
             members.append(E(tag_name, pop.to_xml(document, **as_ref_kwargs)))
         members.extend([
-            E.Response(self.response.to_xml(document, **kwargs)),
-            E.Connectivity(self.connectivity.to_xml(document, **kwargs)),
-            E.Delay(self.delay.to_xml(document, **kwargs))])
+            E.Response(self.response.to_xml(document, E=E, **kwargs)),
+            E.Connectivity(self.connectivity.to_xml(document, E=E, **kwargs)),
+            E.Delay(self.delay.to_xml(document, E=E, **kwargs))])
         if self.plasticity is not None:
             members.append(
-                E.Plasticity(self.plasticity.to_xml(document, **kwargs)))
-        members.extend([pc.to_xml(document, **kwargs)
+                E.Plasticity(self.plasticity.to_xml(document, E=E, **kwargs)))
+        members.extend([pc.to_xml(document, E=E, **kwargs)
                         for pc in self.port_connections])
         return E(self.element_name, *members, name=self.name)
 

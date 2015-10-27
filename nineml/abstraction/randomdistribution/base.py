@@ -1,4 +1,5 @@
 from ..componentclass import ComponentClass
+from nineml.xml import E
 
 
 class RandomDistribution(ComponentClass):
@@ -48,10 +49,10 @@ class RandomDistribution(ComponentClass):
         extractor.visit(self)
         return extractor.expressions
 
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return RandomDistributionXMLWriter(document).visit(self)
+        return RandomDistributionXMLWriter(document, E).visit(self)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable

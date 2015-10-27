@@ -83,7 +83,7 @@ class Network(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         as_ref_kwargs = copy(kwargs)
         as_ref_kwargs['as_reference'] = True
         member_elems = []

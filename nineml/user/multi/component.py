@@ -102,12 +102,12 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):
-        members = [c.to_xml(document, **kwargs)
+    def to_xml(self, document, E=E, **kwargs):
+        members = [c.to_xml(document, E=E, **kwargs)
                    for c in self.sub_components]
-        members.extend(pe.to_xml(document, **kwargs)
+        members.extend(pe.to_xml(document, E=E, **kwargs)
                         for pe in self.port_exposures)
-        members.extend(pc.to_xml(document, **kwargs)
+        members.extend(pc.to_xml(document, E=E, **kwargs)
                        for pc in self.port_connections)
         return E(self.element_name, *members, name=self.name)
 
@@ -169,8 +169,8 @@ class SubDynamicsProperties(BaseULObject):
         return set(p for p in self.properties if p.units is not None)
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
-        return E(self.element_name, self._component.to_xml(document, **kwargs),
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
+        return E(self.element_name, self._component.to_xml(document, E=E, **kwargs),
                  name=self.name)
 
     @classmethod

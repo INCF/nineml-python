@@ -135,7 +135,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return self.i
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         kwargs = {'name': self.name}
         kwargs.update(dict(
             (n, str(p))
@@ -341,7 +341,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         return self.name
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         kwargs = {'symbol': self.name, 'dimension': self.dimension.name,
                   'power': str(self.power)}
         if self.offset:
@@ -475,9 +475,9 @@ class Quantity(BaseNineMLObject):
                 .format(self.element_name, self.value, units))
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 self._value.to_xml(document, **kwargs),
+                 self._value.to_xml(document, E=E, **kwargs),
                  units=self.units.name)
 
     @classmethod

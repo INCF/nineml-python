@@ -201,78 +201,78 @@ class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
 
     @annotate_xml
     def visit_componentclass(self, component_class):
-        return E('Dynamics',
-                 *self._sort(e.accept_visitor(self)
-                             for e in component_class.elements(
-                                 as_class=self.class_to_visit)),
-                 name=component_class.name)
+        return self.E('Dynamics',
+                      *self._sort(e.accept_visitor(self)
+                                  for e in component_class.elements(
+                                      as_class=self.class_to_visit)),
+                      name=component_class.name)
 
     @annotate_xml
     def visit_regime(self, regime):
-        return E('Regime', name=regime.name,
-                 *self._sort(e.accept_visitor(self)
-                             for e in regime.elements()))
+        return self.E('Regime', name=regime.name,
+                      *self._sort(e.accept_visitor(self)
+                                  for e in regime.elements()))
 
     @annotate_xml
     def visit_statevariable(self, state_variable):
-        return E('StateVariable',
-                 name=state_variable.name,
-                 dimension=state_variable.dimension.name)
+        return self.E('StateVariable',
+                      name=state_variable.name,
+                      dimension=state_variable.dimension.name)
 
     @annotate_xml
     def visit_outputevent(self, event_out):
-        return E('OutputEvent',
-                 port=event_out.port_name)
+        return self.E('OutputEvent',
+                      port=event_out.port_name)
 
     @annotate_xml
     def visit_analogreceiveport(self, port):
-        return E('AnalogReceivePort', name=port.name,
-                 dimension=port.dimension.name)
+        return self.E('AnalogReceivePort', name=port.name,
+                      dimension=port.dimension.name)
 
     @annotate_xml
     def visit_analogreduceport(self, port):
-        return E('AnalogReducePort', name=port.name,
-                 dimension=port.dimension.name, operator=port.operator)
+        return self.E('AnalogReducePort', name=port.name,
+                      dimension=port.dimension.name, operator=port.operator)
 
     @annotate_xml
     def visit_analogsendport(self, port):
-        return E('AnalogSendPort', name=port.name,
-                 dimension=port.dimension.name)
+        return self.E('AnalogSendPort', name=port.name,
+                      dimension=port.dimension.name)
 
     @annotate_xml
     def visit_eventsendport(self, port):
-        return E('EventSendPort', name=port.name)
+        return self.E('EventSendPort', name=port.name)
 
     @annotate_xml
     def visit_eventreceiveport(self, port):
-        return E('EventReceivePort', name=port.name)
+        return self.E('EventReceivePort', name=port.name)
 
     @annotate_xml
     def visit_stateassignment(self, assignment):
-        return E('StateAssignment',
-                 E("MathInline", assignment.rhs_xml),
-                 variable=assignment.lhs)
+        return self.E('StateAssignment',
+                      self.E("MathInline", assignment.rhs_xml),
+                      variable=assignment.lhs)
 
     @annotate_xml
     def visit_timederivative(self, time_derivative):
-        return E('TimeDerivative',
-                 E("MathInline", time_derivative.rhs_xml),
-                 variable=time_derivative.variable)
+        return self.E('TimeDerivative',
+                      self.E("MathInline", time_derivative.rhs_xml),
+                      variable=time_derivative.variable)
 
     @annotate_xml
     def visit_oncondition(self, on_condition):
-        return E('OnCondition', on_condition.trigger.accept_visitor(self),
-                 target_regime=on_condition._target_regime.name,
-                 *self._sort(e.accept_visitor(self)
-                             for e in on_condition.elements()))
+        return self.E('OnCondition', on_condition.trigger.accept_visitor(self),
+                      target_regime=on_condition._target_regime.name,
+                      *self._sort(e.accept_visitor(self)
+                                  for e in on_condition.elements()))
 
     @annotate_xml
     def visit_trigger(self, trigger):
-        return E('Trigger', E("MathInline", trigger.rhs_xml))
+        return self.E('Trigger', self.E("MathInline", trigger.rhs_xml))
 
     @annotate_xml
     def visit_onevent(self, on_event):
-        return E('OnEvent', port=on_event.src_port_name,
-                 target_regime=on_event.target_regime.name,
-                 *self._sort(e.accept_visitor(self)
-                             for e in on_event.elements()))
+        return self.E('OnEvent', port=on_event.src_port_name,
+                      target_regime=on_event.target_regime.name,
+                      *self._sort(e.accept_visitor(self)
+                                  for e in on_event.elements()))

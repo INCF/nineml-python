@@ -192,7 +192,7 @@ class BasePortConnection(BaseULObject):
         self._check_ports()
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         attribs = {}
         try:
             attribs['sender_role'] = self.sender_role

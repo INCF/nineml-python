@@ -22,7 +22,7 @@ class BaseValue(BaseNineMLObject):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def to_xml(self, document, **kwargs):
+    def to_xml(self, document, E=E, **kwargs):
         pass
 
     @classmethod
@@ -78,7 +78,7 @@ class SingleValue(BaseValue):
         return hash(self.value)
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.element_name, str(self.value))
 
     @classmethod
@@ -214,7 +214,7 @@ class ArrayValue(BaseValue):
         return hash(self.value)
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         if self._datafile is None:
             return E.ArrayValue(
                 *[E.ArrayValueRow(index=i, value=v).to_xml()
@@ -440,9 +440,9 @@ class RandomDistributionValue(BaseValue):
                 .format(self.port_name, self.distribution.name))
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 self.distribution.to_xml(document, **kwargs),
+                 self.distribution.to_xml(document, E=E, **kwargs),
                  port=self.port.name)
 
     @classmethod
