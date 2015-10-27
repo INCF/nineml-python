@@ -7,7 +7,7 @@ docstring needed
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xml import (
-    E, get_xml_attr, unprocessed_xml, NINEMLv1, extract_xmlns)
+    get_xml_attr, unprocessed_xml, NINEMLv1, extract_xmlns)
 from nineml.annotations import read_annotations
 from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
@@ -52,10 +52,18 @@ class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        return self.E('ConnectionRule',
-                      *self._sort(e.accept_visitor(self)
-                                  for e in component_class),
-                      name=component_class.name,
-                      standard_library=component_class.standard_library)
+        if self.xmlns == NINEMLv1:
+            xml = self.E(
+                'ComponentClass',
+                self.E('ConnectionRule',
+                         standardLibrary=component_class.standard_library),
+                name=component_class.name)
+        else:
+            xml = self.E(component_class.element_name,
+                         *self._sort(e.accept_visitor(self)
+                                     for e in component_class),
+                         name=component_class.name,
+                         standard_library=component_class.standard_library)
+        return xml
 
 from ..base import ConnectionRule
