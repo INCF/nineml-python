@@ -7,7 +7,7 @@ docstring goes here
 from lxml import etree  # @UnusedImport
 from lxml.builder import ElementMaker
 from nineml.exceptions import (
-    NineMLXMLAttributeError, NineMLXMLBlockError)
+    NineMLXMLAttributeError, NineMLXMLBlockError, NineMLRuntimeError)
 import re
 import nineml
 
@@ -59,7 +59,9 @@ def from_child_xml(element, child_classes, document, multiple=False,
                     "{} in '{}' has '{}' attributes when none are expected"
                     .format(identify_element(parent), document.url,
                             "', '".join(parent.attrib.iterkeys())))
-            if not multiple_within and len(parent.getchildren()) > 1:
+            if not multiple_within and len([
+                    c for c in parent.getchildren()
+                    if c.tag != xmlns + 'Annotations']) > 1:
                 raise NineMLXMLBlockError(
                     "{} in '{}' is only expected to contain a single child "
                     "block, found {}"
@@ -160,10 +162,14 @@ def get_xml_attr(element, name, document, unprocessed=None, in_block=False,
                         "', '".join(element.attrib.iterkeys())))
     try:
         attr = dtype(attr_str)
-    except ValueError:
-        raise NineMLXMLAttributeError(
-            "'{}' attribute of {} in '{}' cannot be converted to {} type"
-            .format(name, identify_element(element), document.url, dtype))
+    except ValueError, e:
+        if isinstance(e, NineMLRuntimeError):
+            raise
+        else:
+            raise NineMLXMLAttributeError(
+                "'{}' attribute of {} in '{}', {}, cannot be converted to {} "
+                "type".format(name, identify_element(element), document.url,
+                              attr_str, dtype))
     return attr
 
 

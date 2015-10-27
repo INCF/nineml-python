@@ -312,6 +312,36 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     def num_ports(self):
         return self.component_class.num_ports
 
+    def send_port(self, name):
+        return self.component_class.send_port(name)
+
+    @property
+    def send_ports(self):
+        return self.component_class.send_ports
+
+    @property
+    def send_port_names(self):
+        return self.component_class.send_port_names
+
+    @property
+    def num_send_ports(self):
+        return self.component_class.num_send_ports
+
+    def receive_port(self, name):
+        return self.component_class.receive_port(name)
+
+    @property
+    def receive_ports(self):
+        return self.component_class.receive_ports
+
+    @property
+    def receive_port_names(self):
+        return self.component_class.receive_port_names
+
+    @property
+    def num_receive_ports(self):
+        return self.component_class.num_receive_ports
+
     def analog_receive_port(self, name):
         return self.component_class.analog_receive_port(name)
 

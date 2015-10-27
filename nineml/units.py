@@ -484,7 +484,6 @@ class Quantity(BaseNineMLObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        cls.check_tag(element)
         value = BaseValue.from_parent_xml(element, document, **kwargs)
         try:
             units_str = get_xml_attr(element, 'units', document, **kwargs)
