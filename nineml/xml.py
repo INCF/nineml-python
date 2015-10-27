@@ -7,7 +7,7 @@ docstring goes here
 from lxml import etree  # @UnusedImport
 from lxml.builder import ElementMaker
 from nineml.exceptions import (
-    NineMLXMLError, NineMLXMLAttributeError, NineMLXMLBlockError)
+    NineMLXMLAttributeError, NineMLXMLBlockError)
 import re
 import nineml
 
@@ -36,7 +36,7 @@ def strip_xmlns(tag_name):
 
 def from_child_xml(element, child_classes, document, multiple=False,
                    allow_reference=False, allow_none=False, within=None,
-                   unprocessed=None, **kwargs):
+                   unprocessed=None, multiple_within=False, **kwargs):
     """
     Loads a child element from the element, matching the tag name to the
     appropriate class and calling its 'from_xml' method
@@ -59,6 +59,12 @@ def from_child_xml(element, child_classes, document, multiple=False,
                     "{} in '{}' has '{}' attributes when none are expected"
                     .format(identify_element(parent), document.url,
                             "', '".join(parent.attrib.iterkeys())))
+            if not multiple_within and len(parent.getchildren()) > 1:
+                raise NineMLXMLBlockError(
+                    "{} in '{}' is only expected to contain a single child "
+                    "block, found {}"
+                    .format(identify_element(parent), document.url,
+                            ", ".join(e.tag for e in parent.getchildren())))
             if unprocessed:
                 unprocessed[0].discard(parent)
         elif not within_elems:
@@ -99,7 +105,7 @@ def from_child_xml(element, child_classes, document, multiple=False,
             result = [] if multiple else None
         else:
             raise NineMLXMLBlockError(
-                "Did not find and child blocks with the tag{s} "
+                "Did not find any child blocks with the tag{s} "
                 "'{child_cls_names}'in the {parent_name} in '{url}'"
                 .format(s=('s' if len(child_classes) else ''),
                         child_cls_names=child_cls_names,
@@ -183,10 +189,13 @@ def unprocessed_xml(from_xml):
         if args:
             document = args[0]  # if UL classmethod
             # Check the tag of the element matches the class names
-            assert element.tag in (xmlns + cls.element_name
-                                   for xmlns in ALL_NINEML), (
-                "Found '{}' element, expected '{}'".format(element.tag,
-                                                           cls.element_name))
+            try:
+                assert element.tag in (xmlns + cls.element_name
+                                       for xmlns in ALL_NINEML), (
+                    "Found '{}' element, expected '{}'".format(element.tag,
+                                                               cls.element_name))
+            except:
+                raise
         else:
             document = cls.document  # if AL visitor method
         # Keep track of which blocks and attributes were processed within the

@@ -10,6 +10,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLMissingElementError, NineMLXMLError)
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 import contextlib
+from nineml.utils import expect_single
 
 
 class Document(dict, BaseNineMLObject):
@@ -298,29 +299,9 @@ class Document(dict, BaseNineMLObject):
                 except AttributeError:
                     # Check for v1 document-level objects
                     if (xmlns, element_name) == (NINEMLv1, 'ComponentClass'):
-                        if child.findall(NINEMLv1 + 'Dynamics'):
-                            child_cls = nineml.Dynamics
-                        elif child.findall(NINEMLv1 + 'ConnectionRule'):
-                            child_cls = nineml.ConnectionRule
-                        elif child.findall(NINEMLv1 + 'RandomDistribution'):
-                            child_cls = nineml.RandomDistribution
-                        else:
-                            raise NineMLXMLError(
-                                "No type defining block in ComponentClass")
+                        child_cls = get_component_class_type(child)
                     elif (xmlns, element_name) == (NINEMLv1, 'Component'):
-                        definition = from_child_xml(
-                            child,
-                            (nineml.user.Definition, nineml.user.Prototype),
-                            self, **kwargs)
-                        cc = definition.component_class
-                        if isinstance(cc, nineml.Dynamics):
-                            child_cls = nineml.DynamicsProperties
-                        elif isinstance(cc, nineml.ConnectionRule):
-                            child_cls = nineml.ConnectionRuleProperties
-                        elif isinstance(cc, nineml.RandomDistribution):
-                            child_cls = nineml.RandomDistributionProperties
-                        else:
-                            assert False
+                        child_cls = get_component_type(child, element, url)
                     else:
                         raise NineMLXMLError(
                             "Did not find matching NineML class for '{}' "
@@ -389,21 +370,7 @@ def read(url, relative_to=None):
     If the URL does not have a scheme identifier, it is taken to refer to a
     local file.
     """
-    if url.startswith('.') and relative_to:
-        url = os.path.abspath(os.path.join(relative_to, url))
-    try:
-        if not isinstance(url, file):
-            try:
-                with contextlib.closing(urlopen(url)) as f:
-                    xml = etree.parse(f)
-            except IOError, e:
-                raise NineMLRuntimeError("Could not read 9ML URL '{}': \n{}"
-                                         .format(url, e))
-        else:
-            xml = etree.parse(url)
-    except etree.LxmlError, e:
-        raise NineMLRuntimeError("Could not parse XML of 9ML file '{}': \n {}"
-                                 .format(url, e))
+    xml = read_xml(url, relative_to=relative_to)
     root = xml.getroot()
     return load(root, url)
 
@@ -419,11 +386,73 @@ def write(document, filename):
     document.write(filename)
 
 
+def read_xml(url, relative_to):
+    if url.startswith('.') and relative_to:
+        url = os.path.abspath(os.path.join(relative_to, url))
+    try:
+        if not isinstance(url, file):
+            try:
+                with contextlib.closing(urlopen(url)) as f:
+                    xml = etree.parse(f)
+            except IOError, e:
+                raise NineMLRuntimeError("Could not read 9ML URL '{}': \n{}"
+                                         .format(url, e))
+        else:
+            xml = etree.parse(url)
+    except etree.LxmlError, e:
+        raise NineMLRuntimeError("Could not parse XML of 9ML file '{}': \n {}"
+                                 .format(url, e))
+    return xml
+
+
 def write_xml(xml, filename):
     with open(filename, 'w') as f:
         etree.ElementTree(xml).write(f, encoding="UTF-8",
                                      pretty_print=True,
                                      xml_declaration=True)
 
+
+def get_component_class_type(elem):
+    if elem.findall(NINEMLv1 + 'Dynamics'):
+        cls = nineml.Dynamics
+    elif elem.findall(NINEMLv1 + 'ConnectionRule'):
+        cls = nineml.ConnectionRule
+    elif elem.findall(NINEMLv1 + 'RandomDistribution'):
+        cls = nineml.RandomDistribution
+    else:
+        raise NineMLXMLError(
+            "No type defining block in ComponentClass")
+    return cls
+
+
+def get_component_type(comp_xml, doc_xml, relative_to):
+    try:
+        definition = expect_single(chain(
+            comp_xml.findall(NINEMLv1 + 'Definition'),
+            comp_xml.findall(NINEMLv1 + 'Prototype')))
+    except:
+        raise
+    url = definition.get('url')
+    if url:
+        doc_xml = read_xml(url, relative_to)
+    for ref_elem in chain(doc_xml.findall(NINEMLv1 + 'ComponentClass'),
+                          doc_xml.findall(NINEMLv1 + 'Component')):
+        if ref_elem.attrib['name'] == definition.text:
+            if ref_elem.tag == NINEMLv1 + 'ComponentClass':
+                cc_cls = get_component_class_type(ref_elem)
+                if cc_cls == nineml.Dynamics:
+                    cls = nineml.user.component.DynamicsComponent
+                elif cc_cls == nineml.ConnectionRule:
+                    cls = nineml.user.component.ConnectionRuleComponent
+                elif cc_cls == nineml.RandomDistribution:
+                    cls = nineml.user.component.RandomDistributionComponent
+                else:
+                    assert False
+            else:
+                # Recurse through the prototype until we find the component
+                # class at the bottom of it.
+                cls = get_component_type(ref_elem, doc_xml, url)
+            return cls
+
+
 import nineml.user
-import nineml.abstraction

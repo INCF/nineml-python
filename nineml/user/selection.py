@@ -1,11 +1,12 @@
-from operator import itemgetter
+from operator import itemgetter, and_
 from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference, Reference
-from nineml.xml import extract_xmlns, E, get_xml_attr
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.xml import from_child_xml, unprocessed_xml, get_xml_attr
+from nineml.xml import (
+    extract_xmlns, E, from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.base import DocumentLevelObject
 from .population import Population
+from nineml.exceptions import NineMLMissingElementError
 
 
 def find_difference(this, that):
@@ -31,6 +32,34 @@ def find_difference(this, that):
                 that.keys())  # need to handle case of different keys
             for key in this:
                 find_difference(this[key], that[key])
+
+
+def combined_port_accessor(population_accessor):
+    def accessor(self, name):
+        try:
+            ports = [population_accessor(p, name) for p in self.populations]
+        except NineMLMissingElementError:
+            raise NineMLMissingElementError(
+                "'{}' {} is not present in all populations '{}' of the "
+                "selection"
+                .format(name, population_accessor.__name__,
+                        "', '".join(p.name for p in self.populations)))
+        port = ports[0]
+        if any(p != port for p in ports):
+            raise NineMLMissingElementError(
+                "{} '{}' in populations '{}' are not equivalent"
+                .format(population_accessor.__name__.capitalize(),
+                        name, "', '".join(p.name for p in self.populations)))
+        return port
+    return accessor
+
+
+def combined_ports_property(population_property):
+    def combined_property(self):
+        combined = reduce(and_, (set(population_property(p))
+                                 for p in self.populations))
+        return iter(combined)
+    return combined_property
 
 
 class Selection(BaseULObject, DocumentLevelObject):
@@ -78,6 +107,81 @@ class Selection(BaseULObject, DocumentLevelObject):
         assert isinstance(self.operation, Concatenate), \
             "Only concatenation is currently supported"
         return (item.user_object for item in self.operation.items)
+
+    @property
+    def populations(self):
+        return self.operation.items
+
+    port = combined_port_accessor(Population.port)
+    ports = combined_ports_property(Population.ports)
+    event_receive_port = combined_port_accessor(
+        Population.event_receive_port)
+    event_receive_ports = combined_ports_property(
+        Population.event_receive_ports)
+    event_send_port = combined_port_accessor(
+        Population.event_send_port)
+    event_send_ports = combined_ports_property(
+        Population.event_send_ports)
+    analog_receive_port = combined_port_accessor(
+        Population.analog_receive_port)
+    analog_receive_ports = combined_ports_property(
+        Population.analog_receive_ports)
+    analog_send_port = combined_port_accessor(
+        Population.analog_send_port)
+    analog_send_ports = combined_ports_property(
+        Population.analog_send_ports)
+    analog_reduce_port = combined_port_accessor(
+        Population.analog_reduce_port)
+    analog_reduce_ports = combined_ports_property(
+        Population.analog_reduce_ports)
+
+    @property
+    def port_names(self):
+        return (p.name for p in self.ports)
+
+    @property
+    def num_ports(self):
+        return len(list(self.ports))
+
+    @property
+    def analog_send_port_names(self):
+        return (p.name for p in self.analog_send_ports)
+
+    @property
+    def num_analog_send_ports(self):
+        return len(list(self.analog_receive_ports))
+
+    @property
+    def analog_receive_port_names(self):
+        return (p.name for p in self.analog_receive_ports)
+
+    @property
+    def num_analog_receive_ports(self):
+        return len(list(self.analog_reduce_ports))
+
+    @property
+    def analog_reduce_port_names(self):
+        return (p.name for p in self.analog_reduce_ports)
+
+    @property
+    def num_analog_reduce_ports(self):
+        return len(list(self.analog_reduce_ports))
+
+    @property
+    def event_send_port_names(self):
+        return (p.name for p in self.event_send_ports)
+
+    @property
+    def num_event_send_ports(self):
+        return len(list(self.event_receive_ports))
+
+    @property
+    def event_receive_port_names(self):
+        return (p.name for p in self.event_receive_ports)
+
+    @property
+    def num_event_receive_ports(self):
+        return len(list(self.event_receive_ports))
 
 
 class Concatenate(BaseULObject):
