@@ -105,6 +105,10 @@ class ComponentClassXMLWriter(ComponentVisitor):
         self.document = document
         self.E = E
 
+    @property
+    def xmlns(self):
+        return self.E._namespace
+
     @annotate_xml
     def visit_parameter(self, parameter):
         return self.E(Parameter.element_name,
@@ -119,10 +123,17 @@ class ComponentClassXMLWriter(ComponentVisitor):
 
     @annotate_xml
     def visit_constant(self, constant):
-        return self.E('Constant',
-                      name=constant.name,
-                      value=str(constant.value),
-                      units=constant.units.name)
+        if self.xmlns == NINEMLv1:
+            xml = self.E(Constant.element_name,
+                         str(constant.value),
+                         name=constant.name,
+                         units=constant.units.name)
+        else:
+            xml = self.E(Constant.element_name,
+                         name=constant.name,
+                         value=str(constant.value),
+                         units=constant.units.name)
+        return xml
 
     def _sort(self, elements):
         """Sorts the element into a consistent, logical order before write"""
