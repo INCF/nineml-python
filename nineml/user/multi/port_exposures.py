@@ -66,7 +66,7 @@ class _BasePortExposure(BaseULObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.element_name,
                  name=self.name,
                  sub_component=self.sub_component_name,

@@ -87,9 +87,9 @@ class Selection(BaseULObject, DocumentLevelObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 self.operation.to_xml(document, **kwargs),
+                 self.operation.to_xml(document, E=E, **kwargs),
                  name=self.name)
 
     @classmethod
@@ -230,10 +230,10 @@ class Concatenate(BaseULObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         def item_to_xml(item):
             if isinstance(item, Reference):
-                return item.to_xml(document, **kwargs)
+                return item.to_xml(document, E=E, **kwargs)
             else:
                 return E.Reference(name=item.name)
         return E(self.element_name,
@@ -295,9 +295,9 @@ class Concatenate(BaseULObject):
 #         self.populations = []
 #         self.evaluated = False
 #
-#     def to_xml(self, document, **kwargs):  # @UnusedVariable
+#     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
 #         return E(self.element_name,
-#                  E.select(self.condition.to_xml(document, **kwargs)),
+#                  E.select(self.condition.to_xml(document, E=E, **kwargs)),
 #                  name=self.name)
 #
 #     @classmethod
@@ -393,13 +393,13 @@ class Concatenate(BaseULObject):
 #     def __init__(self, *operands):
 #         self.operands = operands
 #
-#     def to_xml(self, document, **kwargs):  # @UnusedVariable
+#     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
 #         operand_elements = []
 #         for c in self.operands:
 #             if isinstance(c, (basestring, float, int)):
 #                 operand_elements.append(E(StringValue.element_name, str(c)))
 #             else:
-#                 operand_elements.append(c.to_xml(document, **kwargs))
+#                 operand_elements.append(c.to_xml(document, E=E, **kwargs))
 #         return E(self.element_name,
 #                  *operand_elements)
 #

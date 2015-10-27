@@ -16,7 +16,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      EventSendPort)
 from nineml.utils import (check_list_contain_same_items,
                           assert_no_duplicates)
-from nineml.xml import nineml_ns
+from nineml.xml import nineml_ns, E
 from nineml.annotations import VALIDATE_DIMENSIONS
 
 
@@ -514,10 +514,10 @@ class Dynamics(ComponentClass):
                                                 trans._name))
                 trans.set_target_regime(target)
 
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return DynamicsXMLWriter(document).visit(self)
+        return DynamicsXMLWriter(document, E).visit(self)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):

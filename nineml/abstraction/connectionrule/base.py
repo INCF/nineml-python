@@ -13,6 +13,7 @@ docstring goes here
 :license: BSD-3, see LICENSE for details.
 """
 from ..componentclass import ComponentClass
+from nineml.xml import E
 
 
 class ConnectionRule(ComponentClass):
@@ -62,10 +63,10 @@ class ConnectionRule(ComponentClass):
         extractor.visit(self)
         return extractor.expressions
 
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return ConnectionRuleXMLWriter(document).visit(self)
+        return ConnectionRuleXMLWriter(document, E).visit(self)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
@@ -73,7 +74,6 @@ class ConnectionRule(ComponentClass):
             element, **kwargs)
 
 
-from .visitors.cloner import ConnectionRuleCloner
 from .visitors.modifiers import (
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
 from .visitors.queriers import (

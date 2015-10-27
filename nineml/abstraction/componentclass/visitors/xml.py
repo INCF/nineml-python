@@ -101,27 +101,28 @@ class ComponentClassXMLLoader(object):
 
 class ComponentClassXMLWriter(ComponentVisitor):
 
-    def __init__(self, document):
+    def __init__(self, document, E):
         self.document = document
+        self.E = E
 
     @annotate_xml
     def visit_parameter(self, parameter):
-        return E(Parameter.element_name,
-                 name=parameter.name,
-                 dimension=parameter.dimension.name)
+        return self.E(Parameter.element_name,
+                      name=parameter.name,
+                      dimension=parameter.dimension.name)
 
     @annotate_xml
     def visit_alias(self, alias):
-        return E(Alias.element_name,
-                 E("MathInline", alias.rhs_xml),
-                 name=alias.lhs)
+        return self.E(Alias.element_name,
+                      self.E("MathInline", alias.rhs_xml),
+                      name=alias.lhs)
 
     @annotate_xml
     def visit_constant(self, constant):
-        return E('Constant',
-                 name=constant.name,
-                 value=str(constant.value),
-                 units=constant.units.name)
+        return self.E('Constant',
+                      name=constant.name,
+                      value=str(constant.value),
+                      units=constant.units.name)
 
     def _sort(self, elements):
         """Sorts the element into a consistent, logical order before write"""

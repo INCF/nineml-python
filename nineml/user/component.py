@@ -50,7 +50,7 @@ class Definition(BaseReference):
         return self._referred_to
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         if self.url is None:
             # If definition was created in Python, add component class
             # reference to document argument before writing definition
@@ -65,7 +65,7 @@ class Definition(BaseReference):
                                 type(self._referred_to), type(doc_obj)))
             except NineMLMissingElementError:
                 document.add(self._referred_to)
-        return super(Definition, self).to_xml(document, **kwargs)
+        return super(Definition, self).to_xml(document, E=E, **kwargs)
 
 
 class Prototype(Definition):
@@ -253,14 +253,14 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         """
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
         """
         element = E(self.element_name,
-                    self._definition.to_xml(document, **kwargs),
-                    *[p.to_xml(document, **kwargs)
+                    self._definition.to_xml(document, E=E, **kwargs),
+                    *[p.to_xml(document, E=E, **kwargs)
                       for p in self._properties.itervalues()],
                       name=self.name)
         return element
@@ -498,9 +498,9 @@ class Property(BaseULObject):
                 .format(self.element_name, self.name, self.value, units))
 
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 self._quantity.to_xml(document, **kwargs),
+                 self._quantity.to_xml(document, E=E, **kwargs),
                  name=self.name)
 
     @classmethod
@@ -595,14 +595,14 @@ class DynamicsProperties(Component):
 
     @write_reference
     @annotate_xml
-    def to_xml(self, document, **kwargs):  # @UnusedVariable
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         """
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
         """
         element = E(self.element_name,
-                    self._definition.to_xml(document, **kwargs),
-                    *[p.to_xml(document, **kwargs) for p in chain(
+                    self._definition.to_xml(document, E=E, **kwargs),
+                    *[p.to_xml(document, E=E, **kwargs) for p in chain(
                         self._properties.itervalues(),
                         self._initial_values.itervalues())],
                       name=self.name)
