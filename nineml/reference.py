@@ -48,10 +48,16 @@ class BaseReference(BaseNineMLObject):
                             ' in "{}"'.format(self.url) if self.url else ''))
 
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        kwargs = {'name': self._referred_to.name}
+        name = self._referred_to.name
+        if E._namespace == NINEMLv1:
+            attrs = {}
+            text = name
+        else:
+            attrs = {'name': name}
+            text = ''
         if self.url:
-            kwargs['url'] = self.url
-        element = E(self.element_name, **kwargs)
+            attrs['url'] = self.url
+        element = E(self.element_name, text, **attrs)
         return element
 
     @classmethod

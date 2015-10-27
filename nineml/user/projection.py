@@ -1,5 +1,6 @@
 # encoding: utf-8
 from . import BaseULObject
+from collections import defaultdict
 from nineml.reference import resolve_reference, write_reference
 from nineml.xml import (
     E, from_child_xml, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
@@ -134,22 +135,46 @@ class Projection(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        as_ref_kwargs = copy(kwargs)
-        as_ref_kwargs['as_reference'] = True
-        members = []
-        for pop, tag_name in ((self.pre, 'Pre'), (self.post, 'Post')):
-            pop.set_local_reference(document, overwrite=False)
-            members.append(E(tag_name, pop.to_xml(document, **as_ref_kwargs)))
-        members.extend([
-            E.Response(self.response.to_xml(document, E=E, **kwargs)),
-            E.Connectivity(self.connectivity.to_xml(document, E=E, **kwargs)),
-            E.Delay(self.delay.to_xml(document, E=E, **kwargs))])
-        if self.plasticity is not None:
-            members.append(
-                E.Plasticity(self.plasticity.to_xml(document, E=E, **kwargs)))
-        members.extend([pc.to_xml(document, E=E, **kwargs)
-                        for pc in self.port_connections])
-        return E(self.element_name, *members, name=self.name)
+        if E._namespace == NINEMLv1:
+            pcs = defaultdict(list)
+            for pc in self.port_connections:
+                pcs[pc.receiver_role].append(
+                    E('From' + pc.sender_roler.capitalize(),
+                      send_port=pc.send_port_name,
+                      receive_port=pc.receive_port_name))
+            args = [E.Source(self.source.to_xml(), *pcs['source']),
+                    E.Destination(self.destination.to_xml(),
+                                  *pcs['destination']),
+                    E.Connectivity(self.connectivity.to_xml()),
+                    E.Response(self.response.to_xml(), *pcs['response'])]
+            if self.plasticity:
+                args.append(E.Plasticity(self.plasticity.to_xml(),
+                                         *pcs['plasticity']))
+            args.append(E('Delay',
+                          self.delay._value.to_xml(document, E=E, **kwargs),
+                          units=self.delay.units.name))
+            xml = E(self.element_name, *args, name=self.name)
+        else:
+            as_ref_kwargs = copy(kwargs)
+            as_ref_kwargs['as_reference'] = True
+            members = []
+            for pop, tag_name in ((self.pre, 'Pre'), (self.post, 'Post')):
+                pop.set_local_reference(document, overwrite=False)
+                members.append(E(tag_name, pop.to_xml(document,
+                                                      **as_ref_kwargs)))
+            members.extend([
+                E.Response(self.response.to_xml(document, E=E, **kwargs)),
+                E.Connectivity(self.connectivity.to_xml(document, E=E,
+                                                        **kwargs)),
+                E.Delay(self.delay.to_xml(document, E=E, **kwargs))])
+            if self.plasticity is not None:
+                members.append(
+                    E.Plasticity(self.plasticity.to_xml(document, E=E,
+                                                        **kwargs)))
+            members.extend([pc.to_xml(document, E=E, **kwargs)
+                            for pc in self.port_connections])
+            xml = E(self.element_name, *members, name=self.name)
+        return xml
 
     @classmethod
     @resolve_reference
