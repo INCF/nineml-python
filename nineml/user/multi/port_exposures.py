@@ -77,7 +77,6 @@ class _BasePortExposure(BaseULObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        cls.check_tag(element)
         return cls(name=get_xml_attr(element, 'name', document, **kwargs),
                    component=get_xml_attr(element, 'sub_component', document, **kwargs),
                    port=get_xml_attr(element, 'port', document, **kwargs))

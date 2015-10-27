@@ -36,9 +36,8 @@ class Document(dict, BaseNineMLObject):
     def __init__(self, *elements, **kwargs):
         BaseNineMLObject.__init__(self, annotations=kwargs.pop('annotations',
                                                                None))
-        self._url = kwargs.pop('url', None)
-        if self.url:
-            self._url = os.path.normpath(self.url)
+        url = kwargs.pop('url', None)
+        self._url = os.path.abspath(url) if url else None
         assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
                                   .format("', '".join(kwargs.iterkeys())))
         for element in elements:
@@ -370,7 +369,7 @@ def read(url, relative_to=None):
     If the URL does not have a scheme identifier, it is taken to refer to a
     local file.
     """
-    xml = read_xml(url, relative_to=relative_to)
+    xml, url = read_xml(url, relative_to=relative_to)
     root = xml.getroot()
     return load(root, url)
 
@@ -402,7 +401,7 @@ def read_xml(url, relative_to):
     except etree.LxmlError, e:
         raise NineMLRuntimeError("Could not parse XML of 9ML file '{}': \n {}"
                                  .format(url, e))
-    return xml
+    return xml, url
 
 
 def write_xml(xml, filename):

@@ -114,6 +114,10 @@ class Selection(BaseULObject, DocumentLevelObject):
 
     port = combined_port_accessor(Population.port)
     ports = combined_ports_property(Population.ports)
+    send_port = combined_port_accessor(Population.send_port)
+    send_ports = combined_ports_property(Population.send_ports)
+    receive_port = combined_port_accessor(Population.receive_port)
+    receive_ports = combined_ports_property(Population.receive_ports)
     event_receive_port = combined_port_accessor(
         Population.event_receive_port)
     event_receive_ports = combined_ports_property(
@@ -142,6 +146,22 @@ class Selection(BaseULObject, DocumentLevelObject):
     @property
     def num_ports(self):
         return len(list(self.ports))
+
+    @property
+    def send_port_names(self):
+        return (p.name for p in self.send_ports)
+
+    @property
+    def num_send_ports(self):
+        return len(list(self.analog_receive_ports))
+
+    @property
+    def receive_port_names(self):
+        return (p.name for p in self.receive_ports)
+
+    @property
+    def num_receive_ports(self):
+        return len(list(self.analog_receive_ports))
 
     @property
     def analog_send_port_names(self):
@@ -282,7 +302,6 @@ class Concatenate(BaseULObject):
 #
 #     @classmethod
 #     def from_xml(cls, element, components):
-#         cls.check_tag(element)
 #         select_element = element.find(NINEML + 'select')
 #         assert len(select_element) == 1
 #         return cls(get_xml_attr(element, 'name', document, **kwargs),

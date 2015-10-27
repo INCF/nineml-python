@@ -177,13 +177,14 @@ class BasePortConnection(BaseULObject):
             self._sender = container[self.sender_name]
             self._receiver = container[self.receiver_name]
         try:
-            self._send_port = self.sender.port(self.send_port_name)
+            self._send_port = self.sender.send_port(self.send_port_name)
         except KeyError:
             raise NineMLMissingElementError(
                 "Could not bind to missing send port, '{}', in '{}'"
                 .format(self.receive_port_name, self.sender.name))
         try:
-            self._receive_port = self._receiver.port(self.receive_port_name)
+            self._receive_port = self._receiver.receive_port(
+                self.receive_port_name)
         except KeyError:
             raise NineMLMissingElementError(
                 "Could not bind to missing receive port, '{}', in '{}'"
@@ -210,7 +211,6 @@ class BasePortConnection(BaseULObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        cls.check_tag(element)
         return cls(send_port=get_xml_attr(element, 'send_port',
                                           document, **kwargs),
                    receive_port=get_xml_attr(element, 'receive_port', document,

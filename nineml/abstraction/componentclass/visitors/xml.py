@@ -55,7 +55,7 @@ class ComponentClassXMLLoader(object):
             value = float(element.text)
         else:
             value = get_xml_attr(element, 'value', self.document,
-                                 dtype=float, **kwargs),
+                                 dtype=float, **kwargs)
         return Constant(
             name=get_xml_attr(element, 'name', self.document, **kwargs),
             value=value,
@@ -88,7 +88,7 @@ class ComponentClassXMLLoader(object):
                     raise NineMLXMLBlockError(
                         "Unexpected block {} within {} in '{}', expected: {}"
                         .format(tag, identify_element(element),
-                                self.document.url, ','.join(block_names)))
+                                self.document.url, ', '.join(block_names)))
                 loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
         return loaded_objects
 

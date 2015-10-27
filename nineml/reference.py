@@ -4,7 +4,7 @@ from .base import BaseNineMLObject
 from nineml.xml import (
     E, ALL_NINEML, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLXMLAttributeError
 from nineml.document import Document
 
 
@@ -61,6 +61,10 @@ class BaseReference(BaseNineMLObject):
         xmlns = extract_xmlns(element.tag)
         if xmlns == NINEMLv1:
             name = element.text
+            if name is None:
+                raise NineMLXMLAttributeError(
+                    "References require the element name provided in the XML "
+                    "element text")
         else:
             name = get_xml_attr(element, 'name', document, **kwargs)
         url = get_xml_attr(element, 'url', document, default=None, **kwargs)

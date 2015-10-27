@@ -100,6 +100,36 @@ class Population(BaseULObject, DocumentLevelObject):
     def num_ports(self):
         return self.cell.num_ports
 
+    def receive_port(self, name):
+        return self.cell.receive_port(name)
+
+    @property
+    def receive_ports(self):
+        return self.cell.receive_ports
+
+    @property
+    def receive_port_names(self):
+        return self.cell.receive_port_names
+
+    @property
+    def num_receive_ports(self):
+        return self.cell.num_receive_ports
+
+    def send_port(self, name):
+        return self.cell.send_port(name)
+
+    @property
+    def send_ports(self):
+        return self.cell.send_ports
+
+    @property
+    def send_port_names(self):
+        return self.cell.send_port_names
+
+    @property
+    def num_send_ports(self):
+        return self.cell.num_send_ports
+
     def analog_receive_port(self, name):
         return self.cell.analog_receive_port(name)
 
