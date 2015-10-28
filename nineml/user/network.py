@@ -32,10 +32,11 @@ class Network(BaseULObject, DocumentLevelObject):
     defining_attributes = ("_populations", "_projections", "_selections")
 
     def __init__(self, name="anonymous", populations=[], projections=[],
-                 selections=[]):
+                 selections=[], document=None):
         # better would be *items, then sort by type, taking the name from the
         # item
-        super(Network, self).__init__()
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self, document=document)
         self.name = name
         self._populations = dict((p.name, p) for p in populations)
         self._projections = dict((p.name, p) for p in projections)
@@ -89,7 +90,7 @@ class Network(BaseULObject, DocumentLevelObject):
         member_elems = []
         for member in chain(self.populations, self.selections,
                             self.projections):
-            member.set_local_reference(document, overwrite=False)
+#             member.set_local_reference(document, overwrite=False)
             member_elems.append(member.to_xml(document, **as_ref_kwargs))
         return E(self.element_name, name=self.name, *member_elems)
 

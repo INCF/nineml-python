@@ -5,7 +5,6 @@ import operator
 from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
-from nineml.reference import resolve_reference, write_reference
 from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
@@ -64,7 +63,6 @@ class _BasePortExposure(BaseULObject):
     def attributes_with_units(self):
         return chain(*[c.attributes_with_units for c in self.sub_component])
 
-    @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.element_name,
@@ -73,12 +71,12 @@ class _BasePortExposure(BaseULObject):
                  port=self.port_name)
 
     @classmethod
-    @resolve_reference
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return cls(name=get_xml_attr(element, 'name', document, **kwargs),
-                   component=get_xml_attr(element, 'sub_component', document, **kwargs),
+                   component=get_xml_attr(element, 'sub_component', document,
+                                          **kwargs),
                    port=get_xml_attr(element, 'port', document, **kwargs))
 
     @classmethod
