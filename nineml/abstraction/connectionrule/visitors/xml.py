@@ -41,7 +41,8 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader, ConnectionRuleVisitor):
         return ConnectionRule(
             name=get_xml_attr(element, 'name', self.document, **kwargs),
             standard_library=std_lib,
-            parameters=blocks["Parameter"])
+            parameters=blocks["Parameter"],
+            document=self.document)
 
     tag_to_loader = dict(
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +

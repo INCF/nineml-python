@@ -50,7 +50,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader, DynamicsVisitor):
                 **kwargs)
             blocks.update(dyn_blocks)
         dyn_kwargs = dict((k, v) for k, v in kwargs.iteritems()
-                          if k in ('validate_dimensions', 'url'))
+                          if k in ('validate_dimensions'))
         return Dynamics(
             name=get_xml_attr(element, 'name', self.document, **kwargs),
             parameters=blocks["Parameter"],
@@ -62,7 +62,9 @@ class DynamicsXMLLoader(ComponentClassXMLLoader, DynamicsVisitor):
             regimes=blocks["Regime"],
             aliases=blocks["Alias"],
             state_variables=blocks["StateVariable"],
-            constants=blocks["Constant"], **dyn_kwargs)
+            constants=blocks["Constant"],
+            document=self.document,
+            **dyn_kwargs)
 
     @read_annotations
     @unprocessed_xml

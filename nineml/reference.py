@@ -15,18 +15,22 @@ class BaseReference(BaseNineMLObject):
     abstraction layer.
     """
 
-    def __init__(self, name, document=None, url=None):
+    def __init__(self, name, document, url=None):
         super(BaseReference, self).__init__()
-        if document is None:
-            document = Document()
-        self._url = url
-        if self.url:
-            if document.url is None or not os.path.dirname(document.url):
-                rel_dir = os.getcwd()
+        if url:
+            if url.startswith('.'):
+                if document is None:
+                    raise NineMLRuntimeError(
+                        "Must supply document if definition is a URL string, "
+                        "'{}'".format(url))
+                relative_to = os.path.dirname(document.url)
             else:
-                rel_dir = os.path.dirname(document.url)
-            document = read(url, relative_to=rel_dir)
-        self._referred_to = document[name]
+                relative_to = None
+            remote_doc = read(url, relative_to=relative_to)
+        else:
+            remote_doc = document
+        self._url = url
+        self._referred_to = remote_doc[name]
 
     @property
     def url(self):
@@ -96,31 +100,10 @@ class Reference(BaseReference):
     """
     element_name = "Reference"
 
-    def __init__(self, name, document=None, url=None):
-        """
-        docstring needed
-
-        `name`     -- a name of an existing component_class to refer to
-        `document` -- a Document object containing the top-level
-                      objects in the current file
-        `url`      -- a url of the file containing the exiting component_class
-        """
-        super(Reference, self).__init__(name, document, url)
-        try:
-            self._referred_to.from_reference = self
-        except AttributeError:
-            NineMLRuntimeError(
-                "Reference points to a non-user-layer object '{}'"
-                .format(self._referred_to.name))
-
     @property
     def user_object(self):
         """The object being referred to."""
         return self._referred_to
-
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):
-        return super(Reference, self).to_xml(document, E=E, **kwargs)
 
 
 def resolve_reference(from_xml):

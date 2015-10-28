@@ -25,9 +25,9 @@ class Population(BaseULObject, DocumentLevelObject):
     element_name = "Population"
     defining_attributes = ("name", "size", "cell")
 
-    def __init__(self, name, size, cell, url=None):
+    def __init__(self, name, size, cell, document=None):
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, document)
         self.name = name
         self.size = size
         self.cell = cell
@@ -79,7 +79,7 @@ class Population(BaseULObject, DocumentLevelObject):
         return cls(name=get_xml_attr(element, 'name', document, **kwargs),
                    size=get_xml_attr(element, 'Size', document, in_block=True,
                                      dtype=int, **kwargs),
-                   cell=cell, url=document.url)
+                   cell=cell, document=document)
 
     def port(self, name):
         return self.cell.port(name)

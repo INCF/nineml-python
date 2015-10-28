@@ -58,7 +58,7 @@ class Dynamics(ComponentClass):
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[], regimes=None, aliases=None,
                  state_variables=None, constants=None,
-                 validate_dimensions=True, url=None):
+                 validate_dimensions=True, document=None):
         """Constructs a Dynamics
 
         :param name: The name of the component_class.
@@ -88,7 +88,7 @@ class Dynamics(ComponentClass):
         """
         ComponentClass.__init__(self, name=name, parameters=parameters,
                                 aliases=aliases, constants=constants,
-                                url=url)
+                                document=document)
         regimes = normalise_parameter_as_list(regimes)
         state_variables = normalise_parameter_as_list(state_variables)
 
@@ -528,7 +528,7 @@ class Dynamics(ComponentClass):
     @classmethod
     def from_xml(cls, element, document, **kwargs):
         return DynamicsXMLLoader(document).load_dynamics(
-            element, url=document.url, **kwargs)
+            element, **kwargs)
 
 
 def inf_check(l1, l2, desc):
