@@ -213,8 +213,8 @@ def unprocessed_xml(from_xml):
             try:
                 assert element.tag in (xmlns + cls.element_name
                                        for xmlns in ALL_NINEML), (
-                    "Found '{}' element, expected '{}'".format(element.tag,
-                                                               cls.element_name))
+                    "Found '{}' element, expected '{}'"
+                    .format(element.tag, cls.element_name))
             except:
                 raise
         else:

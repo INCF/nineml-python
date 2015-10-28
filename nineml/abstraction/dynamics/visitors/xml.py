@@ -21,6 +21,9 @@ from ...componentclass.visitors.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
 
 
+version1_main = ('Regime', 'Alias', 'StateVariable', 'Constant')
+
+
 class DynamicsXMLLoader(ComponentClassXMLLoader, DynamicsVisitor):
 
     """This class is used by XMLReader interny.
@@ -43,7 +46,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader, DynamicsVisitor):
             dyn_elem = expect_single(element.findall(NINEMLv1 + 'Dynamics'))
             dyn_blocks = self._load_blocks(
                 dyn_elem,
-                block_names=self.v1_in_main_block,
+                block_names=version1_main,
                 **kwargs)
             blocks.update(dyn_blocks)
         dyn_kwargs = dict((k, v) for k, v in kwargs.iteritems()
@@ -206,11 +209,11 @@ class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
             for e in component_class.elements(as_class=self.class_to_visit))
         if self.xmlns == NINEMLv1:
             v1_elems = [e for e in child_elems
-                        if e.tag[len(NINEMLv1):] not in self.v1_in_main_block]
+                        if e.tag[len(NINEMLv1):] not in self.version1_main]
             v1_elems.append(
                 self.E('Dynamics',
                        *(e for e in child_elems
-                         if e.tag[len(NINEMLv1):] in self.v1_in_main_block)))
+                         if e.tag[len(NINEMLv1):] in self.version1_main)))
             xml = self.E('ComponentClass',
                          *v1_elems, name=component_class.name)
         else:
@@ -288,5 +291,3 @@ class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
                       target_regime=on_event.target_regime.name,
                       *self._sort(e.accept_visitor(self)
                                   for e in on_event.elements()))
-
-    v1_in_main_block = ('Regime', 'Alias', 'StateVariable', 'Constant')
