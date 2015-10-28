@@ -26,7 +26,7 @@ class NineMLNamespaceError(KeyError, NineMLRuntimeError):
     pass
 
 
-class NineMLMissingElementError(KeyError, NineMLRuntimeError):
+class NineMLNameError(KeyError, NineMLRuntimeError):
     pass
 
 

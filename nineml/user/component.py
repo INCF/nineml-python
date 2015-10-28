@@ -2,7 +2,7 @@
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError)
+    NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError)
 from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
@@ -63,7 +63,7 @@ class Definition(BaseReference):
                         "object"
                         .format(self._referred_to.name,
                                 type(self._referred_to), type(doc_obj)))
-            except NineMLMissingElementError:
+            except NineMLNameError:
                 document.add(self._referred_to)
         return super(Definition, self).to_xml(document, E=E, **kwargs)
 
@@ -460,7 +460,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             try:
                 return self.definition.component.property(name)
             except AttributeError:
-                raise NineMLMissingElementError(
+                raise NineMLNameError(
                     "No property named '{}' in component class".format(name))
 
 

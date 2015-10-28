@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLMissingElementError, NineMLDimensionError)
+    NineMLRuntimeError, NineMLNameError, NineMLDimensionError)
 from nineml.abstraction.ports import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort)
@@ -179,14 +179,14 @@ class BasePortConnection(BaseULObject):
         try:
             self._send_port = self.sender.send_port(self.send_port_name)
         except KeyError:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "Could not bind to missing send port, '{}', in '{}'"
                 .format(self.send_port_name, self.sender.name))
         try:
             self._receive_port = self._receiver.receive_port(
                 self.receive_port_name)
         except KeyError:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "Could not bind to missing receive port, '{}', in '{}'"
                 .format(self.receive_port_name, self.receiver.name))
         self._check_ports()

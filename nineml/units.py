@@ -9,7 +9,7 @@ from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLMissingElementError, NineMLDimensionError)
+    NineMLRuntimeError, NineMLNameError, NineMLDimensionError)
 from nineml.values import (
     BaseValue, SingleValue, ArrayValue, RandomValue)
 
@@ -495,7 +495,7 @@ class Quantity(BaseNineMLObject):
         try:
             units = document[units_str]
         except KeyError:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "Did not find definition of '{}' units in the current "
                 "document.".format(units_str))
         return cls(value=value, units=units)

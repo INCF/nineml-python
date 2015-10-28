@@ -7,7 +7,7 @@ from nineml.xml import (
     E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker)
 from nineml.annotations import Annotations
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLMissingElementError, NineMLXMLError)
+    NineMLRuntimeError, NineMLNameError, NineMLXMLError)
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 import contextlib
 from nineml.utils import expect_single
@@ -61,7 +61,7 @@ class Document(dict, BaseNineMLObject):
             # Ignore if the element is already added (this can happend
             # implictly when writing other elements that refer to this element)
             if element is not self[element.name]:
-                raise NineMLRuntimeError(
+                raise NineMLNameError(
                     "Could not add element '{}' as an element with that name "
                     "already exists in the document '{}'"
                     .format(element.name, self.url))
@@ -70,7 +70,7 @@ class Document(dict, BaseNineMLObject):
                 if element.document is None:
                     element._document = self  # Set its document to this one
                 else:
-                    raise NineMLRuntimeError(
+                    raise NineMLNameError(
                         "Attempting to add the same object '{}' {} to '{}' "
                         "document '{}' when it is already in '{}'. Please "
                         "remove it from the original document first"
@@ -87,7 +87,7 @@ class Document(dict, BaseNineMLObject):
             del self[element.name]
         except KeyError:
             if not ignore_missing:
-                raise NineMLMissingElementError(
+                raise NineMLNameError(
                     "Could not find '{}' element to remove from document '{}'"
                     .format(element.name, self.url))
         assert element.document is self
@@ -121,7 +121,7 @@ class Document(dict, BaseNineMLObject):
         try:
             elem = super(Document, self).__getitem__(name)
         except KeyError:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "'{}' was not found in the NineML document {} (elements in the"
                 " document were '{}')."
                 .format(name, self.url or '', "', '".join(self.iterkeys())))

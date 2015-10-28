@@ -1,5 +1,5 @@
 from ..base import BaseNineMLObject
-from nineml.exceptions import NineMLRuntimeError, NineMLMissingElementError
+from nineml.exceptions import NineMLRuntimeError, NineMLNameError
 from nineml.reference import Reference
 
 
@@ -25,7 +25,7 @@ class BaseULObject(BaseNineMLObject):
 #                         "Cannot create reference for '{}' {} in the provided "
 #                         "document due to name clash with existing {} "
 #                         "object".format(self.name, type(self), type(doc_obj)))
-#             except NineMLMissingElementError:
+#             except NineMLNameError:
 #                 document.add(self)
 #             self.from_reference = Reference(self.name, document, url=None)
 

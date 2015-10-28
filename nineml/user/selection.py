@@ -6,7 +6,7 @@ from nineml.xml import (
     extract_xmlns, E, from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.base import DocumentLevelObject
 from .population import Population
-from nineml.exceptions import NineMLMissingElementError
+from nineml.exceptions import NineMLNameError
 
 
 def find_difference(this, that):
@@ -38,15 +38,15 @@ def combined_port_accessor(population_accessor):
     def accessor(self, name):
         try:
             ports = [population_accessor(p, name) for p in self.populations]
-        except NineMLMissingElementError:
-            raise NineMLMissingElementError(
+        except NineMLNameError:
+            raise NineMLNameError(
                 "'{}' {} is not present in all populations '{}' of the "
                 "selection"
                 .format(name, population_accessor.__name__,
                         "', '".join(p.name for p in self.populations)))
         port = ports[0]
         if any(p != port for p in ports):
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "{} '{}' in populations '{}' are not equivalent"
                 .format(population_accessor.__name__.capitalize(),
                         name, "', '".join(p.name for p in self.populations)))
