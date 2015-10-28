@@ -90,6 +90,13 @@ class Document(dict, BaseNineMLObject):
                 raise NineMLMissingElementError(
                     "Could not find '{}' element to remove from document '{}'"
                     .format(element.name, self.url))
+        assert element.document is self
+        element._document = None
+
+    def pop(self, name):
+        element = self[name]
+        self.remove(element)
+        return element
 
     def __eq__(self, other):
         # Ensure all objects are loaded
