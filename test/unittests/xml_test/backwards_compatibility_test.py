@@ -25,9 +25,9 @@ class TestBackwardsCompatibility(unittest.TestCase):
             self.assertEqual(
                 v1, v2, "Loaded version 1 didn't match loaded version 2:\n{}"
                 .format(v1.find_mismatch(v2)))
-            v1_to_v2_xml = v1.to_xml(self.v2_doc, as_reference=False,
+            v1_to_v2_xml = v1.to_xml(self.v2_doc, as_ref=False,
                                      E=get_element_maker(2.0))
-            v2_to_v1_xml = v2.to_xml(self.v1_doc, as_reference=False,
+            v2_to_v1_xml = v2.to_xml(self.v1_doc, as_ref=False,
                                      E=get_element_maker(1.0))
 
             v1_xml = self._get_xml_element(self.v1_xml, name)

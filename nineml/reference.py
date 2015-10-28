@@ -21,8 +21,9 @@ class BaseReference(BaseNineMLObject):
             if url.startswith('.'):
                 if document is None:
                     raise NineMLRuntimeError(
-                        "Must supply document if definition is a URL string, "
-                        "'{}'".format(url))
+                        "Must supply the document that is being referenced "
+                        "from if definition is a relative URL string, '{}'"
+                        .format(url))
                 relative_to = os.path.dirname(document.url)
             else:
                 relative_to = None
@@ -110,24 +111,50 @@ def resolve_reference(from_xml):
     def resolving_from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
         if element.tag in (ns + Reference.element_name for ns in ALL_NINEML):
             reference = Reference.from_xml(element, document)
-            ul_object = reference.user_object
+            obj = reference.user_object
         else:
-            ul_object = from_xml(cls, element, document)
-        return ul_object
+            obj = from_xml(cls, element, document)
+        return obj
     return resolving_from_xml
 
 
 def write_reference(to_xml):
-    def unresolving_to_xml(self, document, as_reference=True, **kwargs):
-        if self.document is not None and as_reference:
+    def unresolving_to_xml(self, document, as_ref=None, absolute_refs=False,
+                           prefer_refs=False, **kwargs):
+        # Determine whether to write the elemnt as a reference or not depending
+        # on whether it needs to be, as determined by `as_ref`, e.g. in the
+        # case of populations referenced from projections, or whether the user
+        # would prefer it to be, `prefer_refs`. If neither kwarg is set whether
+        # the element is written as a reference is determined by whether it
+        # has already been added to a document or not.
+        if (as_ref or prefer_refs) and self.document is None:
+            # Add the object to the current document
+            document.add(self)
+            as_ref = True
+        elif as_ref is None:
+            as_ref = self.document is not None
+        if as_ref:
+            # If the object is already in the current document the url is None
             if self.document is document:
                 url = None
+            # Use the full ref if the `absolute_refs` kwarg is provided
+            elif absolute_refs:
+                url = self.document.url
+            # Otherwise use the relative path, which is recommended as it makes
+            # directories of files transportable
             else:
-                url = os.path.relpath(self.document.url, document.url)
-            xml = Reference(self.name, document, url=url).to_xml(document,
-                                                                 **kwargs)
+                url = os.path.relpath(self.document.url,
+                                      os.path.dirname(document.url))
+            # Write the element as a reference
+            xml = Reference(self.name, document, url=url).to_xml(
+                document, **kwargs)
         else:
-            xml = to_xml(self, document, **kwargs)
+            # Write the element inline. NB: This will effectively duplicate the
+            # object in the saved xml if it is referred to in multiple places.
+            # To avoid this from happening it is safer to avoid inline
+            # definitions by setting the `prefer_refs` kwarg.
+            xml = to_xml(self, document, absolute_refs=absolute_refs,
+                         prefer_refs=prefer_refs, **kwargs)
         return xml
     return unresolving_to_xml
 
