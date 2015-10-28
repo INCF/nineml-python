@@ -11,7 +11,7 @@ from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLMissingElementError, NineMLDimensionError)
 from nineml.values import (
-    BaseValue, SingleValue, ArrayValue, RandomDistributionValue)
+    BaseValue, SingleValue, ArrayValue, RandomValue)
 
 
 class Dimension(BaseNineMLObject, DocumentLevelObject):
@@ -424,7 +424,7 @@ class Quantity(BaseNineMLObject):
     def __init__(self, value, units=None):
         super(Quantity, self).__init__()
         if not isinstance(value, (SingleValue, ArrayValue,
-                                  RandomDistributionValue)):
+                                  RandomValue)):
             try:
                 # Convert value from float
                 value = SingleValue(float(value))

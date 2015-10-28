@@ -29,7 +29,7 @@ class BaseValue(BaseNineMLObject):
     @read_annotations
     def from_parent_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return from_child_xml(
-            element, (SingleValue, ArrayValue, RandomDistributionValue),
+            element, (SingleValue, ArrayValue, RandomValue),
             document, allow_reference=True, **kwargs)
 
 
@@ -394,24 +394,19 @@ class ArrayValue(BaseValue):
             return [abs(v) for v in self._values]
 
 
-class RandomDistributionValue(BaseValue):
+class RandomValue(BaseValue):
 
-    element_name = "RandomDistributionValue"
-    defining_attributes = ("_port_name", "distribution")
+    element_name = "RandomValue"
+    defining_attributes = ("distribution",)
 
-    def __init__(self, distribution, port_name):
-        super(RandomDistributionValue, self).__init__()
+    def __init__(self, distribution):
+        super(RandomValue, self).__init__()
         self._distribution = distribution
-        self._port_name = port_name
         self._generator = None
-
-    @property
-    def port(self):
-        return self._distribution.port(self._port_name)
 
     def __float__(self):
         raise NineMLRuntimeError(
-            "RandomDistributionValues cannot be converted to a single float")
+            "RandomValues cannot be converted to a single float")
 
     @property
     def distribution(self):
@@ -423,7 +418,7 @@ class RandomDistributionValue(BaseValue):
     def __iter__(self):
         if self._generator is None:
             raise NineMLRuntimeError(
-                "Generator not set for RandomDistributionValue '{}'"
+                "Generator not set for RandomValue '{}'"
                 .format(self))
         yield self._generator()
 
@@ -436,14 +431,13 @@ class RandomDistributionValue(BaseValue):
         self._generator = generator_cls(self.distribution)
 
     def __repr__(self):
-        return ("RandomDistributionValue({} port of {} component)"
+        return ("RandomValue({} port of {} component)"
                 .format(self.port_name, self.distribution.name))
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.element_name,
-                 self.distribution.to_xml(document, E=E, **kwargs),
-                 port=self.port.name)
+                 self.distribution.to_xml(document, E=E, **kwargs))
 
     @classmethod
     @read_annotations
@@ -452,4 +446,4 @@ class RandomDistributionValue(BaseValue):
         distribution = from_child_xml(
             element, nineml.user.RandomDistributionProperties,
             document, allow_reference=True, **kwargs)
-        return cls(distribution, port_name=get_xml_attr(element, 'port', document, **kwargs))
+        return cls(distribution)

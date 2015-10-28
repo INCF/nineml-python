@@ -1,5 +1,6 @@
 
 import unittest
+from nineml.xml import E
 from nineml.abstraction import (Expression, Alias, StateAssignment,
                                 TimeDerivative)
 from nineml.abstraction.expressions import (
@@ -422,12 +423,12 @@ class Constant_test(unittest.TestCase):
 
     def test_xml_roundtrip(self):
         document = Document(coulomb)
-        writer = XMLWriter(document)
+        writer = XMLWriter(document, E)
         xml = self.c.accept_visitor(writer)
         loader = XMLLoader(document)
         c = loader.load_constant(xml)
         self.assertEqual(c, self.c, "Constant failed xml roundtrip")
-        
+
 
 class MathUtils_test(unittest.TestCase):
 

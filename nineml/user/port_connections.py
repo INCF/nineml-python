@@ -71,10 +71,10 @@ class BasePortConnection(BaseULObject):
     def __repr__(self):
         return ("{}(sender={}->{}, receiver={}->{})"
                 .format(self.element_name,
-                        (self.sender_name if self.sender_name is not None
+                        (self._sender_name if self._sender_name is not None
                          else 'role:' + self.sender_role),
                         self.send_port_name,
-                        (self.receiver_name if self.receiver_name is not None
+                        (self._receiver_name if self._receiver_name is not None
                          else 'role:' + self.receiver_role),
                         self.receive_port_name))
 
@@ -181,7 +181,7 @@ class BasePortConnection(BaseULObject):
         except KeyError:
             raise NineMLMissingElementError(
                 "Could not bind to missing send port, '{}', in '{}'"
-                .format(self.receive_port_name, self.sender.name))
+                .format(self.send_port_name, self.sender.name))
         try:
             self._receive_port = self._receiver.receive_port(
                 self.receive_port_name)

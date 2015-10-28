@@ -4,7 +4,7 @@ from urllib import urlopen
 from lxml import etree
 import collections
 from nineml.xml import (
-    E, ALL_NINEML, extract_xmlns, strip_xmlns, NINEMLv1, get_element_maker)
+    E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker)
 from nineml.annotations import Annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLMissingElementError, NineMLXMLError)
@@ -111,6 +111,10 @@ class Document(dict, BaseNineMLObject):
     @property
     def elements(self):
         return self.itervalues()
+
+    @property
+    def element_names(self):
+        return (e.name for e in self.elements)
 
     def itervalues(self):
         for v in super(Document, self).itervalues():
@@ -253,7 +257,8 @@ class Document(dict, BaseNineMLObject):
         self.standardize_units()
         return E(
             self.element_name,
-            (e.to_xml(self, as_reference=False) for e in self.sorted_elements))
+            *[e.to_xml(self, as_reference=False)
+              for e in self.sorted_elements()])
 
     def write(self, filename, version=2.0, **kwargs):
         doc = self.to_xml(E=get_element_maker(version), **kwargs)
@@ -343,7 +348,6 @@ class Document(dict, BaseNineMLObject):
                 result += s.find_mismatch(other[k])
         return result
 
-    @property
     def sorted_elements(self):
         """Sorts elements into a consistent order before write"""
         return sorted(
