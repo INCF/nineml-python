@@ -6,6 +6,7 @@ docstring needed
 """
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
+from nineml.exceptions import NineMLXMLBlockError
 from nineml.xml import (
     get_xml_attr, unprocessed_xml, NINEMLv1, extract_xmlns)
 from nineml.annotations import read_annotations
@@ -31,6 +32,10 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader, ConnectionRuleVisitor):
         if xmlns == NINEMLv1:
             lib_elem = expect_single(element.findall(NINEMLv1 +
                                                      'ConnectionRule'))
+            if lib_elem.getchildren():
+                raise NineMLXMLBlockError(
+                    "Not expecting {} blocks within 'ConnectionRule' block"
+                    .format(', '.join(e.tag for e in lib_elem.getchildren())))
         else:
             lib_elem = element
         std_lib = get_xml_attr(lib_elem, 'standard_library', self.document,

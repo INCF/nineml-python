@@ -8,7 +8,8 @@ from itertools import chain
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xml import (
-    E, get_xml_attr, unprocessed_xml, NINEMLv1, extract_xmlns)
+    get_xml_attr, unprocessed_xml, NINEMLv1, extract_xmlns)
+from nineml.exceptions import NineMLXMLBlockError
 from ..base import Dynamics
 from nineml.annotations import read_annotations
 from ...ports import (EventSendPort, EventReceivePort, AnalogSendPort,
@@ -43,6 +44,12 @@ class DynamicsXMLLoader(ComponentClassXMLLoader, DynamicsVisitor):
         blocks = self._load_blocks(element, block_names=block_names,
                                    ignore=[(NINEMLv1, 'Dynamics')], **kwargs)
         if extract_xmlns(element.tag) == NINEMLv1:
+            if any(blocks[block_name] for block_name in version1_main):
+                raise NineMLXMLBlockError(
+                    "{} blocks should be enclosed in a Dynamics block (i.e. "
+                    "not the outer ComponentClass block) in version 1.0 "
+                    "(they belong in the outer block in later versions)"
+                    .format(', '.join(n for n in version1_main if blocks[n])))
             dyn_elem = expect_single(element.findall(NINEMLv1 + 'Dynamics'))
             dyn_blocks = self._load_blocks(
                 dyn_elem,
