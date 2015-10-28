@@ -84,6 +84,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     defining_attributes = ('_name', '_parameters', '_aliases', '_constants')
     class_to_member = {'Parameter': 'parameter', 'Alias': 'alias',
                        'Constant': 'constant'}
+    v1_element_name = 'ComponentClass'
 
     def __init__(self, name, parameters=None, aliases=None, constants=None,
                  url=None):

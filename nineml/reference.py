@@ -51,13 +51,13 @@ class BaseReference(BaseNineMLObject):
         name = self._referred_to.name
         if E._namespace == NINEMLv1:
             attrs = {}
-            text = name
+            body = [name]
         else:
             attrs = {'name': name}
-            text = ''
+            body = []
         if self.url:
             attrs['url'] = self.url
-        element = E(self.element_name, text, **attrs)
+        element = E(self.element_name, *body, **attrs)
         return element
 
     @classmethod

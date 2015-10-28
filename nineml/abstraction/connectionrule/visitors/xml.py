@@ -60,8 +60,8 @@ class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
                 name=component_class.name)
         else:
             xml = self.E(component_class.element_name,
-                         *self._sort(e.accept_visitor(self)
-                                     for e in component_class),
+                         *(e.accept_visitor(self)
+                           for e in component_class.sorted_elements),
                          name=component_class.name,
                          standard_library=component_class.standard_library)
         return xml

@@ -108,8 +108,10 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     """
     __metaclass__ = ABCMeta  # Abstract base class
+    v1_element_name = 'Component'
     defining_attributes = ('name', 'component_class', '_properties')
     children = ("Property", "Definition", 'Prototype')
+    write_order = ('Property',)
 
     class_to_member = {'Property': 'property'}
 
@@ -260,8 +262,8 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         """
         element = E(self.element_name,
                     self._definition.to_xml(document, E=E, **kwargs),
-                    *[p.to_xml(document, E=E, **kwargs)
-                      for p in self._properties.itervalues()],
+                    *(p.to_xml(document, E=E, **kwargs)
+                      for p in self.sorted_elements()),
                       name=self.name)
         return element
 
@@ -501,7 +503,7 @@ class Property(BaseULObject):
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         if E._namespace == NINEMLv1:
             xml = E(self.element_name,
-                    self._value.to_xml(document, E=E, **kwargs),
+                    self.value.to_xml(document, E=E, **kwargs),
                     name=self.name,
                     units=self.units.name)
         else:
@@ -518,7 +520,7 @@ class Property(BaseULObject):
         if extract_xmlns(element.tag) == NINEMLv1:
             value = from_child_xml(
                 element,
-                (SingleValue, ArrayValue, RandomDistributionComponent),
+                (SingleValue, ArrayValue, RandomDistributionProperties),
                 document, **kwargs)
             units = document[
                 get_xml_attr(element, 'units', document, **kwargs)]
@@ -550,6 +552,7 @@ class DynamicsProperties(Component):
     class_to_member = dict(
         tuple(Component.class_to_member.iteritems()) +
         (('Initial', 'initial_value'),))
+    write_order = ('Property', 'Initial')
 
     def __init__(self, name, definition, properties={}, initial_values={},
                  url=None, check_initial_values=False):
@@ -600,21 +603,6 @@ class DynamicsProperties(Component):
         return (super(DynamicsProperties, self).attributes_with_units |
                 set(p for p in self.initial_values if p.units is not None))
 
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        """
-        docstring missing, although since the decorators don't
-        preserve the docstring, it doesn't matter at the moment.
-        """
-        element = E(self.element_name,
-                    self._definition.to_xml(document, E=E, **kwargs),
-                    *[p.to_xml(document, E=E, **kwargs) for p in chain(
-                        self._properties.itervalues(),
-                        self._initial_values.itervalues())],
-                      name=self.name)
-        return element
-
     @classmethod
     @resolve_reference
     @read_annotations
@@ -664,27 +652,3 @@ class RandomDistributionProperties(Component):
 
     def get_element_name(self):
         return self.element_name
-
-
-class DynamicsComponent(DynamicsProperties):
-    """
-    An extension of DynamicsProperties for v1 compatibility
-    """
-
-    element_name = "Component"
-
-
-class ConnectionRuleComponent(ConnectionRuleProperties):
-    """
-    An extension of DynamicsProperties for v1 compatibility
-    """
-
-    element_name = "Component"
-
-
-class RandomDistributionComponent(RandomDistributionProperties):
-    """
-    An extension of DynamicsProperties for v1 compatibility
-    """
-
-    element_name = "Component"

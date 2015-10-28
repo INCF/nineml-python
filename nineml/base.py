@@ -69,7 +69,7 @@ class BaseNineMLObject(object):
         else:
             result = ''
         if self.element_name != other.element_name:
-            result += "mismatch in element_name ({} and {})".format(
+            result += "mismatch in element_name, '{}' and '{}'".format(
                 self.element_name, other.element_name)
         else:
             for attr_name in self.__class__.defining_attributes:
@@ -361,6 +361,12 @@ class ContainerObject(object):
         return getattr(
             self, '_' + pluralise(accessor_name_from_type(
                 self, element_type)))
+
+    def sorted_elements(self, **kwargs):
+        """Sorts the element into a consistent, logical order before write"""
+        return sorted(
+            self.elements(**kwargs),
+            key=lambda e: (self.write_order.index(e.element_name), e._name))
 
 
 def accessor_name_from_type(class_type, element_type):

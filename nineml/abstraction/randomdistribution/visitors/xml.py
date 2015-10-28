@@ -51,9 +51,6 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader,
 class RandomDistributionXMLWriter(ComponentClassXMLWriter,
                                   RandomDistributionVisitor):
 
-    # Maintains order of elements between writes
-    write_order = ['Parameters', 'Alias', 'Constant', 'Annotations']
-
     @annotate_xml
     def visit_componentclass(self, component_class):
         if self.xmlns == NINEMLv1:
@@ -64,8 +61,8 @@ class RandomDistributionXMLWriter(ComponentClassXMLWriter,
                 name=component_class.name)
         else:
             xml = self.E('RandomDistribution',
-                         *self._sort(e.accept_visitor(self)
-                                     for e in component_class),
+                         *(e.accept_visitor(self)
+                           for e in component_class.sorted_elements()),
                          name=component_class.name)
         return xml
 

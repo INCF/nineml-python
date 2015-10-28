@@ -162,6 +162,8 @@ class Regime(BaseALObject, ContainerObject):
                        'OnCondition': 'on_condition',
                        'Alias': 'alias'}
 
+    write_order = ('TimeDerivative', 'OnEvent', 'OnCondition')
+
     _n = 0
 
     @classmethod

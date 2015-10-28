@@ -253,8 +253,7 @@ class Document(dict, BaseNineMLObject):
         self.standardize_units()
         return E(
             self.element_name,
-            *self._sort(c.to_xml(self, as_reference=False)
-                        for c in self.itervalues()))
+            (e.to_xml(self, as_reference=False) for e in self.sorted_elements))
 
     def write(self, filename, version=2.0, **kwargs):
         doc = self.to_xml(E=get_element_maker(version), **kwargs)
@@ -344,11 +343,12 @@ class Document(dict, BaseNineMLObject):
                 result += s.find_mismatch(other[k])
         return result
 
-    def _sort(self, elements):
-        """Sorts the element into a consistent, logical order before write"""
+    @property
+    def sorted_elements(self):
+        """Sorts elements into a consistent order before write"""
         return sorted(
-            elements,
-            key=lambda e: self.write_order.index(strip_xmlns(e.tag)))
+            self.elements,
+            key=lambda e: (self.write_order.index(e.element_name), e.name))
 
 
 def load(root_element, read_from=None, **kwargs):
@@ -442,11 +442,11 @@ def get_component_type(comp_xml, doc_xml, relative_to):
             if ref_elem.tag == NINEMLv1 + 'ComponentClass':
                 cc_cls = get_component_class_type(ref_elem)
                 if cc_cls == nineml.Dynamics:
-                    cls = nineml.user.component.DynamicsComponent
+                    cls = nineml.user.component.DynamicsProperties
                 elif cc_cls == nineml.ConnectionRule:
-                    cls = nineml.user.component.ConnectionRuleComponent
+                    cls = nineml.user.component.ConnectionRuleProperties
                 elif cc_cls == nineml.RandomDistribution:
-                    cls = nineml.user.component.RandomDistributionComponent
+                    cls = nineml.user.component.RandomDistributionProperties
                 else:
                     assert False
             else:
