@@ -207,16 +207,20 @@ def identify_element(element):
 def unprocessed_xml(from_xml):
     def from_xml_with_exception_handling(cls, element, *args, **kwargs):  # @UnusedVariable @IgnorePep8
         # Get the document object for error messages
-        if args:
-            document = args[0]  # if UL classmethod
+        if args:  # if UL classmethod
+            document = args[0]
+            xmlns = extract_xmlns(element.tag)
+            if xmlns == NINEMLv1:
+                try:
+                    element_name = cls.v1_element_name
+                except AttributeError:
+                    element_name = cls.element_name
+            else:
+                element_name = cls.element_name
             # Check the tag of the element matches the class names
-            try:
-                assert element.tag in (xmlns + cls.element_name
-                                       for xmlns in ALL_NINEML), (
-                    "Found '{}' element, expected '{}'"
-                    .format(element.tag, cls.element_name))
-            except:
-                raise
+            assert element.tag in (xmlns + element_name), (
+                "Found '{}' element, expected '{}'"
+                .format(element.tag, cls.element_name))
         else:
             document = cls.document  # if AL visitor method
         # Keep track of which blocks and attributes were processed within the

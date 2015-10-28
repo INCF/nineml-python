@@ -133,6 +133,7 @@ class Transition(BaseALObject, ContainerObject):
                            'target_regime_name')
     class_to_member = {'StateAssignment': 'state_assignment',
                        'OutputEvent': 'output_event'}
+    write_order = ('Trigger', 'StateAssignment', 'OutputEvent')
 
     def __init__(self, state_assignments=None, output_events=None,
                  target_regime=None):

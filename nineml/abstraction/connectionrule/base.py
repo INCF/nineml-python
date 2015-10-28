@@ -20,6 +20,8 @@ class ConnectionRule(ComponentClass):
 
     element_name = 'ConnectionRule'
     defining_attributes = ('name', '_parameters', 'standard_library')
+    # Maintains order of elements between writes
+    write_order = ('Parameters', 'Alias', 'Constant', 'Annotations')
 
     def __init__(self, name, standard_library, parameters=None):
         super(ConnectionRule, self).__init__(

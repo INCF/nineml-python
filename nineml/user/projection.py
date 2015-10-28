@@ -6,8 +6,7 @@ from nineml.xml import (
     E, from_child_xml, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
 from nineml.annotations import read_annotations, annotate_xml
 from .component import (
-    ConnectionRuleProperties, DynamicsProperties, DynamicsComponent,
-    ConnectionRuleComponent, RandomDistributionComponent)
+    ConnectionRuleProperties, DynamicsProperties)
 from nineml.values import SingleValue, ArrayValue
 from copy import copy
 from itertools import chain

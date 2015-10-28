@@ -1,29 +1,59 @@
 import unittest
 from nineml import load
-from nineml.exceptions import NineMLXMLBlockError, NineMLXMLAttributeError
+from nineml.xml import etree, get_element_maker
 
 
 class TestBackwardsCompatibility(unittest.TestCase):
 
     def setUp(self):
-        self.v1 = load(version1)
-        self.v2 = load(version2)
+        self.v1_xml = etree.fromstring(version1)
+        self.v2_xml = etree.fromstring(version2)
+        self.v1_doc = load(version1)
+        self.v2_doc = load(version2)
 #         list(self.v1.elements)
 #         list(self.v2.elements)
 
-    def test_dynamics(self):
-        v1 = self.v1['D_cellP']
-        v2 = self.v2['D_cellP']
-        self.assertEqual(
-            v1, v2, "Loaded version 1 didn't match loaded version 2:\n{}"
-            .format(v1.find_mismatch(v2)))
+    def test_backwards_compatibility(self):
+        for name in ('D_cellP',):
+            v1 = self.v1_doc[name]
+            v2 = self.v2_doc[name]
+            # Test loaded python objects are equivalent between versions
+            self.assertEqual(
+                v1, v2, "Loaded version 1 didn't match loaded version 2:\n{}"
+                .format(v1.find_mismatch(v2)))
+            v1_to_v2_xml = v1.to_xml(self.v2_doc, E=get_element_maker(2.0))
+            v2_to_v1_xml = v2.to_xml(self.v1_doc, E=get_element_maker(1.0))
+
+            v1_xml = self._get_xml_element(self.v1_xml, name)
+            v2_xml = self._get_xml_element(self.v2_xml, name)
+            # Test the version 1 converted to version 2
+            self.assertEqual(
+                v1_to_v2_xml, v2_xml,
+                "v2 produced from v1 doesn't match loaded:\n{}\n\nand\n\n{}"
+                .format(xml_to_str(v1_to_v2_xml), xml_to_str(v2_xml)))
+            # Test the version 2 converted to version 1
+            self.assertEqual(
+                v2_to_v1_xml, v1_xml,
+                "v2 produced from v1 doesn't match loaded:\n{}\n\nand\n\n{}"
+                .format(xml_to_str(v2_to_v1_xml), xml_to_str(v1_xml)))
+
+    def _get_xml_element(self, xml, name):
+        for child in xml.getchildren():
+            if child.get('name') == name:
+                return child
+        assert False
+
+
+def xml_to_str(xml):
+    return etree.tostring(xml, encoding="UTF-8", pretty_print=True,
+                          xml_declaration=True)
 
 
 version1 = """<?xml version="1.0" encoding="UTF-8"?>
 <NineML xmlns="http://nineml.net/9ML/1.0">
   <ComponentClass name="D_cell">
-    <Parameter name="tau" dimension="time"/>
     <Parameter name="cm" dimension="capacitance"/>
+    <Parameter name="tau" dimension="time"/>
     <Parameter name="v_thresh" dimension="voltage"/>
     <EventSendPort name="spike"/>
     <AnalogReducePort name="i_ext" dimension="current" operator="+"/>
@@ -74,10 +104,10 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
   </ComponentClass>
   <Component name="D_cellP">
     <Definition>D_cell</Definition>
-    <Property name="tau" units="ms">
+    <Property name="cm" units="uF">
       <SingleValue>1.0</SingleValue>
     </Property>
-    <Property name="cm" units="uF">
+    <Property name="tau" units="ms">
       <SingleValue>1.0</SingleValue>
     </Property>
     <Property name="v_thresh" units="mV">
