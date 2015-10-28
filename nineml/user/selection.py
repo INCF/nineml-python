@@ -76,9 +76,9 @@ class Selection(BaseULObject, DocumentLevelObject):
     element_name = "Selection"
     defining_attributes = ('name', 'operation')
 
-    def __init__(self, name, operation, url=None):
+    def __init__(self, name, operation, document=None):
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, document)
         self.name = name
         self.operation = operation
 
@@ -101,7 +101,7 @@ class Selection(BaseULObject, DocumentLevelObject):
         op = from_child_xml(
             element, Concatenate, document, **kwargs)
         return cls(get_xml_attr(element, 'name', document, **kwargs), op,
-                   url=document.url)
+                   document=document)
 
     def evaluate(self):
         assert isinstance(self.operation, Concatenate), \

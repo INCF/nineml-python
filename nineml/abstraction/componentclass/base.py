@@ -87,11 +87,11 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     v1_element_name = 'ComponentClass'
 
     def __init__(self, name, parameters=None, aliases=None, constants=None,
-                 url=None):
+                 document=None):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
-        DocumentLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, document)
         ContainerObject.__init__(self)
 
         # Turn any strings in the parameter list into Parameters:

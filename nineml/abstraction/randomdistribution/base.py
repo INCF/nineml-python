@@ -9,9 +9,10 @@ class RandomDistribution(ComponentClass):
     # Maintains order of elements between writes
     write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 
-    def __init__(self, name, standard_library, parameters=None):
+    def __init__(self, name, standard_library, parameters=None,
+                 document=None):
         super(RandomDistribution, self).__init__(
-            name, parameters)
+            name, parameters, document=document)
         self._standard_library = standard_library
 
     @property

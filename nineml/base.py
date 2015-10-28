@@ -113,12 +113,12 @@ class BaseNineMLObject(object):
 
 class DocumentLevelObject(object):
 
-    def __init__(self, url):
-        self._url = url
+    def __init__(self, document):
+        self._document = document
 
     @property
-    def url(self):
-        return self._url
+    def document(self):
+        return self._document
 
     @property
     def attributes_with_dimension(self):

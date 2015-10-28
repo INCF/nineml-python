@@ -432,11 +432,11 @@ class MultiDynamics(Dynamics):
     core_type = Dynamics
 
     def __init__(self, name, sub_components, port_connections,
-                 port_exposures=None, url=None, validate_dimensions=True):
+                 port_exposures=None, document=None, validate_dimensions=True):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
-        DocumentLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, document)
         ContainerObject.__init__(self)
         # =====================================================================
         # Create the structures unique to MultiDynamics

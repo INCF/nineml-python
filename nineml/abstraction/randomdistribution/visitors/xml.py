@@ -41,7 +41,8 @@ class RandomDistributionXMLLoader(ComponentClassXMLLoader,
             name=get_xml_attr(element, 'name', self.document, **kwargs),
             standard_library=get_xml_attr(lib_elem, 'standard_library',
                                           self.document, **kwargs),
-            parameters=blocks["Parameter"])
+            parameters=blocks["Parameter"],
+            document=self.document)
 
     tag_to_loader = dict(
         tuple(ComponentClassXMLLoader.tag_to_loader.iteritems()) +
@@ -52,7 +53,7 @@ class RandomDistributionXMLWriter(ComponentClassXMLWriter,
                                   RandomDistributionVisitor):
 
     @annotate_xml
-    def visit_componentclass(self, component_class):
+    def visit_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         if self.xmlns == NINEMLv1:
             elems = [e.accept_visitor(self)
                         for e in component_class.sorted_elements()]

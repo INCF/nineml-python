@@ -29,7 +29,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     def __init__(self, name, dimensions=None, **kwargs):
         BaseNineMLObject.__init__(self)
-        DocumentLevelObject.__init__(self, kwargs.pop('url', None))
+        DocumentLevelObject.__init__(self, kwargs.pop('document', None))
         self._name = name
         if dimensions is not None:
             assert len(dimensions) == 7, "Incorrect dimension length"
@@ -151,7 +151,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         dim_args = dict((s, get_xml_attr(element, s, document, default=0,
                                          dtype=int, **kwargs))
                          for s in cls.dimension_symbols)
-        return cls(name, url=document.url, **dim_args)
+        return cls(name, document=document, **dim_args)
 
     def __mul__(self, other):
         "self * other"
@@ -276,9 +276,9 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     element_name = 'Unit'
     defining_attributes = ('_dimension', '_power', '_offset')
 
-    def __init__(self, name, dimension, power, offset=0.0, url=None):
+    def __init__(self, name, dimension, power, offset=0.0, document=None):
         BaseNineMLObject.__init__(self)
-        DocumentLevelObject.__init__(self, url)
+        DocumentLevelObject.__init__(self, document)
         self._name = name
         assert isinstance(dimension, Dimension)
         self._dimension = dimension
@@ -360,7 +360,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
                              default=0, **kwargs)
         offset = get_xml_attr(element, 'offset', document, dtype=float,
                               default=0.0, **kwargs)
-        return cls(name, dimension, power, offset=offset, url=document.url)
+        return cls(name, dimension, power, offset=offset, document=document)
 
     def __mul__(self, other):
         "self * other"
