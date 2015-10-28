@@ -1,6 +1,7 @@
 import unittest
 from nineml import load
 from nineml.xml import etree, get_element_maker
+from itertools import izip
 
 
 class TestBackwardsCompatibility(unittest.TestCase):
@@ -14,34 +15,60 @@ class TestBackwardsCompatibility(unittest.TestCase):
 #         list(self.v2.elements)
 
     def test_backwards_compatibility(self):
-        for name in ('D_cellP',):
+        v1_names = list(self.v1_doc.element_names)
+        v2_names = list(self.v1_doc.element_names)
+        self.assertEqual(v1_names, v2_names)
+        for name in v1_names:
             v1 = self.v1_doc[name]
             v2 = self.v2_doc[name]
             # Test loaded python objects are equivalent between versions
             self.assertEqual(
                 v1, v2, "Loaded version 1 didn't match loaded version 2:\n{}"
                 .format(v1.find_mismatch(v2)))
-            v1_to_v2_xml = v1.to_xml(self.v2_doc, E=get_element_maker(2.0))
-            v2_to_v1_xml = v2.to_xml(self.v1_doc, E=get_element_maker(1.0))
+            v1_to_v2_xml = v1.to_xml(self.v2_doc, as_reference=False,
+                                     E=get_element_maker(2.0))
+            v2_to_v1_xml = v2.to_xml(self.v1_doc, as_reference=False,
+                                     E=get_element_maker(1.0))
 
             v1_xml = self._get_xml_element(self.v1_xml, name)
             v2_xml = self._get_xml_element(self.v2_xml, name)
+#             if not xml_equal(v1_to_v2_xml, v2_xml):
+#                 v1.to_xml(self.v2_doc, E=get_element_maker(2.0))
             # Test the version 1 converted to version 2
-            self.assertEqual(
-                v1_to_v2_xml, v2_xml,
+            self.assert_(
+                xml_equal(v1_to_v2_xml, v2_xml),
                 "v2 produced from v1 doesn't match loaded:\n{}\n\nand\n\n{}"
                 .format(xml_to_str(v1_to_v2_xml), xml_to_str(v2_xml)))
             # Test the version 2 converted to version 1
-            self.assertEqual(
-                v2_to_v1_xml, v1_xml,
+            self.assert_(
+                xml_equal(v2_to_v1_xml, v1_xml),
                 "v2 produced from v1 doesn't match loaded:\n{}\n\nand\n\n{}"
                 .format(xml_to_str(v2_to_v1_xml), xml_to_str(v1_xml)))
 
     def _get_xml_element(self, xml, name):
         for child in xml.getchildren():
-            if child.get('name') == name:
+            if child.get('name', child.get('symbol')) == name:
                 return child
-        assert False
+        raise KeyError("No '{}' in: \n{}"
+                       .format(name, xml_to_str(xml)))
+
+
+def xml_equal(xml1, xml2):
+    if xml1.attrib != xml2.attrib:
+        print "{} not {}".format(xml1.attrib, xml2.attrib)
+        return False
+    children1 = [c for c in xml1.getchildren()
+                 if not c.tag.endswith('Annotations')]
+    children2 = [c for c in xml2.getchildren()
+                 if not c.tag.endswith('Annotations')]
+    if len(children1) != len(children2):
+        print "len different"
+        return False
+    for c1, c2 in izip(children1, children2):
+        if not xml_equal(c1, c2):
+            print "{} not {}".format(c1, c2)
+            return False
+    return True
 
 
 def xml_to_str(xml):
@@ -55,8 +82,8 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
     <Parameter name="cm" dimension="capacitance"/>
     <Parameter name="tau" dimension="time"/>
     <Parameter name="v_thresh" dimension="voltage"/>
-    <EventSendPort name="spike"/>
     <AnalogReducePort name="i_ext" dimension="current" operator="+"/>
+    <EventSendPort name="spike"/>
     <Dynamics>
       <StateVariable name="v" dimension="voltage"/>
       <Regime name="sole">
@@ -76,9 +103,9 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
     <Parameter name="tau" dimension="time"/>
     <Parameter name="weight" dimension="current"/>
     <EventReceivePort name="spike"/>
-    <StateVariable name="a" dimension="current"/>
     <AnalogSendPort name="a" dimension="current"/>
     <Dynamics>
+      <StateVariable name="a" dimension="current"/>
       <Regime name="sole">
         <TimeDerivative variable="a">
           <MathInline>a/tau</MathInline>
@@ -92,15 +119,13 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
     </Dynamics>
   </ComponentClass>
   <ComponentClass name="CR">
-    <ConnectionRule standard_library="http://nineml.net/connectionrule/Probabilistic">
-      <Parameter name="probability" dimension="dimensionless"/>
-    </ConnectionRule>
+    <Parameter name="probability" dimension="dimensionless"/>
+    <ConnectionRule standard_library="http://nineml.net/connectionrule/Probabilistic"/>
   </ComponentClass>
   <ComponentClass name="RD">
-    <RandomDistribution standard_library="http://uncertml.org/2.0/UniformDistribution.xml">
-      <Parameter name="minimum" dimension="dimensionless"/>
-      <Parameter name="maximum" dimension="dimensionless"/>
-    </RandomDistribution>
+    <Parameter name="maximum" dimension="dimensionless"/>
+    <Parameter name="minimum" dimension="dimensionless"/>
+    <RandomDistribution standard_library="http://uncertml.org/2.0/UniformDistribution.xml"/>
   </ComponentClass>
   <Component name="D_cellP">
     <Definition>D_cell</Definition>
@@ -120,15 +145,17 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
       <SingleValue>1.0</SingleValue>
     </Property>
     <Property name="weight" units="nA">
-      <Component name="RDP">
-        <Definition>RD</Definition>
-        <Property name="minimum" units="unitless">
-          <SingleValue>0.0</SingleValue>
-        </Property>
-        <Property name="maximum" units="unitless">
-          <SingleValue>1.0</SingleValue>
-        </Property>
-      </Component>
+      <RandomValue>
+        <Component name="RDP">
+          <Definition>RD</Definition>
+          <Property name="maximum" units="unitless">
+            <SingleValue>1.0</SingleValue>
+          </Property>
+          <Property name="minimum" units="unitless">
+            <SingleValue>0.0</SingleValue>
+          </Property>
+        </Component>
+      </RandomValue>
     </Property>
   </Component>
   <Component name="CRP">
@@ -155,7 +182,7 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
     </Source>
     <Destination>
       <Reference>P2</Reference>
-      <FromResposne send_port="a" receive_port="i_ext"/>
+      <FromResponse send_port="a" receive_port="i_ext"/>
     </Destination>
     <Response>
       <Reference>D_psrP</Reference>
@@ -177,14 +204,14 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
   <Unit symbol="uF" dimension="capacitance" power="-6"/>
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="ms" dimension="time" power="-3"/>
-  <Unit symbol="unitless" dimension="dimensionless"/>
+  <Unit symbol="unitless" dimension="dimensionless" power="0"/>
 </NineML>"""
 
 version2 = """<?xml version="1.0" encoding="UTF-8"?>
 <NineML xmlns="http://nineml.net/9ML/2.0">
   <Dynamics name="D_cell">
-    <Parameter name="tau" dimension="time"/>
     <Parameter name="cm" dimension="capacitance"/>
+    <Parameter name="tau" dimension="time"/>
     <Parameter name="v_thresh" dimension="voltage"/>
     <AnalogReducePort name="i_ext" dimension="current" operator="+"/>
     <EventSendPort name="spike"/>
@@ -222,18 +249,18 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
     <Parameter name="probability" dimension="dimensionless"/>
   </ConnectionRule>
   <RandomDistribution name="RD" standard_library="http://uncertml.org/2.0/UniformDistribution.xml">
-    <Parameter name="minimum" dimension="dimensionless"/>
     <Parameter name="maximum" dimension="dimensionless"/>
+    <Parameter name="minimum" dimension="dimensionless"/>
   </RandomDistribution>
   <DynamicsProperties name="D_cellP">
     <Definition name="D_cell"/>
-    <Property name="tau">
-      <Quantity units="ms">
+    <Property name="cm">
+      <Quantity units="uF">
         <SingleValue>1.0</SingleValue>
       </Quantity>
     </Property>
-    <Property name="cm">
-      <Quantity units="uF">
+    <Property name="tau">
+      <Quantity units="ms">
         <SingleValue>1.0</SingleValue>
       </Quantity>
     </Property>
@@ -252,21 +279,21 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
     </Property>
     <Property name="weight">
       <Quantity units="nA">
-        <RandomDistributionValue port="out">
+        <RandomValue>
           <RandomDistributionProperties name="RDP">
             <Definition name="RD"/>
-            <Property name="minimum">
-              <Quantity units="unitless">
-                <SingleValue>0.0</SingleValue>
-              </Quantity>
-            </Property>
             <Property name="maximum">
               <Quantity units="unitless">
                 <SingleValue>1.0</SingleValue>
               </Quantity>
             </Property>
+            <Property name="minimum">
+              <Quantity units="unitless">
+                <SingleValue>0.0</SingleValue>
+              </Quantity>
+            </Property>
           </RandomDistributionProperties>
-        </RandomDistributionValue>
+        </RandomValue>
       </Quantity>
     </Property>
   </DynamicsProperties>
@@ -303,13 +330,13 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
     <Connectivity>
       <Reference name="CRP"/>
     </Connectivity>
-    <EventPortConnection sender_role="pre" receiver_role="response" send_port="spike" receive_port="spike"/>
-    <AnalogPortConnection sender_role="response" receiver_role="post" send_port="i_syn" receive_port="i_ext"/>
     <Delay>
       <Quantity units="ms">
         <SingleValue>1.0</SingleValue>
       </Quantity>
     </Delay>
+    <AnalogPortConnection sender_role="response" receiver_role="post" send_port="a" receive_port="i_ext"/>
+    <EventPortConnection sender_role="pre" receiver_role="response" send_port="spike" receive_port="spike"/>    
   </Projection>
   <Dimension name="time" t="1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
@@ -320,5 +347,5 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
   <Unit symbol="uF" dimension="capacitance" power="-6"/>
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="ms" dimension="time" power="-3"/>
-  <Unit symbol="unitless" dimension="dimensionless"/>
+  <Unit symbol="unitless" dimension="dimensionless" power="0"/>
 </NineML>"""

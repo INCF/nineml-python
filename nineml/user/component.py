@@ -15,7 +15,7 @@ from nineml.units import Quantity
 from . import BaseULObject
 from nineml.document import Document
 from nineml.base import DocumentLevelObject, ContainerObject
-from nineml.values import SingleValue, ArrayValue
+from nineml.values import SingleValue, ArrayValue, RandomValue
 from os import path
 
 
@@ -263,7 +263,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         element = E(self.element_name,
                     self._definition.to_xml(document, E=E, **kwargs),
                     *(p.to_xml(document, E=E, **kwargs)
-                      for p in self.sorted_elements()),
+                      for p in self.sorted_elements(local=True)),
                       name=self.name)
         return element
 
@@ -415,6 +415,17 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     def event_send_port_names(self):
         return self.component_class.event_send_port_names
 
+    def elements(self, local=False):
+        """
+        Overrides the elements method in ContainerObject base class to allow
+        for "local" kwarg to only iterate the members that are declared in
+        this instance (i.e. not the prototype)
+        """
+        if local:
+            return self._properties.itervalues()
+        else:
+            return ContainerObject.elements(self)
+
     @property
     def properties(self):
         """
@@ -520,7 +531,7 @@ class Property(BaseULObject):
         if extract_xmlns(element.tag) == NINEMLv1:
             value = from_child_xml(
                 element,
-                (SingleValue, ArrayValue, RandomDistributionProperties),
+                (SingleValue, ArrayValue, RandomValue),
                 document, **kwargs)
             units = document[
                 get_xml_attr(element, 'units', document, **kwargs)]
@@ -602,6 +613,18 @@ class DynamicsProperties(Component):
     def attributes_with_units(self):
         return (super(DynamicsProperties, self).attributes_with_units |
                 set(p for p in self.initial_values if p.units is not None))
+
+    def elements(self, local=False):
+        """
+        Overrides the elements method in ContainerObject base class to allow
+        for "local" kwarg to only iterate the members that are declared in
+        this instance (i.e. not the prototype)
+        """
+        if local:
+            return chain(self._properties.itervalues(),
+                         self._initial_values.itervalues())
+        else:
+            return ContainerObject.elements(self)
 
     @classmethod
     @resolve_reference

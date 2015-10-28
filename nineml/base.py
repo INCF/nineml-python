@@ -366,7 +366,8 @@ class ContainerObject(object):
         """Sorts the element into a consistent, logical order before write"""
         return sorted(
             self.elements(**kwargs),
-            key=lambda e: (self.write_order.index(e.element_name), e._name))
+            key=lambda e: (self.write_order.index(e.element_name),
+                           str(e._name)))
 
 
 def accessor_name_from_type(class_type, element_type):

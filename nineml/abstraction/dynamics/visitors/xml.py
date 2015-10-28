@@ -203,11 +203,11 @@ class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
                 as_class=self.class_to_visit)]
         if self.xmlns == NINEMLv1:
             v1_elems = [e for e in child_elems
-                        if e.tag[len(NINEMLv1):] not in self.version1_main]
+                        if e.tag[len(NINEMLv1):] not in version1_main]
             v1_elems.append(
                 self.E('Dynamics',
                        *(e for e in child_elems
-                         if e.tag[len(NINEMLv1):] in self.version1_main)))
+                         if e.tag[len(NINEMLv1):] in version1_main)))
             xml = self.E(component_class.v1_element_name,
                          *v1_elems, name=component_class.name)
         else:

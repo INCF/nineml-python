@@ -103,7 +103,14 @@ def from_child_xml(element, child_classes, document, multiple=False,
     children = []
     if allow_reference != 'only':
         for child_cls in child_classes:
-            for child_elem in parent.findall(xmlns + child_cls.element_name):
+            if xmlns == NINEMLv1:
+                try:
+                    tag_name = child_cls.v1_element_name
+                except AttributeError:
+                    tag_name = child_cls.element_name
+            else:
+                tag_name = child_cls.element_name
+            for child_elem in parent.findall(xmlns + tag_name):
                 children.append(child_cls.from_xml(child_elem, document,
                                                    **kwargs))
                 if unprocessed and not within:

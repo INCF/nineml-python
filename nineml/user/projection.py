@@ -1,13 +1,14 @@
 # encoding: utf-8
 from . import BaseULObject
 from collections import defaultdict
+from nineml.exceptions import NineMLRuntimeError
 from nineml.reference import resolve_reference, write_reference
 from nineml.xml import (
     E, from_child_xml, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
 from nineml.annotations import read_annotations, annotate_xml
 from .component import (
     ConnectionRuleProperties, DynamicsProperties)
-from nineml.values import SingleValue, ArrayValue
+from nineml.values import SingleValue, ArrayValue, RandomValue
 from copy import copy
 from itertools import chain
 from .population import Population
@@ -138,17 +139,21 @@ class Projection(BaseULObject, DocumentLevelObject):
             pcs = defaultdict(list)
             for pc in self.port_connections:
                 pcs[pc.receiver_role].append(
-                    E('From' + pc.sender_roler.capitalize(),
+                    E('From' + pc.sender_role.capitalize(),
                       send_port=pc.send_port_name,
                       receive_port=pc.receive_port_name))
-            args = [E.Source(self.source.to_xml(), *pcs['source']),
-                    E.Destination(self.destination.to_xml(),
-                                  *pcs['destination']),
-                    E.Connectivity(self.connectivity.to_xml()),
-                    E.Response(self.response.to_xml(), *pcs['response'])]
+            args = [E.Source(self.pre.to_xml(document, E=E, **kwargs),
+                             *pcs['pre']),
+                    E.Destination(self.post.to_xml(document, E=E, **kwargs),
+                                  *pcs['post']),
+                    E.Response(self.response.to_xml(document, E=E, **kwargs),
+                               *pcs['response']),
+                    E.Connectivity(
+                        self.connectivity.to_xml(document, E=E, **kwargs))]
             if self.plasticity:
-                args.append(E.Plasticity(self.plasticity.to_xml(),
-                                         *pcs['plasticity']))
+                args.append(E.Plasticity(
+                    self.plasticity.to_xml(document, E=E, **kwargs),
+                    *pcs['plasticity']))
             args.append(E('Delay',
                           self.delay._value.to_xml(document, E=E, **kwargs),
                           units=self.delay.units.name))
@@ -186,8 +191,6 @@ class Projection(BaseULObject, DocumentLevelObject):
         if xmlns == NINEMLv1:
             pre_within = 'Source'
             post_within = 'Destination'
-            dyn_cls = DynamicsComponent
-            con_cls = ConnectionRuleComponent
             multiple_within = True
             # Get Delay
             delay_elem = expect_single(element.findall(NINEMLv1 + 'Delay'))
@@ -195,7 +198,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                 get_xml_attr(delay_elem, 'units', document, **kwargs)]
             value = from_child_xml(
                 delay_elem,
-                (SingleValue, ArrayValue, RandomDistributionComponent),
+                (SingleValue, ArrayValue, RandomValue),
                 document, **kwargs)
             delay = Quantity(value, units)
             if 'unprocessed' in kwargs:
@@ -203,8 +206,6 @@ class Projection(BaseULObject, DocumentLevelObject):
         else:
             pre_within = 'Pre'
             post_within = 'Post'
-            dyn_cls = DynamicsProperties
-            con_cls = ConnectionRuleProperties
             multiple_within = False
             delay = from_child_xml(element, Quantity, document, within='Delay',
                                    **kwargs)
@@ -215,21 +216,27 @@ class Projection(BaseULObject, DocumentLevelObject):
         post = from_child_xml(element, (Population, Selection), document,
                               allow_reference='only', within=post_within,
                               multiple_within=multiple_within, **kwargs)
-        response = from_child_xml(element, dyn_cls, document,
+        response = from_child_xml(element, DynamicsProperties, document,
                                   allow_reference=True, within='Response',
                                   multiple_within=multiple_within, **kwargs)
-        plasticity = from_child_xml(element, dyn_cls, document,
+        plasticity = from_child_xml(element, DynamicsProperties, document,
                                     allow_reference=True, within='Plasticity',
                                     multiple_within=multiple_within,
                                     allow_none=True, **kwargs)
-        connectivity = from_child_xml(element, con_cls,
+        connectivity = from_child_xml(element, ConnectionRuleProperties,
                                       document, within='Connectivity',
                                       allow_reference=True, **kwargs)
         if xmlns == NINEMLv1:
             port_connections = []
             for receive_name in cls.version1_nodes:
-                receive_elem = expect_single(
-                    element.findall(NINEMLv1 + receive_name))
+                try:
+                    receive_elem = expect_single(
+                        element.findall(NINEMLv1 + receive_name))
+                except NineMLRuntimeError:
+                    if receive_name == 'Plasticity':
+                        continue
+                    else:
+                        raise
                 receiver = eval(cls.v1tov2[receive_name])
                 for send_name in cls.version1_nodes:
                     for from_elem in receive_elem.findall(NINEMLv1 + 'From' +

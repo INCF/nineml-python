@@ -54,15 +54,17 @@ class RandomDistributionXMLWriter(ComponentClassXMLWriter,
     @annotate_xml
     def visit_componentclass(self, component_class):
         if self.xmlns == NINEMLv1:
-            xml = self.E(
-                'ComponentClass',
-                self.E('ConnectionRule',
-                         standardLibrary=component_class.standard_library),
-                name=component_class.name)
+            elems = [e.accept_visitor(self)
+                        for e in component_class.sorted_elements()]
+            elems.append(
+                self.E('RandomDistribution',
+                       standard_library=component_class.standard_library))
+            xml = self.E('ComponentClass', *elems, name=component_class.name)
         else:
-            xml = self.E('RandomDistribution',
+            xml = self.E(component_class.element_name,
                          *(e.accept_visitor(self)
                            for e in component_class.sorted_elements()),
+                         standard_library=component_class.standard_library,
                          name=component_class.name)
         return xml
 

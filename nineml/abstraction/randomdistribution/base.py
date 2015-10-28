@@ -7,7 +7,7 @@ class RandomDistribution(ComponentClass):
     element_name = 'RandomDistribution'
     defining_attributes = ('name', '_parameters')
     # Maintains order of elements between writes
-    write_order = ['Parameters', 'Alias', 'Constant', 'Annotations']
+    write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 
     def __init__(self, name, standard_library, parameters=None):
         super(RandomDistribution, self).__init__(
