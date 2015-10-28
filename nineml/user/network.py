@@ -85,13 +85,11 @@ class Network(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        as_ref_kwargs = copy(kwargs)
-        as_ref_kwargs['as_reference'] = True
         member_elems = []
         for member in chain(self.populations, self.selections,
                             self.projections):
-#             member.set_local_reference(document, overwrite=False)
-            member_elems.append(member.to_xml(document, **as_ref_kwargs))
+            member_elems.append(member.to_xml(
+                document, E=E, as_ref=True, **kwargs))
         return E(self.element_name, name=self.name, *member_elems)
 
     @classmethod

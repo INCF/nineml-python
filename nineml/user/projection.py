@@ -159,13 +159,10 @@ class Projection(BaseULObject, DocumentLevelObject):
                           units=self.delay.units.name))
             xml = E(self.element_name, *args, name=self.name)
         else:
-            as_ref_kwargs = copy(kwargs)
-            as_ref_kwargs['as_reference'] = True
             members = []
             for pop, tag_name in ((self.pre, 'Pre'), (self.post, 'Post')):
-#                 pop.set_local_reference(document, overwrite=False)
-                members.append(E(tag_name, pop.to_xml(document,
-                                                      **as_ref_kwargs)))
+                members.append(E(tag_name, pop.to_xml(
+                    document, E=E, as_ref=True, **kwargs)))
             members.extend([
                 E.Response(self.response.to_xml(document, E=E, **kwargs)),
                 E.Connectivity(self.connectivity.to_xml(document, E=E,

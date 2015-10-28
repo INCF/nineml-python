@@ -228,7 +228,6 @@ class Concatenate(BaseULObject):
         # method?
         return self._items
 
-    @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         def item_to_xml(item):
@@ -241,7 +240,6 @@ class Concatenate(BaseULObject):
                    for i, item in enumerate(self.items)])
 
     @classmethod
-    @resolve_reference
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable

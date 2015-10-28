@@ -58,13 +58,27 @@ class Document(dict, BaseNineMLObject):
                 .format(element.element_name, self.url,
                         "', '".join(self.top_level_types)))
         if element.name in self:
-            raise NineMLRuntimeError(
-                "Could not add element '{}' as an element with that name "
-                "already exists in the document '{}'"
-                .format(element.name, self.url))
-        self[element.name] = element
+            # Ignore if the element is already added (this can happend
+            # implictly when writing other elements that refer to this element)
+            if element is not self[element.name]:
+                raise NineMLRuntimeError(
+                    "Could not add element '{}' as an element with that name "
+                    "already exists in the document '{}'"
+                    .format(element.name, self.url))
+        else:
+            if not isinstance(element, self._Unloaded):
+                if element.document is None:
+                    element._document = self  # Set its document to this one
+                else:
+                    raise NineMLRuntimeError(
+                        "Attempting to add the same object '{}' {} to '{}' "
+                        "document '{}' when it is already in '{}'. Please "
+                        "remove it from the original document first"
+                        .format(element.name, element.element_name,
+                                self.url, element.document.url))
+            self[element.name] = element
 
-    def remove(self, element):
+    def remove(self, element, ignore_missing=False):
         if not isinstance(element, DocumentLevelObject):
             raise NineMLRuntimeError(
                 "Could not remove {} from document as it is not a document "
@@ -72,9 +86,10 @@ class Document(dict, BaseNineMLObject):
         try:
             del self[element.name]
         except KeyError:
-            raise NineMLMissingElementError(
-                "Could not find '{}' element to remove from document '{}'"
-                .format(element.name, self.url))
+            if not ignore_missing:
+                raise NineMLMissingElementError(
+                    "Could not find '{}' element to remove from document '{}'"
+                    .format(element.name, self.url))
 
     def __eq__(self, other):
         # Ensure all objects are loaded
@@ -257,7 +272,7 @@ class Document(dict, BaseNineMLObject):
         self.standardize_units()
         return E(
             self.element_name,
-            *[e.to_xml(self, as_reference=False)
+            *[e.to_xml(self, as_ref=False)
               for e in self.sorted_elements()])
 
     def write(self, filename, version=2.0, **kwargs):
