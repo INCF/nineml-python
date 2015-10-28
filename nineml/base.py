@@ -68,9 +68,9 @@ class BaseNineMLObject(object):
                       .format(self.__class__.__name__))
         else:
             result = ''
-        if type(self) != type(other):
-            result += "mismatch in type ({} and {})".format(type(self),
-                                                            type(other))
+        if self.element_name != other.element_name:
+            result += "mismatch in element_name ({} and {})".format(
+                self.element_name, other.element_name)
         else:
             for attr_name in self.__class__.defining_attributes:
                 self_attr = getattr(self, attr_name)

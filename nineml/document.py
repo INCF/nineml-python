@@ -359,6 +359,8 @@ def load(root_element, read_from=None, **kwargs):
     read_from    -- specifies the url, which the xml should be considered to
                     have been read from in order to resolve relative references
     """
+    if isinstance(root_element, basestring):
+        root_element = etree.fromstring(root_element)
     return Document.from_xml(root_element, url=read_from, **kwargs)
 
 
@@ -452,6 +454,7 @@ def get_component_type(comp_xml, doc_xml, relative_to):
                 # class at the bottom of it.
                 cls = get_component_type(ref_elem, doc_xml, url)
             return cls
+    assert False
 
 
 import nineml.user
