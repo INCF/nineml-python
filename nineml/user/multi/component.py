@@ -12,7 +12,7 @@ from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLMissingElementError)
+    NineMLRuntimeError, NineMLNameError)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
@@ -632,7 +632,7 @@ class MultiDynamics(Dynamics):
         try:
             sender, send_port, receiver, receive_port = name
         except ValueError:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "Name provided to analog_port_connection '{}' was not a "
                 "4-tuple of (sender, send_port, receiver, receive_port)")
         return self._analog_port_connections[
@@ -642,7 +642,7 @@ class MultiDynamics(Dynamics):
         try:
             sender, send_port, receiver, receive_port = name
         except ValueError:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "Name provided to analog_port_connection '{}' was not a "
                 "4-tuple of (sender, send_port, receiver, receive_port)")
         return self._event_port_connections[
@@ -672,7 +672,7 @@ class MultiDynamics(Dynamics):
             try:
                 alias = self.analog_receive_port_exposure(name).alias
             except KeyError:
-                raise NineMLMissingElementError(
+                raise NineMLNameError(
                     "Could not find alias corresponding to '{}' in "
                     "sub-components or port connections/exposures"
                     .format(name))
@@ -699,7 +699,7 @@ class MultiDynamics(Dynamics):
                             if (pe.port_name == port_name and
                                 pe.sub_component.name == comp_name))
         except StopIteration:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "No port exposure that exposes '{}'".format(exposed_port_name))
         return exposure
 
@@ -1048,14 +1048,14 @@ class _MultiTransition(BaseALObject, ContainerObject):
             return next(sa for sa in self.state_assignments
                         if sa.variable == variable)
         except StopIteration:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "No state assignment for variable '{}' found in transition"
                 .format(variable))
 
     def output_event(self, name):
         exposure = self._parent._parent.event_send_port(name)
         if exposure.port not in self._sub_output_event_ports:
-            raise NineMLMissingElementError(
+            raise NineMLNameError(
                 "Output event for '{}' port is not present in transition"
                 .format(name))
         return _ExposedOutputEvent(exposure)
