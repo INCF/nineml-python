@@ -163,7 +163,7 @@ class Projection(BaseULObject, DocumentLevelObject):
             as_ref_kwargs['as_reference'] = True
             members = []
             for pop, tag_name in ((self.pre, 'Pre'), (self.post, 'Post')):
-                pop.set_local_reference(document, overwrite=False)
+#                 pop.set_local_reference(document, overwrite=False)
                 members.append(E(tag_name, pop.to_xml(document,
                                                       **as_ref_kwargs)))
             members.extend([

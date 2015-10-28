@@ -119,8 +119,13 @@ def resolve_reference(from_xml):
 
 def write_reference(to_xml):
     def unresolving_to_xml(self, document, as_reference=True, **kwargs):
-        if self.from_reference is not None and as_reference:
-            xml = self.from_reference.to_xml(document, **kwargs)
+        if self.document is not None and as_reference:
+            if self.document is document:
+                url = None
+            else:
+                url = os.path.relpath(self.document.url, document.url)
+            xml = Reference(self.name, document, url=url).to_xml(document,
+                                                                 **kwargs)
         else:
             xml = to_xml(self, document, **kwargs)
         return xml
