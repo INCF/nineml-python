@@ -607,6 +607,25 @@ def nearly_equal(float1, float2, places=15):
             exp1 == exp2)
 
 
+def xml_equal(xml1, xml2):
+    if xml1.tag != xml2.tag:
+        return False
+    if xml1.attrib != xml2.attrib:
+        return False
+    if xml1.text != xml2.text:
+        return False
+    if xml1.tail != xml2.tail:
+        return False
+    children1 = [c for c in xml1.getchildren()
+                 if not c.tag.endswith('Annotations')]
+    children2 = [c for c in xml2.getchildren()
+                 if not c.tag.endswith('Annotations')]
+    if len(children1) != len(children2):
+        return False
+    return all(xml_equal(c1, c2)
+               for c1, c2 in itertools.izip(children1, children2))
+
+
 @restore_sys_path
 def load_py_module(filename):
     """Takes the fully qualified path of a python file,

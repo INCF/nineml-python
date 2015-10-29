@@ -1,6 +1,8 @@
 import os.path
 from itertools import chain
 from urllib import urlopen
+import weakref
+import time
 from lxml import etree
 import collections
 from nineml.xml import (
@@ -10,7 +12,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLXMLError)
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 import contextlib
-from nineml.utils import expect_single
+from nineml.utils import expect_single, xml_equal
 
 
 class Document(dict, BaseNineMLObject):
@@ -33,10 +35,13 @@ class Document(dict, BaseNineMLObject):
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls kwargs')
 
+    _loaded_docs = {}
+
     def __init__(self, *elements, **kwargs):
         BaseNineMLObject.__init__(self, annotations=kwargs.pop('annotations',
                                                                None))
         url = kwargs.pop('url', None)
+        self._xml = kwargs.pop('_xml', None)
         self._url = os.path.abspath(url) if url else None
         assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
                                   .format("', '".join(kwargs.iterkeys())))
@@ -282,9 +287,15 @@ class Document(dict, BaseNineMLObject):
             *[e.to_xml(self, as_ref=False)
               for e in self.sorted_elements()])
 
-    def write(self, filename, version=2.0, **kwargs):
-        doc = self.to_xml(E=get_element_maker(version), **kwargs)
-        write_xml(doc, filename)
+    def write(self, url, version=2.0, **kwargs):
+        if self.url is None:
+            self._url = url  # Required so relative urls can be generated
+        elif self.url != url:
+            raise NotImplementedError(
+                "Need to implement deepcopy properly before a document can be "
+                "written to a different url")
+        doc_xml = self.to_xml(E=get_element_maker(version), **kwargs)
+        write_xml(doc_xml, url)
 
     @classmethod
     def from_xml(cls, element, url=None, **kwargs):
@@ -370,24 +381,61 @@ class Document(dict, BaseNineMLObject):
                 result += s.find_mismatch(other[k])
         return result
 
+    def as_network(self, name=None):
+        if name is None:
+            if self.url:
+                name = os.path.basename(self.url).rstrip('.xml')
+            else:
+                raise NineMLRuntimeError(
+                    "Must provide a name for documents without urls")
+        return nineml.user.Network(
+            name, populations=self.populations, projections=self.projections,
+            selections=self.selections, document=self)
+
     def sorted_elements(self):
         """Sorts elements into a consistent order before write"""
         return sorted(
             self.elements,
             key=lambda e: (self.write_order.index(e.element_name), e.name))
 
+    @classmethod
+    def load(cls, xml, url=None, **kwargs):
+        """
+        Loads the lib9ml object model from a root lxml.etree.Element
 
-def load(root_element, read_from=None, **kwargs):
-    """
-    Loads the lib9ml object model from a root lxml.etree.Element
-
-    root_element -- the 'NineML' etree.Element to load the object model from
-    read_from    -- specifies the url, which the xml should be considered to
-                    have been read from in order to resolve relative references
-    """
-    if isinstance(root_element, basestring):
-        root_element = etree.fromstring(root_element)
-    return Document.from_xml(root_element, url=read_from, **kwargs)
+        root_element -- the 'NineML' etree.Element to load the object model
+                        from
+        read_from    -- specifies the url, which the xml should be considered
+                        to have been read from in order to resolve relative
+                        references
+        """
+        if isinstance(xml, basestring):
+            xml = etree.fromstring(xml)
+            mod_time = None
+        else:
+            mod_time = time.ctime(os.path.getmtime(url))
+        doc = None
+        if url is not None:
+            if mod_time is None:
+                raise NineMLRuntimeError(
+                    "Cannot reuse the '{}' url for to different XML strings"
+                    .format(url))
+            # Check whether the document has already been loaded and whether it
+            # is still in memory
+            try:
+                # Loaded docs are stored as weak refs to avoid preventing the
+                # document from being released from memory by the garbarge
+                # collector NB: g. collect. weakrefs eval None
+                doc, saved_time = cls._loaded_docs[url]()
+                if not saved_time != mod_time:
+                    raise NineMLRuntimeError(
+                        "'{}' has been modified between reads".format(url))
+            except KeyError:  # If the url hasn't been loaded before
+                pass
+        if doc is None:
+            doc = Document.from_xml(xml, url=url, **kwargs)
+            cls._loaded_docs[url] = weakref.ref(doc), mod_time
+        return doc
 
 
 def read(url, relative_to=None, **kwargs):
@@ -399,7 +447,7 @@ def read(url, relative_to=None, **kwargs):
     """
     xml, url = read_xml(url, relative_to=relative_to)
     root = xml.getroot()
-    return load(root, url, **kwargs)
+    return Document.load(root, url, **kwargs)
 
 
 def write(document, filename, **kwargs):

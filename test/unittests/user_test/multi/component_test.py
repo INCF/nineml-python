@@ -2,7 +2,7 @@ import os.path
 import unittest
 import sympy
 from nineml import units as un
-from nineml import load, Document
+from nineml import Document
 from nineml.user.multi.component import (
     MultiDynamicsProperties, SubDynamicsProperties, MultiDynamics,
     AnalogReceivePortExposure)
@@ -90,7 +90,7 @@ class MultiDynamicsXML_test(unittest.TestCase):
                               ('b', 'A1', 'a', 'ARP1'),
                               ('b', 'A3', 'a', 'ARP2')])
         xml = Document(comp1, self.a, self.b).to_xml()
-        comp2 = load(xml)['test']
+        comp2 = Document.load(xml)['test']
         if comp1 != comp2:
             print comp2.find_mismatch(comp1)
         self.assertEquals(comp1, comp2)

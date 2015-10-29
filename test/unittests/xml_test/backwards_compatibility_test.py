@@ -1,7 +1,7 @@
 import unittest
 from nineml import load
 from nineml.xml import etree, get_element_maker
-from itertools import izip
+from nineml.utils import xml_equal
 
 
 class TestBackwardsCompatibility(unittest.TestCase):
@@ -51,24 +51,6 @@ class TestBackwardsCompatibility(unittest.TestCase):
                 return child
         raise KeyError("No '{}' in: \n{}"
                        .format(name, xml_to_str(xml)))
-
-
-def xml_equal(xml1, xml2):
-    if xml1.attrib != xml2.attrib:
-        print "{} not {}".format(xml1.attrib, xml2.attrib)
-        return False
-    children1 = [c for c in xml1.getchildren()
-                 if not c.tag.endswith('Annotations')]
-    children2 = [c for c in xml2.getchildren()
-                 if not c.tag.endswith('Annotations')]
-    if len(children1) != len(children2):
-        print "len different"
-        return False
-    for c1, c2 in izip(children1, children2):
-        if not xml_equal(c1, c2):
-            print "{} not {}".format(c1, c2)
-            return False
-    return True
 
 
 def xml_to_str(xml):

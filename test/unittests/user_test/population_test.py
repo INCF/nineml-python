@@ -1,7 +1,6 @@
 import os.path
 import unittest
-from nineml import read, load
-from nineml.exceptions import NineMLXMLBlockError, NineMLXMLAttributeError
+from nineml import read, Document
 
 
 class TestPopulation(unittest.TestCase):
@@ -12,7 +11,7 @@ class TestPopulation(unittest.TestCase):
     def test_xml_540degree_roundtrip(self):
         document1 = read(self.test_file)
         xml = document1.to_xml()
-        document2 = load(xml, read_from=self.test_file)
+        document2 = Document.load(xml, url=self.test_file)
         self.assertEquals(document1, document2,
                           "Documents don't match after write/read from file:\n"
                           "{}".format(document2.find_mismatch(document1)))

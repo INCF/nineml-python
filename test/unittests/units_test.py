@@ -1,14 +1,14 @@
 import unittest
 from sympy import sympify
-from nineml import load, units as un
+from nineml import Document, units as un
 
 
 class TestUnitsDimensions(unittest.TestCase):
 
     def test_xml_540degree_roundtrip(self):
-        document1 = load(units_xml_str)
+        document1 = Document.load(units_xml_str)
         xml = document1.to_xml()
-        document2 = load(xml)
+        document2 = Document.load(xml)
         self.assertEquals(document1, document2)
 
     def test_sympy(self):
