@@ -3,13 +3,11 @@ from .population import Population
 from .projection import Projection
 from .selection import Selection
 from ..document import Document
-from copy import copy
 from . import BaseULObject
 from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.xml import E, get_xml_attr
 from nineml.base import DocumentLevelObject
-from nineml.xml import from_child_xml, unprocessed_xml, get_xml_attr
+from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
 import nineml
 from nineml.exceptions import NineMLRuntimeError
 
@@ -31,7 +29,7 @@ class Network(BaseULObject, DocumentLevelObject):
     element_name = "Network"
     defining_attributes = ("_populations", "_projections", "_selections")
 
-    def __init__(self, name="anonymous", populations=[], projections=[],
+    def __init__(self, name, populations=[], projections=[],
                  selections=[], document=None):
         # better would be *items, then sort by type, taking the name from the
         # item

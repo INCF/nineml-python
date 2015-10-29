@@ -7,7 +7,7 @@ A Python library for working with 9ML model descriptions.
 
 __version__ = "0.2dev"
 
-from .document import read, write, load, Document
+from .document import read, write, Document
 from . import abstraction
 from . import user
 from . import exceptions
