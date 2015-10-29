@@ -170,7 +170,8 @@ class SubDynamicsProperties(BaseULObject):
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.element_name, self._component.to_xml(document, E=E, **kwargs),
+        return E(self.element_name,
+                 self._component.to_xml(document, E=E, **kwargs),
                  name=self.name)
 
     @classmethod
@@ -181,7 +182,8 @@ class SubDynamicsProperties(BaseULObject):
         dynamics_properties = from_child_xml(
             element, (DynamicsProperties, MultiDynamicsProperties), document,
             allow_reference=True, **kwargs)
-        return cls(get_xml_attr(element, 'name', document, **kwargs), dynamics_properties)
+        return cls(get_xml_attr(element, 'name', document, **kwargs),
+                   dynamics_properties)
 
 
 class SubDynamics(BaseULObject):
