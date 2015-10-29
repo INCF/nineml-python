@@ -490,13 +490,7 @@ class Document(dict, BaseNineMLObject):
                 result += s.find_mismatch(other[k])
         return result
 
-    def as_network(self, name=None):
-        if name is None:
-            if self.url:
-                name = os.path.basename(self.url).rstrip('.xml')
-            else:
-                raise NineMLRuntimeError(
-                    "Must provide a name for documents without urls")
+    def as_network(self, name):
         return nineml.user.Network(
             name, populations=self.populations, projections=self.projections,
             selections=self.selections, document=self)

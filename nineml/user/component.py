@@ -481,7 +481,7 @@ class Property(BaseULObject):
     def __init__(self, name, quantity):
         super(Property, self).__init__()
         assert isinstance(name, basestring)
-        quantity = Quantity.parse_quantity(quantity)
+        quantity = Quantity.parse(quantity)
         self._name = name
         self._quantity = quantity
 

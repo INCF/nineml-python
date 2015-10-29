@@ -562,7 +562,7 @@ class Quantity(BaseNineMLObject):
                     "quantities")
 
     @classmethod
-    def parse_quantity(cls, qty):
+    def parse(cls, qty):
         """
         Parses ints and floats as dimensionless quantities and
         python-quantities Quantity objects into 9ML Quantity objects

@@ -2,17 +2,14 @@ from itertools import chain
 from .population import Population
 from .projection import Projection
 from .selection import Selection
-from ..document import Document
 from . import BaseULObject
 from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.base import DocumentLevelObject
+from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
-import nineml
-from nineml.exceptions import NineMLRuntimeError
 
 
-class Network(BaseULObject, DocumentLevelObject):
+class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     """
     Container for populations and projections between those populations.
 
@@ -27,7 +24,12 @@ class Network(BaseULObject, DocumentLevelObject):
             a dict containing the selections contained in the network.
     """
     element_name = "Network"
-    defining_attributes = ("_populations", "_projections", "_selections")
+    defining_attributes = ('name', "_populations", "_projections",
+                           "_selections")
+    class_to_member = {'Population': 'population',
+                       'Projection': 'projection',
+                       'Selection': 'selection'}
+    write_order = ('Population', 'Selection', 'Projection')
 
     def __init__(self, name, populations=[], projections=[],
                  selections=[], document=None):
@@ -35,10 +37,24 @@ class Network(BaseULObject, DocumentLevelObject):
         # item
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document=document)
-        self.name = name
+        ContainerObject.__init__(self)
+        self._name = name
         self._populations = dict((p.name, p) for p in populations)
         self._projections = dict((p.name, p) for p in projections)
         self._selections = dict((s.name, s) for s in selections)
+
+    @property
+    def name(self):
+        return self._name
+
+    def population(self, name):
+        return self._populations[name]
+
+    def projection(self, name):
+        return self._projections[name]
+
+    def selection(self, name):
+        return self._selections[name]
 
     @property
     def populations(self):
@@ -51,6 +67,30 @@ class Network(BaseULObject, DocumentLevelObject):
     @property
     def selections(self):
         return self._selections.itervalues()
+
+    @property
+    def population_names(self):
+        return self._populations.iterkeys()
+
+    @property
+    def projection_names(self):
+        return self._projections.iterkeys()
+
+    @property
+    def selection_names(self):
+        return self._selections.iterkeys()
+
+    @property
+    def num_populations(self):
+        return len(self._populations)
+
+    @property
+    def num_projections(self):
+        return len(self._projections)
+
+    @property
+    def num_selections(self):
+        return len(self._selections)
 
     def add(self, *objs):
         """
@@ -104,28 +144,7 @@ class Network(BaseULObject, DocumentLevelObject):
         selections = from_child_xml(element, Selection, document,
                                      multiple=True, allow_reference='only',
                                      allow_none=True, **kwargs)
-        network = cls(name=get_xml_attr(element, 'name', document, **kwargs), populations=populations,
-                      projections=projections, selections=selections)
+        network = cls(name=get_xml_attr(element, 'name', document, **kwargs),
+                      populations=populations, projections=projections,
+                      selections=selections)
         return network
-
-    def write(self, filename):
-        document = Document(*chain(
-            self.populations.itervalues(), self.projections.itervalues(),
-            self.selections.itervalues()))
-        document.write(filename)
-
-    @classmethod
-    def read(self, filename):
-        if isinstance(filename, basestring):
-            document = nineml.read(filename)
-        elif isinstance(filename, Document):
-            document = filename
-        else:
-            raise NineMLRuntimeError(
-                "Unrecognised argument type {}, can be either filename or "
-                "Document".format(filename))
-        return Network(
-            name='root',
-            populations=dict((p.name, p) for p in document.populations),
-            projections=dict((p.name, p) for p in document.projections),
-            selections=dict((s.name, s) for s in document.selections))
