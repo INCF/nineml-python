@@ -8,6 +8,7 @@ from ...expressions import reserved_identifiers
 from nineml.units import Dimension
 from nineml.abstraction.ports import SendPortBase
 from nineml.abstraction.expressions import Expression
+from nineml.exceptions import NineMLNameError
 import operator
 
 
@@ -232,7 +233,7 @@ class ComponentDimensionResolver(ComponentActionVisitor):
             except KeyError:
                 pass
         if element is None:
-            raise KeyError(
+            raise NineMLNameError(
                 "'{}' element was not found in component class '{}'"
                 .format(sym, self.component_class.name))
         return element

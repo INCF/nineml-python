@@ -121,6 +121,14 @@ class DocumentLevelObject(object):
         return self._document
 
     @property
+    def url(self):
+        if self.document:
+            url = self.document.url
+        else:
+            url = None
+        return url
+
+    @property
     def attributes_with_dimension(self):
         return []  # To be overridden in derived classes
 
