@@ -15,17 +15,21 @@ class _BasePortExposure(BaseULObject):
 
     defining_attributes = ('_name', '_sub_component', '_port')
 
-    def __init__(self, name, component, port):
+    def __init__(self, component, port, name=None):
         super(_BasePortExposure, self).__init__()
         self._name = name
-        self._component_name = component
+        self._sub_component_name = component
         self._port_name = port
         self._sub_component = None
         self._port = None
 
     @property
     def name(self):
-        return self._name
+        if self._name is not None:
+            name = self._name
+        else:
+            name = append_namespace(self.port_name, self.sub_component_name)
+        return name
 
     @property
     def sub_component(self):
