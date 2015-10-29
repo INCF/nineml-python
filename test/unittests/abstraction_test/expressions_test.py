@@ -2,7 +2,9 @@
 import unittest
 from nineml.xml import E
 from nineml.abstraction import (Expression, Alias, StateAssignment,
-                                TimeDerivative)
+                                TimeDerivative, Constant, AnalogReducePort,
+                                AnalogReceivePort)
+from nineml import units as un
 from nineml.abstraction.expressions import (
     ExpressionWithSimpleLHS, Constant)
 from nineml.units import coulomb
@@ -233,6 +235,17 @@ class SympyToC89_test(unittest.TestCase):
     def test_negation(self):
         expr = Expression(sympy.Not(self.a))
         self.assertEqual(expr.rhs_cstr, '!a')
+
+
+class SympifyTest(unittest.TestCase):
+
+    def test_sympify(self):
+        a = sympy.Symbol('a')
+        self.assertEqual(a, sympy.sympify(Alias('a', 'b + c')))
+        self.assertEqual(a, sympy.sympify(AnalogReceivePort('a')))
+        self.assertEqual(a, sympy.sympify(AnalogReducePort('a')))
+        self.assertEqual(a, sympy.sympify(Constant('a', 1.0,
+                                                   units=un.unitless)))
 
 
 class Rationals_test(unittest.TestCase):
