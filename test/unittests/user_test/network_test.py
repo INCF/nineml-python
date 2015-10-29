@@ -15,7 +15,7 @@ import unittest
 from nineml.user import (
     Projection, Network, DynamicsProperties, ConnectionRuleProperties,
     Population)
-from nineml import Document, load
+from nineml import Document
 from nineml.units import ms, mV, nA, Hz, Mohm
 from os import path
 
@@ -94,7 +94,7 @@ class TestNetwork(unittest.TestCase):
         doc = Document(model, static_exc, static_inh, exc_prj,
                        inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
         xml = doc.to_xml()
-        loaded_doc = load(xml)
+        loaded_doc = Document.load(xml)
         if loaded_doc != doc:
             mismatch = loaded_doc.find_mismatch(doc)
         else:

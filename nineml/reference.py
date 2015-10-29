@@ -19,11 +19,11 @@ class BaseReference(BaseNineMLObject):
         super(BaseReference, self).__init__()
         if url:
             if url.startswith('.'):
-                if document is None:
+                if document is None or document.url is None:
                     raise NineMLRuntimeError(
-                        "Must supply the document that is being referenced "
-                        "from if definition is a relative URL string, '{}'"
-                        .format(url))
+                        "Must supply a document with a non-None URL that is "
+                        "being referenced from if definition is a relative URL"
+                        " string, '{}'".format(url))
                 relative_to = os.path.dirname(document.url)
             else:
                 relative_to = None

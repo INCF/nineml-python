@@ -1,10 +1,9 @@
 import os.path
 import unittest
-from nineml import read, load
+from nineml import read, Document
 from nineml.exceptions import NineMLRuntimeError
 from nineml.user import Property
 from nineml import Unit, Dimension
-from nineml.document import Document
 
 voltage = Dimension('voltage', m=1, l=2, t=-3, i=-1)
 mV = Unit(name='mV', dimension=voltage, power=-3)
@@ -19,7 +18,7 @@ class TestComponent(unittest.TestCase):
         test_file = os.path.join(examples_dir, 'HodgkinHuxley.xml')
         document1 = read(test_file)
         xml = document1.to_xml()
-        document2 = load(xml, read_from=test_file)
+        document2 = Document.load(xml, url=test_file)
         if document1 != document2:
             mismatch = document1.find_mismatch(document2)
         else:
@@ -30,7 +29,7 @@ class TestComponent(unittest.TestCase):
         test_file = os.path.join(examples_dir, 'HodgkinHuxleyModified.xml')
         document1 = read(test_file)
         xml = document1.to_xml()
-        document2 = load(xml, read_from=test_file)
+        document2 = Document.load(xml, url=test_file)
         if document1 != document2:
             mismatch = document1.find_mismatch(document2)
         else:
