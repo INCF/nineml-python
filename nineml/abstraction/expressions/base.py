@@ -427,7 +427,7 @@ class ExpressionWithLHS(Expression):
                 self.lhs == other.lhs)
 
 
-class ExpressionWithSimpleLHS(ExpressionWithLHS, ExpressionSymbol):
+class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):
 
     """Represents a an equation with a simple left-hand-side.
     That is, a single symbol, for example 's = t+1'

@@ -177,11 +177,11 @@ class DimensionalityComponentValidator(BaseValidator):
                 try:
                     self._dimensions[e] = sympify(e.dimension)
                 except AttributeError:
-                    pass
+                    pass  # If element doesn't have dimension attribute
                 try:
                     self._dimensions[e] = sympify(e.units.dimension)
                 except AttributeError:
-                    pass
+                    pass  # If element doesn't have units attribute
         self.visit(component_class)
 
     def _get_dimensions(self, element):
@@ -210,10 +210,7 @@ class DimensionalityComponentValidator(BaseValidator):
             return self._dimensions[element]
         except (KeyError, AttributeError):  # for derived dimensions
             dims = self._flatten_dims(expr, element)
-#         try:
         self._dimensions[element] = dims
-#         except AttributeError:
-#             pass
         return dims
 
     def _flatten_dims(self, expr, element):
