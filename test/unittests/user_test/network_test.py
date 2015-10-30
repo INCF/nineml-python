@@ -15,6 +15,12 @@ import unittest
 from nineml.user import (
     Projection, Network, DynamicsProperties, ConnectionRuleProperties,
     Population)
+from nineml.abstraction import (
+    Parameter, Constant, Dynamics, Regime, On, OutputEvent, StateVariable,
+    StateAssignment)
+from nineml.abstraction.ports import (
+    AnalogSendPort, AnalogReceivePort, EventSendPort)
+from nineml import units as un
 from nineml import Document
 from nineml.units import ms, mV, nA, Hz, Mohm
 from os import path
@@ -102,3 +108,56 @@ class TestNetwork(unittest.TestCase):
         self.assertEqual(loaded_doc, doc,
                          "Brunel network model failed xml roundtrip:\n\n{}"
                          .format(mismatch))
+
+    def test_dynamics_compilations(self):
+
+        cell = Dynamics(
+            name='Cell',
+            state_variables=[
+                StateVariable('SV1', dimension=un.voltage)],
+            regimes=[
+                Regime(
+                    'dSV1/dt = -SV1 / P1 + ARP1 / P2',
+                    transitions=[On('SV1 > P3', do=[OutputEvent('spike')])],
+                    name='R1')],
+            analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
+                          EventSendPort('spike')],
+            parameters=[Parameter('P1', dimension=un.time),
+                        Parameter('P2', dimension=un.capacitance),
+                        Parameter('P3', dimension=un.voltage)])
+
+        exc = Dynamics(
+            name="Exc",
+            aliases=["I_ext := SV1"],
+            regimes=[
+                Regime(
+                    name="default",
+                    time_derivatives=[
+                        "dSV1/dt = SV1/tau"],
+                    transitions=On('spike', do=["SV1 = SV1 + weight"]))],
+            state_variables=[
+                StateVariable('A', dimension=un.current),
+                StateVariable('B', dimension=un.current),
+            ],
+            analog_ports=[AnalogSendPort("I_ext", dimension=un.current),
+                          AnalogReceivePort("weight", dimension=un.current)],
+            parameters=[Parameter('tau', dimension=un.time)])
+
+        inh = Dynamics(
+            name="Inh",
+            aliases=["I_ext := SV1"],
+            regimes=[
+                Regime(
+                    name="default",
+                    time_derivatives=[
+                        "dSV1/dt = SV1/tau"],
+                    transitions=On('spike', do=["SV1 = SV1 - weight"]))],
+            state_variables=[
+                StateVariable('A', dimension=un.current),
+                StateVariable('B', dimension=un.current),
+            ],
+            analog_ports=[AnalogSendPort("I_ext", dimension=un.current),
+                          AnalogReceivePort("weight", dimension=un.current)],
+            parameters=[Parameter('tau', dimension=un.time)])
+        
+        

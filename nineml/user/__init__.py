@@ -1,6 +1,5 @@
 # encoding: utf-8
 from .base import BaseULObject
-from .network import Network
 from .population import Population
 from .selection import Selection, Concatenate
 from .port_connections import (
@@ -12,3 +11,4 @@ from .component import (Property, Component, Definition,
                         ConnectionRuleProperties, RandomDistributionProperties,
                         Quantity)
 from .multi import MultiDynamics, MultiDynamicsProperties
+from .network import Network

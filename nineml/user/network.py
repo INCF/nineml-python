@@ -7,10 +7,10 @@ from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
-from .multi import (
-    MultiDynamics, AnalogReceivePortExposure, EventReceivePortExposure,
+from .multi.component import MultiDynamics
+from .multi.port_exposures import (
+    AnalogReceivePortExposure, EventReceivePortExposure,
     AnalogSendPortExposure, EventSendPortExposure)
-from .multi.namespace import append_namespace
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -149,22 +149,19 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                 for pc in proj.event_port_connections
                 if 'pre' == pc.receiver_role)
         return MultiDynamics(
-            name=pop.name + 'Dynamics',
+            name=pop.name + 'AndSynapticDynamics',
             sub_dynamics=sub_dynamics, port_connections=port_connections,
             port_exposures=port_exposures)
 
     def pre_synaptic_connections(self, projection_name):
         proj = self.projection(projection_name)
-        return (
-            pc.cls(
-                sender_role=pc.sender_role, receiver_role=pc.receiver_role,
-                receive_port=append_namespace(
-                    pc.receive_port, self._role2dyn(proj.name,
-                                                    pc.sender_role)),
-                send_port=append_namespace(
-                    pc.send_port, self._role2dyn(proj.name, pc.receiver_role)))
-            for pc in proj.port_connections
-            if 'pre' in (pc.sender_role, pc.receiver_role))
+        return (pc.cls(sender_name=self._role2dyn(proj.name, pc.sender_role),
+                       receiver_name=self._role2dyn(proj.name,
+                                                    pc.receiver_role),
+                       receive_port=pc.receive_port,
+                       send_port=pc.send_port)
+                for pc in proj.port_connections
+                if 'pre' in (pc.sender_role, pc.receiver_role))
 
     def get_components(self):
         components = []
@@ -194,8 +191,8 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                                      multiple=True, allow_reference='only',
                                      allow_none=True, **kwargs)
         selections = from_child_xml(element, Selection, document,
-                                     multiple=True, allow_reference='only',
-                                     allow_none=True, **kwargs)
+                                    multiple=True, allow_reference='only',
+                                    allow_none=True, **kwargs)
         network = cls(name=get_xml_attr(element, 'name', document, **kwargs),
                       populations=populations, projections=projections,
                       selections=selections)
@@ -203,7 +200,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @classmethod
     def _role2dyn(cls, name, role):
-        if role == 'post':
+        if role in ('pre', 'post'):
             dyn_name = 'cell'
         elif role == 'response':
             dyn_name = name + '_psr'

@@ -1,4 +1,4 @@
-from nineml import abstraction as al, user as ul  # @Reimport
+from nineml import abstraction as al, user as ul, Document
 from nineml import units as un
 from nineml.xml import E, etree
 
@@ -91,41 +91,41 @@ def create_hodgkin_huxley():
 def parameterise_hodgkin_huxley(definition=None):
     if definition is None:
         definition = create_hodgkin_huxley()
-    comp = ul.DynamicsComponent(
+    comp = ul.DynamicsProperties(
         name='SampleHodgkinHuxley',
         definition=create_hodgkin_huxley(),
-        properties=[ul.Property('C', 1.0, un.pF),
-                    ul.Property('celsius', 20.0, un.degC),
-                    ul.Property('ek', -90, un.mV),
-                    ul.Property('el', -65, un.mV),
-                    ul.Property('ena', 80, un.mV),
-                    ul.Property('gkbar', 30.0, un.nS),
-                    ul.Property('gl', 0.3, un.nS),
-                    ul.Property('gnabar', 130.0, un.nS),
-                    ul.Property('v_threshold', -40.0, un.mV),
-                    ul.Property('qfactor', 6.3, un.degC),
-                    ul.Property('tendegrees', 10.0, un.degC),
+        properties=[ul.Property('C', 1.0 * un.pF),
+                    ul.Property('celsius', 20.0 * un.degC),
+                    ul.Property('ek', -90 * un.mV),
+                    ul.Property('el', -65 * un.mV),
+                    ul.Property('ena', 80 * un.mV),
+                    ul.Property('gkbar', 30.0 * un.nS),
+                    ul.Property('gl', 0.3 * un.nS),
+                    ul.Property('gnabar', 130.0 * un.nS),
+                    ul.Property('v_threshold', -40.0 * un.mV),
+                    ul.Property('qfactor', 6.3 * un.degC),
+                    ul.Property('tendegrees', 10.0 * un.degC),
                     ul.Property('m_alpha_A', -0.1,
                                 un.unitless / (un.ms * un.mV)),
-                    ul.Property('m_alpha_V0', -40.0, un.mV),
-                    ul.Property('m_alpha_K', 10.0, un.mV),
-                    ul.Property('m_beta_A', 4.0, un.per_ms),
-                    ul.Property('m_beta_V0', -65.0, un.mV),
-                    ul.Property('m_beta_K', 18.0, un.mV),
-                    ul.Property('h_alpha_A', 0.07, un.per_ms),
-                    ul.Property('h_alpha_V0', -65.0, un.mV),
-                    ul.Property('h_alpha_K', 20.0, un.mV),
-                    ul.Property('h_beta_A', 1.0, un.per_ms),
-                    ul.Property('h_beta_V0', -35.0, un.mV),
-                    ul.Property('h_beta_K', 10.0, un.mV),
+                    ul.Property('m_alpha_V0', -40.0 * un.mV),
+                    ul.Property('m_alpha_K', 10.0 * un.mV),
+                    ul.Property('m_beta_A', 4.0 * un.per_ms),
+                    ul.Property('m_beta_V0', -65.0 * un.mV),
+                    ul.Property('m_beta_K', 18.0 * un.mV),
+                    ul.Property('h_alpha_A', 0.07 * un.per_ms),
+                    ul.Property('h_alpha_V0', -65.0 * un.mV),
+                    ul.Property('h_alpha_K', 20.0 * un.mV),
+                    ul.Property('h_beta_A', 1.0 * un.per_ms),
+                    ul.Property('h_beta_V0', -35.0 * un.mV),
+                    ul.Property('h_beta_K', 10.0 * un.mV),
                     ul.Property('n_alpha_A', -0.01,
                                 un.unitless / (un.ms * un.mV)),
-                    ul.Property('n_alpha_V0', -55.0, un.mV),
-                    ul.Property('n_alpha_K', 10.0, un.mV),
-                    ul.Property('n_beta_A', 0.125, un.per_ms),
-                    ul.Property('n_beta_V0', -65.0, un.mV),
-                    ul.Property('n_beta_K', 80.0, un.mV)],
-        initial_values=[ul.Initial('V', -70, un.mV),
+                    ul.Property('n_alpha_V0', -55.0 * un.mV),
+                    ul.Property('n_alpha_K', 10.0 * un.mV),
+                    ul.Property('n_beta_A', 0.125 * un.per_ms),
+                    ul.Property('n_beta_V0', -65.0 * un.mV),
+                    ul.Property('n_beta_K', 80.0 * un.mV)],
+        initial_values=[ul.Initial('V', -70 * un.mV),
                         ul.Initial('m', 0.1),
                         ul.Initial('n', 0),
                         ul.Initial('h', 0.9)])
@@ -150,10 +150,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.mode == 'print':
+        document = Document()
         print etree.tostring(
             E.NineML(
-                create_hodgkin_huxley().to_xml(),
-                parameterise_hodgkin_huxley().to_xml()),
+                create_hodgkin_huxley().to_xml(document),
+                parameterise_hodgkin_huxley().to_xml(document)),
             encoding="UTF-8", pretty_print=True, xml_declaration=True)
     elif args.mode == 'compare':
         if ninemlcatalog is None:

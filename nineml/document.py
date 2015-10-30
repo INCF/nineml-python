@@ -595,4 +595,4 @@ def get_component_type(comp_xml, doc_xml, relative_to):
     assert False
 
 
-import nineml.user
+import nineml
