@@ -65,7 +65,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         DocumentLevelObject.__init__(self, document)
         assert isinstance(name, basestring)
         assert isinstance(delay, Quantity)
-        self.name = name
+        self._name = name
         assert pre.name != post.name
         self._pre = pre
         self._post = post
@@ -80,6 +80,10 @@ class Projection(BaseULObject, DocumentLevelObject):
                     port_connection, self)
             port_connection.bind(self, to_roles=True)
             self._port_connections.append(port_connection)
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def pre(self):

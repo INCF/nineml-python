@@ -95,8 +95,11 @@ class TestNetwork(unittest.TestCase):
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
         model = Network("brunel_network")
-        model.add(inpt, p1, p2)
-        model.add(exc_prj, inh_prj)
+        model.add(inpt)
+        model.add(p1)
+        model.add(p2)
+        model.add(exc_prj)
+        model.add(inh_prj)
         doc = Document(model, static_exc, static_inh, exc_prj,
                        inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
         xml = doc.to_xml()
@@ -136,8 +139,7 @@ class TestNetwork(unittest.TestCase):
                         "dSV1/dt = SV1/tau"],
                     transitions=On('spike', do=["SV1 = SV1 + weight"]))],
             state_variables=[
-                StateVariable('A', dimension=un.current),
-                StateVariable('B', dimension=un.current),
+                StateVariable('SV1', dimension=un.current),
             ],
             analog_ports=[AnalogSendPort("I_ext", dimension=un.current),
                           AnalogReceivePort("weight", dimension=un.current)],
@@ -153,8 +155,7 @@ class TestNetwork(unittest.TestCase):
                         "dSV1/dt = SV1/tau"],
                     transitions=On('spike', do=["SV1 = SV1 - weight"]))],
             state_variables=[
-                StateVariable('A', dimension=un.current),
-                StateVariable('B', dimension=un.current),
+                StateVariable('SV1', dimension=un.current),
             ],
             analog_ports=[AnalogSendPort("I_ext", dimension=un.current),
                           AnalogReceivePort("weight", dimension=un.current)],
@@ -194,18 +195,19 @@ class TestNetwork(unittest.TestCase):
             regimes=[
                 Regime(
                     name="sole",
-                    On('incoming_spike',
-                       target_regime="regime_0",
-                       do=[
-                           StateAssignment('tlast_post', 't'),
-                           StateAssignment('tlast_pre', 'tlast_pre'),
-                           StateAssignment(
-                               'deltaw',
-                               'P*pow(wmax - wsyn, muLTP) * '
-                               'exp(-interval/tauLTP) + deltaw ))'),
-                           StateAssignment('interval', 't - tlast_pre'),
-                           StateAssignment(
-                               'M', 'M*exp((-t + tlast_post)/tauLTD) - aLTD'),
-                           StateAssignment(
-                               'P', 'P*exp((-t + tlast_pre)/tauLTP) + aLTP'),
-                           StateAssignment('wsyn', 'deltaw + wsyn')]))])
+                    transitions=On(
+                        'incoming_spike',
+                        to='sole',
+                        do=[
+                            StateAssignment('tlast_post', 't'),
+                            StateAssignment('tlast_pre', 'tlast_pre'),
+                            StateAssignment(
+                                'deltaw',
+                                'P*pow(wmax - wsyn, muLTP) * '
+                                'exp(-interval/tauLTP) + deltaw'),
+                            StateAssignment('interval', 't - tlast_pre'),
+                            StateAssignment(
+                                'M', 'M*exp((-t + tlast_post)/tauLTD) - aLTD'),
+                            StateAssignment(
+                                'P', 'P*exp((-t + tlast_pre)/tauLTP) + aLTP'),
+                            StateAssignment('wsyn', 'deltaw + wsyn')]))])
