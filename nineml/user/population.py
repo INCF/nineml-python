@@ -28,7 +28,7 @@ class Population(BaseULObject, DocumentLevelObject):
     def __init__(self, name, size, cell, document=None):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
-        self.name = name
+        self._name = name
         self.size = size
         self.cell = cell
 
@@ -39,6 +39,10 @@ class Population(BaseULObject, DocumentLevelObject):
     def __repr__(self):
         return ("Population(name='{}', size={}, cell={})"
                 .format(self.name, self.size, self.cell.name))
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def component_class(self):
