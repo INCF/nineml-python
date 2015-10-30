@@ -1,4 +1,4 @@
-from nineml import units as un, user as ul, abstraction as al
+from nineml import units as un, user as ul, abstraction as al, Document
 from nineml.xml import etree, E
 
 
@@ -28,10 +28,10 @@ def create_alpha():
 
 def parameterise_alpha():
 
-    comp = ul.DynamicsComponent(
+    comp = ul.DynamicsProperties(
         name='SampleAlpha',
         definition=create_alpha(),
-        properties=[ul.Property('tau', 20.0, un.ms)],
-        initial_values=[ul.Initial('a', 0.0, un.pA),
-                        ul.Initial('b', 0.0, un.pA)])
+        properties=[ul.Property('tau', 20.0 * un.ms)],
+        initial_values=[ul.Initial('a', 0.0 * un.pA),
+                        ul.Initial('b', 0.0 * un.pA)])
     return comp

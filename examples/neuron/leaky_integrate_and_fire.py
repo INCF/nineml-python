@@ -1,4 +1,4 @@
-from nineml import abstraction as al, user as ul
+from nineml import abstraction as al, user as ul, Document
 from nineml import units as un
 from nineml.xml import etree, E
 
@@ -39,13 +39,13 @@ def create_leaky_integrate_and_fire():
 def parameterise_leaky_integrate_and_fire(definition=None):
     if definition is None:
         definition = create_leaky_integrate_and_fire()
-    comp = ul.DynamicsComponent(
+    comp = ul.DynamicsProperties(
         name='SampleLeakyIntegrateAndFire',
         definition=create_leaky_integrate_and_fire(),
-        properties=[ul.Property('tau', 20.0, un.ms),
-                    ul.Property('v_threshold', 20.0, un.mV),
-                    ul.Property('refractory_period', 2.0, un.ms),
-                    ul.Property('v_reset', 10.0, un.mV),
-                    ul.Property('R', 1.5, un.Mohm)],
-        initial_values=[ul.Initial('V', -70, un.mV)])
+        properties=[ul.Property('tau', 20.0 * un.ms),
+                    ul.Property('v_threshold', 20.0 * un.mV),
+                    ul.Property('refractory_period', 2.0 * un.ms),
+                    ul.Property('v_reset', 10.0 * un.mV),
+                    ul.Property('R', 1.5 * un.Mohm)],
+        initial_values=[ul.Initial('V', -70 * un.mV)])
     return comp
