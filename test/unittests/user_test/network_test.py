@@ -16,10 +16,10 @@ from nineml.user import (
     Projection, Network, DynamicsProperties, ConnectionRuleProperties,
     Population)
 from nineml.abstraction import (
-    Parameter, Constant, Dynamics, Regime, On, OutputEvent, StateVariable,
+    Parameter, Dynamics, Regime, On, OutputEvent, StateVariable,
     StateAssignment)
 from nineml.abstraction.ports import (
-    AnalogSendPort, AnalogReceivePort, EventSendPort)
+    AnalogSendPort, AnalogReceivePort, EventSendPort, EventReceivePort)
 from nineml import units as un
 from nineml import Document
 from nineml.units import ms, mV, nA, Hz, Mohm
@@ -159,5 +159,69 @@ class TestNetwork(unittest.TestCase):
             analog_ports=[AnalogSendPort("I_ext", dimension=un.current),
                           AnalogReceivePort("weight", dimension=un.current)],
             parameters=[Parameter('tau', dimension=un.time)])
-        
-        
+
+        pls = Dynamics(
+            name="Static",
+            aliases=["fixed_weight := weight"],
+            regimes=[
+                Regime(name="default")],
+            analog_ports=[AnalogSendPort("fixed_weight",
+                                         dimension=un.current)],
+            parameters=[Parameter('weight', dimension=un.current)])
+
+        stdp = Dynamics(
+            name="StdpGuetig",
+            parameters=[
+                Parameter(name='tauLTP', dimension=un.time),
+                Parameter(name='aLTD', dimension=un.dimensionless),
+                Parameter(name='wmax', dimension=un.dimensionless),
+                Parameter(name='muLTP', dimension=un.dimensionless),
+                Parameter(name='tauLTD', dimension=un.time),
+                Parameter(name='aLTP', dimension=un.dimensionless)],
+            analog_ports=[
+                AnalogReceivePort(dimension=un.dimensionless, name="w"),
+                AnalogSendPort(dimension=un.dimensionless, name="wsyn")],
+            event_ports=[
+                EventReceivePort(name="incoming_spike")],
+            state_variables=[
+                StateVariable(name='tlast_post', dimension=un.time),
+                StateVariable(name='tlast_pre', dimension=un.time),
+                StateVariable(name='deltaw', dimension=un.dimensionless),
+                StateVariable(name='interval', dimension=un.time),
+                StateVariable(name='M', dimension=un.dimensionless),
+                StateVariable(name='P', dimension=un.dimensionless),
+                StateVariable(name='wsyn', dimension=un.dimensionless)],
+            regimes=[
+                Regime(
+                    name="sole",
+                    On('incoming_spike',
+                       target_regime="regime_0",
+                       do=[
+                           StateAssignment(
+                               'tlast_post',
+                               '((w &gt;= 0) ? ( tlast_post ) : ( t ))'),
+                           StateAssignment(
+                               'tlast_pre',
+                               '((w &gt;= 0) ? ( t ) : ( tlast_pre ))'),
+                           StateAssignment(
+                               'deltaw',
+                               '((w &gt;= 0) ? '
+                               '( 0.0 ) : '
+                               '( P*pow(wmax - wsyn, muLTP) * '
+                               'exp(-interval/tauLTP) + deltaw ))'),
+                           StateAssignment(
+                               'interval',
+                               '((w &gt;= 0) ? ( -t + tlast_post ) : '
+                               '( t - tlast_pre ))'),
+                           StateAssignment(
+                               'M',
+                               '((w &gt;= 0) ? ( M ) : '
+                               '( M*exp((-t + tlast_post)/tauLTD) - aLTD ))'),
+                           StateAssignment(
+                               'P',
+                               '((w &gt;= 0) ? '
+                               '( P*exp((-t + tlast_pre)/tauLTP) + aLTP ) : '
+                               '( P ))'),
+                           StateAssignment(
+                               'wsyn', '((w &gt;= 0) ? ( deltaw + wsyn ) : '
+                               '( wsyn ))')]))])
