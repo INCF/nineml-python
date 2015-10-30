@@ -160,7 +160,7 @@ class TestNetwork(unittest.TestCase):
                           AnalogReceivePort("weight", dimension=un.current)],
             parameters=[Parameter('tau', dimension=un.time)])
 
-        pls = Dynamics(
+        static = Dynamics(
             name="Static",
             aliases=["fixed_weight := weight"],
             regimes=[
@@ -170,7 +170,7 @@ class TestNetwork(unittest.TestCase):
             parameters=[Parameter('weight', dimension=un.current)])
 
         stdp = Dynamics(
-            name="StdpGuetig",
+            name="PartialStdpGuetig",
             parameters=[
                 Parameter(name='tauLTP', dimension=un.time),
                 Parameter(name='aLTD', dimension=un.dimensionless),
@@ -197,31 +197,15 @@ class TestNetwork(unittest.TestCase):
                     On('incoming_spike',
                        target_regime="regime_0",
                        do=[
-                           StateAssignment(
-                               'tlast_post',
-                               '((w &gt;= 0) ? ( tlast_post ) : ( t ))'),
-                           StateAssignment(
-                               'tlast_pre',
-                               '((w &gt;= 0) ? ( t ) : ( tlast_pre ))'),
+                           StateAssignment('tlast_post', 't'),
+                           StateAssignment('tlast_pre', 'tlast_pre'),
                            StateAssignment(
                                'deltaw',
-                               '((w &gt;= 0) ? '
-                               '( 0.0 ) : '
-                               '( P*pow(wmax - wsyn, muLTP) * '
+                               'P*pow(wmax - wsyn, muLTP) * '
                                'exp(-interval/tauLTP) + deltaw ))'),
+                           StateAssignment('interval', 't - tlast_pre'),
                            StateAssignment(
-                               'interval',
-                               '((w &gt;= 0) ? ( -t + tlast_post ) : '
-                               '( t - tlast_pre ))'),
+                               'M', 'M*exp((-t + tlast_post)/tauLTD) - aLTD'),
                            StateAssignment(
-                               'M',
-                               '((w &gt;= 0) ? ( M ) : '
-                               '( M*exp((-t + tlast_post)/tauLTD) - aLTD ))'),
-                           StateAssignment(
-                               'P',
-                               '((w &gt;= 0) ? '
-                               '( P*exp((-t + tlast_pre)/tauLTP) + aLTP ) : '
-                               '( P ))'),
-                           StateAssignment(
-                               'wsyn', '((w &gt;= 0) ? ( deltaw + wsyn ) : '
-                               '( wsyn ))')]))])
+                               'P', 'P*exp((-t + tlast_pre)/tauLTP) + aLTP'),
+                           StateAssignment('wsyn', 'deltaw + wsyn')]))])
