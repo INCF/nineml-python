@@ -29,35 +29,35 @@ def create_stdp_guetig():
             al.Regime(
                 name="sole",
                 al.On('incoming_spike',
-                      target_regime="regime_0",
+                      target_regime="sole",
                       do=[
                           al.StateAssignment(
                               'tlast_post',
-                              '((w &gt;= 0) ? ( tlast_post ) : ( t ))'),
+                              '((w >= 0) ? ( tlast_post ) : ( t ))'),
                           al.StateAssignment(
                               'tlast_pre',
-                              '((w &gt;= 0) ? ( t ) : ( tlast_pre ))'),
+                              '((w >= 0) ? ( t ) : ( tlast_pre ))'),
                           al.StateAssignment(
                               'deltaw',
-                              '((w &gt;= 0) ? '
+                              '((w >= 0) ? '
                               '( 0.0 ) : '
                               '( P*pow(wmax - wsyn, muLTP) * '
                               'exp(-interval/tauLTP) + deltaw ))'),
                           al.StateAssignment(
                               'interval',
-                              '((w &gt;= 0) ? ( -t + tlast_post ) : '
+                              '((w >= 0) ? ( -t + tlast_post ) : '
                               '( t - tlast_pre ))'),
                           al.StateAssignment(
                               'M',
-                              '((w &gt;= 0) ? ( M ) : '
+                              '((w >= 0) ? ( M ) : '
                               '( M*exp((-t + tlast_post)/tauLTD) - aLTD ))'),
                           al.StateAssignment(
                               'P',
-                              '((w &gt;= 0) ? '
+                              '((w >= 0) ? '
                               '( P*exp((-t + tlast_pre)/tauLTP) + aLTP ) : '
                               '( P ))'),
                           al.StateAssignment(
-                              'wsyn', '((w &gt;= 0) ? ( deltaw + wsyn ) : '
+                              'wsyn', '((w >= 0) ? ( deltaw + wsyn ) : '
                               '( wsyn ))')]))])
     return dyn
 
