@@ -36,6 +36,10 @@ class TestNetwork(unittest.TestCase):
     xml_dir = path.normpath(path.join(src_dir, '..', '..', '..',
                                       'examples', '_old', 'Brunel2000'))
 
+    def setUp(self):
+        self.all_to_all = ConnectionRuleProperties(
+            "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})
+
     def test_xml_roundtrip(self):
 
         delay = 1.5 * ms     # (ms) global delay for all neurons in the group
@@ -73,8 +77,6 @@ class TestNetwork(unittest.TestCase):
         p2 = Population("Inh", 1, celltype)
         inpt = Population("Ext", 1, ext_stim)
 
-        all_to_all = ConnectionRuleProperties(
-            "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})
         static_exc = DynamicsProperties(
             "ExcitatoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"), {},
@@ -86,12 +88,12 @@ class TestNetwork(unittest.TestCase):
 
         exc_prj = Projection(
             "Excitation", pre=inpt, post=p1, response=psr,
-            plasticity=static_exc, connectivity=all_to_all, delay=delay,
+            plasticity=static_exc, connectivity=self.all_to_all, delay=delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
         inh_prj = Projection(
             "Inhibition", pre=inpt, post=p2, response=psr,
-            plasticity=static_inh, connectivity=all_to_all, delay=delay,
+            plasticity=static_inh, connectivity=self.all_to_all, delay=delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
         model = Network("brunel_network")
@@ -114,7 +116,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_dynamics_compilations(self):
 
-        cell = Dynamics(
+        cell1 = Dynamics(
             name='Cell',
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage)],
@@ -126,6 +128,21 @@ class TestNetwork(unittest.TestCase):
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
                           EventSendPort('spike')],
             parameters=[Parameter('P1', dimension=un.time),
+                        Parameter('P2', dimension=un.capacitance),
+                        Parameter('P3', dimension=un.voltage)])
+
+        cell2 = Dynamics(
+            name='Cell',
+            state_variables=[
+                StateVariable('SV1', dimension=un.voltage)],
+            regimes=[
+                Regime(
+                    'dSV1/dt = -SV1 ^ 2 / P1 + ARP1 / P2',
+                    transitions=[On('SV1 > P3', do=[OutputEvent('spike')])],
+                    name='R1')],
+            analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
+                          EventSendPort('spike')],
+            parameters=[Parameter('P1', dimension=un.time / un.voltage),
                         Parameter('P2', dimension=un.capacitance),
                         Parameter('P3', dimension=un.voltage)])
 
@@ -211,3 +228,46 @@ class TestNetwork(unittest.TestCase):
                             StateAssignment(
                                 'P', 'P*exp((-t + tlast_pre)/tauLTP) + aLTP'),
                             StateAssignment('wsyn', 'deltaw + wsyn')]))])
+
+        pop1 = Population(
+            name="Pop1",
+            size=10,
+            cell=DynamicsProperties(
+                definition=cell1,
+                properties={'P1': 10 * un.ms,
+                            'P2': 100 * un.uF,
+                            'P3': -50 * un.voltage}))
+
+        pop2 = Population(
+            name="Pop2",
+            size=15,
+            cell=DynamicsProperties(
+                definition=cell2,
+                properties={'P1': 20 * un.ms / un.mV,
+                            'P2': 50 * un.uF,
+                            'P3': -40 * un.voltage}))
+
+        pop3 = Population(
+            name="Pop3",
+            size=20,
+            cell=DynamicsProperties(
+                definition=cell1,
+                properties={'P1': 30 * un.ms,
+                            'P2': 50 * un.pF,
+                            'P3': -20 * un.voltage}))
+
+        proj1 = Projection(
+            name="Proj1", pre=pop1, post=pop2, response=exc, plasticity=static,
+            connectivity=self.all_to_all,
+            port_connections=[
+                ('pre', 'response', 'spike', 'spike'),
+                ('response', 'post', 'i_syn', 'i_ext'),
+                ('plasticity', 'response', 'fixed_weight', 'weight')])
+
+        proj2 = Projection(
+            name="Proj2", pre=pop2, post=pop1, response=inh, plasticity=static,
+            connectivity=self.all_to_all,
+            port_connections=[
+                ('pre', 'response', 'spike', 'spike'),
+                ('response', 'post', 'i_syn', 'i_ext'),
+                ('plasticity', 'response', 'fixed_weight', 'weight')])
