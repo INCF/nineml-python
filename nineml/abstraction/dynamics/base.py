@@ -329,6 +329,25 @@ class Dynamics(ComponentClass):
                      self.event_receive_ports)
 
     @property
+    def send_port_names(self):
+        return chain(self.analog_send_port_names, self.event_send_port_names)
+
+    @property
+    def receive_port_names(self):
+        return chain(self.analog_receive_port_names,
+                     self.analog_reduce_port_names,
+                     self.event_receive_port_names)
+
+    @property
+    def num_send_ports(self):
+        return self.num_analog_send_ports + self.num_event_send_ports
+
+    @property
+    def num_receive_ports(self):
+        return (self.num_analog_receive_ports + self.num_analog_reduce_ports +
+                self.num_event_receive_ports)
+
+    @property
     def analog_ports(self):
         """Returns an iterator over the local analog port objects"""
         return chain(self.analog_send_ports, self.analog_receive_ports,
