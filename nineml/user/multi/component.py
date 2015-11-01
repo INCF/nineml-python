@@ -12,7 +12,7 @@ from nineml.user import DynamicsProperties
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError)
+    NineMLRuntimeError, NineMLNameError, name_error)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
@@ -78,12 +78,15 @@ class MultiDynamicsProperties(DynamicsProperties):
     def port_connections(self):
         return self.component_class.port_connections
 
+    @name_error
     def sub_component(self, name):
         return self._sub_component_properties[name]
 
+    @name_error
     def port_exposure(self, name):
         return self.component_class.port(name)
 
+    @name_error
     def port_connection(self, name):
         return self.component_class.port_connection(name)
 
@@ -231,27 +234,32 @@ class SubDynamics(BaseULObject):
         return (_NamespaceRegime(self, r, self)
                 for r in self.component_class.regimes)
 
+    @name_error
     def parameter(self, name):
         elem_name, _ = split_namespace(name)
         return _NamespaceParameter(
             self, self.component_class.parameter(elem_name), self)
 
+    @name_error
     def alias(self, name):
         elem_name, _ = split_namespace(name)
         return _NamespaceAlias(self, self.component_class.alias(elem_name),
                                self)
 
+    @name_error
     def state_variable(self, variable):
         elem_name, _ = split_namespace(variable)
         return _NamespaceStateVariable(
             self, self.component_class.state_variable(elem_name), self)
 
+    @name_error
     def constant(self, name):
         elem_name, _ = split_namespace(name)
         return _NamespaceConstant(self,
                                   self.component_class.constant(elem_name),
                                   self)
 
+    @name_error
     def regime(self, name):
         elem_name, _ = split_namespace(name)
         return _NamespaceRegime(self, self.component_class.regime(elem_name),

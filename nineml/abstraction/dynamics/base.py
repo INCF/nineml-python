@@ -6,7 +6,7 @@ components definitions of interface and dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, name_error
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction.componentclass import (
@@ -363,24 +363,31 @@ class Dynamics(ComponentClass):
         """Forwarding function to self._state_variables"""
         return self._state_variables.itervalues()
 
+    @name_error
     def regime(self, name):
         return self._regimes[name]
 
+    @name_error
     def state_variable(self, name):
         return self._state_variables[name]
 
+    @name_error
     def analog_send_port(self, name):
         return self._analog_send_ports[name]
 
+    @name_error
     def analog_receive_port(self, name):
         return self._analog_receive_ports[name]
 
+    @name_error
     def analog_reduce_port(self, name):
         return self._analog_reduce_ports[name]
 
+    @name_error
     def event_send_port(self, name):
         return self._event_send_ports[name]
 
+    @name_error
     def event_receive_port(self, name):
         return self._event_receive_ports[name]
 

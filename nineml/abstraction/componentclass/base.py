@@ -17,6 +17,7 @@ from nineml.utils import (
 from ..expressions import Alias, Constant
 from ...units import dimensionless, Dimension
 from nineml.base import DocumentLevelObject
+from nineml.exceptions import name_error
 
 
 class Parameter(BaseALObject):
@@ -169,12 +170,15 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     def constants(self):
         return self._constants.itervalues()
 
+    @name_error
     def parameter(self, name):
         return self._parameters[name]
 
+    @name_error
     def alias(self, name):
         return self._aliases[name]
 
+    @name_error
     def constant(self, name):
         return self._constants[name]
 

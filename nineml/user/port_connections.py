@@ -17,6 +17,8 @@ class BasePortConnection(BaseULObject):
                            '_send_port', '_receive_port',
                            '_sender_name', '_receiver_name')
 
+    _projection_roles = ('pre', 'post', 'response', 'plasticity')
+
     def __init__(self, send_port, receive_port,
                  sender_role=None, receiver_role=None,
                  sender_name=None, receiver_name=None):
@@ -238,14 +240,26 @@ class BasePortConnection(BaseULObject):
             sender_dynamics = getattr(container, sender).component_class
             init_kwargs['sender_role'] = sender
         except AttributeError:
-            sender_dynamics = container[sender].component_class
-            init_kwargs['sender_name'] = sender
+            try:
+                sender_dynamics = container[sender].component_class
+                init_kwargs['sender_name'] = sender
+            except (TypeError, KeyError), e:
+                raise NineMLRuntimeError(
+                    "Did not find sender {} '{}' in '{}' container"
+                    .format('name' if isinstance(e, KeyError) else 'role',
+                            receiver, container.name))
         try:
             getattr(container, receiver).component_class
             init_kwargs['receiver_role'] = receiver
         except AttributeError:
-            container[receiver].component_class
-            init_kwargs['receiver_name'] = receiver
+            try:
+                container[receiver].component_class
+                init_kwargs['receiver_name'] = receiver
+            except (TypeError, KeyError), e:
+                raise NineMLRuntimeError(
+                    "Did not find receiver {} '{}' in '{}' container"
+                    .format('name' if isinstance(e, KeyError) else 'role',
+                            receiver, container.name))
         if isinstance(sender_dynamics.port(send_port), AnalogSendPort):
             port_connection = AnalogPortConnection(
                 receive_port=receive_port, send_port=send_port, **init_kwargs)

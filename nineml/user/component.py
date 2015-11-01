@@ -2,7 +2,7 @@
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError)
+    NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error)
 from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
@@ -150,7 +150,10 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             self._properties = dict((name, Property(name, qty))
                                     for name, qty in properties.iteritems())
         else:
-            self._properties = dict((p.name, p) for p in properties)
+            try:
+                self._properties = dict((p.name, p) for p in properties)
+            except:
+                raise
         self.check_properties()
 
     @property
@@ -453,6 +456,8 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         return len(list(self.properties))
 
     # Property is declared last so as not to overwrite the 'property' decorator
+
+    @name_error
     def property(self, name):
         try:
             return self._properties[name]
@@ -600,6 +605,7 @@ class DynamicsProperties(Component):
     def initial_values(self):
         return self._initial_values.itervalues()
 
+    @name_error
     def initial_value(self, name):
         return self._initial_values[name]
 
