@@ -17,7 +17,7 @@ from nineml.user import (
     Population)
 from nineml.abstraction import (
     Parameter, Dynamics, Regime, On, OutputEvent, StateVariable,
-    StateAssignment)
+    StateAssignment, Constant, Alias)
 from nineml.abstraction.ports import (
     AnalogSendPort, AnalogReceivePort, EventSendPort, EventReceivePort)
 from nineml import units as un
@@ -114,7 +114,7 @@ class TestNetwork(unittest.TestCase):
                          "Brunel network model failed xml roundtrip:\n\n{}"
                          .format(mismatch))
 
-    def test_dynamics_compilations(self):
+    def test_component_arrays_and_connection_groups(self):
 
         cell1_cls = Dynamics(
             name='Cell',
@@ -122,10 +122,10 @@ class TestNetwork(unittest.TestCase):
                 StateVariable('SV1', dimension=un.voltage)],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1 / P1 + ARP1 / P2',
+                    'dSV1/dt = -SV1 / P1 + i_ext / P2',
                     transitions=[On('SV1 > P3', do=[OutputEvent('spike')])],
                     name='R1')],
-            analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
+            analog_ports=[AnalogReceivePort('i_ext', dimension=un.current),
                           EventSendPort('spike')],
             parameters=[Parameter('P1', dimension=un.time),
                         Parameter('P2', dimension=un.capacitance),
@@ -137,10 +137,10 @@ class TestNetwork(unittest.TestCase):
                 StateVariable('SV1', dimension=un.voltage)],
             regimes=[
                 Regime(
-                    'dSV1/dt = -SV1 ^ 2 / P1 + ARP1 / P2',
+                    'dSV1/dt = -SV1 ^ 2 / P1 + i_ext / P2',
                     transitions=[On('SV1 > P3', do=[OutputEvent('spike')])],
                     name='R1')],
-            analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
+            analog_ports=[AnalogReceivePort('i_ext', dimension=un.current),
                           EventSendPort('spike')],
             parameters=[Parameter('P1', dimension=un.time * un.voltage),
                         Parameter('P2', dimension=un.capacitance),
@@ -148,7 +148,7 @@ class TestNetwork(unittest.TestCase):
 
         exc_cls = Dynamics(
             name="Exc",
-            aliases=["I_ext := SV1"],
+            aliases=["i := SV1"],
             regimes=[
                 Regime(
                     name="default",
@@ -158,13 +158,13 @@ class TestNetwork(unittest.TestCase):
             state_variables=[
                 StateVariable('SV1', dimension=un.current),
             ],
-            analog_ports=[AnalogSendPort("I_ext", dimension=un.current),
+            analog_ports=[AnalogSendPort("i", dimension=un.current),
                           AnalogReceivePort("weight", dimension=un.current)],
             parameters=[Parameter('tau', dimension=un.time)])
 
         inh_cls = Dynamics(
             name="Inh",
-            aliases=["I_ext := SV1"],
+            aliases=["i := SV1"],
             regimes=[
                 Regime(
                     name="default",
@@ -174,7 +174,7 @@ class TestNetwork(unittest.TestCase):
             state_variables=[
                 StateVariable('SV1', dimension=un.current),
             ],
-            analog_ports=[AnalogSendPort("I_ext", dimension=un.current),
+            analog_ports=[AnalogSendPort("i", dimension=un.current),
                           AnalogReceivePort("weight", dimension=un.current)],
             parameters=[Parameter('tau', dimension=un.time)])
 
@@ -198,7 +198,8 @@ class TestNetwork(unittest.TestCase):
                 Parameter(name='aLTP', dimension=un.dimensionless)],
             analog_ports=[
                 AnalogReceivePort(dimension=un.dimensionless, name="w"),
-                AnalogSendPort(dimension=un.dimensionless, name="wsyn")],
+                AnalogSendPort(dimension=un.dimensionless, name="wsyn"),
+                AnalogSendPort(dimension=un.current, name="wsyn_current")],
             event_ports=[
                 EventReceivePort(name="incoming_spike")],
             state_variables=[
@@ -209,6 +210,7 @@ class TestNetwork(unittest.TestCase):
                 StateVariable(name='M', dimension=un.dimensionless),
                 StateVariable(name='P', dimension=un.dimensionless),
                 StateVariable(name='wsyn', dimension=un.dimensionless)],
+            constants=[Constant('ONE_NA', 1.0, un.nA)],
             regimes=[
                 Regime(
                     name="sole",
@@ -227,7 +229,8 @@ class TestNetwork(unittest.TestCase):
                                 'M', 'M*exp((-t + tlast_post)/tauLTD) - aLTD'),
                             StateAssignment(
                                 'P', 'P*exp((-t + tlast_pre)/tauLTP) + aLTP'),
-                            StateAssignment('wsyn', 'deltaw + wsyn')]))])
+                            StateAssignment('wsyn', 'deltaw + wsyn')]))],
+            aliases=[Alias('wsyn_current', 'wsyn * ONE_NA')])
 
         exc = DynamicsProperties(
             name="ExcProps",
@@ -284,7 +287,7 @@ class TestNetwork(unittest.TestCase):
             connectivity=self.all_to_all,
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
-                ('response', 'i_syn', 'post', 'i_ext'),
+                ('response', 'i', 'post', 'i_ext'),
                 ('plasticity', 'fixed_weight', 'response', 'weight')],
             delay=1 * un.ms)
 
@@ -293,25 +296,27 @@ class TestNetwork(unittest.TestCase):
             connectivity=self.all_to_all,
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
-                ('response', 'i_syn', 'post', 'i_ext'),
+                ('response', 'i', 'post', 'i_ext'),
                 ('plasticity', 'fixed_weight', 'response', 'weight')],
             delay=1 * un.ms)
 
         proj3 = Projection(
             name="Proj3",
             pre=pop3, post=pop2, response=exc, plasticity=stdp,
+            connectivity=self.all_to_all,
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
-                ('response', 'i_syn', 'post', 'i_ext'),
-                ('plasticity', 'fixed_weight', 'response', 'weight')],
+                ('response', 'i', 'post', 'i_ext'),
+                ('plasticity', 'wsyn_current', 'response', 'weight')],
             delay=1 * un.ms)
 
         proj4 = Projection(
             name="Proj4",
             pre=pop3, post=pop1, response=exc, plasticity=static,
+            connectivity=self.all_to_all,
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
-                ('response', 'i_syn', 'post', 'i_ext'),
+                ('response', 'i', 'post', 'i_ext'),
                 ('plasticity', 'fixed_weight', 'response', 'weight')],
             delay=1 * un.ms)
 

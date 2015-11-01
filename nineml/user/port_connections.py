@@ -285,9 +285,9 @@ class AnalogPortConnection(BasePortConnection):
                 " an AnalogPortConnection".format(self.receive_port.name))
         if self.send_port.dimension != self.receive_port.dimension:
             raise NineMLDimensionError(
-                "Dimensions do not matc in analog port connection: sender port"
-                " '{}' has dimensions of '{}' and receive port '{}' has "
-                "dimensions of '{}'"
+                "Dimensions do not match in analog port connection: sender "
+                "port" " '{}' has dimensions of '{}' and receive port '{}' has"
+                " dimensions of '{}'"
                 .format(self.send_port.name, self.send_port.dimension,
                         self.receive_port.name, self.receive_port.dimension))
 
