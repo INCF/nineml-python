@@ -9,7 +9,7 @@ import re
 import sympy
 from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
                             normalise_parameter_as_list, assert_no_duplicates)
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, name_error
 from ..expressions import ODE
 from .. import BaseALObject
 from nineml.units import dimensionless, Dimension
@@ -318,17 +318,21 @@ class Regime(BaseALObject, ContainerObject):
     def aliases(self):
         return self._aliases.itervalues()
 
+    @name_error
     def time_derivative(self, variable):
         return self._time_derivatives[variable]
 
+    @name_error
     def on_event(self, port_name):
         return self._on_events[port_name]
 
+    @name_error
     def on_condition(self, condition):
         if not isinstance(condition, sympy.Basic):
             condition = Trigger(condition).rhs
         return self._on_conditions[condition]
 
+    @name_error
     def alias(self, name):
         return self._aliases[name]
 

@@ -116,7 +116,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_dynamics_compilations(self):
 
-        cell1 = Dynamics(
+        cell1_cls = Dynamics(
             name='Cell',
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage)],
@@ -131,7 +131,7 @@ class TestNetwork(unittest.TestCase):
                         Parameter('P2', dimension=un.capacitance),
                         Parameter('P3', dimension=un.voltage)])
 
-        cell2 = Dynamics(
+        cell2_cls = Dynamics(
             name='Cell',
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage)],
@@ -142,11 +142,11 @@ class TestNetwork(unittest.TestCase):
                     name='R1')],
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
                           EventSendPort('spike')],
-            parameters=[Parameter('P1', dimension=un.time / un.voltage),
+            parameters=[Parameter('P1', dimension=un.time * un.voltage),
                         Parameter('P2', dimension=un.capacitance),
                         Parameter('P3', dimension=un.voltage)])
 
-        exc = Dynamics(
+        exc_cls = Dynamics(
             name="Exc",
             aliases=["I_ext := SV1"],
             regimes=[
@@ -162,7 +162,7 @@ class TestNetwork(unittest.TestCase):
                           AnalogReceivePort("weight", dimension=un.current)],
             parameters=[Parameter('tau', dimension=un.time)])
 
-        inh = Dynamics(
+        inh_cls = Dynamics(
             name="Inh",
             aliases=["I_ext := SV1"],
             regimes=[
@@ -178,7 +178,7 @@ class TestNetwork(unittest.TestCase):
                           AnalogReceivePort("weight", dimension=un.current)],
             parameters=[Parameter('tau', dimension=un.time)])
 
-        static = Dynamics(
+        static_cls = Dynamics(
             name="Static",
             aliases=["fixed_weight := weight"],
             regimes=[
@@ -187,7 +187,7 @@ class TestNetwork(unittest.TestCase):
                                          dimension=un.current)],
             parameters=[Parameter('weight', dimension=un.current)])
 
-        stdp = Dynamics(
+        stdp_cls = Dynamics(
             name="PartialStdpGuetig",
             parameters=[
                 Parameter(name='tauLTP', dimension=un.time),
@@ -229,45 +229,95 @@ class TestNetwork(unittest.TestCase):
                                 'P', 'P*exp((-t + tlast_pre)/tauLTP) + aLTP'),
                             StateAssignment('wsyn', 'deltaw + wsyn')]))])
 
+        exc = DynamicsProperties(
+            name="ExcProps",
+            definition=exc_cls, properties={'tau': 1 * ms})
+
+        inh = DynamicsProperties(
+            name="ExcProps",
+            definition=inh_cls, properties={'tau': 1 * ms})
+
+        static = DynamicsProperties(name="StaticProps",
+                                    definition=static_cls,
+                                    properties={'weight': 1 * un.nA})
+
+        stdp = DynamicsProperties(name="StdpProps", definition=stdp_cls,
+                                  properties={'tauLTP': 10 * un.ms,
+                                              'aLTD': 1,
+                                              'wmax': 2,
+                                              'muLTP': 3,
+                                              'tauLTD': 20 * un.ms,
+                                              'aLTP': 4})
+
         pop1 = Population(
             name="Pop1",
             size=10,
             cell=DynamicsProperties(
-                definition=cell1,
+                name="Pop1Props",
+                definition=cell1_cls,
                 properties={'P1': 10 * un.ms,
                             'P2': 100 * un.uF,
-                            'P3': -50 * un.voltage}))
+                            'P3': -50 * un.mV}))
 
         pop2 = Population(
             name="Pop2",
             size=15,
             cell=DynamicsProperties(
-                definition=cell2,
-                properties={'P1': 20 * un.ms / un.mV,
+                name="Pop2Props",
+                definition=cell2_cls,
+                properties={'P1': 20 * un.ms * un.mV,
                             'P2': 50 * un.uF,
-                            'P3': -40 * un.voltage}))
+                            'P3': -40 * un.mV}))
 
         pop3 = Population(
             name="Pop3",
             size=20,
             cell=DynamicsProperties(
-                definition=cell1,
+                name="Pop3Props",
+                definition=cell1_cls,
                 properties={'P1': 30 * un.ms,
                             'P2': 50 * un.pF,
-                            'P3': -20 * un.voltage}))
+                            'P3': -20 * un.mV}))
 
         proj1 = Projection(
             name="Proj1", pre=pop1, post=pop2, response=exc, plasticity=static,
             connectivity=self.all_to_all,
             port_connections=[
-                ('pre', 'response', 'spike', 'spike'),
-                ('response', 'post', 'i_syn', 'i_ext'),
-                ('plasticity', 'response', 'fixed_weight', 'weight')])
+                ('pre', 'spike', 'response', 'spike'),
+                ('response', 'i_syn', 'post', 'i_ext'),
+                ('plasticity', 'fixed_weight', 'response', 'weight')],
+            delay=1 * un.ms)
 
         proj2 = Projection(
             name="Proj2", pre=pop2, post=pop1, response=inh, plasticity=static,
             connectivity=self.all_to_all,
             port_connections=[
-                ('pre', 'response', 'spike', 'spike'),
-                ('response', 'post', 'i_syn', 'i_ext'),
-                ('plasticity', 'response', 'fixed_weight', 'weight')])
+                ('pre', 'spike', 'response', 'spike'),
+                ('response', 'i_syn', 'post', 'i_ext'),
+                ('plasticity', 'fixed_weight', 'response', 'weight')],
+            delay=1 * un.ms)
+
+        proj3 = Projection(
+            name="Proj3",
+            pre=pop3, post=pop2, response=exc, plasticity=stdp,
+            port_connections=[
+                ('pre', 'spike', 'response', 'spike'),
+                ('response', 'i_syn', 'post', 'i_ext'),
+                ('plasticity', 'fixed_weight', 'response', 'weight')],
+            delay=1 * un.ms)
+
+        proj4 = Projection(
+            name="Proj4",
+            pre=pop3, post=pop1, response=exc, plasticity=static,
+            port_connections=[
+                ('pre', 'spike', 'response', 'spike'),
+                ('response', 'i_syn', 'post', 'i_ext'),
+                ('plasticity', 'fixed_weight', 'response', 'weight')],
+            delay=1 * un.ms)
+
+        network = Network(
+            name="Net",
+            populations=(pop1, pop2, pop3),
+            projections=(proj1, proj2, proj3, proj4))
+
+        print network

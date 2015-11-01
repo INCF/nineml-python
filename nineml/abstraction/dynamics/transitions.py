@@ -9,8 +9,8 @@ from copy import copy
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
-from ...exceptions import (NineMLRuntimeError,
-                           NineMLInvalidElementTypeException)
+from nineml.exceptions import (NineMLRuntimeError,
+                               NineMLInvalidElementTypeException, name_error)
 from nineml.base import ContainerObject
 from nineml.utils import normalise_parameter_as_list
 
@@ -270,6 +270,7 @@ class Transition(BaseALObject, ContainerObject):
     def state_assignments(self):
         return self._state_assignments.itervalues()
 
+    @name_error
     def state_assignment(self, variable):
         return self._state_assignments[variable]
 
@@ -286,6 +287,7 @@ class Transition(BaseALObject, ContainerObject):
         """|Events| that happen when this transitions occurs"""
         return self._output_events.itervalues()
 
+    @name_error
     def output_event(self, port):
         return self._output_events[port]
 

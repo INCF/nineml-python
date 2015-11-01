@@ -63,3 +63,18 @@ def raise_exception(exception=None):
             raise exception
     else:
         raise NineMLRuntimeError()
+
+
+def name_error(accessor):
+    def accessor_with_handling(self, name):
+        try:
+            return accessor(self, name)
+        except KeyError:
+            # Get the name of the element type to be accessed making use of a
+            # strict naming convention of the accessors
+            type_name = ''.join(p.capitalize()
+                                for p in accessor.__name__.split('_'))
+            raise NineMLNameError(
+                "'{}' {} does not have {} named '{}"
+                .format(self.name, self.element_name, type_name, name))
+    return accessor_with_handling
