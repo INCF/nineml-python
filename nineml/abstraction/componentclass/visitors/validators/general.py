@@ -8,6 +8,7 @@ from nineml.exceptions import NineMLRuntimeError, NineMLDimensionError
 from nineml.abstraction.expressions.utils import is_valid_lhs_target
 from nineml.abstraction.expressions import reserved_identifiers, Expression
 from nineml.utils import assert_no_duplicates
+from nineml.base import BaseNineMLObject
 import operator
 import sympy
 from sympy import sympify
@@ -281,6 +282,9 @@ class DimensionalityComponentValidator(BaseValidator):
         elif (type(expr).__name__ in ('Pi',) or
               isinstance(expr, sympy.Rational)):
             dims = 1
+        elif isinstance(element, BaseNineMLObject):
+            assert False, ("{} was not added to pre-determined dimensions"
+                           .format(element))
         else:
             raise NotImplementedError(
                 "Unrecognised type {} of expression '{}'"

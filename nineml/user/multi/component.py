@@ -195,6 +195,11 @@ class SubDynamics(BaseULObject):
     defining_attributes = ('_name', '_component_class')
 
     def __init__(self, name, component_class):
+        try:
+            assert isinstance(name, basestring)
+            assert isinstance(component_class, Dynamics)
+        except:
+            raise
         self._name = name
         self._component_class = component_class
 
@@ -231,8 +236,11 @@ class SubDynamics(BaseULObject):
 
     @property
     def regimes(self):
-        return (_NamespaceRegime(self, r, self)
-                for r in self.component_class.regimes)
+        try:
+            return (_NamespaceRegime(self, r, self)
+                    for r in self.component_class.regimes)
+        except:
+            raise
 
     @name_error
     def parameter(self, name):
@@ -457,12 +465,16 @@ class MultiDynamics(Dynamics):
                 for name, dyn in sub_components.iteritems())
         else:
             self._sub_components = dict((d.name, d) for d in sub_components)
-        # Save port exposurs into separate member dictionaries
         self._analog_send_ports = {}
         self._analog_receive_ports = {}
         self._analog_reduce_ports = {}
         self._event_send_ports = {}
         self._event_receive_ports = {}
+        self._analog_port_connections = {}
+        self._event_port_connections = {}
+        # =====================================================================
+        # Save port exposurs into separate member dictionaries
+        # =====================================================================
         if port_exposures is not None:
             for exposure in port_exposures:
                 if isinstance(exposure, tuple):
@@ -484,8 +496,9 @@ class MultiDynamics(Dynamics):
                 else:
                     raise NineMLRuntimeError(
                         "Unrecognised port exposure '{}'".format(exposure))
-        self._analog_port_connections = {}
-        self._event_port_connections = {}
+        # =====================================================================
+        # Set port connections
+        # =====================================================================
         # Insert an empty list for each event and reduce port in the combined
         # model
         # Parse port connections (from tuples if required), bind them to the
@@ -516,7 +529,7 @@ class MultiDynamics(Dynamics):
                         .format(port_connection.receive_port_name,
                                 port_connection.receiver_name, name))
                 self._analog_port_connections[
-                    rcv_key][snd_key] = port_connection
+                    rcv_key][snd_key] = port_connection                    
         self.annotations[nineml_ns][VALIDATE_DIMENSIONS] = validate_dimensions
         self.validate()
 
@@ -640,7 +653,7 @@ class MultiDynamics(Dynamics):
 
     def analog_port_connection(self, name):
         try:
-            sender, send_port, receiver, receive_port = name
+            sender, send_port, receiver, receive_port = name.split('___')
         except ValueError:
             raise NineMLNameError(
                 "Name provided to analog_port_connection '{}' was not a "
@@ -650,7 +663,7 @@ class MultiDynamics(Dynamics):
 
     def event_port_connection(self, name):
         try:
-            sender, send_port, receiver, receive_port = name
+            sender, send_port, receiver, receive_port = name.split('___')
         except ValueError:
             raise NineMLNameError(
                 "Name provided to analog_port_connection '{}' was not a "
@@ -689,8 +702,8 @@ class MultiDynamics(Dynamics):
         return alias
 
     def constant(self, name):
-        name, comp_name = split_namespace(name)
-        return self.sub_component(comp_name).component_class.constant(name)
+        _, comp_name = split_namespace(name)
+        return self.sub_component(comp_name).constant(name)
 
     def regime(self, name):
         try:
@@ -851,8 +864,9 @@ class _MultiRegime(Regime):
         """
         list_of_args = []
         for port_exposure in self._parent.event_receive_ports:
-            exposed_on_events = [oe for oe in self._all_sub_on_events
-                                 if oe.port is port_exposure.port]
+            exposed_on_events = [
+                oe for oe in self._all_sub_on_events
+                if oe.src_port_name is port_exposure.local_port_name]
             if exposed_on_events:
                 list_of_args.append((port_exposure, exposed_on_events))
         return (_MultiOnEvent(pe, oes, self) for pe, oes in list_of_args)
@@ -1099,8 +1113,11 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
     def __init__(self, port_exposure, sub_transitions, parent):
         sub_transitions = normalise_parameter_as_list(sub_transitions)
         self._port_exposure = port_exposure
-        assert all(st.src_port_name == self._port_exposure.local_port_name
-                   for st in sub_transitions)
+        try:
+            assert all(st.src_port_name == self._port_exposure.local_port_name
+                       for st in sub_transitions)
+        except:
+            raise
         _MultiTransition.__init__(self, sub_transitions, parent)
 
     def __hash__(self):
