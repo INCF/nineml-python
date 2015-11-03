@@ -35,8 +35,18 @@ class BasePortConnection(BaseULObject):
                            which uniquely identifies it within the container
         """
         BaseULObject.__init__(self)
-        self._send_port_name = send_port
-        self._receive_port_name = receive_port
+        if isinstance(send_port, basestring):
+            self._send_port_name = send_port
+            self._send_port = None
+        else:
+            self._send_port = send_port
+            self._send_port_name = None
+        if isinstance(receive_port, basestring):
+            self._receive_port_name = receive_port
+            self._receive_port = None
+        else:
+            self._receive_port = receive_port
+            self._receive_port_name = None
         if sender_role is not None:
             if sender_name is not None:
                 raise NineMLRuntimeError(
@@ -57,6 +67,13 @@ class BasePortConnection(BaseULObject):
             raise NineMLRuntimeError(
                 "Either 'receiver_role' or 'receiver_name' must be "
                 "provided to PortConnection __init__")
+        try:
+            assert isinstance(sender_role, (basestring, type(None)))
+            assert isinstance(sender_name, (basestring, type(None)))
+            assert isinstance(receiver_name, (basestring, type(None)))
+            assert isinstance(receiver_role, (basestring, type(None)))
+        except:
+            raise
         self._sender_role = sender_role
         self._sender_name = sender_name
         self._receiver_name = receiver_name
@@ -65,10 +82,6 @@ class BasePortConnection(BaseULObject):
         # bound
         self._sender = None
         self._receiver = None
-        self._sender_dynamics = None
-        self._receiver_dynamics = None
-        self._send_port = None
-        self._receive_port = None
 
     def __repr__(self):
         return ("{}(sender={}->{}, receiver={}->{})"
@@ -99,18 +112,6 @@ class BasePortConnection(BaseULObject):
         if self._receiver is None:
             raise NineMLRuntimeError("Ports have not been bound")
         return self._receiver
-
-    @property
-    def sender_dynamics(self):
-        if self._sender_dynamics is None:
-            raise NineMLRuntimeError("Ports have not been bound")
-        return self._sender_dynamics
-
-    @property
-    def receiver_dynamics(self):
-        if self._receiver_dynamics is None:
-            raise NineMLRuntimeError("Ports have not been bound")
-        return self._receiver_dynamics
 
     @property
     def send_port(self):
@@ -256,6 +257,7 @@ class BasePortConnection(BaseULObject):
                 container[receiver].component_class
                 init_kwargs['receiver_name'] = receiver
             except (TypeError, KeyError), e:
+                container[receiver]
                 raise NineMLRuntimeError(
                     "Did not find receiver {} '{}' in '{}' container"
                     .format('name' if isinstance(e, KeyError) else 'role',

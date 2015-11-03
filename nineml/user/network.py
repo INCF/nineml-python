@@ -1,13 +1,16 @@
 from itertools import chain
+from nineml.abstraction import ConnectionRule
 from .population import Population
 from .projection import Projection
 from .selection import Selection
 from . import BaseULObject
 from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
+from nineml.exceptions import NineMLNameError
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
 from .multi.component import MultiDynamics
+from nineml.user.port_connections import BasePortConnection
 from .multi.port_exposures import (
     AnalogReceivePortExposure, EventReceivePortExposure,
     AnalogSendPortExposure, EventSendPortExposure)
@@ -96,72 +99,125 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     def num_selections(self):
         return len(self._selections)
 
-    def post_synaptic_dynamics(self, population_name):
+    # =========================================================================
+    # Core accessors
+    # =========================================================================
+
+    def dynamics_array(self, name):
+        return self._dyn_array_from_pop(self.population(name))
+
+    @property
+    def dynamics_arrays(self):
+        return (self._dyn_array_from_pop(p) for p in self.populations)
+
+    @property
+    def dynamics_array_names(self):
+        return self.population_names
+
+    @property
+    def num_dynamics_array(self):
+        return self.num_populations
+
+    def connection_group(self, name):
+        try:
+            return next(cg for cg in self.connection_groups
+                        if cg.name == name)
+        except StopIteration:
+            raise NineMLNameError(
+                "No connection group named '{}' in '{}' network (found '{}')"
+                .format(name, self.name,
+                        "', '".join(self.connection_group_names)))
+
+    @property
+    def connection_groups(self):
+        dyn_dct = dict((da.name, da) for da in self.dynamics_arrays)
+        return chain(self._conn_groups_from_proj(p, dynamics_arrays=dyn_dct)
+                     for p in self.projections)
+
+    @property
+    def connection_group_names(self):
+        return (cg.name for cg in self.connection_groups)
+
+    @property
+    def num_connection_groups(self):
+        return len(list(self.connection_groups))
+
+    def _dyn_array_from_pop(self, population):
         """
         Returns a multi-dynamics object containing the cell and all
         post-synaptic response/plasticity dynamics
         """
-        # Get the population
-        pop = self.population(population_name)
         # Get all the projections that project to the given population
-        received = [p for p in self.projections if p.post == pop]
+        received = [p for p in self.projections if p.post == population]
         # Get all sub-dynamics, port connections and port exposures
-        sub_dynamics = {'cell': pop.cell}
+        sub_dynamics = {'cell': population.cell.component_class}
         port_connections = []
         port_exposures = []
         for proj in received:
-            sub_dynamics[p.name + '_psr'] = proj.response
-            sub_dynamics[p.name + '_pls'] = proj.plasticity
+            sub_dynamics[proj.name + '_psr'] = proj.response.component_class
+            sub_dynamics[proj.name + '_pls'] = proj.plasticity.component_class
             # Get all projection port connections that don't project to/from
             # the "pre" population and convert them into local MultiDynamics
             # port connections
             port_connections.extend(
-                pc.cls(sender_name=self._role2dyn(proj.name, pc.sender_role),
-                       receiver_name=self._role2dyn(proj.name,
-                                                    pc.receiver_role),
-                       send_port=pc.send_port, receive_port=pc.receive_port)
+                pc.__class__(
+                    sender_name=self._role2dyn(proj.name, pc.sender_role),
+                    receiver_name=self._role2dyn(proj.name, pc.receiver_role),
+                    send_port=pc.send_port, receive_port=pc.receive_port)
                 for pc in proj.port_connections
                 if 'pre' not in (pc.sender_role, pc.receiver_role))
             # Get all the projection port connections that project to/from the
             # the "pre" population and convert them into port exposures
             port_exposures.extend(
                 AnalogReceivePortExposure(
-                    component=self._role2dyn(pc.receiver_role),
+                    component=self._role2dyn(proj.name, pc.receiver_role),
                     port=pc.receive_port)
                 for pc in proj.analog_port_connections
                 if 'pre' == pc.sender_role)
             port_exposures.extend(
                 EventReceivePortExposure(
-                    component=self._role2dyn(pc.receiver_role),
+                    component=self._role2dyn(proj.name, pc.receiver_role),
                     port=pc.receive_port)
                 for pc in proj.event_port_connections
                 if 'pre' == pc.sender_role)
             port_exposures.extend(
                 AnalogSendPortExposure(
-                    component=self._role2dyn(pc.sender_role),
+                    component=self._role2dyn(proj.name, pc.sender_role),
                     port=pc.send_port)
                 for pc in proj.analog_port_connections
                 if 'pre' == pc.receiver_role)
             port_exposures.extend(
                 EventSendPortExposure(
-                    component=self._role2dyn(pc.sender_role),
+                    component=self._role2dyn(proj.name, pc.sender_role),
                     port=pc.send_port)
                 for pc in proj.event_port_connections
                 if 'pre' == pc.receiver_role)
-        return MultiDynamics(
-            name=pop.name + 'AndSynapticDynamics',
-            sub_dynamics=sub_dynamics, port_connections=port_connections,
+        dyn = MultiDynamics(
+            name=population.name + 'Dynamics',
+            sub_components=sub_dynamics, port_connections=port_connections,
             port_exposures=port_exposures)
+        return DynamicsArray(population.name, population.size, dyn)
 
-    def pre_synaptic_connections(self, projection_name):
-        proj = self.projection(projection_name)
-        return (pc.cls(sender_name=self._role2dyn(proj.name, pc.sender_role),
-                       receiver_name=self._role2dyn(proj.name,
-                                                    pc.receiver_role),
-                       receive_port=pc.receive_port,
-                       send_port=pc.send_port)
-                for pc in proj.port_connections
-                if 'pre' in (pc.sender_role, pc.receiver_role))
+    def _conn_groups_from_proj(self, projection, dynamics_arrays=None):
+        port_conns = (pc.cls(sender_name=self._role2dyn(projection.name,
+                                                        pc.sender_role),
+                             receiver_name=self._role2dyn(projection.name,
+                                                          pc.receiver_role),
+                             receive_port=pc.receive_port,
+                             send_port=pc.send_port)
+                      for pc in projection.port_connections
+                      if 'pre' in (pc.sender_role, pc.receiver_role))
+        if dynamics_arrays:
+            source = dynamics_arrays[projection.pre.name]
+            dest = dynamics_arrays[projection.post.name]
+        else:
+            source = self._dyn_array_from_pop(projection.pre)
+            dest = self._dyn_array_from_pop(projection.post)
+        return (ConnectionGroup('{}__{}__{}'.format(projection.name,
+                                                    pc.source_port,
+                                                    pc.destination_port),
+                                source, dest, pc, projection.connectivity)
+                for pc in port_conns)
 
     def get_components(self):
         components = []
@@ -209,3 +265,68 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         else:
             assert False
         return dyn_name
+
+
+class DynamicsArray(BaseULObject):
+
+    element_name = "DynamicsArray"
+    defining_attributes = ('name', "_size", "_dynamics")
+
+    def __init__(self, name, size, dynamics):
+        self._name = name
+        self._size = size
+        self._dynamics = dynamics
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def size(self):
+        return self._size
+
+    @property
+    def dynamics(self):
+        return self._dynamics
+
+
+class ConnectionGroup(BaseULObject):
+
+    element_name = "ConnectionGroup"
+    defining_attributes = ('name', "source", "destination",
+                           "port_connection", "connection_rule")
+
+    def __init__(self, name, source, destination, port_connection,
+                 connection_rule):
+        assert isinstance(name, basestring)
+        assert isinstance(source, DynamicsArray)
+        assert isinstance(destination, DynamicsArray)
+        assert isinstance(destination, BasePortConnection)
+        assert isinstance(connection_rule, ConnectionRule)
+        self._name = name
+        self._source = source
+        self._destination = destination
+        self._port_connection = port_connection
+        self._connection_rule = connection_rule
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def source(self):
+        return self._source
+
+    @property
+    def destination(self):
+        return self._destination
+
+    @property
+    def port_connection(self):
+        return self._port_connection
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def connected(self, i, j):
+        raise NotImplementedError

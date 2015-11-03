@@ -11,4 +11,4 @@ from .component import (Property, Component, Definition,
                         ConnectionRuleProperties, RandomDistributionProperties,
                         Quantity)
 from .multi import MultiDynamics, MultiDynamicsProperties
-from .network import Network
+from .network import Network, DynamicsArray, ConnectionGroup

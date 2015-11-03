@@ -302,7 +302,14 @@ class _NamespaceParameter(_NamespaceNamed, _NamespaceDimensioned, Parameter):
 
 
 class _NamespaceConstant(_NamespaceNamed, Constant):
-    pass
+
+    @property
+    def value(self):
+        return self._object.value
+
+    @property
+    def units(self):
+        return self._object.units
 
 
 class _NamespaceTimeDerivative(_NamespaceNamed, _NamespaceExpression,

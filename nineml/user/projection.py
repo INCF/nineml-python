@@ -9,7 +9,6 @@ from nineml.annotations import read_annotations, annotate_xml
 from .component import (
     ConnectionRuleProperties, DynamicsProperties)
 from nineml.values import SingleValue, ArrayValue, RandomValue
-from copy import copy
 from itertools import chain
 from .population import Population
 from .selection import Selection
@@ -76,13 +75,17 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._plasticity = plasticity
         self._connectivity = connectivity
         self._delay = delay
-        self._port_connections = []
+        self._analog_port_connections = []
+        self._event_port_connections = []
         for port_connection in port_connections:
             if isinstance(port_connection, tuple):
                 port_connection = BasePortConnection.from_tuple(
                     port_connection, self)
             port_connection.bind(self, to_roles=True)
-            self._port_connections.append(port_connection)
+            if isinstance(port_connection, EventPortConnection):
+                self._event_port_connections.append(port_connection)
+            else:
+                self._analog_port_connections.append(port_connection)
 
     @property
     def name(self):
@@ -113,8 +116,16 @@ class Projection(BaseULObject, DocumentLevelObject):
         return self._delay
 
     @property
+    def analog_port_connections(self):
+        return self._analog_port_connections
+
+    @property
+    def event_port_connections(self):
+        return self._event_port_connections
+
+    @property
     def port_connections(self):
-        return self._port_connections
+        return chain(self.analog_port_connections, self.event_port_connections)
 
     def __repr__(self):
         return ('Projection(name="{}", pre={}, post={}, '

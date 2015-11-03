@@ -4,7 +4,7 @@ import sympy
 import operator
 from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
-    EventReceivePort, Alias)
+    EventReceivePort, Alias, Dynamics)
 from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
@@ -18,10 +18,22 @@ class _BasePortExposure(BaseULObject):
     def __init__(self, component, port, name=None):
         super(_BasePortExposure, self).__init__()
         self._name = name
-        self._sub_component_name = component
-        self._port_name = port
-        self._sub_component = None
-        self._port = None
+        if isinstance(component, basestring):
+            self._sub_component_name = component
+            self._sub_component = None
+        else:
+            self._sub_component_name = None
+            try:
+                assert isinstance(component, Dynamics)
+            except:
+                raise
+            self._sub_component = component
+        if isinstance(port, basestring):
+            self._port_name = port
+            self._port = None
+        else:
+            self._port = port
+            self._port_name = None
 
     @property
     def name(self):
@@ -85,30 +97,36 @@ class _BasePortExposure(BaseULObject):
 
     @classmethod
     def from_tuple(cls, tple, container):
-        name, component_name, port_name = tple
+        component_name, port_name = tple[:2]
+        try:
+            name = tple[2]
+        except IndexError:
+            name = None
         port = container.sub_component(component_name).component_class.port(
             port_name)
         if isinstance(port, AnalogSendPort):
-            exposure = AnalogSendPortExposure(name, component_name, port_name)
+            exposure = AnalogSendPortExposure(
+                name=name, component=component_name, port=port_name)
         elif isinstance(port, AnalogReceivePort):
-            exposure = AnalogReceivePortExposure(name, component_name,
-                                                 port_name)
+            exposure = AnalogReceivePortExposure(
+                name=name, component=component_name, port=port_name)
         elif isinstance(port, AnalogReducePort):
-            exposure = AnalogReducePortExposure(name, component_name,
-                                                port_name)
+            exposure = AnalogReducePortExposure(
+                name=name, component=component_name, port=port_name)
         elif isinstance(port, EventSendPort):
-            exposure = EventSendPortExposure(name, component_name, port_name)
+            exposure = EventSendPortExposure(
+                name=name, component=component_name, port=port_name)
         elif isinstance(port, EventReceivePort):
-            exposure = EventReceivePortExposure(name, component_name,
-                                                port_name)
+            exposure = EventReceivePortExposure(
+                name=name, component=component_name, port=port_name)
         else:
             assert False
         return exposure
 
     def bind(self, container):
-        self._sub_component = container[self._component_name]
-        self._port = self._sub_component.component_class.port(self._port_name)
-        self._component_name = None
+        self._sub_component = container[self.sub_component_name]
+        self._port = self._sub_component.component_class.port(self.port_name)
+        self._sub_component_name = None
         self._port_name = None
 
 

@@ -2,7 +2,7 @@ from itertools import chain
 import operator
 from collections import defaultdict
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLInvalidElementTypeException)
+    NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException)
 
 
 class BaseNineMLObject(object):
@@ -218,7 +218,7 @@ class ContainerObject(object):
                 # aliases/state variables
                 if not isinstance(elem, SendPortBase):
                     return elem
-            except KeyError:
+            except NineMLNameError:
                 pass
         raise KeyError("'{}' was not found in '{}' {} object"
                        .format(name, self._name, as_class.__name__))
@@ -254,10 +254,10 @@ class ContainerObject(object):
             if hasattr(cls, 'class_to_member'):
                 try:
                     return self.element(name, as_class=cls)
-                except KeyError:
+                except NineMLNameError:
                     pass
-        raise KeyError("'{}' was not found in '{}' {} object"
-                       .format(name, self._name, type(self).__name__))
+        raise NineMLNameError("'{}' was not found in '{}' {} object"
+                              .format(name, self._name, type(self).__name__))
 
     def __contains__(self, element):
         """

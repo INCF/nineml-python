@@ -14,12 +14,13 @@ import os.path
 import unittest
 from nineml.user import (
     Projection, Network, DynamicsProperties, ConnectionRuleProperties,
-    Population)
+    Population, DynamicsArray, ConnectionGroup, MultiDynamics)
 from nineml.abstraction import (
     Parameter, Dynamics, Regime, On, OutputEvent, StateVariable,
     StateAssignment, Constant, Alias)
 from nineml.abstraction.ports import (
-    AnalogSendPort, AnalogReceivePort, EventSendPort, EventReceivePort)
+    AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
+    EventReceivePort)
 from nineml import units as un
 from nineml import Document
 from nineml.units import ms, mV, nA, Hz, Mohm
@@ -116,6 +117,10 @@ class TestNetwork(unittest.TestCase):
 
     def test_component_arrays_and_connection_groups(self):
 
+        # =====================================================================
+        # Dynamics components
+        # =====================================================================
+
         cell1_cls = Dynamics(
             name='Cell',
             state_variables=[
@@ -125,7 +130,8 @@ class TestNetwork(unittest.TestCase):
                     'dSV1/dt = -SV1 / P1 + i_ext / P2',
                     transitions=[On('SV1 > P3', do=[OutputEvent('spike')])],
                     name='R1')],
-            analog_ports=[AnalogReceivePort('i_ext', dimension=un.current),
+            analog_ports=[AnalogReducePort('i_ext', dimension=un.current,
+                                           operator='+'),
                           EventSendPort('spike')],
             parameters=[Parameter('P1', dimension=un.time),
                         Parameter('P2', dimension=un.capacitance),
@@ -140,7 +146,8 @@ class TestNetwork(unittest.TestCase):
                     'dSV1/dt = -SV1 ^ 2 / P1 + i_ext / P2',
                     transitions=[On('SV1 > P3', do=[OutputEvent('spike')])],
                     name='R1')],
-            analog_ports=[AnalogReceivePort('i_ext', dimension=un.current),
+            analog_ports=[AnalogReducePort('i_ext', dimension=un.current,
+                                           operator='+'),
                           EventSendPort('spike')],
             parameters=[Parameter('P1', dimension=un.time * un.voltage),
                         Parameter('P2', dimension=un.capacitance),
@@ -197,7 +204,6 @@ class TestNetwork(unittest.TestCase):
                 Parameter(name='tauLTD', dimension=un.time),
                 Parameter(name='aLTP', dimension=un.dimensionless)],
             analog_ports=[
-                AnalogReceivePort(dimension=un.dimensionless, name="w"),
                 AnalogSendPort(dimension=un.dimensionless, name="wsyn"),
                 AnalogSendPort(dimension=un.current, name="wsyn_current")],
             event_ports=[
@@ -251,6 +257,10 @@ class TestNetwork(unittest.TestCase):
                                               'muLTP': 3,
                                               'tauLTD': 20 * un.ms,
                                               'aLTP': 4})
+
+        # =====================================================================
+        # Populations and Projections
+        # =====================================================================
 
         pop1 = Population(
             name="Pop1",
@@ -320,9 +330,70 @@ class TestNetwork(unittest.TestCase):
                 ('plasticity', 'fixed_weight', 'response', 'weight')],
             delay=1 * un.ms)
 
+        # =====================================================================
+        # Construct the Network
+        # =====================================================================
+
         network = Network(
             name="Net",
             populations=(pop1, pop2, pop3),
             projections=(proj1, proj2, proj3, proj4))
 
-        print network
+        # =====================================================================
+        # Create expected dynamics arrays
+        # =====================================================================
+
+        dyn_array1 = DynamicsArray(
+            "Pop1", pop1.size,
+            MultiDynamics(
+                "Pop1Dynamics",
+                sub_components={'cell': cell1_cls,
+                                'Proj2_psr': exc_cls, 'Proj3_psr': exc_cls,
+                                'Proj2_pls': static_cls,
+                                'Proj3_pls': stdp_cls},
+                port_connections=[
+                    ('Proj2_psr', 'i', 'cell', 'i_ext'),
+                    ('Proj2_pls', 'fixed_weight', 'Proj2_psr', 'weight'),
+                    ('Proj3_psr', 'i', 'cell', 'i_ext'),
+                    ('Proj3_pls', 'wsyn_current', 'Proj3_psr', 'weight')],
+                port_exposures=[
+                    ('Proj2_psr', 'spike'),
+                    ('Proj3_psr', 'spike')]))
+
+        dyn_array2 = DynamicsArray(
+            "Pop2", pop2.size,
+            MultiDynamics(
+                "Pop2Dynamics",
+                sub_components={'cell': cell2_cls,
+                                'Proj1_psr': exc_cls, 'Proj4_psr': exc_cls,
+                                'Proj1_pls': static_cls,
+                                'Proj4_pls': static_cls},
+                port_connections=[
+                    ('Proj1_psr', 'i', 'cell', 'i_ext'),
+                    ('Proj1_pls', 'fixed_weight', 'Proj1_psr', 'weight'),
+                    ('Proj4_psr', 'i', 'cell', 'i_ext'),
+                    ('Proj4_pls', 'fixed_weight', 'Proj4_psr', 'weight')],
+                port_exposures=[
+                    ('Proj1_psr', 'spike'),
+                    ('Proj4_psr', 'spike')]))
+
+        dyn_array3 = DynamicsArray(
+            "Pop3", pop3.size, cell1_cls)
+
+        # =====================================================================
+        # Test equality between network automatically generated dynamics arrays
+        # and manually generated expected one
+        # =====================================================================
+
+        self.assertEqual(
+            network.dynamics_array('Pop1'), dyn_array1,
+            "Mismatch between generated and expected dynamics arrays:\n {}"
+            .format(network.dynamics_array('Pop1').find_mismatch(dyn_array1)))
+        self.assertEqual(
+            network.dynamics_array('Pop2'), dyn_array2,
+            "Mismatch between generated and expected dynamics arrays:\n {}"
+            .format(network.dynamics_array('Pop2').find_mismatch(dyn_array2)))
+        self.assertEqual(
+            network.dynamics_array('Pop3'), dyn_array3,
+            "Mismatch between generated and expected dynamics arrays:\n {}"
+            .format(network.dynamics_array('Pop3').find_mismatch(dyn_array3)))
