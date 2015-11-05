@@ -69,8 +69,8 @@ class BaseNineMLObject(object):
         else:
             result = ''
         if self.element_name != other.element_name:
-            result += "mismatch in element_name, '{}' and '{}'".format(
-                self.element_name, other.element_name)
+            result += ("mismatch in element_name, self:'{}' and other:'{}'"
+                       .format(self.element_name, other.element_name))
         else:
             for attr_name in self.__class__.defining_attributes:
                 self_attr = getattr(self, attr_name)
@@ -88,9 +88,14 @@ class BaseNineMLObject(object):
             result += s.find_mismatch(o, indent=indent + '  ')
         elif isinstance(s, dict):
             if set(s.keys()) != set(o.keys()):
-                result += ('keys do not match:\n{}  {}\n{}  {})'
-                           .format(indent, set(s.keys()), indent,
-                                   set(o.keys())))
+                result += (
+                    "keys do not match:\n{}  self:{}\n{}  other:{}".format(
+                        indent,
+                        ", ".join("'{}'".format(k) if isinstance(k, basestring)
+                                  else str(k) for k in sorted(s.keys())),
+                        indent,
+                        ", ".join("'{}'".format(k) if isinstance(k, basestring)
+                                  else str(k) for k in sorted(o.keys()))))
             else:
                 for k in s:
                     if s[k] != o[k]:
@@ -99,7 +104,8 @@ class BaseNineMLObject(object):
                                                        indent + '  ')
         elif isinstance(s, list):
             if len(s) != len(o):
-                result += 'differ in length ({} to {})'.format(len(s), len(o))
+                result += ('differ in length (self:{} to other:{})'
+                           .format(len(s), len(o)))
             else:
                 for i, (s_elem, o_elem) in enumerate(zip(s, o)):
                     if s_elem != o_elem:
@@ -107,7 +113,7 @@ class BaseNineMLObject(object):
                         result += cls._unwrap_mismatch(s_elem, o_elem,
                                                        indent + '  ')
         else:
-            result += "{} != {}".format(s, o)
+            result += "self:{} != other:{}".format(s, o)
         return result
 
 

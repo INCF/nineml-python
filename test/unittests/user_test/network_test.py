@@ -293,7 +293,8 @@ class TestNetwork(unittest.TestCase):
                             'P3': -20 * un.mV}))
 
         proj1 = Projection(
-            name="Proj1", pre=pop1, post=pop2, response=exc, plasticity=static,
+            name="Proj1",
+            pre=pop1, post=pop2, response=exc, plasticity=static,
             connectivity=self.all_to_all,
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
@@ -302,7 +303,8 @@ class TestNetwork(unittest.TestCase):
             delay=1 * un.ms)
 
         proj2 = Projection(
-            name="Proj2", pre=pop2, post=pop1, response=inh, plasticity=static,
+            name="Proj2",
+            pre=pop2, post=pop1, response=inh, plasticity=static,
             connectivity=self.all_to_all,
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
@@ -348,34 +350,38 @@ class TestNetwork(unittest.TestCase):
             MultiDynamics(
                 "Pop1Dynamics",
                 sub_components={'cell': cell1_cls,
-                                'Proj2_psr': exc_cls, 'Proj3_psr': exc_cls,
+                                'Proj2_psr': inh_cls,
+                                'Proj4_psr': exc_cls,
                                 'Proj2_pls': static_cls,
-                                'Proj3_pls': stdp_cls},
+                                'Proj4_pls': static_cls},
                 port_connections=[
                     ('Proj2_psr', 'i', 'cell', 'i_ext'),
                     ('Proj2_pls', 'fixed_weight', 'Proj2_psr', 'weight'),
-                    ('Proj3_psr', 'i', 'cell', 'i_ext'),
-                    ('Proj3_pls', 'wsyn_current', 'Proj3_psr', 'weight')],
+                    ('Proj4_psr', 'i', 'cell', 'i_ext'),
+                    ('Proj4_pls', 'fixed_weight', 'Proj4_psr', 'weight')],
                 port_exposures=[
+                    ('cell', 'spike'),
                     ('Proj2_psr', 'spike'),
-                    ('Proj3_psr', 'spike')]))
+                    ('Proj4_psr', 'spike')]))
 
         dyn_array2 = DynamicsArray(
             "Pop2", pop2.size,
             MultiDynamics(
                 "Pop2Dynamics",
                 sub_components={'cell': cell2_cls,
-                                'Proj1_psr': exc_cls, 'Proj4_psr': exc_cls,
+                                'Proj1_psr': exc_cls,
+                                'Proj3_psr': exc_cls,
                                 'Proj1_pls': static_cls,
-                                'Proj4_pls': static_cls},
+                                'Proj3_pls': stdp_cls},
                 port_connections=[
                     ('Proj1_psr', 'i', 'cell', 'i_ext'),
                     ('Proj1_pls', 'fixed_weight', 'Proj1_psr', 'weight'),
-                    ('Proj4_psr', 'i', 'cell', 'i_ext'),
-                    ('Proj4_pls', 'fixed_weight', 'Proj4_psr', 'weight')],
+                    ('Proj3_psr', 'i', 'cell', 'i_ext'),
+                    ('Proj3_pls', 'wsyn_current', 'Proj3_psr', 'weight')],
                 port_exposures=[
+                    ('cell', 'spike'),
                     ('Proj1_psr', 'spike'),
-                    ('Proj4_psr', 'spike')]))
+                    ('Proj3_psr', 'spike')]))
 
         dyn_array3 = DynamicsArray(
             "Pop3", pop3.size, cell1_cls)
