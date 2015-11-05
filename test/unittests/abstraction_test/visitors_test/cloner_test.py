@@ -75,8 +75,8 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
                           sub_components={'c1': c, 'c2': c},
                           port_connections=[('c1', 'C1', 'c2', 'cIn1'),
                                             ('c2', 'emit', 'c1', 'spikein')],
-                          port_exposures=[('cIn2_c2', 'c2', 'cIn2'),
-                                          ('cIn1_c1', 'c1', 'cIn1')])
+                          port_exposures=[('c2', 'cIn2', 'cIn2_c2'),
+                                          ('c1', 'cIn1', 'cIn1_c1')])
 
         b_clone = DynamicsCloner().visit(b)
 #         c1_clone = b_clone.get_subnode('c1')

@@ -67,7 +67,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         assert isinstance(pre, Population)
         assert isinstance(post, Population)
         assert isinstance(response, DynamicsProperties)
-        assert isinstance(plasticity, DynamicsProperties)
+        assert isinstance(plasticity, (DynamicsProperties, type(None)))
         self._name = name
         self._pre = pre
         self._post = post

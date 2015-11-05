@@ -7,8 +7,8 @@ from nineml.user.multi.component import (
     MultiDynamicsProperties, SubDynamicsProperties, MultiDynamics,
     AnalogReceivePortExposure)
 from nineml.abstraction import (
-    Dynamics, Regime, AnalogReceivePort, OutputEvent, AnalogSendPort, On,
-    StateAssignment)
+    Dynamics, Regime, AnalogReceivePort, AnalogReducePort, OutputEvent,
+    AnalogSendPort, On, StateAssignment, Constant)
 from nineml.user.port_connections import AnalogPortConnection
 from nineml.user.component import DynamicsProperties
 from nineml.exceptions import NineMLRuntimeError
@@ -85,7 +85,7 @@ class MultiDynamicsXML_test(unittest.TestCase):
         comp1 = MultiDynamicsProperties(
             name='test',
             sub_dynamics_properties={'a': self.a_props, 'b': self.b_props},
-            port_exposures=[("b_ARP2", "b", "ARP2")],
+            port_exposures=[("b", "ARP2", "b_ARP2")],
             port_connections=[('a', 'A1', 'b', 'ARP1'),
                               ('b', 'A1', 'a', 'ARP1'),
                               ('b', 'A3', 'a', 'ARP2')])
@@ -140,10 +140,10 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
             name='E', sub_components={'a': c, 'b': d},
             port_connections=[('a', 'C1', 'b', 'dIn1'),
                               ('a', 'C2', 'b', 'dIn2')],
-            port_exposures=[('ARP1', 'a', 'cIn1'),
-                            ('ARP2', 'a', 'cIn2'),
-                            ('ERP1', 'a', 'spikein'),
-                            ('ESP1', 'a', 'emit')])
+            port_exposures=[('a', 'cIn1', 'ARP1'),
+                            ('a', 'cIn2', 'ARP2'),
+                            ('a', 'spikein', 'ERP1'),
+                            ('a', 'emit', 'ESP1')])
 
         # =====================================================================
         # General properties
@@ -247,6 +247,29 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
                          set(['cp1__a', 'cp2__a', 'dp1__b', 'dp2__b']))
         self.assertEqual(set(e.state_variable_names),
                          set(['SV1__a', 'SV1__b']))
+
+    def test_unused_reduce_ports(self):
+        """
+        Tests whether empty reduce ports are "closed" by inserting a zero-
+        valued constant in their stead
+        """
+        test_dyn = Dynamics(
+            name='TestDyn',
+            regimes=[
+                Regime(
+                    'dSV1/dt = -P1/t + ADP1', name='r1')],
+            analog_ports=[AnalogReducePort('ADP1', un.per_time)],
+            parameters=['P1']
+        )
+
+        test_multi = MultiDynamics(
+            name="TestMultiDyn",
+            sub_components={'cell': test_dyn})
+
+        self.assert_(Constant('ADP1__cell', 0.0, un.per_time.origin.units)
+                     in test_multi.constants,
+                     "Zero-valued constant wasn't inserted for unused reduce "
+                     "port")
 
 #     def test_Flattening2(self):
 #         c = Dynamics(

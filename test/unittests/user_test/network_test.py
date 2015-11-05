@@ -41,79 +41,79 @@ class TestNetwork(unittest.TestCase):
         self.all_to_all = ConnectionRuleProperties(
             "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})
 
-    def test_xml_roundtrip(self):
-
-        delay = 1.5 * ms     # (ms) global delay for all neurons in the group
-        J = 0.1              # (mV) EPSP size
-        Jeff = 24.0 * J      # (nA) synaptic weight
-        g = 5.0              # relative strength of inhibitory synapses
-#         eta = 2.0            # nu_ext / nu_thresh
-        Je = Jeff            # excitatory weights
-        Ji = -g * Je         # inhibitory weights
-        theta = 20.0 * mV         # firing thresholds
-        tau = 20.0 * ms           # membrane time constant
-        tau_syn = 0.5 * ms        # synapse time constant
-        input_rate = 50.0 * Hz    # mean input spiking rate
-
-        celltype = DynamicsProperties(
-            name="nrn",
-            definition=path.join(self.xml_dir, 'BrunelIaF.xml'),
-            properties={'tau': tau, 'theta': theta,
-                        'tau_rp': 2.0 * ms, 'Vreset': 10.0 * mV,
-                        'R': 1.5 * Mohm},
-            initial_values={"V": 0.0 * mV,
-                            "t_rpend": 0.0 * ms})
-        ext_stim = DynamicsProperties(
-            name="stim",
-            definition=path.join(self.xml_dir, "Poisson.xml"),
-            properties={'rate': input_rate},
-            initial_values={"t_next": 0.5 * ms})
-        psr = DynamicsProperties(
-            name="syn",
-            definition=path.join(self.xml_dir, "AlphaPSR.xml"),
-            properties={'tau_syn': tau_syn},
-            initial_values={"A": 0.0 * nA, "B": 0.0 * nA})
-
-        p1 = Population("Exc", 1, celltype)
-        p2 = Population("Inh", 1, celltype)
-        inpt = Population("Ext", 1, ext_stim)
-
-        static_exc = DynamicsProperties(
-            "ExcitatoryPlasticity",
-            path.join(self.xml_dir, "StaticConnection.xml"), {},
-            initial_values={"weight": Je * nA})
-        static_inh = DynamicsProperties(
-            "InhibitoryPlasticity",
-            path.join(self.xml_dir, "StaticConnection.xml"),
-            initial_values={"weight": Ji * nA})
-
-        exc_prj = Projection(
-            "Excitation", pre=inpt, post=p1, response=psr,
-            plasticity=static_exc, connectivity=self.all_to_all, delay=delay,
-            port_connections=[('response', 'Isyn', 'post', 'Isyn'),
-                              ('plasticity', 'weight', 'response', 'weight')])
-        inh_prj = Projection(
-            "Inhibition", pre=inpt, post=p2, response=psr,
-            plasticity=static_inh, connectivity=self.all_to_all, delay=delay,
-            port_connections=[('response', 'Isyn', 'post', 'Isyn'),
-                              ('plasticity', 'weight', 'response', 'weight')])
-        model = Network("brunel_network")
-        model.add(inpt)
-        model.add(p1)
-        model.add(p2)
-        model.add(exc_prj)
-        model.add(inh_prj)
-        doc = Document(model, static_exc, static_inh, exc_prj,
-                       inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
-        xml = doc.to_xml()
-        loaded_doc = Document.load(xml)
-        if loaded_doc != doc:
-            mismatch = loaded_doc.find_mismatch(doc)
-        else:
-            mismatch = ''
-        self.assertEqual(loaded_doc, doc,
-                         "Brunel network model failed xml roundtrip:\n\n{}"
-                         .format(mismatch))
+#     def test_xml_roundtrip(self):
+# 
+#         delay = 1.5 * ms     # (ms) global delay for all neurons in the group
+#         J = 0.1              # (mV) EPSP size
+#         Jeff = 24.0 * J      # (nA) synaptic weight
+#         g = 5.0              # relative strength of inhibitory synapses
+# #         eta = 2.0            # nu_ext / nu_thresh
+#         Je = Jeff            # excitatory weights
+#         Ji = -g * Je         # inhibitory weights
+#         theta = 20.0 * mV         # firing thresholds
+#         tau = 20.0 * ms           # membrane time constant
+#         tau_syn = 0.5 * ms        # synapse time constant
+#         input_rate = 50.0 * Hz    # mean input spiking rate
+# 
+#         celltype = DynamicsProperties(
+#             name="nrn",
+#             definition=path.join(self.xml_dir, 'BrunelIaF.xml'),
+#             properties={'tau': tau, 'theta': theta,
+#                         'tau_rp': 2.0 * ms, 'Vreset': 10.0 * mV,
+#                         'R': 1.5 * Mohm},
+#             initial_values={"V": 0.0 * mV,
+#                             "t_rpend": 0.0 * ms})
+#         ext_stim = DynamicsProperties(
+#             name="stim",
+#             definition=path.join(self.xml_dir, "Poisson.xml"),
+#             properties={'rate': input_rate},
+#             initial_values={"t_next": 0.5 * ms})
+#         psr = DynamicsProperties(
+#             name="syn",
+#             definition=path.join(self.xml_dir, "AlphaPSR.xml"),
+#             properties={'tau_syn': tau_syn},
+#             initial_values={"A": 0.0 * nA, "B": 0.0 * nA})
+# 
+#         p1 = Population("Exc", 1, celltype)
+#         p2 = Population("Inh", 1, celltype)
+#         inpt = Population("Ext", 1, ext_stim)
+# 
+#         static_exc = DynamicsProperties(
+#             "ExcitatoryPlasticity",
+#             path.join(self.xml_dir, "StaticConnection.xml"), {},
+#             initial_values={"weight": Je * nA})
+#         static_inh = DynamicsProperties(
+#             "InhibitoryPlasticity",
+#             path.join(self.xml_dir, "StaticConnection.xml"),
+#             initial_values={"weight": Ji * nA})
+# 
+#         exc_prj = Projection(
+#             "Excitation", pre=inpt, post=p1, response=psr,
+#             plasticity=static_exc, connectivity=self.all_to_all, delay=delay,
+#             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
+#                               ('plasticity', 'weight', 'response', 'weight')])
+#         inh_prj = Projection(
+#             "Inhibition", pre=inpt, post=p2, response=psr,
+#             plasticity=static_inh, connectivity=self.all_to_all, delay=delay,
+#             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
+#                               ('plasticity', 'weight', 'response', 'weight')])
+#         model = Network("brunel_network")
+#         model.add(inpt)
+#         model.add(p1)
+#         model.add(p2)
+#         model.add(exc_prj)
+#         model.add(inh_prj)
+#         doc = Document(model, static_exc, static_inh, exc_prj,
+#                        inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
+#         xml = doc.to_xml()
+#         loaded_doc = Document.load(xml)
+#         if loaded_doc != doc:
+#             mismatch = loaded_doc.find_mismatch(doc)
+#         else:
+#             mismatch = ''
+#         self.assertEqual(loaded_doc, doc,
+#                          "Brunel network model failed xml roundtrip:\n\n{}"
+#                          .format(mismatch))
 
     def test_component_arrays_and_connection_groups(self):
 
@@ -144,14 +144,16 @@ class TestNetwork(unittest.TestCase):
             regimes=[
                 Regime(
                     'dSV1/dt = -SV1 ^ 2 / P1 + i_ext / P2',
-                    transitions=[On('SV1 > P3', do=[OutputEvent('spike')])],
+                    transitions=[On('SV1 > P3', do=[OutputEvent('spike')]),
+                                 On('SV1 > P4',
+                                    do=[OutputEvent('double_spike')])],
                     name='R1')],
             analog_ports=[AnalogReducePort('i_ext', dimension=un.current,
-                                           operator='+'),
-                          EventSendPort('spike')],
+                                           operator='+')],
             parameters=[Parameter('P1', dimension=un.time * un.voltage),
                         Parameter('P2', dimension=un.capacitance),
-                        Parameter('P3', dimension=un.voltage)])
+                        Parameter('P3', dimension=un.voltage),
+                        Parameter('P4', dimension=un.voltage)])
 
         exc_cls = Dynamics(
             name="Exc",
@@ -161,7 +163,9 @@ class TestNetwork(unittest.TestCase):
                     name="default",
                     time_derivatives=[
                         "dSV1/dt = SV1/tau"],
-                    transitions=On('spike', do=["SV1 = SV1 + weight"]))],
+                    transitions=[
+                        On('spike', do=["SV1 = SV1 + weight"]),
+                        On('double_spike', do=['SV1 = SV1 + 2 * weight'])])],
             state_variables=[
                 StateVariable('SV1', dimension=un.current),
             ],
@@ -280,7 +284,8 @@ class TestNetwork(unittest.TestCase):
                 definition=cell2_cls,
                 properties={'P1': 20 * un.ms * un.mV,
                             'P2': 50 * un.uF,
-                            'P3': -40 * un.mV}))
+                            'P3': -40 * un.mV,
+                            'P4': -20 * un.mV}))
 
         pop3 = Population(
             name="Pop3",
@@ -294,7 +299,7 @@ class TestNetwork(unittest.TestCase):
 
         proj1 = Projection(
             name="Proj1",
-            pre=pop1, post=pop2, response=exc, plasticity=static,
+            pre=pop1, post=pop2, response=inh, plasticity=static,
             connectivity=self.all_to_all,
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
@@ -304,10 +309,11 @@ class TestNetwork(unittest.TestCase):
 
         proj2 = Projection(
             name="Proj2",
-            pre=pop2, post=pop1, response=inh, plasticity=static,
+            pre=pop2, post=pop1, response=exc, plasticity=static,
             connectivity=self.all_to_all,
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
+                ('pre', 'double_spike', 'response', 'double_spike'),
                 ('response', 'i', 'post', 'i_ext'),
                 ('plasticity', 'fixed_weight', 'response', 'weight')],
             delay=1 * un.ms)
@@ -319,7 +325,8 @@ class TestNetwork(unittest.TestCase):
             port_connections=[
                 ('pre', 'spike', 'response', 'spike'),
                 ('response', 'i', 'post', 'i_ext'),
-                ('plasticity', 'wsyn_current', 'response', 'weight')],
+                ('plasticity', 'wsyn_current', 'response', 'weight'),
+                ('pre', 'spike', 'plasticity', 'incoming_spike')],
             delay=1 * un.ms)
 
         proj4 = Projection(
@@ -350,7 +357,7 @@ class TestNetwork(unittest.TestCase):
             MultiDynamics(
                 "Pop1Dynamics",
                 sub_components={'cell': cell1_cls,
-                                'Proj2_psr': inh_cls,
+                                'Proj2_psr': exc_cls,
                                 'Proj4_psr': exc_cls,
                                 'Proj2_pls': static_cls,
                                 'Proj4_pls': static_cls},
@@ -361,6 +368,7 @@ class TestNetwork(unittest.TestCase):
                     ('Proj4_pls', 'fixed_weight', 'Proj4_psr', 'weight')],
                 port_exposures=[
                     ('cell', 'spike'),
+                    ('Proj2_psr', 'double_spike'),
                     ('Proj2_psr', 'spike'),
                     ('Proj4_psr', 'spike')]))
 
@@ -369,7 +377,7 @@ class TestNetwork(unittest.TestCase):
             MultiDynamics(
                 "Pop2Dynamics",
                 sub_components={'cell': cell2_cls,
-                                'Proj1_psr': exc_cls,
+                                'Proj1_psr': inh_cls,
                                 'Proj3_psr': exc_cls,
                                 'Proj1_pls': static_cls,
                                 'Proj3_pls': stdp_cls},
@@ -380,17 +388,22 @@ class TestNetwork(unittest.TestCase):
                     ('Proj3_pls', 'wsyn_current', 'Proj3_psr', 'weight')],
                 port_exposures=[
                     ('cell', 'spike'),
+                    ('cell', 'double_spike'),
                     ('Proj1_psr', 'spike'),
-                    ('Proj3_psr', 'spike')]))
+                    ('Proj3_psr', 'spike'),
+                    ('Proj3_pls', 'incoming_spike')]))
 
         dyn_array3 = DynamicsArray(
-            "Pop3", pop3.size, cell1_cls)
+            "Pop3", pop3.size, MultiDynamics(
+                'Pop3Dynamics',
+                sub_components={'cell': cell1_cls},
+                port_exposures=[('cell', 'spike')]))
 
         # =====================================================================
         # Test equality between network automatically generated dynamics arrays
         # and manually generated expected one
         # =====================================================================
-
+        self.assertEqual(network.num_dynamics_arrays, 3)
         self.assertEqual(
             network.dynamics_array('Pop1'), dyn_array1,
             "Mismatch between generated and expected dynamics arrays:\n {}"
@@ -403,3 +416,8 @@ class TestNetwork(unittest.TestCase):
             network.dynamics_array('Pop3'), dyn_array3,
             "Mismatch between generated and expected dynamics arrays:\n {}"
             .format(network.dynamics_array('Pop3').find_mismatch(dyn_array3)))
+        # =====================================================================
+        # Test equality between network automatically generated connection
+        # groups and manually generated expected ones
+        # =====================================================================
+        self.assertEqual(network.num_connection_groups, 6)

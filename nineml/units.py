@@ -267,6 +267,11 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
             name += '_per_' + '_'.join(name_den)
         return Dimension(name, **powers)
 
+    @property
+    def origin(self):
+        """Returns a Quantity that equal to the origin of this dimension"""
+        return Quantity(0.0, Unit(self.name + 'SIUnit', self, power=0))
+
 
 class Unit(BaseNineMLObject, DocumentLevelObject):
     """

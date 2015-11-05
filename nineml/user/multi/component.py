@@ -23,7 +23,7 @@ from nineml.annotations import VALIDATE_DIMENSIONS
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, EventReceivePort,
     StateVariable, OnEvent, OnCondition, OutputEvent, StateAssignment,
-    Trigger)
+    Trigger, Constant)
 from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
     AnalogReceivePortExposure, AnalogSendPortExposure, _BasePortExposure,
@@ -449,8 +449,8 @@ class MultiDynamics(Dynamics):
         'EventReceivePortExposure': 'event_receive_port'}
     core_type = Dynamics
 
-    def __init__(self, name, sub_components, port_connections,
-                 port_exposures=None, document=None, validate_dimensions=True):
+    def __init__(self, name, sub_components, port_connections=[],
+                 port_exposures=[], document=None, validate_dimensions=True):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
@@ -475,32 +475,29 @@ class MultiDynamics(Dynamics):
         # =====================================================================
         # Save port exposurs into separate member dictionaries
         # =====================================================================
-        if port_exposures is not None:
-            for exposure in port_exposures:
-                if isinstance(exposure, tuple):
-                    exposure = _BasePortExposure.from_tuple(exposure, self)
-                exposure.bind(self)
-                if isinstance(exposure, AnalogSendPortExposure):
-                    self._analog_send_ports[exposure.name] = exposure
-                elif isinstance(exposure, AnalogReceivePortExposure):
-                    self._analog_receive_ports[
-                        exposure.name] = exposure
-                elif isinstance(exposure, AnalogReducePortExposure):
-                    self._analog_reduce_ports[
-                        exposure.name] = exposure
-                elif isinstance(exposure, EventSendPortExposure):
-                    self._event_send_ports[exposure.name] = exposure
-                elif isinstance(exposure, EventReceivePortExposure):
-                    self._event_receive_ports[
-                        exposure.name] = exposure
-                else:
-                    raise NineMLRuntimeError(
-                        "Unrecognised port exposure '{}'".format(exposure))
+        for exposure in port_exposures:
+            if isinstance(exposure, tuple):
+                exposure = _BasePortExposure.from_tuple(exposure, self)
+            exposure.bind(self)
+            if isinstance(exposure, AnalogSendPortExposure):
+                self._analog_send_ports[exposure.name] = exposure
+            elif isinstance(exposure, AnalogReceivePortExposure):
+                self._analog_receive_ports[
+                    exposure.name] = exposure
+            elif isinstance(exposure, AnalogReducePortExposure):
+                self._analog_reduce_ports[
+                    exposure.name] = exposure
+            elif isinstance(exposure, EventSendPortExposure):
+                self._event_send_ports[exposure.name] = exposure
+            elif isinstance(exposure, EventReceivePortExposure):
+                self._event_receive_ports[
+                    exposure.name] = exposure
+            else:
+                raise NineMLRuntimeError(
+                    "Unrecognised port exposure '{}'".format(exposure))
         # =====================================================================
         # Set port connections
         # =====================================================================
-        # Insert an empty list for each event and reduce port in the combined
-        # model
         # Parse port connections (from tuples if required), bind them to the
         # ports within the subcomponents and append them to their respective
         # member dictionaries
@@ -593,13 +590,25 @@ class MultiDynamics(Dynamics):
             (p.alias for p in self.analog_receive_ports),
             (p.alias for p in self.analog_reduce_ports),
             (_LocalAnalogPortConnections(
-                rcv[1], rcv[0], snd_dct.values(), self)
+                receive_port=rcv[1], receiver=rcv[0],
+                port_connections=snd_dct.values(), parent=self)
              for rcv, snd_dct in self._analog_port_connections.iteritems()),
             *[sc.aliases for sc in self.sub_components])
 
     @property
     def constants(self):
-        return chain(*[sc.constants for sc in self.sub_components])
+        # We need to insert a 0-valued constant for each internal reduce port
+        # that doesn't receive any connections
+        unused_reduce_ports = []
+        for sub_comp in self.sub_components:
+            for port in sub_comp.analog_reduce_ports:
+                if (sub_comp.name,
+                        port.name) not in self._analog_port_connections:
+                    unused_reduce_ports.append(
+                        Constant(append_namespace(port.name, sub_comp.name),
+                                 0.0, port.dimension.origin.units))
+        return chain(unused_reduce_ports,
+                     *[sc.constants for sc in self.sub_components])
 
     @property
     def state_variables(self):
@@ -702,8 +711,25 @@ class MultiDynamics(Dynamics):
         return alias
 
     def constant(self, name):
-        _, comp_name = split_namespace(name)
-        return self.sub_component(comp_name).constant(name)
+        port_name, comp_name = split_namespace(name)
+        sub_component = self.sub_component(comp_name)
+        try:
+            return sub_component.constant(name)
+        except NineMLNameError:
+            try:
+                reduce_port = sub_component.analog_reduce_port(port_name)
+                if (comp_name, port_name) not in self._analog_port_connections:
+                    return Constant(name, 0.0,
+                                    reduce_port.dimension.origin.units)
+                else:
+                    raise NineMLNameError(
+                        "'{}' corresponds to a AnalogReduce port, but one that"
+                        "is used and so is represented by an Alias instead of"
+                        "a Constant in '{}'".format(port_name, comp_name))
+            except NineMLNameError:
+                raise NineMLNameError(
+                    "Could not find Constant '{}' in '{}"
+                    .format(name, self.name))
 
     def regime(self, name):
         try:

@@ -283,8 +283,11 @@ class DimensionalityComponentValidator(BaseValidator):
               isinstance(expr, sympy.Rational)):
             dims = 1
         elif isinstance(element, BaseNineMLObject):
-            assert False, ("{} was not added to pre-determined dimensions"
-                           .format(element))
+            try:
+                assert False, ("{} was not added to pre-determined dimensions"
+                               .format(element))
+            except:
+                raise
         else:
             raise NotImplementedError(
                 "Unrecognised type {} of expression '{}'"
