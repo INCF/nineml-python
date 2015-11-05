@@ -9,7 +9,7 @@ from ..component import Property
 from nineml.abstraction import (
     Alias, TimeDerivative, Regime, OnEvent, OnCondition, StateAssignment,
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
-from nineml.exceptions import NineMLImmutableError, NineMLNamespaceError
+from nineml.exceptions import NineMLImmutableError, NineMLNameError
 from nineml.abstraction.expressions import reserved_identifiers
 
 
@@ -48,7 +48,7 @@ def split_namespace(identifier_in_namespace):
     """
     parts = double_underscore_re.split(identifier_in_namespace)
     if len(parts) < 2:
-        raise NineMLNamespaceError(
+        raise NineMLNameError(
             "Identifier '{}' does not belong to a sub-namespace"
             .format(identifier_in_namespace))
     name = '__'.join(parts[:-1])
@@ -90,7 +90,7 @@ def make_regime_name(sub_regimes_dict):
 def split_multi_regime_name(name):
     parts = triple_underscore_re.split(name)[:-1]
     if not parts:
-        raise NineMLNamespaceError(
+        raise NineMLNameError(
             "'{}' is not a multi-regime name".format(name))
     return [more_than_triple_underscore_re.sub('_\1', p) for p in parts]
 
@@ -124,7 +124,7 @@ class _NamespaceNamed(_NamespaceObject):
 
     @property
     def _name(self):
-        return self.name
+        return self.sub_component.append_namespace(self._object._name)
 
     @property
     def relative_name(self):
