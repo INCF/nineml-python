@@ -30,6 +30,7 @@ class EventPortsDynamicsValidator(BaseDynamicsValidator):
         self.output_events = []
         self.input_events = []
 
+        # Visit all elements of the component class
         self.visit(component_class)
 
         # Check that each output event has a corresponding event_port with a
@@ -48,18 +49,19 @@ class EventPortsDynamicsValidator(BaseDynamicsValidator):
                     "Can't find port definition matching input event: {}"
                     .format(input_event))
 
-        # Check that each Event port emits/recieves at least one
-        for event_ports in (self.event_send_ports, self.event_receive_ports):
-            for evt_port_name in event_ports.keys():
-                op_evts_on_port = [ev for ev in self.output_events
-                                   if ev == evt_port_name]
-                ip_evts_on_port = [ev for ev in self.input_events
-                                   if ev == evt_port_name]
+        # Check that each EventSendPort emits at least one output event
+        for port_name in self.event_send_ports.keys():
+            if port_name not in self.output_events:
+                raise NineMLRuntimeError(
+                    "Unable to find events generated for '{}' in '{}'"
+                    .format(port_name, component_class.name))
 
-                if len(op_evts_on_port) + len(ip_evts_on_port) == 0:
-                    raise NineMLRuntimeError(
-                        "Unable to find events generated for '{}'"
-                        .format(evt_port_name))
+        # Check that each Event port emits/recieves at least one
+        for port_name in self.event_receive_ports.keys():
+            if port_name not in self.input_events:
+                raise NineMLRuntimeError(
+                    "Unable to find event transitions triggered by '{}' in "
+                    "'{}'".format(port_name, component_class.name))
 
     def action_eventsendport(self, port, **kwargs):  # @UnusedVariable @IgnorePep8
         assert port.name not in self.event_send_ports
@@ -69,8 +71,8 @@ class EventPortsDynamicsValidator(BaseDynamicsValidator):
         assert port.name not in self.event_receive_ports
         self.event_receive_ports[port.name] = port
 
-    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.output_events.append(event_out.port_name)
+    def action_outputevent(self, output_event, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.output_events.append(output_event.port_name)
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.input_events.append(on_event.src_port_name)

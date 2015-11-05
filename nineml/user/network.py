@@ -147,13 +147,18 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         Returns a multi-dynamics object containing the cell and all
         post-synaptic response/plasticity dynamics
         """
-        # Get all the projections that project to the given population
-        received = [p for p in self.projections if p.post == population]
+        # Get all the projections that project to/from the given population
+        receiving = [p for p in self.projections if p.post == population]
+        sending = [p for p in self.projections if p.pre == population]
         # Get all sub-dynamics, port connections and port exposures
         sub_dynamics = {'cell': population.cell.component_class}
+        # =====================================================================
+        # Get all the port connections between Response, Plasticity and Post
+        # nodes and convert them to MultiDynamics port connections (i.e.
+        # referring to sub-component names instead of projection roles)
+        # =====================================================================
         port_connections = []
-        port_exposures = []
-        for proj in received:
+        for proj in receiving:
             sub_dynamics[proj.name + '_psr'] = proj.response.component_class
             sub_dynamics[proj.name + '_pls'] = proj.plasticity.component_class
             # Get all projection port connections that don't project to/from
@@ -166,8 +171,31 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                     send_port=pc.send_port, receive_port=pc.receive_port)
                 for pc in proj.port_connections
                 if 'pre' not in (pc.sender_role, pc.receiver_role))
-            # Get all the projection port connections that project to/from the
-            # the "pre" population and convert them into port exposures
+        # =====================================================================
+        # Get all the ports that are connected to/from the Pre node and insert
+        # a port exposure to handle them
+        # =====================================================================
+        port_exposures = []
+        for proj in sending:
+            port_exposures.extend(
+                AnalogSendPortExposure(component='cell', port=pc.send_port)
+                for pc in proj.analog_port_connections
+                if 'pre' == pc.sender_role)
+            port_exposures.extend(
+                EventSendPortExposure(component='cell', port=pc.send_port)
+                for pc in proj.event_port_connections
+                if 'pre' == pc.sender_role)
+            port_exposures.extend(
+                AnalogReceivePortExposure(component='cell',
+                                          port=pc.receive_port)
+                for pc in proj.analog_port_connections
+                if 'pre' == pc.receiver_role)
+            port_exposures.extend(
+                EventReceivePortExposure(component='cell',
+                                         port=pc.receive_port)
+                for pc in proj.event_port_connections
+                if 'pre' == pc.receiver_role)
+        for proj in receiving:
             port_exposures.extend(
                 AnalogReceivePortExposure(
                     component=self._role2dyn(proj.name, pc.receiver_role),
@@ -256,7 +284,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @classmethod
     def _role2dyn(cls, name, role):
-        if role in ('pre', 'post'):
+        if role == 'post':
             dyn_name = 'cell'
         elif role == 'response':
             dyn_name = name + '_psr'
