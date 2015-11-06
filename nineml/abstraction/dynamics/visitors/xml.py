@@ -209,7 +209,7 @@ class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
         child_elems = [
             e.accept_visitor(self)
             for e in component_class.sorted_elements(
-                as_class=self.class_to_visit)]
+                class_map=self.class_to_visit.class_to_member)]
         if self.xmlns == NINEMLv1:
             v1_elems = [e for e in child_elems
                         if e.tag[len(NINEMLv1):] not in version1_main]

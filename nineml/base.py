@@ -203,27 +203,27 @@ class ContainerObject(object):
             except KeyError:
                 pass
 
-    def elements(self, as_class=None):
+    def elements(self, class_map=None):
         """
         Iterates through all the core member elements of the container. For
         core 9ML objects this will be the same as those iterated by the
         __iter__ magic method, where as for 9ML extensions.
         """
-        if as_class is None:
-            as_class = type(self)
-        return chain(*(self._members_iter(et, as_class=as_class)
-                       for et in as_class.class_to_member))
+        if class_map is None:
+            class_map = self.class_to_member
+        return chain(*(self._members_iter(et, class_map=class_map)
+                       for et in class_map))
 
-    def element(self, name, as_class=None):
+    def element(self, name, class_map=None):
         """
         Looks a member item by "name" (identifying characteristic)
         """
-        if as_class is None:
-            as_class = type(self)
-        for element_type in as_class.class_to_member:
+        if class_map is None:
+            class_map = self.class_to_member
+        for element_type in class_map:
             try:
                 elem = self._member_accessor(
-                    element_type, as_class=as_class)(name)
+                    element_type, class_map=class_map)(name)
                 # Ignore send ports as they otherwise mask
                 # aliases/state variables
                 if not isinstance(elem, SendPortBase):
@@ -231,24 +231,24 @@ class ContainerObject(object):
             except NineMLNameError:
                 pass
         raise KeyError("'{}' was not found in '{}' {} object"
-                       .format(name, self._name, as_class.__name__))
+                       .format(name, self._name, class_map.__name__))
 
-    def num_elements(self, as_class=None):
-        if as_class is None:
-            as_class = type(self)
+    def num_elements(self, class_map=None):
+        if class_map is None:
+            class_map = self.class_to_member
         return reduce(operator.add,
-                      *(self._num_members(et, as_class=as_class)
-                        for et in as_class.class_to_member))
+                      *(self._num_members(et, class_map=class_map)
+                        for et in class_map))
 
-    def element_names(self, as_class=None):
-        if as_class is None:
-            as_class = type(self)
-        for element_type in as_class.class_to_member:
+    def element_names(self, class_map=None):
+        if class_map is None:
+            class_map = self.class_to_member
+        for element_type in class_map:
             # Some of these do not meet the stereotypical *_names format, e.g.
             # time_derivative_variables, could change these to *_keys instead
             try:
                 for name in self._member_names_iter(element_type,
-                                                    as_class=as_class):
+                                                    class_map=class_map):
                     yield name
             except AttributeError:
                 pass
@@ -257,7 +257,7 @@ class ContainerObject(object):
         raise ValueError("'{}' {} container is not iterable"
                          .format(self.name, type(self).__name__))
 
-    def index_of(self, element, key=None, as_class=None):
+    def index_of(self, element, key=None, class_map=None):
         """
         Returns the index of an element amongst others of its type. The indices
         are generated on demand but then remembered to allow them to be
@@ -269,10 +269,10 @@ class ContainerObject(object):
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
         """
-        if as_class is None:
-            as_class = type(self)
+        if class_map is None:
+            class_map = self.class_to_member
         if key is None:
-            key = accessor_name_from_type(as_class, element)
+            key = accessor_name_from_type(class_map, element)
         dct = self._indices[key]
         try:
             index = dct[element]
@@ -293,46 +293,36 @@ class ContainerObject(object):
     # derrived from the stereotypical naming structure used
     # =========================================================================
 
-    def _member_accessor(self, element_type, as_class=None):
-        if as_class is None:
-            as_class = type(self)
-        return getattr(self, accessor_name_from_type(as_class,
-                                                     element_type))
+    def _member_accessor(self, element_type, class_map):
+        return getattr(self, accessor_name_from_type(class_map, element_type))
 
-    def _members_iter(self, element_type, as_class=None):
+    def _members_iter(self, element_type, class_map):
         """
         Looks up the name of values iterator from the nineml_type of the
         element argument.
         """
-        if as_class is None:
-            as_class = type(self)
         return getattr(
-            self, pluralise(accessor_name_from_type(as_class,
-                                                    element_type)))
+            self, pluralise(accessor_name_from_type(class_map, element_type)))
 
-    def _member_names_iter(self, element_type, as_class=None):
-        if as_class is None:
-            as_class = type(self)
+    def _member_names_iter(self, element_type, class_map):
         try:
             return getattr(
-                self, (accessor_name_from_type(as_class, element_type)
+                self, (accessor_name_from_type(class_map, element_type)
                        + '_names'))
         except AttributeError:
             raise AttributeError(
                 "Elements of type {} aren't named".format(element_type))
 
-    def _num_members(self, element_type, as_class=None):
-        if as_class is None:
-            as_class = type(self)
+    def _num_members(self, element_type, class_map):
         return getattr(
-            self, ('num_' +
-                   pluralise(accessor_name_from_type(as_class,
-                                                     element_type))))
+            self, (
+                'num_' +
+                pluralise(accessor_name_from_type(class_map, element_type))))
 
     def _member_dict(self, element_type):
         return getattr(
-            self, '_' + pluralise(accessor_name_from_type(
-                self, element_type)))
+            self, '_' + pluralise(accessor_name_from_type(self.class_to_member,
+                                                          element_type)))
 
     def sorted_elements(self, **kwargs):
         """Sorts the element into a consistent, logical order before write"""
@@ -342,7 +332,7 @@ class ContainerObject(object):
                            str(e._name)))
 
 
-def accessor_name_from_type(class_type, element_type):
+def accessor_name_from_type(class_map, element_type):
     """
     Looks up the name of the accessor method from the nineml_type of the
     element argument for a given container type
@@ -350,11 +340,11 @@ def accessor_name_from_type(class_type, element_type):
     if not isinstance(element_type, basestring):
         element_type = element_type.nineml_type
     try:
-        return class_type.class_to_member[element_type]
+        return class_map[element_type]
     except KeyError:
         raise NineMLInvalidElementTypeException(
-            "Could not get member attr for element of type '{}' for object "
-            "'{}' container".format(element_type, class_type))
+            "Could not get member attr for element of type '{}', available "
+            "types are {}".format(element_type, ", ".join(class_map.keys())))
 
 
 def pluralise(word):
