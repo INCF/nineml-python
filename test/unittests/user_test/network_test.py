@@ -408,6 +408,46 @@ class TestNetwork(unittest.TestCase):
                 receiver_name='Proj1_psr', receive_port='spike'),
             self.all_to_all)
 
+        conn_group2 = ConnectionGroup(
+            'Proj2__pre_spike__response_spike___connection_group', dyn_array2,
+            dyn_array1,
+            EventPortConnection(
+                sender_name='cell', send_port='spike',
+                receiver_name='Proj2_psr', receive_port='spike'),
+            self.all_to_all)
+
+        conn_group3 = ConnectionGroup(
+            'Proj2__pre_double_spike__response_double_spike___connection_group'
+            , dyn_array2, dyn_array1,
+            EventPortConnection(
+                sender_name='cell', send_port='double_spike',
+                receiver_name='Proj2_psr', receive_port='double_spike'),
+            self.all_to_all)
+
+        conn_group4 = ConnectionGroup(
+            'Proj3__pre_spike__response_spike___connection_group', dyn_array3,
+            dyn_array2,
+            EventPortConnection(
+                sender_name='cell', send_port='spike',
+                receiver_name='Proj3_psr', receive_port='spike'),
+            self.all_to_all)
+
+        conn_group5 = ConnectionGroup(
+            'Proj3__pre_spike__plasticity_incoming_spike___connection_group',
+            dyn_array3, dyn_array2,
+            EventPortConnection(
+                sender_name='cell', send_port='spike',
+                receiver_name='Proj3_pls', receive_port='incoming_spike'),
+            self.all_to_all)
+
+        conn_group6 = ConnectionGroup(
+            'Proj4__pre_spike__response_spike___connection_group', dyn_array3,
+            dyn_array1,
+            EventPortConnection(
+                sender_name='cell', send_port='spike',
+                receiver_name='Proj4_psr', receive_port='spike'),
+            self.all_to_all)
+
         # =====================================================================
         # Test equality between network automatically generated dynamics arrays
         # and manually generated expected one
@@ -439,3 +479,52 @@ class TestNetwork(unittest.TestCase):
                 network.connection_group(
                     'Proj1__pre_spike__response_spike___connection_group')
                 .find_mismatch(conn_group1)))
+        self.assertEqual(
+            network.connection_group(
+                'Proj2__pre_spike__response_spike___connection_group'),
+            conn_group2,
+            "Mismatch between generated and expected connection groups:\n {}"
+            .format(
+                network.connection_group(
+                    'Proj2__pre_spike__response_spike___connection_group')
+                .find_mismatch(conn_group2)))
+        self.assertEqual(
+            network.connection_group(
+                'Proj2__pre_double_spike__response_double_spike'
+                '___connection_group'),
+            conn_group3,
+            "Mismatch between generated and expected connection groups:\n {}"
+            .format(
+                network.connection_group(
+                    'Proj2__pre_double_spike__response_double_spike'
+                    '___connection_group')
+                .find_mismatch(conn_group3)))
+        self.assertEqual(
+            network.connection_group(
+                'Proj3__pre_spike__response_spike___connection_group'),
+            conn_group4,
+            "Mismatch between generated and expected connection groups:\n {}"
+            .format(
+                network.connection_group(
+                    'Proj3__pre_spike__response_spike___connection_group')
+                .find_mismatch(conn_group4)))
+        self.assertEqual(
+            network.connection_group(
+                'Proj3__pre_spike__plasticity_incoming_spike'
+                '___connection_group'),
+            conn_group5,
+            "Mismatch between generated and expected connection groups:\n {}"
+            .format(
+                network.connection_group(
+                    'Proj3__pre_spike__plasticity_incoming_spike'
+                    '___connection_group')
+                .find_mismatch(conn_group5)))
+        self.assertEqual(
+            network.connection_group(
+                'Proj4__pre_spike__response_spike___connection_group'),
+            conn_group6,
+            "Mismatch between generated and expected connection groups:\n {}"
+            .format(
+                network.connection_group(
+                    'Proj4__pre_spike__response_spike___connection_group')
+                .find_mismatch(conn_group6)))
