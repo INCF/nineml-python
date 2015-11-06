@@ -530,6 +530,9 @@ class MultiDynamics(Dynamics):
         self.annotations[nineml_ns][VALIDATE_DIMENSIONS] = validate_dimensions
         self.validate()
 
+    def __getitem__(self, comp_name):
+        return self._sub_components[comp_name]
+
     def flatten(self):
         return DynamicsCloner().visit(self)
 

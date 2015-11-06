@@ -253,22 +253,6 @@ class ContainerObject(object):
             except AttributeError:
                 pass
 
-    def __getitem__(self, name):
-        """
-        Looks a member item by "name" (identifying characteristic) in any of
-        of the base classes in the same order as the MRO.
-        """
-        # Loop through all base classes to see if the name fits any member
-        # of any base class
-        for cls in type(self).__mro__:
-            if hasattr(cls, 'class_to_member'):
-                try:
-                    return self.element(name, as_class=cls)
-                except NineMLNameError:
-                    pass
-        raise NineMLNameError("'{}' was not found in '{}' {} object"
-                              .format(name, self._name, type(self).__name__))
-
     def __contains__(self, element):
         """
         Checks whether the element belongs to the container object or any sub-
