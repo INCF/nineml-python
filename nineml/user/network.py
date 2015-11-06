@@ -1,3 +1,4 @@
+import re
 from itertools import chain
 from nineml.user import ConnectionRuleProperties
 from .population import Population
@@ -227,26 +228,27 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         return DynamicsArray(population.name, population.size, dyn)
 
     def _conn_groups_from_proj(self, projection, dynamics_arrays=None):
-        port_conns = (
-            pc.__class__(
-                sender_name=self._role2dyn(projection.name, pc.sender_role),
-                receiver_name=self._role2dyn(projection.name,
-                                             pc.receiver_role),
-                receive_port=pc.receive_port, send_port=pc.send_port)
-            for pc in projection.port_connections
-            if 'pre' in (pc.sender_role, pc.receiver_role))
         if dynamics_arrays:
             source = dynamics_arrays[projection.pre.name]
             dest = dynamics_arrays[projection.post.name]
         else:
             source = self._dyn_array_from_pop(projection.pre)
             dest = self._dyn_array_from_pop(projection.post)
-        return (ConnectionGroup('{}___{}___{}___connection_group'
-                                .format(projection.name,
-                                        pc.send_port_name,
-                                        pc.receive_port_name),
-                                source, dest, pc, projection.connectivity)
-                for pc in port_conns)
+        return (
+            ConnectionGroup(
+                '{}__{}_{}__{}_{}___connection_group'.format(
+                    projection.name, pc.sender_role, pc.send_port_name,
+                    pc.receiver_role, pc.receive_port_name),
+                source, dest,
+                pc.__class__(sender_name=self._role2dyn(projection.name,
+                                                        pc.sender_role),
+                             receiver_name=self._role2dyn(projection.name,
+                                                          pc.receiver_role),
+                             receive_port=pc.receive_port,
+                             send_port=pc.send_port),
+                projection.connectivity)
+            for pc in projection.port_connections
+            if 'pre' in (pc.sender_role, pc.receiver_role))
 
     def get_components(self):
         components = []
@@ -294,6 +296,9 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         else:
             assert False
         return dyn_name
+
+    _conn_group_name_re = re.compile(
+        r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')
 
 
 class DynamicsArray(BaseULObject):
@@ -353,6 +358,10 @@ class ConnectionGroup(BaseULObject):
     @property
     def port_connection(self):
         return self._port_connection
+
+    @property
+    def connection_rule(self):
+        return self._connection_rule
 
     def __iter__(self):
         raise NotImplementedError

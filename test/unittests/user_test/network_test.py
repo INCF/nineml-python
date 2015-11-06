@@ -14,7 +14,8 @@ import os.path
 import unittest
 from nineml.user import (
     Projection, Network, DynamicsProperties, ConnectionRuleProperties,
-    Population, DynamicsArray, ConnectionGroup, MultiDynamics)
+    Population, DynamicsArray, ConnectionGroup, MultiDynamics,
+    AnalogPortConnection, EventPortConnection)
 from nineml.abstraction import (
     Parameter, Dynamics, Regime, On, OutputEvent, StateVariable,
     StateAssignment, Constant, Alias)
@@ -399,6 +400,14 @@ class TestNetwork(unittest.TestCase):
                 sub_components={'cell': cell1_cls},
                 port_exposures=[('cell', 'spike')]))
 
+        conn_group1 = ConnectionGroup(
+            'Proj1__pre_spike__response_spike___connection_group', dyn_array1,
+            dyn_array2,
+            EventPortConnection(
+                sender_name='cell', send_port='spike',
+                receiver_name='Proj1_psr', receive_port='spike'),
+            self.all_to_all)
+
         # =====================================================================
         # Test equality between network automatically generated dynamics arrays
         # and manually generated expected one
@@ -421,3 +430,12 @@ class TestNetwork(unittest.TestCase):
         # groups and manually generated expected ones
         # =====================================================================
         self.assertEqual(network.num_connection_groups, 6)
+        self.assertEqual(
+            network.connection_group(
+                'Proj1__pre_spike__response_spike___connection_group'),
+            conn_group1,
+            "Mismatch between generated and expected connection groups:\n {}"
+            .format(
+                network.connection_group(
+                    'Proj1__pre_spike__response_spike___connection_group')
+                .find_mismatch(conn_group1)))

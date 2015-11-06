@@ -13,8 +13,8 @@ class BasePortConnection(BaseULObject):
 
     __metaclass__ = ABCMeta
 
-    defining_attributes = ('_sender_role', '_receiver_role',
-                           '_send_port', '_receive_port',
+    defining_attributes = ('send_port_name', 'receive_port_name',
+                           '_sender_role', '_receiver_role',
                            '_sender_name', '_receiver_name')
 
     _projection_roles = ('pre', 'post', 'response', 'plasticity')
@@ -103,25 +103,25 @@ class BasePortConnection(BaseULObject):
 
     @property
     def sender(self):
-        if self._sender is None:
+        if not self.is_bound():
             raise NineMLRuntimeError("Ports have not been bound")
         return self._sender
 
     @property
     def receiver(self):
-        if self._receiver is None:
+        if not self.is_bound():
             raise NineMLRuntimeError("Ports have not been bound")
         return self._receiver
 
     @property
     def send_port(self):
-        if self._send_port is None:
+        if not self.is_bound():
             raise NineMLRuntimeError("Ports have not been bound")
         return self._send_port
 
     @property
     def receive_port(self):
-        if self._receive_port is None:
+        if not self.is_bound():
             raise NineMLRuntimeError("Ports have not been bound")
         return self._receive_port
 
@@ -180,19 +180,35 @@ class BasePortConnection(BaseULObject):
             self._sender = container[self.sender_name]
             self._receiver = container[self.receiver_name]
         try:
-            self._send_port = self.sender.send_port(self.send_port_name)
-        except KeyError:
+            self._send_port = self._sender.send_port(self.send_port_name)
+        except NineMLNameError:
             raise NineMLNameError(
                 "Could not bind to missing send port, '{}', in '{}'"
                 .format(self.send_port_name, self.sender.name))
         try:
             self._receive_port = self._receiver.receive_port(
                 self.receive_port_name)
-        except KeyError:
+        except NineMLNameError:
             raise NineMLNameError(
                 "Could not bind to missing receive port, '{}', in '{}'"
                 .format(self.receive_port_name, self.receiver.name))
         self._check_ports()
+
+    def is_bound(self):
+        try:
+            if self._sender is None:
+                assert self._receiver is None
+                assert self._send_port is None
+                assert self._receive_port is None
+                bound = False
+            else:
+                assert self._receiver is not None
+                assert self._send_port is not None
+                assert self._receive_port is not None
+                bound = True
+        except:
+            raise
+        return bound
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
