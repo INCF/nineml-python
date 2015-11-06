@@ -4,7 +4,7 @@ from nineml.xml import E
 
 class RandomDistribution(ComponentClass):
 
-    element_name = 'RandomDistribution'
+    nineml_type = 'RandomDistribution'
     defining_attributes = ('name', '_parameters')
     # Maintains order of elements between writes
     write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')

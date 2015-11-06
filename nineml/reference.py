@@ -62,7 +62,7 @@ class BaseReference(BaseNineMLObject):
             body = []
         if self.url:
             attrs['url'] = self.url
-        element = E(self.element_name, *body, **attrs)
+        element = E(self.nineml_type, *body, **attrs)
         return element
 
     @classmethod
@@ -99,7 +99,7 @@ class Reference(BaseReference):
             of the file.
 
     """
-    element_name = "Reference"
+    nineml_type = "Reference"
 
     @property
     def user_object(self):
@@ -109,7 +109,7 @@ class Reference(BaseReference):
 
 def resolve_reference(from_xml):
     def resolving_from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
-        if element.tag in (ns + Reference.element_name for ns in ALL_NINEML):
+        if element.tag in (ns + Reference.nineml_type for ns in ALL_NINEML):
             reference = Reference.from_xml(element, document)
             obj = reference.user_object
         else:

@@ -217,10 +217,10 @@ class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
                 self.E('Dynamics',
                        *(e for e in child_elems
                          if e.tag[len(NINEMLv1):] in version1_main)))
-            xml = self.E(component_class.v1_element_name,
+            xml = self.E(component_class.v1_nineml_type,
                          *v1_elems, name=component_class.name)
         else:
-            xml = self.E(component_class.element_name,
+            xml = self.E(component_class.nineml_type,
                          *child_elems,
                          name=component_class.name)
         return xml

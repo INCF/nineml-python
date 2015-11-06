@@ -150,7 +150,7 @@ class AnalogSendPort(AnalogPort, SendPort):
 
     """
 
-    element_name = 'AnalogSendPort'
+    nineml_type = 'AnalogSendPort'
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -166,7 +166,7 @@ class AnalogReceivePort(AnalogPort, ReceivePort):
 
     """
 
-    element_name = 'AnalogReceivePort'
+    nineml_type = 'AnalogReceivePort'
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -181,7 +181,7 @@ class EventSendPort(EventPort, SendPort):
     notify other components that it had fired.
     """
 
-    element_name = 'EventSendPort'
+    nineml_type = 'EventSendPort'
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -196,7 +196,7 @@ class EventReceivePort(EventPort, ReceivePort):
     to notify them to provide current to a post-synaptic neuron.
     """
 
-    element_name = 'EventReceivePort'
+    nineml_type = 'EventReceivePort'
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -216,7 +216,7 @@ class AnalogReducePort(AnalogPort, ReceivePort):
         Currently support ``operator`` s are: ``+``.
 
     """
-    element_name = 'AnalogReducePort'
+    nineml_type = 'AnalogReducePort'
     mode = "reduce"
     _operator_map = {'add': '+', '+': '+', }
 

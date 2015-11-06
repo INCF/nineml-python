@@ -37,7 +37,7 @@ from .namespace import (
 
 class MultiDynamicsProperties(DynamicsProperties):
 
-    element_name = "MultiDynamicsProperties"
+    nineml_type = "MultiDynamicsProperties"
     defining_attributes = ('_name', 'component_class')
 
     def __init__(self, name, sub_dynamics_properties, port_connections,
@@ -112,7 +112,7 @@ class MultiDynamicsProperties(DynamicsProperties):
                         for pe in self.port_exposures)
         members.extend(pc.to_xml(document, E=E, **kwargs)
                        for pc in self.port_connections)
-        return E(self.element_name, *members, name=self.name)
+        return E(self.nineml_type, *members, name=self.name)
 
     @classmethod
     @resolve_reference
@@ -140,7 +140,7 @@ class MultiDynamicsProperties(DynamicsProperties):
 
 class SubDynamicsProperties(BaseULObject):
 
-    element_name = 'SubDynamicsProperties'
+    nineml_type = 'SubDynamicsProperties'
     defining_attributes = ('_name', '_component')
 
     def __init__(self, name, component):
@@ -173,7 +173,7 @@ class SubDynamicsProperties(BaseULObject):
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
+        return E(self.nineml_type,
                  self._component.to_xml(document, E=E, **kwargs),
                  name=self.name)
 
@@ -191,7 +191,7 @@ class SubDynamicsProperties(BaseULObject):
 
 class SubDynamics(BaseULObject):
 
-    element_name = 'SubDynamics'
+    nineml_type = 'SubDynamics'
     defining_attributes = ('_name', '_component_class')
 
     def __init__(self, name, component_class):
@@ -432,7 +432,7 @@ class SubDynamics(BaseULObject):
 
 class MultiDynamics(Dynamics):
 
-    element_name = 'MultiDynamics'
+    nineml_type = 'MultiDynamics'
     defining_attributes = (
         '_name', '_sub_components', '_analog_port_connections',
         '_event_port_connections', '_analog_send_ports',

@@ -27,7 +27,7 @@ class StateVariable(BaseALObject):
     future, wrapping in into its own object may make the transition easier
     """
 
-    element_name = 'StateVariable'
+    nineml_type = 'StateVariable'
     defining_attributes = ('name', 'dimension')
 
     def accept_visitor(self, visitor, **kwargs):
@@ -72,7 +72,7 @@ class TimeDerivative(ODE, BaseALObject):
 
     """
 
-    element_name = 'TimeDerivative'
+    nineml_type = 'TimeDerivative'
 
     def __init__(self, variable, rhs):
         """Time Derivative Constructor
@@ -154,7 +154,7 @@ class Regime(BaseALObject, ContainerObject):
     be join the Regimes to other Regimes.
     """
 
-    element_name = 'Regime'
+    nineml_type = 'Regime'
     defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
                            'name', '_aliases')
     class_to_member = {'TimeDerivative': 'time_derivative',

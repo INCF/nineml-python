@@ -29,7 +29,7 @@ class Dynamics(ComponentClass):
          For more information, see
 
     """
-    element_name = 'Dynamics'
+    nineml_type = 'Dynamics'
     defining_attributes = (ComponentClass.defining_attributes +
                            ('_analog_send_ports', '_analog_receive_ports',
                             '_analog_reduce_ports', '_event_send_ports',

@@ -49,7 +49,7 @@ class Projection(BaseULObject, DocumentLevelObject):
     the same name.
 
     """
-    element_name = "Projection"
+    nineml_type = "Projection"
     defining_attributes = ("name", "pre", "post", "connectivity",
                            "response", "plasticity", "delay")
 
@@ -175,7 +175,7 @@ class Projection(BaseULObject, DocumentLevelObject):
             args.append(E('Delay',
                           self.delay._value.to_xml(document, E=E, **kwargs),
                           units=self.delay.units.name))
-            xml = E(self.element_name, *args, name=self.name)
+            xml = E(self.nineml_type, *args, name=self.name)
         else:
             members = []
             for pop, tag_name in ((self.pre, 'Pre'), (self.post, 'Post')):
@@ -192,7 +192,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                                                         **kwargs)))
             members.extend([pc.to_xml(document, E=E, **kwargs)
                             for pc in self.port_connections])
-            xml = E(self.element_name, *members, name=self.name)
+            xml = E(self.nineml_type, *members, name=self.name)
         return xml
 
     @classmethod

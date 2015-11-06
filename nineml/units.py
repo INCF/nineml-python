@@ -19,7 +19,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     Defines the dimension used for quantity units
     """
 
-    element_name = 'Dimension'
+    nineml_type = 'Dimension'
     dimension_symbols = ('m', 'l', 't', 'i', 'n', 'k', 'j')
     dimension_names = ('mass', 'length', 'time', 'current', 'amount',
                        'temperature', 'luminous_intensity')
@@ -140,7 +140,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         kwargs.update(dict(
             (n, str(p))
             for n, p in zip(self.dimension_symbols, self._dims) if abs(p) > 0))
-        return E(self.element_name, **kwargs)
+        return E(self.nineml_type, **kwargs)
 
     @classmethod
     @read_annotations
@@ -278,7 +278,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     Defines the units of a quantity
     """
 
-    element_name = 'Unit'
+    nineml_type = 'Unit'
     defining_attributes = ('_dimension', '_power', '_offset')
 
     def __init__(self, name, dimension, power, offset=0.0, document=None):
@@ -351,7 +351,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
                   'power': str(self.power)}
         if self.offset:
             kwargs['offset'] = str(self.offset)
-        return E(self.element_name,
+        return E(self.nineml_type,
                  **kwargs)
 
     @classmethod
@@ -423,7 +423,7 @@ class Quantity(BaseNineMLObject):
     Numerical values may either be numbers, or a component_class that generates
     numbers, e.g. a RandomDistribution instance.
     """
-    element_name = 'Quantity'
+    nineml_type = 'Quantity'
     defining_attributes = ("value", "units")
 
     def __init__(self, value, units=None):
@@ -477,11 +477,11 @@ class Quantity(BaseNineMLObject):
         if u"µ" in units:
             units = units.replace(u"µ", "u")
         return ("{}(value={}, units={})"
-                .format(self.element_name, self.value, units))
+                .format(self.nineml_type, self.value, units))
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
+        return E(self.nineml_type,
                  self._value.to_xml(document, E=E, **kwargs),
                  units=self.units.name)
 

@@ -81,7 +81,7 @@ class _BasePortExposure(BaseULObject):
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
+        return E(self.nineml_type,
                  name=self.name,
                  sub_component=self.sub_component_name,
                  port=self.port_name)
@@ -163,7 +163,7 @@ class _PortExposureAlias(Alias):
 
 class _SendPortExposureAlias(_PortExposureAlias):
 
-    element_name = '_SendPortExposureAlias'
+    nineml_type = '_SendPortExposureAlias'
 
     @property
     def lhs(self):
@@ -178,7 +178,7 @@ class _SendPortExposureAlias(_PortExposureAlias):
 
 class _ReceivePortExposureAlias(_PortExposureAlias):
 
-    element_name = '_ReceivePortExposureAlias'
+    nineml_type = '_ReceivePortExposureAlias'
 
     @property
     def lhs(self):
@@ -192,7 +192,7 @@ class _ReceivePortExposureAlias(_PortExposureAlias):
 
 class AnalogSendPortExposure(_BaseAnalogPortExposure, AnalogSendPort):
 
-    element_name = 'AnalogSendPortExposure'
+    nineml_type = 'AnalogSendPortExposure'
 
     @property
     def alias(self):
@@ -201,7 +201,7 @@ class AnalogSendPortExposure(_BaseAnalogPortExposure, AnalogSendPort):
 
 class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
 
-    element_name = 'AnalogReceivePortExposure'
+    nineml_type = 'AnalogReceivePortExposure'
 
     @property
     def alias(self):
@@ -210,7 +210,7 @@ class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
 
 class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
 
-    element_name = 'AnalogReducePortExposure'
+    nineml_type = 'AnalogReducePortExposure'
 
     @property
     def alias(self):
@@ -219,12 +219,12 @@ class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
 
 class EventSendPortExposure(_BasePortExposure, EventSendPort):
 
-    element_name = 'EventSendPortExposure'
+    nineml_type = 'EventSendPortExposure'
 
 
 class EventReceivePortExposure(_BasePortExposure, EventReceivePort):
 
-    element_name = 'EventReceivePortExposure'
+    nineml_type = 'EventReceivePortExposure'
 
 
 class _LocalAnalogPortConnections(Alias):

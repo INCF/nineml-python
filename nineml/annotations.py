@@ -16,7 +16,7 @@ class Annotations(defaultdict, DocumentLevelObject):
     #        namespaces with more involved loaders could provide them through
     #        kwargs also. TGC 11/15
 
-    element_name = 'Annotations'
+    nineml_type = 'Annotations'
 
     @classmethod
     def _dict_tree(cls):
@@ -38,7 +38,7 @@ class Annotations(defaultdict, DocumentLevelObject):
                                   for k, v in self.iteritems())))
 
     def to_xml(self, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
+        return E(self.nineml_type,
                  *chain(*[[E(k, str(v)) for k, v in dct.iteritems()]
                           for dct in self.itervalues()]))
 
@@ -55,14 +55,14 @@ def read_annotations(from_xml):
     def annotate_from_xml(cls, element, *args, **kwargs):
         nineml_xmlns = extract_xmlns(element.tag)
         annot_elem = expect_none_or_single(
-            element.findall(nineml_xmlns + Annotations.element_name))
+            element.findall(nineml_xmlns + Annotations.nineml_type))
         if annot_elem is not None:
             # Extract the annotations
             annotations = Annotations.from_xml(annot_elem)
             # Get a copy of the element with the annotations stripped
             element = copy(element)
             element.remove(element.find(nineml_xmlns +
-                                        Annotations.element_name))
+                                        Annotations.nineml_type))
         else:
             annotations = Annotations()
         if (cls.__class__.__name__ == 'DynamicsXMLLoader' and

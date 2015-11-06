@@ -18,7 +18,7 @@ from nineml.xml import E
 
 class ConnectionRule(ComponentClass):
 
-    element_name = 'ConnectionRule'
+    nineml_type = 'ConnectionRule'
     defining_attributes = ('name', '_parameters', 'standard_library')
     # Maintains order of elements between writes
     write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')

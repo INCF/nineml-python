@@ -25,7 +25,7 @@ class Document(dict, BaseNineMLObject):
     """
 
     defining_attributes = ('elements',)
-    element_name = 'NineML'
+    nineml_type = 'NineML'
     write_order = ['Population', 'Projection', 'Selection', 'Network',
                    'Dynamics', 'ConnectionRule', 'RandomDistribution',
                    'ComponentClass', 'Component',  # For v1.0
@@ -56,7 +56,7 @@ class Document(dict, BaseNineMLObject):
             raise NineMLRuntimeError(
                 "Could not add {} to document '{}' as it is not a 'document "
                 "level NineML object' ('{}')"
-                .format(element.element_name, self.url,
+                .format(element.nineml_type, self.url,
                         "', '".join(self.top_level_types)))
         if element.name in self:
             # Ignore if the element is already added (this can happend
@@ -75,7 +75,7 @@ class Document(dict, BaseNineMLObject):
                         "Attempting to add the same object '{}' {} to '{}' "
                         "document '{}' when it is already in '{}'. Please "
                         "remove it from the original document first"
-                        .format(element.name, element.element_name,
+                        .format(element.name, element.nineml_type,
                                 self.url, element.document.url))
             self[element.name] = element
 
@@ -83,7 +83,7 @@ class Document(dict, BaseNineMLObject):
         if not isinstance(element, DocumentLevelObject):
             raise NineMLRuntimeError(
                 "Could not remove {} from document as it is not a document "
-                "level NineML object ('{}') ".format(element.element_name))
+                "level NineML object ('{}') ".format(element.nineml_type))
         try:
             del self[element.name]
         except KeyError:
@@ -136,7 +136,7 @@ class Document(dict, BaseNineMLObject):
         return self.itervalues()
 
     @property
-    def element_names(self):
+    def nineml_types(self):
         return (e.name for e in self.elements)
 
     def itervalues(self):
@@ -279,7 +279,7 @@ class Document(dict, BaseNineMLObject):
     def to_xml(self, E=E, **kwargs):  # @UnusedVariable
         self.standardize_units()
         return E(
-            self.element_name,
+            self.nineml_type,
             *[e.to_xml(self, as_ref=False)
               for e in self.sorted_elements()])
 
@@ -291,7 +291,7 @@ class Document(dict, BaseNineMLObject):
                 "Unrecognised XML namespace '{}', can be one of '{}'"
                 .format(xmlns[1:-1],
                         "', '".join(ns[1:-1] for ns in ALL_NINEML)))
-        if element.tag[len(xmlns):] != cls.element_name:
+        if element.tag[len(xmlns):] != cls.nineml_type:
             raise NineMLXMLError("'{}' document does not have a NineML root "
                                  "('{}')".format(url, element.tag))
         # Initialise the document
@@ -303,8 +303,8 @@ class Document(dict, BaseNineMLObject):
             if isinstance(child, etree._Comment):
                 continue
             if child.tag.startswith(xmlns):
-                element_name = child.tag[len(xmlns):]
-                if element_name == Annotations.element_name:
+                nineml_type = child.tag[len(xmlns):]
+                if nineml_type == Annotations.nineml_type:
                     assert annotations is None, \
                         "Multiple annotations tags found"
                     annotations = Annotations.from_xml(child, **kwargs)
@@ -312,7 +312,7 @@ class Document(dict, BaseNineMLObject):
                 try:
                     # Note that all `DocumentLevelObjects` need to be imported
                     # into the root nineml package
-                    child_cls = getattr(nineml, element_name)
+                    child_cls = getattr(nineml, nineml_type)
                     if (not issubclass(child_cls, DocumentLevelObject) or
                             not hasattr(child_cls, 'from_xml')):
                         raise NineMLRuntimeError(
@@ -320,18 +320,18 @@ class Document(dict, BaseNineMLObject):
                             "document-level object".format(child_cls.__name__))
                 except AttributeError:
                     # Check for v1 document-level objects
-                    if (xmlns, element_name) == (NINEMLv1, 'ComponentClass'):
+                    if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
                         child_cls = get_component_class_type(child)
-                    elif (xmlns, element_name) == (NINEMLv1, 'Component'):
+                    elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
                         child_cls = get_component_type(child, element, url)
                     else:
                         raise NineMLXMLError(
                             "Did not find matching NineML class for '{}' "
-                            "element".format(element_name))
+                            "element".format(nineml_type))
                 if not issubclass(child_cls, DocumentLevelObject):
                     raise NineMLXMLError(
                         "'{}' is not a valid top-level NineML element"
-                        .format(element_name))
+                        .format(nineml_type))
             else:
                 raise NotImplementedError(
                     "Cannot load '{}' element (extensions not implemented)"
@@ -350,8 +350,8 @@ class Document(dict, BaseNineMLObject):
             if name in elements:
                 raise NineMLXMLError(
                     "Duplicate identifier '{ob1}:{name}'in NineML file '{url}'"
-                    .format(name=name, ob1=elements[name].cls.element_name,
-                            ob2=child_cls.element_name, url=url or ''))
+                    .format(name=name, ob1=elements[name].cls.nineml_type,
+                            ob2=child_cls.nineml_type, url=url or ''))
             elements.append(cls._Unloaded(name, child, child_cls, kwargs))
         document = cls(*elements, url=url, annotations=annotations)
         return document
@@ -499,7 +499,7 @@ class Document(dict, BaseNineMLObject):
         """Sorts elements into a consistent order before write"""
         return sorted(
             self.elements,
-            key=lambda e: (self.write_order.index(e.element_name), e.name))
+            key=lambda e: (self.write_order.index(e.nineml_type), e.name))
 
 
 def read(url, relative_to=None, **kwargs):

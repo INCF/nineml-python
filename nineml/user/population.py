@@ -22,7 +22,7 @@ class Population(BaseULObject, DocumentLevelObject):
             the cell type (i.e. the mathematical model and its
             parameterisation).
     """
-    element_name = "Population"
+    nineml_type = "Population"
     defining_attributes = ("name", "size", "cell")
 
     def __init__(self, name, size, cell, document=None):
@@ -68,7 +68,7 @@ class Population(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):
-        return E(self.element_name,
+        return E(self.nineml_type,
                  E.Size(str(self.size)),
                  E.Cell(self.cell.to_xml(document, E=E, **kwargs)),
                  name=self.name)

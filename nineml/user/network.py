@@ -31,7 +31,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         *selections*
             a dict containing the selections contained in the network.
     """
-    element_name = "Network"
+    nineml_type = "Network"
     defining_attributes = ('name', "_populations", "_projections",
                            "_selections")
     class_to_member = {'Population': 'population',
@@ -264,7 +264,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                             self.projections):
             member_elems.append(member.to_xml(
                 document, E=E, as_ref=True, **kwargs))
-        return E(self.element_name, name=self.name, *member_elems)
+        return E(self.nineml_type, name=self.name, *member_elems)
 
     @classmethod
     @resolve_reference
@@ -303,7 +303,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
 class DynamicsArray(BaseULObject):
 
-    element_name = "DynamicsArray"
+    nineml_type = "DynamicsArray"
     defining_attributes = ('name', "_size", "_dynamics")
 
     def __init__(self, name, size, dynamics):
@@ -326,7 +326,7 @@ class DynamicsArray(BaseULObject):
 
 class ConnectionGroup(BaseULObject):
 
-    element_name = "ConnectionGroup"
+    nineml_type = "ConnectionGroup"
     defining_attributes = ('name', "source", "destination",
                            "port_connection", "connection_rule")
 
