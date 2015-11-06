@@ -15,7 +15,7 @@ import unittest
 from nineml.user import (
     Projection, Network, DynamicsProperties, ConnectionRuleProperties,
     Population, DynamicsArray, ConnectionGroup, MultiDynamics,
-    AnalogPortConnection, EventPortConnection)
+    EventPortConnection)
 from nineml.abstraction import (
     Parameter, Dynamics, Regime, On, OutputEvent, StateVariable,
     StateAssignment, Constant, Alias)
@@ -42,79 +42,78 @@ class TestNetwork(unittest.TestCase):
         self.all_to_all = ConnectionRuleProperties(
             "AllToAll", path.join(self.xml_dir, "AllToAll.xml"), {})
 
-#     def test_xml_roundtrip(self):
-# 
-#         delay = 1.5 * ms     # (ms) global delay for all neurons in the group
-#         J = 0.1              # (mV) EPSP size
-#         Jeff = 24.0 * J      # (nA) synaptic weight
-#         g = 5.0              # relative strength of inhibitory synapses
-# #         eta = 2.0            # nu_ext / nu_thresh
-#         Je = Jeff            # excitatory weights
-#         Ji = -g * Je         # inhibitory weights
-#         theta = 20.0 * mV         # firing thresholds
-#         tau = 20.0 * ms           # membrane time constant
-#         tau_syn = 0.5 * ms        # synapse time constant
-#         input_rate = 50.0 * Hz    # mean input spiking rate
-# 
-#         celltype = DynamicsProperties(
-#             name="nrn",
-#             definition=path.join(self.xml_dir, 'BrunelIaF.xml'),
-#             properties={'tau': tau, 'theta': theta,
-#                         'tau_rp': 2.0 * ms, 'Vreset': 10.0 * mV,
-#                         'R': 1.5 * Mohm},
-#             initial_values={"V": 0.0 * mV,
-#                             "t_rpend": 0.0 * ms})
-#         ext_stim = DynamicsProperties(
-#             name="stim",
-#             definition=path.join(self.xml_dir, "Poisson.xml"),
-#             properties={'rate': input_rate},
-#             initial_values={"t_next": 0.5 * ms})
-#         psr = DynamicsProperties(
-#             name="syn",
-#             definition=path.join(self.xml_dir, "AlphaPSR.xml"),
-#             properties={'tau_syn': tau_syn},
-#             initial_values={"A": 0.0 * nA, "B": 0.0 * nA})
-# 
-#         p1 = Population("Exc", 1, celltype)
-#         p2 = Population("Inh", 1, celltype)
-#         inpt = Population("Ext", 1, ext_stim)
-# 
-#         static_exc = DynamicsProperties(
-#             "ExcitatoryPlasticity",
-#             path.join(self.xml_dir, "StaticConnection.xml"), {},
-#             initial_values={"weight": Je * nA})
-#         static_inh = DynamicsProperties(
-#             "InhibitoryPlasticity",
-#             path.join(self.xml_dir, "StaticConnection.xml"),
-#             initial_values={"weight": Ji * nA})
-# 
-#         exc_prj = Projection(
-#             "Excitation", pre=inpt, post=p1, response=psr,
-#             plasticity=static_exc, connectivity=self.all_to_all, delay=delay,
-#             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
-#                               ('plasticity', 'weight', 'response', 'weight')])
-#         inh_prj = Projection(
-#             "Inhibition", pre=inpt, post=p2, response=psr,
-#             plasticity=static_inh, connectivity=self.all_to_all, delay=delay,
-#             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
-#                               ('plasticity', 'weight', 'response', 'weight')])
-#         model = Network("brunel_network")
-#         model.add(inpt)
-#         model.add(p1)
-#         model.add(p2)
-#         model.add(exc_prj)
-#         model.add(inh_prj)
-#         doc = Document(model, static_exc, static_inh, exc_prj,
-#                        inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
-#         xml = doc.to_xml()
-#         loaded_doc = Document.load(xml)
-#         if loaded_doc != doc:
-#             mismatch = loaded_doc.find_mismatch(doc)
-#         else:
-#             mismatch = ''
-#         self.assertEqual(loaded_doc, doc,
-#                          "Brunel network model failed xml roundtrip:\n\n{}"
-#                          .format(mismatch))
+    def test_xml_roundtrip(self):
+
+        delay = 1.5 * ms     # (ms) global delay for all neurons in the group
+        J = 0.1              # (mV) EPSP size
+        Jeff = 24.0 * J      # (nA) synaptic weight
+        g = 5.0              # relative strength of inhibitory synapses
+        Je = Jeff            # excitatory weights
+        Ji = -g * Je         # inhibitory weights
+        theta = 20.0 * mV         # firing thresholds
+        tau = 20.0 * ms           # membrane time constant
+        tau_syn = 0.5 * ms        # synapse time constant
+        input_rate = 50.0 * Hz    # mean input spiking rate
+
+        celltype = DynamicsProperties(
+            name="nrn",
+            definition=path.join(self.xml_dir, 'BrunelIaF.xml'),
+            properties={'tau': tau, 'theta': theta,
+                        'tau_rp': 2.0 * ms, 'Vreset': 10.0 * mV,
+                        'R': 1.5 * Mohm},
+            initial_values={"V": 0.0 * mV,
+                            "t_rpend": 0.0 * ms})
+        ext_stim = DynamicsProperties(
+            name="stim",
+            definition=path.join(self.xml_dir, "Poisson.xml"),
+            properties={'rate': input_rate},
+            initial_values={"t_next": 0.5 * ms})
+        psr = DynamicsProperties(
+            name="syn",
+            definition=path.join(self.xml_dir, "AlphaPSR.xml"),
+            properties={'tau_syn': tau_syn},
+            initial_values={"A": 0.0 * nA, "B": 0.0 * nA})
+
+        p1 = Population("Exc", 1, celltype)
+        p2 = Population("Inh", 1, celltype)
+        inpt = Population("Ext", 1, ext_stim)
+
+        static_exc = DynamicsProperties(
+            "ExcitatoryPlasticity",
+            path.join(self.xml_dir, "StaticConnection.xml"), {},
+            initial_values={"weight": Je * nA})
+        static_inh = DynamicsProperties(
+            "InhibitoryPlasticity",
+            path.join(self.xml_dir, "StaticConnection.xml"),
+            initial_values={"weight": Ji * nA})
+
+        exc_prj = Projection(
+            "Excitation", pre=inpt, post=p1, response=psr,
+            plasticity=static_exc, connectivity=self.all_to_all, delay=delay,
+            port_connections=[('response', 'Isyn', 'post', 'Isyn'),
+                              ('plasticity', 'weight', 'response', 'weight')])
+        inh_prj = Projection(
+            "Inhibition", pre=inpt, post=p2, response=psr,
+            plasticity=static_inh, connectivity=self.all_to_all, delay=delay,
+            port_connections=[('response', 'Isyn', 'post', 'Isyn'),
+                              ('plasticity', 'weight', 'response', 'weight')])
+        model = Network("brunel_network")
+        model.add(inpt)
+        model.add(p1)
+        model.add(p2)
+        model.add(exc_prj)
+        model.add(inh_prj)
+        doc = Document(model, static_exc, static_inh, exc_prj,
+                       inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
+        xml = doc.to_xml()
+        loaded_doc = Document.load(xml)
+        if loaded_doc != doc:
+            mismatch = loaded_doc.find_mismatch(doc)
+        else:
+            mismatch = ''
+        self.assertEqual(loaded_doc, doc,
+                         "Brunel network model failed xml roundtrip:\n\n{}"
+                         .format(mismatch))
 
     def test_component_arrays_and_connection_groups(self):
 
@@ -417,8 +416,9 @@ class TestNetwork(unittest.TestCase):
             self.all_to_all)
 
         conn_group3 = ConnectionGroup(
-            'Proj2__pre_double_spike__response_double_spike___connection_group'
-            , dyn_array2, dyn_array1,
+            'Proj2__pre_double_spike__response_double_spike'
+            '___connection_group',
+            dyn_array2, dyn_array1,
             EventPortConnection(
                 sender_name='cell', send_port='double_spike',
                 receiver_name='Proj2_psr', receive_port='double_spike'),
