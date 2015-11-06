@@ -173,7 +173,8 @@ class DimensionalityComponentValidator(BaseValidator):
         self.component_class = component_class
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database
-        for e in component_class.elements(as_class=self.class_to_visit):
+        for e in component_class.elements(
+                class_map=self.class_to_visit.class_to_member):
             if not isinstance(e, SendPortBase):
                 try:
                     self._dimensions[e] = sympify(e.dimension)
@@ -193,12 +194,13 @@ class DimensionalityComponentValidator(BaseValidator):
             element = None
             for scope in reversed(self._scopes):
                 try:
-                    element = scope.element(name, as_class=self.class_to_visit)
+                    element = scope.element(
+                        name, class_map=self.class_to_visit.class_to_member)
                 except KeyError:
                     pass
             if element is None:
                 element = scope.element(
-                    name, as_class=self.class_to_visit)
+                    name, class_map=self.class_to_visit.class_to_member)
                 raise NineMLRuntimeError(
                     "Did not find '{}' in '{}' dynamics class (scopes: {})"
                     .format(name, self.component_class.name,

@@ -229,7 +229,8 @@ class ComponentDimensionResolver(ComponentActionVisitor):
         element = None
         for scope in reversed(self._scopes):
             try:
-                element = scope.element(name, as_class=self.class_to_visit)
+                element = scope.element(
+                    name, class_map=self.class_to_visit.class_to_member)
             except KeyError:
                 pass
         if element is None:
