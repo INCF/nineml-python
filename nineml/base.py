@@ -240,7 +240,7 @@ class ContainerObject(object):
                       *(self._num_members(et, as_class=as_class)
                         for et in as_class.class_to_member))
 
-    def nineml_types(self, as_class=None):
+    def element_names(self, as_class=None):
         if as_class is None:
             as_class = type(self)
         for element_type in as_class.class_to_member:
@@ -253,34 +253,11 @@ class ContainerObject(object):
             except AttributeError:
                 pass
 
-    def __contains__(self, element):
-        """
-        Checks whether the element belongs to the container object or any sub-
-        containers. The element can either be a string representing a named
-        object or an element that is meant to equal an element within the
-        container.
-        """
-        if isinstance(element, basestring):
-            for cls in type(self).__mro__:
-                try:
-                    for type_name in cls.class_to_member:
-                        if element in self._member_dict(type_name):
-                            return True
-                        for member in self._members_iter(type_name):
-                            if (isinstance(member, ContainerObject) and
-                                    element in member):
-                                return True
-                except AttributeError:
-                    pass
-            return False
-        else:
-            return self._find_element(element)  # Lookup via full-search
-
     def __iter__(self):
         raise ValueError("'{}' {} container is not iterable"
                          .format(self.name, type(self).__name__))
 
-    def index_of(self, element, key=None):
+    def index_of(self, element, key=None, as_class=None):
         """
         Returns the index of an element amongst others of its type. The indices
         are generated on demand but then remembered to allow them to be
@@ -292,17 +269,10 @@ class ContainerObject(object):
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
         """
+        if as_class is None:
+            as_class = type(self)
         if key is None:
-            for cls in type(self).__mro__:
-                if hasattr(cls, 'class_to_member'):
-                    try:
-                        key = accessor_name_from_type(cls, element)
-                    except NineMLInvalidElementTypeException:
-                        pass
-            if key is None:
-                raise NineMLInvalidElementTypeException(
-                    "Could not find member of type {} in {} or its base "
-                    "classes".format(type(element), type(self)))
+            key = accessor_name_from_type(as_class, element)
         dct = self._indices[key]
         try:
             index = dct[element]
