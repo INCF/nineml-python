@@ -85,7 +85,7 @@ class BasePortConnection(BaseULObject):
 
     def __repr__(self):
         return ("{}(sender={}->{}, receiver={}->{})"
-                .format(self.element_name,
+                .format(self.nineml_type,
                         (self._sender_name if self._sender_name is not None
                          else 'role:' + self.sender_role),
                         self.send_port_name,
@@ -222,7 +222,7 @@ class BasePortConnection(BaseULObject):
         except NineMLRuntimeError:
             attribs['receiver_name'] = self.receiver_name
         return E(
-            self.element_name,
+            self.nineml_type,
             send_port=self.send_port_name, receive_port=self.receive_port_name,
             **attribs)
 
@@ -289,7 +289,7 @@ class BasePortConnection(BaseULObject):
 
 class AnalogPortConnection(BasePortConnection):
 
-    element_name = 'AnalogPortConnection'
+    nineml_type = 'AnalogPortConnection'
 
     def _check_ports(self):
         if not isinstance(self.send_port, AnalogSendPort):
@@ -312,7 +312,7 @@ class AnalogPortConnection(BasePortConnection):
 
 class EventPortConnection(BasePortConnection):
 
-    element_name = 'EventPortConnection'
+    nineml_type = 'EventPortConnection'
 
     def _check_ports(self):
         if not isinstance(self.send_port, EventSendPort):

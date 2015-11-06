@@ -46,7 +46,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
 
     """
-    element_name = 'Alias'
+    nineml_type = 'Alias'
     defining_attributes = ('name', 'rhs')
 
     def __init__(self, lhs=None, rhs=None):
@@ -92,7 +92,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
 class Constant(BaseALObject, ExpressionSymbol):
 
-    element_name = 'Constant'
+    nineml_type = 'Constant'
     defining_attributes = ('name', 'value', 'units')
 
     def __init__(self, name, value, units=None):

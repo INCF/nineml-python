@@ -44,7 +44,7 @@ class SingleValue(BaseValue):
     Numerical values may either be numbers, or a component that generates
     numbers, e.g. a RandomDistribution instance.
     """
-    element_name = "SingleValue"
+    nineml_type = "SingleValue"
     defining_attributes = ("value",)
 
     def __init__(self, value):
@@ -79,7 +79,7 @@ class SingleValue(BaseValue):
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.element_name, str(self.value))
+        return E(self.nineml_type, str(self.value))
 
     @classmethod
     @read_annotations
@@ -173,7 +173,7 @@ class SingleValue(BaseValue):
 
 class ArrayValue(BaseValue):
 
-    element_name = "ArrayValue"
+    nineml_type = "ArrayValue"
     defining_attributes = ("_values",)
     DataFile = collections.namedtuple('DataFile', 'url mimetype, columnName')
 
@@ -396,7 +396,7 @@ class ArrayValue(BaseValue):
 
 class RandomValue(BaseValue):
 
-    element_name = "RandomValue"
+    nineml_type = "RandomValue"
     defining_attributes = ("distribution",)
 
     def __init__(self, distribution):
@@ -436,7 +436,7 @@ class RandomValue(BaseValue):
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
+        return E(self.nineml_type,
                  self.distribution.to_xml(document, E=E, **kwargs))
 
     @classmethod

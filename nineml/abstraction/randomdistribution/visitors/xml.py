@@ -67,7 +67,7 @@ class RandomDistributionXMLWriter(ComponentClassXMLWriter,
                        standard_library=component_class.standard_library))
             xml = self.E('ComponentClass', *elems, name=component_class.name)
         else:
-            xml = self.E(component_class.element_name,
+            xml = self.E(component_class.nineml_type,
                          *(e.accept_visitor(self)
                            for e in component_class.sorted_elements()),
                          standard_library=component_class.standard_library,

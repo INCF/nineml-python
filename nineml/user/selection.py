@@ -73,7 +73,7 @@ class Selection(BaseULObject, DocumentLevelObject):
             a "selector" object which determines which neurons form part of the
             selection. Only :class:`Concatenate` is currently supported.
     """
-    element_name = "Selection"
+    nineml_type = "Selection"
     defining_attributes = ('name', 'operation')
 
     def __init__(self, name, operation, document=None):
@@ -88,7 +88,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.element_name,
+        return E(self.nineml_type,
                  self.operation.to_xml(document, E=E, **kwargs),
                  name=self.name)
 
@@ -210,7 +210,7 @@ class Concatenate(BaseULObject):
     together into a larger :class:`Selection`.
     """
 
-    element_name = 'Concatenate'
+    nineml_type = 'Concatenate'
     defining_attributes = ('items',)
 
     def __init__(self, *items):
@@ -235,7 +235,7 @@ class Concatenate(BaseULObject):
                 return item.to_xml(document, E=E, **kwargs)
             else:
                 return E.Reference(name=item.name)
-        return E(self.element_name,
+        return E(self.nineml_type,
                  *[E.Item(item_to_xml(item), index=str(i))
                    for i, item in enumerate(self.items)])
 
@@ -279,7 +279,7 @@ class Concatenate(BaseULObject):
 #     A set of network nodes selected from existing populations within the
 #     Network.
 #     """
-#     element_name = "Selection"
+#     nineml_type = "Selection"
 #     defining_attributes = ("name", "condition")
 #
 #     def __init__(self, name, condition):
@@ -294,7 +294,7 @@ class Concatenate(BaseULObject):
 #         self.evaluated = False
 #
 #     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-#         return E(self.element_name,
+#         return E(self.nineml_type,
 #                  E.select(self.condition.to_xml(document, E=E, **kwargs)),
 #                  name=self.name)
 #
@@ -340,21 +340,21 @@ class Concatenate(BaseULObject):
 #
 #
 # class Any(SelectionOperator):
-#     element_name = "Any"
+#     nineml_type = "Any"
 #
 #     def __str__(self):
 #         return "(" + ") or (".join(qstr(op) for op in self.operands) + ")"
 #
 #
 # class All(SelectionOperator):
-#     element_name = "All"
+#     nineml_type = "All"
 #
 #     def __str__(self):
 #         return "(" + ") and (".join(qstr(op) for op in self.operands) + ")"
 #
 #
 # class Not(SelectionOperator):
-#     element_name = "Not"
+#     nineml_type = "Not"
 #
 #     def __init__(self, *operands):
 #         assert len(operands) == 1
@@ -368,14 +368,14 @@ class Concatenate(BaseULObject):
 #
 #
 # class Eq(Comparison):
-#     element_name = "Equal"
+#     nineml_type = "Equal"
 #
 #     def __str__(self):
 #         return "(%s) == (%s)" % tuple(qstr(op) for op in self.operands)
 #
 #
 # class In(Comparison):
-#     element_name = "In"
+#     nineml_type = "In"
 #
 #     def __init__(self, item, sequence):
 #         Operator.__init__(self, item, sequence)
@@ -395,23 +395,23 @@ class Concatenate(BaseULObject):
 #         operand_elements = []
 #         for c in self.operands:
 #             if isinstance(c, (basestring, float, int)):
-#                 operand_elements.append(E(StringValue.element_name, str(c)))
+#                 operand_elements.append(E(StringValue.nineml_type, str(c)))
 #             else:
 #                 operand_elements.append(c.to_xml(document, E=E, **kwargs))
-#         return E(self.element_name,
+#         return E(self.nineml_type,
 #                  *operand_elements)
 #
 #     @classmethod
 #     def from_xml(cls, element):
-#         if hasattr(cls, "element_name") and element.tag == (NINEML +
-#                                                            cls.element_name):
+#         if hasattr(cls, "nineml_type") and element.tag == (NINEML +
+#                                                            cls.nineml_type):
 #             dispatch = {
-#                 NINEML + StringValue.element_name: StringValue.from_xml,
-#                 NINEML + Eq.element_name: Eq.from_xml,
-#                 NINEML + Any.element_name: Any.from_xml,
-#                 NINEML + All.element_name: All.from_xml,
-#                 NINEML + Not.element_name: Not.from_xml,
-#                 NINEML + In.element_name: In.from_xml,
+#                 NINEML + StringValue.nineml_type: StringValue.from_xml,
+#                 NINEML + Eq.nineml_type: Eq.from_xml,
+#                 NINEML + Any.nineml_type: Any.from_xml,
+#                 NINEML + All.nineml_type: All.from_xml,
+#                 NINEML + Not.nineml_type: Not.from_xml,
+#                 NINEML + In.nineml_type: In.from_xml,
 #             }
 #             operands = []
 #             for child in element.iterchildren():
@@ -419,10 +419,10 @@ class Concatenate(BaseULObject):
 #             return cls(*operands)
 #         else:
 #             return {
-#                 NINEML + Eq.element_name: Eq,
-#                 NINEML + Any.element_name: Any,
-#                 NINEML + All.element_name: All,
-#                 NINEML + Not.element_name: Not,
-#                 NINEML + StringValue.element_name: StringValue,
-#                 NINEML + In.element_name: In,
+#                 NINEML + Eq.nineml_type: Eq,
+#                 NINEML + Any.nineml_type: Any,
+#                 NINEML + All.nineml_type: All,
+#                 NINEML + Not.nineml_type: Not,
+#                 NINEML + StringValue.nineml_type: StringValue,
+#                 NINEML + In.nineml_type: In,
 #             }[element.tag].from_xml(element)

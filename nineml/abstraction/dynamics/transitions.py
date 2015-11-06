@@ -30,7 +30,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
 
     """
 
-    element_name = 'StateAssignment'
+    nineml_type = 'StateAssignment'
 
     def __init__(self, lhs, rhs):
         """StateAssignment Constructor
@@ -71,7 +71,7 @@ class OutputEvent(BaseALObject):
     the component.
     """
 
-    element_name = 'OutputEvent'
+    nineml_type = 'OutputEvent'
     defining_attributes = ('port_name',)
 
     def accept_visitor(self, visitor, **kwargs):
@@ -241,7 +241,7 @@ class Transition(BaseALObject, ContainerObject):
             containing this transition has been built. See
             ``set_source_regime``
         """
-        assert regime.element_name == 'Regime'
+        assert regime.nineml_type == 'Regime'
         self._target_regime = regime
         self._target_regime_name = None
 
@@ -254,7 +254,7 @@ class Transition(BaseALObject, ContainerObject):
             containing this transition has been built. See
             ``set_source_regime``
         """
-        assert regime.element_name == 'Regime'
+        assert regime.nineml_type == 'Regime'
         self._source_regime = regime
 
     @property
@@ -318,7 +318,7 @@ class Transition(BaseALObject, ContainerObject):
 
 class OnEvent(Transition):
 
-    element_name = "OnEvent"
+    nineml_type = "OnEvent"
     defining_attributes = (Transition.defining_attributes + ('src_port_name',))
 
     def accept_visitor(self, visitor, **kwargs):
@@ -372,7 +372,7 @@ class OnEvent(Transition):
 
 class OnCondition(Transition):
 
-    element_name = "OnCondition"
+    nineml_type = "OnCondition"
     defining_attributes = (Transition.defining_attributes + ('trigger',))
 
     def accept_visitor(self, visitor, **kwargs):
@@ -415,7 +415,7 @@ class OnCondition(Transition):
 
 class Trigger(BaseALObject, Expression):
 
-    element_name = 'Trigger'
+    nineml_type = 'Trigger'
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

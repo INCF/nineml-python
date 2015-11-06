@@ -15,8 +15,8 @@ class TestBackwardsCompatibility(unittest.TestCase):
 #         list(self.v2.elements)
 
     def test_backwards_compatibility(self):
-        v1_names = list(self.v1_doc.element_names)
-        v2_names = list(self.v1_doc.element_names)
+        v1_names = list(self.v1_doc.nineml_types)
+        v2_names = list(self.v1_doc.nineml_types)
         self.assertEqual(v1_names, v2_names)
         for name in v1_names:
             v1 = self.v1_doc[name]

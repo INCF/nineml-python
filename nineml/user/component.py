@@ -24,7 +24,7 @@ class Definition(BaseReference):
     """
     Base class for model components that are defined in the abstraction layer.
     """
-    element_name = "Definition"
+    nineml_type = "Definition"
 
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
@@ -70,7 +70,7 @@ class Definition(BaseReference):
 
 class Prototype(Definition):
 
-    element_name = "Prototype"
+    nineml_type = "Prototype"
 
     @property
     def component(self):
@@ -108,7 +108,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     """
     __metaclass__ = ABCMeta  # Abstract base class
-    v1_element_name = 'Component'
+    v1_nineml_type = 'Component'
     defining_attributes = ('name', 'component_class', '_properties')
     children = ("Property", "Definition", 'Prototype')
     write_order = ('Property',)
@@ -161,7 +161,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         return self._name
 
     @abstractmethod
-    def get_element_name(self):
+    def get_nineml_type(self):
         "Used to stop accidental construction of this class"
         pass
 
@@ -264,7 +264,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
         """
-        element = E(self.element_name,
+        element = E(self.nineml_type,
                     self._definition.to_xml(document, E=E, **kwargs),
                     *(p.to_xml(document, E=E, **kwargs)
                       for p in self.sorted_elements(local=True)),
@@ -301,7 +301,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     def get_random_distributions(self):
         return [p.value.distribution for p in self.properties
-                if p.value.element_name == 'RandomValue']
+                if p.value.nineml_type == 'RandomValue']
 
     def port(self, name):
         return self.component_class.port(name)
@@ -480,7 +480,7 @@ class Property(BaseULObject):
     Numerical values may either be numbers, or a component_class that generates
     numbers, e.g. a RandomDistribution instance.
     """
-    element_name = "Property"
+    nineml_type = "Property"
     defining_attributes = ("_name", "_quantity")
 
     def __init__(self, name, quantity):
@@ -514,17 +514,17 @@ class Property(BaseULObject):
         if u"µ" in units:
             units = units.replace(u"µ", "u")
         return ("{}(name={}, value={}, units={})"
-                .format(self.element_name, self.name, self.value, units))
+                .format(self.nineml_type, self.name, self.value, units))
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         if E._namespace == NINEMLv1:
-            xml = E(self.element_name,
+            xml = E(self.nineml_type,
                     self.value.to_xml(document, E=E, **kwargs),
                     name=self.name,
                     units=self.units.name)
         else:
-            xml = E(self.element_name,
+            xml = E(self.nineml_type,
                     self._quantity.to_xml(document, E=E, **kwargs),
                     name=self.name)
         return xml
@@ -556,14 +556,14 @@ class Initial(Property):
     """
     temporary, longer-term plan is to use SEDML or something similar
     """
-    element_name = "Initial"
+    nineml_type = "Initial"
 
 
 class DynamicsProperties(Component):
     """
     Container for the set of properties for a component_class.
     """
-    element_name = 'DynamicsProperties'
+    nineml_type = 'DynamicsProperties'
     defining_attributes = ('name', 'component_class', '_properties',
                            '_initial_values')
     class_to_member = dict(
@@ -585,8 +585,8 @@ class DynamicsProperties(Component):
         if check_initial_values:
             self.check_initial_values()
 
-    def get_element_name(self):
-        return self.element_name
+    def get_nineml_type(self):
+        return self.nineml_type
 
     def check_initial_values(self):
         for var in self.definition.component_class.state_variables:
@@ -656,10 +656,10 @@ class ConnectionRuleProperties(Component):
     """
     docstring needed
     """
-    element_name = 'ConnectionRuleProperties'
+    nineml_type = 'ConnectionRuleProperties'
 
-    def get_element_name(self):
-        return self.element_name
+    def get_nineml_type(self):
+        return self.nineml_type
 
     @property
     def standard_library(self):
@@ -675,11 +675,11 @@ class RandomDistributionProperties(Component):
 
         example goes here
     """
-    element_name = 'RandomDistributionProperties'
+    nineml_type = 'RandomDistributionProperties'
 
     @property
     def standard_library(self):
         return self.component_class.standard_library
 
-    def get_element_name(self):
-        return self.element_name
+    def get_nineml_type(self):
+        return self.nineml_type

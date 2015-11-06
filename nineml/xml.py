@@ -98,18 +98,18 @@ def from_child_xml(element, child_classes, document, multiple=False,
     else:
         parent = element
     # Get the list of child class names for error messages
-    child_cls_names = "', '".join(c.element_name for c in child_classes)
+    child_cls_names = "', '".join(c.nineml_type for c in child_classes)
     # Append all child classes
     children = []
     if allow_reference != 'only':
         for child_cls in child_classes:
             if xmlns == NINEMLv1:
                 try:
-                    tag_name = child_cls.v1_element_name
+                    tag_name = child_cls.v1_nineml_type
                 except AttributeError:
-                    tag_name = child_cls.element_name
+                    tag_name = child_cls.nineml_type
             else:
-                tag_name = child_cls.element_name
+                tag_name = child_cls.nineml_type
             for child_elem in parent.findall(xmlns + tag_name):
                 children.append(child_cls.from_xml(child_elem, document,
                                                    **kwargs))
@@ -117,7 +117,7 @@ def from_child_xml(element, child_classes, document, multiple=False,
                     unprocessed[0].discard(child_elem)
     if allow_reference:
         for ref_elem in parent.findall(
-                xmlns + nineml.reference.Reference.element_name):
+                xmlns + nineml.reference.Reference.nineml_type):
             ref = nineml.reference.Reference.from_xml(ref_elem, document,
                                                       **kwargs)
             if isinstance(ref.user_object, child_classes):
@@ -219,15 +219,15 @@ def unprocessed_xml(from_xml):
             xmlns = extract_xmlns(element.tag)
             if xmlns == NINEMLv1:
                 try:
-                    element_name = cls.v1_element_name
+                    nineml_type = cls.v1_nineml_type
                 except AttributeError:
-                    element_name = cls.element_name
+                    nineml_type = cls.nineml_type
             else:
-                element_name = cls.element_name
+                nineml_type = cls.nineml_type
             # Check the tag of the element matches the class names
-            assert element.tag in (xmlns + element_name), (
+            assert element.tag in (xmlns + nineml_type), (
                 "Found '{}' element, expected '{}'"
-                .format(element.tag, cls.element_name))
+                .format(element.tag, cls.nineml_type))
         else:
             document = cls.document  # if AL visitor method
         # Keep track of which blocks and attributes were processed within the

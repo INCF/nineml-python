@@ -28,7 +28,7 @@ class Parameter(BaseALObject):
     future, wrapping in into its own object may make the transition easier
     """
 
-    element_name = 'Parameter'
+    nineml_type = 'Parameter'
     defining_attributes = ('_name', '_dimension')
 
     def __init__(self, name, dimension=None):
@@ -85,7 +85,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     defining_attributes = ('_name', '_parameters', '_aliases', '_constants')
     class_to_member = {'Parameter': 'parameter', 'Alias': 'alias',
                        'Constant': 'constant'}
-    v1_element_name = 'ComponentClass'
+    v1_nineml_type = 'ComponentClass'
 
     def __init__(self, name, parameters=None, aliases=None, constants=None,
                  document=None):

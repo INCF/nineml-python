@@ -25,7 +25,7 @@ class BaseNineMLObject(object):
 
     def __eq__(self, other):
         try:
-            if self.element_name != other.element_name:
+            if self.nineml_type != other.nineml_type:
                 return False
         except AttributeError:
             return False
@@ -69,9 +69,9 @@ class BaseNineMLObject(object):
         else:
             result = ''
         try:
-            if self.element_name != other.element_name:
-                result += ("mismatch in element_name, self:'{}' and other:'{}'"
-                           .format(self.element_name, other.element_name))
+            if self.nineml_type != other.nineml_type:
+                result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
+                           .format(self.nineml_type, other.nineml_type))
             else:
                 for attr_name in self.__class__.defining_attributes:
                     self_attr = getattr(self, attr_name)
@@ -240,7 +240,7 @@ class ContainerObject(object):
                       *(self._num_members(et, as_class=as_class)
                         for et in as_class.class_to_member))
 
-    def element_names(self, as_class=None):
+    def nineml_types(self, as_class=None):
         if as_class is None:
             as_class = type(self)
         for element_type in as_class.class_to_member:
@@ -333,7 +333,7 @@ class ContainerObject(object):
         return index
 
     # =========================================================================
-    # Each member element_name is associated with a member accessor by the
+    # Each member nineml_type is associated with a member accessor by the
     # class attribute 'class_to_member' dictionary. From this name accessors
     # for the set of members of this type, and their names and length, can be
     # derrived from the stereotypical naming structure used
@@ -347,7 +347,7 @@ class ContainerObject(object):
 
     def _members_iter(self, element_type, as_class=None):
         """
-        Looks up the name of values iterator from the element_name of the
+        Looks up the name of values iterator from the nineml_type of the
         element argument.
         """
         if as_class is None:
@@ -384,17 +384,17 @@ class ContainerObject(object):
         """Sorts the element into a consistent, logical order before write"""
         return sorted(
             self.elements(**kwargs),
-            key=lambda e: (self.write_order.index(e.element_name),
+            key=lambda e: (self.write_order.index(e.nineml_type),
                            str(e._name)))
 
 
 def accessor_name_from_type(class_type, element_type):
     """
-    Looks up the name of the accessor method from the element_name of the
+    Looks up the name of the accessor method from the nineml_type of the
     element argument for a given container type
     """
     if not isinstance(element_type, basestring):
-        element_type = element_type.element_name
+        element_type = element_type.nineml_type
     try:
         return class_type.class_to_member[element_type]
     except KeyError:
