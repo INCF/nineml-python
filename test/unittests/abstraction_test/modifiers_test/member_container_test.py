@@ -98,15 +98,6 @@ class MemberContainer_test(unittest.TestCase):
         b.add(Alias('A5', 'P1 + P2'))
         self.assertNotEqual(a, b, "Added Alias was not detected")
 
-    def test_contains(self):
-        self.assertTrue(self.a.regime('R2') in self.a)
-        self.assertFalse(self.a.regime('R2') in self.b)
-        self.assertTrue(self.a.regime('R2').name in self.b)
-        self.assertTrue(self.b.parameter('P3') in self.b)
-        self.assertTrue('A1' in self.a)
-        self.assertTrue(self.b.regime('R2').on_condition('SV3 < 0.001')
-                        .state_assignment('SV3') in self.b)
-
     def test_getitem(self):
         self.assertIs(self.a.alias('A1'), self.a.element('A1'))
         self.assertIs(self.a.parameter('P2'), self.a.element('P2'))
