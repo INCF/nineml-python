@@ -6,7 +6,7 @@ from nineml.abstraction import (
     ConnectionRule)
 from nineml.user import (
     Population, DynamicsProperties, Projection, ConnectionRuleProperties)
-from nineml.xml import nineml_ns
+from nineml.xml import nineml_v1_ns
 from nineml import units as un, Document
 
 
@@ -76,7 +76,7 @@ class TestProjection(unittest.TestCase):
 
         self.one_to_one = ConnectionRule(
             name="OneToOne",
-            standard_library=(nineml_ns + '/connectionrules/OneToOne'))
+            standard_library=(nineml_v1_ns + '/connectionrules/OneToOne'))
 
         self.projection = Projection(
             name="Projection",
@@ -95,7 +95,8 @@ class TestProjection(unittest.TestCase):
         xml = self.projection.to_xml(document)
         projection2 = Projection.from_xml(xml, document)
         self.assertEquals(self.projection, projection2,
-                          "Projection failed XML roundtrip")
+                          "Projection failed XML roundtrip:\n{}"
+                          .format(self.projection.find_mismatch(projection2)))
 
 if __name__ == '__main__':
     tester = TestProjection()

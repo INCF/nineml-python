@@ -665,6 +665,10 @@ class ConnectionRuleProperties(Component):
     def standard_library(self):
         return self.component_class.standard_library
 
+    @property
+    def lib_type(self):
+        return self.component_class.lib_type
+
 
 class RandomDistributionProperties(Component):
     """

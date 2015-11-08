@@ -28,17 +28,31 @@ class BaseConnectivity(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, connection_rule, source, destination, **kwargs):
+    def __init__(self, connection_rule_props, source, destination, **kwargs):
         self._source = source
         self._dest = destination
-        self._rule = connection_rule
+        self._rule = connection_rule_props
         self._src_size = self._source.size
         self._dest_size = self._dest.size
         self.reset(**kwargs)
 
+    def __eq__(self, other):
+        result = (self._rule == other._rule and
+                  self._src_size == other._src_size and
+                  self._dest_size == other._dest_size)
+        return result
+
+    def __ne__(self, other):
+        return not (self == other)
+
     @property
     def rule(self):
         return self._rule
+
+    def __repr__(self):
+        return ("{}(rule={}, src={}, dest_size={})"
+                .format(self.__class__.__name__, self._rule.lib_type,
+                        self._src_size, self._dest_size))
 
     def connections(self, source_mask=None, destination_mask=None):
         """
@@ -280,9 +294,9 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
-    def __init__(self, name, pre, post, response, connection_rule_props,
+    def __init__(self, name, pre, post, response, connectivity,
                  delay, plasticity=None, port_connections=[], document=None,
-                 connectivity_class=Connectivity, rng_seed=None):
+                 connectivity_cls=Connectivity, **kwargs):
         """
         Create a new projection.
         """
@@ -299,8 +313,8 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._post = post
         self._response = response
         self._plasticity = plasticity
-        self._connectivity = connectivity_class(
-            connection_rule_props, pre, post, rng_seed)
+        self._connectivity = connectivity_cls(
+            connectivity, pre, post, **kwargs)
         self._delay = delay
         self._analog_port_connections = []
         self._event_port_connections = []
@@ -367,7 +381,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         """
         Return a list of all components used by the projection.
         """
-        components = [self.connectivity, self.response]
+        components = [self.connectivity.rule, self.response]
         if self.plasticity is not None:
             components.append(self.plasticity)
         return components
@@ -394,7 +408,8 @@ class Projection(BaseULObject, DocumentLevelObject):
                     E.Response(self.response.to_xml(document, E=E, **kwargs),
                                *pcs['response']),
                     E.Connectivity(
-                        self.connectivity.to_xml(document, E=E, **kwargs))]
+                        self.connectivity.rule.to_xml(document, E=E,
+                                                      **kwargs))]
             if self.plasticity:
                 args.append(E.Plasticity(
                     self.plasticity.to_xml(document, E=E, **kwargs),
@@ -410,8 +425,8 @@ class Projection(BaseULObject, DocumentLevelObject):
                     document, E=E, as_ref=True, **kwargs)))
             members.extend([
                 E.Response(self.response.to_xml(document, E=E, **kwargs)),
-                E.Connectivity(self.connectivity.to_xml(document, E=E,
-                                                        **kwargs)),
+                E.Connectivity(self.connectivity.rule.to_xml(document, E=E,
+                                                             **kwargs)),
                 E.Delay(self.delay.to_xml(document, E=E, **kwargs))])
             if self.plasticity is not None:
                 members.append(
