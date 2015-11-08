@@ -4,7 +4,7 @@ from .component import (
     resolve_reference, write_reference, DynamicsProperties)
 from nineml.base import DocumentLevelObject
 from nineml.xml import (
-    E, unprocessed_xml, from_child_xml, get_xml_attr, extract_xmlns, NINEMLv1)
+    E, unprocessed_xml, from_child_xml, get_xml_attr)
 from nineml.annotations import annotate_xml, read_annotations
 
 
