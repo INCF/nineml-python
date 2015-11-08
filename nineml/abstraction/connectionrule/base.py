@@ -14,6 +14,7 @@ docstring goes here
 """
 from ..componentclass import ComponentClass
 from nineml.xml import E
+from nineml.exceptions import NineMLRuntimeError
 
 
 class ConnectionRule(ComponentClass):
@@ -23,10 +24,24 @@ class ConnectionRule(ComponentClass):
     # Maintains order of elements between writes
     write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 
+    standard_library_basepath = 'http://nineml.net/connectionrule/'
+    _base_len = len(standard_library_basepath)
+    standard_types = ('AllToAll', 'OneToOne', 'ExplicitConnectionList',
+                      'ProbabilisticConnectivity', 'RandomFanIn',
+                      'RandomFanOut')
+
     def __init__(self, name, standard_library, parameters=None,
                  document=None):
         super(ConnectionRule, self).__init__(
             name, parameters, document=document)
+        if (not standard_library.startswith(self.standard_library_basepath) or
+                standard_library[self._base_len:] not in self.standard_types):
+            raise NineMLRuntimeError(
+                "Unrecognised connection rule library path '{}'. "
+                "Available options are '{}'".format(
+                    standard_library,
+                    "', '".join(self.standard_library_basepath + t
+                                for t in self.standard_types)))
         self._standard_library = standard_library
 
     @property
@@ -75,6 +90,14 @@ class ConnectionRule(ComponentClass):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return ConnectionRuleXMLLoader(document).load_connectionruleclass(
             element, **kwargs)
+
+    @property
+    def lib_type(self):
+        return self.standard_library[self._base_len:]
+
+    def is_random(self):
+        return self.lib_type in ('Probabilistic', 'RandomFanIn',
+                                 'RandomFanOut')
 
 
 from .visitors.modifiers import (

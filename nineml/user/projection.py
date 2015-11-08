@@ -1,5 +1,7 @@
 # encoding: utf-8
+from abc import ABCMeta, abstractmethod
 from . import BaseULObject
+from itertools import izip
 from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
 from nineml.reference import resolve_reference, write_reference
@@ -9,6 +11,7 @@ from nineml.annotations import read_annotations, annotate_xml
 from .component import (
     ConnectionRuleProperties, DynamicsProperties)
 from nineml.values import SingleValue, ArrayValue, RandomValue
+import random
 from itertools import chain
 from .population import Population
 from .selection import Selection
@@ -18,6 +21,179 @@ from nineml.utils import expect_single
 from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
+
+
+class BaseConnectivity(object):
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, connection_rule, source, destination, **kwargs):
+        self._source = source
+        self._dest = destination
+        self._rule = connection_rule
+        self._src_size = self._source.size
+        self._dest_size = self._dest.size
+        self.reset(**kwargs)
+
+    @property
+    def rule(self):
+        return self._rule
+
+    def connections(self, source_indices=None, destination_indices=None):  # @UnusedVariable @IgnorePep8
+        """
+        Returns an iterator over all the source/destination index pairings
+        with a connection.
+        `src`  -- the indices to get the connections from
+        `dest` -- the indices to get the connections to
+        """
+        if self._src_size != self._source.size:
+            raise NineMLRuntimeError(
+                "Source has changed size ({} to {}) since last reset"
+                .format(self._src_size, self._source.size))
+        if self._dest_size != self._dest.size:
+            raise NineMLRuntimeError(
+                "Destination has changed size ({} to {}) since last reset"
+                .format(self._dest_size, self._dest.size))
+        if self.rule.lib_type == 'AllToAll':
+            conn = self._all_to_all(source_indices, destination_indices)
+        elif self.rule.lib_type == 'OneToOne':
+            conn = self._one_to_one(source_indices, destination_indices)
+        elif self.rule.lib_type == 'ExplicitConnectionList':
+            conn = self._explicit_connection_list(source_indices,
+                                                  destination_indices)
+        elif self.rule.lib_type == 'ProbabilisticConnectivity':
+            conn = self._probabilistic_connectivity(source_indices,
+                                                    destination_indices)
+        elif self.rule.lib_type == 'RandomFanIn':
+            conn = self._random_fan_in(source_indices, destination_indices)
+        elif self.rule.lib_type == 'RandomFanOut':
+            conn = self._random_fan_out(source_indices, destination_indices)
+        else:
+            assert False
+        return conn
+
+    def reset(self, **kwargs):  # @UnusedVariable
+        self._src_size = self._source.size
+        self._dest_size = self._dest.size
+
+    @abstractmethod
+    def _all_to_all(self, source_indices, destination_indices):
+        pass
+
+    @abstractmethod
+    def _one_to_one(self, source_indices, destination_indices):
+        pass
+
+    @abstractmethod
+    def _explicit_connection_list(self, source_indices, destination_indices):
+        pass
+
+    @abstractmethod
+    def _probabilistic_connectivity(self, source_indices, destination_indices):
+        pass
+
+    @abstractmethod
+    def _random_fan_in(self, source_indices, destination_indices):
+        pass
+
+    @abstractmethod
+    def _random_fan_out(self, source_indices, destination_indices):
+        pass
+
+
+class Connectivity(BaseConnectivity):
+    """
+    A reference implementation of the Connectivity class, it is not recommended
+    for large networks as it is not designed for efficiency. For more efficient
+    implementations the BaseConnectivity class can be overridden for more
+    (e.g. using NumPy etc...)
+    """
+
+    def reset(self, seed=None):
+        super(Connectivity, self).reset()
+        if self.rule.is_random():
+            self._cache = {}
+
+    def _all_to_all(self, source_indices, destination_indices):
+        if source_indices is not None:
+            src = source_indices
+        else:
+            src = xrange(self._src_size)
+        if destination_indices is not None:
+            dest = destination_indices
+        else:
+            dest = xrange(self._dest_size)
+        return chain(*(((s, d) for d in dest) for s in src))
+
+    def _one_to_one(self, source_indices, destination_indices):
+        if self._src_size != self._dest_size:
+            raise NineMLRuntimeError(
+                "Cannot connect to populations of different sizes "
+                "({} and {}) with OneToOne connection rule"
+                .format(self._src_size, self._dest_size))
+        if source_indices is not None:
+            if destination_indices is not None:
+                # Get the intersection between the source and destination
+                # sets
+                inds = set(source_indices) ^ set(destination_indices)
+            else:
+                inds = source_indices
+        elif destination_indices is not None:
+            inds = destination_indices
+        else:
+            inds = xrange(self._src_size)  # All indices
+        return ((i, i) for i in inds)
+
+    def _explicit_connection_list(self, source_indices, destination_indices):
+        conns = izip(self.rule.property('source_indices').values,
+                     self.rule.property('destination_indices').values)
+        if source_indices is not None:
+            if destination_indices is not None:
+                conns = (
+                    (s, d) for s, d in conns
+                    if s in source_indices and d in destination_indices)
+            else:
+                conns = ((s, d) for s, d in conns if s in source_indices)
+        elif destination_indices:
+            conns = ((s, d) for s, d in conns if d in destination_indices)
+
+    def _probabilistic_connectivity(self, source_indices, destination_indices):
+        self._check_seed()
+        if source_indices is not None:
+            src = source_indices
+        else:
+            src = xrange(self._src_size)
+        if destination_indices is not None:
+            dest = destination_indices
+        else:
+            dest = xrange(self._dest_size)
+        p = self.rule.property('probability')
+        if self._cache:
+            conn = chain(*((self._cache.get((s, d), random.random() < p)
+                            for d in dest) for s in src))
+        else:
+            conn = chain(*(((s, d) for d in dest if random.random() < p)
+                           for s in src))
+        return conn
+
+    def _random_fan_in(self, source_indices, destination_indices):
+        self._check_seed()
+        raise NotImplementedError
+
+    def _random_fan_out(self, source_indices, destination_indices):
+        self._check_seed()
+        raise NotImplementedError
+
+    def _check_seed(self):
+        if self._seed is None:
+            raise NineMLRuntimeError(
+                "Random number generator seed must be set before connections "
+                "can be read as connection rule '{}' has stochastic "
+                "components".format(self._connection_rule.name))
+
+    @property
+    def seed(self):
+        return self._seed
 
 
 class Projection(BaseULObject, DocumentLevelObject):
@@ -55,8 +231,9 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
-    def __init__(self, name, pre, post, response, connectivity,
-                 delay, plasticity=None, port_connections=[], document=None):
+    def __init__(self, name, pre, post, response, connection_rule_props,
+                 delay, plasticity=None, port_connections=[], document=None,
+                 connectivity_class=Connectivity, rng_seed=None):
         """
         Create a new projection.
         """
@@ -73,7 +250,8 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._post = post
         self._response = response
         self._plasticity = plasticity
-        self._connectivity = connectivity
+        self._connectivity = connectivity_class(
+            connection_rule_props, pre, post, rng_seed)
         self._delay = delay
         self._analog_port_connections = []
         self._event_port_connections = []

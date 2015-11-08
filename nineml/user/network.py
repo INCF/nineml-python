@@ -11,10 +11,11 @@ from nineml.exceptions import NineMLNameError
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
 from .multi.component import MultiDynamics
-from nineml.user.port_connections import BasePortConnection
+from nineml.user.port_connections import EventPortConnection
 from .multi.port_exposures import (
     AnalogReceivePortExposure, EventReceivePortExposure,
     AnalogSendPortExposure, EventSendPortExposure)
+from .multi.namespace import append_namespace
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -235,17 +236,17 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
             source = self._dyn_array_from_pop(projection.pre)
             dest = self._dyn_array_from_pop(projection.post)
         return (
-            ConnectionGroup(
+            BaseConnectionGroup.cls_from_port_connection(pc)(
                 '{}__{}_{}__{}_{}___connection_group'.format(
                     projection.name, pc.sender_role, pc.send_port_name,
                     pc.receiver_role, pc.receive_port_name),
                 source, dest,
-                pc.__class__(sender_name=self._role2dyn(projection.name,
-                                                        pc.sender_role),
-                             receiver_name=self._role2dyn(projection.name,
-                                                          pc.receiver_role),
-                             receive_port=pc.receive_port,
-                             send_port=pc.send_port),
+                source_port=append_namespace(
+                    pc.send_port,
+                    self._role2dyn(projection.name, pc.sender_role)),
+                destination_port=append_namespace(
+                    pc.receive_port,
+                    self._role2dyn(projection.name, pc.receiver_role)),
                 projection.connectivity)
             for pc in projection.port_connections
             if 'pre' in (pc.sender_role, pc.receiver_role))
@@ -324,24 +325,26 @@ class DynamicsArray(BaseULObject):
         return self._dynamics
 
 
-class ConnectionGroup(BaseULObject):
+class BaseConnectionGroup(BaseULObject):
 
-    nineml_type = "ConnectionGroup"
     defining_attributes = ('name', "source", "destination",
-                           "port_connection", "connection_rule")
+                           "source_port", "destination_port",
+                           "_connections")
 
-    def __init__(self, name, source, destination, port_connection,
-                 connection_rule):
+    def __init__(self, name, source, destination, source_port,
+                 destination_port, connections):
         assert isinstance(name, basestring)
         assert isinstance(source, DynamicsArray)
         assert isinstance(destination, DynamicsArray)
-        assert isinstance(port_connection, BasePortConnection)
-        assert isinstance(connection_rule, ConnectionRuleProperties)
+        assert isinstance(source_port, basestring)
+        assert isinstance(destination_port, basestring)
+        assert isinstance(connections, ConnectionRuleProperties)
         self._name = name
         self._source = source
         self._destination = destination
-        self._port_connection = port_connection
-        self._connection_rule = connection_rule
+        self._source_port = source_port
+        self._destination_port = destination_port
+        self._connections = connections
 
     @property
     def name(self):
@@ -356,15 +359,37 @@ class ConnectionGroup(BaseULObject):
         return self._destination
 
     @property
-    def port_connection(self):
-        return self._port_connection
+    def source_port(self):
+        return self._source_port
 
     @property
-    def connection_rule(self):
-        return self._connection_rule
+    def destination_port(self):
+        return self._destination_port
 
-    def __iter__(self):
-        raise NotImplementedError
+    @property
+    def connections(self):
+        return self._connections
 
-    def connected(self, i, j):
-        raise NotImplementedError
+    @classmethod
+    def cls_from_port_connection(cls, port_connection):
+        if isinstance(port_connection, EventPortConnection):
+            conn_grp_cls = EventConnectionGroup
+        else:
+            conn_grp_cls = AnalogConnectionGroup
+        return conn_grp_cls
+
+
+class AnalogConnectionGroup(BaseConnectionGroup):
+
+    nineml_type = 'AnalogConnectionGroup'
+
+
+class EventConnectionGroup(BaseConnectionGroup):
+
+    nineml_type = 'EventConnectionGroup'
+
+
+class Connections(object):
+
+    def __init__(self, connection_rule):
+        self._connection_rule = connection_rule

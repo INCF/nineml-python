@@ -1,5 +1,6 @@
 from ..componentclass import ComponentClass
 from nineml.xml import E
+from nineml.exceptions import NineMLRuntimeError
 
 
 class RandomDistribution(ComponentClass):
@@ -9,10 +10,26 @@ class RandomDistribution(ComponentClass):
     # Maintains order of elements between writes
     write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 
+    standard_library_basepath = 'http://www.uncertml.org/distributions/'
+    _base_len = len(standard_library_basepath)
+    standard_types = ('bernoulli', 'beta', 'binomial', 'cauchy', 'chi-square'
+                      'dirichlet', 'exponential', 'f', 'gamma', 'geometric',
+                      'hypergeometric', 'laplace', 'logistic', 'log-normal',
+                      'multinomial', 'negative-binomial', 'normal'
+                      'pareto', 'poisson', 'uniform', 'weibull')
+
     def __init__(self, name, standard_library, parameters=None,
                  document=None):
         super(RandomDistribution, self).__init__(
             name, parameters, document=document)
+        if (not standard_library.startswith(self.standard_library_basepath) or
+                standard_library[self._base_len:] not in self.standard_types):
+            raise NineMLRuntimeError(
+                "Unrecognised random distribution library path '{}'. "
+                "Available options are '{}'".format(
+                    standard_library,
+                    "', '".join(self.standard_library_basepath + t
+                                for t in self.standard_types)))
         self._standard_library = standard_library
 
     @property
