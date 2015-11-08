@@ -1,7 +1,8 @@
 # encoding: utf-8
 from abc import ABCMeta, abstractmethod
 from . import BaseULObject
-from itertools import izip
+import math
+from itertools import izip, tee
 from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
 from nineml.reference import resolve_reference, write_reference
@@ -39,7 +40,7 @@ class BaseConnectivity(object):
     def rule(self):
         return self._rule
 
-    def connections(self, source_indices=None, destination_indices=None):  # @UnusedVariable @IgnorePep8
+    def connections(self, source_mask=None, destination_mask=None):
         """
         Returns an iterator over all the source/destination index pairings
         with a connection.
@@ -55,19 +56,19 @@ class BaseConnectivity(object):
                 "Destination has changed size ({} to {}) since last reset"
                 .format(self._dest_size, self._dest.size))
         if self.rule.lib_type == 'AllToAll':
-            conn = self._all_to_all(source_indices, destination_indices)
+            conn = self._all_to_all(source_mask, destination_mask)
         elif self.rule.lib_type == 'OneToOne':
-            conn = self._one_to_one(source_indices, destination_indices)
+            conn = self._one_to_one(source_mask, destination_mask)
         elif self.rule.lib_type == 'ExplicitConnectionList':
-            conn = self._explicit_connection_list(source_indices,
-                                                  destination_indices)
+            conn = self._explicit_connection_list(source_mask,
+                                                  destination_mask)
         elif self.rule.lib_type == 'ProbabilisticConnectivity':
-            conn = self._probabilistic_connectivity(source_indices,
-                                                    destination_indices)
+            conn = self._probabilistic_connectivity(source_mask,
+                                                    destination_mask)
         elif self.rule.lib_type == 'RandomFanIn':
-            conn = self._random_fan_in(source_indices, destination_indices)
+            conn = self._random_fan_in(source_mask, destination_mask)
         elif self.rule.lib_type == 'RandomFanOut':
-            conn = self._random_fan_out(source_indices, destination_indices)
+            conn = self._random_fan_out(source_mask, destination_mask)
         else:
             assert False
         return conn
@@ -77,27 +78,27 @@ class BaseConnectivity(object):
         self._dest_size = self._dest.size
 
     @abstractmethod
-    def _all_to_all(self, source_indices, destination_indices):
+    def _all_to_all(self, source_mask, destination_mask):
         pass
 
     @abstractmethod
-    def _one_to_one(self, source_indices, destination_indices):
+    def _one_to_one(self, source_mask, destination_mask):
         pass
 
     @abstractmethod
-    def _explicit_connection_list(self, source_indices, destination_indices):
+    def _explicit_connection_list(self, source_mask, destination_mask):
         pass
 
     @abstractmethod
-    def _probabilistic_connectivity(self, source_indices, destination_indices):
+    def _probabilistic_connectivity(self, source_mask, destination_mask):
         pass
 
     @abstractmethod
-    def _random_fan_in(self, source_indices, destination_indices):
+    def _random_fan_in(self, source_mask, destination_mask):
         pass
 
     @abstractmethod
-    def _random_fan_out(self, source_indices, destination_indices):
+    def _random_fan_out(self, source_mask, destination_mask):
         pass
 
 
@@ -105,95 +106,143 @@ class Connectivity(BaseConnectivity):
     """
     A reference implementation of the Connectivity class, it is not recommended
     for large networks as it is not designed for efficiency. For more efficient
-    implementations the BaseConnectivity class can be overridden for more
-    (e.g. using NumPy etc...)
+    implementations the BaseConnectivity class can be overridden using
+    external libraries such as NumPy.
     """
 
-    def reset(self, seed=None):
+    def reset(self):
         super(Connectivity, self).reset()
-        if self.rule.is_random():
+        if self.rule.lib_type == 'ProbabilisticConnectivity':
+            self._in_cache = set()
+            self._cache = []
+        elif self.rule.lib_type in ('RandomFanIn', 'RandomFanOut'):
             self._cache = {}
 
-    def _all_to_all(self, source_indices, destination_indices):
-        if source_indices is not None:
-            src = source_indices
+    def _all_to_all(self, source_mask, destination_mask):
+        if source_mask is not None:
+            src = source_mask
         else:
             src = xrange(self._src_size)
-        if destination_indices is not None:
-            dest = destination_indices
+        if destination_mask is not None:
+            dest = destination_mask
         else:
             dest = xrange(self._dest_size)
         return chain(*(((s, d) for d in dest) for s in src))
 
-    def _one_to_one(self, source_indices, destination_indices):
+    def _one_to_one(self, source_mask, destination_mask):
         if self._src_size != self._dest_size:
             raise NineMLRuntimeError(
                 "Cannot connect to populations of different sizes "
                 "({} and {}) with OneToOne connection rule"
                 .format(self._src_size, self._dest_size))
-        if source_indices is not None:
-            if destination_indices is not None:
+        if source_mask is not None:
+            if destination_mask is not None:
                 # Get the intersection between the source and destination
                 # sets
-                inds = set(source_indices) ^ set(destination_indices)
+                inds = set(source_mask) ^ set(destination_mask)
             else:
-                inds = source_indices
-        elif destination_indices is not None:
-            inds = destination_indices
+                inds = source_mask
+        elif destination_mask is not None:
+            inds = destination_mask
         else:
             inds = xrange(self._src_size)  # All indices
         return ((i, i) for i in inds)
 
-    def _explicit_connection_list(self, source_indices, destination_indices):
-        conns = izip(self.rule.property('source_indices').values,
-                     self.rule.property('destination_indices').values)
-        if source_indices is not None:
-            if destination_indices is not None:
+    def _explicit_connection_list(self, source_mask, destination_mask):
+        conns = izip(self.rule.property('source_mask').values,
+                     self.rule.property('destination_mask').values)
+        if source_mask is not None:
+            if destination_mask is not None:
                 conns = (
                     (s, d) for s, d in conns
-                    if s in source_indices and d in destination_indices)
+                    if s in source_mask and d in destination_mask)
             else:
-                conns = ((s, d) for s, d in conns if s in source_indices)
-        elif destination_indices:
-            conns = ((s, d) for s, d in conns if d in destination_indices)
+                conns = ((s, d) for s, d in conns if s in source_mask)
+        elif destination_mask:
+            conns = ((s, d) for s, d in conns if d in destination_mask)
 
-    def _probabilistic_connectivity(self, source_indices, destination_indices):
-        self._check_seed()
-        if source_indices is not None:
-            src = source_indices
+    def _probabilistic_connectivity(self, source_mask, destination_mask):
+        if self._in_cache is None:  # All connections have been generated prev.
+            conn = iter(self._cache)
         else:
-            src = xrange(self._src_size)
-        if destination_indices is not None:
-            dest = destination_indices
-        else:
-            dest = xrange(self._dest_size)
-        p = self.rule.property('probability')
-        if self._cache:
-            conn = chain(*((self._cache.get((s, d), random.random() < p)
-                            for d in dest) for s in src))
-        else:
-            conn = chain(*(((s, d) for d in dest if random.random() < p)
-                           for s in src))
+            if source_mask is not None:
+                src = source_mask
+            else:
+                src = xrange(self._src_size)
+            if destination_mask is not None:
+                dest = destination_mask
+            else:
+                dest = xrange(self._dest_size)
+            p = self.rule.property('probability').value
+            # Get an iterator over all of the source dest pairs to test
+            pairs_to_test = chain(*(((s, d) for d in dest) for s in src))
+            # Get two copies of the iterator, one for generating the
+            # probabilities the other for updating the list of pairs in the
+            # cache
+            pairs_to_test, pairs_to_test_copy = tee(pairs_to_test)
+            # Get new connections if that pair hasn't already been tested and
+            # saved in cache
+            if self._in_cache is None or not len(self._in_cache):
+                new_conn = [
+                    pair for pair in pairs_to_test if p < random.random()]
+            else:
+                new_conn = [
+                    pair for pair in pairs_to_test
+                    if pair not in self._in_cache and p < random.random()]
+            # Append the new connections to the cache
+            self._cache.append(new_conn)
+            # Record the which pairs have been tested (and stored in cache)
+            if source_mask is None and destination_mask is None:
+                self._in_cache = None  # Signifies all are in cache
+            else:
+                self._in_cache.add(pairs_to_test_copy)
+            # Return the pairs in the cache combined with the new connections
+            conn = chain(self._cache, new_conn)
         return conn
 
-    def _random_fan_in(self, source_indices, destination_indices):
-        self._check_seed()
-        raise NotImplementedError
+    def _random_fan_in(self, source_mask, destination_mask):
+        N = int(self.rule.property('number').value)
+        if destination_mask is not None:
+            dest = destination_mask
+        else:
+            dest = xrange(self._dest_size)
+        all_conns = []
+        for d in dest:
+            try:
+                src_inds = self._cache[d]
+            except KeyError:
+                # Generate N random source indices
+                src_inds = [math.floor(random.random() * self._src_size)
+                            for _ in xrange(N)]
+                self._cache[d] = src_inds
+            if source_mask is None:
+                conns = ((s, d) for s in src_inds)
+            else:
+                conns = ((s, d) for s in src_inds if s in source_mask)
+            all_conns.append(conns)
+        return chain(*all_conns)
 
-    def _random_fan_out(self, source_indices, destination_indices):
-        self._check_seed()
-        raise NotImplementedError
-
-    def _check_seed(self):
-        if self._seed is None:
-            raise NineMLRuntimeError(
-                "Random number generator seed must be set before connections "
-                "can be read as connection rule '{}' has stochastic "
-                "components".format(self._connection_rule.name))
-
-    @property
-    def seed(self):
-        return self._seed
+    def _random_fan_out(self, source_mask, destination_mask):
+        N = int(self.rule.property('number').value)
+        if source_mask is not None:
+            src = source_mask
+        else:
+            src = xrange(self._src_size)
+        all_conns = []
+        for s in src:
+            try:
+                dest_inds = self._cache[s]
+            except KeyError:
+                # Generate N random destination indices
+                dest_inds = [math.floor(random.random() * self._dest_size)
+                             for _ in xrange(N)]
+                self._cache[s] = dest_inds
+            if destination_mask is None:
+                conns = ((s, d) for d in dest_inds)
+            else:
+                conns = ((s, d) for d in dest_inds if d in destination_mask)
+            all_conns.append(conns)
+        return chain(*all_conns)
 
 
 class Projection(BaseULObject, DocumentLevelObject):
