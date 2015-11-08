@@ -14,8 +14,9 @@ import os.path
 import unittest
 from nineml.user import (
     Projection, Network, DynamicsProperties, ConnectionRuleProperties,
-    Population, DynamicsArray, ConnectionGroup, MultiDynamics,
-    EventPortConnection)
+    Population, DynamicsArray, EventConnectionGroup,
+    MultiDynamics)
+from nineml.user.projection import Connectivity
 from nineml.abstraction import (
     Parameter, Dynamics, Regime, On, OutputEvent, StateVariable,
     StateAssignment, Constant, Alias)
@@ -399,54 +400,37 @@ class TestNetwork(unittest.TestCase):
                 sub_components={'cell': cell1_cls},
                 port_exposures=[('cell', 'spike')]))
 
-        conn_group1 = ConnectionGroup(
+        conn_group1 = EventConnectionGroup(
             'Proj1__pre_spike__response_spike___connection_group', dyn_array1,
-            dyn_array2,
-            EventPortConnection(
-                sender_name='cell', send_port='spike',
-                receiver_name='Proj1_psr', receive_port='spike'),
-            self.all_to_all)
+            dyn_array2, 'spike__cell', 'spike__Proj1_psr',
+            Connectivity(self.all_to_all, pop1, pop2))
 
-        conn_group2 = ConnectionGroup(
+        conn_group2 = EventConnectionGroup(
             'Proj2__pre_spike__response_spike___connection_group', dyn_array2,
-            dyn_array1,
-            EventPortConnection(
-                sender_name='cell', send_port='spike',
-                receiver_name='Proj2_psr', receive_port='spike'),
-            self.all_to_all)
+            dyn_array1, 'spike__cell', 'spike__Proj2_psr',
+            Connectivity(self.all_to_all, pop2, pop1))
 
-        conn_group3 = ConnectionGroup(
+        conn_group3 = EventConnectionGroup(
             'Proj2__pre_double_spike__response_double_spike'
             '___connection_group',
-            dyn_array2, dyn_array1,
-            EventPortConnection(
-                sender_name='cell', send_port='double_spike',
-                receiver_name='Proj2_psr', receive_port='double_spike'),
-            self.all_to_all)
+            dyn_array2, dyn_array1, 'double_spike__cell',
+            'double_spike__Proj2_psr',
+            Connectivity(self.all_to_all, pop2, pop1))
 
-        conn_group4 = ConnectionGroup(
+        conn_group4 = EventConnectionGroup(
             'Proj3__pre_spike__response_spike___connection_group', dyn_array3,
-            dyn_array2,
-            EventPortConnection(
-                sender_name='cell', send_port='spike',
-                receiver_name='Proj3_psr', receive_port='spike'),
-            self.all_to_all)
+            dyn_array2, 'spike__cell', 'spike__Proj3_psr',
+            Connectivity(self.all_to_all, pop3, pop2))
 
-        conn_group5 = ConnectionGroup(
+        conn_group5 = EventConnectionGroup(
             'Proj3__pre_spike__plasticity_incoming_spike___connection_group',
-            dyn_array3, dyn_array2,
-            EventPortConnection(
-                sender_name='cell', send_port='spike',
-                receiver_name='Proj3_pls', receive_port='incoming_spike'),
-            self.all_to_all)
+            dyn_array3, dyn_array2, 'spike__cell', 'incoming_spike__Proj3_pls',
+            Connectivity(self.all_to_all, pop3, pop2))
 
-        conn_group6 = ConnectionGroup(
+        conn_group6 = EventConnectionGroup(
             'Proj4__pre_spike__response_spike___connection_group', dyn_array3,
-            dyn_array1,
-            EventPortConnection(
-                sender_name='cell', send_port='spike',
-                receiver_name='Proj4_psr', receive_port='spike'),
-            self.all_to_all)
+            dyn_array1, 'spike__cell', 'spike__Proj4_psr',
+            Connectivity(self.all_to_all, pop3, pop1))
 
         # =====================================================================
         # Test equality between network automatically generated dynamics arrays

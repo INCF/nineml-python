@@ -1,8 +1,7 @@
 import re
 from itertools import chain
-from nineml.user import ConnectionRuleProperties
 from .population import Population
-from .projection import Projection
+from .projection import Projection, BaseConnectivity
 from .selection import Selection
 from . import BaseULObject
 from .component import write_reference, resolve_reference
@@ -242,12 +241,12 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                     pc.receiver_role, pc.receive_port_name),
                 source, dest,
                 source_port=append_namespace(
-                    pc.send_port,
+                    pc.send_port_name,
                     self._role2dyn(projection.name, pc.sender_role)),
                 destination_port=append_namespace(
-                    pc.receive_port,
+                    pc.receive_port_name,
                     self._role2dyn(projection.name, pc.receiver_role)),
-                projection.connectivity)
+                connectivity=projection.connectivity)
             for pc in projection.port_connections
             if 'pre' in (pc.sender_role, pc.receiver_role))
 
@@ -329,22 +328,22 @@ class BaseConnectionGroup(BaseULObject):
 
     defining_attributes = ('name', "source", "destination",
                            "source_port", "destination_port",
-                           "_connections")
+                           "_connectivity")
 
     def __init__(self, name, source, destination, source_port,
-                 destination_port, connections):
+                 destination_port, connectivity):
         assert isinstance(name, basestring)
         assert isinstance(source, DynamicsArray)
         assert isinstance(destination, DynamicsArray)
         assert isinstance(source_port, basestring)
         assert isinstance(destination_port, basestring)
-        assert isinstance(connections, ConnectionRuleProperties)
+        assert isinstance(connectivity, BaseConnectivity)
         self._name = name
         self._source = source
         self._destination = destination
         self._source_port = source_port
         self._destination_port = destination_port
-        self._connections = connections
+        self._connectivity = connectivity
 
     @property
     def name(self):
@@ -368,7 +367,7 @@ class BaseConnectionGroup(BaseULObject):
 
     @property
     def connections(self):
-        return self._connections
+        return self._connectivity.connections()
 
     @classmethod
     def cls_from_port_connection(cls, port_connection):

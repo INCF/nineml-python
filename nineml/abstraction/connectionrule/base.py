@@ -24,7 +24,7 @@ class ConnectionRule(ComponentClass):
     # Maintains order of elements between writes
     write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 
-    standard_library_basepath = 'http://nineml.net/connectionrule/'
+    standard_library_basepath = 'http://nineml.net/9ML/1.0/connectionrules/'
     _base_len = len(standard_library_basepath)
     standard_types = ('AllToAll', 'OneToOne', 'ExplicitConnectionList',
                       'ProbabilisticConnectivity', 'RandomFanIn',
