@@ -1,6 +1,7 @@
 # encoding: utf-8
 from . import BaseULObject
 import math
+from abc import ABCMeta, abstractmethod
 from copy import copy
 from itertools import izip, repeat, tee
 from collections import defaultdict
@@ -24,14 +25,9 @@ from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 
 
-class Connectivity(object):
-    """
-    A reference implementation of the Connectivity class, it is not recommended
-    for large networks as it is not designed for efficiency (although perhaps
-    with JIT it would be okay, see PyPy). More efficient implementations, which
-    use external libraries such as NumPy can be supplied to the Projection as a
-    kwarg.
-    """
+class BaseConnectivity(object):
+
+    __metaclass__ = ABCMeta
 
     def __init__(self, connection_rule_properties, source, destination,
                  **kwargs):  # @UnusedVariable
@@ -58,6 +54,10 @@ class Connectivity(object):
         return self._rule_props
 
     @property
+    def lib_type(self):
+        return self._rule_props.lib_type
+
+    @property
     def source_size(self):
         return self._src_size
 
@@ -73,6 +73,24 @@ class Connectivity(object):
                 .format(self.__class__.__name__, self._rule.lib_type,
                         self._src_size, self._dest_size))
 
+    @abstractmethod
+    def connections(self):
+        pass
+
+    @abstractmethod
+    def has_been_sampled(self):
+        pass
+
+
+class Connectivity(BaseConnectivity):
+    """
+    A reference implementation of the Connectivity class, it is not recommended
+    for large networks as it is not designed for efficiency (although perhaps
+    with JIT it would be okay, see PyPy). More efficient implementations, which
+    use external libraries such as NumPy can be supplied to the Projection as a
+    kwarg.
+    """
+
     def connections(self, **kwargs):
         """
         Returns an iterator over all the source/destination index pairings
@@ -84,17 +102,17 @@ class Connectivity(object):
             kw = kwargs
             kwargs = copy(self._kwargs)
             kwargs.update(kw)
-        if self._rule_props.lib_type == 'AllToAll':
+        if self.lib_type == 'AllToAll':
             conn = self._all_to_all(**kwargs)
-        elif self._rule_props.lib_type == 'OneToOne':
+        elif self.lib_type == 'OneToOne':
             conn = self._one_to_one(**kwargs)
-        elif self._rule_props.lib_type == 'ExplicitConnectionList':
+        elif self.lib_type == 'ExplicitConnectionList':
             conn = self._explicit_connection_list(**kwargs)
-        elif self._rule_props.lib_type == 'ProbabilisticConnectivity':
+        elif self.lib_type == 'ProbabilisticConnectivity':
             conn = self._probabilistic_connectivity(**kwargs)
-        elif self._rule_props.lib_type == 'RandomFanIn':
+        elif self.lib_type == 'RandomFanIn':
             conn = self._random_fan_in(**kwargs)
-        elif self._rule_props.lib_type == 'RandomFanOut':
+        elif self.lib_type == 'RandomFanOut':
             conn = self._random_fan_out(**kwargs)
         else:
             assert False
@@ -149,6 +167,11 @@ class Connectivity(object):
             conn, cpy = tee(conn)
             self._cache = list(cpy)
         return conn
+
+    def has_been_sampled(self):
+        return (self.lib_type in ('AllToAll', 'OneToOne',
+                                  'ExplicitConnectionList') or
+                self._cache is not None)
 
 
 class Projection(BaseULObject, DocumentLevelObject):
