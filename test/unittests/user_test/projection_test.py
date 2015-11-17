@@ -98,6 +98,28 @@ class TestProjection(unittest.TestCase):
                           "Projection failed XML roundtrip:\n{}"
                           .format(self.projection.find_mismatch(projection2)))
 
+
+class TestConnectivity(unittest.TestCase):
+
+    def test_all_to_all(self):
+        pass
+
+    def test_one_to_one(self):
+        pass
+
+    def test_explicit_list(self):
+        pass
+
+    def test_probabilistic_connectivity(self):
+        pass
+
+    def test_random_fan_in(self):
+        pass
+
+    def test_random_fan_out(self):
+        pass
+
+
 if __name__ == '__main__':
     tester = TestProjection()
     tester.test_xml_roundtrip()
