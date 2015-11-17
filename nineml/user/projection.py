@@ -1,8 +1,8 @@
 # encoding: utf-8
-from abc import ABCMeta, abstractmethod
 from . import BaseULObject
 import math
-from itertools import izip, tee
+from copy import copy
+from itertools import izip, repeat, tee
 from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
 from nineml.reference import resolve_reference, write_reference
@@ -24,239 +24,131 @@ from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 
 
-class BaseConnectivity(object):
+class Connectivity(object):
+    """
+    A reference implementation of the Connectivity class, it is not recommended
+    for large networks as it is not designed for efficiency (although perhaps
+    with JIT it would be okay, see PyPy). More efficient implementations, which
+    use external libraries such as NumPy can be supplied to the Projection as a
+    kwarg.
+    """
 
-    __metaclass__ = ABCMeta
-
-    def __init__(self, connection_rule_props, source, destination, **kwargs):
-        self._source = source
-        self._dest = destination
-        self._rule = connection_rule_props
-        self._src_size = self._source.size
-        self._dest_size = self._dest.size
-        self.reset(**kwargs)
+    def __init__(self, connection_rule_properties, source, destination,
+                 **kwargs):  # @UnusedVariable
+        if (connection_rule_properties.lib_type == 'OneToOne' and
+                self._src_size != self._dest_size):
+            raise NineMLRuntimeError(
+                "Cannot connect to populations of different sizes "
+                "({} and {}) with OneToOne connection rule"
+                .format(self._src_size, self._dest_size))
+        self._rule_props = connection_rule_properties
+        self._src_size = source.size
+        self._dest_size = destination.size
+        self._cache = None
+        self._kwargs = kwargs
 
     def __eq__(self, other):
-        result = (self._rule == other._rule and
+        result = (self._rule_props == other._rule_props and
                   self._src_size == other._src_size and
                   self._dest_size == other._dest_size)
         return result
 
-    def __ne__(self, other):
-        return not (self == other)
+    @property
+    def connection_rule_properties(self):
+        return self._rule_props
 
     @property
-    def rule(self):
-        return self._rule
+    def source_size(self):
+        return self._src_size
+
+    @property
+    def destination_size(self):
+        return self._dest_size
+
+    def __ne__(self, other):
+        return not (self == other)
 
     def __repr__(self):
         return ("{}(rule={}, src={}, dest_size={})"
                 .format(self.__class__.__name__, self._rule.lib_type,
                         self._src_size, self._dest_size))
 
-    def connections(self, source_mask=None, destination_mask=None):
+    def connections(self, **kwargs):
         """
         Returns an iterator over all the source/destination index pairings
         with a connection.
         `src`  -- the indices to get the connections from
         `dest` -- the indices to get the connections to
         """
-        if self._src_size != self._source.size:
-            raise NineMLRuntimeError(
-                "Source has changed size ({} to {}) since last reset"
-                .format(self._src_size, self._source.size))
-        if self._dest_size != self._dest.size:
-            raise NineMLRuntimeError(
-                "Destination has changed size ({} to {}) since last reset"
-                .format(self._dest_size, self._dest.size))
-        if self.rule.lib_type == 'AllToAll':
-            conn = self._all_to_all(source_mask, destination_mask)
-        elif self.rule.lib_type == 'OneToOne':
-            conn = self._one_to_one(source_mask, destination_mask)
-        elif self.rule.lib_type == 'ExplicitConnectionList':
-            conn = self._explicit_connection_list(source_mask,
-                                                  destination_mask)
-        elif self.rule.lib_type == 'ProbabilisticConnectivity':
-            conn = self._probabilistic_connectivity(source_mask,
-                                                    destination_mask)
-        elif self.rule.lib_type == 'RandomFanIn':
-            conn = self._random_fan_in(source_mask, destination_mask)
-        elif self.rule.lib_type == 'RandomFanOut':
-            conn = self._random_fan_out(source_mask, destination_mask)
+        if self._kwargs:
+            kw = kwargs
+            kwargs = copy(self._kwargs)
+            kwargs.update(kw)
+        if self._rule_props.lib_type == 'AllToAll':
+            conn = self._all_to_all(**kwargs)
+        elif self._rule_props.lib_type == 'OneToOne':
+            conn = self._one_to_one(**kwargs)
+        elif self._rule_props.lib_type == 'ExplicitConnectionList':
+            conn = self._explicit_connection_list(**kwargs)
+        elif self._rule_props.lib_type == 'ProbabilisticConnectivity':
+            conn = self._probabilistic_connectivity(**kwargs)
+        elif self._rule_props.lib_type == 'RandomFanIn':
+            conn = self._random_fan_in(**kwargs)
+        elif self._rule_props.lib_type == 'RandomFanOut':
+            conn = self._random_fan_out(**kwargs)
         else:
             assert False
         return conn
 
-    def reset(self, **kwargs):  # @UnusedVariable
-        self._src_size = self._source.size
-        self._dest_size = self._dest.size
+    def _all_to_all(self, **kwargs):  # @UnusedVariable
+        return chain(*(((s, d) for d in xrange(self._dest_size))
+                       for s in xrange(self._src_size)))
 
-    @abstractmethod
-    def _all_to_all(self, source_mask, destination_mask):
-        pass
+    def _one_to_one(self, **kwargs):  # @UnusedVariable
+        return ((i, i) for i in xrange(self._src_size))
 
-    @abstractmethod
-    def _one_to_one(self, source_mask, destination_mask):
-        pass
+    def _explicit_connection_list(self, **kwargs):  # @UnusedVariable
+        return izip(self._rule_props.property('source_indices').values,
+                    self._rule_props.property('destination_indices').values)
 
-    @abstractmethod
-    def _explicit_connection_list(self, source_mask, destination_mask):
-        pass
-
-    @abstractmethod
-    def _probabilistic_connectivity(self, source_mask, destination_mask):
-        pass
-
-    @abstractmethod
-    def _random_fan_in(self, source_mask, destination_mask):
-        pass
-
-    @abstractmethod
-    def _random_fan_out(self, source_mask, destination_mask):
-        pass
-
-
-class Connectivity(BaseConnectivity):
-    """
-    A reference implementation of the Connectivity class, it is not recommended
-    for large networks as it is not designed for efficiency. For more efficient
-    implementations the BaseConnectivity class can be overridden using
-    external libraries such as NumPy.
-    """
-
-    def reset(self):
-        super(Connectivity, self).reset()
-        if self.rule.lib_type == 'ProbabilisticConnectivity':
-            self._in_cache = set()
-            self._cache = []
-        elif self.rule.lib_type in ('RandomFanIn', 'RandomFanOut'):
-            self._cache = {}
-
-    def _all_to_all(self, source_mask, destination_mask):
-        if source_mask is not None:
-            src = source_mask
-        else:
-            src = xrange(self._src_size)
-        if destination_mask is not None:
-            dest = destination_mask
-        else:
-            dest = xrange(self._dest_size)
-        return chain(*(((s, d) for d in dest) for s in src))
-
-    def _one_to_one(self, source_mask, destination_mask):
-        if self._src_size != self._dest_size:
-            raise NineMLRuntimeError(
-                "Cannot connect to populations of different sizes "
-                "({} and {}) with OneToOne connection rule"
-                .format(self._src_size, self._dest_size))
-        if source_mask is not None:
-            if destination_mask is not None:
-                # Get the intersection between the source and destination
-                # sets
-                inds = set(source_mask) ^ set(destination_mask)
-            else:
-                inds = source_mask
-        elif destination_mask is not None:
-            inds = destination_mask
-        else:
-            inds = xrange(self._src_size)  # All indices
-        return ((i, i) for i in inds)
-
-    def _explicit_connection_list(self, source_mask, destination_mask):
-        conns = izip(self.rule.property('source_mask').values,
-                     self.rule.property('destination_mask').values)
-        if source_mask is not None:
-            if destination_mask is not None:
-                conns = (
-                    (s, d) for s, d in conns
-                    if s in source_mask and d in destination_mask)
-            else:
-                conns = ((s, d) for s, d in conns if s in source_mask)
-        elif destination_mask:
-            conns = ((s, d) for s, d in conns if d in destination_mask)
-
-    def _probabilistic_connectivity(self, source_mask, destination_mask):
-        if self._in_cache is None:  # All connections have been generated prev.
+    def _probabilistic_connectivity(self, **kwargs):  # @UnusedVariable
+        if self._cache:
             conn = iter(self._cache)
         else:
-            if source_mask is not None:
-                src = source_mask
-            else:
-                src = xrange(self._src_size)
-            if destination_mask is not None:
-                dest = destination_mask
-            else:
-                dest = xrange(self._dest_size)
-            p = self.rule.property('probability').value
+            p = self._rule_props.property('probability').value
             # Get an iterator over all of the source dest pairs to test
-            pairs_to_test = chain(*(((s, d) for d in dest) for s in src))
-            # Get two copies of the iterator, one for generating the
-            # probabilities the other for updating the list of pairs in the
-            # cache
-            pairs_to_test, pairs_to_test_copy = tee(pairs_to_test)
-            # Get new connections if that pair hasn't already been tested and
-            # saved in cache
-            if self._in_cache is None or not len(self._in_cache):
-                new_conn = [
-                    pair for pair in pairs_to_test if p < random.random()]
-            else:
-                new_conn = [
-                    pair for pair in pairs_to_test
-                    if pair not in self._in_cache and p < random.random()]
-            # Append the new connections to the cache
-            self._cache.append(new_conn)
-            # Record the which pairs have been tested (and stored in cache)
-            if source_mask is None and destination_mask is None:
-                self._in_cache = None  # Signifies all are in cache
-            else:
-                self._in_cache.add(pairs_to_test_copy)
-            # Return the pairs in the cache combined with the new connections
-            conn = chain(self._cache, new_conn)
+            conn = chain(*(((s, d) for d in xrange(self._dest_size)
+                            if random.random() < p)
+                           for s in xrange(self._src_size)))
+            conn, cpy = tee(conn)
+            self._cache = list(cpy)
         return conn
 
-    def _random_fan_in(self, source_mask, destination_mask):
-        N = int(self.rule.property('number').value)
-        if destination_mask is not None:
-            dest = destination_mask
+    def _random_fan_in(self, **kwargs):  # @UnusedVariable
+        if self._cache:
+            conn = iter(self._cache)
         else:
-            dest = xrange(self._dest_size)
-        all_conns = []
-        for d in dest:
-            try:
-                src_inds = self._cache[d]
-            except KeyError:
-                # Generate N random source indices
-                src_inds = [math.floor(random.random() * self._src_size)
-                            for _ in xrange(N)]
-                self._cache[d] = src_inds
-            if source_mask is None:
-                conns = ((s, d) for s in src_inds)
-            else:
-                conns = ((s, d) for s in src_inds if s in source_mask)
-            all_conns.append(conns)
-        return chain(*all_conns)
+            N = int(self._rule_props.property('number').value)
+            conn = chain(*(
+                izip((math.floor(random.random() * self._src_size)
+                      for _ in xrange(N), repeat(d)))
+                for d in xrange(self._dest_size)))
+            conn, cpy = tee(conn)
+            self._cache = list(cpy)
+        return conn
 
-    def _random_fan_out(self, source_mask, destination_mask):
-        N = int(self.rule.property('number').value)
-        if source_mask is not None:
-            src = source_mask
+    def _random_fan_out(self, **kwargs):  # @UnusedVariable
+        if self._cache:
+            conn = iter(self._cache)
         else:
-            src = xrange(self._src_size)
-        all_conns = []
-        for s in src:
-            try:
-                dest_inds = self._cache[s]
-            except KeyError:
-                # Generate N random destination indices
-                dest_inds = [math.floor(random.random() * self._dest_size)
-                             for _ in xrange(N)]
-                self._cache[s] = dest_inds
-            if destination_mask is None:
-                conns = ((s, d) for d in dest_inds)
-            else:
-                conns = ((s, d) for d in dest_inds if d in destination_mask)
-            all_conns.append(conns)
-        return chain(*all_conns)
+            N = int(self._rule_props.property('number').value)
+            conn = chain(*(
+                izip(repeat(s), (math.floor(random.random() * self._dest_size)
+                                 for _ in xrange(N)))
+                for s in xrange(self._src_size)))
+            conn, cpy = tee(conn)
+            self._cache = list(cpy)
+        return conn
 
 
 class Projection(BaseULObject, DocumentLevelObject):
@@ -294,9 +186,9 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
-    def __init__(self, name, pre, post, response, connectivity,
+    def __init__(self, name, pre, post, response, connection_rule_properties,
                  delay, plasticity=None, port_connections=[], document=None,
-                 connectivity_cls=Connectivity, **kwargs):
+                 connectivity_class=Connectivity, **kwargs):
         """
         Create a new projection.
         """
@@ -313,8 +205,8 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._post = post
         self._response = response
         self._plasticity = plasticity
-        self._connectivity = connectivity_cls(
-            connectivity, pre, post, **kwargs)
+        self._connectivity = connectivity_class(
+            connection_rule_properties, pre, post, **kwargs)
         self._delay = delay
         self._analog_port_connections = []
         self._event_port_connections = []
@@ -367,6 +259,14 @@ class Projection(BaseULObject, DocumentLevelObject):
     @property
     def port_connections(self):
         return chain(self.analog_port_connections, self.event_port_connections)
+
+    def redraw_connectivity(self, connectivity_class=None, **kwargs):
+        if connectivity_class is None:
+            connectivity_class = type(self.connectivity)
+        self._connectivity = connectivity_class(
+            self.connectivity.connection_rule_properties,
+            self.connectivity.source_size, self.connectivity.destination_size,
+            **kwargs)
 
     def __repr__(self):
         return ('Projection(name="{}", pre={}, post={}, '
@@ -480,9 +380,9 @@ class Projection(BaseULObject, DocumentLevelObject):
                                     allow_reference=True, within='Plasticity',
                                     multiple_within=multiple_within,
                                     allow_none=True, **kwargs)
-        connectivity = from_child_xml(element, ConnectionRuleProperties,
-                                      document, within='Connectivity',
-                                      allow_reference=True, **kwargs)
+        connection_rule_props = from_child_xml(
+            element, ConnectionRuleProperties, document, within='Connectivity',
+            allow_reference=True, **kwargs)
         if xmlns == NINEMLv1:
             port_connections = []
             for receive_name in cls.version1_nodes:
@@ -521,7 +421,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                    post=post,
                    response=response,
                    plasticity=plasticity,
-                   connectivity=connectivity,
+                   connection_rule_properties=connection_rule_props,
                    delay=delay,
                    port_connections=port_connections,
                    document=document)
