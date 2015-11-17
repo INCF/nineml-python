@@ -490,6 +490,10 @@ class Property(BaseULObject):
         self._name = name
         self._quantity = quantity
 
+    def __iter__(self):
+        """For convenient tuple expansion"""
+        return self.name, self.value, self.units
+
     @property
     def name(self):
         return self._name
