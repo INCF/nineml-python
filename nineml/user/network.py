@@ -1,7 +1,7 @@
 import re
 from itertools import chain
 from .population import Population
-from .projection import Projection, BaseConnectivity
+from .projection import Projection
 from .selection import Selection
 from . import BaseULObject
 from .component import write_reference, resolve_reference
@@ -131,9 +131,8 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @property
     def connection_groups(self):
-        dyn_dct = dict((da.name, da) for da in self.dynamics_arrays)
-        return chain(*(self._conn_groups_from_proj(p, dynamics_arrays=dyn_dct)
-                       for p in self.projections))
+        return chain(
+            *(self._conn_groups_from_proj(p) for p in self.projections))
 
     @property
     def connection_group_names(self):
@@ -227,26 +226,21 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
             port_exposures=port_exposures)
         return DynamicsArray(population.name, population.size, dyn)
 
-    def _conn_groups_from_proj(self, projection, dynamics_arrays=None):
-        if dynamics_arrays:
-            source = dynamics_arrays[projection.pre.name]
-            dest = dynamics_arrays[projection.post.name]
-        else:
-            source = self._dyn_array_from_pop(projection.pre)
-            dest = self._dyn_array_from_pop(projection.post)
+    def _conn_groups_from_proj(self, projection):
         return (
-            BaseConnectionGroup.cls_from_port_connection(pc)(
+            _conn_group_cls_from_port_connection(pc)(
                 '{}__{}_{}__{}_{}___connection_group'.format(
                     projection.name, pc.sender_role, pc.send_port_name,
                     pc.receiver_role, pc.receive_port_name),
-                source, dest,
+                projection.pre.name, projection.post.name,
                 source_port=append_namespace(
                     pc.send_port_name,
                     self._role2dyn(projection.name, pc.sender_role)),
                 destination_port=append_namespace(
                     pc.receive_port_name,
                     self._role2dyn(projection.name, pc.receiver_role)),
-                connectivity=projection.connectivity)
+                connectivity=projection.connectivity,
+                delays=projection.delay)
             for pc in projection.port_connections
             if 'pre' in (pc.sender_role, pc.receiver_role))
 
@@ -331,19 +325,19 @@ class BaseConnectionGroup(BaseULObject):
                            "_connectivity")
 
     def __init__(self, name, source, destination, source_port,
-                 destination_port, connectivity):
+                 destination_port, connectivity, delays):
         assert isinstance(name, basestring)
-        assert isinstance(source, DynamicsArray)
-        assert isinstance(destination, DynamicsArray)
+        assert isinstance(source, basestring)
+        assert isinstance(destination, basestring)
         assert isinstance(source_port, basestring)
         assert isinstance(destination_port, basestring)
-        assert isinstance(connectivity, BaseConnectivity)
         self._name = name
         self._source = source
         self._destination = destination
         self._source_port = source_port
         self._destination_port = destination_port
         self._connectivity = connectivity
+        self._delays = delays
 
     @property
     def name(self):
@@ -366,16 +360,12 @@ class BaseConnectionGroup(BaseULObject):
         return self._destination_port
 
     @property
+    def delays(self):
+        return self._delays
+
+    @property
     def connections(self):
         return self._connectivity.connections()
-
-    @classmethod
-    def cls_from_port_connection(cls, port_connection):
-        if isinstance(port_connection, EventPortConnection):
-            conn_grp_cls = EventConnectionGroup
-        else:
-            conn_grp_cls = AnalogConnectionGroup
-        return conn_grp_cls
 
 
 class AnalogConnectionGroup(BaseConnectionGroup):
@@ -388,7 +378,9 @@ class EventConnectionGroup(BaseConnectionGroup):
     nineml_type = 'EventConnectionGroup'
 
 
-class Connections(object):
-
-    def __init__(self, connection_rule):
-        self._connection_rule = connection_rule
+def _conn_group_cls_from_port_connection(port_connection):
+    if isinstance(port_connection, EventPortConnection):
+        conn_grp_cls = EventConnectionGroup
+    else:
+        conn_grp_cls = AnalogConnectionGroup
+    return conn_grp_cls
