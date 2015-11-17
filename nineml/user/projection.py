@@ -283,7 +283,7 @@ class Projection(BaseULObject, DocumentLevelObject):
     def port_connections(self):
         return chain(self.analog_port_connections, self.event_port_connections)
 
-    def redraw_connectivity(self, connectivity_class=None, **kwargs):
+    def resample_connectivity(self, connectivity_class=None, **kwargs):
         if connectivity_class is None:
             connectivity_class = type(self.connectivity)
         self._connectivity = connectivity_class(
