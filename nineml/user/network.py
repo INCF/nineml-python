@@ -250,6 +250,10 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
             components.extend(p.get_components())
         return components
 
+    def resample_connectivity(self, **kwargs):
+        for projection in self.projections:
+            projection.resample_connectivity(**kwargs)
+
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
