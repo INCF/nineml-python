@@ -240,7 +240,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                     pc.receive_port_name,
                     self._role2dyn(projection.name, pc.receiver_role)),
                 connectivity=projection.connectivity,
-                delays=projection.delay)
+                delay=projection.delay)
             for pc in projection.port_connections
             if 'pre' in (pc.sender_role, pc.receiver_role))
 
@@ -253,6 +253,9 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     def resample_connectivity(self, **kwargs):
         for projection in self.projections:
             projection.resample_connectivity(**kwargs)
+
+    def connectivity_has_been_sampled(self):
+        return any(p.connectivity.has_been_sampled() for p in self.projections)
 
     @write_reference
     @annotate_xml
@@ -329,7 +332,7 @@ class BaseConnectionGroup(BaseULObject):
                            "_connectivity")
 
     def __init__(self, name, source, destination, source_port,
-                 destination_port, connectivity, delays):
+                 destination_port, connectivity, delay):
         assert isinstance(name, basestring)
         assert isinstance(source, basestring)
         assert isinstance(destination, basestring)
@@ -341,7 +344,7 @@ class BaseConnectionGroup(BaseULObject):
         self._source_port = source_port
         self._destination_port = destination_port
         self._connectivity = connectivity
-        self._delays = delays
+        self._delay = delay
 
     @property
     def name(self):
@@ -364,8 +367,8 @@ class BaseConnectionGroup(BaseULObject):
         return self._destination_port
 
     @property
-    def delays(self):
-        return self._delays
+    def delay(self):
+        return self._delay
 
     @property
     def connections(self):
