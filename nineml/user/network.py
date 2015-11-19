@@ -9,12 +9,6 @@ from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLNameError
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
-from .multi.component import MultiDynamics
-from nineml.user.port_connections import EventPortConnection
-from .multi.port_exposures import (
-    AnalogReceivePortExposure, EventReceivePortExposure,
-    AnalogSendPortExposure, EventSendPortExposure)
-from .multi.namespace import append_namespace
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -104,20 +98,22 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     # Core accessors
     # =========================================================================
 
-    def dynamics_array(self, name):
-        return self._dyn_array_from_pop(self.population(name))
-
     @property
     def dynamics_arrays(self):
-        return (self._dyn_array_from_pop(p) for p in self.populations)
+        raise NotImplementedError
 
     @property
-    def dynamics_array_names(self):
-        return self.population_names
+    def connection_groups(self):
+        raise NotImplementedError
 
-    @property
-    def num_dynamics_arrays(self):
-        return self.num_populations
+    def dynamics_array(self, name):
+        try:
+            return next(ca for ca in self.dynamics_arrays if ca.name == name)
+        except StopIteration:
+            raise NineMLNameError(
+                "No component group named '{}' in '{}' network (found '{}')"
+                .format(name, self.name,
+                        "', '".join(self.dynamics_arrays_names)))
 
     def connection_group(self, name):
         try:
@@ -130,119 +126,20 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                         "', '".join(self.connection_group_names)))
 
     @property
-    def connection_groups(self):
-        return chain(
-            *(self._conn_groups_from_proj(p) for p in self.projections))
+    def dynamics_array_names(self):
+        return (ca.name for ca in self.dynamics_arrays)
 
     @property
     def connection_group_names(self):
         return (cg.name for cg in self.connection_groups)
 
     @property
+    def num_dynamics_arrays(self):
+        return len(list(self.dynamics_arrays))
+
+    @property
     def num_connection_groups(self):
         return len(list(self.connection_groups))
-
-    def _dyn_array_from_pop(self, population):
-        """
-        Returns a multi-dynamics object containing the cell and all
-        post-synaptic response/plasticity dynamics
-        """
-        # Get all the projections that project to/from the given population
-        receiving = [p for p in self.projections if p.post == population]
-        sending = [p for p in self.projections if p.pre == population]
-        # Get all sub-dynamics, port connections and port exposures
-        sub_dynamics = {'cell': population.cell.component_class}
-        # =====================================================================
-        # Get all the port connections between Response, Plasticity and Post
-        # nodes and convert them to MultiDynamics port connections (i.e.
-        # referring to sub-component names instead of projection roles)
-        # =====================================================================
-        port_connections = []
-        for proj in receiving:
-            sub_dynamics[proj.name + '_psr'] = proj.response.component_class
-            sub_dynamics[proj.name + '_pls'] = proj.plasticity.component_class
-            # Get all projection port connections that don't project to/from
-            # the "pre" population and convert them into local MultiDynamics
-            # port connections
-            port_connections.extend(
-                pc.__class__(
-                    sender_name=self._role2dyn(proj.name, pc.sender_role),
-                    receiver_name=self._role2dyn(proj.name, pc.receiver_role),
-                    send_port=pc.send_port, receive_port=pc.receive_port)
-                for pc in proj.port_connections
-                if 'pre' not in (pc.sender_role, pc.receiver_role))
-        # =====================================================================
-        # Get all the ports that are connected to/from the Pre node and insert
-        # a port exposure to handle them
-        # =====================================================================
-        port_exposures = []
-        for proj in sending:
-            port_exposures.extend(
-                AnalogSendPortExposure(component='cell', port=pc.send_port)
-                for pc in proj.analog_port_connections
-                if 'pre' == pc.sender_role)
-            port_exposures.extend(
-                EventSendPortExposure(component='cell', port=pc.send_port)
-                for pc in proj.event_port_connections
-                if 'pre' == pc.sender_role)
-            port_exposures.extend(
-                AnalogReceivePortExposure(component='cell',
-                                          port=pc.receive_port)
-                for pc in proj.analog_port_connections
-                if 'pre' == pc.receiver_role)
-            port_exposures.extend(
-                EventReceivePortExposure(component='cell',
-                                         port=pc.receive_port)
-                for pc in proj.event_port_connections
-                if 'pre' == pc.receiver_role)
-        for proj in receiving:
-            port_exposures.extend(
-                AnalogReceivePortExposure(
-                    component=self._role2dyn(proj.name, pc.receiver_role),
-                    port=pc.receive_port)
-                for pc in proj.analog_port_connections
-                if 'pre' == pc.sender_role)
-            port_exposures.extend(
-                EventReceivePortExposure(
-                    component=self._role2dyn(proj.name, pc.receiver_role),
-                    port=pc.receive_port)
-                for pc in proj.event_port_connections
-                if 'pre' == pc.sender_role)
-            port_exposures.extend(
-                AnalogSendPortExposure(
-                    component=self._role2dyn(proj.name, pc.sender_role),
-                    port=pc.send_port)
-                for pc in proj.analog_port_connections
-                if 'pre' == pc.receiver_role)
-            port_exposures.extend(
-                EventSendPortExposure(
-                    component=self._role2dyn(proj.name, pc.sender_role),
-                    port=pc.send_port)
-                for pc in proj.event_port_connections
-                if 'pre' == pc.receiver_role)
-        dyn = MultiDynamics(
-            name=population.name + 'Dynamics',
-            sub_components=sub_dynamics, port_connections=port_connections,
-            port_exposures=port_exposures)
-        return DynamicsArray(population.name, population.size, dyn)
-
-    def _conn_groups_from_proj(self, projection):
-        return (
-            _conn_group_cls_from_port_connection(pc)(
-                '{}__{}_{}__{}_{}___connection_group'.format(
-                    projection.name, pc.sender_role, pc.send_port_name,
-                    pc.receiver_role, pc.receive_port_name),
-                projection.pre.name, projection.post.name,
-                source_port=append_namespace(
-                    pc.send_port_name,
-                    self._role2dyn(projection.name, pc.sender_role)),
-                destination_port=append_namespace(
-                    pc.receive_port_name,
-                    self._role2dyn(projection.name, pc.receiver_role)),
-                connectivity=projection.connectivity,
-                delay=projection.delay)
-            for pc in projection.port_connections
-            if 'pre' in (pc.sender_role, pc.receiver_role))
 
     def get_components(self):
         components = []
@@ -383,11 +280,3 @@ class AnalogConnectionGroup(BaseConnectionGroup):
 class EventConnectionGroup(BaseConnectionGroup):
 
     nineml_type = 'EventConnectionGroup'
-
-
-def _conn_group_cls_from_port_connection(port_connection):
-    if isinstance(port_connection, EventPortConnection):
-        conn_grp_cls = EventConnectionGroup
-    else:
-        conn_grp_cls = AnalogConnectionGroup
-    return conn_grp_cls
