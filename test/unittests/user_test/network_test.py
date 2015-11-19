@@ -14,7 +14,7 @@ import os.path
 import unittest
 from nineml.user import (
     Projection, Network, DynamicsProperties, ConnectionRuleProperties,
-    Population, DynamicsArray, EventConnectionGroup,
+    Population, ComponentArray, EventConnectionGroup,
     MultiDynamics)
 from nineml.user.projection import Connectivity
 from nineml.abstraction import (
@@ -353,7 +353,7 @@ class TestNetwork(unittest.TestCase):
         # Create expected dynamics arrays
         # =====================================================================
 
-        dyn_array1 = DynamicsArray(
+        dyn_array1 = ComponentArray(
             "Pop1", pop1.size,
             MultiDynamics(
                 "Pop1Dynamics",
@@ -373,7 +373,7 @@ class TestNetwork(unittest.TestCase):
                     ('Proj2_psr', 'spike'),
                     ('Proj4_psr', 'spike')]))
 
-        dyn_array2 = DynamicsArray(
+        dyn_array2 = ComponentArray(
             "Pop2", pop2.size,
             MultiDynamics(
                 "Pop2Dynamics",
@@ -394,7 +394,7 @@ class TestNetwork(unittest.TestCase):
                     ('Proj3_psr', 'spike'),
                     ('Proj3_pls', 'incoming_spike')]))
 
-        dyn_array3 = DynamicsArray(
+        dyn_array3 = ComponentArray(
             "Pop3", pop3.size, MultiDynamics(
                 'Pop3Dynamics',
                 sub_components={'cell': cell1_cls},

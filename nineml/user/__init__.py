@@ -12,4 +12,4 @@ from .component import (Property, Component, Definition,
                         Quantity)
 from .multi import MultiDynamics, MultiDynamicsProperties
 from .network import (
-    Network, DynamicsArray, AnalogConnectionGroup, EventConnectionGroup)
+    Network, ComponentArray, AnalogConnectionGroup, EventConnectionGroup)
