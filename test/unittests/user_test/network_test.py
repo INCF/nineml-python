@@ -436,19 +436,19 @@ class TestNetwork(unittest.TestCase):
         # Test equality between network automatically generated dynamics arrays
         # and manually generated expected one
         # =====================================================================
-        self.assertEqual(network.num_dynamics_arrays, 3)
+        self.assertEqual(network.num_component_arrays, 3)
         self.assertEqual(
-            network.dynamics_array('Pop1'), dyn_array1,
+            network.component_array('Pop1'), dyn_array1,
             "Mismatch between generated and expected dynamics arrays:\n {}"
-            .format(network.dynamics_array('Pop1').find_mismatch(dyn_array1)))
+            .format(network.component_array('Pop1').find_mismatch(dyn_array1)))
         self.assertEqual(
-            network.dynamics_array('Pop2'), dyn_array2,
+            network.component_array('Pop2'), dyn_array2,
             "Mismatch between generated and expected dynamics arrays:\n {}"
-            .format(network.dynamics_array('Pop2').find_mismatch(dyn_array2)))
+            .format(network.component_array('Pop2').find_mismatch(dyn_array2)))
         self.assertEqual(
-            network.dynamics_array('Pop3'), dyn_array3,
+            network.component_array('Pop3'), dyn_array3,
             "Mismatch between generated and expected dynamics arrays:\n {}"
-            .format(network.dynamics_array('Pop3').find_mismatch(dyn_array3)))
+            .format(network.component_array('Pop3').find_mismatch(dyn_array3)))
         # =====================================================================
         # Test equality between network automatically generated connection
         # groups and manually generated expected ones

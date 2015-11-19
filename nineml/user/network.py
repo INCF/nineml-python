@@ -99,21 +99,21 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     # =========================================================================
 
     @property
-    def dynamics_arrays(self):
+    def component_arrays(self):
         raise NotImplementedError
 
     @property
     def connection_groups(self):
         raise NotImplementedError
 
-    def dynamics_array(self, name):
+    def component_array(self, name):
         try:
-            return next(ca for ca in self.dynamics_arrays if ca.name == name)
+            return next(ca for ca in self.component_arrays if ca.name == name)
         except StopIteration:
             raise NineMLNameError(
                 "No component group named '{}' in '{}' network (found '{}')"
                 .format(name, self.name,
-                        "', '".join(self.dynamics_arrays_names)))
+                        "', '".join(self.component_arrays_names)))
 
     def connection_group(self, name):
         try:
@@ -126,16 +126,16 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                         "', '".join(self.connection_group_names)))
 
     @property
-    def dynamics_array_names(self):
-        return (ca.name for ca in self.dynamics_arrays)
+    def component_array_names(self):
+        return (ca.name for ca in self.component_arrays)
 
     @property
     def connection_group_names(self):
         return (cg.name for cg in self.connection_groups)
 
     @property
-    def num_dynamics_arrays(self):
-        return len(list(self.dynamics_arrays))
+    def num_component_arrays(self):
+        return len(list(self.component_arrays))
 
     @property
     def num_connection_groups(self):
@@ -199,9 +199,9 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')
 
 
-class DynamicsArray(BaseULObject):
+class ComponentArray(BaseULObject):
 
-    nineml_type = "DynamicsArray"
+    nineml_type = "ComponentArray"
     defining_attributes = ('name', "_size", "_dynamics")
 
     def __init__(self, name, size, dynamics):
