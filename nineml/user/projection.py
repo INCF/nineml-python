@@ -243,6 +243,9 @@ class Projection(BaseULObject, DocumentLevelObject):
             else:
                 self._analog_port_connections.append(port_connection)
 
+    def __len__(self):
+        return sum(1 for _ in self.connectivity.connections)
+
     @property
     def name(self):
         return self._name

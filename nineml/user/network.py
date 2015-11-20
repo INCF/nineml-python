@@ -9,6 +9,7 @@ from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLNameError
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
+from nineml.user.port_connections import EventPortConnection
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -100,11 +101,19 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @property
     def component_arrays(self):
-        raise NotImplementedError
+        return chain((ComponentArray(p.name, p.size, p.cell)
+                      for p in self.populations),
+                     (ComponentArray(p.name + '__psr', len(p), p.response)
+                      for p in self.projections),
+                     (ComponentArray(p.name + '__pls', len(p), p.response)
+                      for p in self.projections))
 
     @property
     def connection_groups(self):
-        raise NotImplementedError
+        raise chain(*(
+            (BaseConnectionGroup.from_port_connection(pc, p)
+             for pc in p.port_connections)
+            for p in self.projections))
 
     def component_array(self, name):
         try:
@@ -270,6 +279,21 @@ class BaseConnectionGroup(BaseULObject):
     @property
     def connections(self):
         return self._connectivity.connections()
+
+    @classmethod
+    def from_port_connection(self, port_connection, projection):
+        if isinstance(port_connection, EventPortConnection):
+            cls = AnalogConnectionGroup
+        else:
+            cls = EventConnectionGroup
+        name = (
+            projection.name + '__' + port_connection.source_port + '__' +
+            port_connection.destination_port)
+        return cls(name, projection.pre.name, projection.post.name,
+                   source_port=port_connection.source_port,
+                   destination_port=port_connection.destination_port,
+                   connectivity=projection.connectivity,
+                   delay=projection.delay)
 
 
 class AnalogConnectionGroup(BaseConnectionGroup):
