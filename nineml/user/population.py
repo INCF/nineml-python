@@ -29,8 +29,8 @@ class Population(BaseULObject, DocumentLevelObject):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
         self._name = name
-        self.size = size
-        self.cell = cell
+        self._size = size
+        self._cell = cell
 
     def __str__(self):
         return ("Population '{}' of size {} with dynamics '{}'"
@@ -40,9 +40,20 @@ class Population(BaseULObject, DocumentLevelObject):
         return ("Population(name='{}', size={}, cell={})"
                 .format(self.name, self.size, self.cell.name))
 
+    def __len__(self):
+        return self.size
+
     @property
     def name(self):
         return self._name
+
+    @property
+    def size(self):
+        return self._size
+
+    @property
+    def cell(self):
+        return self._cell
 
     @property
     def component_class(self):
