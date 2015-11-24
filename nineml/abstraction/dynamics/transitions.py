@@ -7,7 +7,7 @@ This file contains the definitions for the Events
 
 from copy import copy
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
-from nineml.abstraction_layer.componentclass import BaseALObject
+from nineml.abstraction.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS
 from ...exceptions import (NineMLRuntimeError,
                            NineMLInvalidElementTypeException)
@@ -264,18 +264,20 @@ class Transition(BaseALObject, MemberContainerObject):
             self._state_assignments[element.name] = element
         elif isinstance(element, OutputEvent):
             self._output_events[element.name] = element
-        raise NineMLInvalidElementTypeException(
-            "Could not add element of type '{}' to {} class"
-            .format(element.__class__.__name__, self.__class__.__name__))
+        else:
+            raise NineMLInvalidElementTypeException(
+                "Could not add element of type '{}' to {} class"
+                .format(element.__class__.__name__, self.__class__.__name__))
 
     def remove(self, element):
         if isinstance(element, StateAssignment):
             self._state_assignments.pop(element.name)
         elif isinstance(element, OutputEvent):
             self._output_events.pop(element.name)
-        raise NineMLInvalidElementTypeException(
-            "Could not remove element of type '{}' to {} class"
-            .format(element.__class__.__name__, self.__class__.__name__))
+        else:
+            raise NineMLInvalidElementTypeException(
+                "Could not remove element of type '{}' to {} class"
+                .format(element.__class__.__name__, self.__class__.__name__))
 
 
 class OnEvent(Transition):

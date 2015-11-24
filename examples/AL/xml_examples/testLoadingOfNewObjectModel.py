@@ -2,15 +2,15 @@
 
 from nineml.utility import LocationMgr
 from os.path import join as Join
-from nineml.abstraction_layer.xmlns import *
+from nineml.abstraction.xmlns import *
 
-import nineml.abstraction_layer as al
-import nineml.abstraction_layer.readers as readers
-import nineml.abstraction_layer.writers as writers
+import nineml.abstraction as al
+import nineml.abstraction.readers as readers
+import nineml.abstraction.writers as writers
 
 import pyNN.neuron.nineml as pyNNml
 
-from nineml.abstraction_layer.flattening import ComponentFlattener
+from nineml.abstraction.flattening import ComponentFlattener
 
 #LocationMgr.StdAppendToPath()
 
@@ -51,8 +51,8 @@ def t4():
     writers.XMLWriter.write(component, '/tmp/nineml_toxml4.xml', )
     model = readers.XMLReader.read_component(Join(tenml_dir, 'iaf_2coba.10ml'))
 
-    from nineml.abstraction_layer.flattening import flatten
-    from nineml.abstraction_layer.dynamics.utils.modifiers import (
+    from nineml.abstraction.flattening import flatten
+    from nineml.abstraction.dynamics.utils.modifiers import (
         DynamicsModifier)
 
     flatcomponent = flatten(model, componentname='iaf_2coba')

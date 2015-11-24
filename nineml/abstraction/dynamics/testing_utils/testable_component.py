@@ -11,7 +11,7 @@ import sys
 from nineml.exceptions import NineMLRuntimeError
 from nineml.utils import restore_sys_path
 from nineml.utils import LocationMgr
-from nineml.abstraction_layer import DynamicsClass
+from nineml.abstraction import DynamicsClass
 
 
 @restore_sys_path

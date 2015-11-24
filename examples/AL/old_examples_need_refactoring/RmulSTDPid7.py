@@ -13,7 +13,7 @@ Author: Abigail Morrison, 1/2011.
 
 """
 
-import nineml.abstraction_layer as nineml
+import nineml.abstraction as nineml
 
 # note: this assumes that Pre/PostEvent are the arrival times of the event
 # at the synapse, i.e. after application of axonal or back-propagation delays

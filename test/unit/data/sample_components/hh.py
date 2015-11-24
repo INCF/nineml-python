@@ -4,7 +4,7 @@ Script for generating a single-compartment Hodgkin-Huxley cell in NineML XML for
 Andrew Davison, 2010
 """
 
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 
 def get_component():

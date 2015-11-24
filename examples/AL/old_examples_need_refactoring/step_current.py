@@ -1,4 +1,4 @@
-import nineml.abstraction_layer as nineml
+import nineml.abstraction as nineml
 
 # define a step current
 

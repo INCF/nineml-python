@@ -9,7 +9,7 @@ class NamespaceAddress(object):
         """Returns a empty (root) namespace address
 
 
-        >>> nineml.abstraction_layer.NamespaceAddress.create_root()
+        >>> nineml.abstraction.NamespaceAddress.create_root()
         NameSpaceAddress: '//'
 
         """

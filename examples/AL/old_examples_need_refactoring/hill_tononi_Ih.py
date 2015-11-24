@@ -1,4 +1,4 @@
-from nineml.abstraction_layer import *
+from nineml.abstraction import *
 
 # H-current (I_h) from
 #  Hill & Tononi, J Neurophysiol 93:1671-1698, 2005. doi:10.1152/jn.00915.2004

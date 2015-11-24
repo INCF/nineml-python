@@ -3,9 +3,9 @@
 import unittest
 
 
-from nineml.abstraction_layer import NamespaceAddress as NSA
+from nineml.abstraction import NamespaceAddress as NSA
 from nineml.exceptions import NineMLRuntimeError
-from nineml.abstraction_layer.dynamics import DynamicsClass as ComponentClass
+from nineml.abstraction.dynamics import DynamicsClass as ComponentClass
 
 
 class NamespaceAddress_test(unittest.TestCase):
@@ -25,7 +25,7 @@ class NamespaceAddress_test(unittest.TestCase):
                 #
                 # >>> NamespaceAddress.concat('first.second','third.forth','fifth.sixth')
                 #     NameSpaceAddress: '/first/second/third/forth/fifth/sixth'
-        # from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
+        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
         self.assertEqual(
             NSA.concat(NSA('a.b.c'), NSA('d.e.f'), NSA('g.h.i')),
             NSA('a.b.c.d.e.f.g.h.i'))
@@ -43,16 +43,16 @@ class NamespaceAddress_test(unittest.TestCase):
                 # Returns a empty (root) namespace address
                 #
                 #
-                # >>> nineml.abstraction_layer.NamespaceAddress.create_root()
+                # >>> nineml.abstraction.NamespaceAddress.create_root()
                 # NameSpaceAddress: '//'
-        # from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
+        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
         self.assertEqual(NSA.create_root().loctuple, ())
 
     def test_get_local_name(self):
         # Signature: name(self)
                 # Returns the local reference; i.e. the last field in the
                 # address, as a ``string``
-        # from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
+        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
         self.assertEqual(
             NSA('a.b.c.d.e.f.g.h.i').get_local_name(),
             'i')
@@ -137,7 +137,7 @@ class NamespaceAddress_test(unittest.TestCase):
                 # Returns the namespace address as a string.
                 #
                 # :param join_char: The character used to join the levels in the address.
-        # from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
+        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
 
         self.assertEqual(
             NSA('a.b.c.d.e.f.g.h.i').getstr('.'),
@@ -168,7 +168,7 @@ class NamespaceAddress_test(unittest.TestCase):
                 # variables.
                 #
                 # :param join_char: The character used to join the levels in the address.
-        # from nineml.abstraction_layer.component.namespaceaddress import NamespaceAddress
+        # from nineml.abstraction.component.namespaceaddress import NamespaceAddress
 
         self.assertEqual(
             NSA('a.b.c.d.e.f.g.h.i').get_str_prefix('.'),

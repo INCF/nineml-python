@@ -1,5 +1,5 @@
 # A leaky_iaf which defines analog_ports to play with an ampa synapse
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 
 def get_component():

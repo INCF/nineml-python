@@ -15,7 +15,7 @@ class ComponentMetadata(object):
     pass
 
 
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 
 def get_component():

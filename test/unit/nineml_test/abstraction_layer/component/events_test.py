@@ -14,7 +14,7 @@ class OutputEvent_test(unittest.TestCase):
     def test_accept_visitor(self):
         # Signature: name(self, visitor, **kwargs)
                 # |VISITATION|
-        # from nineml.abstraction_layer.component.events import OutputEvent
+        # from nineml.abstraction.component.events import OutputEvent
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()
@@ -22,7 +22,7 @@ class OutputEvent_test(unittest.TestCase):
     def test_port_name(self):
         # Signature: name
                 # Returns the name of the port
-        # from nineml.abstraction_layer.component.events import OutputEvent
+        # from nineml.abstraction.component.events import OutputEvent
 #         warnings.warn('Tests not implemented')
         pass
         # raise NotImplementedError()

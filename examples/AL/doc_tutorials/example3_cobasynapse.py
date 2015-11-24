@@ -1,4 +1,4 @@
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 cond_decay = al.Regime(name='default',
                        time_derivatives=["dg/dt = -g/tau"],

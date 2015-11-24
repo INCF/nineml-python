@@ -3,9 +3,9 @@
 """
 
 
-from nineml.abstraction_layer.testing_utils import RecordValue, TestableComponent
-from nineml.abstraction_layer import ComponentClass, flattening, writers
-from nineml.abstraction_layer.testing_utils import std_pynn_simulation
+from nineml.abstraction.testing_utils import RecordValue, TestableComponent
+from nineml.abstraction import ComponentClass, flattening, writers
+from nineml.abstraction.testing_utils import std_pynn_simulation
 
 # Load the Component:
 coba1_base = TestableComponent('hierachical_iaf_1coba')

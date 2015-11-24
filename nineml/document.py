@@ -116,27 +116,27 @@ class Document(dict, BaseNineMLObject):
     @property
     def components(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user_layer.Component))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.user.Component))  # @UndefinedVariable @IgnorePep8
 
     @property
     def componentclasses(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.abstraction_layer.ComponentClass))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.abstraction.ComponentClass))  # @UndefinedVariable @IgnorePep8
 
     @property
     def populations(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user_layer.Population))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.user.Population))  # @UndefinedVariable @IgnorePep8
 
     @property
     def projections(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user_layer.Projection))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.user.Projection))  # @UndefinedVariable @IgnorePep8
 
     @property
     def selections(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user_layer.Selection))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.user.Selection))  # @UndefinedVariable @IgnorePep8
 
     @property
     def network_structures(self):
@@ -233,7 +233,7 @@ class Document(dict, BaseNineMLObject):
         return E(
             self.element_name,
             *[c.to_xml(as_reference=False)
-              if isinstance(c, nineml.user_layer.BaseULObject) else c.to_xml()
+              if isinstance(c, nineml.user.BaseULObject) else c.to_xml()
               for c in self.itervalues()])
 
     def write(self, filename):
@@ -346,5 +346,5 @@ def write(document, filename):
         document = Document(document)
     document.write(filename)
 
-import nineml.user_layer
-import nineml.abstraction_layer
+import nineml.user
+import nineml.abstraction

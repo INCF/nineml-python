@@ -1,11 +1,11 @@
 """
-Tests for the user_layer module
+Tests for the user module
 """
 
 
 import unittest
 from lxml import etree
-from nineml.user_layer import Property
+from nineml.user import Property
 from nineml import Unit, Dimension
 from nineml.document import Document
 

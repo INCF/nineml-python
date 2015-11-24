@@ -11,7 +11,7 @@ Synaptic Plasticity. J. Neurophysiol. 98 3648--3665
 Author: Abigail Morrison, 1/2011.
 
 """
-import nineml.abstraction_layer as nineml
+import nineml.abstraction as nineml
 
 regimes = [
     nineml.Regime(

@@ -30,7 +30,7 @@ Author: Eilif Muller, 2010. Mike Hull 2011
 """WARNING - PreEventRelay??? """
 
 
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 
 def get_component():

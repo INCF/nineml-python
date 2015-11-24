@@ -2,7 +2,7 @@ from nineml.utils import filter_discrete_types
 from nineml.exceptions import NineMLRuntimeError
 from .transitions import (OutputEvent, Trigger, StateAssignment, OnEvent,
                           OnCondition)
-from nineml.abstraction_layer.expressions.utils import is_single_symbol
+from nineml.abstraction.expressions.utils import is_single_symbol
 
 
 def SpikeOutputEvent():

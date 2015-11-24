@@ -1,9 +1,9 @@
 import unittest
 from itertools import chain
-from nineml.abstraction_layer.dynamics import (
+from nineml.abstraction.dynamics import (
     DynamicsClass, Regime, On, OutputEvent)
-from nineml.abstraction_layer.ports import AnalogSendPort, AnalogReceivePort
-from nineml.abstraction_layer.expressions import reserved_identifiers
+from nineml.abstraction.ports import AnalogSendPort, AnalogReceivePort
+from nineml.abstraction.expressions import reserved_identifiers
 
 
 # Testing Skeleton for class: DynamicsClonerPrefixNamespace

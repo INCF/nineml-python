@@ -1,6 +1,6 @@
-from nineml.abstraction_layer import (
+from nineml.abstraction import (
     DynamicsClass, Regime, OutputEvent, On, StateAssignment, StateVariable)
-from nineml.abstraction_layer import units as un
+from nineml.abstraction import units as un
 
 
 c = DynamicsClass(

@@ -1,10 +1,10 @@
 
 
-from nineml.abstraction_layer.dynamics import flattening
+from nineml.abstraction.dynamics import flattening
 
 import hierachical_iaf_2coba
 
-from nineml.abstraction_layer.dynamics.visitors import RenameSymbol
+from nineml.abstraction.dynamics.visitors import RenameSymbol
 
 
 class ComponentMetaData(object):

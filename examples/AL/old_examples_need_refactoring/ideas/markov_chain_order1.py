@@ -1,4 +1,4 @@
-from nineml.abstraction_layer import *
+from nineml.abstraction import *
 import numpy
 
 # Case study:

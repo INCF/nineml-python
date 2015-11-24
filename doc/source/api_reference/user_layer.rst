@@ -2,7 +2,7 @@
 User layer API
 ==============
 
-.. currentmodule:: nineml.user_layer
+.. currentmodule:: nineml.user
 
 A NineML model is made up of populations of cells, connected via synapses, which may exhibit plasticity. The models for the cells, synapses and plasticity mechanisms are all instances of :class:`Component`. Populations of cells are represented by :class:`Population`, the set of connections between two populations by :class:`Projection`. Finally, the entire model is encapsulated in :class:`Network`.
 
@@ -12,7 +12,7 @@ Components
 .. autoclass:: Component
    :show-inheritance:
 
-.. autoclass:: nineml.user_layer.components.BaseComponent
+.. autoclass:: nineml.user.components.BaseComponent
    :members: component_class, properties, initial_values, diff
 
 :class:`SpikingNodeType` and :class:`SynapseType` are subclasses of :class:`Component`. In the current version they
@@ -22,7 +22,7 @@ References
 ==========
 
 NineML has three closely-related objects used to refer to other NineML objects. :class:`Definition` is used inside
-:class:`Component`\s to refer to abstraction layer :class:`~nineml.abstraction_layer.ComponentClass` definitions.
+:class:`Component`\s to refer to abstraction layer :class:`~nineml.abstraction.ComponentClass` definitions.
 :class:`Prototype` is used inside :class:`Component`\s to refer to previously-defined :class:`Component`\s.
 :class:`Reference` is used inside :class:`Selection`\s to refer to :class:`Population` objects, and inside
 :class:`Projection`\s to refer to :class:`Population`\s and :class:`Selection`\s.
@@ -34,7 +34,7 @@ NineML has three closely-related objects used to refer to other NineML objects. 
    :members: component
 
 .. autoclass:: Reference
-   :members: user_layer_object
+   :members: user_object
 
 
 Properties and physical quantities
@@ -57,7 +57,7 @@ Properties and physical quantities
 
       The value of the parameter (magnitude and units).
 
-.. currentmodule:: nineml.user_layer.values
+.. currentmodule:: nineml.user.values
 
 .. autoclass:: SingleValue
 
@@ -70,7 +70,7 @@ Properties and physical quantities
 .. autoclass:: ComponentValue
 
 
-.. currentmodule:: nineml.user_layer
+.. currentmodule:: nineml.user
 
 .. autoclass:: RandomDistribution
 

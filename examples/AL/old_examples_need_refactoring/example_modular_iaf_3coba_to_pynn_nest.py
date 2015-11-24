@@ -21,8 +21,8 @@ os.environ['LD_LIBRARY_PATH'] = os.environ.get(
 print os.environ['LD_LIBRARY_PATH']
 
 
-from nineml.abstraction_layer.example_models import get_hierachical_iaf_3coba
-from nineml.abstraction_layer.models import ModelToSingleComponentReducer
+from nineml.abstraction.example_models import get_hierachical_iaf_3coba
+from nineml.abstraction.models import ModelToSingleComponentReducer
 
 # import pyNN.neuron as sim
 # import pyNN.neuron.nineml as pyNNml

@@ -1,4 +1,4 @@
-from nineml.abstraction_layer import *
+from nineml.abstraction import *
 
 # Case study:
 # Inhomogeneous Gamma Renewal Process

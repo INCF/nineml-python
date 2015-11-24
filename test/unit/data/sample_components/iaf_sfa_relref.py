@@ -62,7 +62,7 @@ SeeAlso: iaf_cond_exp_sfa_rr, aeif_cond_alpha, iaf_psc_delta, iaf_psc_exp, iaf_c
 
 """
 
-import nineml.abstraction_layer as al
+import nineml.abstraction as al
 
 
 def get_component():

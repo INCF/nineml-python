@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from nineml.abstraction_layer import (
+from nineml.abstraction import (
     DynamicsClass, On, OutputEvent, AnalogReceivePort, AnalogSendPort,
     Regime)
 

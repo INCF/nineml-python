@@ -1,8 +1,8 @@
 
 
-from nineml.abstraction_layer.testing_utils import (std_pynn_simulation,
+from nineml.abstraction.testing_utils import (std_pynn_simulation,
                                                     RecordValue)
-from nineml.abstraction_layer import (ComponentClass, Regime, On, OutputEvent,
+from nineml.abstraction import (ComponentClass, Regime, On, OutputEvent,
                                       SendPort, ReducePort, flattening)
 
 
