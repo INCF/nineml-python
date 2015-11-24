@@ -14,13 +14,14 @@ class RandomDistributionBlock(MainBlock):
         return visitor.visit_randomdistributionblock(self, **kwargs)
 
 
-class RandomDistributionClass(ComponentClass):
+class RandomDistribution(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_main_block')
 
-    def __init__(self, name, randomdistributionblock, parameters=None):
-        super(RandomDistributionClass, self).__init__(
-            name, parameters, main_block=randomdistributionblock)
+    def __init__(self, name, randomdistributionblock, parameters=None,
+                 url=None):
+        super(RandomDistribution, self).__init__(
+            name, parameters, main_block=randomdistributionblock, url=url)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -43,6 +44,10 @@ class RandomDistributionClass(ComponentClass):
 
     def validate(self):
         RandomDistributionValidator.validate_componentclass(self)
+
+    @property
+    def standard_library(self):
+        return self._main_block.standard_library
 
 from .utils.cloner import RandomDistributionCloner
 from .utils.modifiers import(

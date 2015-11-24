@@ -10,9 +10,10 @@ from nineml.xmlns import E
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
+from nineml.exceptions import handle_xml_exceptions
 
 
-class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
+class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -23,15 +24,18 @@ class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
+    @handle_xml_exceptions
     def load_componentclass(self, element):
         subblocks = ('Parameter', 'ConnectionRule')
         children = self._load_blocks(element, blocks=subblocks)
         connectionruleblock = expect_single(children["ConnectionRule"])
-        return ConnectionRuleClass(name=element.get('name'),
-                                   parameters=children["Parameter"],
-                                   connectionruleblock=connectionruleblock)
+        return ConnectionRule(name=element.attrib['name'],
+                              parameters=children["Parameter"],
+                              connectionruleblock=connectionruleblock,
+                              url=self.document.url)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_connectionruleblock(self, element):
         subblocks = ()
         children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8
@@ -44,7 +48,7 @@ class ConnectionRuleClassXMLLoader(ComponentClassXMLLoader):
     }
 
 
-class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
+class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, componentclass):
@@ -58,4 +62,4 @@ class ConnectionRuleClassXMLWriter(ComponentClassXMLWriter):
         return E('ConnectionRule',
                  standardLibrary=connectionrule.standard_library)
 
-from ..base import ConnectionRuleClass, ConnectionRuleBlock
+from ..base import ConnectionRule, ConnectionRuleBlock

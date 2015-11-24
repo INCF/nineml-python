@@ -44,13 +44,15 @@ class Document(dict, BaseNineMLObject):
     def add(self, element):
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
             raise NineMLRuntimeError(
-                "Could not add {} as it is not a document level NineML "
-                "object ('{}') ".format(element.element_name,
-                                        "', '".join(self.top_level_types)))
+                "Could not add {} to document '{}' as it is not a 'document "
+                "level NineML object' ('{}')"
+                .format(element.element_name, self.url,
+                        "', '".join(self.top_level_types)))
         if element.name in self:
             raise NineMLRuntimeError(
                 "Could not add element '{}' as an element with that name "
-                "already exists in the document".format(element.name))
+                "already exists in the document '{}'"
+                .format(element.name, self.url))
         self[element.name] = element
 
     def remove(self, element):
@@ -93,7 +95,7 @@ class Document(dict, BaseNineMLObject):
 
     @property
     def elements(self):
-        return dict(self.iteritems())  # Ensures all elements are loaded
+        return self.itervalues()
 
     def itervalues(self):
         for v in super(Document, self).itervalues():
@@ -238,15 +240,13 @@ class Document(dict, BaseNineMLObject):
 
     def write(self, filename):
         doc = self.to_xml()
-        with open(filename, 'w') as f:
-            etree.ElementTree(doc).write(f, encoding="UTF-8",
-                                         pretty_print=True,
-                                         xml_declaration=True)
+        write_xml(doc, filename)
 
     @classmethod
     def from_xml(cls, element, url=None):
         if element.tag != NINEML + cls.element_name:
-            raise Exception("Not a NineML root ('{}')".format(element.tag))
+            raise Exception("'{}' document does not have a NineML root ('{}')"
+                            .format(url, element.tag))
         # Initialise the document
         elements = []
         # Loop through child elements, determine the class needed to extract
@@ -345,6 +345,14 @@ def write(document, filename):
     if not isinstance(document, Document):
         document = Document(document)
     document.write(filename)
+
+
+def write_xml(xml, filename):
+    with open(filename, 'w') as f:
+        etree.ElementTree(xml).write(f, encoding="UTF-8",
+                                     pretty_print=True,
+                                     xml_declaration=True)
+
 
 import nineml.user
 import nineml.abstraction

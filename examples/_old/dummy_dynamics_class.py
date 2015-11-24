@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from nineml.abstraction import (
-    DynamicsClass, On, OutputEvent, AnalogReceivePort, AnalogSendPort,
+    Dynamics, On, OutputEvent, AnalogReceivePort, AnalogSendPort,
     Regime)
 
-c = DynamicsClass(
+c = Dynamics(
     name='C',
     aliases=['C1:=cp1', 'C2 := cIn1', 'C3 := SV1'],
     regimes=[

@@ -5,6 +5,7 @@ from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.utils import expect_single, check_tag
 from nineml import DocumentLevelObject
+from nineml.exceptions import handle_xml_exceptions
 
 
 def find_difference(this, that):
@@ -65,6 +66,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         # The only supported op at this stage
@@ -117,6 +119,7 @@ class Concatenate(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         # Load references and indices from xml
         items = ((e.attrib['index'],

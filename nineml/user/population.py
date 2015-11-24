@@ -5,6 +5,7 @@ from nineml import DocumentLevelObject
 from nineml.xmlns import NINEML, E
 from nineml.utils import expect_single, check_tag
 from nineml.annotations import annotate_xml, read_annotations
+from nineml.exceptions import handle_xml_exceptions
 
 
 class Population(BaseULObject, DocumentLevelObject):
@@ -78,6 +79,7 @@ class Population(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         layout_elem = element.find(NINEML + 'Layout')
@@ -91,7 +93,8 @@ class Population(BaseULObject, DocumentLevelObject):
             cell_component = cell.find(NINEML + 'Reference')
         return cls(name=element.attrib['name'],
                    size=int(element.find(NINEML + 'Size').text),
-                   cell=Component.from_xml(cell_component, document), **kwargs)
+                   cell=Component.from_xml(cell_component, document),
+                   url=document.url, **kwargs)
 
 
 class PositionList(BaseULObject, DocumentLevelObject):
@@ -186,6 +189,7 @@ class PositionList(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         if element is None:
             return None

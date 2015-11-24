@@ -4,7 +4,7 @@ import unittest
 from nineml.abstraction import (Regime, On, OutputEvent,
                                       AnalogReceivePort, AnalogSendPort,
                                       flattening)
-from nineml.abstraction.dynamics import DynamicsClass as ComponentClass
+from nineml.abstraction.dynamics import Dynamics as ComponentClass
 
 
 class ComponentFlattener_test(unittest.TestCase):

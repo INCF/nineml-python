@@ -142,7 +142,7 @@ class Transition(BaseALObject, MemberContainerObject):
             transition.  ``None`` implies staying in the same regime. This has
             to be specified as a string, not the object, because in general the
             |Regime| object is not yet constructed. This is automatically
-            resolved by the |DynamicsClass| in
+            resolved by the |Dynamics| in
             ``_ResolveTransitionRegimeNames()`` during construction.
 
 
@@ -181,14 +181,14 @@ class Transition(BaseALObject, MemberContainerObject):
 
         .. note::
 
-            This method will only be available after the DynamicsClass
+            This method will only be available after the Dynamics
             containing this transition has been built. See
             ``set_source_regime``
         """
         if type(self._target_regime).__name__ != 'Regime':
             raise NineMLRuntimeError(
                 "Target regime ({}) has not been set (use 'validate()' "
-                "of DynamicsClass first)."
+                "of Dynamics first)."
                 .format(self._target_regime))
         return self._target_regime
 
@@ -206,7 +206,7 @@ class Transition(BaseALObject, MemberContainerObject):
 
         .. note::
 
-            This method will only be available after the |DynamicsClass|
+            This method will only be available after the |Dynamics|
             containing this transition has been built. See
             ``set_source_regime``
         """
@@ -221,7 +221,7 @@ class Transition(BaseALObject, MemberContainerObject):
 
         .. note::
 
-            This method will only be available after the DynamicsClass
+            This method will only be available after the Dynamics
             containing this transition has been built. See
             ``set_source_regime``
         """
@@ -233,7 +233,7 @@ class Transition(BaseALObject, MemberContainerObject):
 
         .. note::
 
-            This method will only be available after the DynamicsClass
+            This method will only be available after the Dynamics
             containing this transition has been built. See
             ``set_source_regime``
         """
@@ -384,3 +384,7 @@ class Trigger(BaseALObject, Expression):
         negated = copy(self)
         negated.negate()
         return negated
+
+    @property
+    def _name(self):
+        return self.rhs

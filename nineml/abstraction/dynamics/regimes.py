@@ -20,7 +20,7 @@ from .utils.visitors import DynamicsElementFinder
 
 class StateVariable(BaseALObject):
 
-    """A class representing a state-variable in a ``DynamicsClass``.
+    """A class representing a state-variable in a ``Dynamics``.
 
     This was originally a string, but if we intend to support units in the
     future, wrapping in into its own object may make the transition easier
@@ -215,7 +215,12 @@ class Regime(BaseALObject, MemberContainerObject):
 
         # Check for double definitions:
         td_dep_vars = [td.variable for td in time_derivatives]
-        assert_no_duplicates(td_dep_vars)
+        assert_no_duplicates(
+            td_dep_vars,
+            msg=("Multiple time derivatives found for the same state variable "
+                 "in regime '{}' (found '{}')".format(
+                     self.name,
+                     "', '".join(td.variable for td in time_derivatives))))
 
         # Store as a dictionary
         self._time_derivatives = dict((td.variable, td)

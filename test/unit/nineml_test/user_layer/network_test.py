@@ -26,7 +26,7 @@ class TestNetwork(unittest.TestCase):
 
     tmp_xml_file = path.join(src_dir, 'network_tmp.xml')
     xml_dir = path.normpath(path.join(src_dir, '..', '..', '..', '..',
-                                      'examples', 'Brunel2000'))
+                                      'examples', '_old', 'Brunel2000'))
 
     def test_xml_roundtrip(self):
 
@@ -72,15 +72,15 @@ class TestNetwork(unittest.TestCase):
         p2 = nineml.Population("Inh", 1, celltype, positions=None)
         inpt = nineml.Population("Ext", 1, ext_stim, positions=None)
 
-        all_to_all = nineml.ConnectionRule("AllToAll",
+        all_to_all = nineml.ConnectionRuleComponent("AllToAll",
                                            path.join(self.xml_dir,
                                                      "AllToAll.xml"), {})
 
-        static_exc = nineml.Dynamics(
+        static_exc = nineml.DynamicsComponent(
             "ExcitatoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"), {},
             initial_values={"weight": (Je, nA)})
-        static_inh = nineml.Dynamics(
+        static_inh = nineml.DynamicsComponent(
             "InhibitoryPlasticity",
             path.join(self.xml_dir, "StaticConnection.xml"),
             initial_values={"weight": (Ji, nA)})

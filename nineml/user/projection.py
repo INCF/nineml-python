@@ -13,6 +13,7 @@ from ..exceptions import NineMLRuntimeError
 from .values import SingleValue
 from .component import Quantity
 from nineml import DocumentLevelObject
+from nineml.exceptions import handle_xml_exceptions
 
 
 class Projection(BaseULObject, DocumentLevelObject):
@@ -165,10 +166,11 @@ class Projection(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         # Get Name
-        name = element.get('name')
+        name = element.attrib['name']
         # Get Source
         e = expect_single(element.findall(NINEML + 'Source'))
         e = expect_single(e.findall(NINEML + 'Reference'))
@@ -257,7 +259,7 @@ class Delay(Quantity):
             value.
 
     Numerical values may either be numbers, or a component that generates
-    numbers, e.g. a RandomDistribution instance.
+    numbers, e.g. a RandomDistributionComponent instance.
     """
     element_name = 'Delay'
 

@@ -11,7 +11,7 @@ June 2014
 """
 
 from __future__ import division
-import nineml.user as nineml
+import nineml.user_layer as nineml
 from nineml.units import ms, mV, nA, dimensionless, Hz, Mohm
 
 delay = 1.5          # (ms) global delay for all neurons in the group

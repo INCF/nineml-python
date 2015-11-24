@@ -3,6 +3,7 @@ from operator import and_
 from . import BaseNineMLObject
 from nineml.xmlns import NINEML, E
 from nineml.annotations import annotate_xml, read_annotations
+from nineml.exceptions import handle_xml_exceptions
 
 
 class BaseReference(BaseNineMLObject):
@@ -34,7 +35,9 @@ class BaseReference(BaseNineMLObject):
 
     def __repr__(self):
             return ('{}(name="{}"{})'
-                    .format(self.__class__.__name__, self._referred_to.name,
+                    .format(self.__class__.__name__,
+                            (self._referred_to.name if self._referred_to
+                             else ''),
                             ' in "{}"'.format(self.url) if self.url else ''))
 
     @annotate_xml
@@ -47,12 +50,13 @@ class BaseReference(BaseNineMLObject):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         if element.tag != NINEML + cls.element_name:
             raise Exception("Expecting tag name %s%s, actual tag name %s" % (
                 NINEML, cls.element_name, element.tag))
         name = element.text
         url = element.attrib.get("url", None)
-        return cls(name, document, url)
+        return cls(name=name, document=document, url=url)
 
 from .document import read

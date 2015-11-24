@@ -12,7 +12,7 @@ June 2014
 
 from __future__ import division
 from math import exp
-import nineml.user as nineml
+import nineml.user_layer as nineml
 from nineml.document import Document
 from nineml.units import ms, mV, nA, unitless, Hz, Mohm
 

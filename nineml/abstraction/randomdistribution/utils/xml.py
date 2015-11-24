@@ -7,13 +7,14 @@ docstring needed
 from nineml.annotations import annotate_xml
 from nineml.utils import expect_single
 from nineml.xmlns import E
-from ..base import RandomDistributionClass, RandomDistributionBlock
+from ..base import RandomDistribution, RandomDistributionBlock
 from nineml.annotations import read_annotations
 from ...componentclass.utils.xml import (
     ComponentClassXMLLoader, ComponentClassXMLWriter)
+from nineml.exceptions import handle_xml_exceptions
 
 
-class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
+class RandomDistributionXMLLoader(ComponentClassXMLLoader):
 
     """This class is used by XMLReader interny.
 
@@ -24,15 +25,19 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
     """
 
     @read_annotations
+    @handle_xml_exceptions
     def load_componentclass(self, element):
         subblocks = ('Parameter', 'RandomDistribution')
         children = self._load_blocks(element, blocks=subblocks)
         randomdistributionblock = expect_single(children["RandomDistribution"])
-        return RandomDistributionClass(name=element.get('name'),
-                                 parameters=children["Parameter"],
-                                 randomdistributionblock=randomdistributionblock)
+        return RandomDistribution(
+            name=element.attrib['name'],
+            parameters=children["Parameter"],
+            randomdistributionblock=randomdistributionblock,
+            url=self.document.url)
 
     @read_annotations
+    @handle_xml_exceptions
     def load_randomdistributionblock(self, element):
         subblocks = ()
         children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8
@@ -45,7 +50,7 @@ class RandomDistributionClassXMLLoader(ComponentClassXMLLoader):
     }
 
 
-class RandomDistributionClassXMLWriter(ComponentClassXMLWriter):
+class RandomDistributionXMLWriter(ComponentClassXMLWriter):
 
     @annotate_xml
     def visit_componentclass(self, componentclass):

@@ -3,6 +3,7 @@ from . import BaseULObject
 from nineml.xmlns import E, NINEML
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import check_tag
+from nineml.exceptions import handle_xml_exceptions
 
 
 class BaseValue(BaseULObject):
@@ -18,7 +19,7 @@ class SingleValue(BaseValue):
     is a (name, value) pair.
 
     Numerical values may either be numbers, or a component that generates
-    numbers, e.g. a RandomDistribution instance.
+    numbers, e.g. a RandomDistributionComponent instance.
     """
     element_name = "SingleValue"
     defining_attributes = ("value",)
@@ -42,6 +43,7 @@ class SingleValue(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, _):
         check_tag(element, cls)
         return cls(float(element.text))
@@ -73,6 +75,7 @@ class ArrayValue(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         rows = []
         for row_xml in element.findall(NINEML + ArrayValueRow.element_name):
@@ -109,6 +112,7 @@ class ArrayValueRow(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, _):
         return cls(index=element.attrib["index"], value=element.text)
 
@@ -138,6 +142,7 @@ class ExternalArrayValue(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, _):
         return cls(url=element.attrib["url"],
                    mimetype=element.attrib["mimetype"],
@@ -186,6 +191,7 @@ class StringValue(BaseValue):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element):
         """
         Parse an XML ElementTree structure and return a string value.

@@ -9,6 +9,7 @@ from nineml.annotations import annotate_xml, read_annotations
 from nineml.xmlns import E, NINEML
 from nineml.utils import check_tag
 import nineml
+from nineml.exceptions import handle_xml_exceptions, NineMLRuntimeError
 
 
 class Network(BaseULObject):
@@ -55,6 +56,12 @@ class Network(BaseULObject):
                 raise Exception("Networks may only contain Populations, "
                                 "Projections, or Selections")
 
+    @property
+    def elements(self):
+        return chain(self.populations.itervalues(),
+                     self.projections.itervalues(),
+                     self.selections.itervalues())
+
     def get_components(self):
         components = []
         for p in chain(self.populations.values(), self.projections.values()):
@@ -73,6 +80,7 @@ class Network(BaseULObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         populations = []
@@ -99,7 +107,14 @@ class Network(BaseULObject):
 
     @classmethod
     def read(self, filename):
-        document = nineml.read(filename)
+        if isinstance(filename, basestring):
+            document = nineml.read(filename)
+        elif isinstance(filename, Document):
+            document = filename
+        else:
+            raise NineMLRuntimeError(
+                "Unrecognised argument type {}, can be either filename or "
+                "Document".format(filename))
         return Network(
             name='root',
             populations=dict((p.name, p) for p in document.populations),

@@ -2,7 +2,7 @@ import nineml.abstraction as al
 
 
 def get_component():
-    iaf = al.dynamics.DynamicsClass(
+    iaf = al.dynamics.Dynamics(
         name="iaf",
         regimes=[
             al.Regime(

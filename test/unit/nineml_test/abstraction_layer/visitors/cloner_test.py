@@ -5,7 +5,7 @@ import warnings
 import unittest
 
 from nineml.abstraction import (
-    DynamicsClass as ComponentClass, Regime, On, OutputEvent,
+    Dynamics as ComponentClass, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort,
     NamespaceAddress)
 from nineml.abstraction.dynamics.utils.cloner import (

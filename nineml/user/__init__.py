@@ -16,9 +16,9 @@ Classes
         SynapseType
         CurrentSourceType
         Structure
-        ConnectionRule
+        ConnectionRuleComponent
         ConnectionType
-        RandomDistribution
+        RandomDistributionComponent
     Parameter
     PropertySet
     Value
@@ -65,9 +65,9 @@ from .population import Population, PositionList, Structure
 from .selection import Selection, Concatenate
 from .projection import Projection, PortConnection, Delay
 from .component import (PropertySet, Property, Component, Definition,
-                        Prototype, Dynamics, ConnectionRule, RandomDistribution,
-                        resolve_reference, write_reference, Reference,
-                        InitialValue, InitialValueSet)
+                        Prototype, DynamicsComponent, ConnectionRuleComponent,
+                        RandomDistributionComponent, resolve_reference,
+                        write_reference, Reference, Initial, InitialSet)
 from .syntactic_sugar import (
     SpikingNodeType, IonDynamicsType, SynapseType, CurrentSourceType,
     ConnectionType)

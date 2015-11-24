@@ -15,14 +15,14 @@
     <Dynamics>
       <StateVariable name="g1" dimension="conductance"/>
       <StateVariable name="g2" dimension="conductance"/>
-      <Regime>
+      <Regime name="sole">
         <TimeDerivative variable="g1">
           <MathInline>-g1 / tau1</MathInline>
         </TimeDerivative>
         <TimeDerivative variable="g2">
           <MathInline>-g2 / tau2</MathInline>
         </TimeDerivative>
-        <OnEvent port="spike">
+        <OnEvent port="spike" target_regime="sole">
           <StateAssignment variable="g1">
             <MathInline>g1 + gBar * normalising_factor</MathInline>
           </StateAssignment>

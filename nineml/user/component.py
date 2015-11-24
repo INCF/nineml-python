@@ -5,15 +5,17 @@ from abc import ABCMeta
 import collections
 from nineml.reference import BaseReference
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError)
+    NineMLUnitMismatchError, NineMLRuntimeError, NineMLMissingElementError,
+    handle_xml_exceptions)
 from nineml.xmlns import nineml_namespace
 from operator import and_
 from nineml.xmlns import NINEML, E
 from nineml.annotations import read_annotations, annotate_xml
 from nineml.utils import expect_single, check_tag, check_units
 from nineml.units import Unit, unitless
+from nineml import units as un
 from ..abstraction import (
-    ComponentClass, DynamicsClass, ConnectionRuleClass, RandomDistributionClass)
+    ComponentClass, Dynamics, ConnectionRule, RandomDistribution)
 from .values import SingleValue, ArrayValue, ExternalArrayValue
 from . import BaseULObject
 from nineml.document import Document
@@ -130,12 +132,12 @@ class Component(BaseULObject, DocumentLevelObject):
         if isinstance(definition, basestring):
             definition = Definition(
                 name=path.basename(definition).replace(".xml", ""),
-                document=Document(url=definition),
+                document=Document(url=url),
                 url=definition)
         elif isinstance(definition, ComponentClass):
-            definition = Definition(definition.name, Document(definition))
+            definition = Definition(component_class=definition)
         elif isinstance(definition, Component):
-            definition = Prototype(definition.name, Document(definition))
+            definition = Prototype(component=definition)
         elif not (isinstance(definition, Definition) or
                   isinstance(definition, Prototype)):
             raise ValueError("'definition' must be either a 'Definition' or "
@@ -151,12 +153,14 @@ class Component(BaseULObject, DocumentLevelObject):
             raise TypeError(
                 "properties must be a PropertySet, dict of properties or an "
                 "iterable of properties (not '{}')".format(properties))
-        if isinstance(initial_values, InitialValueSet):
+        if isinstance(initial_values, InitialSet):
             self._initial_values = initial_values
         elif isinstance(initial_values, dict):
-            self._initial_values = InitialValueSet(**initial_values)
+            self._initial_values = InitialSet(**initial_values)
+        elif isinstance(initial_values, collections.Iterable):
+            self._initial_values = InitialSet(*initial_values)
         else:
-            raise TypeError("initial_values must be an InitialValueSet or a "
+            raise TypeError("initial_values must be an InitialSet or a "
                             "dict, not a %s" % type(initial_values))
         self.check_properties()
         try:
@@ -172,7 +176,8 @@ class Component(BaseULObject, DocumentLevelObject):
         depending on how the componentclass is defined.
         """
         defn = self.definition
-        while not isinstance(defn, Definition):
+        # Dereference chains of Prototypes until we get a Definition object
+        while isinstance(defn, Prototype):
             defn = defn.component.definition
         return defn.component_class
 
@@ -229,7 +234,7 @@ class Component(BaseULObject, DocumentLevelObject):
         """
         # Recursively retrieves initial values defined in prototypes and
         # updates them with properties defined locally
-        vals = InitialValueSet()
+        vals = InitialSet()
         if isinstance(self.definition, Prototype):
             vals.update(self.definition.component.initial_values)
         vals.update(self._initial_values)
@@ -271,13 +276,15 @@ class Component(BaseULObject, DocumentLevelObject):
         diff_a = properties.difference(parameters)
         diff_b = parameters.difference(properties)
         if diff_a:
-            msg.append("User properties contains the following parameters "
-                       "that are not present in the definition: %s" %
-                       ",".join(diff_a))
+            msg.append("User properties of '{}' contain the following "
+                       "parameters that are not present in the definition of "
+                       "'{}': {}".format(self.name, self.component_class.name,
+                                         ",".join(diff_a)))
         if diff_b:
-            msg.append("Definition contains the following parameters that are "
-                       "not present in the user properties: %s" %
-                       ",".join(diff_b))
+            msg.append("Definition of '{}' contains the following parameters "
+                       "that are not present in the user properties of '{}': "
+                       "{}".format(self.component_class.name,
+                                   self.name, ",".join(diff_b)))
         if msg:
             # need a more specific type of Exception
             raise Exception(". ".join(msg))
@@ -288,9 +295,10 @@ class Component(BaseULObject, DocumentLevelObject):
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
                 raise NineMLRuntimeError(
-                    "Dimensions for '{}' property ('{}') don't match that of "
-                    "componentclass class ('{}')."
-                    .format(param.name, prop_dimension, param_dimension))
+                    "Dimensions for '{}' property, {}, in '{}' don't match "
+                    "that of its definition in '{}', {}."
+                    .format(param.name, prop_dimension, self.name,
+                            self.component_class.name, param_dimension))
 
     @write_reference
     @annotate_xml
@@ -311,6 +319,7 @@ class Component(BaseULObject, DocumentLevelObject):
     @classmethod
     @resolve_reference
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         """docstring missing"""
         if element.tag != NINEML + cls.element_name:
@@ -319,8 +328,8 @@ class Component(BaseULObject, DocumentLevelObject):
         name = element.attrib.get("name", None)
         properties = PropertySet.from_xml(
             element.findall(NINEML + Property.element_name), document)
-        initial_values = InitialValueSet.from_xml(
-            element.findall(NINEML + InitialValue.element_name), document)
+        initial_values = InitialSet.from_xml(
+            element.findall(NINEML + Initial.element_name), document)
         definition_element = element.find(NINEML + Definition.element_name)
         if definition_element is not None:
             definition = Definition.from_xml(definition_element, document)
@@ -340,12 +349,15 @@ class Component(BaseULObject, DocumentLevelObject):
             comp_type = type(definition.component)  # If Prototype
         except AttributeError:
             component_class = definition.component_class
-            if isinstance(component_class, DynamicsClass):
-                comp_type = Dynamics
-            elif isinstance(component_class, RandomDistributionClass):
-                comp_type = RandomDistribution
-            elif isinstance(component_class, ConnectionRuleClass):
-                comp_type = ConnectionRule
+            if isinstance(component_class, Dynamics):
+                comp_type = DynamicsComponent
+            elif isinstance(component_class, RandomDistribution):
+                comp_type = RandomDistributionComponent
+            elif isinstance(component_class, ConnectionRule):
+                comp_type = ConnectionRuleComponent
+            else:
+                raise NineMLRuntimeError(
+                    "Unrecognised definition {}".format(definition))
         return comp_type
 
     @property
@@ -372,14 +384,28 @@ class Definition(BaseReference):
     """
     element_name = "Definition"
 
+    def __init__(self, name=None, document=None, component_class=None,
+                 url=None):
+        if component_class is None:
+            assert name is not None and document is not None
+            super(Definition, self).__init__(name, document, url)
+        else:
+            self.url = component_class.url
+            self._referred_to = component_class
+
     @property
     def component_class(self):
         return self._referred_to
 
 
-class Prototype(BaseReference):
+class Prototype(Definition):
 
     element_name = "Prototype"
+
+    def __init__(self, name=None, document=None, component=None,
+                 url=None):
+        super(Prototype, self).__init__(name=name, document=document,
+                                        component_class=component, url=url)
 
     @property
     def component(self):
@@ -395,7 +421,7 @@ class Quantity(BaseULObject):
     is a (name, value) pair.
 
     Numerical values may either be numbers, or a componentclass that generates
-    numbers, e.g. a RandomDistribution instance.
+    numbers, e.g. a RandomDistributionComponent instance.
     """
     __metaclass__ = ABCMeta  # Abstract base class
     element_name = 'Quantity'
@@ -404,15 +430,23 @@ class Quantity(BaseULObject):
 
     def __init__(self, value, units=None):
         if not isinstance(value, (int, float, SingleValue, ArrayValue,
-                                  ExternalArrayValue)):
+                                  ExternalArrayValue,
+                                  RandomDistributionComponent)):
             raise Exception("Invalid type '{}' for value, can be one of "
                             "'Value', 'Reference', 'Component', 'ValueList', "
                             "'ExternalValueList'"
                             .format(value.__class__.__name__))
         if units is None:
             units = unitless
+        elif isinstance(units, basestring):
+            try:
+                units = getattr(un, units)
+            except AttributeError:
+                raise NineMLRuntimeError(
+                    "Did not find unit '{}' in units module".format(units))
         if not isinstance(units, Unit):
-            raise Exception("Units ({}) must of type <Unit>".format(units))
+            raise NineMLRuntimeError(
+                "Units ({}) must of type <Unit>".format(units))
         super(Quantity, self).__init__()
         if isinstance(value, (int, float)):
             value = SingleValue(value)
@@ -420,13 +454,13 @@ class Quantity(BaseULObject):
         self.units = units
 
     def __hash__(self):
-        return hash(self.value) ^ hash(self.units)
+        return hash(self._value) ^ hash(self.units)
 
     def is_single(self):
         return isinstance(self._value, SingleValue)
 
     def is_random(self):
-        return False
+        return isinstance(self._value, RandomDistributionComponent)
 
     def is_array(self):
         return (isinstance(self._value, ArrayValue) or
@@ -456,10 +490,11 @@ class Quantity(BaseULObject):
     @property
     def random_distribution(self):
         if self.is_random():
-            return self._value.componentclass
+            return self._value
         else:
-            raise NineMLRuntimeError("Cannot access random randomdistribution for "
-                                     "componentclass or single value types")
+            raise NineMLRuntimeError(
+                "Cannot access random randomdistribution"
+                "for componentclass or single value types")
 
     def set_units(self, units):
         if units.dimension != self.units.dimension:
@@ -489,6 +524,7 @@ class Quantity(BaseULObject):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         if element.find(NINEML + 'SingleValue') is not None:
             value = SingleValue.from_xml(
@@ -502,12 +538,12 @@ class Quantity(BaseULObject):
             value = ArrayValue.from_xml(
                 expect_single(element.findall(NINEML + 'ArrayValue')),
                 document)
-        elif element.find(NINEML + 'ComponentValue') is not None:
-            value = ArrayValue.from_xml(
-                expect_single(element.findall(NINEML + 'ArrayValue')),
+        elif element.find(NINEML + 'Component') is not None:
+            value = RandomDistributionComponent.from_xml(
+                expect_single(element.findall(NINEML + 'Component')),
                 document)
         else:
-            raise Exception(
+            raise NineMLRuntimeError(
                 "Did not find recognised value tag in property (found {})"
                 .format(', '.join(c.tag for c in element.getchildren())))
         try:
@@ -535,7 +571,7 @@ class Property(Quantity):
     is a (name, value) pair.
 
     Numerical values may either be numbers, or a componentclass that generates
-    numbers, e.g. a RandomDistribution instance.
+    numbers, e.g. a RandomDistributionComponent instance.
     """
     element_name = "Property"
 
@@ -565,17 +601,18 @@ class Property(Quantity):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         check_tag(element, cls)
         quantity = Quantity.from_xml(element, document)
         try:
-            name = element.get('name')
+            name = element.attrib['name']
         except KeyError:
             raise Exception("Property did not have a name")
-        return cls(name=name, value=quantity.value, units=quantity.units)
+        return cls(name=name, value=quantity._value, units=quantity.units)
 
 
-class InitialValue(Property):
+class Initial(Property):
 
     """
     temporary, longer-term plan is to use SEDML or something similar
@@ -616,7 +653,7 @@ class PropertySet(dict):
                 self[name] = parameter  # again, should perhaps copy
 
     def get_random_distributions(self):
-        return [p.value for p in self.values() if p.is_random()]
+        return [p.random_distribution for p in self.values() if p.is_random()]
 
     def to_xml(self):
         # serialization is in alphabetical order
@@ -630,31 +667,31 @@ class PropertySet(dict):
         return cls(*properties)
 
 
-class InitialValueSet(PropertySet):
+class InitialSet(PropertySet):
 
     def __init__(self, *ivs, **kwivs):
         """
-        `*ivs` - should be InitialValue instances
+        `*ivs` - should be Initial instances
         `**kwivs` - should be name=(value,units)
         """
         dict.__init__(self)
         for iv in ivs:
             self[iv.name] = iv  # should perhaps do a copy
         for name, (value, units) in kwivs.items():
-            self[name] = InitialValue(name, value, units)
+            self[name] = Initial(name, value, units)
 
     def __repr__(self):
-        return "InitialValueSet(%s)" % dict(self)
+        return "InitialSet(%s)" % dict(self)
 
     @classmethod
     def from_xml(cls, elements, document):
         initial_values = []
         for iv_element in elements:
-            initial_values.append(InitialValue.from_xml(iv_element, document))
+            initial_values.append(Initial.from_xml(iv_element, document))
         return cls(*initial_values)
 
 
-class Dynamics(Component):
+class DynamicsComponent(Component):
 
     def check_initial_values(self):
         for var in self.definition.componentclass.state_variables:
@@ -666,14 +703,17 @@ class Dynamics(Component):
             check_units(initial_value.units, var.dimension)
 
 
-class ConnectionRule(Component):
+class ConnectionRuleComponent(Component):
     """
     docstring needed
     """
-    pass
+
+    @property
+    def standard_library(self):
+        return self.component_class.standard_library
 
 
-class RandomDistribution(Component):
+class RandomDistributionComponent(Component):
     """
     Component representing a random number randomdistribution, e.g. normal, gamma,
     binomial.
@@ -682,4 +722,7 @@ class RandomDistribution(Component):
 
         example goes here
     """
-    pass
+
+    @property
+    def standard_library(self):
+        return self.component_class.standard_library

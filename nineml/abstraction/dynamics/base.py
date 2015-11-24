@@ -1,5 +1,5 @@
 """
-Definitions for the DynamicsClass. DynamicsClass derives from 2 other mixin
+Definitions for the Dynamics. Dynamics derives from 2 other mixin
 classes, which provide functionality for hierachical components and for local
 components definitions of interface and dynamics
 
@@ -31,7 +31,7 @@ class _NamespaceMixin(object):
 
     def __init__(self, subnodes=None, portconnections=None):
         """Constructor - For parameter descriptions, see the
-        DynamicsClass.__init__() method
+        Dynamics.__init__() method
         """
 
         # Prevent dangers with default arguments.
@@ -94,7 +94,7 @@ class _NamespaceMixin(object):
     def insert_subnode(self, namespace, subnode):
         """Insert a subnode into this component
 
-        :param subnode: An object of type ``DynamicsClass``.
+        :param subnode: An object of type ``Dynamics``.
         :param namespace: A `string` specifying the name of the component in
             this components namespace.
 
@@ -110,7 +110,7 @@ class _NamespaceMixin(object):
             err = 'Invalid namespace: %s' % type(subnode)
             raise NineMLRuntimeError(err)
 
-        if not isinstance(subnode, DynamicsClass):
+        if not isinstance(subnode, Dynamics):
             err = 'Attempting to insert invalid '
             err += 'object as subcomponent: %s' % type(subnode)
             raise NineMLRuntimeError(err)
@@ -148,9 +148,9 @@ class _NamespaceMixin(object):
         return self._portconnections
 
 
-class DynamicsClass(ComponentClass, _NamespaceMixin):
+class Dynamics(ComponentClass, _NamespaceMixin):
 
-    """A DynamicsClass object represents a *component* in NineML.
+    """A Dynamics object represents a *component* in NineML.
 
       .. todo::
 
@@ -174,8 +174,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                  dynamicsblock=None, subnodes=None,
                  portconnections=None, regimes=None,
                  aliases=None, state_variables=None,
-                 constants=None):
-        """Constructs a DynamicsClass
+                 constants=None, url=None):
+        """Constructs a Dynamics
 
         :param name: The name of the componentclass.
         :param parameters: A list containing either |Parameter| objects
@@ -189,8 +189,8 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         :param dynamicsblock: A |DynamicsBlock| object, defining the local
                               dynamicsblock of the componentclass.
         :param subnodes: A dictionary mapping namespace-names to sub-
-            componentclass. [Type: ``{string:|DynamicsClass|,
-            string:|DynamicsClass|, string:|DynamicsClass|}`` ] describing the
+            componentclass. [Type: ``{string:|Dynamics|,
+            string:|Dynamics|, string:|Dynamics|}`` ] describing the
             namespace of subcomponents for this componentclass.
         :param portconnections: A list of pairs, specifying the connections
             between the ports of the subcomponents in this componentclass.
@@ -203,7 +203,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
         Examples:
 
-        >>> a = DynamicsClass(name='MyComponent1')
+        >>> a = Dynamics(name='MyComponent1')
 
         .. todo::
 
@@ -224,7 +224,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
                                           state_variables=state_variables,
                                           constants=constants)
         ComponentClass.__init__(self, name, parameters,
-                                main_block=dynamicsblock)
+                                main_block=dynamicsblock, url=url)
         self._query = DynamicsQueryer(self)
 
         # Ensure analog_ports is a list not an iterator
@@ -248,12 +248,14 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         self._event_receive_ports = self._event_send_ports = self.subnodes = {}
 
         # EventPort, StateVariable and Parameter Inference:
-        inferred_struct = DynamicsClassInterfaceInferer(self)
+        inferred_struct = DynamicsInterfaceInferer(self)
 
         # Check any supplied parameters match:
         if parameters is not None:
             inf_check(self._parameters.keys(), inferred_struct.parameter_names,
-                      'Parameters')
+                      desc=("\nPlease check for references to missing "
+                            "parameters in component class '{}'.\n"
+                            .format(self.name)))
         else:
             self._parameters = dict((n, Parameter(n))
                                     for n in inferred_struct.parameter_names)
@@ -262,7 +264,9 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         if self.num_state_variables:
             state_var_names = [p.name for p in self.state_variables]
             inf_check(state_var_names, inferred_struct.state_variable_names,
-                      'StateVariables')
+                      ("\nPlease check for time derivatives of missing state "
+                       "variables in component class '{}'.\n"
+                       .format(self.name)))
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
@@ -279,7 +283,9 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
             # list is identical to the inferred one.
             inf_check(self._event_receive_ports.keys(),
                       inferred_struct.input_event_port_names,
-                      'Event Ports In')
+                      ("\nPlease check OnEvents for references to missing "
+                       "EventReceivePorts in component class '{}'.\n"
+                       .format(self.name)))
         else:
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.input_event_port_names:
@@ -291,7 +297,9 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         if len(self._event_send_ports):
             inf_check(self._event_send_ports.keys(),
                       inferred_struct.event_out_port_names,
-                      'Event Ports Out')
+                      ("\nPlease check OutputEvent for references to missing "
+                       "EventSendPorts in component class '{}'.\n"
+                       .format(self.name)))
         else:
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.event_out_port_names:
@@ -325,7 +333,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
         return DynamicsElementFinder(element).found_in(self)
 
     def __repr__(self):
-        return "<dynamics.DynamicsClass %s>" % self.name
+        return "<dynamics.Dynamics %s>" % self.name
 
     def validate(self):
         self._resolve_transition_regimes()
@@ -350,7 +358,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def attributes_with_dimension(self):
-        return chain(super(DynamicsClass, self).attributes_with_dimension,
+        return chain(super(Dynamics, self).attributes_with_dimension,
                      self.analog_ports, self.state_variables)
 
     @property
@@ -380,7 +388,7 @@ class DynamicsClass(ComponentClass, _NamespaceMixin):
 
     @property
     def ports(self):
-        return chain(super(DynamicsClass, self).ports,
+        return chain(super(Dynamics, self).ports,
                      self.analog_send_ports, self.analog_receive_ports,
                      self.analog_reduce_ports, self.event_send_ports,
                      self.event_receive_ports)
@@ -640,7 +648,7 @@ def inf_check(l1, l2, desc):
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
 from .validators import DynamicsValidator
-from .utils import DynamicsClassInterfaceInferer
+from .utils import DynamicsInterfaceInferer
 from .utils.visitors import (DynamicsElementFinder,
                              DynamicsRequiredDefinitions)
 from .utils.modifiers import (

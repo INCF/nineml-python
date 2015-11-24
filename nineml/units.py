@@ -5,6 +5,7 @@ from sympy import Symbol
 from nineml.xmlns import E
 from nineml import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
+from nineml.exceptions import handle_xml_exceptions
 
 
 class Dimension(BaseNineMLObject, DocumentLevelObject):
@@ -133,6 +134,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         kwargs = dict(element.attrib)
         name = kwargs.pop('name')
@@ -309,6 +311,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
 
     @classmethod
     @read_annotations
+    @handle_xml_exceptions
     def from_xml(cls, element, document):
         name = element.attrib['symbol']
         dimension = document[element.attrib['dimension']]

@@ -1,2 +1,2 @@
-from .base import RandomDistributionClass, RandomDistributionBlock
-from .utils import RandomDistributionClassXMLLoader, RandomDistributionClassXMLWriter
+from .base import RandomDistribution, RandomDistributionBlock
+from .utils import RandomDistributionXMLLoader, RandomDistributionXMLWriter

@@ -25,16 +25,16 @@ docstring needed
 #         xmlfile2 = build_dir + component.name + '2.xml'
 #
 #         print '    -- Saving Component To XML:', xmlfile1
-#         xml.DynamicsClassXMLWriter.write(component, xmlfile1)
+#         xml.DynamicsXMLWriter.write(component, xmlfile1)
 #
 #         print '    -- Loading Component To XML.'
-#         reloaded_comp = xml.DynamicsClassXMLReader.read(xmlfile1)
+#         reloaded_comp = xml.DynamicsXMLReader.read(xmlfile1)
 #
 #         print '    -- Checking Components are identical'
 #         DynamicsEqualityChecker.check_equal(component, reloaded_comp)
 #
 #         print '    -- Saving Reloaded Component to XML', xmlfile2
-#         xml.DynamicsClassXMLWriter.write(reloaded_comp, xmlfile2)
+#         xml.DynamicsXMLWriter.write(reloaded_comp, xmlfile2)
 #
 #         print '    -- Checking the SHA1 Checksum of the two xml files:'
 #         hash1 = file_sha1_hexdigest(xmlfile1)

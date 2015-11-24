@@ -4,6 +4,7 @@ docstring goes here
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from lxml import etree  # @UnusedImport
 from lxml.builder import ElementMaker
 
 nineml_namespace = 'http://nineml.net/9ML/1.0'

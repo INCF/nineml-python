@@ -198,7 +198,7 @@ class ComponentFlattener(object):
     # Flattening Functions:
     # --------------------- #
     def __init__(self, componentclass, componentname=None):
-        assert isinstance(componentclass, DynamicsClass)
+        assert isinstance(componentclass, Dynamics)
 
         # Is our componentclass already flat??
         if componentclass.is_flat():
@@ -231,7 +231,7 @@ class ComponentFlattener(object):
         self.build_new_regime_space()
 
         # Build Our New Component
-        self.reducedcomponent = DynamicsClass(
+        self.reducedcomponent = Dynamics(
             name=self.componentname,
             aliases=flatten_first_level(
                 [m.aliases for m in self.all_components]),
@@ -376,4 +376,4 @@ def flatten(model, componentname=None):
     reducer = ComponentFlattener(model, componentname)
     return reducer.reducedcomponent
 
-from ..base import DynamicsClass
+from ..base import Dynamics

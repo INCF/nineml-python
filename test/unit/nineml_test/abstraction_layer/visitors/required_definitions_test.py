@@ -1,7 +1,7 @@
 import unittest
 from itertools import chain
 from nineml.abstraction.dynamics import (
-    DynamicsClass, Regime, On, OutputEvent)
+    Dynamics, Regime, On, OutputEvent)
 from nineml.abstraction.ports import AnalogSendPort, AnalogReceivePort
 from nineml.abstraction.expressions import reserved_identifiers
 
@@ -11,7 +11,7 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
 
     def setUp(self):
 
-        self.a = DynamicsClass(
+        self.a = Dynamics(
             name='A',
             aliases=['A1:=P1', 'A2 := ARP2', 'A3 := SV1'],
             regimes=[
@@ -26,7 +26,7 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
             parameters=['P1', 'P2']
         )
 
-        self.b = DynamicsClass(
+        self.b = Dynamics(
             name='B',
             aliases=['A1:=P1', 'A2 := ARP1 + SV2', 'A3 := SV1'],
             regimes=[

@@ -17,7 +17,7 @@ from ..componentclass import ComponentClass, MainBlock
 
 class ConnectionRuleBlock(MainBlock):
 
-    element_name = 'ConnectionRule'
+    element_name = 'ConnectionRuleComponent'
     defining_attributes = ('standard_library',)
 
     def __init__(self, standard_library):
@@ -29,13 +29,13 @@ class ConnectionRuleBlock(MainBlock):
         return visitor.visit_connectionruleblock(self, **kwargs)
 
 
-class ConnectionRuleClass(ComponentClass):
+class ConnectionRule(ComponentClass):
 
     defining_attributes = ('name', '_parameters', '_main_block')
 
-    def __init__(self, name, connectionruleblock, parameters=None):
-        super(ConnectionRuleClass, self).__init__(
-            name, parameters, main_block=connectionruleblock)
+    def __init__(self, name, connectionruleblock, parameters=None, url=None):
+        super(ConnectionRule, self).__init__(
+            name, parameters, main_block=connectionruleblock, url=url)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -58,6 +58,10 @@ class ConnectionRuleClass(ComponentClass):
 
     def validate(self):
         ConnectionRuleValidator.validate_componentclass(self)
+
+    @property
+    def standard_library(self):
+        return self._main_block.standard_library
 
 from .utils.cloner import ConnectionRuleCloner
 from .utils.modifiers import (

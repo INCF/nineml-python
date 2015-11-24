@@ -5,13 +5,13 @@ import nineml.user as nineml
 catalog = "https://raw.githubusercontent.com/apdavison/nineml/modular/catalog/"
 
 
-tau_distr = nineml.RandomDistribution(
+tau_distr = nineml.RandomDistributionComponent(
     "normal(20.0,3.0)",
     catalog + "randomdistributions/normal_distribution.xml",
     {'standardDeviation': (10.0, "dimensionless"),
      'mean': (50.0, "dimensionless")})
 
-reset_distr = nineml.RandomDistribution(
+reset_distr = nineml.RandomDistributionComponent(
     "uniform(-70.0,-60.0)",
     catalog + "randomdistributions/uniform_distribution.xml",
     {'lowerBound': (-70.0, "dimensionless"),
@@ -54,7 +54,7 @@ all_cells = nineml.Selection("All cells",
                              nineml.Eq("population[@name]", inh_cells.name))
                              )
 
-connection_rule = nineml.ConnectionRule("random connections",
+connection_rule = nineml.ConnectionRuleComponent("random connections",
                                         catalog + "connectionrules/random_fixed_probability.xml",
                                         {'p_connect': (0.1, "dimensionless")})
 
