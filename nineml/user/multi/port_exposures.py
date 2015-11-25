@@ -11,12 +11,12 @@ from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
 from .namespace import append_namespace
 
 
-class _BasePortExposure(BaseULObject):
+class BasePortExposure(BaseULObject):
 
     defining_attributes = ('_name', '_sub_component', '_port')
 
     def __init__(self, component, port, name=None):
-        super(_BasePortExposure, self).__init__()
+        super(BasePortExposure, self).__init__()
         self._name = name
         if isinstance(component, basestring):
             self._sub_component_name = component
@@ -104,21 +104,25 @@ class _BasePortExposure(BaseULObject):
             name = None
         port = container.sub_component(component_name).component_class.port(
             port_name)
+        return cls.from_port(name, port, component_name)
+
+    @classmethod
+    def from_port(cls, port, component_name, name=None):
         if isinstance(port, AnalogSendPort):
             exposure = AnalogSendPortExposure(
-                name=name, component=component_name, port=port_name)
+                name=name, component=component_name, port=port.name)
         elif isinstance(port, AnalogReceivePort):
             exposure = AnalogReceivePortExposure(
-                name=name, component=component_name, port=port_name)
+                name=name, component=component_name, port=port.name)
         elif isinstance(port, AnalogReducePort):
             exposure = AnalogReducePortExposure(
-                name=name, component=component_name, port=port_name)
+                name=name, component=component_name, port=port.name)
         elif isinstance(port, EventSendPort):
             exposure = EventSendPortExposure(
-                name=name, component=component_name, port=port_name)
+                name=name, component=component_name, port=port.name)
         elif isinstance(port, EventReceivePort):
             exposure = EventReceivePortExposure(
-                name=name, component=component_name, port=port_name)
+                name=name, component=component_name, port=port.name)
         else:
             assert False
         return exposure
@@ -130,7 +134,7 @@ class _BasePortExposure(BaseULObject):
         self._port_name = None
 
 
-class _BaseAnalogPortExposure(_BasePortExposure):
+class _BaseAnalogPortExposure(BasePortExposure):
 
     def lhs_name_transform_inplace(self, name_map):
         raise NineMLImmutableError(
@@ -217,12 +221,12 @@ class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
         return _ReceivePortExposureAlias(self)
 
 
-class EventSendPortExposure(_BasePortExposure, EventSendPort):
+class EventSendPortExposure(BasePortExposure, EventSendPort):
 
     nineml_type = 'EventSendPortExposure'
 
 
-class EventReceivePortExposure(_BasePortExposure, EventReceivePort):
+class EventReceivePortExposure(BasePortExposure, EventReceivePort):
 
     nineml_type = 'EventReceivePortExposure'
 

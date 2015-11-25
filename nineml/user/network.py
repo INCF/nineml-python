@@ -1,5 +1,6 @@
 import re
 from itertools import chain
+from abc import ABCMeta, abstractmethod
 from .population import Population
 from .projection import Projection
 from .selection import Selection
@@ -10,6 +11,8 @@ from nineml.exceptions import NineMLNameError
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
 from nineml.user.port_connections import EventPortConnection
+from nineml.abstraction.ports import (
+    SendPort, ReceivePort, EventPort, AnalogPort)
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -192,18 +195,6 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                       selections=selections)
         return network
 
-    @classmethod
-    def _role2dyn(cls, name, role):
-        if role in ('post', 'pre'):
-            dyn_name = 'cell'
-        elif role == 'response':
-            dyn_name = name + '_psr'
-        elif role == 'plasticity':
-            dyn_name = name + '_pls'
-        else:
-            assert False
-        return dyn_name
-
     _conn_group_name_re = re.compile(
         r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')
 
@@ -233,6 +224,8 @@ class ComponentArray(BaseULObject):
 
 class BaseConnectionGroup(BaseULObject):
 
+    __metaclass__ = ABCMeta
+
     defining_attributes = ('name', "source", "destination",
                            "source_port", "destination_port",
                            "_connectivity")
@@ -242,8 +235,6 @@ class BaseConnectionGroup(BaseULObject):
         assert isinstance(name, basestring)
         assert isinstance(source, basestring)
         assert isinstance(destination, basestring)
-        assert isinstance(source_port, basestring)
-        assert isinstance(destination_port, basestring)
         self._name = name
         self._source = source
         self._destination = destination
@@ -251,6 +242,7 @@ class BaseConnectionGroup(BaseULObject):
         self._destination_port = destination_port
         self._connectivity = connectivity
         self._delay = delay
+        self._check_ports(source_port, destination_port)
 
     @property
     def name(self):
@@ -295,12 +287,29 @@ class BaseConnectionGroup(BaseULObject):
                    connectivity=projection.connectivity,
                    delay=projection.delay)
 
+    @abstractmethod
+    def _check_ports(self, source_port, destination_port):
+        assert isinstance(source_port, SendPort)
+        assert isinstance(destination_port, ReceivePort)
+
 
 class AnalogConnectionGroup(BaseConnectionGroup):
 
     nineml_type = 'AnalogConnectionGroup'
 
+    def _check_ports(self, source_port, destination_port):
+        super(AnalogConnectionGroup, self)._check_ports(source_port,
+                                                        destination_port)
+        assert isinstance(source_port, AnalogPort)
+        assert isinstance(destination_port, AnalogPort)
+
 
 class EventConnectionGroup(BaseConnectionGroup):
 
     nineml_type = 'EventConnectionGroup'
+
+    def _check_ports(self, source_port, destination_port):
+        super(EventConnectionGroup, self)._check_ports(source_port,
+                                                       destination_port)
+        assert isinstance(source_port, EventPort)
+        assert isinstance(destination_port, EventPort)

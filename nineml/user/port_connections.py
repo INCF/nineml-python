@@ -167,6 +167,27 @@ class BasePortConnection(BaseULObject):
                 "Sender object was not identified by its name")
         return self._receiver_name
 
+    def assign_roles(self, role_map, to='name'):
+        """
+        Assigns a name to a role, or specifies a new role for any role in the
+        role map. Roles not in the map are left as they are.
+        """
+        try:
+            kwargs = {
+                ('sender_' + to): role_map.get(self.sender_role,
+                                               getattr(self, 'sender_' + to)),
+                ('receiver_' + to): role_map.get(self.receiver_name,
+                                                 getattr(self,
+                                                         'receiver_' + to))}
+        except NineMLRuntimeError:
+            raise NineMLRuntimeError(
+                "A mapping for each role must be provided when mapping from "
+                "roles to names (roles: {}, {}, provided_mappings: {})."
+                .format(self.sender_role, self.receiver_role,
+                        ", ".join(role_map.iterkeys())))
+        return self.__class__(send_port=self.send_port,
+                              receive_port=self.receive_port, **kwargs)
+
     def bind(self, container, to_roles=False):
         """
         Binds the PortConnection to the components it is connecting
