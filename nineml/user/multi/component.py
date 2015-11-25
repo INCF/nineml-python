@@ -26,7 +26,7 @@ from nineml.abstraction import (
     Trigger, Constant)
 from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
-    AnalogReceivePortExposure, AnalogSendPortExposure, _BasePortExposure,
+    AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
     _LocalAnalogPortConnections)
 from .namespace import (
     _NamespaceAlias, _NamespaceRegime, _NamespaceStateVariable,
@@ -59,6 +59,10 @@ class MultiDynamicsProperties(DynamicsProperties):
         super(MultiDynamicsProperties, self).__init__(
             name, definition=component_class,
             properties=chain(*[p.properties for p in sub_dynamics_properties]))
+        # FIXME: The properties are being duplicated here and will cause
+        #        problems if they are updated. Should override the 'properties'
+        #        generator to return the properties from the sub_component
+        #        properties as the Dynamics properties
         self._sub_component_properties = dict(
             (p.name, p) for p in sub_dynamics_properties)
 
@@ -477,7 +481,7 @@ class MultiDynamics(Dynamics):
         # =====================================================================
         for exposure in port_exposures:
             if isinstance(exposure, tuple):
-                exposure = _BasePortExposure.from_tuple(exposure, self)
+                exposure = BasePortExposure.from_tuple(exposure, self)
             exposure.bind(self)
             if isinstance(exposure, AnalogSendPortExposure):
                 self._analog_send_ports[exposure.name] = exposure
