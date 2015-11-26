@@ -104,7 +104,8 @@ class BasePortExposure(BaseULObject):
             name = None
         port = container.sub_component(component_name).component_class.port(
             port_name)
-        return cls.from_port(name, port, component_name)
+        return cls.from_port(name=name, port=port,
+                             component_name=component_name)
 
     @classmethod
     def from_port(cls, port, component_name, name=None):

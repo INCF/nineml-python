@@ -12,7 +12,7 @@ from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
 from nineml.user.port_connections import EventPortConnection
 from nineml.abstraction.ports import (
-    SendPort, ReceivePort, EventPort, AnalogPort)
+    SendPort, ReceivePort, EventPort, AnalogPort, Port)
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -242,7 +242,8 @@ class BaseConnectionGroup(BaseULObject):
         self._destination_port = destination_port
         self._connectivity = connectivity
         self._delay = delay
-        self._check_ports(source_port, destination_port)
+        if isinstance(source_port, Port):
+            self._check_ports(source_port, destination_port)
 
     @property
     def name(self):

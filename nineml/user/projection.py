@@ -32,7 +32,7 @@ class BaseConnectivity(object):
     def __init__(self, connection_rule_properties, source, destination,
                  **kwargs):  # @UnusedVariable
         if (connection_rule_properties.lib_type == 'OneToOne' and
-                self._src_size != self._dest_size):
+                source.size != destination.size):
             raise NineMLRuntimeError(
                 "Cannot connect to populations of different sizes "
                 "({} and {}) with OneToOne connection rule"
@@ -50,8 +50,12 @@ class BaseConnectivity(object):
         return result
 
     @property
-    def connection_rule_properties(self):
+    def rule_properties(self):
         return self._rule_props
+
+    @property
+    def rule(self):
+        return self._rule_props.component_class
 
     @property
     def lib_type(self):
@@ -70,7 +74,7 @@ class BaseConnectivity(object):
 
     def __repr__(self):
         return ("{}(rule={}, src={}, dest_size={})"
-                .format(self.__class__.__name__, self._rule.lib_type,
+                .format(self.__class__.__name__, self.lib_type,
                         self._src_size, self._dest_size))
 
     @abstractmethod
@@ -149,7 +153,7 @@ class Connectivity(BaseConnectivity):
             N = int(self._rule_props.property('number').value)
             conn = chain(*(
                 izip((math.floor(random.random() * self._src_size)
-                      for _ in xrange(N), repeat(d)))
+                      for _ in xrange(N)), repeat(d))
                 for d in xrange(self._dest_size)))
             conn, cpy = tee(conn)
             self._cache = list(cpy)
@@ -209,7 +213,7 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
-    def __init__(self, name, pre, post, response, connection_rule_properties,
+    def __init__(self, name, pre, post, response, connectivity,
                  delay, plasticity=None, port_connections=[], document=None,
                  connectivity_class=Connectivity, **kwargs):
         """
@@ -229,7 +233,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._response = response
         self._plasticity = plasticity
         self._connectivity = connectivity_class(
-            connection_rule_properties, pre, post, **kwargs)
+            connectivity, pre, post, **kwargs)
         self._delay = delay
         self._analog_port_connections = []
         self._event_port_connections = []
@@ -244,7 +248,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                 self._analog_port_connections.append(port_connection)
 
     def __len__(self):
-        return sum(1 for _ in self.connectivity.connections)
+        return sum(1 for _ in self.connectivity.connections())
 
     @property
     def name(self):
@@ -351,8 +355,8 @@ class Projection(BaseULObject, DocumentLevelObject):
                     document, E=E, as_ref=True, **kwargs)))
             members.extend([
                 E.Response(self.response.to_xml(document, E=E, **kwargs)),
-                E.Connectivity(self.connectivity.rule.to_xml(document, E=E,
-                                                             **kwargs)),
+                E.Connectivity(self.connectivity.rule_properties.to_xml(
+                    document, E=E, **kwargs)),
                 E.Delay(self.delay.to_xml(document, E=E, **kwargs))])
             if self.plasticity is not None:
                 members.append(
@@ -447,7 +451,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                    post=post,
                    response=response,
                    plasticity=plasticity,
-                   connection_rule_properties=connection_rule_props,
+                   connectivity=connection_rule_props,
                    delay=delay,
                    port_connections=port_connections,
                    document=document)
