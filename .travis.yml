@@ -7,6 +7,6 @@ install:
   - pip install coveralls --use-mirrors
 # command to run tests, e.g. python setup.py test
 script:
-  nosetests test/unit --with-coverage --cover-package=nineml
+  nosetests test/unittests --with-coverage --cover-package=nineml
 after_success:
   coveralls
