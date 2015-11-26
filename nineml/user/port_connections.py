@@ -82,6 +82,9 @@ class BasePortConnection(BaseULObject):
         # bound
         self._sender = None
         self._receiver = None
+        # check to see if the ports are either all bound or all not bound,
+        # raising an error if they are inconsistent
+        self.is_bound()
 
     def __repr__(self):
         return ("{}(sender={}->{}, receiver={}->{})"

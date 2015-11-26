@@ -230,8 +230,9 @@ class ContainerObject(object):
                     return elem
             except NineMLNameError:
                 pass
-        raise KeyError("'{}' was not found in '{}' {} object"
-                       .format(name, self._name, class_map.__name__))
+        raise NineMLNameError(
+            "'{}' was not found in '{}' {} object"
+            .format(name, self._name, self.__class__.__name__))
 
     def num_elements(self, class_map=None):
         if class_map is None:
