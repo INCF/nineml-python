@@ -1,12 +1,12 @@
 import unittest
-from nineml import load
+from nineml import Document
 from nineml.exceptions import NineMLXMLBlockError, NineMLXMLAttributeError
 
 
 class TestPopulation(unittest.TestCase):
 
     def setUp(self):
-        self.doc = load(bad_xml)
+        self.doc = Document.load(bad_xml)
 
     def test_bad_block(self):
         self.assertRaises(NineMLXMLBlockError,
