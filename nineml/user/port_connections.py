@@ -170,24 +170,30 @@ class BasePortConnection(BaseULObject):
                 "Sender object was not identified by its name")
         return self._receiver_name
 
-    def assign_roles(self, role_map, to='name'):
+    def assign_roles(self, role_map, target='name'):
         """
         Assigns a name to a role, or specifies a new role for any role in the
         role map. Roles not in the map are left as they are.
         """
-        try:
-            kwargs = {
-                ('sender_' + to): role_map.get(self.sender_role,
-                                               getattr(self, 'sender_' + to)),
-                ('receiver_' + to): role_map.get(self.receiver_name,
-                                                 getattr(self,
-                                                         'receiver_' + to))}
-        except NineMLRuntimeError:
-            raise NineMLRuntimeError(
-                "A mapping for each role must be provided when mapping from "
-                "roles to names (roles: {}, {}, provided_mappings: {})."
-                .format(self.sender_role, self.receiver_role,
-                        ", ".join(role_map.iterkeys())))
+        kwargs = {}
+        for node in ('sender', 'receiver'):
+            try:
+                kwargs[node + '_' + target] = role_map[getattr(self,
+                                                               node + '_role')]
+            except KeyError:
+                # If the role isn't in the role_map and mapping to a new role
+                # instead of names, keep the old role
+                if target == 'role':
+                    kwargs[node + '_role'] = getattr(self, node + '_role')
+                else:
+                    raise NineMLRuntimeError(
+                        "Missing a mapping for the '{}' role, which must be "
+                        "provided when mapping from roles to names. (provided "
+                        "roles: '{}')."
+                        .format(getattr(self, node + '_role'),
+                                "', '".join(role_map.iterkeys())))
+        # Return a new port connection with the roles mapped to names or new
+        # roles
         return self.__class__(send_port=self.send_port,
                               receive_port=self.receive_port, **kwargs)
 

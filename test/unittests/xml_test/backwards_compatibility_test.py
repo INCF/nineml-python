@@ -1,5 +1,5 @@
 import unittest
-from nineml import load
+from nineml import Document
 from nineml.xml import etree, get_element_maker
 from nineml.utils import xml_equal
 
@@ -9,8 +9,8 @@ class TestBackwardsCompatibility(unittest.TestCase):
     def setUp(self):
         self.v1_xml = etree.fromstring(version1)
         self.v2_xml = etree.fromstring(version2)
-        self.v1_doc = load(version1)
-        self.v2_doc = load(version2)
+        self.v1_doc = Document.load(version1)
+        self.v2_doc = Document.load(version2)
 #         list(self.v1.elements)
 #         list(self.v2.elements)
 
