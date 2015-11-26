@@ -593,14 +593,15 @@ class MultiDynamics(Dynamics):
         all aliases defined in the sub components
         """
         return chain(
-            (p.alias for p in self.analog_send_ports),
-            (p.alias for p in self.analog_receive_ports),
-            (p.alias for p in self.analog_reduce_ports),
+            (p.alias for p in chain(self.analog_send_ports,
+                                    self.analog_receive_ports,
+                                    self.analog_reduce_ports)
+             if p.name != p.local_port_name),
             (_LocalAnalogPortConnections(
                 receive_port=rcv[1], receiver=rcv[0],
                 port_connections=snd_dct.values(), parent=self)
              for rcv, snd_dct in self._analog_port_connections.iteritems()),
-            *[sc.aliases for sc in self.sub_components])
+            *(sc.aliases for sc in self.sub_components))
 
     @property
     def constants(self):

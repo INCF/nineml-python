@@ -82,8 +82,12 @@ class DimensionedPort(Port, ExpressionSymbol):
 
     def __repr__(self):
         classstring = self.__class__.__name__
+        try:
+            dim_name = self.dimension.name
+        except NineMLRuntimeError:
+            dim_name = '<unknown>'
         return "{}('{}', dimension='{}')".format(classstring, self.name,
-                                                 self.dimension.name)
+                                                 dim_name)
 
 
 class SendPort(SendPortBase):
