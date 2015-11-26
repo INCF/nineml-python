@@ -304,7 +304,7 @@ class DimensionalityComponentValidator(BaseValidator):
                     ref_name, sympify(reference), reference.name))))
 
     def _check_send_port(self, port):
-        element = self.component_class.element(port.name)
+        element = self.component_class.send_port(port.name)
         try:
             if element.dimension != port.dimension:
                 raise NineMLDimensionError(self._construct_error_message(

@@ -317,6 +317,7 @@ class SubDynamics(BaseULObject):
     def regime_names(self):
         return (p.name for p in self.regimes)
 
+    @name_error
     def port(self, name):
         return self.component_class.port(name)
 
@@ -332,6 +333,7 @@ class SubDynamics(BaseULObject):
     def num_ports(self):
         return self.component_class.num_ports
 
+    @name_error
     def receive_port(self, name):
         return self.component_class.receive_port(name)
 
@@ -362,6 +364,7 @@ class SubDynamics(BaseULObject):
     def num_send_ports(self):
         return self.component_class.num_send_ports
 
+    @name_error
     def analog_receive_port(self, name):
         return self.component_class.analog_receive_port(name)
 
@@ -392,6 +395,7 @@ class SubDynamics(BaseULObject):
     def num_analog_send_ports(self):
         return self.component_class.num_analog_send_ports
 
+    @name_error
     def analog_reduce_port(self, name):
         return self.component_class.analog_reduce_port(name)
 
@@ -407,6 +411,7 @@ class SubDynamics(BaseULObject):
     def num_analog_reduce_ports(self):
         return self.component_class.num_analog_reduce_ports
 
+    @name_error
     def event_receive_port(self, name):
         return self.component_class.event_receive_port(name)
 
@@ -422,6 +427,7 @@ class SubDynamics(BaseULObject):
     def num_event_receive_ports(self):
         return self.component_class.num_event_receive_ports
 
+    @name_error
     def event_send_port(self, name):
         return self.component_class.event_send_port(name)
 
@@ -665,11 +671,9 @@ class MultiDynamics(Dynamics):
         return chain(*(d.iterkeys()
                        for d in self._event_port_connections.itervalues()))
 
+    @name_error
     def sub_component(self, name):
-        try:
-            return self._sub_components[name]
-        except:
-            raise
+        return self._sub_components[name]
 
     def analog_port_connection(self, name):
         try:
