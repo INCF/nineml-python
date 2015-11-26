@@ -179,11 +179,11 @@ class DimensionalityComponentValidator(BaseValidator):
                 try:
                     self._dimensions[e] = sympify(e.dimension)
                 except AttributeError:
-                    pass  # If element doesn't have dimension attribute
-                try:
-                    self._dimensions[e] = sympify(e.units.dimension)
-                except AttributeError:
-                    pass  # If element doesn't have units attribute
+                    # If element doesn't have dimension attribute
+                    try:
+                        self._dimensions[e] = sympify(e.units.dimension)
+                    except AttributeError:
+                        pass  # If element doesn't have units attribute
         self.visit(component_class)
 
     def _get_dimensions(self, element):
@@ -304,7 +304,10 @@ class DimensionalityComponentValidator(BaseValidator):
                     ref_name, sympify(reference), reference.name))))
 
     def _check_send_port(self, port):
-        element = self.component_class.send_port(port.name)
+        # Get the state variable or alias associated with the analog send
+        # port
+        element = self.component_class.element(
+            port.name, self.class_to_visit.class_to_member)
         try:
             if element.dimension != port.dimension:
                 raise NineMLDimensionError(self._construct_error_message(

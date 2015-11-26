@@ -228,6 +228,13 @@ class Dynamics(ComponentClass):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
 
+    def is_linear(self):
+        if self.num_regimes > 1:
+            return False
+        # FIXME: Need to analyse all the time derivatives and determine whether
+        # they are all linear (i.e. +-*/ of other states)
+        return True
+
     @property
     def num_state_variables(self):
         return len(list(self._state_variables))

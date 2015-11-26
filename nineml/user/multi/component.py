@@ -40,31 +40,31 @@ class MultiDynamicsProperties(DynamicsProperties):
     nineml_type = "MultiDynamicsProperties"
     defining_attributes = ('_name', 'component_class')
 
-    def __init__(self, name, sub_dynamics_properties, port_connections,
+    def __init__(self, name, sub_components, port_connections=[],
                  port_exposures=[]):
-        if isinstance(sub_dynamics_properties, dict):
+        if isinstance(sub_components, dict):
             sub_dynamics = [
                 SubDynamics(n, sc.component_class)
-                for n, sc in sub_dynamics_properties.iteritems()]
-            sub_dynamics_properties = [
+                for n, sc in sub_components.iteritems()]
+            sub_components = [
                 SubDynamicsProperties(n, p)
-                for n, p in sub_dynamics_properties.iteritems()]
+                for n, p in sub_components.iteritems()]
         else:
             sub_dynamics = [
                 SubDynamics(sc.name, sc.component.component_class)
-                for sc in sub_dynamics_properties]
+                for sc in sub_components]
         component_class = MultiDynamics(
             name + '_Dynamics', sub_dynamics,
             port_exposures=port_exposures, port_connections=port_connections)
         super(MultiDynamicsProperties, self).__init__(
             name, definition=component_class,
-            properties=chain(*[p.properties for p in sub_dynamics_properties]))
+            properties=chain(*[p.properties for p in sub_components]))
         # FIXME: The properties are being duplicated here and will cause
         #        problems if they are updated. Should override the 'properties'
         #        generator to return the properties from the sub_component
         #        properties as the Dynamics properties
         self._sub_component_properties = dict(
-            (p.name, p) for p in sub_dynamics_properties)
+            (p.name, p) for p in sub_components)
 
     @property
     def name(self):
@@ -137,7 +137,7 @@ class MultiDynamicsProperties(DynamicsProperties):
             (AnalogPortConnection, EventPortConnection), document,
             multiple=True, allow_none=True, **kwargs)
         return cls(name=get_xml_attr(element, 'name', document, **kwargs),
-                   sub_dynamics_properties=sub_component_properties,
+                   sub_components=sub_component_properties,
                    port_exposures=port_exposures,
                    port_connections=port_connections)
 
@@ -717,12 +717,18 @@ class MultiDynamics(Dynamics):
                 alias = self.sub_component(comp_name).alias(name)
         except KeyError:
             try:
-                alias = self.analog_port(name).alias
+                alias = self.analog_send_port(name).alias
             except KeyError:
-                raise NineMLNameError(
-                    "Could not find alias corresponding to '{}' in "
-                    "sub-components or port connections/exposures"
-                    .format(name))
+                try:
+                    alias = next(p.alias
+                                 for p in chain(self.analog_receive_ports,
+                                                self.analog_reduce_ports)
+                                 if p.alias.lhs == name)
+                except StopIteration:
+                    raise NineMLNameError(
+                        "Could not find alias corresponding to '{}' in "
+                        "sub-components or port connections/exposures"
+                        .format(name))
         return alias
 
     def constant(self, name):
@@ -778,6 +784,10 @@ class MultiDynamics(Dynamics):
     @property
     def num_constants(self):
         return len(list(self.constants))
+
+    @property
+    def num_regimes(self):
+        return len(list(self.regimes))
 
     @property
     def num_state_variables(self):

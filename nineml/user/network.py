@@ -290,8 +290,11 @@ class BaseConnectionGroup(BaseULObject):
 
     @abstractmethod
     def _check_ports(self, source_port, destination_port):
-        assert isinstance(source_port, SendPort)
-        assert isinstance(destination_port, ReceivePort)
+        try:
+            assert isinstance(source_port, SendPort)
+            assert isinstance(destination_port, ReceivePort)
+        except:
+            raise
 
 
 class AnalogConnectionGroup(BaseConnectionGroup):
