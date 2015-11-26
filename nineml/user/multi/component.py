@@ -666,7 +666,10 @@ class MultiDynamics(Dynamics):
                        for d in self._event_port_connections.itervalues()))
 
     def sub_component(self, name):
-        return self._sub_components[name]
+        try:
+            return self._sub_components[name]
+        except:
+            raise
 
     def analog_port_connection(self, name):
         try:
@@ -710,7 +713,7 @@ class MultiDynamics(Dynamics):
                 alias = self.sub_component(comp_name).alias(name)
         except KeyError:
             try:
-                alias = self.analog_receive_port_exposure(name).alias
+                alias = self.analog_port(name).alias
             except KeyError:
                 raise NineMLNameError(
                     "Could not find alias corresponding to '{}' in "
