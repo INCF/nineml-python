@@ -194,8 +194,8 @@ class BasePortConnection(BaseULObject):
                                 "', '".join(role_map.iterkeys())))
         # Return a new port connection with the roles mapped to names or new
         # roles
-        return self.__class__(send_port=self.send_port,
-                              receive_port=self.receive_port, **kwargs)
+        return self.__class__(send_port=self.send_port_name,
+                              receive_port=self.receive_port_name, **kwargs)
 
     def bind(self, container, to_roles=False):
         """

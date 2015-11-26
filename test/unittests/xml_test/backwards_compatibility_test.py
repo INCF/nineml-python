@@ -107,7 +107,7 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
   <ComponentClass name="RD">
     <Parameter name="maximum" dimension="dimensionless"/>
     <Parameter name="minimum" dimension="dimensionless"/>
-    <RandomDistribution standard_library="http://uncertml.org/2.0/UniformDistribution.xml"/>
+    <RandomDistribution standard_library="http://www.uncertml.org/distributions/uniform"/>
   </ComponentClass>
   <Component name="D_cellP">
     <Definition>D_cell</Definition>
@@ -230,7 +230,7 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
   <ConnectionRule name="CR" standard_library="http://nineml.net/connectionrule/Probabilistic">
     <Parameter name="probability" dimension="dimensionless"/>
   </ConnectionRule>
-  <RandomDistribution name="RD" standard_library="http://uncertml.org/2.0/UniformDistribution.xml">
+  <RandomDistribution name="RD" standard_library="http://uncertml.org/distributions/uniform">
     <Parameter name="maximum" dimension="dimensionless"/>
     <Parameter name="minimum" dimension="dimensionless"/>
   </RandomDistribution>
