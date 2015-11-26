@@ -84,7 +84,7 @@ class MultiDynamicsXML_test(unittest.TestCase):
     def test_multicomponent_xml_roundtrip(self):
         comp1 = MultiDynamicsProperties(
             name='test',
-            sub_dynamics_properties={'a': self.a_props, 'b': self.b_props},
+            sub_components={'a': self.a_props, 'b': self.b_props},
             port_exposures=[("b", "ARP2", "b_ARP2")],
             port_connections=[('a', 'A1', 'b', 'ARP1'),
                               ('b', 'A1', 'a', 'ARP1'),
