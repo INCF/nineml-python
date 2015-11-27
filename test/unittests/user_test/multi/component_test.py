@@ -172,12 +172,12 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
                          un.dimensionless)
         # - Regimes and Transitions:
         self.assertEqual(set(e.regime_names),
-                         set(['r1___r1___regime', 'r1___r2___regime',
-                              'r2___r1___regime', 'r2___r2___regime']))
+                         set(['r1___r1', 'r1___r2',
+                              'r2___r1', 'r2___r2']))
         # =====================================================================
         # Regime a=1, b=2
         # =====================================================================
-        r11 = e.regime('r1___r1___regime')
+        r11 = e.regime('r1___r1')
         self.assertEqual(r11.num_on_conditions, 2)
         self.assertEqual(r11.num_on_events, 1)
         oe1 = r11.on_event('ERP1')
@@ -202,7 +202,7 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         # =====================================================================
         # Regime a=1, b=2
         # =====================================================================
-        r12 = e.regime('r1___r2___regime')
+        r12 = e.regime('r1___r2')
         self.assertEqual(r12.num_on_conditions, 2)
         oc1 = r12.on_condition('SV1__a > cp1__a')
         self.assertEqual(set(oc1.output_event_port_names), set(('ESP1',)))
@@ -216,7 +216,7 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         # =====================================================================
         # Regime a=2, b=1
         # =====================================================================
-        r21 = e.regime('r2___r1___regime')
+        r21 = e.regime('r2___r1')
         self.assertEqual(r21.num_on_conditions, 2)
         oc1 = r21.on_condition('SV1__a > 1')
         self.assertEqual(oc1.num_output_events, 0)
@@ -230,7 +230,7 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
         # =====================================================================
         # Regime a=2, b=2
         # =====================================================================
-        r22 = e.regime('r2___r2___regime')
+        r22 = e.regime('r2___r2')
         self.assertEqual(r21.num_on_conditions, 2)
         oc1 = r22.on_condition('SV1__a > 1')
         self.assertEqual(oc1.num_output_events, 0)

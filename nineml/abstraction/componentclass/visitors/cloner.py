@@ -7,7 +7,8 @@ docstring needed
 from ...expressions.utils import is_builtin_symbol
 from .base import ComponentVisitor
 from nineml.base import ContainerObject, accessor_name_from_type
-from ..base import Parameter, Constant, Alias
+from ..base import Parameter
+from ...expressions import Constant, Alias
 
 
 class ComponentCloner(ComponentVisitor):

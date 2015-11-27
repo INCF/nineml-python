@@ -14,7 +14,7 @@ from nineml.base import ContainerObject
 from nineml.utils import (
     filter_discrete_types, ensure_valid_identifier,
     normalise_parameter_as_list, assert_no_duplicates)
-from ..expressions import Alias, Constant
+from ..expressions import Alias
 from ...units import dimensionless, Dimension
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import name_error
