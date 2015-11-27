@@ -328,7 +328,7 @@ class Projection(BaseULObject, DocumentLevelObject):
             pcs = defaultdict(list)
             for pc in self.port_connections:
                 pcs[pc.receiver_role].append(
-                    E('From' + pc.sender_role.capitalize(),
+                    E('From' + self.v2tov1[pc.sender_role],
                       send_port=pc.send_port_name,
                       receive_port=pc.receive_port_name))
             args = [E.Source(self.pre.to_xml(document, E=E, **kwargs),
@@ -338,8 +338,8 @@ class Projection(BaseULObject, DocumentLevelObject):
                     E.Response(self.response.to_xml(document, E=E, **kwargs),
                                *pcs['response']),
                     E.Connectivity(
-                        self.connectivity.rule.to_xml(document, E=E,
-                                                      **kwargs))]
+                        self.connectivity.rule_properties.to_xml(document, E=E,
+                                                                 **kwargs))]
             if self.plasticity:
                 args.append(E.Plasticity(
                     self.plasticity.to_xml(document, E=E, **kwargs),
@@ -459,3 +459,4 @@ class Projection(BaseULObject, DocumentLevelObject):
     version1_nodes = ('Source', 'Destination', 'Response', 'Plasticity')
     v1tov2 = {'Source': 'pre', 'Destination': 'post',
               'Plasticity': 'plasticity', 'Response': 'response'}
+    v2tov1 = dict((v, k) for k, v in v1tov2.iteritems())

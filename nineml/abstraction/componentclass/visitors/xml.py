@@ -101,9 +101,10 @@ class ComponentClassXMLLoader(object):
 
 class ComponentClassXMLWriter(ComponentVisitor):
 
-    def __init__(self, document, E):
+    def __init__(self, document, E, **options):
         self.document = document
         self.E = E
+        self.options = options
 
     @property
     def xmlns(self):

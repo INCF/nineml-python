@@ -72,7 +72,7 @@ class RandomDistribution(ComponentClass):
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return RandomDistributionXMLWriter(document, E).visit(self)
+        return RandomDistributionXMLWriter(document, E, **kwargs).visit(self)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable

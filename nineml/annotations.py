@@ -3,6 +3,7 @@ from collections import defaultdict
 from nineml.xml import E, NINEML, extract_xmlns, strip_xmlns
 from nineml.base import DocumentLevelObject
 from itertools import chain
+import re
 
 
 class Annotations(defaultdict, DocumentLevelObject):
@@ -80,18 +81,23 @@ def read_annotations(from_xml):
 def annotate_xml(to_xml):
     def annotate_to_xml(self, document_or_obj, **kwargs):
         # If Abstraction Layer class
-        if hasattr(self, 'document'):
+        if xml_visitor_module_re.match(type(self).__module__):
             obj = document_or_obj
+            options = self.options
         # If User Layer class
         else:
             obj = self
+            options = kwargs
         elem = to_xml(self, document_or_obj, **kwargs)
-        if any(a for a in obj.annotations.itervalues()):
+        if (not options.get('no_annotations', False) and
+                any(a for a in obj.annotations.itervalues())):
             elem.append(obj.annotations.to_xml(**kwargs))
         return elem
     return annotate_to_xml
 
 
 VALIDATE_DIMENSIONS = 'ValidateDimensions'
+
+xml_visitor_module_re = re.compile(r'nineml\.abstraction\.\w+\.visitors\.xml')
 
 from nineml.utils import expect_none_or_single

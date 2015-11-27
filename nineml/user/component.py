@@ -264,8 +264,11 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         docstring missing, although since the decorators don't
         preserve the docstring, it doesn't matter at the moment.
         """
-        element = E(self.nineml_type,
-                    self._definition.to_xml(document, E=E, **kwargs),
+        if E._namespace == NINEMLv1:
+            tag = self.v1_nineml_type
+        else:
+            tag = self.nineml_type
+        element = E(tag, self._definition.to_xml(document, E=E, **kwargs),
                     *(p.to_xml(document, E=E, **kwargs)
                       for p in self.sorted_elements(local=True)),
                       name=self.name)
@@ -282,7 +285,11 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                                     **kwargs)
         properties = from_child_xml(element, Property, document, multiple=True,
                                     allow_none=True, **kwargs)
-        return cls(name, definition, properties=properties, document=document)
+        if name in document:
+            doc = document
+        else:
+            doc = None
+        return cls(name, definition, properties=properties, document=doc)
 
     @property
     def used_units(self):
