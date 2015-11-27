@@ -612,9 +612,13 @@ def xml_equal(xml1, xml2):
         return False
     if xml1.attrib != xml2.attrib:
         return False
-    if xml1.text != xml2.text:
+    text1 = xml1.text if xml1.text is not None else ''
+    text2 = xml2.text if xml1.text is not None else ''
+    if text1.strip() != text2.strip():
         return False
-    if xml1.tail != xml2.tail:
+    tail1 = xml1.tail if xml1.tail is not None else ''
+    tail2 = xml2.tail if xml1.tail is not None else ''
+    if tail1.strip() != tail2.strip():
         return False
     children1 = [c for c in xml1.getchildren()
                  if not c.tag.endswith('Annotations')]

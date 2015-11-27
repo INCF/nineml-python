@@ -41,8 +41,12 @@ class Document(dict, BaseNineMLObject):
     def __init__(self, *elements, **kwargs):
         BaseNineMLObject.__init__(self,
                                   annotations=kwargs.pop('annotations', None))
-        self._url = None  # Required for url setter
-        self.url = kwargs.pop('url', None)
+        url = kwargs.pop('url', None)
+        if kwargs.pop('register_url', True):
+            self._url = None  # Required for url setter
+            self.url = url
+        else:
+            self._url = os.path.abspath(url)
         assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
                                   .format("', '".join(kwargs.iterkeys())))
         for element in elements:
@@ -284,7 +288,7 @@ class Document(dict, BaseNineMLObject):
               for e in self.sorted_elements()])
 
     @classmethod
-    def from_xml(cls, element, url=None, **kwargs):
+    def from_xml(cls, element, url=None, register_url=True, **kwargs):
         xmlns = extract_xmlns(element.tag)
         if xmlns not in ALL_NINEML:
             raise NineMLXMLError(
@@ -353,7 +357,8 @@ class Document(dict, BaseNineMLObject):
                     .format(name=name, ob1=elements[name].cls.nineml_type,
                             ob2=child_cls.nineml_type, url=url or ''))
             elements.append(cls._Unloaded(name, child, child_cls, kwargs))
-        document = cls(*elements, url=url, annotations=annotations)
+        document = cls(*elements, url=url, annotations=annotations,
+                       register_url=register_url)
         return document
 
     def duplicate(self):
@@ -380,7 +385,7 @@ class Document(dict, BaseNineMLObject):
         self._register_url(self, url)
 
     @classmethod
-    def load(cls, xml, url=None, **kwargs):
+    def load(cls, xml, url=None, register_url=True, **kwargs):
         """
         Loads the lib9ml object model from a root lxml.etree.Element. If the
         document has been previously loaded it is reused. To reload a document
@@ -401,13 +406,12 @@ class Document(dict, BaseNineMLObject):
             else:
                 mod_time = time.ctime(os.path.getmtime(url))
         doc = None
-        if url is not None:
+        if url is not None and register_url:
             # Check whether the document has already been loaded and is is
             # still in memory
             try:
-                # Loaded docs are stored as weak refs to avoid preventing the
-                # document from being released from memory by the garbarge
-                # collector
+                # Loaded docs are stored as weak refs to allow the document to
+                # be released from memory by the garbarge collector
                 doc_ref, saved_time = cls._loaded_docs[url]
                 # NB: weakrefs to garbarge collected objs eval to None
                 doc = doc_ref()
@@ -426,7 +430,8 @@ class Document(dict, BaseNineMLObject):
             except KeyError:  # If the url hasn't been loaded before
                 pass
         if doc is None:
-            doc = Document.from_xml(xml, url=url, **kwargs)
+            doc = Document.from_xml(xml, url=url, register_url=register_url,
+                                    **kwargs)
         return doc
 
     @property
@@ -454,14 +459,12 @@ class Document(dict, BaseNineMLObject):
                         .format(url))
             except KeyError:
                 pass
-            # Update the url
-            self._url = url
             # Register the url with the Document class to avoid reloading
             if self.url is None:
                 self._register_url(self, url)
             else:
                 url = os.path.abspath(url)
-                # TODO: should validate URL proper
+                # TODO: should validate URL properly
                 if not isinstance(url, basestring):
                     raise NineMLRuntimeError(
                         "{} is not a valid URL")
@@ -469,6 +472,8 @@ class Document(dict, BaseNineMLObject):
                 doc_and_time = self._loaded_docs.pop(self.url, None)
                 if doc_and_time:
                     self._loaded_docs[url] = doc_and_time
+            # Update the url
+            self._url = url
 
     @classmethod
     def _register_url(cls, doc, url):
@@ -502,16 +507,27 @@ class Document(dict, BaseNineMLObject):
             key=lambda e: (self.write_order.index(e.nineml_type), e.name))
 
 
-def read(url, relative_to=None, **kwargs):
+def read(url, relative_to=None, force_reload=False, **kwargs):
     """
     Read a NineML file and parse its child elements
 
     If the URL does not have a scheme identifier, it is taken to refer to a
     local file.
     """
-    xml, url = read_xml(url, relative_to=relative_to)
-    root = xml.getroot()
-    return Document.load(root, url, **kwargs)
+    # Try to read
+    doc = None
+    if not force_reload:
+        try:
+            # Get the loaded document if it has been loaded previously and
+            # still in memory
+            doc = Document._loaded_docs[os.path.abspath(url)][0]()
+        except KeyError:
+            pass
+    if doc is None:
+        xml, url = read_xml(url, relative_to=relative_to)
+        root = xml.getroot()
+        doc = Document.load(root, url, **kwargs)
+    return doc
 
 
 def write(document, filename, **kwargs):

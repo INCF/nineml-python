@@ -9,8 +9,9 @@ class TestBackwardsCompatibility(unittest.TestCase):
     def setUp(self):
         self.v1_xml = etree.fromstring(version1)
         self.v2_xml = etree.fromstring(version2)
-        self.v1_doc = Document.load(version1)
-        self.v2_doc = Document.load(version2)
+        self.v1_doc = Document.load(version1, url='./dummy.xml')
+        self.v2_doc = Document.load(version2, url='./dummy.xml',
+                                    register_url=False)
 #         list(self.v1.elements)
 #         list(self.v2.elements)
 
@@ -26,9 +27,11 @@ class TestBackwardsCompatibility(unittest.TestCase):
                 v1, v2, "Loaded version 1 didn't match loaded version 2:\n{}"
                 .format(v1.find_mismatch(v2)))
             v1_to_v2_xml = v1.to_xml(self.v2_doc, as_ref=False,
-                                     E=get_element_maker(2.0))
+                                     E=get_element_maker(2.0),
+                                     no_annotations=True)
             v2_to_v1_xml = v2.to_xml(self.v1_doc, as_ref=False,
-                                     E=get_element_maker(1.0))
+                                     E=get_element_maker(1.0),
+                                     no_annotations=True)
 
             v1_xml = self._get_xml_element(self.v1_xml, name)
             v2_xml = self._get_xml_element(self.v2_xml, name)
@@ -42,7 +45,7 @@ class TestBackwardsCompatibility(unittest.TestCase):
             # Test the version 2 converted to version 1
             self.assert_(
                 xml_equal(v2_to_v1_xml, v1_xml),
-                "v2 produced from v1 doesn't match loaded:\n{}\n\nand\n\n{}"
+                "v1 produced from v2 doesn't match loaded:\n{}\n\nand\n\n{}"
                 .format(xml_to_str(v2_to_v1_xml), xml_to_str(v1_xml)))
 
     def _get_xml_element(self, xml, name):
@@ -102,7 +105,7 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
   </ComponentClass>
   <ComponentClass name="CR">
     <Parameter name="probability" dimension="dimensionless"/>
-    <ConnectionRule standard_library="http://nineml.net/connectionrule/Probabilistic"/>
+    <ConnectionRule standard_library="http://nineml.net/9ML/1.0/connectionrules/ProbabilisticConnectivity"/>
   </ComponentClass>
   <ComponentClass name="RD">
     <Parameter name="maximum" dimension="dimensionless"/>
@@ -214,8 +217,8 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
     <Parameter name="tau" dimension="time"/>
     <Parameter name="weight" dimension="current"/>
     <EventReceivePort name="spike"/>
-    <StateVariable name="a" dimension="current"/>
     <AnalogSendPort name="a" dimension="current"/>
+    <StateVariable name="a" dimension="current"/>
     <Regime name="sole">
       <TimeDerivative variable="a">
         <MathInline>a/tau</MathInline>
@@ -227,10 +230,10 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
       </OnEvent>
     </Regime>
   </Dynamics>
-  <ConnectionRule name="CR" standard_library="http://nineml.net/connectionrule/Probabilistic">
+  <ConnectionRule name="CR" standard_library="http://nineml.net/9ML/1.0/connectionrules/ProbabilisticConnectivity">
     <Parameter name="probability" dimension="dimensionless"/>
   </ConnectionRule>
-  <RandomDistribution name="RD" standard_library="http://uncertml.org/distributions/uniform">
+  <RandomDistribution name="RD" standard_library="http://www.uncertml.org/distributions/uniform">
     <Parameter name="maximum" dimension="dimensionless"/>
     <Parameter name="minimum" dimension="dimensionless"/>
   </RandomDistribution>

@@ -18,7 +18,8 @@ class TestComponent(unittest.TestCase):
         test_file = os.path.join(examples_dir, 'HodgkinHuxley.xml')
         document1 = read(test_file)
         xml = document1.to_xml()
-        document2 = Document.load(xml, url=test_file)
+        document2 = Document.load(xml, url=test_file,
+                                  register_url=False)
         if document1 != document2:
             mismatch = document1.find_mismatch(document2)
         else:
@@ -29,7 +30,8 @@ class TestComponent(unittest.TestCase):
         test_file = os.path.join(examples_dir, 'HodgkinHuxleyModified.xml')
         document1 = read(test_file)
         xml = document1.to_xml()
-        document2 = Document.load(xml, url=test_file)
+        document2 = Document.load(xml, url=test_file,
+                                  register_url=False)
         if document1 != document2:
             mismatch = document1.find_mismatch(document2)
         else:

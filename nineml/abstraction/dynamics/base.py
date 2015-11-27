@@ -556,7 +556,7 @@ class Dynamics(ComponentClass):
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return DynamicsXMLWriter(document, E).visit(self)
+        return DynamicsXMLWriter(document, E, **kwargs).visit(self)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):
