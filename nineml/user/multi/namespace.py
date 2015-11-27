@@ -194,7 +194,7 @@ class _NamespaceDimensioned(object):
 
     @property
     def dimension(self):
-        return self._object._dimension
+        return self._object.dimension
 
 
 class _NamespaceTransition(_NamespaceNamed):
