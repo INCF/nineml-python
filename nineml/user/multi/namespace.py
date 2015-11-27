@@ -15,7 +15,7 @@ from nineml.abstraction.expressions import reserved_identifiers
 
 # Matches multiple underscores, so they can be escaped by appending another
 # underscore (double underscores are used to delimit namespaces).
-multiple_underscore_re = re.compile(r'(.*)(__+)()')
+multiple_underscore_re = re.compile(r'(__+)')
 # Match only double underscores (no more or less)
 double_underscore_re = re.compile(r'(?<!_)__(?!_)')
 # Match only triple underscores (no more or less)
@@ -23,9 +23,6 @@ triple_underscore_re = re.compile(r'(?<!_)___(?!_)')
 # Match more than double underscores to reverse escaping of double underscores
 # in sub-component suffixes by adding an additional underscore.
 more_than_double_underscore_re = re.compile(r'__(_+)')
-# Match more than double underscores to reverse escaping of double underscores
-# in sub-component suffixes by adding an additional underscore.
-more_than_triple_underscore_re = re.compile(r'___(_+)')
 
 
 def append_namespace(identifier, namespace):
@@ -38,7 +35,7 @@ def append_namespace(identifier, namespace):
     # in underscores) we append an underscore to each multiple underscore
     # to avoid clash with the delimeter in the suffix
     return (str(identifier) + '__' +
-            multiple_underscore_re.sub(r'\1\2_\3', namespace))
+            multiple_underscore_re.sub(r'\1__', namespace))
 
 
 def split_namespace(identifier_in_namespace):
@@ -53,7 +50,7 @@ def split_namespace(identifier_in_namespace):
             .format(identifier_in_namespace))
     name = '__'.join(parts[:-1])
     comp_name = parts[-1]
-    comp_name = more_than_double_underscore_re.sub('_\1', comp_name)
+    comp_name = more_than_double_underscore_re.sub(r'\1', comp_name)
     return name, comp_name
 
 
@@ -62,37 +59,37 @@ def make_delay_trigger_name(port_conn):
     Creates a name for a delay trigger statevariable from a given event port
     connection object
     """
-    parts = (
-        (port_conn.sender_role
-         if port_conn.sender_role is not None else port_conn.sender_name),
-        port_conn.send_port_name,
-        (port_conn.receiver_role
-         if port_conn.receiver_role is not None else port_conn.receiver_name),
-        port_conn.receive_port_name)
-    return ('___'.join(multiple_underscore_re.sub(r'\1\2__\3', p)
-                       for p in parts)
-            + '___delay_trigger')
+    sender = (port_conn.sender_role
+              if port_conn.sender_role is not None else port_conn.sender_name)
+    receiver = (port_conn.receiver_role
+                if port_conn.receiver_role is not None
+                else port_conn.receiver_name)
+    return '{}___{}__{}___{}'.format(
+        *(multiple_underscore_re.sub(r'\1__', p)
+          for p in (sender, port_conn.send_port_name,
+                    receiver, port_conn.receive_port_name)))
 
 
 def split_delay_trigger_name(name):
-    parts = triple_underscore_re.split(name)[:-1]
-    return [more_than_triple_underscore_re.sub('_\1', p) for p in parts]
+    snd, rcv = double_underscore_re.split(name)
+    sender, send_port = triple_underscore_re.split(snd)
+    receiver, receive_port = triple_underscore_re.split(rcv)
+    return tuple(more_than_double_underscore_re.sub(r'\1', p)
+                 for p in (sender, send_port, receiver, receive_port))
 
 
 def make_regime_name(sub_regimes_dict):
     sorted_keys = sorted(sub_regimes_dict.iterkeys())
     return '___'.join(
-        multiple_underscore_re.sub(
-            r'\1\2__\3', sub_regimes_dict[k].relative_name)
-        for k in sorted_keys) + '___regime'
+        multiple_underscore_re.sub(r'\1__', sub_regimes_dict[k].relative_name)
+        for k in sorted_keys)
 
 
 def split_multi_regime_name(name):
-    parts = triple_underscore_re.split(name)[:-1]
+    parts = triple_underscore_re.split(name)
     if not parts:
-        raise NineMLNameError(
-            "'{}' is not a multi-regime name".format(name))
-    return [more_than_triple_underscore_re.sub('_\1', p) for p in parts]
+        raise NineMLNameError("'{}' is not a multi-regime name".format(name))
+    return tuple(more_than_double_underscore_re.sub(r'\1', p) for p in parts)
 
 
 class _NamespaceObject(object):

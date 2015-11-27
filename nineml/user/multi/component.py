@@ -199,11 +199,8 @@ class SubDynamics(BaseULObject):
     defining_attributes = ('_name', '_component_class')
 
     def __init__(self, name, component_class):
-        try:
-            assert isinstance(name, basestring)
-            assert isinstance(component_class, Dynamics)
-        except:
-            raise
+        assert isinstance(name, basestring)
+        assert isinstance(component_class, Dynamics)
         self._name = name
         self._component_class = component_class
 
@@ -240,11 +237,8 @@ class SubDynamics(BaseULObject):
 
     @property
     def regimes(self):
-        try:
             return (_NamespaceRegime(self, r, self)
                     for r in self.component_class.regimes)
-        except:
-            raise
 
     @name_error
     def parameter(self, name):
@@ -757,6 +751,11 @@ class MultiDynamics(Dynamics):
             sub_regime_names = split_multi_regime_name(name)
         except TypeError:
             sub_regime_names = name  # Assume it is already an iterable
+        try:
+            assert len(sub_regime_names) == len(self._sub_component_keys)
+        except:
+            split_multi_regime_name(name)
+            raise
         return self._create_multi_regime(
             self.sub_component(sc_n).regime(append_namespace(r_n, sc_n))
             for sc_n, r_n in izip(self._sub_component_keys, sub_regime_names))
