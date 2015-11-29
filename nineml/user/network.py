@@ -113,7 +113,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @property
     def connection_groups(self):
-        raise chain(*(
+        return chain(*(
             (BaseConnectionGroup.from_port_connection(pc, p)
              for pc in p.port_connections)
             for p in self.projections))
@@ -226,9 +226,8 @@ class BaseConnectionGroup(BaseULObject):
 
     __metaclass__ = ABCMeta
 
-    defining_attributes = ('name', "source", "destination",
-                           "source_port", "destination_port",
-                           "_connectivity")
+    defining_attributes = ('name', 'source', 'destination', 'source_port',
+                           'destination_port', 'connectivity')
 
     def __init__(self, name, source, destination, source_port,
                  destination_port, connectivity, delay):
@@ -262,6 +261,10 @@ class BaseConnectionGroup(BaseULObject):
         return self._source_port
 
     @property
+    def connectivity(self):
+        return self._connectivity
+
+    @property
     def destination_port(self):
         return self._destination_port
 
@@ -279,12 +282,13 @@ class BaseConnectionGroup(BaseULObject):
             cls = AnalogConnectionGroup
         else:
             cls = EventConnectionGroup
-        name = (
-            projection.name + '__' + port_connection.source_port + '__' +
-            port_connection.destination_port)
+        name = '__'.join((
+            projection.name, port_connection.sender_role,
+            port_connection.send_port_name, port_connection.receiver_role,
+            port_connection.receive_port_name))
         return cls(name, projection.pre.name, projection.post.name,
-                   source_port=port_connection.source_port,
-                   destination_port=port_connection.destination_port,
+                   source_port=port_connection.send_port_name,
+                   destination_port=port_connection.receive_port_name,
                    connectivity=projection.connectivity,
                    delay=projection.delay)
 
