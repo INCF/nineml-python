@@ -55,11 +55,11 @@ class BaseConnectivity(object):
 
     @property
     def rule(self):
-        return self._rule_props.component_class
+        return self.rule_properties.component_class
 
     @property
     def lib_type(self):
-        return self._rule_props.lib_type
+        return self.rule_properties.lib_type
 
     @property
     def source_size(self):
@@ -73,9 +73,9 @@ class BaseConnectivity(object):
         return not (self == other)
 
     def __repr__(self):
-        return ("{}(rule={}, src={}, dest_size={})"
+        return ("{}(rule={}, src_size={}, dest_size={})"
                 .format(self.__class__.__name__, self.lib_type,
-                        self._src_size, self._dest_size))
+                        self.source_size, self.destination_size))
 
     @abstractmethod
     def connections(self):
