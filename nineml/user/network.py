@@ -108,7 +108,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                       for p in self.populations),
                      (ComponentArray(p.name + '__psr', len(p), p.response)
                       for p in self.projections),
-                     (ComponentArray(p.name + '__pls', len(p), p.response)
+                     (ComponentArray(p.name + '__pls', len(p), p.plasticity)
                       for p in self.projections))
 
     @property
@@ -286,11 +286,21 @@ class BaseConnectionGroup(BaseULObject):
             projection.name, port_connection.sender_role,
             port_connection.send_port_name, port_connection.receiver_role,
             port_connection.receive_port_name))
+        if port_connection.receiver_role == 'pre':
+            connectivity = InverseConnectivity(projection.connectivity)
+        else:
+            connectivity = projection.connectivity
+        # FIXME: This will need to change in version 2, when each connection
+        #        has its own delay
+        if port_connection.sender_role == 'pre':
+            delay = projection.delay
+        else:
+            delay = None
         return cls(name, projection.pre.name, projection.post.name,
                    source_port=port_connection.send_port_name,
                    destination_port=port_connection.receive_port_name,
-                   connectivity=projection.connectivity,
-                   delay=projection.delay)
+                   connectivity=connectivity,
+                   delay=delay)
 
     @abstractmethod
     def _check_ports(self, source_port, destination_port):
@@ -321,3 +331,52 @@ class EventConnectionGroup(BaseConnectionGroup):
                                                        destination_port)
         assert isinstance(source_port, EventPort)
         assert isinstance(destination_port, EventPort)
+
+
+class InverseConnectivity(object):
+    """
+    Inverts the connectivity so that the source and destination are effectively
+    flipped. Used when mapping a projection connectivity to a reverse
+    connection to from the synapse or post-synaptic cell to the pre-synaptic
+    cell
+    """
+
+    def __init__(self, connectivity):  # @UnusedVariable
+        self._connectivity = connectivity
+
+    def __eq__(self, other):
+        return self._connectivity == other._connectivity
+
+    @property
+    def rule_properties(self):
+        return self._connectivity._rule_props
+
+    @property
+    def rule(self):
+        return self.rule_properties.component_class
+
+    @property
+    def lib_type(self):
+        return self.rule_properties.lib_type
+
+    @property
+    def source_size(self):
+        return self._connectivity.destination_size
+
+    @property
+    def destination_size(self):
+        return self._connectivity.source_size
+
+    def __repr__(self):
+        return ("{}(rule={}, src_size={}, dest_size={})"
+                .format(self.__class__.__name__, self.lib_type,
+                        self.source_size, self.destination_size))
+
+    @abstractmethod
+    def connections(self):
+        return ((j, i) for i, j in self._connectivity.connections)
+
+    @abstractmethod
+    def has_been_sampled(self):
+        return self._connectivity.has_been_sampled
+
