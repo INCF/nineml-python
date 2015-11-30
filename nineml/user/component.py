@@ -187,6 +187,9 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             defn = defn.component.definition
         return defn.component_class
 
+    def is_base_component(self):
+        return isinstance(self.definition, Prototype)
+
     @property
     def definition(self):
         return self._definition
@@ -436,6 +439,26 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             return self._properties.itervalues()
         else:
             return ContainerObject.elements(self)
+
+    @property
+    def local_properties(self):
+        """
+        All the properties that are defined in this component rather than its
+        prototype
+        """
+        return self._properties.itervalues()
+
+    @property
+    def local_property_names(self):
+        return self._properties.itervalues()
+
+    @property
+    def num_local_properties(self):
+        return len(self._properties)
+
+    @name_error
+    def local_property(self, name):
+        return self._properties[name]
 
     @property
     def properties(self):
