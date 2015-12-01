@@ -115,9 +115,6 @@ class BaseNineMLObject(object):
             else:
                 for k in s:
                     if s[k] != o[k]:
-                        p1 = next(iter(s[k].connection_weights['spike__psr']))
-                        p2 = next(iter(o[k].connection_weights['spike__psr']))
-                        print p1 == p2
                         result += "\n{}Key '{}':".format(indent + '  ', k)
                         result += cls._unwrap_mismatch(s[k], o[k],
                                                        indent + '  ')
