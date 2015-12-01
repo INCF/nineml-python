@@ -511,7 +511,7 @@ class Property(BaseULObject):
     numbers, e.g. a RandomDistribution instance.
     """
     nineml_type = "Property"
-    defining_attributes = ("_name", "_quantity")
+    defining_attributes = ("name", "quantity")
 
     def __init__(self, name, quantity):
         super(Property, self).__init__()

@@ -23,21 +23,31 @@ class BaseNineMLObject(object):
     def annotations(self):
         return self._annotations
 
-    def __eq__(self, other):
+    def __eq__(self, other, defining_attributes=None):
+        if defining_attributes is None:
+            defining_attributes = self.defining_attributes
         try:
             if self.nineml_type != other.nineml_type:
                 return False
         except AttributeError:
             return False
-        if self.defining_attributes != other.defining_attributes:
-            return False
-        for name in self.defining_attributes:
-            self_elem = getattr(self, name)
-            other_elem = getattr(other, name)
-            if not isinstance(self_elem, dict):
-                # Try to sort the elements (so they are order non-specific) if
-                # they are an iterable list, ask forgiveness and fall back to
-                # standard equality if they aren't
+        for name in defining_attributes:
+            try:
+                self_elem = getattr(self, name)
+                other_elem = getattr(other, name)
+            except AttributeError:
+                # This is when comparing to derived classes that don't contain
+                # the member dictionary, just an iterator over generated
+                # members, e.g. _Namespace* classes
+                if name.startswith('_'):
+                    name = name[1:]
+                    self_elem = getattr(self, name)
+                    other_elem = getattr(other, name)
+                else:
+                    raise
+            # Try to sort the elements by their '_name' attribute (so they are
+            # order non-specific) if they are an iterable list
+            if not isinstance(self_elem, (dict, basestring)):
                 try:
                     if len(self_elem) > 1 and len(other_elem) > 1:
                         self_elem = sorted(self_elem, key=lambda x: x._name)
@@ -103,6 +113,9 @@ class BaseNineMLObject(object):
             else:
                 for k in s:
                     if s[k] != o[k]:
+                        p1 = next(iter(s[k].connection_weights['spike__psr']))
+                        p2 = next(iter(o[k].connection_weights['spike__psr']))
+                        print p1 == p2
                         result += "\n{}Key '{}':".format(indent + '  ', k)
                         result += cls._unwrap_mismatch(s[k], o[k],
                                                        indent + '  ')
