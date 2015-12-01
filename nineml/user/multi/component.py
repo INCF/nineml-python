@@ -833,8 +833,6 @@ class MultiDynamics(Dynamics):
 
 class _MultiRegime(Regime):
 
-    defining_attributes = ('_sub_regimes', '_parent')
-
     def __init__(self, sub_regimes, parent):
         """
         `sub_regimes_dict` -- a dictionary containing the sub_regimes and
@@ -1158,8 +1156,6 @@ class _MultiTransition(BaseALObject, ContainerObject):
 
 class _MultiOnEvent(_MultiTransition, OnEvent):
 
-    defining_attributes = ('_sub_transitions', '_src_port_name')
-
     def __init__(self, port_exposure, sub_transitions, parent):
         sub_transitions = normalise_parameter_as_list(sub_transitions)
         self._port_exposure = port_exposure
@@ -1190,8 +1186,6 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
 
 class _MultiOnCondition(_MultiTransition, OnCondition):
 
-    defining_attributes = ('_sub_transitions', '_trigger')
-
     def __init__(self, sub_transitions, parent):
         sub_transitions = normalise_parameter_as_list(sub_transitions)
         self._trigger = sub_transitions[0].trigger
@@ -1213,8 +1207,6 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
 
 
 class _ExposedOutputEvent(OutputEvent):
-
-    defining_attributes = ('_port_exposure')
 
     def __init__(self, port_exposure):
         self._port_exposure = port_exposure

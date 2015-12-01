@@ -38,11 +38,11 @@ class BaseNineMLObject(object):
             except AttributeError:
                 # This is when comparing to derived classes that don't contain
                 # the member dictionary, just an iterator over generated
-                # members, e.g. _Namespace* classes
+                # members, e.g. _Namespace* classes.
                 if name.startswith('_'):
                     name = name[1:]
-                    self_elem = getattr(self, name)
-                    other_elem = getattr(other, name)
+                    self_elem = list(getattr(self, name))
+                    other_elem = list(getattr(other, name))
                 else:
                     raise
             # Try to sort the elements by their '_name' attribute (so they are
@@ -50,8 +50,10 @@ class BaseNineMLObject(object):
             if not isinstance(self_elem, (dict, basestring)):
                 try:
                     if len(self_elem) > 1 and len(other_elem) > 1:
-                        self_elem = sorted(self_elem, key=lambda x: x._name)
-                        other_elem = sorted(other_elem, key=lambda x: x._name)
+                        self_elem = sorted(self_elem,
+                                           key=lambda x: str(x._name))
+                        other_elem = sorted(other_elem,
+                                            key=lambda x: str(x._name))
                 except (TypeError, AttributeError):
                     pass
             if self_elem != other_elem:
