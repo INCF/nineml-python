@@ -116,8 +116,14 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
         connected = set()
         if self.regimes:
             add_connected_regimes_recursive(self.regimes[0], connected)
-            if len(connected) != len(self.regimes):
+            if len(connected) < len(self.regimes):
                 raise NineMLRuntimeError("Transition graph contains islands")
+            elif len(connected) > len(self.regimes):
+                for r1 in connected:
+                    for r2 in connected:
+                        if r1.name == r2.name:
+                            r1 == r2
+                assert False
 
     def action_componentclass(self, component_class):
         self.regimes = list(component_class.regimes)
