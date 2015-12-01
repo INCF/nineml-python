@@ -124,6 +124,7 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
 
     def action_regime(self, regime):  # @UnusedVariable
         for transition in regime.transitions:
+            regime == transition.target_regime
             self.connected_regimes_from_regime[regime].add(
                 transition.target_regime)
             self.connected_regimes_from_regime[transition.target_regime].add(

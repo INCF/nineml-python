@@ -11,6 +11,7 @@ from nineml.abstraction import (
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
 from nineml.exceptions import NineMLImmutableError, NineMLNameError
 from nineml.abstraction.expressions import reserved_identifiers
+from nineml.base import BaseNineMLObject
 
 
 # Matches multiple underscores, so they can be escaped by appending another
@@ -94,8 +95,6 @@ def split_multi_regime_name(name):
 
 class _NamespaceObject(object):
 
-    defining_attributes = ('_sub_component', '_object')
-
     def __init__(self, sub_component, element, parent=None):
         self._sub_component = sub_component
         self._object = element
@@ -104,6 +103,13 @@ class _NamespaceObject(object):
     def __hash__(self):
         return (hash(self.sub_component) ^ hash(self._object)
                 ^ hash(self._parent))
+
+    def __eq__(self, other):
+        return BaseNineMLObject.__eq__(
+            self, other, defining_attributes=self._object.defining_attributes)
+
+    def __neq__(self, other):
+        return not (other == self)
 
     @property
     def sub_component(self):

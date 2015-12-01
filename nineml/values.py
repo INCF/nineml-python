@@ -431,8 +431,7 @@ class RandomValue(BaseValue):
         self._generator = generator_cls(self.distribution)
 
     def __repr__(self):
-        return ("RandomValue({} port of {} component)"
-                .format(self.port_name, self.distribution.name))
+        return ("RandomValue({})".format(self.distribution.name))
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable

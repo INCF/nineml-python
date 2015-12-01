@@ -63,7 +63,7 @@ class MultiDynamicsProperties(DynamicsProperties):
         #        problems if they are updated. Should override the 'properties'
         #        generator to return the properties from the sub_component
         #        properties as the Dynamics properties
-        self._sub_component_properties = dict(
+        self._sub_components = dict(
             (p.name, p) for p in sub_components)
 
     @property
@@ -72,7 +72,7 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     @property
     def sub_components(self):
-        return self._sub_component_properties.itervalues()
+        return self._sub_components.itervalues()
 
     @property
     def port_exposures(self):
@@ -84,7 +84,7 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     @name_error
     def sub_component(self, name):
-        return self._sub_component_properties[name]
+        return self._sub_components[name]
 
     @name_error
     def port_exposure(self, name):
@@ -96,7 +96,7 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     @property
     def sub_component_names(self):
-        return self.sub_component.iterkeys()
+        return self._sub_components.iterkeys()
 
     @property
     def port_exposure_names(self):
