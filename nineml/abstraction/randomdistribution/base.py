@@ -12,10 +12,10 @@ class RandomDistribution(ComponentClass):
 
     standard_library_basepath = 'http://www.uncertml.org/distributions/'
     _base_len = len(standard_library_basepath)
-    standard_types = ('bernoulli', 'beta', 'binomial', 'cauchy', 'chi-square'
+    standard_types = ('bernoulli', 'beta', 'binomial', 'cauchy', 'chi-square',
                       'dirichlet', 'exponential', 'f', 'gamma', 'geometric',
                       'hypergeometric', 'laplace', 'logistic', 'log-normal',
-                      'multinomial', 'negative-binomial', 'normal'
+                      'multinomial', 'negative-binomial', 'normal',
                       'pareto', 'poisson', 'uniform', 'weibull')
 
     def __init__(self, name, standard_library, parameters=None,
@@ -31,6 +31,8 @@ class RandomDistribution(ComponentClass):
                     "', '".join(self.standard_library_basepath + t
                                 for t in self.standard_types)))
         self._standard_library = standard_library
+
+# http://www.uncertml.org/distributions/normal
 
     @property
     def standard_library(self):
