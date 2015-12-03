@@ -4,7 +4,7 @@
     <Parameter name="shape"/>
     <Parameter name="scale"/>
     <RandomDistribution>
-      <StandarLibrary definition="http://www.uncertml.org/distributions/inverse-gamma.xml">InverseGammaDistribution</StandarLibrary>
+      <StandarLibrary definition="http://www.uncertml.org/distributions/inverse-gamma">InverseGammaDistribution</StandarLibrary>
     </RandomDistribution>
   </RandomDistribution>
 </NineML>

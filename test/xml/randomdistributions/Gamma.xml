@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/2.0">
-  <RandomDistribution name="GammaDistribution" standard_library="http://www.uncertml.org/distributions/gamma.xml">
+  <RandomDistribution name="GammaDistribution" standard_library="http://www.uncertml.org/distributions/gamma">
     <Parameter name="shape"/>
     <Parameter name="scale"/>
   </RandomDistribution>

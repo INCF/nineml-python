@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <NineML xmlns="http://nineml.net/9ML/2.0">
-  <RandomDistribution name="UniformDistribution" standard_library="http://www.uncertml.org/distributions/uniform.xml">
+  <RandomDistribution name="UniformDistribution" standard_library="http://www.uncertml.org/distributions/uniform">
     <Parameter name="minimum"/>
     <Parameter name="maximum"/>
   </RandomDistribution>
