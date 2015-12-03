@@ -113,7 +113,6 @@ class BaseNineMLObject(object):
             else:
                 for k in s:
                     if s[k] != o[k]:
-                        s[k] == o[k]
                         result += "\n{}Key '{}':".format(indent + '  ', k)
                         result += cls._unwrap_mismatch(s[k], o[k],
                                                        indent + '  ')
