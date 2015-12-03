@@ -98,10 +98,7 @@ class Constant(BaseALObject, ExpressionSymbol):
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)
         self._name = name
-        try:
-            self._value = float(value)
-        except:
-            raise
+        self._value = float(value)
         self._units = units if units is not None else unitless
         assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
 

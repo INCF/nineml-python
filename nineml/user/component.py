@@ -150,10 +150,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             self._properties = dict((name, Property(name, qty))
                                     for name, qty in properties.iteritems())
         else:
-            try:
-                self._properties = dict((p.name, p) for p in properties)
-            except:
-                raise
+            self._properties = dict((p.name, p) for p in properties)
         self.check_properties()
 
     @property

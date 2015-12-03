@@ -581,12 +581,9 @@ def get_component_class_type(elem):
 
 
 def get_component_type(comp_xml, doc_xml, relative_to):
-    try:
-        definition = expect_single(chain(
-            comp_xml.findall(NINEMLv1 + 'Definition'),
-            comp_xml.findall(NINEMLv1 + 'Prototype')))
-    except:
-        raise
+    definition = expect_single(chain(
+        comp_xml.findall(NINEMLv1 + 'Definition'),
+        comp_xml.findall(NINEMLv1 + 'Prototype')))
     url = definition.get('url')
     if url:
         doc_xml = read_xml(url, relative_to)

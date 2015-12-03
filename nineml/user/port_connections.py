@@ -67,13 +67,10 @@ class BasePortConnection(BaseULObject):
             raise NineMLRuntimeError(
                 "Either 'receiver_role' or 'receiver_name' must be "
                 "provided to PortConnection __init__")
-        try:
-            assert isinstance(sender_role, (basestring, type(None)))
-            assert isinstance(sender_name, (basestring, type(None)))
-            assert isinstance(receiver_name, (basestring, type(None)))
-            assert isinstance(receiver_role, (basestring, type(None)))
-        except:
-            raise
+        assert isinstance(sender_role, (basestring, type(None)))
+        assert isinstance(sender_name, (basestring, type(None)))
+        assert isinstance(receiver_name, (basestring, type(None)))
+        assert isinstance(receiver_role, (basestring, type(None)))
         self._sender_role = sender_role
         self._sender_name = sender_name
         self._receiver_name = receiver_name
@@ -245,19 +242,16 @@ class BasePortConnection(BaseULObject):
         self._check_ports()
 
     def is_bound(self):
-        try:
-            if self._sender is None:
-                assert self._receiver is None
-                assert self._send_port is None
-                assert self._receive_port is None
-                bound = False
-            else:
-                assert self._receiver is not None
-                assert self._send_port is not None
-                assert self._receive_port is not None
-                bound = True
-        except:
-            raise
+        if self._sender is None:
+            assert self._receiver is None
+            assert self._send_port is None
+            assert self._receive_port is None
+            bound = False
+        else:
+            assert self._receiver is not None
+            assert self._send_port is not None
+            assert self._receive_port is not None
+            bound = True
         return bound
 
     @annotate_xml

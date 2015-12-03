@@ -238,10 +238,7 @@ class Regime(BaseALObject, ContainerObject):
         # appropriately:
         transitions = normalise_parameter_as_list(kwargs.get('transitions',
                                                              None))
-        try:
-            f_dict = filter_discrete_types(transitions, (OnEvent, OnCondition))
-        except:
-            raise
+        f_dict = filter_discrete_types(transitions, (OnEvent, OnCondition))
         self._on_events = {}
         self._on_conditions = {}
         # Add all the OnEvents and OnConditions:
