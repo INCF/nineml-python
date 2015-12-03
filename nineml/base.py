@@ -48,8 +48,8 @@ class BaseNineMLObject(object):
                     other_elem = getattr(other, name)
                 else:
                     raise
-            if not isinstance(self_elem,
-                              (dict, basestring, nineml.values.BaseValue)):
+            if not isinstance(
+                    self_elem, (dict, basestring, BaseNineMLObject)):
                 # Try to sort the elements by their '_name' attribute (so they
                 # are order non-specific) if they are an iterable
                 try:
@@ -78,7 +78,7 @@ class BaseNineMLObject(object):
         """
         if not indent:
             result = ("Mismatch between '{}' types:"
-                      .format(self.__class__.__name__))
+                      .format(self.nineml_type))
         else:
             result = ''
         try:
@@ -116,6 +116,7 @@ class BaseNineMLObject(object):
             else:
                 for k in s:
                     if s[k] != o[k]:
+                        s[k] == o[k]
                         result += "\n{}Key '{}':".format(indent + '  ', k)
                         result += cls._unwrap_mismatch(s[k], o[k],
                                                        indent + '  ')

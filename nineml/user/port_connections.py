@@ -170,32 +170,52 @@ class BasePortConnection(BaseULObject):
                 "Sender object was not identified by its name")
         return self._receiver_name
 
-    def assign_roles(self, role_map, target='name'):
+    def assign_roles(self, name_map={}, role_map={}, port_namespaces={}):
         """
         Assigns a name to a role, or specifies a new role for any role in the
         role map. Roles not in the map are left as they are.
         """
+        # Check role doesn't appear in both name_map and role_map
+        assert not (set(name_map.iterkeys()) & set(role_map.iterkeys()))
         kwargs = {}
-        for node in ('sender', 'receiver'):
-            try:
-                kwargs[node + '_' + target] = role_map[getattr(self,
-                                                               node + '_role')]
-            except KeyError:
-                # If the role isn't in the role_map and mapping to a new role
-                # instead of names, keep the old role
-                if target == 'role':
-                    kwargs[node + '_role'] = getattr(self, node + '_role')
-                else:
-                    raise NineMLRuntimeError(
-                        "Missing a mapping for the '{}' role, which must be "
-                        "provided when mapping from roles to names. (provided "
-                        "roles: '{}')."
-                        .format(getattr(self, node + '_role'),
-                                "', '".join(role_map.iterkeys())))
+        try:
+            kwargs['sender_name'] = name_map[self.sender_role]
+        except KeyError:
+            kwargs['sender_role'] = role_map.get(self.sender_role,
+                                                 self.sender_role)
+        try:
+            kwargs['receiver_name'] = name_map[self.receiver_role]
+        except KeyError:
+            kwargs['receiver_role'] = role_map.get(self.receiver_role,
+                                                   self.receiver_role)
+        try:
+            send_port = nineml.user.append_namespace(
+                self.send_port_name, port_namespaces[self.sender_role])
+        except KeyError:
+            send_port = self.send_port_name
+        try:
+            receive_port = nineml.user.append_namespace(
+                self.receive_port_name, port_namespaces[self.receiver_role])
+        except KeyError:
+            receive_port = self.receive_port_name
         # Return a new port connection with the roles mapped to names or new
         # roles
-        return self.__class__(send_port=self.send_port_name,
-                              receive_port=self.receive_port_name, **kwargs)
+        return self.__class__(send_port=send_port, receive_port=receive_port,
+                              **kwargs)
+
+    def expose_ports(self, role_map):
+        exposures = []
+        try:
+            exposures.append(nineml.user.multi.BasePortExposure.from_port(
+                self.send_port, role_map[self.sender_role]))
+        except KeyError:
+            pass
+        try:
+            exposures.append(nineml.user.multi.BasePortExposure.from_port(
+                self.receive_port, role_map[self.receiver_role]))
+        except KeyError:
+            pass
+        return exposures
 
     def bind(self, container, to_roles=False):
         """
@@ -320,6 +340,7 @@ class BasePortConnection(BaseULObject):
 class AnalogPortConnection(BasePortConnection):
 
     nineml_type = 'AnalogPortConnection'
+    communicates = 'analog'
 
     def _check_ports(self):
         if not isinstance(self.send_port, AnalogSendPort):
@@ -343,6 +364,7 @@ class AnalogPortConnection(BasePortConnection):
 class EventPortConnection(BasePortConnection):
 
     nineml_type = 'EventPortConnection'
+    communicates = 'event'
 
     def _check_ports(self):
         if not isinstance(self.send_port, EventSendPort):
@@ -361,3 +383,5 @@ class EventPortConnection(BasePortConnection):
         nineml.user.multi.component for future versions
         """
         return 0.0
+
+import nineml.user

@@ -60,6 +60,8 @@ class SingleValue(BaseValue):
         return itertools.repeat(self._value)
 
     def __eq__(self, other):
+        if self.nineml_type != other.nineml_type:
+            return False
         return nearly_equal(self._value, other._value)
 
     def __neq__(self, other):
