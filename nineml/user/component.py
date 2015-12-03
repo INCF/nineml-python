@@ -637,19 +637,36 @@ class DynamicsProperties(Component):
 
     @property
     def initial_values(self):
-        return self._initial_values.itervalues()
+        if isinstance(self.definition, Prototype):
+            return (
+                (self._initial_values[p.name]
+                 if p.name in self._initial_values else p)
+                for p in self.definition.component.properties)
+        else:
+            return self._initial_values.itervalues()
 
     @name_error
     def initial_value(self, name):
-        return self._initial_values[name]
+        try:
+            return self._initial_values[name]
+        except KeyError:
+            try:
+                return self.definition.component.initial_value(name)
+            except AttributeError:
+                raise NineMLNameError(
+                    "No initial value named '{}' in component class"
+                    .format(name))
 
     @property
     def initial_value_names(self):
-        return self._initial_values.iterkeys()
+        if isinstance(self.definition, Prototype):
+            return (p.name for p in self.initial_values)
+        else:
+            return self._initial_values.iterkeys()
 
     @property
     def num_initial_values(self):
-        return len(self._initial_values)
+        return len(list(self.initial_values))
 
     @property
     def attributes_with_units(self):
