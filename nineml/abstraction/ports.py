@@ -125,7 +125,7 @@ class AnalogPort(DimensionedPort):
     Component. For example, this could be the membrane-voltage into a synapse
     component, or the current provided by a ion-channel.
     """
-    communication_type = 'analog'
+    communicates = 'analog'
 
     def type_matches(self, port):
         return isinstance(port, AnalogPort)
@@ -139,7 +139,7 @@ class EventPort(Port):
     notify other components that it had fired; or synapses could receive events
     to notify them to provide current to a post-synaptic neuron.
     """
-    communication_type = 'event'
+    communicates = 'event'
 
     def type_matches(self, port):
         return isinstance(port, AnalogPort)

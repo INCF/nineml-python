@@ -314,6 +314,7 @@ class BaseConnectionGroup(BaseULObject):
 class AnalogConnectionGroup(BaseConnectionGroup):
 
     nineml_type = 'AnalogConnectionGroup'
+    communicates = 'analog'
 
     def _check_ports(self, source_port, destination_port):
         super(AnalogConnectionGroup, self)._check_ports(source_port,
@@ -325,6 +326,7 @@ class AnalogConnectionGroup(BaseConnectionGroup):
 class EventConnectionGroup(BaseConnectionGroup):
 
     nineml_type = 'EventConnectionGroup'
+    communicates = 'event'
 
     def _check_ports(self, source_port, destination_port):
         super(EventConnectionGroup, self)._check_ports(source_port,
