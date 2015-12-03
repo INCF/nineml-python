@@ -8,7 +8,7 @@ from nineml.reference import resolve_reference, write_reference
 from nineml.base import DocumentLevelObject
 from nineml.xml import (
     nineml_ns, E, from_child_xml, unprocessed_xml, get_xml_attr)
-from nineml.user import DynamicsProperties
+from nineml.user import DynamicsProperties, Definition
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
@@ -38,10 +38,17 @@ from .namespace import (
 class MultiDynamicsProperties(DynamicsProperties):
 
     nineml_type = "MultiDynamicsProperties"
-    defining_attributes = ('_name', 'component_class')
+    defining_attributes = ('name', '_sub_components')
 
     def __init__(self, name, sub_components, port_connections=[],
-                 port_exposures=[]):
+                 port_exposures=[], document=None, check_initial_values=False):
+        # Initiate inherited base classes
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self, document)
+        ContainerObject.__init__(self)
+        # Extract abstraction layer component of sub-dynamics object (won't be
+        # necessary from v2) and convert dict of name: DynamicsProperties pairs
+        # into SubDynamics objects
         if isinstance(sub_components, dict):
             sub_dynamics = [
                 SubDynamics(n, sc.component_class)
@@ -53,18 +60,18 @@ class MultiDynamicsProperties(DynamicsProperties):
             sub_dynamics = [
                 SubDynamics(sc.name, sc.component.component_class)
                 for sc in sub_components]
-        component_class = MultiDynamics(
+        # Construct component class definition
+        definition = MultiDynamics(
             name + '_Dynamics', sub_dynamics,
             port_exposures=port_exposures, port_connections=port_connections)
-        super(MultiDynamicsProperties, self).__init__(
-            name, definition=component_class,
-            properties=chain(*[p.properties for p in sub_components]))
-        # FIXME: The properties are being duplicated here and will cause
-        #        problems if they are updated. Should override the 'properties'
-        #        generator to return the properties from the sub_component
-        #        properties as the Dynamics properties
+        self._name = name
+        self._definition = Definition(definition)
         self._sub_components = dict(
             (p.name, p) for p in sub_components)
+        # Check for property/parameter matches
+        self.check_properties()
+        if check_initial_values:
+            self.check_initial_values()
 
     @property
     def name(self):
@@ -141,6 +148,45 @@ class MultiDynamicsProperties(DynamicsProperties):
                    port_exposures=port_exposures,
                    port_connections=port_connections)
 
+    @property
+    def initial_values(self):
+        return chain(*(sc.initial_values for sc in self.sub_components))
+
+    @name_error
+    def initial_value(self, name):
+        _, comp_name = split_namespace(name)
+        return self.sub_component(comp_name).initial_value(name)
+
+    @property
+    def initial_value_names(self):
+        return (iv.name for iv in self.initial_values)
+
+    @property
+    def num_initial_values(self):
+        return len(list(self.initial_values))
+
+    @property
+    def properties(self):
+        """
+        The set of component_class properties (parameter values).
+        """
+        return chain(*(sc.properties for sc in self.sub_components))
+
+    @property
+    def property_names(self):
+        return (p.name for p in self.properties)
+
+    @property
+    def num_properties(self):
+        return len(list(self.properties))
+
+    # Property is declared last so as not to overwrite the 'property' decorator
+
+    @name_error
+    def property(self, name):
+        _, comp_name = split_namespace(name)
+        return self.sub_component(comp_name).property(name)
+
 
 class SubDynamicsProperties(BaseULObject):
 
@@ -159,11 +205,6 @@ class SubDynamicsProperties(BaseULObject):
     @property
     def component(self):
         return self._component
-
-    @property
-    def properties(self):
-        return (_NamespaceProperty(self, p)
-                for p in self._component.properties)
 
     def __iter__(self):
         return self.properties
@@ -191,6 +232,46 @@ class SubDynamicsProperties(BaseULObject):
             allow_reference=True, **kwargs)
         return cls(get_xml_attr(element, 'name', document, **kwargs),
                    dynamics_properties)
+
+    @property
+    def initial_values(self):
+        return (_NamespaceProperty(self, iv)
+                for iv in self._component.initial_values)
+
+    @property
+    def num_initial_values(self):
+        return len(list(self.initial_values))
+
+    @property
+    def initial_value_names(self):
+        return (iv.name for iv in self.initial_values)
+
+    @name_error
+    def initial_value(self, name):
+        local_name, comp_name = split_namespace(name)
+        if comp_name != self.name:
+            raise KeyError(name)
+        return self._component.initial_value(local_name)
+
+    @property
+    def properties(self):
+        return (_NamespaceProperty(self, p)
+                for p in self._component.properties)
+
+    @property
+    def num_properties(self):
+        return len(list(self.properties))
+
+    @property
+    def property_names(self):
+        return (p.name for p in self.properties)
+
+    @name_error
+    def property(self, name):
+        local_name, comp_name = split_namespace(name)
+        if comp_name != self.name:
+            raise KeyError(name)
+        return self._component.property(local_name)
 
 
 class SubDynamics(BaseULObject):
