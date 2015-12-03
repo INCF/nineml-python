@@ -39,6 +39,7 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     nineml_type = "MultiDynamicsProperties"
     defining_attributes = ('name', '_sub_components')
+    class_to_member = {'SubDynamicsProperties': 'sub_component'}
 
     def __init__(self, name, sub_components, port_connections=[],
                  port_exposures=[], document=None, check_initial_values=False):
@@ -50,28 +51,29 @@ class MultiDynamicsProperties(DynamicsProperties):
         # necessary from v2) and convert dict of name: DynamicsProperties pairs
         # into SubDynamics objects
         if isinstance(sub_components, dict):
-            sub_dynamics = [
-                SubDynamics(n, sc.component_class)
-                for n, sc in sub_components.iteritems()]
             sub_components = [
                 SubDynamicsProperties(n, p)
                 for n, p in sub_components.iteritems()]
-        else:
-            sub_dynamics = [
-                SubDynamics(sc.name, sc.component.component_class)
-                for sc in sub_components]
-        # Construct component class definition
-        definition = MultiDynamics(
-            name + '_Dynamics', sub_dynamics,
-            port_exposures=port_exposures, port_connections=port_connections)
         self._name = name
-        self._definition = Definition(definition)
         self._sub_components = dict(
             (p.name, p) for p in sub_components)
+        self._definition = self._extract_definition(
+            sub_components, port_exposures, port_connections)
         # Check for property/parameter matches
         self.check_properties()
         if check_initial_values:
             self.check_initial_values()
+
+    def _extract_definition(self, sub_components, port_exposures,
+                            port_connections):
+        sub_dynamics = [
+            SubDynamics(sc.name, sc.component.component_class)
+            for sc in sub_components]
+        # Construct component class definition
+        return Definition(MultiDynamics(
+            self.name + '_Dynamics', sub_dynamics,
+            port_exposures=port_exposures,
+            port_connections=port_connections))
 
     @property
     def name(self):
@@ -1240,11 +1242,8 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
     def __init__(self, port_exposure, sub_transitions, parent):
         sub_transitions = normalise_parameter_as_list(sub_transitions)
         self._port_exposure = port_exposure
-        try:
-            assert all(st.src_port_name == self._port_exposure.local_port_name
-                       for st in sub_transitions)
-        except:
-            raise
+        assert all(st.src_port_name == self._port_exposure.local_port_name
+                   for st in sub_transitions)
         _MultiTransition.__init__(self, sub_transitions, parent)
 
     def __hash__(self):

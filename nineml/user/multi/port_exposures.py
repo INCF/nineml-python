@@ -23,10 +23,7 @@ class BasePortExposure(BaseULObject):
             self._sub_component = None
         else:
             self._sub_component_name = None
-            try:
-                assert isinstance(component, Dynamics)
-            except:
-                raise
+            assert isinstance(component, Dynamics)
             self._sub_component = component
         if isinstance(port, basestring):
             self._port_name = port
