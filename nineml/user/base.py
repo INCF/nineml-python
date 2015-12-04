@@ -1,6 +1,6 @@
 from ..base import BaseNineMLObject
-from nineml.exceptions import NineMLRuntimeError, NineMLNameError
-from nineml.reference import Reference
+# from nineml.exceptions import NineMLRuntimeError, NineMLNameError
+# from nineml.reference import Reference
 
 
 class BaseULObject(BaseNineMLObject):
@@ -8,6 +8,8 @@ class BaseULObject(BaseNineMLObject):
     """
     Base class for user layer classes
     """
+
+    layer = 'user'
 
     def __init__(self):
         BaseNineMLObject.__init__(self)

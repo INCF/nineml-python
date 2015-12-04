@@ -38,7 +38,7 @@ from .namespace import (
 class MultiDynamicsProperties(DynamicsProperties):
 
     nineml_type = "MultiDynamicsProperties"
-    defining_attributes = ('name', '_sub_components')
+    defining_attributes = ('name', 'definition', '_sub_components')
     class_to_member = {'SubDynamicsProperties': 'sub_component'}
 
     def __init__(self, name, sub_components, port_connections=[],

@@ -13,7 +13,7 @@ class BaseALObject(BaseNineMLObject):
     """
     Base class for abstraction layer classes
     """
-    pass
+    layer = 'abstraction'
 
 
 import dynamics
