@@ -537,7 +537,8 @@ class MultiDynamics(Dynamics):
     core_type = Dynamics
 
     def __init__(self, name, sub_components, port_connections=[],
-                 port_exposures=[], document=None, validate_dimensions=True):
+                 port_exposures=[], document=None, validate_dimensions=True,
+                 **kwargs):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
@@ -615,7 +616,7 @@ class MultiDynamics(Dynamics):
                 self._analog_port_connections[
                     rcv_key][snd_key] = port_connection
         self.annotations[nineml_ns][VALIDATE_DIMENSIONS] = validate_dimensions
-        self.validate()
+        self.validate(**kwargs)
 
     def __getitem__(self, comp_name):
         return self._sub_components[comp_name]
@@ -894,7 +895,7 @@ class MultiDynamics(Dynamics):
     def _create_multi_regime(self, sub_regimes):
         return _MultiRegime(sub_regimes, self)
 
-    def validate(self):
+    def validate(self, **kwargs):
         exposed_ports = [pe.port for pe in self.analog_receive_ports]
         connected_ports = [pc.receive_port
                            for pc in self.analog_port_connections]
@@ -906,7 +907,7 @@ class MultiDynamics(Dynamics):
                         "not connected via a port-connection or exposed via a "
                         "port-exposure in MultiDynamics object '{}'"
                         .format(port.name, sub_component.name, self.name))
-        super(MultiDynamics, self).validate()
+        super(MultiDynamics, self).validate(**kwargs)
 
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and

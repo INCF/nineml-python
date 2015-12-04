@@ -72,8 +72,8 @@ class ConnectionRule(ComponentClass):
     def _find_element(self, element):
         return ConnectionRuleElementFinder(element).found_in(self)
 
-    def validate(self):
-        ConnectionRuleValidator.validate_componentclass(self)
+    def validate(self, **kwargs):
+        ConnectionRuleValidator.validate_componentclass(self, **kwargs)
 
     @property
     def all_expressions(self):

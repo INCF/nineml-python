@@ -62,8 +62,8 @@ class RandomDistribution(ComponentClass):
     def _find_element(self, element):
         return RandomDistributionElementFinder(element).found_in(self)
 
-    def validate(self):
-        RandomDistributionValidator.validate_componentclass(self)
+    def validate(self, **kwargs):
+        RandomDistributionValidator.validate_componentclass(self, **kwargs)
 
     @property
     def all_expressions(self):
