@@ -11,6 +11,7 @@ from nineml.utils import assert_no_duplicates
 from nineml.base import BaseNineMLObject
 import operator
 import sympy
+from itertools import chain
 from sympy import sympify
 from nineml.base import SendPortBase
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
@@ -58,7 +59,7 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
     parameters, aliases, statevariables and ports
     """
 
-    def __init__(self, component_class, additional_symbols=[], **kwargs):  # @UnusedVariable @IgnorePep8
+    def __init__(self, component_class, additional_parameters=[], **kwargs):  # @UnusedVariable @IgnorePep8
         BaseValidator.__init__(
             self, require_explicit_overrides=False)
 
@@ -67,8 +68,8 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
         self.time_derivatives = []
         self.state_assignments = []
         self.component_class = component_class
-        for symbol in additional_symbols:
-            self.add_symbol(symbol)
+        for parameter in additional_parameters:
+            self.add_symbol(parameter.name)
         self.visit(component_class)
 
         # Check Aliases:
@@ -170,13 +171,15 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(BaseValidator):
 
 class DimensionalityComponentValidator(BaseValidator):
 
-    def __init__(self, component_class, **kwargs):  # @UnusedVariable
+    def __init__(self, component_class, additional_parameters=[], **kwargs):  # @UnusedVariable @IgnorePep8
         BaseValidator.__init__(self, require_explicit_overrides=False)
         self.component_class = component_class
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database
-        for e in component_class.elements(
-                class_map=self.class_to_visit.class_to_member):
+        for e in chain(
+            component_class.elements(
+                class_map=self.class_to_visit.class_to_member),
+                additional_parameters):
             if not isinstance(e, SendPortBase):
                 try:
                     self._dimensions[e] = sympify(e.dimension)

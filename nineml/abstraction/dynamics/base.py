@@ -58,7 +58,7 @@ class Dynamics(ComponentClass):
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[], regimes=None, aliases=None,
                  state_variables=None, constants=None,
-                 validate_dimensions=True, document=None):
+                 validate_dimensions=True, document=None, **kwargs):
         """Constructs a Dynamics
 
         :param name: The name of the component_class.
@@ -187,7 +187,7 @@ class Dynamics(ComponentClass):
         for transition in self.all_transitions():
             transition.bind(self)
         # Is the finished component_class valid?:
-        self.validate()
+        self.validate(**kwargs)
 
     # -------------------------- #
 
@@ -217,12 +217,13 @@ class Dynamics(ComponentClass):
     def __repr__(self):
         return "<dynamics.Dynamics %s>" % self.name
 
-    def validate(self, validate_dimensions=None):
+    def validate(self, validate_dimensions=None, **kwargs):
         if validate_dimensions is None:
             validate_dimensions = self.annotations[nineml_ns].get(
                 VALIDATE_DIMENSIONS, True)
         self._resolve_transition_regimes()
-        DynamicsValidator.validate_componentclass(self, validate_dimensions)
+        DynamicsValidator.validate_componentclass(self, validate_dimensions,
+                                                  **kwargs)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
