@@ -21,7 +21,7 @@ class LocalNameConflictsComponentValidator(BaseValidator):
     will use names.
     """
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseValidator.__init__(
             self, require_explicit_overrides=False)
         self.symbols = []
@@ -49,7 +49,7 @@ class LocalNameConflictsComponentValidator(BaseValidator):
 
 class DimensionNameConflictsComponentValidator(BaseValidator):
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseValidator.__init__(
             self, require_explicit_overrides=False)
         self.dimensions = {}

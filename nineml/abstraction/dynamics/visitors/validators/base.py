@@ -32,27 +32,30 @@ class DynamicsValidator(object):
 
     @classmethod
     def validate_componentclass(cls, component_class,
-                                validate_dimensions=True):
+                                validate_dimensions=True, **kwargs):
         """
         Tests a componentclassclass against a variety of tests, to verify its
         internal structure
         """
         # Check class structure:
-        TypesDynamicsValidator(component_class)
-        NoDuplicatedObjectsDynamicsValidator(component_class)
-        DuplicateRegimeNamesDynamicsValidator(component_class)
-        LocalNameConflictsDynamicsValidator(component_class)
-        DimensionNameConflictsDynamicsValidator(component_class)
-        RegimeAliasMatchesBaseScopeValidator(component_class)
-        EventPortsDynamicsValidator(component_class)
-        OutputAnalogPortsDynamicsValidator(component_class)
-        TimeDerivativesAreDeclaredDynamicsValidator(component_class)
-        StateAssignmentsAreOnStateVariablesDynamicsValidator(component_class)
-        AliasesAreNotRecursiveDynamicsValidator(component_class)
-        NoUnresolvedSymbolsDynamicsValidator(component_class)
-        PortConnectionsDynamicsValidator(component_class)
-        RegimeGraphDynamicsValidator(component_class)
-        RegimeOnlyHasOneHandlerPerEventDynamicsValidator(component_class)
-        CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(component_class)
+        TypesDynamicsValidator(component_class, **kwargs)
+        NoDuplicatedObjectsDynamicsValidator(component_class, **kwargs)
+        DuplicateRegimeNamesDynamicsValidator(component_class, **kwargs)
+        LocalNameConflictsDynamicsValidator(component_class, **kwargs)
+        DimensionNameConflictsDynamicsValidator(component_class, **kwargs)
+        RegimeAliasMatchesBaseScopeValidator(component_class, **kwargs)
+        EventPortsDynamicsValidator(component_class, **kwargs)
+        OutputAnalogPortsDynamicsValidator(component_class, **kwargs)
+        TimeDerivativesAreDeclaredDynamicsValidator(component_class, **kwargs)
+        StateAssignmentsAreOnStateVariablesDynamicsValidator(component_class,
+                                                             **kwargs)
+        AliasesAreNotRecursiveDynamicsValidator(component_class, **kwargs)
+        NoUnresolvedSymbolsDynamicsValidator(component_class, **kwargs)
+        PortConnectionsDynamicsValidator(component_class, **kwargs)
+        RegimeGraphDynamicsValidator(component_class, **kwargs)
+        RegimeOnlyHasOneHandlerPerEventDynamicsValidator(component_class,
+                                                         **kwargs)
+        CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(component_class,
+                                                               **kwargs)
         if validate_dimensions:
-            DimensionalityDynamicsValidator(component_class)
+            DimensionalityDynamicsValidator(component_class, **kwargs)

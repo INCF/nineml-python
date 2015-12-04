@@ -19,7 +19,7 @@ class EventPortsDynamicsValidator(BaseDynamicsValidator):
     defined, and that the EventPort has the right direction.
     """
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(EventPortsDynamicsValidator, self).__init__(
             require_explicit_overrides=False)
 
@@ -87,7 +87,7 @@ class OutputAnalogPortsDynamicsValidator(BaseDynamicsValidator):
     or a state variable
     """
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(OutputAnalogPortsDynamicsValidator, self).__init__(
             require_explicit_overrides=False)
         self.output_analogports = []

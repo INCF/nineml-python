@@ -12,7 +12,7 @@ from nineml.abstraction.expressions import Alias, Constant
 
 class TypesComponentValidator(ComponentActionVisitor):
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(TypesComponentValidator, self).__init__()
         self.visit(component_class)
 

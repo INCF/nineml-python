@@ -24,18 +24,23 @@ class RandomDistributionValidator(object):
     """Class for grouping all the component-validations tests together"""
 
     @classmethod
-    def validate_componentclass(cls, component_class):
+    def validate_componentclass(cls, component_class, **kwargs):
         """
         Tests a componentclassclass against a variety of tests, to verify its
         internal structure
         """
         # Check class structure:
-        TypesRandomDistributionValidator(component_class)
-#         NoDuplicatedObjectsRandomDistributionValidator(component_class)  # Commented out until perNamespaceValidator is removed @IgnorePep8
-#         LocalNameConflictsRandomDistributionValidator(component_class)
-#         DimensionNameConflictsRandomDistributionValidator(component_class)
-#         AliasesAreNotRecursiveRandomDistributionValidator(component_class)
-#         NoUnresolvedSymbolsRandomDistributionValidator(component_class)
-#         PortConnectionsRandomDistributionValidator(component_class)
+        TypesRandomDistributionValidator(component_class, **kwargs)
+#         NoDuplicatedObjectsRandomDistributionValidator(component_class,
+#                                                        **kwargs)
+#         LocalNameConflictsRandomDistributionValidator(component_class,
+#                                                       **kwargs)
+#         DimensionNameConflictsRandomDistributionValidator(component_class,
+#                                                           **kwargs)
+#         AliasesAreNotRecursiveRandomDistributionValidator(component_class,
+#                                                           **kwargs)
+#         NoUnresolvedSymbolsRandomDistributionValidator(component_class,
+#                                                        **kwargs)
+#         PortConnectionsRandomDistributionValidator(component_class, **kwargs)
 #         CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(
-#             component_class)
+#             component_class, **kwargs)
