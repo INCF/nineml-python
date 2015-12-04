@@ -243,14 +243,14 @@ class BasePortConnection(BaseULObject):
 
     def is_bound(self):
         if self._sender is None:
-            assert self._receiver is None
-            assert self._send_port is None
-            assert self._receive_port is None
+#             assert self._receiver is None
+#             assert self._send_port is None
+#             assert self._receive_port is None
             bound = False
         else:
-            assert self._receiver is not None
-            assert self._send_port is not None
-            assert self._receive_port is not None
+#             assert self._receiver is not None
+#             assert self._send_port is not None
+#             assert self._receive_port is not None
             bound = True
         return bound
 

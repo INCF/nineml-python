@@ -15,7 +15,7 @@ class PortConnectionsComponentValidator(BaseValidator):
     each send & recv port only has a single connection.
     """
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseValidator.__init__(self, require_explicit_overrides=False)
 
         self.ports = defaultdict(list)

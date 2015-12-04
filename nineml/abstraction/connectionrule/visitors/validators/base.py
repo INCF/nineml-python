@@ -24,18 +24,20 @@ class ConnectionRuleValidator(object):
     """Class for grouping all the component-validations tests together"""
 
     @classmethod
-    def validate_componentclass(cls, component_class):
+    def validate_componentclass(cls, component_class, **kwargs):
         """
         Tests a componentclassclass against a variety of tests, to verify its
         internal structure
         """
         # Check class structure:
-        TypesConnectionRuleValidator(component_class)
-#         NoDuplicatedObjectsConnectionRuleValidator(component_class)  # Commented out until perNamespaceValidator is removed @IgnorePep8
-#         LocalNameConflictsConnectionRuleValidator(component_class)
-#         DimensionNameConflictsConnectionRuleValidator(component_class)
-#         AliasesAreNotRecursiveConnectionRuleValidator(component_class)
-#         NoUnresolvedSymbolsConnectionRuleValidator(component_class)
-#         PortConnectionsConnectionRuleValidator(component_class)
+        TypesConnectionRuleValidator(component_class, **kwargs)
+#         NoDuplicatedObjectsConnectionRuleValidator(component_class, **kwargs)
+#         LocalNameConflictsConnectionRuleValidator(component_class, **kwargs)
+#         DimensionNameConflictsConnectionRuleValidator(component_class,
+#                                                       **kwargs)
+#         AliasesAreNotRecursiveConnectionRuleValidator(component_class,
+#                                                       **kwargs)
+#         NoUnresolvedSymbolsConnectionRuleValidator(component_class, **kwargs)
+#         PortConnectionsConnectionRuleValidator(component_class, **kwargs)
 #         CheckNoLHSAssignmentsToMathsNamespaceConnectionRuleValidator(
-#             component_class)
+#             component_class, **kwargs)

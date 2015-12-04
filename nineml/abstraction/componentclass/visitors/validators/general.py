@@ -21,7 +21,7 @@ class AliasesAreNotRecursiveComponentValidator(BaseValidator):
 
     """Check that aliases are not self-referential"""
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseValidator.__init__(
             self, require_explicit_overrides=False)
         self.visit(component_class)
@@ -58,7 +58,7 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
     parameters, aliases, statevariables and ports
     """
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, additional_symbols=[], **kwargs):  # @UnusedVariable @IgnorePep8
         BaseValidator.__init__(
             self, require_explicit_overrides=False)
 
@@ -67,6 +67,8 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
         self.time_derivatives = []
         self.state_assignments = []
         self.component_class = component_class
+        for symbol in additional_symbols:
+            self.add_symbol(symbol)
         self.visit(component_class)
 
         # Check Aliases:
@@ -117,7 +119,7 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
 
 class NoDuplicatedObjectsComponentValidator(BaseValidator):
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseValidator.__init__(self, require_explicit_overrides=True)
         self.all_objects = list()
         self.visit(component_class)
@@ -143,7 +145,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(BaseValidator):
     on the left-hand-side of an equation
     """
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseValidator.__init__(
             self, require_explicit_overrides=False)
 
@@ -168,7 +170,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(BaseValidator):
 
 class DimensionalityComponentValidator(BaseValidator):
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseValidator.__init__(self, require_explicit_overrides=False)
         self.component_class = component_class
         self._dimensions = {}

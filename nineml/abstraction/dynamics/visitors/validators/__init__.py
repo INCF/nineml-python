@@ -4,7 +4,7 @@ from ..base import DynamicsActionVisitor
 
 class BaseDynamicsValidator(BaseValidator, DynamicsActionVisitor):
 
-    def __init__(self, require_explicit_overrides=True):
+    def __init__(self, require_explicit_overrides=True, **kwargs):  # @UnusedVariable
         BaseValidator.__init__(
             self, require_explicit_overrides=require_explicit_overrides)
 

@@ -24,7 +24,7 @@ class TimeDerivativesAreDeclaredDynamicsValidator(
         as  StateVariables.
     """
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.sv_declared = []
@@ -49,7 +49,7 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.sv_declared = []
@@ -102,7 +102,7 @@ class NoUnresolvedSymbolsDynamicsValidator(
 
 class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.connected_regimes_from_regime = defaultdict(set)
@@ -179,7 +179,7 @@ class NoDuplicatedObjectsDynamicsValidator(
 class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
         BaseDynamicsValidator):
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False)
         self.visit(component_class)
@@ -212,7 +212,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
 class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
                                       BaseDynamicsValidator):
 
-    def __init__(self, component_class):
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(DimensionalityDynamicsValidator,
               self).__init__(component_class)
 
