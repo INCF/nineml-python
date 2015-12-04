@@ -835,11 +835,14 @@ class MultiDynamics(Dynamics):
             sub_regime_names = split_multi_regime_name(name)
         except TypeError:
             sub_regime_names = name  # Assume it is already an iterable
-        try:
-            assert len(sub_regime_names) == len(self._sub_component_keys)
-        except:
-            split_multi_regime_name(name)
-            raise
+        if len(sub_regime_names) != len(self._sub_component_keys):
+            raise NineMLNameError(
+                "The number of regime names extracted from '{}' ({}) does not "
+                "match the number of sub-components ('{}'). NB: the format for"
+                " multi-regimes is '___' delimited list of regime names sorted"
+                " by sub-component names)".format(
+                    name, len(sub_regime_names),
+                    "', '".join(self._sub_component_keys)))
         return self._create_multi_regime(
             self.sub_component(sc_n).regime(append_namespace(r_n, sc_n))
             for sc_n, r_n in izip(self._sub_component_keys, sub_regime_names))
