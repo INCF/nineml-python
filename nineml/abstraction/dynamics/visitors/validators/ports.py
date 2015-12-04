@@ -21,7 +21,7 @@ class EventPortsDynamicsValidator(BaseDynamicsValidator):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(EventPortsDynamicsValidator, self).__init__(
-            require_explicit_overrides=False)
+            require_explicit_overrides=False, **kwargs)
 
         # Mapping component_class to list of events/eventports at that
         # component_class
@@ -89,7 +89,7 @@ class OutputAnalogPortsDynamicsValidator(BaseDynamicsValidator):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(OutputAnalogPortsDynamicsValidator, self).__init__(
-            require_explicit_overrides=False)
+            require_explicit_overrides=False, **kwargs)
         self.output_analogports = []
         self.available_symbols = []
         self.component_class = component_class

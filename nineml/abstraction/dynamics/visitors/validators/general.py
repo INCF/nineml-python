@@ -26,7 +26,7 @@ class TimeDerivativesAreDeclaredDynamicsValidator(
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseDynamicsValidator.__init__(
-            self, require_explicit_overrides=False)
+            self, require_explicit_overrides=False, **kwargs)
         self.sv_declared = []
         self.time_derivatives_used = []
         self.visit(component_class)
@@ -51,7 +51,7 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseDynamicsValidator.__init__(
-            self, require_explicit_overrides=False)
+            self, require_explicit_overrides=False, **kwargs)
         self.sv_declared = []
         self.state_assignments_lhs = []
         self.visit(component_class)
@@ -104,7 +104,7 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseDynamicsValidator.__init__(
-            self, require_explicit_overrides=False)
+            self, require_explicit_overrides=False, **kwargs)
         self.connected_regimes_from_regime = defaultdict(set)
         self.regimes = set
         self.visit(component_class)
@@ -181,7 +181,7 @@ class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         BaseDynamicsValidator.__init__(
-            self, require_explicit_overrides=False)
+            self, require_explicit_overrides=False, **kwargs)
         self.visit(component_class)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
@@ -214,7 +214,7 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(DimensionalityDynamicsValidator,
-              self).__init__(component_class)
+              self).__init__(component_class, **kwargs)
 
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(timederivative)
