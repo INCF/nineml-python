@@ -175,6 +175,11 @@ class DimensionalityComponentValidator(BaseValidator):
         BaseValidator.__init__(self, require_explicit_overrides=False)
         self.component_class = component_class
         self._dimensions = {}
+        # Additional parameters can be used by custom derived classes to define
+        # other dimensioned variables that don't appear in the base 9ML
+        # structure
+        self._additional_parameters = dict(
+            (p.name, p) for p in additional_parameters)
         # Insert declared dimensions into dimensionality database
         for e in chain(
             component_class.elements(
@@ -196,20 +201,25 @@ class DimensionalityComponentValidator(BaseValidator):
             if element == sympy.Symbol('t'):  # Reserved symbol 't'
                 return sympy.Symbol('t')  # representation of the time dim.
             name = Expression.symbol_to_str(element)
-            element = None
-            for scope in reversed(self._scopes):
-                try:
-                    element = scope.element(
-                        name, class_map=self.class_to_visit.class_to_member)
-                except KeyError:
-                    pass
-            if element is None:
-                element = scope.element(
-                    name, class_map=self.class_to_visit.class_to_member)
-                raise NineMLRuntimeError(
-                    "Did not find '{}' in '{}' dynamics class (scopes: {})"
-                    .format(name, self.component_class.name,
-                            list(reversed(self._scopes))))
+            try:
+                # Check additional parameters first
+                element = self._additional_parameters[name]
+            except KeyError:
+                # Look back through the scope stack to find the referenced
+                # element
+                element = None
+                for scope in reversed(self._scopes):
+                    try:
+                        element = scope.element(
+                            name,
+                            class_map=self.class_to_visit.class_to_member)
+                    except KeyError:
+                        pass
+                if element is None:
+                    raise NineMLRuntimeError(
+                        "Did not find '{}' in '{}' dynamics class (scopes: {})"
+                        .format(name, self.component_class.name,
+                                list(reversed(self._scopes))))
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions

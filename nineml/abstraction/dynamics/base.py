@@ -130,7 +130,9 @@ class Dynamics(ComponentClass):
 
         # Check any supplied parameters match:
         if parameters is not None:
-            inf_check(self._parameters.keys(), inferred_struct.parameter_names,
+            inf_check((self._parameters.keys() +
+                       kwargs.get('additional_parameters', [])),
+                      inferred_struct.parameter_names,
                       desc=("\nPlease check for references to missing "
                             "parameters in component class '{}'.\n"
                             .format(self.name)))
