@@ -701,7 +701,7 @@ class MultiDynamics(Dynamics):
                 if (((sub_comp.name, port.name) not in
                      self._analog_port_connections) and
                     (append_namespace(port.name, sub_comp.name) not in
-                     pe.local_port_name for pe in self.analog_reduce_ports)):
+                     (pe.local_port_name for pe in self.analog_reduce_ports))):
                     unused_reduce_ports.append(
                         Constant(append_namespace(port.name, sub_comp.name),
                                  0.0, port.dimension.origin.units))
