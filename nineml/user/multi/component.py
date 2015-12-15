@@ -200,6 +200,10 @@ class SubDynamicsProperties(BaseULObject):
         self._name = name
         self._component = component
 
+    def __repr__(self):
+        return "SubDynamics(name={}, component={})".format(self.name,
+                                                           self.component)
+
     @property
     def name(self):
         return self._name
@@ -694,8 +698,10 @@ class MultiDynamics(Dynamics):
         unused_reduce_ports = []
         for sub_comp in self.sub_components:
             for port in sub_comp.analog_reduce_ports:
-                if (sub_comp.name,
-                        port.name) not in self._analog_port_connections:
+                if (((sub_comp.name, port.name) not in
+                     self._analog_port_connections) and
+                    (append_namespace(port.name, sub_comp.name) not in
+                     pe.local_port_name for pe in self.analog_reduce_ports)):
                     unused_reduce_ports.append(
                         Constant(append_namespace(port.name, sub_comp.name),
                                  0.0, port.dimension.origin.units))
