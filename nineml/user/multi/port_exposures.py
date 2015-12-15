@@ -218,6 +218,10 @@ class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
     def alias(self):
         return _ReceivePortExposureAlias(self)
 
+    @property
+    def operator(self):
+        return self.port.operator
+
 
 class EventSendPortExposure(BasePortExposure, EventSendPort):
 
