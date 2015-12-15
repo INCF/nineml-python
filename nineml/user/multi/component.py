@@ -695,18 +695,13 @@ class MultiDynamics(Dynamics):
     def constants(self):
         # We need to insert a 0-valued constant for each internal reduce port
         # that doesn't receive any connections
-        unused_reduce_ports = []
-        for sub_comp in self.sub_components:
-            for port in sub_comp.analog_reduce_ports:
-                if (((sub_comp.name, port.name) not in
-                     self._analog_port_connections) and
-                    (append_namespace(port.name, sub_comp.name) not in
-                     (pe.local_port_name for pe in self.analog_reduce_ports))):
-                    unused_reduce_ports.append(
-                        Constant(append_namespace(port.name, sub_comp.name),
-                                 0.0, port.dimension.origin.units))
-        return chain(unused_reduce_ports,
-                     *[sc.constants for sc in self.sub_components])
+        unused_reduce_ports = (
+            set(chain(*(sc.analog_reduce_ports for sc in self.sub_components)))
+            - set(self._connected_reduce_ports()))
+        return chain(
+            (Constant(p.name, 0.0, p.dimension.origin.units)
+             for p in unused_reduce_ports),
+            *[sc.constants for sc in self.sub_components])
 
     @property
     def state_variables(self):
@@ -823,9 +818,9 @@ class MultiDynamics(Dynamics):
         except NineMLNameError:
             try:
                 reduce_port = sub_component.analog_reduce_port(port_name)
-                if (comp_name, port_name) not in self._analog_port_connections:
-                    return Constant(name, 0.0,
-                                    reduce_port.dimension.origin.units)
+                if reduce_port not in self._connected_reduce_ports():
+                    return Constant(
+                        name, 0.0, reduce_port.dimension.origin.units)
                 else:
                     raise NineMLNameError(
                         "'{}' corresponds to a AnalogReduce port, but one that"
@@ -917,6 +912,11 @@ class MultiDynamics(Dynamics):
                         "port-exposure in MultiDynamics object '{}'"
                         .format(port.name, sub_component.name, self.name))
         super(MultiDynamics, self).validate(**kwargs)
+
+    def _connected_reduce_ports(self):
+        return chain(
+            (pe.port for pe in self.analog_reduce_ports),
+            (pc.receive_port for pc in self.analog_port_connections))
 
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and
