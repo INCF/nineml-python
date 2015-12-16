@@ -11,7 +11,6 @@ from nineml.utils import assert_no_duplicates
 from nineml.base import BaseNineMLObject
 import operator
 import sympy
-from itertools import chain
 from sympy import sympify
 from nineml.base import SendPortBase
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
@@ -169,6 +168,8 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(BaseValidator):
 
 class DimensionalityComponentValidator(BaseValidator):
 
+    _RECURSION_MAX = 450
+
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         BaseValidator.__init__(self, require_explicit_overrides=False)
         self.component_class = component_class
@@ -185,6 +186,7 @@ class DimensionalityComponentValidator(BaseValidator):
                         self._dimensions[e] = sympify(e.units.dimension)
                     except AttributeError:
                         pass  # If element doesn't have units attribute
+        self._recursion_count = 0
         self.visit(component_class)
 
     def _get_dimensions(self, element):
@@ -212,10 +214,22 @@ class DimensionalityComponentValidator(BaseValidator):
         except AttributeError:  # for basic sympy expressions
             expr = element
         try:
-            return self._dimensions[element]
+            dims = self._dimensions[element]
+            self._recursion_count = 0
         except (KeyError, AttributeError):  # for derived dimensions
+            if self._recursion_count > self._RECURSION_MAX:
+                assert False, (
+                    "'{}' is not defined.\nDefined symbols:\n{}"
+                    "\n\nElements:\n{}".format(
+                        expr, "\n".join(
+                            str(e) for e in self._dimensions.iterkeys()),
+                        "\n".join(
+                            str(e) for e in self.component_class.elements(
+                                class_map=self.class_to_visit.class_to_member))
+                    ))
+            self._recursion_count += 1
             dims = self._flatten_dims(expr, element)
-        self._dimensions[element] = dims
+            self._dimensions[element] = dims
         return dims
 
     def _flatten_dims(self, expr, element):

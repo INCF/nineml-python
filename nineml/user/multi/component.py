@@ -3,7 +3,7 @@ from copy import copy
 from .. import BaseULObject
 import sympy
 import operator
-from itertools import product, groupby, izip
+from itertools import product, groupby, izip, repeat
 from nineml.reference import resolve_reference, write_reference
 from nineml.base import DocumentLevelObject
 from nineml.xml import (
@@ -693,14 +693,17 @@ class MultiDynamics(Dynamics):
 
     @property
     def constants(self):
+        1 + 1
         # We need to insert a 0-valued constant for each internal reduce port
         # that doesn't receive any connections
         unused_reduce_ports = (
-            set(chain(*(sc.analog_reduce_ports for sc in self.sub_components)))
+            set(chain(*(izip(repeat(sc.name), sc.analog_reduce_ports)
+                        for sc in self.sub_components)))
             - set(self._connected_reduce_ports()))
         return chain(
-            (Constant(p.name, 0.0, p.dimension.origin.units)
-             for p in unused_reduce_ports),
+            (Constant(append_namespace(port.name, sub_comp_name), 0.0,
+                                       port.dimension.origin.units)
+             for sub_comp_name, port in unused_reduce_ports),
             *[sc.constants for sc in self.sub_components])
 
     @property
@@ -799,10 +802,10 @@ class MultiDynamics(Dynamics):
                 alias = self.analog_send_port(name).alias
             except KeyError:
                 try:
-                    alias = next(p.alias
-                                 for p in chain(self.analog_receive_ports,
-                                                self.analog_reduce_ports)
-                                 if p.alias.lhs == name)
+                    alias = next(
+                        p.alias for p in chain(self.analog_receive_ports,
+                                               self.analog_reduce_ports)
+                        if p.alias.lhs == name and p.local_port_name != p.name)
                 except StopIteration:
                     raise NineMLNameError(
                         "Could not find alias corresponding to '{}' in "
@@ -818,7 +821,8 @@ class MultiDynamics(Dynamics):
         except NineMLNameError:
             try:
                 reduce_port = sub_component.analog_reduce_port(port_name)
-                if reduce_port not in self._connected_reduce_ports():
+                if ((sub_component.name, reduce_port) not in
+                        self._connected_reduce_ports()):
                     return Constant(
                         name, 0.0, reduce_port.dimension.origin.units)
                 else:
@@ -915,8 +919,10 @@ class MultiDynamics(Dynamics):
 
     def _connected_reduce_ports(self):
         return chain(
-            (pe.port for pe in self.analog_reduce_ports),
-            (pc.receive_port for pc in self.analog_port_connections))
+            ((pe.sub_component.name, pe.port)
+             for pe in self.analog_reduce_ports),
+            ((pc.receiver_name, pc.receive_port)
+             for pc in self.analog_port_connections))
 
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and
