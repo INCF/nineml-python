@@ -3,9 +3,8 @@ from operator import and_
 from .base import BaseNineMLObject
 from nineml.xml import (
     E, ALL_NINEML, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
-from nineml.annotations import annotate_xml, read_annotations
+from nineml.annotations import read_annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLXMLAttributeError
-from nineml.document import Document
 from nineml.exceptions import NineMLNameError
 
 
@@ -15,6 +14,8 @@ class BaseReference(BaseNineMLObject):
     Base class for references to model components that are defined in the
     abstraction layer.
     """
+
+    defining_attributes = ('url', '_referred_to')
 
     def __init__(self, name, document, url=None):
         super(BaseReference, self).__init__()
