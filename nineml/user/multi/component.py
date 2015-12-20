@@ -629,12 +629,9 @@ class MultiDynamics(Dynamics):
         return DynamicsCloner().visit(self)
 
     def __repr__(self):
-        return ("MultiDynamics(name='{}', sub_components=[{}], "
-                "port_exposures=[{}], port_connections=[{}])"
-                .format(self.name,
-                        ', '.join(str(sc) for sc in self.sub_components),
-                        ', '.join(str(pe) for pe in self.port_exposures),
-                        ', '.join(str(pc) for pc in self.port_connections)))
+        return ("MultiDynamics(name='{}', sub_components=[{}])"
+                .format(self.name, ', '.join(str(sc)
+                                             for sc in self.sub_components)))
 
     @property
     def sub_components(self):

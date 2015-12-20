@@ -137,12 +137,14 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                 name=name,
                 document=document,
                 url=defn_url)
-        elif isinstance(definition, ComponentClass):
+        elif (isinstance(definition, ComponentClass) or
+              definition.nineml_type in ('Dynamics', 'MultiDynamics')):
             definition = Definition(definition)
-        elif isinstance(definition, Component):
+        elif (isinstance(definition, Component) or
+              definition.nineml_type in ('DynamicsProperties',
+                                         'MultiDynamicsProperties')):
             definition = Prototype(definition)
-        elif not (isinstance(definition, Definition) or
-                  isinstance(definition, Prototype)):
+        elif definition.nineml_type not in ('Definition', 'Prototype'):
             raise ValueError("'definition' must be either a 'Definition' or "
                              "'Prototype' element")
         self._definition = definition
