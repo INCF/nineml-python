@@ -92,7 +92,7 @@ class BaseNineMLObject(object):
             result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
                        .format(self.nineml_type, other.nineml_type))
         else:
-            for attr_name in self.__class__.defining_attributes:
+            for attr_name in self.defining_attributes:
                 self_attr = getattr(self, attr_name)
                 other_attr = getattr(other, attr_name)
                 if self_attr != other_attr:
