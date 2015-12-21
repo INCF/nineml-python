@@ -237,8 +237,9 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         if diff_a:
             msg.append("User properties of '{}' contain the following "
                        "parameters that are not present in the definition of "
-                       "'{}': {}".format(self.name, self.component_class.name,
-                                         ",".join(diff_a)))
+                       "'{}': {}\n\n".format(
+                           self.name, self.component_class.name,
+                           ",".join(diff_a)))
         if diff_b:
             msg.append("Definition of '{}' contains the following parameters "
                        "that are not present in the user properties of '{}': "

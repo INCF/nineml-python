@@ -216,8 +216,8 @@ class Dynamics(ComponentClass):
     def _find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)
 
-    def __repr__(self):
-        return "<dynamics.Dynamics %s>" % self.name
+#     def __repr__(self):
+#         return "<dynamics.Dynamics %s>" % self.name
 
     def validate(self, validate_dimensions=None, **kwargs):
         if validate_dimensions is None:

@@ -61,6 +61,13 @@ class BaseNineMLObject(object):
                 return False
         return True
 
+    def __repr__(self):
+        return '{}({})'.format(
+            self.__class__.__name__,
+            ', '.join(n + '=' + (v if len(v) < 150 else v[:150] + ' ...)')
+                      for n, v in ((a, repr(getattr(self, a)))
+                                   for a in self.defining_attributes)))
+
     def __ne__(self, other):
         return not self == other
 
