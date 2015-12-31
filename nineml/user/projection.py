@@ -271,8 +271,8 @@ class Projection(BaseULObject, DocumentLevelObject):
         DocumentLevelObject.__init__(self, document)
         assert isinstance(name, basestring)
         assert isinstance(delay, Quantity)
-        assert isinstance(pre, Population)
-        assert isinstance(post, Population)
+        assert isinstance(pre, (Population, Selection))
+        assert isinstance(post, (Population, Selection))
         assert isinstance(response, DynamicsProperties)
         assert isinstance(plasticity, (DynamicsProperties, type(None)))
         self._name = name
