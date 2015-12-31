@@ -112,6 +112,10 @@ class Selection(BaseULObject, DocumentLevelObject):
     def populations(self):
         return self.operation.items
 
+    @property
+    def size(self):
+        return sum(p.size for p in self.populations)
+
     port = combined_port_accessor(Population.port)
     ports = combined_ports_property(Population.ports)
     send_port = combined_port_accessor(Population.send_port)
