@@ -40,7 +40,7 @@ class ConnectionRuleXMLLoader(ComponentClassXMLLoader):
         subblocks = ()
         children = self._load_blocks(element, blocks=subblocks)  # @UnusedVariable @IgnorePep8
         return ConnectionRuleBlock(
-            standard_library=element.attrib['standardLibrary'])
+            standard_library=element.attrib['standard_library'])
 
     tag_to_loader = {
         "ComponentClass": load_componentclass,
@@ -60,6 +60,6 @@ class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
     @annotate_xml
     def visit_connectionruleblock(self, connectionrule):
         return E('ConnectionRule',
-                 standardLibrary=connectionrule.standard_library)
+                 standard_library=connectionrule.standard_library)
 
 from ..base import ConnectionRule, ConnectionRuleBlock
