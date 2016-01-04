@@ -1,3 +1,4 @@
+import os.path
 import re
 from itertools import chain
 from abc import ABCMeta, abstractmethod
@@ -194,6 +195,13 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                       populations=populations, projections=projections,
                       selections=selections)
         return network
+
+    @classmethod
+    def from_document(cls, document):
+        name = os.path.splitext(os.path.basename(document.url))[0]
+        return Network(name=name, populations=document.populations,
+                       projections=document.projections,
+                       selections=document.selections, document=document)
 
     _conn_group_name_re = re.compile(
         r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')
