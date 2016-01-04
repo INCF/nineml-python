@@ -212,10 +212,10 @@ class ComponentArray(BaseULObject):
     nineml_type = "ComponentArray"
     defining_attributes = ('name', "_size", "_dynamics")
 
-    def __init__(self, name, size, dynamics):
+    def __init__(self, name, size, dynamics_properties):
         self._name = name
         self._size = size
-        self._dynamics = dynamics
+        self._dynamics_properties = dynamics_properties
 
     @property
     def name(self):
@@ -226,8 +226,8 @@ class ComponentArray(BaseULObject):
         return self._size
 
     @property
-    def dynamics(self):
-        return self._dynamics
+    def dynamics_properties(self):
+        return self._dynamics_properties
 
 
 class BaseConnectionGroup(BaseULObject):
