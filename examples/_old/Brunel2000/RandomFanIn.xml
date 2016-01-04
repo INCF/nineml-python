@@ -2,6 +2,6 @@
 <NineML xmlns="http://nineml.net/9ML/1.0">
   <ComponentClass name="RandomFanIn">
     <Parameter name="number"/>
-    <ConnectionRule standardLibrary="RandomFanIn" />
+    <ConnectionRule standard_library="RandomFanIn" />
   </ComponentClass>
 </NineML>
