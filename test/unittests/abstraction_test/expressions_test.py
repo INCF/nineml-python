@@ -123,7 +123,7 @@ class Expression_test(unittest.TestCase):
         self.assertEquals(Expression("a^(a - 2)").rhs_cstr, 'pow(a, a - 2)')
 
 
-class AnsiC89ToSympy_test(unittest.TestCase):
+class C89ToSympy_test(unittest.TestCase):
 
     def setUp(self):
         self.a = sympy.Symbol('a')
@@ -235,6 +235,10 @@ class SympyToC89_test(unittest.TestCase):
     def test_negation(self):
         expr = Expression(sympy.Not(self.a))
         self.assertEqual(expr.rhs_cstr, '!a')
+
+    def test_random(self):
+        expr = Expression('random.exponential(a)')
+        self.assertEqual(expr.rhs_cstr, 'random_exponential_(a)')
 
 
 class SympifyTest(unittest.TestCase):
