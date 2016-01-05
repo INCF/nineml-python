@@ -472,6 +472,17 @@ class Quantity(BaseNineMLObject):
                 .format(self.units.dimension, units.dimension))
         self.units = units
 
+    def in_units(self, units):
+        """
+        Returns a float value in terms of the given units (dimensions must be
+        equivalent)
+        """
+        if units.dimension != self.units.dimension:
+            raise NineMLRuntimeError(
+                "Can't change convert quantity dimension from '{}' to '{}'"
+                .format(self.units.dimension, units.dimension))
+        return float(self.value) * 10 ** (self.units.power - units.power)
+
     def __repr__(self):
         units = self.units.name
         if u"µ" in units:

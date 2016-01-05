@@ -24,7 +24,7 @@ builtin_functions = set([
 reserved_symbols = set(['t'])
 reserved_identifiers = set(chain(builtin_constants, builtin_functions,
                                  reserved_symbols))
-from .parser import Parser
+from .parser import Parser  # @IgnorePep8
 
 
 class Expression(object):
