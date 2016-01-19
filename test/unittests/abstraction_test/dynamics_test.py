@@ -4,7 +4,7 @@ from nineml.abstraction import (
     Dynamics, AnalogSendPort, Alias,
     AnalogReceivePort, AnalogReducePort, Regime, On,
     OutputEvent, EventReceivePort, Constant, StateVariable, Parameter,
-    OnCondition, OnEvent)
+    OnCondition, OnEvent, Trigger)
 import nineml.units as un
 from nineml.exceptions import NineMLMathParseError, NineMLRuntimeError
 from nineml.document import Document
@@ -772,6 +772,17 @@ class OnCondition_test(unittest.TestCase):
             python_func = c.trigger.rhs_as_python_func
             param_dict = dict([(v, namespace[v]) for v in expt_vars])
             self.assertEquals(return_values[i], python_func(**param_dict))
+
+    def test_trigger_crossing_time_expr(self):
+        self.assertEqual(Trigger('t > t_next').crossing_time_expr.rhs,
+                         sympify('t_next'))
+        self.assertEqual(Trigger('t^2 > t_next').crossing_time_expr, None)
+        self.assertEqual(Trigger('a < b').crossing_time_expr, None)
+        self.assertEqual(
+            Trigger('t > t_next || t > t_next2').crossing_time_expr.rhs,
+            sympify('Min(t_next, t_next2)'))
+        self.assertEqual(
+            Trigger('t > t_next || a < b').crossing_time_expr, None)
 
 
 class OnEvent_test(unittest.TestCase):

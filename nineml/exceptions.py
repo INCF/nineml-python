@@ -6,7 +6,11 @@ Exceptions specific to the 9ML library
 """
 
 
-class NineMLRuntimeError(Exception):
+class NineMLException(Exception):
+    pass
+
+
+class NineMLRuntimeError(NineMLException):
     pass
 
 
@@ -43,6 +47,10 @@ class NineMLXMLAttributeError(NineMLXMLError):
 
 
 class NineMLXMLBlockError(NineMLXMLError):
+    pass
+
+
+class NineMLNoSolutionException(NineMLException):
     pass
 
 
