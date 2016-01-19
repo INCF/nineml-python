@@ -27,6 +27,9 @@ reserved_identifiers = set(chain(builtin_constants, builtin_functions,
 from .parser import Parser  # @IgnorePep8
 
 
+t = sympy.Symbol('t')  # The symbol for time
+
+
 class Expression(object):
 
     """ This is a base class for Expressions and Conditionals which provides
@@ -439,12 +442,12 @@ class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):
 
     defining_attributes = ('name', 'rhs')
 
-    def __init__(self, lhs, rhs):
+    def __init__(self, lhs, rhs, assign_to_reserved=False):
         ExpressionWithLHS.__init__(self, rhs)
         if not is_single_symbol(lhs):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
             raise NineMLRuntimeError(err)
-        if not is_valid_lhs_target(lhs):
+        if not assign_to_reserved and not is_valid_lhs_target(lhs):
             err = 'Invalid LHS target: %s' % lhs
             raise NineMLRuntimeError(err)
         self._name = lhs.strip()
@@ -523,4 +526,4 @@ class ODE(ExpressionWithLHS):
         return [self.independent_variable, self.dependent_variable]
 
 
-from .utils import str_to_npfunc_map, is_single_symbol, is_valid_lhs_target
+from .utils import str_to_npfunc_map, is_single_symbol, is_valid_lhs_target  # @IgnorePep8

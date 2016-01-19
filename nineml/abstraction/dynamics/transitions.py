@@ -6,13 +6,15 @@ This file contains the definitions for the Events
 """
 
 from copy import copy
+import sympy.solvers
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction.componentclass import BaseALObject
-from ..expressions import Expression, ExpressionWithSimpleLHS
+from ..expressions import Expression, ExpressionWithSimpleLHS, t
 from nineml.exceptions import (NineMLRuntimeError,
                                NineMLInvalidElementTypeException, name_error)
 from nineml.base import ContainerObject
 from nineml.utils import normalise_parameter_as_list
+from nineml.exceptions import NineMLNoSolutionException
 
 
 class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
@@ -442,5 +444,44 @@ class Trigger(BaseALObject, Expression):
         negated.negate()
         return negated
 
+    @property
+    def crossing_time_expr(self):
+        """
+        Get an expression for the exact time of the trigger if it depends on
+        t. Will not be able to solve for time from complex equations but should
+        be able to handle common basic cases (e.g. t > next_spike_time).
+        """
+        try:
+            return ExpressionWithSimpleLHS('t', self._becomes_true(self.rhs),
+                                           assign_to_reserved=True)
+        except NineMLNoSolutionException:
+            return None
 
-from .visitors.queriers import DynamicsElementFinder
+    @classmethod
+    def _becomes_true(cls, expr):
+        if t not in expr.atoms():
+            # TODO: For sub expressions that don't involve t, this could be
+            #       handled by a piecewise expression
+            raise NineMLNoSolutionException
+        if isinstance(expr, (sympy.StrictGreaterThan,
+                             sympy.StrictLessThan)):
+            # Get the equation for the transition between true and false
+            equality = sympy.Eq(*expr.args)
+            solution = sympy.solvers.solve(equality, t)
+            try:
+                if len(solution) != 1:
+                    raise NineMLNoSolutionException
+            except TypeError:
+                raise NineMLNoSolutionException
+            time_expr = solution[0]
+        elif isinstance(expr, sympy.Or):
+            time_expr = sympy.Min(*(cls._becomes_true(a) for a in expr.args))
+        else:
+            # TODO: Should add handling for And expressions but will need
+            # conditional handling for expressions that are true and then
+            # become false.
+            raise NineMLNoSolutionException
+        return time_expr
+
+
+from .visitors.queriers import DynamicsElementFinder  # @IgnorePep8
