@@ -5,7 +5,6 @@ import sympy
 import operator
 from itertools import product, groupby, izip, repeat
 from nineml.reference import resolve_reference, write_reference
-from nineml.base import DocumentLevelObject
 from nineml.xml import (
     nineml_ns, E, from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.user import DynamicsProperties, Definition
@@ -16,7 +15,7 @@ from nineml.exceptions import (
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
-from nineml.base import ContainerObject
+from nineml.base import ContainerObject, DocumentLevelObject
 from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
 from nineml import units as un
 from nineml.annotations import VALIDATE_DIMENSIONS
