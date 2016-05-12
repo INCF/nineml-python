@@ -231,7 +231,7 @@ class ContainerObject(object):
         return chain(*(self._members_iter(et, class_map=class_map)
                        for et in class_map))
 
-    def element(self, name, class_map=None):
+    def element(self, name, class_map=None, send_ports=False):
         """
         Looks a member item by "name" (identifying characteristic)
         """
@@ -243,7 +243,7 @@ class ContainerObject(object):
                     element_type, class_map=class_map)(name)
                 # Ignore send ports as they otherwise mask
                 # aliases/state variables
-                if not isinstance(elem, SendPortBase):
+                if not isinstance(elem, SendPortBase) or send_ports:
                     return elem
             except NineMLNameError:
                 pass
