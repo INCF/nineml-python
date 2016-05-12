@@ -194,7 +194,8 @@ class ComponentDimensionResolver(ComponentActionVisitor):
 
     def dimension_of(self, element):
         if isinstance(element, basestring):
-            element = self.component_class.element(element)
+            element = self.component_class.element(
+                element, class_map=self.class_to_visit.class_to_member)
         return Dimension.from_sympy(self._flatten(element))
 
     def _flatten(self, expr, **kwargs):  # @UnusedVariable
