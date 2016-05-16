@@ -221,8 +221,14 @@ class Connectivity(BaseConnectivity):
         return conn
 
     def has_been_sampled(self):
-        return (self.lib_type in ('AllToAll', 'OneToOne',
-                                  'ExplicitConnectionList') or
+        """
+        Check to see whether randomly drawn values in the Connectivity object
+        have been sampled (and cached) or not. Caching of random values allows
+        multiple connection groups to reference the same instance of the
+        connectivity (for example if they form part of one logical projection)
+        """
+        return (self.lib_type not in ('AllToAll', 'OneToOne',
+                                      'ExplicitConnectionList') and
                 self._cache is not None)
 
 
@@ -342,9 +348,8 @@ class Projection(BaseULObject, DocumentLevelObject):
         if connectivity_class is None:
             connectivity_class = type(self.connectivity)
         self._connectivity = connectivity_class(
-            self.connectivity.connection_rule_properties,
-            self.connectivity.source_size, self.connectivity.destination_size,
-            **kwargs)
+            self.connectivity.rule_properties, self.connectivity.source_size,
+            self.connectivity.destination_size, **kwargs)
 
     def __repr__(self):
         return ('Projection(name="{}", pre={}, post={}, '

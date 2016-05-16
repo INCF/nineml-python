@@ -699,8 +699,8 @@ class MultiDynamics(Dynamics):
         # that doesn't receive any connections
         unused_reduce_ports = (
             set(chain(*(izip(repeat(sc.name), sc.analog_reduce_ports)
-                        for sc in self.sub_components)))
-            - set(self._connected_reduce_ports()))
+                        for sc in self.sub_components))) -
+            set(self._connected_reduce_ports()))
         return chain(
             (Constant(append_namespace(port.name, sub_comp_name), 0.0,
                                        port.dimension.origin.units)
