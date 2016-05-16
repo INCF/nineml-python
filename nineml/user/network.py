@@ -160,9 +160,9 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
             components.extend(p.get_components())
         return components
 
-    def resample_connectivity(self, **kwargs):
+    def resample_connectivity(self, *args, **kwargs):
         for projection in self.projections:
-            projection.resample_connectivity(**kwargs)
+            projection.resample_connectivity(*args, **kwargs)
 
     def connectivity_has_been_sampled(self):
         return any(p.connectivity.has_been_sampled() for p in self.projections)
