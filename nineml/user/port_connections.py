@@ -237,8 +237,8 @@ class BasePortConnection(BaseULObject):
                 self.receive_port_name)
         except NineMLNameError:
             raise NineMLNameError(
-                "Could not bind to missing receive port, '{}', in '{}'"
-                .format(self.receive_port_name, self.receiver.name))
+                "Could not bind {} to missing receive port, '{}', in '{}'"
+                .format(self, self.receive_port_name, self.receiver.name))
         self._check_ports()
 
     def is_bound(self):

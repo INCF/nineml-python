@@ -321,7 +321,7 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
       </Quantity>
     </Delay>
     <AnalogPortConnection sender_role="response" receiver_role="post" send_port="a" receive_port="i_ext"/>
-    <EventPortConnection sender_role="pre" receiver_role="response" send_port="spike" receive_port="spike"/>    
+    <EventPortConnection sender_role="pre" receiver_role="response" send_port="spike" receive_port="spike"/>
   </Projection>
   <Dimension name="time" t="1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>

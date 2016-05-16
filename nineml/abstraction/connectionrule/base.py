@@ -100,11 +100,11 @@ class ConnectionRule(ComponentClass):
                                  'RandomFanOut')
 
 
-from .visitors.modifiers import (
+from .visitors.modifiers import (  # @IgnorePep8
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
-from .visitors.queriers import (
+from .visitors.queriers import (  # @IgnorePep8
     ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder,
     ConnectionRuleExpressionExtractor, ConnectionRuleDimensionResolver)
-from .visitors.validators import ConnectionRuleValidator
-from .visitors.xml import (
+from .visitors.validators import ConnectionRuleValidator  # @IgnorePep8
+from .visitors.xml import (  # @IgnorePep8
     ConnectionRuleXMLLoader, ConnectionRuleXMLWriter)
