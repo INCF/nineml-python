@@ -29,17 +29,18 @@ class BaseConnectivity(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, connection_rule_properties, source, destination,
+    def __init__(self, connection_rule_properties, source_size,
+                 destination_size,
                  **kwargs):  # @UnusedVariable
         if (connection_rule_properties.lib_type == 'OneToOne' and
-                source.size != destination.size):
+                source_size != destination_size):
             raise NineMLRuntimeError(
                 "Cannot connect to populations of different sizes "
                 "({} and {}) with OneToOne connection rule"
-                .format(self._src_size, self._dest_size))
+                .format(source_size, destination_size))
         self._rule_props = connection_rule_properties
-        self._src_size = source.size
-        self._dest_size = destination.size
+        self._src_size = source_size
+        self._dest_size = destination_size
         self._cache = None
         self._kwargs = kwargs
 
@@ -287,7 +288,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._response = response
         self._plasticity = plasticity
         self._connectivity = connectivity_class(
-            connectivity, pre, post, **kwargs)
+            connectivity, pre.size, post.size, **kwargs)
         self._delay = delay
         self._analog_port_connections = []
         self._event_port_connections = []
