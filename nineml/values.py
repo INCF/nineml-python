@@ -101,7 +101,7 @@ class SingleValue(BaseValue):
         return self._value
 
     def __int__(self):
-        return self._value
+        return int(self._value)
 
     def __add__(self, num):
         return self._value + num
