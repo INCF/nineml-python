@@ -85,26 +85,27 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     """
     Base class for model components.
 
-    A :class:`Component` may be regarded as a parameterized instance of a
-    :class:`~nineml.abstraction.ComponentClass`.
+    A Component may be regarded as a parameterized instance of a
+    nineml.abstraction.ComponentClass.
 
     A component_class may be created either from a
-    :class:`~nineml.abstraction.ComponentClass`  together with a set
+    nineml.abstraction.ComponentClass  together with a set
     of properties (parameter values), or by cloning then modifying an
     existing component_class (the prototype).
 
-    *Arguments*:
-        `name`:
-             a name for the component_class.
-        `definition`:
-             the URL of an abstraction layer component_class class definition,
-             a :class:`Definition` or a :class:`Prototype` instance.
-        `properties`:
-             a dictionary containing (value,units) pairs or a
-             :class:`PropertySet` for the component_class's properties.
-        `initial_values`:
-            a dictionary containing (value,units) pairs or a
-            :class:`PropertySet` for the component_class's state variables.
+    Parameters
+    ----------
+    name : str
+        a name for the component_class.
+    definition : Definition
+        the URL of an abstraction layer component_class class definition,
+        a Definition or a Prototype instance.
+    properties : List[Property]|Dict[str,Quantity]
+        a dictionary containing (value,units) pairs or a
+        for the component_class's properties.
+    initial_values : List[Property]|Dict[str,Quantity]
+        a dictionary containing (value,units) pairs or a
+        for the component_class's state variables.
 
     """
     __metaclass__ = ABCMeta  # Abstract base class
@@ -193,20 +194,20 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     def definition(self):
         return self._definition
 
-    def set(self, prop):
-        try:
-            param = self.component_class.parameter(prop.name)
-        except KeyError:
-            raise NineMLRuntimeError(
-                "'{}' is not a parameter of components of class '{}'"
-                .format(prop.name, self.component_class.name))
-        if prop.units.dimension != param.dimension:
-            raise NineMLUnitMismatchError(
-                "Dimensions for '{}' property ('{}') don't match that of "
-                "component_class class ('{}')."
-                .format(prop.name, prop.units.dimension.name,
-                        param.dimension.name))
-        self._properties[prop.name] = prop
+#     def set(self, prop):
+#         try:
+#             param = self.component_class.parameter(prop.name)
+#         except KeyError:
+#             raise NineMLRuntimeError(
+#                 "'{}' is not a parameter of components of class '{}'"
+#                 .format(prop.name, self.component_class.name))
+#         if prop.units.dimension != param.dimension:
+#             raise NineMLUnitMismatchError(
+#                 "Dimensions for '{}' property ('{}') don't match that of "
+#                 "component_class class ('{}')."
+#                 .format(prop.name, prop.units.dimension.name,
+#                         param.dimension.name))
+#         self._properties[prop.name] = prop
 
     @property
     def attributes_with_units(self):
@@ -357,77 +358,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     @property
     def num_receive_ports(self):
         return self.component_class.num_receive_ports
-
-    def analog_receive_port(self, name):
-        return self.component_class.analog_receive_port(name)
-
-    @property
-    def analog_receive_ports(self):
-        return self.component_class.analog_receive_ports
-
-    @property
-    def analog_receive_port_names(self):
-        return self.component_class.analog_receive_port_names
-
-    @property
-    def num_analog_receive_ports(self):
-        return self.component_class.num_analog_receive_ports
-
-    def analog_send_port(self, name):
-        return self.component_class.analog_send_port(name)
-
-    @property
-    def analog_send_ports(self):
-        return self.component_class.analog_send_ports
-
-    @property
-    def analog_send_port_names(self):
-        return self.component_class.analog_send_port_names
-
-    @property
-    def num_analog_send_ports(self):
-        return self.component_class.num_analog_send_ports
-
-    def analog_reduce_port(self, name):
-        return self.component_class.analog_reduce_port(name)
-
-    @property
-    def analog_reduce_ports(self):
-        return self.component_class.analog_reduce_ports
-
-    @property
-    def analog_reduce_port_names(self):
-        return self.component_class.analog_reduce_port_names
-
-    @property
-    def num_analog_reduce_ports(self):
-        return self.component_class.num_analog_reduce_ports
-
-    def event_receive_port(self, name):
-        return self.component_class.event_receive_port(name)
-
-    @property
-    def event_receive_ports(self):
-        return self.component_class.event_receive_ports
-
-    @property
-    def event_receive_port_names(self):
-        return self.component_class.event_receive_port_names
-
-    @property
-    def num_event_receive_ports(self):
-        return self.component_class.num_event_receive_ports
-
-    def event_send_port(self, name):
-        return self.component_class.event_send_port(name)
-
-    @property
-    def event_send_ports(self):
-        return self.component_class.event_send_ports
-
-    @property
-    def event_send_port_names(self):
-        return self.component_class.event_send_port_names
 
     def elements(self, local=False):
         """
@@ -701,6 +631,77 @@ class DynamicsProperties(Component):
                                         **kwargs)
         return cls(name, definition, properties=properties,
                    initial_values=initial_values, document=document)
+
+    def analog_receive_port(self, name):
+        return self.component_class.analog_receive_port(name)
+
+    @property
+    def analog_receive_ports(self):
+        return self.component_class.analog_receive_ports
+
+    @property
+    def analog_receive_port_names(self):
+        return self.component_class.analog_receive_port_names
+
+    @property
+    def num_analog_receive_ports(self):
+        return self.component_class.num_analog_receive_ports
+
+    def analog_send_port(self, name):
+        return self.component_class.analog_send_port(name)
+
+    @property
+    def analog_send_ports(self):
+        return self.component_class.analog_send_ports
+
+    @property
+    def analog_send_port_names(self):
+        return self.component_class.analog_send_port_names
+
+    @property
+    def num_analog_send_ports(self):
+        return self.component_class.num_analog_send_ports
+
+    def analog_reduce_port(self, name):
+        return self.component_class.analog_reduce_port(name)
+
+    @property
+    def analog_reduce_ports(self):
+        return self.component_class.analog_reduce_ports
+
+    @property
+    def analog_reduce_port_names(self):
+        return self.component_class.analog_reduce_port_names
+
+    @property
+    def num_analog_reduce_ports(self):
+        return self.component_class.num_analog_reduce_ports
+
+    def event_receive_port(self, name):
+        return self.component_class.event_receive_port(name)
+
+    @property
+    def event_receive_ports(self):
+        return self.component_class.event_receive_ports
+
+    @property
+    def event_receive_port_names(self):
+        return self.component_class.event_receive_port_names
+
+    @property
+    def num_event_receive_ports(self):
+        return self.component_class.num_event_receive_ports
+
+    def event_send_port(self, name):
+        return self.component_class.event_send_port(name)
+
+    @property
+    def event_send_ports(self):
+        return self.component_class.event_send_ports
+
+    @property
+    def event_send_port_names(self):
+        return self.component_class.event_send_port_names
 
 
 class ConnectionRuleProperties(Component):
