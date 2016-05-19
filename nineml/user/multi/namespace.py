@@ -107,8 +107,8 @@ class _NamespaceObject(object):
         to be placed within a dictionary or set object and be treated as if the
         same object is being referenced each access
         """
-        return (hash(self.sub_component) ^ hash(self._object)
-                ^ hash(self._parent))
+        return (hash(self.sub_component) ^ hash(self._object) ^
+                hash(self._parent))
 
     def __eq__(self, other):
         return BaseNineMLObject.__eq__(
@@ -120,6 +120,10 @@ class _NamespaceObject(object):
     @property
     def sub_component(self):
         return self._sub_component
+
+    @property
+    def annotations(self):
+        return self._object.annotations
 
 
 class _NamespaceNamed(_NamespaceObject):
