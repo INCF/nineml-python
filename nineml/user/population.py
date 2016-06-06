@@ -29,7 +29,7 @@ class Population(BaseULObject, DocumentLevelObject):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
         self._name = name
-        self._size = size
+        self.size = size
         self._cell = cell
 
     def __str__(self):
@@ -50,6 +50,10 @@ class Population(BaseULObject, DocumentLevelObject):
     @property
     def size(self):
         return self._size
+
+    @size.setter
+    def size(self, size):
+        self._size = int(size)
 
     @property
     def cell(self):

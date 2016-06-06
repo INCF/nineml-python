@@ -214,7 +214,7 @@ class ComponentArray(BaseULObject):
 
     def __init__(self, name, size, dynamics_properties):
         self._name = name
-        self._size = size
+        self.size = size
         self._dynamics_properties = dynamics_properties
 
     @property
@@ -224,6 +224,10 @@ class ComponentArray(BaseULObject):
     @property
     def size(self):
         return self._size
+
+    @size.setter
+    def size(self, size):
+        self._size = int(size)
 
     @property
     def dynamics_properties(self):
