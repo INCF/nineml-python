@@ -194,20 +194,20 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     def definition(self):
         return self._definition
 
-#     def set(self, prop):
-#         try:
-#             param = self.component_class.parameter(prop.name)
-#         except KeyError:
-#             raise NineMLRuntimeError(
-#                 "'{}' is not a parameter of components of class '{}'"
-#                 .format(prop.name, self.component_class.name))
-#         if prop.units.dimension != param.dimension:
-#             raise NineMLUnitMismatchError(
-#                 "Dimensions for '{}' property ('{}') don't match that of "
-#                 "component_class class ('{}')."
-#                 .format(prop.name, prop.units.dimension.name,
-#                         param.dimension.name))
-#         self._properties[prop.name] = prop
+    def set(self, prop):
+        try:
+            param = self.component_class.parameter(prop.name)
+        except KeyError:
+            raise NineMLRuntimeError(
+                "'{}' is not a parameter of components of class '{}'"
+                .format(prop.name, self.component_class.name))
+        if prop.units.dimension != param.dimension:
+            raise NineMLUnitMismatchError(
+                "Dimensions for '{}' property ('{}') don't match that of "
+                "component_class class ('{}')."
+                .format(prop.name, prop.units.dimension.name,
+                        param.dimension.name))
+        self._properties[prop.name] = prop
 
     @property
     def attributes_with_units(self):
@@ -236,16 +236,17 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         diff_a = properties.difference(parameters)
         diff_b = parameters.difference(properties)
         if diff_a:
-            msg.append("User properties of '{}' contain the following "
+            msg.append("User properties of '{}' ({}) contain the following "
                        "parameters that are not present in the definition of "
-                       "'{}': {}\n\n".format(
-                           self.name, self.component_class.name,
-                           ",".join(diff_a)))
+                       "'{}' ({}): {}\n\n".format(
+                           self.name, self.url, self.component_class.name,
+                           self.component_class.url, ",".join(diff_a)))
         if diff_b:
-            msg.append("Definition of '{}' contains the following parameters "
-                       "that are not present in the user properties of '{}': "
-                       "{}".format(self.component_class.name,
-                                   self.name, ",".join(diff_b)))
+            msg.append("Definition of '{}' ({}) contains the following "
+                       "parameters that are not present in the user properties"
+                       " of '{}' ({}): {}".format(
+                           self.component_class.name, self.component_class.url,
+                           self.name, self.url, ",".join(diff_b)))
         if msg:
             # need a more specific type of Exception
             raise NineMLRuntimeError(". ".join(msg))
