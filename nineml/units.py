@@ -526,13 +526,19 @@ class Quantity(BaseNineMLObject):
         try:
             return Quantity(self.value * qty.value, self.units * qty.units)
         except AttributeError:
-            return Quantity(self.value, self.units * qty)  # If qty is a Unit
+            if isinstance(qty, float):
+                return Quantity(self.value * qty, self.units)
+            else:
+                return Quantity(self.value, self.units * qty)  # If qty is a Unit @IgnorePep8
 
     def __truediv__(self, qty):
         try:
             return Quantity(self.value / qty.value, self.units / qty.units)
         except AttributeError:
-            return Quantity(self.value, self.units / qty)  # If qty is a Unit
+            if isinstance(qty, float):
+                return Quantity(self.value / qty, self.units)
+            else:
+                return Quantity(self.value, self.units / qty)  # If qty is a Unit @IgnorePep8
 
     def __div__(self, qty):
         return self.__truediv__(qty)
