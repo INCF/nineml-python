@@ -368,6 +368,7 @@ class Document(dict, BaseNineMLObject):
         """
         new = deepcopy(self)
         new._url = None
+        return new
 
     def write(self, url, version=2.0, **kwargs):
         if self.url is None:
