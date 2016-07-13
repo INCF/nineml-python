@@ -130,10 +130,14 @@ class Component(BaseULObject, DocumentLevelObject):
         DocumentLevelObject.__init__(self, url)
         self.name = name
         if isinstance(definition, basestring):
+            if "#" in definition:
+                defn_url, name = definition.split("#")
+            else:
+                defn_url, name = definition, path.basename(definition).replace(".xml", "")
             definition = Definition(
-                name=path.basename(definition).replace(".xml", ""),
+                name=name,
                 document=Document(url=url),
-                url=definition)
+                url=defn_url)
         elif isinstance(definition, ComponentClass):
             definition = Definition(component_class=definition)
         elif isinstance(definition, Component):
