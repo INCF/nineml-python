@@ -3,6 +3,6 @@
   <ComponentClass name="NegativeBinomialDistribution">
     <Parameter name="numberOfFailures"/>
     <Parameter name="probability"/>
-    <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/negative-binomial.xml"/>
+    <RandomDistribution standard_library="http://www.uncertml.org/distributions/negative-binomial.xml"/>
   </ComponentClass>
 </NineML>

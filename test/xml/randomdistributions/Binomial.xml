@@ -3,6 +3,6 @@
   <ComponentClass name="BinomialDistribution">
     <Parameter name="numberOfTrials"/>
     <Parameter name="probabilityOfSuccess"/>
-    <RandomDistribution standardLibrary="http://www.uncertml.org/distributions/binomial.xml"/>
+    <RandomDistribution standard_library="http://www.uncertml.org/distributions/binomial.xml"/>
   </ComponentClass>
 </NineML>
