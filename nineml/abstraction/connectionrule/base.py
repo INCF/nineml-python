@@ -26,14 +26,15 @@ class ConnectionRule(ComponentClass):
 
     standard_library_basepath = 'http://nineml.net/9ML/1.0/connectionrules/'
     _base_len = len(standard_library_basepath)
-    standard_types = ('AllToAll', 'OneToOne', 'ExplicitConnectionList',
-                      'ProbabilisticConnectivity', 'RandomFanIn',
-                      'RandomFanOut')
+    standard_types = ('alltoall', 'onetoone', 'explicitconnectionlist',
+                      'probabilistic', 'randomfanin',
+                      'randomfanout')
 
     def __init__(self, name, standard_library, parameters=None,
                  document=None):
         super(ConnectionRule, self).__init__(
             name, parameters, document=document)
+        # Convert to lower case
         if (not standard_library.startswith(self.standard_library_basepath) or
                 standard_library[self._base_len:] not in self.standard_types):
             raise NineMLRuntimeError(
