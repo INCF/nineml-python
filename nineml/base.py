@@ -144,7 +144,11 @@ class DocumentLevelObject(object):
         # Document level objects can be nested inside other document-level
         # objects, in which case they shouldn't belong to the document
         # directly
-        if document is not None and self.name in document:
+        # FIXME: Once network is its own element in the 9ML spec then the
+        #        check for the nineml_type == 'Network' will no longer be
+        #        necessary
+        if document is not None and (self.name in document or
+                                     self.nineml_type == 'Network'):
             self._document = document
         else:
             self._document = None
