@@ -12,6 +12,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLDimensionError)
 from nineml.values import (
     BaseValue, SingleValue, ArrayValue, RandomValue)
+from nineml.utils import ensure_valid_identifier
 
 
 class Dimension(BaseNineMLObject, DocumentLevelObject):
@@ -28,9 +29,10 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
     def __init__(self, name, dimensions=None, **kwargs):
+        ensure_valid_identifier(name)
+        self._name = name
         BaseNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, kwargs.pop('document', None))
-        self._name = name
         if dimensions is not None:
             assert len(dimensions) == 7, "Incorrect dimension length"
             self._dims = tuple(dimensions)
@@ -282,9 +284,10 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     defining_attributes = ('_dimension', '_power', '_offset')
 
     def __init__(self, name, dimension, power, offset=0.0, document=None):
+        ensure_valid_identifier(name)
+        self._name = name
         BaseNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
-        self._name = name
         assert isinstance(dimension, Dimension)
         self._dimension = dimension
         self._power = power

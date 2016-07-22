@@ -14,6 +14,7 @@ from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
 from nineml.user.port_connections import EventPortConnection
 from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
+from nineml.utils import ensure_valid_identifier
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -42,10 +43,11 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                  selections=[], document=None):
         # better would be *items, then sort by type, taking the name from the
         # item
+        ensure_valid_identifier(name)
+        self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document=document)
         ContainerObject.__init__(self)
-        self._name = name
         self._populations = dict((p.name, p) for p in populations)
         self._projections = dict((p.name, p) for p in projections)
         self._selections = dict((s.name, s) for s in selections)

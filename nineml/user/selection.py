@@ -7,6 +7,7 @@ from nineml.xml import (
 from nineml.base import DocumentLevelObject
 from .population import Population
 from nineml.exceptions import NineMLNameError
+from nineml.utils import ensure_valid_identifier
 
 
 def find_difference(this, that):
@@ -77,13 +78,18 @@ class Selection(BaseULObject, DocumentLevelObject):
     defining_attributes = ('name', 'operation')
 
     def __init__(self, name, operation, document=None):
+        ensure_valid_identifier(name)
+        self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
-        self.name = name
         self.operation = operation
 
     def __repr__(self):
         return "Selection('%s', '%r')" % (self.name, self.operation)
+
+    @property
+    def name(self):
+        return self._name
 
     @write_reference
     @annotate_xml

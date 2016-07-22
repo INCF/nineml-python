@@ -42,6 +42,8 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     def __init__(self, name, sub_components, port_connections=[],
                  port_exposures=[], document=None, check_initial_values=False):
+        ensure_valid_identifier(name)
+        self._name = name
         # Initiate inherited base classes
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
@@ -53,7 +55,6 @@ class MultiDynamicsProperties(DynamicsProperties):
             sub_components = [
                 SubDynamicsProperties(n, p)
                 for n, p in sub_components.iteritems()]
-        self._name = name
         self._sub_components = dict(
             (p.name, p) for p in sub_components)
         self._definition = self._extract_definition(

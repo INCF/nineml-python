@@ -6,6 +6,7 @@ from nineml.base import DocumentLevelObject
 from nineml.xml import (
     E, unprocessed_xml, from_child_xml, get_xml_attr)
 from nineml.annotations import annotate_xml, read_annotations
+from nineml.utils import ensure_valid_identifier
 
 
 class Population(BaseULObject, DocumentLevelObject):
@@ -26,9 +27,10 @@ class Population(BaseULObject, DocumentLevelObject):
     defining_attributes = ("name", "size", "cell")
 
     def __init__(self, name, size, cell, document=None):
+        ensure_valid_identifier(name)
+        self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
-        self._name = name
         self.size = size
         self._cell = cell
 
