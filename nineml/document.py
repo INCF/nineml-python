@@ -284,7 +284,7 @@ class Document(dict, BaseNineMLObject):
         self.standardize_units()
         return E(
             self.nineml_type,
-            *[e.to_xml(self, as_ref=False)
+            *[e.to_xml(self, E=E, as_ref=False)
               for e in self.sorted_elements()])
 
     @classmethod

@@ -141,7 +141,13 @@ class BaseNineMLObject(object):
 class DocumentLevelObject(object):
 
     def __init__(self, document):
-        self._document = document
+        # Document level objects can be nested inside other document-level
+        # objects, in which case they shouldn't belong to the document
+        # directly
+        if document is not None and self.name in document:
+            self._document = document
+        else:
+            self._document = None
 
     @property
     def document(self):

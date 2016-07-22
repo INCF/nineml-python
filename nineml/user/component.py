@@ -7,7 +7,7 @@ from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.utils import check_units
+from nineml.utils import check_units, ensure_valid_identifier
 from nineml.xml import (
     from_child_xml, unprocessed_xml, get_xml_attr, E, extract_xmlns, NINEMLv1)
 from ..abstraction import ComponentClass
@@ -124,10 +124,11 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         properties, or create a prototype to another component_class that will
         be resolved later.
         """
+        ensure_valid_identifier(name)
+        self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
         ContainerObject.__init__(self)
-        self._name = name
         if isinstance(definition, basestring):
             if "#" in definition:
                 defn_url, name = definition.split("#")

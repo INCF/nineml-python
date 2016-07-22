@@ -19,7 +19,7 @@ from .population import Population
 from .selection import Selection
 from .component import Quantity
 from nineml.base import DocumentLevelObject
-from nineml.utils import expect_single
+from nineml.utils import expect_single, ensure_valid_identifier
 from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
@@ -274,6 +274,8 @@ class Projection(BaseULObject, DocumentLevelObject):
         """
         Create a new projection.
         """
+        ensure_valid_identifier(name)
+        self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
         assert isinstance(name, basestring)
@@ -282,7 +284,6 @@ class Projection(BaseULObject, DocumentLevelObject):
         assert isinstance(post, (Population, Selection))
         assert isinstance(response, DynamicsProperties)
         assert isinstance(plasticity, (DynamicsProperties, type(None)))
-        self._name = name
         self._pre = pre
         self._post = post
         self._response = response
