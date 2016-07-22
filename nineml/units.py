@@ -266,7 +266,9 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
                 name_den.append(name)
         name = '_'.join(name_num)
         if name_den:
-            name += '_per_' + '_'.join(name_den)
+            if name:
+                name += '_'
+            name += 'per_' + '_'.join(name_den)
         return Dimension(name, **powers)
 
     @property
