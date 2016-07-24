@@ -105,7 +105,7 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
   </ComponentClass>
   <ComponentClass name="CR">
     <Parameter name="probability" dimension="dimensionless"/>
-    <ConnectionRule standard_library="http://nineml.net/9ML/1.0/connectionrules/ProbabilisticConnectivity"/>
+    <ConnectionRule standard_library="http://nineml.net/9ML/1.0/connectionrules/probabilistic"/>
   </ComponentClass>
   <ComponentClass name="RD">
     <Parameter name="maximum" dimension="dimensionless"/>
@@ -230,7 +230,7 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
       </OnEvent>
     </Regime>
   </Dynamics>
-  <ConnectionRule name="CR" standard_library="http://nineml.net/9ML/1.0/connectionrules/ProbabilisticConnectivity">
+  <ConnectionRule name="CR" standard_library="http://nineml.net/9ML/1.0/connectionrules/probabilistic">
     <Parameter name="probability" dimension="dimensionless"/>
   </ConnectionRule>
   <RandomDistribution name="RD" standard_library="http://www.uncertml.org/distributions/uniform">

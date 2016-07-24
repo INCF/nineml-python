@@ -1,5 +1,5 @@
 <NineML xmlns="http://nineml.net/9ML/2.0">
-  <ConnectionRule name="Probabilistic" standard_library="http://nineml.net/connectionrules/Probabilistic">
+  <ConnectionRule name="Probabilistic" standard_library="http://nineml.net/connectionrules/probabilistic">
     <Parameter name="probability" dimension="dimensionless"/>
   </ConnectionRule>
 </NineML>
