@@ -8,7 +8,7 @@ setup(
     package_data={'nineml': ['examples/AL/demos/*.py',
                              'examples/AL/sample_components/*.py']},
     packages=find_packages(),
-    author="Andrew P. Davison, Eilif Muller, Mike Hull, Thomas G. Close",
+    author="Andrew P. Davison, Thomas G. Close, Eilif Muller, Mike Hull",
     # add your name here if you contribute to the code
     author_email="nineml-users@incf.org",
     description=(
