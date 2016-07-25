@@ -26,9 +26,9 @@ class ConnectionRule(ComponentClass):
 
     standard_library_basepath = 'http://nineml.net/9ML/1.0/connectionrules/'
     _base_len = len(standard_library_basepath)
-    standard_types = ('alltoall', 'onetoone', 'explicitconnectionlist',
-                      'probabilistic', 'randomfanin',
-                      'randomfanout')
+    standard_types = ('AllToAll', 'OneToOne', 'Explicit',
+                      'Probabilistic', 'RandomFanIn',
+                      'RandomFanOut')
 
     def __init__(self, name, standard_library, parameters=None,
                  document=None):

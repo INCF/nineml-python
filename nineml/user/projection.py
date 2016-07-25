@@ -155,17 +155,17 @@ class Connectivity(BaseConnectivity):
             kw = kwargs
             kwargs = copy(self._kwargs)
             kwargs.update(kw)
-        if self.lib_type == 'alltoall':
+        if self.lib_type == 'AllToAll':
             conn = self._all_to_all(**kwargs)
-        elif self.lib_type == 'onetoone':
+        elif self.lib_type == 'OneToOne':
             conn = self._one_to_one(**kwargs)
-        elif self.lib_type == 'explicitconnectionlist':
+        elif self.lib_type == 'Explicit':
             conn = self._explicit_connection_list(**kwargs)
-        elif self.lib_type == 'probabilistic':
+        elif self.lib_type == 'Probabilistic':
             conn = self._probabilistic_connectivity(**kwargs)
-        elif self.lib_type == 'randomfanin':
+        elif self.lib_type == 'RandomFanIn':
             conn = self._random_fan_in(**kwargs)
-        elif self.lib_type == 'randomfanout':
+        elif self.lib_type == 'RandomFanOut':
             conn = self._random_fan_out(**kwargs)
         else:
             assert False

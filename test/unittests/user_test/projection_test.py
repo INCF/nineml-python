@@ -76,7 +76,7 @@ class TestProjection(unittest.TestCase):
 
         self.one_to_one = ConnectionRule(
             name="OneToOne",
-            standard_library=(nineml_v1_ns + '/connectionrules/onetoone'))
+            standard_library=(nineml_v1_ns + '/connectionrules/OneToOne'))
 
         self.projection = Projection(
             name="Projection",
