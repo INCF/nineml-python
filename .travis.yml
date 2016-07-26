@@ -1,8 +1,10 @@
 language: python
+sudo: false
 python:
   - "2.7"
 # command to install dependencies
 install:
+  - wget https://github.com/sympy/sympy/archive/master.zip && unzip master.zip && pip install ./sympy-master
   - pip install -r requirements.txt --use-mirrors
   - pip install coveralls --use-mirrors
 # command to run tests, e.g. python setup.py test

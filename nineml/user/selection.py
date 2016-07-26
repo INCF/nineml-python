@@ -3,7 +3,7 @@ from . import BaseULObject
 from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.xml import (
-    extract_xmlns, E, from_child_xml, unprocessed_xml, get_xml_attr)
+    extract_xmlns, E, from_child_xml, unprocessed_xml, get_xml_attr, NINEMLv1)
 from nineml.base import DocumentLevelObject
 from .population import Population
 from nineml.exceptions import NineMLNameError
@@ -243,6 +243,8 @@ class Concatenate(BaseULObject):
         def item_to_xml(item):
             if isinstance(item, Reference):
                 return item.to_xml(document, E=E, **kwargs)
+            elif E._namespace == NINEMLv1:
+                return E.Reference(item.name)
             else:
                 return E.Reference(name=item.name)
         return E(self.nineml_type,

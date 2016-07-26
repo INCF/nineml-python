@@ -212,7 +212,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @property
     def attributes_with_units(self):
-        return set(p for p in self.properties if p.units is not None)
+        return self.properties
 
     def __repr__(self):
         return ('%s(name="%s", component_class="%s")' %
@@ -602,8 +602,8 @@ class DynamicsProperties(Component):
 
     @property
     def attributes_with_units(self):
-        return (super(DynamicsProperties, self).attributes_with_units |
-                set(p for p in self.initial_values if p.units is not None))
+        return chain(super(DynamicsProperties, self).attributes_with_units,
+                     self.initial_values)
 
     def elements(self, local=False):
         """

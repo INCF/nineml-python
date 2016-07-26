@@ -180,16 +180,26 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
       <SingleValue>1.0</SingleValue>
     </Delay>
   </Projection>
+  <Selection name="selection">
+    <Concatenate>
+      <Item index="0">
+        <Reference>P1</Reference>
+      </Item>
+      <Item index="1">
+        <Reference>P2</Reference>
+      </Item>
+    </Concatenate>
+  </Selection>
+  <Dimension name="dimensionless"/>
   <Dimension name="time" t="1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
-  <Dimension name="dimensionless"/>
   <Dimension name="current" i="1"/>
   <Dimension name="capacitance" m="-1" l="-2" t="4" i="2"/>
+  <Unit symbol="unitless" dimension="dimensionless" power="0"/>
   <Unit symbol="nA" dimension="current" power="-9"/>
   <Unit symbol="uF" dimension="capacitance" power="-6"/>
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="ms" dimension="time" power="-3"/>
-  <Unit symbol="unitless" dimension="dimensionless" power="0"/>
 </NineML>"""
 
 version2 = """<?xml version="1.0" encoding="UTF-8"?>
@@ -323,14 +333,24 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
     <AnalogPortConnection sender_role="response" receiver_role="post" send_port="a" receive_port="i_ext"/>
     <EventPortConnection sender_role="pre" receiver_role="response" send_port="spike" receive_port="spike"/>
   </Projection>
+  <Selection name="selection">
+    <Concatenate>
+      <Item index="0">
+        <Reference name="P1"/>
+      </Item>
+      <Item index="1">
+        <Reference name="P2"/>
+      </Item>
+    </Concatenate>
+  </Selection>
+  <Dimension name="dimensionless"/>
   <Dimension name="time" t="1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
-  <Dimension name="dimensionless"/>
   <Dimension name="current" i="1"/>
   <Dimension name="capacitance" m="-1" l="-2" t="4" i="2"/>
+  <Unit symbol="unitless" dimension="dimensionless" power="0"/>
   <Unit symbol="nA" dimension="current" power="-9"/>
   <Unit symbol="uF" dimension="capacitance" power="-6"/>
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="ms" dimension="time" power="-3"/>
-  <Unit symbol="unitless" dimension="dimensionless" power="0"/>
 </NineML>"""
