@@ -220,7 +220,7 @@ class SubDynamicsProperties(BaseULObject):
 
     @property
     def attributes_with_units(self):
-        return set(p for p in self.properties if p.units is not None)
+        return self.properties
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable

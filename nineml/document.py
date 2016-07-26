@@ -49,11 +49,11 @@ class Document(dict, BaseNineMLObject):
             self._url = os.path.abspath(url)
         assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
                                   .format("', '".join(kwargs.iterkeys())))
-        for element in elements:
-            self.add(element)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
+        for element in elements:
+            self.add(element)
 
     def add(self, element):
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
@@ -205,13 +205,16 @@ class Document(dict, BaseNineMLObject):
         Resolve an element from its XML description and store back in the
         element dictionary
         """
-        if unloaded in self._loading:
-            raise NineMLRuntimeError(
-                "Circular reference detected in '{}(name={})' element. "
-                "Resolution stack was:\n"
-                .format(unloaded.cls.__name__, unloaded.name,
-                        "\n".join('{}(name={})'.format(u.cls.__name__, u.name)
-                                  for u in self._loading)))
+        try:
+            if unloaded in self._loading:
+                raise NineMLRuntimeError(
+                    "Circular reference detected in '{}(name={})' element. "
+                    "Resolution stack was:\n"
+                    .format(unloaded.cls.__name__, unloaded.name,
+                            "\n".join('{}(name={})'.format(u.cls.__name__, u.name)
+                                      for u in self._loading)))
+        except:
+            raise
         # Keep track of the document-level elements that are in the process of
         # being loaded to catch circular references
         self._loading.append(unloaded)
