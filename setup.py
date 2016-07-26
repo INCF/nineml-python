@@ -4,9 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="lib9ML",
-    version="1.0dev",
-    package_data={'nineml': ['examples/AL/demos/*.py',
-                             'examples/AL/sample_components/*.py']},
+    version="0.1",
     packages=find_packages(),
     author="Andrew P. Davison, Thomas G. Close, Eilif Muller, Mike Hull",
     # add your name here if you contribute to the code
