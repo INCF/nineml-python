@@ -12,7 +12,6 @@ from nineml.abstraction import (
 from nineml.user.port_connections import AnalogPortConnection
 from nineml.user.component import DynamicsProperties
 from nineml.exceptions import NineMLRuntimeError
-from nineml.utils import TestableComponent
 from nineml.user.multi.port_exposures import (
     _LocalAnalogPortConnections, _ReceivePortExposureAlias)
 from lxml import etree
