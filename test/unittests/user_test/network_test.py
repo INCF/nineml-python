@@ -27,7 +27,7 @@ class TestNetwork(unittest.TestCase):
     Loads Brunel 2000 network and reads and writes it from XML
     """
 
-    xml_dir = path.normpath(path.join(src_dir, '..', '..', 'xml',
+    xml_dir = path.normpath(path.join(src_dir, '..', '..', 'xml', 'networks',
                                       'Brunel2000'))
 
     def setUp(self):
