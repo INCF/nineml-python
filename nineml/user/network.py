@@ -212,7 +212,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 class ComponentArray(BaseULObject):
 
     nineml_type = "ComponentArray"
-    defining_attributes = ('name', "_size", "_dynamics")
+    defining_attributes = ('name', "_size", "_dynamics_properties")
 
     def __init__(self, name, size, dynamics_properties):
         self._name = name
