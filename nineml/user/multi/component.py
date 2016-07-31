@@ -633,6 +633,9 @@ class MultiDynamics(Dynamics):
                 .format(self.name, ', '.join(str(sc)
                                              for sc in self.sub_components)))
 
+    def is_flat(self):
+        return False
+
     @property
     def sub_components(self):
         return self._sub_components.itervalues()
