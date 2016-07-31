@@ -5,8 +5,6 @@ A Python library for working with 9ML model descriptions.
 :license: BSD-3, see LICENSE for details.
 """
 
-__version__ = "0.2dev"
-
 from .document import read, write, Document
 from . import abstraction
 from . import user
@@ -18,4 +16,6 @@ from abstraction import (
 from .user import (
     Selection, Population, Projection, Property, Definition,
     DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
-    Network, MultiDynamics, MultiDynamicsProperties)
+    Network, MultiDynamics, MultiDynamicsProperties, Concatenate)
+
+__version__ = "0.1"
