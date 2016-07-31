@@ -238,6 +238,9 @@ class Dynamics(ComponentClass):
         # they are all linear (i.e. +-*/ of other states)
         return True
 
+    def is_flat(self):
+        return True
+
     @property
     def num_state_variables(self):
         return len(list(self._state_variables))
