@@ -381,7 +381,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
                         dimension=self.dimension * other.dimension,
                         power=(self.power + other.power))
         except AttributeError:
-            return Quantity(float(other), self)
+            return Quantity(other, self)
 
     def __truediv__(self, other):
         "self / expr"
@@ -392,7 +392,11 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
                         dimension=self.dimension / other.dimension,
                         power=(self.power - other.power))
         except AttributeError:
-            return Quantity(1.0 / float(other), self.units)
+            if isinstance(other, (float, int)):
+                inverted = 1.0 / other
+            else:
+                inverted = other.inverse()
+            return Quantity(1.0 / inverted, self.units)
 
     def __pow__(self, power):
         "self ** expr"
