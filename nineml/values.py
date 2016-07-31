@@ -79,6 +79,9 @@ class SingleValue(BaseValue):
     def __hash__(self):
         return hash(self.value)
 
+    def inverse(self):
+        return SingleValue(1.0 / self._value)
+
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.nineml_type, str(self.value))
@@ -215,6 +218,12 @@ class ArrayValue(BaseValue):
     def __hash__(self):
         return hash(self.value)
 
+    def inverse(self):
+        try:
+            return ArrayValue(1.0 / self._values)
+        except AttributeError:
+            raise ArrayValue(1.0 / v for v in self._values)
+
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         if self._datafile is None:
@@ -269,7 +278,7 @@ class ArrayValue(BaseValue):
     # =========================================================================
 
     def _sympy_(self):
-        return sympy.Matrix(self._value)
+        return sympy.Matrix(self._values)
 
     def __float__(self):
         raise NineMLRuntimeError(
@@ -279,61 +288,58 @@ class ArrayValue(BaseValue):
         try:
             return self._value + num
         except AttributeError:
-            return [self._value + v for v in self._values]
+            return [v + num for v in self._values]
 
     def __sub__(self, num):
         try:
             return self._value - num
         except AttributeError:
-            return [self._value - v for v in self._values]
+            return [v - num for v in self._values]
 
     def __mul__(self, num):
         try:
             return self._value * num
         except AttributeError:
-            return [self._value * v for v in self._values]
+            return [v * num for v in self._values]
 
     def __truediv__(self, num):
         try:
             return self._value.__truediv__(num)
         except AttributeError:
-            return [self._value / v for v in self._values]
+            return [v / num for v in self._values]
 
     def __div__(self, num):
         try:
             return self.__truediv__(num)
         except AttributeError:
-            return [self.__truediv__(v) for v in self._values]
+            return [v.__truediv__(num) for v in self._values]
 
     def __divmod__(self, num):
         try:
             return divmod(self, num)
         except AttributeError:
-            return [divmod(self, v) for v in self._values]
+            return [divmod(v, num) for v in self._values]
 
     def __pow__(self, power):
         try:
             return self._value ** power
         except AttributeError:
-            return [self._value ** v for v in self._values]
+            return [v ** power for v in self._values]
 
     def __floordiv__(self, num):
         try:
             return self._value // num
         except AttributeError:
-            return [self._value // v for v in self._values]
+            return [v // num for v in self._values]
 
     def __mod__(self, num):
         try:
             return self._value % num
         except AttributeError:
-            return [self._value % v for v in self._values]
+            return [v % num for v in self._values]
 
     def __radd__(self, num):
-        try:
-            return self.__add__(num)
-        except AttributeError:
-            return [self.__add__(v) for v in self._values]
+        return self.__add__(num)
 
     def __rsub__(self, num):
         try:
@@ -351,19 +357,19 @@ class ArrayValue(BaseValue):
         try:
             return num.__truediv__(self._value)
         except AttributeError:
-            return [num.__truediv__(v) for v in self._values]
+            return [v.__truediv__(num) for v in self._values]
 
     def __rdiv__(self, num):
         try:
-            return self.__rtruediv__(num)
+            return self._values.__rtruediv__(num)
         except AttributeError:
-            return [self.__rtruediv__(v) for v in self._values]
+            return [v.__rtruediv__(num) for v in self._values]
 
     def __rdivmod__(self, num):
         try:
             return divmod(num, self)
         except AttributeError:
-            return [divmod(v, self) for v in self._values]
+            return [divmod(num, v) for v in self._values]
 
     def __rpow__(self, num):
         try:
@@ -439,6 +445,9 @@ class RandomValue(BaseValue):
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         return E(self.nineml_type,
                  self.distribution.to_xml(document, E=E, **kwargs))
+
+    def inverse(self):
+        raise NotImplementedError
 
     @classmethod
     @read_annotations
