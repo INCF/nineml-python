@@ -119,6 +119,10 @@ class Selection(BaseULObject, DocumentLevelObject):
         return self.operation.items
 
     @property
+    def component_classes(self):
+        return (p.component_class for p in self.populations)
+
+    @property
     def size(self):
         return sum(p.size for p in self.populations)
 

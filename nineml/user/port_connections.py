@@ -295,14 +295,16 @@ class BasePortConnection(BaseULObject):
 
     @classmethod
     def from_tuple(cls, tple, container):
+        # FIXME: Needs comments to explain what is going on and better
+        #        exception messages
         sender, send_port, receiver, receive_port = tple
         init_kwargs = {}
         try:
-            sender_dynamics = getattr(container, sender).component_class
+            sender_dynamicss = getattr(container, sender).component_classes
             init_kwargs['sender_role'] = sender
         except AttributeError:
             try:
-                sender_dynamics = container[sender].component_class
+                sender_dynamicss = [container[sender].component_class]
                 init_kwargs['sender_name'] = sender
             except (TypeError, KeyError), e:
                 raise NineMLRuntimeError(
@@ -310,24 +312,35 @@ class BasePortConnection(BaseULObject):
                     .format('name' if isinstance(e, KeyError) else 'role',
                             receiver, container.name))
         try:
-            getattr(container, receiver).component_class
+            getattr(container, receiver).component_classes
             init_kwargs['receiver_role'] = receiver
         except AttributeError:
             try:
                 container[receiver].component_class
                 init_kwargs['receiver_name'] = receiver
             except (TypeError, KeyError), e:
-                container[receiver]
                 raise NineMLRuntimeError(
                     "Did not find receiver {} '{}' in '{}' container"
                     .format('name' if isinstance(e, KeyError) else 'role',
                             receiver, container.name))
-        if isinstance(sender_dynamics.port(send_port), AnalogSendPort):
+        port_type = None
+        for dyn in sender_dynamicss:
+            pt = dyn.port(send_port).nineml_type
+            if port_type is None:
+                port_type = pt
+            elif port_type != pt:
+                raise NineMLRuntimeError(
+                    "Mismatching port types for '{}' port in populations in "
+                    "Selection '{}'".format(send_port, container.name))
+        if port_type == 'AnalogSendPort':
             port_connection = AnalogPortConnection(
                 receive_port=receive_port, send_port=send_port, **init_kwargs)
-        else:
+        elif port_type == 'EventSendPort':
             port_connection = EventPortConnection(
                 receive_port=receive_port, send_port=send_port, **init_kwargs)
+        else:
+            assert False, "'{}' should be a send port not '{}'".format(
+                send_port, port_type)
         return port_connection
 
 
