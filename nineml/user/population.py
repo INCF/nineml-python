@@ -65,6 +65,14 @@ class Population(BaseULObject, DocumentLevelObject):
     def component_class(self):
         return self.cell.component_class
 
+    @property
+    def component_classes(self):
+        """
+        Returns the component class wrapped in an iterator for duck typing
+        with Selection objects
+        """
+        return iter([self.component_class])
+
     def get_components(self):
         """
         Return a list of all components used by the population.

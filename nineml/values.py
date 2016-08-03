@@ -34,7 +34,6 @@ class BaseValue(BaseNineMLObject):
 
 
 class SingleValue(BaseValue):
-
     """
     Representation of a numerical- or string-valued parameter.
 
