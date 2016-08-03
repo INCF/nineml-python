@@ -202,13 +202,15 @@ def identify_element(element):
     # Get the namespace of the element (i.e. NineML version)
     xmlns = extract_xmlns(element.tag)
     # Get the name of the element for error messages if present
+    identity = element.tag[len(xmlns):]
     try:
-        elem_name = "'{}' {}".format(element.get('name',
-                                                 element.attrib['symbol']),
-                                     element.tag[len(xmlns):])
+        name = element.attrib['name']
     except KeyError:
-        elem_name = element.tag[len(xmlns):]
-    return elem_name
+        try:
+            name = element.attrib['symbol']
+        except KeyError:
+            return identity
+    return "'{}' {}".format(name, identity)
 
 
 def unprocessed_xml(from_xml):
