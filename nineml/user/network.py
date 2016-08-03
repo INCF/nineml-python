@@ -15,6 +15,7 @@ from nineml.user.port_connections import EventPortConnection
 from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
 from nineml.utils import ensure_valid_identifier
+import nineml.document
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -204,6 +205,11 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         return Network(name=name, populations=document.populations,
                        projections=document.projections,
                        selections=document.selections, document=document)
+
+    @classmethod
+    def read(cls, url):
+        document = nineml.document.read(url)
+        return cls.from_document(document)
 
     _conn_group_name_re = re.compile(
         r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')
