@@ -59,7 +59,10 @@ class SingleValue(BaseValue):
         return itertools.repeat(self._value)
 
     def __eq__(self, other):
-        if self.nineml_type != other.nineml_type:
+        try:
+            if self.nineml_type != other.nineml_type:
+                return False
+        except AttributeError:
             return False
         return nearly_equal(self._value, other._value)
 
@@ -199,6 +202,11 @@ class ArrayValue(BaseValue):
         return iter(self._values)
 
     def __eq__(self, other):
+        try:
+            if self.nineml_type != other.nineml_type:
+                return False
+        except AttributeError:
+            return False
         return all(nearly_equal(s, o)
                    for s, o in izip(self._values, other._values))
 
@@ -414,6 +422,14 @@ class RandomValue(BaseValue):
     def __float__(self):
         raise NineMLRuntimeError(
             "RandomValues cannot be converted to a single float")
+
+    def __eq__(self, other):
+        try:
+            if self.nineml_type != other.nineml_type:
+                return False
+        except AttributeError:
+            return False
+        return self.distribution == other.distribution
 
     @property
     def distribution(self):
