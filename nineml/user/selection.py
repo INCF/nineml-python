@@ -112,7 +112,7 @@ class Selection(BaseULObject, DocumentLevelObject):
     def evaluate(self):
         assert isinstance(self.operation, Concatenate), \
             "Only concatenation is currently supported"
-        return (item.user_object for item in self.operation.items)
+        return self.operation.items
 
     @property
     def populations(self):
