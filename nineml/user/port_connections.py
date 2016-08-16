@@ -332,10 +332,10 @@ class BasePortConnection(BaseULObject):
                 raise NineMLRuntimeError(
                     "Mismatching port types for '{}' port in populations in "
                     "Selection '{}'".format(send_port, container.name))
-        if port_type == 'AnalogSendPort':
+        if port_type in ('AnalogSendPort', 'AnalogSendPortExposure'):
             port_connection = AnalogPortConnection(
                 receive_port=receive_port, send_port=send_port, **init_kwargs)
-        elif port_type == 'EventSendPort':
+        elif port_type in ('EventSendPort', 'EventSendPortExposure'):
             port_connection = EventPortConnection(
                 receive_port=receive_port, send_port=send_port, **init_kwargs)
         else:
