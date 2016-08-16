@@ -437,8 +437,12 @@ class Quantity(BaseNineMLObject):
 
     def __init__(self, value, units=None):
         super(Quantity, self).__init__()
-        if not isinstance(value, (SingleValue, ArrayValue,
-                                  RandomValue)):
+        if isinstance(value, Quantity):
+            if units is not None:
+                value = value.in_units(units)
+            else:
+                value = value.value
+        elif not isinstance(value, (SingleValue, ArrayValue, RandomValue)):
             try:
                 # Convert value from float
                 value = SingleValue(float(value))
@@ -452,7 +456,7 @@ class Quantity(BaseNineMLObject):
         if isinstance(value, (int, float)):
             value = SingleValue(value)
         self._value = value
-        self.units = units
+        self._units = units
 
     def __hash__(self):
         return hash(self.value) ^ hash(self.units)
@@ -461,9 +465,16 @@ class Quantity(BaseNineMLObject):
         """For conveniently expanding quantities like a tuple"""
         return (self.value, self.units)
 
+    def __float__(self):
+        return float(self.value)
+
     @property
     def value(self):
         return self._value
+
+    @property
+    def units(self):
+        return self._units
 
     def __getitem__(self, index):
         if self.is_array():
@@ -476,10 +487,11 @@ class Quantity(BaseNineMLObject):
 
     def set_units(self, units):
         if units.dimension != self.units.dimension:
-            raise NineMLRuntimeError(
+            raise NineMLDimensionError(
                 "Can't change dimension of quantity from '{}' to '{}'"
                 .format(self.units.dimension, units.dimension))
-        self.units = units
+        self._value = self.in_units(units)
+        self._units = units
 
     def in_units(self, units):
         """
@@ -487,10 +499,10 @@ class Quantity(BaseNineMLObject):
         equivalent)
         """
         if units.dimension != self.units.dimension:
-            raise NineMLRuntimeError(
+            raise NineMLDimensionError(
                 "Can't change convert quantity dimension from '{}' to '{}'"
                 .format(self.units.dimension, units.dimension))
-        return float(self.value) * 10 ** (self.units.power - units.power)
+        return self.value * 10 ** (self.units.power - units.power)
 
     def __repr__(self):
         units = self.units.name
@@ -535,7 +547,7 @@ class Quantity(BaseNineMLObject):
         try:
             return Quantity(self.value * qty.value, self.units * qty.units)
         except AttributeError:
-            if isinstance(qty, float):
+            if isinstance(qty, (float, int)):
                 return Quantity(self.value * qty, self.units)
             else:
                 return Quantity(self.value, self.units * qty)  # If qty is a Unit @IgnorePep8
@@ -565,7 +577,9 @@ class Quantity(BaseNineMLObject):
         return self.__mul__(qty)
 
     def __rtruediv__(self, qty):
-        return qty.__truediv__(self._value)
+        if isinstance(qty, (float, int)):
+            qty = qty * unitless
+        return qty.__truediv__(self)
 
     def __rdiv__(self, qty):
         return self.__rtruediv__(qty)
