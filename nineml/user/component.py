@@ -196,12 +196,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         return self._definition
 
     def set(self, prop):
-        try:
-            param = self.component_class.parameter(prop.name)
-        except KeyError:
-            raise NineMLRuntimeError(
-                "'{}' is not a parameter of components of class '{}'"
-                .format(prop.name, self.component_class.name))
+        param = self.component_class.parameter(prop.name)
         if prop.units.dimension != param.dimension:
             raise NineMLUnitMismatchError(
                 "Dimensions for '{}' property ('{}') don't match that of "
@@ -596,6 +591,24 @@ class DynamicsProperties(Component):
                 raise NineMLNameError(
                     "No initial value named '{}' in component class"
                     .format(name))
+
+    def set(self, prop):
+        try:
+            super(DynamicsProperties, self).set(prop)
+        except NineMLNameError:
+            try:
+                state_variable = self.component_class.state_variable(prop.name)
+            except NineMLNameError:
+                raise NineMLNameError(
+                    "'{}' Dynamics does not have a Parameter or StateVariable "
+                    "named '{}'".format(self.component_class.name, prop.name))
+            if prop.units.dimension != state_variable.dimension:
+                raise NineMLUnitMismatchError(
+                    "Dimensions for '{}' property ('{}') don't match that of "
+                    "component_class class ('{}')."
+                    .format(prop.name, prop.units.dimension.name,
+                            state_variable.dimension.name))
+            self._initial_values[prop.name] = prop
 
     @property
     def initial_value_names(self):
