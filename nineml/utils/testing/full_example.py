@@ -97,7 +97,10 @@ dynPropA = DynamicsProperties(
         'P1': 1.0 * un.mV,
         'P2': 1.0 * un.ms,
         'P3': 1.0 * un.mV,
-        'P4': 1.0 * un.nA})
+        'P4': 1.0 * un.nA},
+    initial_values={
+        'SV1': 1.0 * un.unitless,
+        'SV2': 1.0 * un.unitless})
 
 dynPropB = DynamicsProperties(
     name='dynB',
@@ -149,5 +152,6 @@ popC = Population(
     size=50,
     cell=dynPropC)
 
-doc = Document((dynA, dynB, dynC, dynPropA, dynPropB, dynPropC, conA,
-                conPropA, ranDistrA, ranDistrPropA, popA, popB, popC))
+full_example = Document(
+    dynA, dynB, dynC, dynPropA, dynPropB, dynPropC, conA, conPropA, ranDistrA,
+    ranDistrPropA, popA, popB, popC)
