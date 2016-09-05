@@ -82,7 +82,7 @@ class Selection(BaseULObject, DocumentLevelObject):
         self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
-        self.operation = operation
+        self._operation = operation
 
     def __repr__(self):
         return "Selection('%s', '%r')" % (self.name, self.operation)
@@ -90,6 +90,10 @@ class Selection(BaseULObject, DocumentLevelObject):
     @property
     def name(self):
         return self._name
+
+    @property
+    def operation(self):
+        return self._operation
 
     @write_reference
     @annotate_xml
