@@ -77,7 +77,7 @@ class Document(dict, BaseNineMLObject):
                 else:
                     raise NineMLNameError(
                         "Attempting to add the same object '{}' {} to '{}' "
-                        "document '{}' when it is already in '{}'. Please "
+                        "document when it is already in '{}'. Please "
                         "remove it from the original document first"
                         .format(element.name, element.nineml_type,
                                 self.url, element.document.url))
@@ -364,7 +364,7 @@ class Document(dict, BaseNineMLObject):
                        register_url=register_url)
         return document
 
-    def duplicate(self):
+    def clone(self):
         """
         Creates a duplicate of the current document with its url set to None to
         allow it to be written to a different file
@@ -541,7 +541,9 @@ def write(document, filename, **kwargs):
     """
     # Encapsulate the NineML element in a document if it is not already
     if not isinstance(document, Document):
-        document = Document(document)
+        element = deepcopy(document)
+        element._document = None
+        document = Document(element)
     document.write(filename, **kwargs)
 
 
