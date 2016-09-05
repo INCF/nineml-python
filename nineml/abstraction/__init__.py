@@ -5,17 +5,7 @@ format.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ..base import BaseNineMLObject
-
-
-class BaseALObject(BaseNineMLObject):
-
-    """
-    Base class for abstraction layer classes
-    """
-    layer = 'abstraction'
-
-
+from .base import BaseALObject
 import dynamics
 import expressions
 import connectionrule
