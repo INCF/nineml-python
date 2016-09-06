@@ -9,8 +9,7 @@ from nineml.user import (
     Definition, Prototype, Initial,
     DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
     MultiDynamics, MultiDynamicsProperties, AnalogPortConnection,
-    EventPortConnection, Network, ComponentArray, AnalogConnectionGroup,
-    EventConnectionGroup)
+    EventPortConnection, Network)
 
 
 dynA = Dynamics(
@@ -115,7 +114,10 @@ dynPropC = DynamicsProperties(
     definition=dynC,
     properties={
         'P1': 1.0 * un.unitless,
-        'P2': 1.0 * un.unitless})
+        'P2': 1.0 * un.unitless},
+    initial_values=[Initial('SV1', 0.0, un.unitless),
+                    Initial('SV2', 0.0, un.unitless),
+                    Initial('SV3', 0.0)])
 
 conA = ConnectionRule(
     name="ConA",
@@ -152,6 +154,17 @@ popC = Population(
     size=50,
     cell=dynPropC)
 
-full_example = Document(
+selA = Selection(
+    name="selA",
+    operation=Concatenate(popA, popB))
+
+projA = Projection(
+    name="projA",
+    pre=popA,
+    post=popB,
+    response=psrA,
+    connectivity=conPropA)
+
+document = Document(
     dynA, dynB, dynC, dynPropA, dynPropB, dynPropC, conA, conPropA, ranDistrA,
-    ranDistrPropA, popA, popB, popC)
+    ranDistrPropA, popA, popB, popC, selA)
