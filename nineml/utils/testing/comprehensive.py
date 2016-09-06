@@ -1,4 +1,9 @@
+"""
+Contains an example document with every type 9ML element in it for use in
+comprehensive testing over all 9ML elements
+"""
 import nineml.units as un
+from nineml.units import Quantity
 from nineml.document import Document
 from nineml.abstraction import (
     Parameter, Constant, Dynamics, Regime, Alias,
@@ -162,7 +167,8 @@ projA = Projection(
     name="projA",
     pre=popA,
     post=popB,
-    response=psrA,
+    response=None,
+    delay=Quantity(2, un.ms),
     connectivity=conPropA)
 
 document = Document(
