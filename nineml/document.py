@@ -63,7 +63,7 @@ class Document(dict, BaseNineMLObject):
                 .format(element.nineml_type, self.url,
                         "', '".join(self.top_level_types)))
         if element.name in self:
-            # Ignore if the element is already added (this can happend
+            # Ignore if the element is already added (this can happen
             # implictly when writing other elements that refer to this element)
             if element is not self[element.name]:
                 raise NineMLNameError(
