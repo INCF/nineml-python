@@ -15,7 +15,7 @@ from nineml.user import (
     Population, Selection, Concatenate, Projection, Property,
     Definition, Prototype, Initial, DynamicsProperties,
     ConnectionRuleProperties, RandomDistributionProperties,
-    MultiDynamics, MultiDynamicsProperties, AnalogPortConnection,
+    MultiDynamicsProperties, AnalogPortConnection,
     EventPortConnection, Network)
 from nineml.xml import nineml_v1_ns
 
@@ -31,7 +31,7 @@ dynA = Dynamics(
             'dSV1/dt = -SV1 / P2',
             'dSV2/dt = A3 / ARP2 + SV2 / P2',
             transitions=[On('SV1 > P3', do=[OutputEvent('ESP1')]),
-                         On('spikein', do=[OutputEvent('ESP2')])],
+                         On('ERP1', do=[OutputEvent('ESP2')])],
             name='R1'
         ),
         Regime(name='R2',
@@ -60,7 +60,7 @@ dynB = Dynamics(
             'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
             'dSV3/dt = -SV3/t + P3/t',
             transitions=[On('SV1 > P1', do=[OutputEvent('ESP1')]),
-                         On('spikein', do=[
+                         On('ERP1', do=[
                             OutputEvent('ESP1'),
                             StateAssignment('SV1', 'P1')])],
             name='R1',
@@ -70,11 +70,13 @@ dynB = Dynamics(
             On('SV3 < 0.001', to='R2',
                do=[StateAssignment('SV3', 1)])])
     ],
-    analog_ports=[AnalogReceivePort('ARP1'),
+    analog_ports=[AnalogReducePort('ARP1', operator='+'),
                   AnalogReceivePort('ARP2'),
                   AnalogSendPort('A1'),
                   AnalogSendPort('A2'),
                   AnalogSendPort('SV3')],
+    event_ports=[EventSendPort('ESP1'),
+                 EventReceivePort('ERP1')],
     parameters=['P1', 'P2', 'P3']
 )
 
@@ -87,7 +89,7 @@ dynC = Dynamics(
             'dSV1/dt = -SV1 / (P2*t)',
             'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
             transitions=[On('SV1 > P1', do=[OutputEvent('ESP1')]),
-                         On('spikein', do=[OutputEvent('ESP1')])],
+                         On('ERP1', do=[OutputEvent('ESP1')])],
             aliases=[Alias('A1', 'P1 * 2')],
             name='R1',
         ),
@@ -105,10 +107,14 @@ dynD = Dynamics(
     regimes=[
         Regime(
             'dSV1/dt = -SV1 / P1',
-            transitions=[On('SV1 > P2', do=[OutputEvent('ESP1')])],
+            transitions=[On('SV1 > P2', do=[OutputEvent('ESP1')]),
+                         On('ERP1', do=[StateAssignment('SV1', 'P2')])],
             name='R1'
         ),
     ],
+    constants=[Constant('C1', 1.0 * un.Mohm)],
+    aliases=[Alias('A1', Expression('SV1 / C1'))],
+    analog_ports=[AnalogSendPort('A1', dimension=un.current)],
     parameters=[Parameter('P1', dimension=un.time),
                 Parameter('P2', dimension=un.voltage)]
 )
@@ -120,13 +126,14 @@ dynE = Dynamics(
     regimes=[
         Regime(
             'dSV1/dt = -SV1 / P1 + ARP1 / P2',
-            name='R1'
-        ),
+            name='R1',
+            transitions=[
+                On('SV1 > P3', do=[OutputEvent('ESP1')])])
     ],
     analog_ports=[AnalogReceivePort('ARP1', dimension=un.current)],
     parameters=[Parameter('P1', dimension=un.time),
-                Parameter('P2', dimension=un.capacitance)]
-)
+                Parameter('P2', dimension=un.capacitance),
+                Parameter('P3', dimension=un.voltage)])
 
 dynF = Dynamics(
     name='dynF',
@@ -135,7 +142,7 @@ dynF = Dynamics(
     regimes=[
         Regime(
             'dSV1/dt = -SV1 / P1',
-            transitions=[On('receive',
+            transitions=[On('ERP1',
                             do=[StateAssignment('SV1', 'SV1 + P2')])],
             name='R1'
         ),
@@ -195,6 +202,19 @@ dynPropC = DynamicsProperties(
                     Initial('SV2', Quantity(0.0, un.unitless)),
                     Initial('SV3', 0.0)])
 
+dynPropD = Dynamics(
+    name='dynPropD',
+    definition=dynD,
+    properties={'P1': 1.0 * un.ms,
+                'P2': 1.0 * un.V})
+
+dynPropE = Dynamics(
+    name='dynPropE',
+    definition=dynE,
+    properties={'P1': 1.0 * un.ms,
+                'P2': 1.0 * un.uF,
+                'P3': 1.0 * un.mV})
+
 dynPropG = DynamicsProperties(
     name='dynPropG',
     definition=dynG,
@@ -205,6 +225,15 @@ dynPropA2 = DynamicsProperties(
     name='dynPropA2',
     definition=Prototype(dynPropA),
     properties=[Property('P4', Quantity(2.0, un.mA))])
+
+
+multiDynPropsA = MultiDynamicsProperties(
+    name='multiDynA',
+    sub_components={
+        'd': dynD, 'e': dynE},
+    port_connections=[
+        ('d', 'A1', 'e', 'ARP1'),
+        ('e', 'ESP1', 'd', 'ERP1')])
 
 ranDistrA = RandomDistribution(
     name="RanDistrA",
@@ -295,7 +324,7 @@ projB = Projection(
     port_connections=[
         EventPortConnection(
             send_port='ESP1',
-            receive_port='receive',
+            receive_port='ERP1',
             sender_role='pre',
             receiver_role='response'),
         AnalogPortConnection(
