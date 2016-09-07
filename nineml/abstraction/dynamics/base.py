@@ -6,7 +6,7 @@ components definitions of interface and dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from nineml.exceptions import NineMLRuntimeError, name_error
+from nineml.exceptions import NineMLRuntimeError, name_error, NineMLNameError
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction.componentclass import (
@@ -314,23 +314,38 @@ class Dynamics(ComponentClass):
     def port(self, name):
         try:
             return self.send_port(name)
-        except KeyError:
-            return self.receive_port(name)
+        except NineMLNameError:
+            try:
+                return self.receive_port(name)
+            except NineMLNameError:
+                raise NineMLNameError(
+                    "'{}' Dynamics object does not have a port named '{}'"
+                    .format(self.name, name))
 
     def receive_port(self, name):
         try:
             return self.event_receive_port(name)
-        except KeyError:
+        except NineMLNameError:
             try:
                 return self.analog_receive_port(name)
-            except KeyError:
-                return self.analog_reduce_port(name)
+            except NineMLNameError:
+                try:
+                    return self.analog_reduce_port(name)
+                except NineMLNameError:
+                    raise NineMLNameError(
+                        "'{}' Dynamics object does not have a receive port "
+                        "named '{}'".format(self.name, name))
 
     def send_port(self, name):
         try:
             return self.event_send_port(name)
-        except KeyError:
-            return self.analog_send_port(name)
+        except NineMLNameError:
+            try:
+                return self.analog_send_port(name)
+            except NineMLNameError:
+                raise NineMLNameError(
+                    "'{}' Dynamics object does not have a send port "
+                    "named '{}'".format(self.name, name))
 
     @property
     def send_ports(self):

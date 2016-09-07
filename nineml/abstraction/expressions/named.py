@@ -2,7 +2,8 @@
 from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
 from .base import ExpressionWithSimpleLHS, ExpressionSymbol
-from nineml.units import unitless, Unit
+from nineml.units import unitless, Unit, Quantity
+from nineml.exceptions import NineMLDimensionError
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -98,8 +99,22 @@ class Constant(BaseALObject, ExpressionSymbol):
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)
         self._name = name
-        self._value = float(value)
-        self._units = units if units is not None else unitless
+        if isinstance(value, Quantity):
+            if units is None:
+                self._value = float(value)
+                self._units = value.units
+            elif units.dimension == value.units.dimension:
+                self._value = float(value) * 10 ** (units.power -
+                                                    value.units.power)
+                self._units = units
+            else:
+                raise NineMLDimensionError(
+                    "Dimensions do not match between provided quantity ({}) "
+                    "and units ({})".format(value.units.dimension,
+                                            units.dimension))
+        else:
+            self._value = float(value)
+            self._units = units if units is not None else unitless
         assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
 
     def __hash__(self):
