@@ -8,13 +8,16 @@ from nineml.document import Document
 from nineml.abstraction import (
     Parameter, Constant, Dynamics, Regime, Alias,
     OutputEvent, StateVariable, StateAssignment, On, AnalogSendPort,
-    AnalogReceivePort, ConnectionRule, RandomDistribution)
+    AnalogReceivePort, AnalogReducePort, ConnectionRule, RandomDistribution,
+    EventReceivePort, EventSendPort, OnEvent, OnCondition,
+    TimeDerivative, Expression)
 from nineml.user import (
-    Population, Selection, Concatenate, Projection, Property, Component,
-    Definition, Prototype, Initial,
-    DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
+    Population, Selection, Concatenate, Projection, Property,
+    Definition, Prototype, Initial, DynamicsProperties,
+    ConnectionRuleProperties, RandomDistributionProperties,
     MultiDynamics, MultiDynamicsProperties, AnalogPortConnection,
     EventPortConnection, Network)
+from nineml.xml import nineml_v1_ns
 
 
 dynA = Dynamics(
@@ -27,12 +30,13 @@ dynA = Dynamics(
         Regime(
             'dSV1/dt = -SV1 / P2',
             'dSV2/dt = A3 / ARP2 + SV2 / P2',
-            transitions=[On('SV1 > P3', do=[OutputEvent('emit')]),
-                         On('spikein', do=[OutputEvent('emit')])],
+            transitions=[On('SV1 > P3', do=[OutputEvent('ESP1')]),
+                         On('spikein', do=[OutputEvent('ESP2')])],
             name='R1'
         ),
-        Regime(name='R2', transitions=On('(SV1 > C1) & (SV2 < P4)',
-                                         to='R1'))
+        Regime(name='R2',
+               transitions=[
+                   OnCondition('(SV1 > C1) & (SV2 < P4)', target_regime='R1')])
     ],
     analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
                   AnalogReceivePort('ARP2', dimension=(un.resistance *
@@ -55,9 +59,9 @@ dynB = Dynamics(
             'dSV1/dt = -SV1 / (P2*t)',
             'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
             'dSV3/dt = -SV3/t + P3/t',
-            transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
+            transitions=[On('SV1 > P1', do=[OutputEvent('ESP1')]),
                          On('spikein', do=[
-                            OutputEvent('emit'),
+                            OutputEvent('ESP1'),
                             StateAssignment('SV1', 'P1')])],
             name='R1',
         ),
@@ -82,8 +86,8 @@ dynC = Dynamics(
         Regime(
             'dSV1/dt = -SV1 / (P2*t)',
             'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
-            transitions=[On('SV1 > P1', do=[OutputEvent('emit')]),
-                         On('spikein', do=[OutputEvent('emit')])],
+            transitions=[On('SV1 > P1', do=[OutputEvent('ESP1')]),
+                         On('spikein', do=[OutputEvent('ESP1')])],
             aliases=[Alias('A1', 'P1 * 2')],
             name='R1',
         ),
@@ -93,6 +97,73 @@ dynC = Dynamics(
                   AnalogSendPort('A1'), AnalogSendPort('A2')],
     parameters=['P1', 'P2']
 )
+
+dynD = Dynamics(
+    name='dynD',
+    state_variables=[
+        StateVariable('SV1', dimension=un.voltage)],
+    regimes=[
+        Regime(
+            'dSV1/dt = -SV1 / P1',
+            transitions=[On('SV1 > P2', do=[OutputEvent('ESP1')])],
+            name='R1'
+        ),
+    ],
+    parameters=[Parameter('P1', dimension=un.time),
+                Parameter('P2', dimension=un.voltage)]
+)
+
+dynE = Dynamics(
+    name='dynE',
+    state_variables=[
+        StateVariable('SV1', dimension=un.voltage)],
+    regimes=[
+        Regime(
+            'dSV1/dt = -SV1 / P1 + ARP1 / P2',
+            name='R1'
+        ),
+    ],
+    analog_ports=[AnalogReceivePort('ARP1', dimension=un.current)],
+    parameters=[Parameter('P1', dimension=un.time),
+                Parameter('P2', dimension=un.capacitance)]
+)
+
+dynF = Dynamics(
+    name='dynF',
+    state_variables=[
+        StateVariable('SV1', dimension=un.current)],
+    regimes=[
+        Regime(
+            'dSV1/dt = -SV1 / P1',
+            transitions=[On('receive',
+                            do=[StateAssignment('SV1', 'SV1 + P2')])],
+            name='R1'
+        ),
+    ],
+    analog_ports=[AnalogSendPort('SV1', dimension=un.current)],
+    parameters=[Parameter('P1', dimension=un.time),
+                Parameter('P2', dimension=un.current)]
+)
+
+dynG = Dynamics(
+    name='dynG',
+    state_variables=[
+        StateVariable('SV1', dimension=un.dimensionless)],
+    event_ports=[
+        EventReceivePort('ERP1')],
+    analog_ports=[
+        AnalogSendPort('SV1', dimension=un.dimensionless)],
+    parameters=[
+        Parameter('P1', dimension=un.dimensionless),
+        Parameter('P2', dimension=un.time)],
+    regimes=[
+        Regime(
+            name='R1',
+            time_derivatives=[
+                TimeDerivative('SV1', Expression('-1/P2'))],
+            transitions=[
+                OnEvent('ERP1', state_assignments=[
+                    StateAssignment('SV1', 'SV1 + P1')])])])
 
 dynPropA = DynamicsProperties(
     name='dynA',
@@ -108,7 +179,7 @@ dynPropA = DynamicsProperties(
 
 dynPropB = DynamicsProperties(
     name='dynB',
-    definition=dynB,
+    definition=Definition(dynB),
     properties={
         'P1': 1.0 * un.unitless,
         'P2': 1.0 * un.unitless,
@@ -120,19 +191,20 @@ dynPropC = DynamicsProperties(
     properties={
         'P1': 1.0 * un.unitless,
         'P2': 1.0 * un.unitless},
-    initial_values=[Initial('SV1', 0.0, un.unitless),
-                    Initial('SV2', 0.0, un.unitless),
+    initial_values=[Initial('SV1', 0.0 * un.unitless),
+                    Initial('SV2', Quantity(0.0, un.unitless)),
                     Initial('SV3', 0.0)])
 
-conA = ConnectionRule(
-    name="ConA",
-    standard_library='http://nineml.net/9ML/1.0/connectionrules/RandomFanIn',
-    parameters=[Parameter('P1', dimension=un.dimensionless)])
+dynPropG = DynamicsProperties(
+    name='dynPropG',
+    definition=dynG,
+    properties={'P1': 1.0,
+                'P2': 10 * un.ms})
 
-conPropA = ConnectionRuleProperties(
-    name="ConPropA",
-    definition=conA,
-    properties={'P1': 1.0 * un.unitless})
+dynPropA2 = DynamicsProperties(
+    name='dynPropA2',
+    definition=Prototype(dynPropA),
+    properties=[Property('P4', Quantity(2.0, un.mA))])
 
 ranDistrA = RandomDistribution(
     name="RanDistrA",
@@ -159,18 +231,93 @@ popC = Population(
     size=50,
     cell=dynPropC)
 
+popD = Population(
+    name="popD",
+    size=1,
+    cell=DynamicsProperties(
+        name="dynDProps", definition=dynD,
+        properties={'P1': 1 * un.ms, 'P2': -65 * un.mV}))
+
+popE = Population(
+    name="popE",
+    size=1,
+    cell=DynamicsProperties(
+        name="dynEProps", definition=dynE,
+        properties={'P1': 1 * un.ms, 'P2': 1 * un.uF}))
+
+
 selA = Selection(
     name="selA",
-    operation=Concatenate(popA, popB))
+    operation=Concatenate(popA, popC))
+
+selB = Selection(
+    name='selB',
+    operation=Concatenate(popB, popD, popE))
+
+
+conA = ConnectionRule(
+    name="ConA",
+    standard_library=nineml_v1_ns + '/connectionrules/RandomFanIn',
+    parameters=[Parameter('P1', dimension=un.dimensionless)])
+
+conPropA = ConnectionRuleProperties(
+    name="ConPropA",
+    definition=conA,
+    properties={'P1': 1.0 * un.unitless})
+
+conB = ConnectionRule(
+    name="ConB",
+    standard_library=(nineml_v1_ns + '/connectionrules/OneToOne'))
 
 projA = Projection(
     name="projA",
     pre=popA,
     post=popB,
-    response=None,
+    response=dynPropG,
     delay=Quantity(2, un.ms),
-    connectivity=conPropA)
+    connectivity=conPropA,
+    port_connections=[
+        ('pre', 'ESP1', 'response', 'ERP1'),
+        ('response', 'SV1', 'post', 'ARP1')])
+
+projB = Projection(
+    name="projB",
+    pre=popD,
+    post=popE,
+    response=DynamicsProperties(
+        name="dynFProps",
+        definition=dynF,
+        properties={'P1': 10 * un.ms, 'P2': 1 * un.nA}),
+    connectivity=ConnectionRuleProperties(
+        name="ConnectionRuleProps",
+        definition=conB),
+    delay=1 * un.ms,
+    port_connections=[
+        EventPortConnection(
+            send_port='ESP1',
+            receive_port='receive',
+            sender_role='pre',
+            receiver_role='response'),
+        AnalogPortConnection(
+            send_port='SV1',
+            receive_port='ARP1',
+            sender_role='response',
+            receiver_role='post')])
+
+netA = Network(
+    name='netA',
+    populations=[popA, popB],
+    projections=[projA])
+
+netB = Network(
+    name='netB',
+    populations=[popA, popB, popC, popD],
+    projections=[projA, projB])
 
 document = Document(
-    dynA, dynB, dynC, dynPropA, dynPropB, dynPropC, conA, conPropA, ranDistrA,
-    ranDistrPropA, popA, popB, popC, selA)
+    dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, ranDistrA,
+    ranDistrPropA, popA, popB, popC, popD, popE, selA, conA, conPropA,
+    conB, netA, netB)
+
+if __name__ == '__main__':
+    print 'loaded successfully'
