@@ -201,8 +201,8 @@ class SubDynamicsProperties(BaseULObject):
         self._component = component
 
     def __repr__(self):
-        return "SubDynamics(name={}, component={})".format(self.name,
-                                                           self.component)
+        return "{}(name={}, component={})".format(self.nineml_type, self.name,
+                                                  self.component)
 
     @property
     def name(self):
