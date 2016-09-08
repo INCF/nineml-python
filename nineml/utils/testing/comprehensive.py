@@ -2,9 +2,16 @@
 Contains an example document with every type 9ML element in it for use in
 comprehensive testing over all 9ML elements
 """
+import pkgutil
+from collections import defaultdict
+from itertools import chain
+import nineml
 import nineml.units as un
+from nineml.annotations import Annotations
 from nineml.units import Quantity
+from nineml.values import SingleValue, ArrayValue, RandomValue
 from nineml.document import Document
+from nineml.reference import Reference
 from nineml.abstraction import (
     Parameter, Constant, Dynamics, Regime, Alias,
     OutputEvent, StateVariable, StateAssignment, On, AnalogSendPort,
@@ -22,6 +29,16 @@ from nineml.user.multi import (
     AnalogReceivePortExposure, AnalogReducePortExposure)
 from nineml.xml import nineml_v1_ns
 
+
+ranDistrA = RandomDistribution(
+    name="ranDistrA",
+    standard_library="http://www.uncertml.org/distributions/exponential",
+    parameters=[Parameter('P1', dimension=un.dimensionless)])
+
+ranDistrPropA = RandomDistributionProperties(
+    name="ranDistrPropA",
+    definition=ranDistrA,
+    properties={'P1': 1.0 * un.unitless})
 
 dynA = Dynamics(
     name='dynA',
@@ -183,6 +200,17 @@ dynG = Dynamics(
                 OnEvent('ERP1', state_assignments=[
                     StateAssignment('SV1', 'SV1 + P1')])])])
 
+dynH = Dynamics(
+    name='dynH',
+    state_variables=[StateVariable('SV1', un.dimensionless)],
+    aliases=['A1 := SV1 + P1'],
+    regimes=[
+        Regime(
+            name='R1',
+            transitions=[On('ERP1',
+                            do=[StateAssignment('SV1', 'SV1 + P2')])])],
+    analog_ports=[AnalogSendPort('A1', un.dimensionless)])
+
 dynPropA = DynamicsProperties(
     name='dynPropA',
     definition=dynA,
@@ -200,15 +228,15 @@ dynPropB = DynamicsProperties(
     definition=Definition(dynB),
     properties={
         'P1': 1.0 * un.unitless,
-        'P2': 1.0 * un.unitless,
+        'P2': Quantity(RandomValue(ranDistrPropA), un.unitless),
         'P3': 1.0 * un.unitless})
 
 dynPropC = DynamicsProperties(
-    name='dynCProp',
+    name='dynPropC',
     definition=dynC,
     properties={
         'P1': 1.0 * un.unitless,
-        'P2': 1.0 * un.unitless},
+        'P2': Quantity(ArrayValue([1.0, 2.0, 3.0, 4.0, 5.0]), un.unitless)},
     initial_values=[Initial('SV1', 0.0 * un.unitless),
                     Initial('SV2', Quantity(0.0, un.unitless)),
                     Initial('SV3', 0.0)])
@@ -216,7 +244,7 @@ dynPropC = DynamicsProperties(
 dynPropD = DynamicsProperties(
     name='dynPropD',
     definition=dynD,
-    properties={'P1': 1.0 * un.ms,
+    properties={'P1': Quantity(SingleValue(1.0), un.ms),
                 'P2': 1.0 * un.V,
                 'P3': 1.0 * un.mV / (un.s * un.pA)})
 
@@ -232,6 +260,11 @@ dynPropG = DynamicsProperties(
     definition=dynG,
     properties={'P1': 1.0,
                 'P2': 10 * un.ms})
+
+dynPropH = DynamicsProperties(
+    name='dynPropH',
+    definition=dynH,
+    properties={'P1': 1.0, 'P2': 1.0})
 
 dynPropA2 = DynamicsProperties(
     name='dynPropA2',
@@ -272,20 +305,10 @@ multiDynPropB = MultiDynamicsProperties(
         AnalogReceivePortExposure('c', 'ARP1', name='ARP1'),
         AnalogReceivePortExposure('multiA', 'ARP1__d', name='ARP2')])
 
-ranDistrA = RandomDistribution(
-    name="RanDistrA",
-    standard_library="http://www.uncertml.org/distributions/exponential",
-    parameters=[Parameter('P1', dimension=un.dimensionless)])
-
-ranDistrPropA = RandomDistributionProperties(
-    name="RanDistrPropA",
-    definition=ranDistrA,
-    properties={'P1': 1.0 * un.unitless})
-
 popA = Population(
     name="popA",
     size=102,
-    cell=dynPropA)
+    cell=dynPropA2)
 
 popB = Population(
     name='popB',
@@ -294,7 +317,7 @@ popB = Population(
 
 popC = Population(
     name='popC',
-    size=50,
+    size=5,
     cell=dynPropC)
 
 popD = Population(
@@ -312,6 +335,16 @@ popE = Population(
         name="dynEProps", definition=dynE,
         properties={'P1': 1 * un.ms, 'P2': 1 * un.uF, 'P3': 1 * un.mV}))
 
+popMultiA = Population(
+    name='popMultiA',
+    size=20,
+    cell=multiDynPropA)
+
+
+popMultiB = Population(
+    name='popMultiB',
+    size=20,
+    cell=multiDynPropB)
 
 selA = Selection(
     name="selA",
@@ -323,22 +356,22 @@ selB = Selection(
 
 
 conA = ConnectionRule(
-    name="ConA",
+    name="conA",
     standard_library=nineml_v1_ns + '/connectionrules/RandomFanIn',
-    parameters=[Parameter('P1', dimension=un.dimensionless)])
+    parameters=[Parameter('number', dimension=un.dimensionless)])
 
 conPropA = ConnectionRuleProperties(
-    name="ConPropA",
+    name="conPropA",
     definition=conA,
-    properties={'P1': 1.0 * un.unitless})
+    properties={'number': 1.0 * un.unitless})
 
 conB = ConnectionRule(
-    name="ConB",
+    name="conB",
     standard_library=(nineml_v1_ns + '/connectionrules/OneToOne'))
 
 
 conPropB = ConnectionRuleProperties(
-    name="ConPropB",
+    name="conPropB",
     definition=conB)
 
 projA = Projection(
@@ -409,6 +442,17 @@ projD = Projection(
             sender_role='response',
             receiver_role='post')])
 
+projE = Projection(
+    name='projE',
+    pre=popMultiA,
+    post=popMultiB,
+    response=dynPropH,
+    delay=0.5 * un.s,
+    connectivity=conPropB,
+    port_connections=[
+        ('pre', 'ESP1__e', 'response', 'ERP1'),
+        ('response', 'A1', 'post', 'ARP1')])
+
 netA = Network(
     name='netA',
     populations=[popA, popB],
@@ -416,13 +460,102 @@ netA = Network(
 
 netB = Network(
     name='netB',
-    populations=[popA, popB, popC, popD],
-    projections=[projA, projB])
+    populations=[popC, popD],
+    projections=[projB])
 
 document = Document(
-    dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, ranDistrA,
-    ranDistrPropA, popA, popB, popC, popD, popE, selA, conA, conPropA,
-    conB, netA, netB)
+    dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, multiDynPropA,
+    multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
+    selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA, netB,
+    *list(chain(netA.component_arrays, netB.component_arrays,
+          netA.connection_groups, netB.connection_groups)))
 
-if __name__ == '__main__':
-    print 'loaded successfully'
+# -----------------------------------------------------------------------------
+# Create dictionaries holding all nineml types and corresponding examples in
+# the example document
+# -----------------------------------------------------------------------------
+
+loading = [None]
+
+
+def add_with_sub_elements(element):
+    """
+    Recursively adds 9ML elements from the example document to a dictionary
+    sorted by 9ML types
+    """
+    if isinstance(element, (basestring, Document)) or element in loading:
+        return
+    try:
+        # If element has an attribute called 'nineml_type' add it to the
+        # dictionary of all 9ML elements
+        if element.nineml_type == 'Annotations':
+            return
+
+        all_nineml_objects[element.nineml_type].add(element)
+        # Loop through all attributes of the element that are not in the class
+        # definition and attempt to add them to the all_nineml_objects dict
+        loading.append(element)
+        for attr in set(dir(element)) - set(dir(element.__class__)):
+            add_with_sub_elements(getattr(element, attr))
+        loading.pop()
+    except AttributeError:
+
+        # If element is a dictionary or list
+        try:
+            sub_elem_iter = element.itervalues()
+        except AttributeError:
+            try:
+                sub_elem_iter = iter(element)
+            except TypeError:
+                return
+        for elem in sub_elem_iter:
+            add_with_sub_elements(elem)
+
+all_nineml_objects = defaultdict(set)
+all_nineml_objects[document.nineml_type] = [document]
+all_nineml_objects[Reference.nineml_type] = [
+    Reference(o, document) for o in (
+        'dynA', 'dynB', 'dynC', 'dynE', 'dynF', 'dynPropA', 'dynPropB',
+        'dynPropC', 'multiDynPropA', 'multiDynPropB', 'ranDistrA',
+        'ranDistrPropA', 'popA', 'popB', 'popC', 'popD', 'popE', 'selA',
+        'conA', 'conPropA', 'conB', 'projA', 'projB', 'projC',
+        'projD', 'projE')]
+all_nineml_objects[Annotations.nineml_type] = [
+    Annotations(test1='value1', test2='value2')]
+for elem in document.itervalues():
+    add_with_sub_elements(elem)
+# Add remaining elements that are not picked up by recursive
+# search
+multiDynA = multiDynPropA.definition._referred_to
+multiDynB = multiDynPropB.definition._referred_to
+for elem in chain(multiDynA.sub_components,
+                  multiDynB.sub_components, multiDynA.ports, multiDynB.ports,
+                  multiDynA.port_connections, multiDynB.port_connections,
+                  multiDynA.aliases, multiDynB.aliases):
+    all_nineml_objects[elem.nineml_type].add(elem)
+
+
+all_nineml_types = {}
+
+for importer, modname, ispkg in pkgutil.walk_packages(
+        path=nineml.__path__, onerror=lambda x: None,  # @UnusedVariable
+        prefix=nineml.__name__ + '.'):
+    if modname != __name__:
+        # This line was giving strange errors with super init methods
+        # so I swapped for the less elegant one below
+        # module = importer.find_module(modname).load_module(modname)
+        exec('import {} as module'.format(modname))
+        for cls in module.__dict__.itervalues():  # @UndefinedVariable
+            if (isinstance(cls, type) and cls.__module__ == module.__name__): # @UndefinedVariable @IgnorePep8
+                try:
+                    all_nineml_types[cls.nineml_type] = cls
+                except AttributeError:
+                    pass  # Not a nineml type
+
+
+_all_class_names = set(all_nineml_types.iterkeys())
+_all_object_names = set(all_nineml_objects.iterkeys())
+
+assert not (_all_class_names - _all_object_names), (
+    "Not all 9ML elements are in comprehensive example document, '{}',"
+    .format("', '".join(_all_class_names - _all_object_names)))

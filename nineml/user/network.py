@@ -108,7 +108,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @property
     def component_arrays(self):
-        return chain((ComponentArray(p.name, p.size, p.cell)
+        return chain((ComponentArray(p.name + '__cell', p.size, p.cell)
                       for p in self.populations),
                      (ComponentArray(p.name + '__psr', len(p), p.response)
                       for p in self.projections),
@@ -215,12 +215,14 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')
 
 
-class ComponentArray(BaseULObject):
+class ComponentArray(BaseULObject, DocumentLevelObject):
 
     nineml_type = "ComponentArray"
     defining_attributes = ('name', "_size", "_dynamics_properties")
 
-    def __init__(self, name, size, dynamics_properties):
+    def __init__(self, name, size, dynamics_properties, document=None):
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self, document)
         self._name = name
         self.size = size
         self._dynamics_properties = dynamics_properties
@@ -242,7 +244,7 @@ class ComponentArray(BaseULObject):
         return self._dynamics_properties
 
 
-class BaseConnectionGroup(BaseULObject):
+class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
 
     __metaclass__ = ABCMeta
 
@@ -250,7 +252,9 @@ class BaseConnectionGroup(BaseULObject):
                            'destination_port', 'connectivity')
 
     def __init__(self, name, source, destination, source_port,
-                 destination_port, connectivity, delay):
+                 destination_port, connectivity, delay, document=None):
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self, document)
         assert isinstance(name, basestring)
         assert isinstance(source, basestring)
         assert isinstance(destination, basestring)
