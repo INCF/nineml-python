@@ -177,6 +177,10 @@ class _PortExposureAlias(Alias):
     def exposure(self):
         return self._exposure
 
+    def __repr__(self):
+        return "{}(name='{}', rhs='{}')".format(self.nineml_type,
+                                                self.lhs, self.rhs)
+
 
 class _SendPortExposureAlias(_PortExposureAlias):
 
@@ -191,6 +195,7 @@ class _SendPortExposureAlias(_PortExposureAlias):
         return sympy.Symbol(
             self.exposure.sub_component.append_namespace(
                 self.exposure.port_name))
+
 
 
 class _ReceivePortExposureAlias(_PortExposureAlias):

@@ -62,11 +62,10 @@ class BaseNineMLObject(object):
         return True
 
     def __repr__(self):
-        return '{}({})'.format(
-            self.__class__.__name__,
-            ', '.join(n + '=' + (v if len(v) < 150 else v[:150] + ' ...)')
-                      for n, v in ((a, repr(getattr(self, a)))
-                                   for a in self.defining_attributes)))
+        return "{}(name='{}')".format(self.nineml_type, self._name)
+
+    def __str__(self):
+        return repr(self)
 
     def __ne__(self, other):
         return not self == other
