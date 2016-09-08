@@ -26,7 +26,8 @@ class Document(dict, BaseNineMLObject):
 
     defining_attributes = ('elements',)
     nineml_type = 'NineML'
-    write_order = ['Population', 'Projection', 'Selection', 'Network',
+    write_order = ['Network', 'Population', 'Projection', 'Selection',
+                   'ComponentArray', 'ConnectionGroup',
                    'Dynamics', 'ConnectionRule', 'RandomDistribution',
                    'ComponentClass', 'Component',  # For v1.0
                    'DynamicsProperties', 'MultiDynamicsProperties',
@@ -61,7 +62,7 @@ class Document(dict, BaseNineMLObject):
                 "Could not add {} to document '{}' as it is not a 'document "
                 "level NineML object' ('{}')"
                 .format(element.nineml_type, self.url,
-                        "', '".join(self.top_level_types)))
+                        "', '".join(self.write_order)))
         if element.name in self:
             # Ignore if the element is already added (this can happen
             # implictly when writing other elements that refer to this element)

@@ -284,7 +284,7 @@ class ContainerObject(object):
                 pass
 
     def __iter__(self):
-        raise ValueError("'{}' {} container is not iterable"
+        raise TypeError("'{}' {} container is not iterable"
                          .format(self._name, type(self).__name__))
 
     def index_of(self, element, key=None, class_map=None):

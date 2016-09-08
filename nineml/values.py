@@ -109,73 +109,73 @@ class SingleValue(BaseValue):
         return int(self._value)
 
     def __add__(self, num):
-        return self._value + num
+        return SingleValue(self._value + num)
 
     def __sub__(self, num):
-        return self._value - num
+        return SingleValue(self._value - num)
 
     def __mul__(self, num):
-        return self._value * num
+        return SingleValue(self._value * num)
 
     def __truediv__(self, num):
-        return self._value / num
+        return SingleValue(self._value / num)
 
     def __div__(self, num):
-        return self.__truediv__(num)
+        return SingleValue(self.__truediv__(num))
 
     def __divmod__(self, num):
-        return divmod(self, num)
+        return SingleValue(divmod(self, num))
 
     def __pow__(self, power):
-        return self._value ** power
+        return SingleValue(self._value ** power)
 
     def __floordiv__(self, num):
-        return self._value // num
+        return SingleValue(self._value // num)
 
     def __mod__(self, num):
-        return self._value % num
+        return SingleValue(self._value % num)
 
     def __radd__(self, num):
-        return self.__add__(num)
+        return SingleValue(self.__add__(num))
 
     def __rsub__(self, num):
-        return num - self._value
+        return SingleValue(num - self._value)
 
     def __rmul__(self, num):
-        return self.__mul__(num)
+        return SingleValue(self.__mul__(num))
 
     def __rtruediv__(self, num):
-        return num.__truediv__(self._value)
+        return SingleValue(num.__truediv__(self._value))
 
     def __rdiv__(self, num):
-        return self.__rtruediv__(num)
+        return SingleValue(self.__rtruediv__(num))
 
     def __rdivmod__(self, num):
-        return divmod(num, self)
+        return SingleValue(divmod(num, self))
 
     def __rpow__(self, num):
-        return num ** self._value
+        return SingleValue(num ** self._value)
 
     def __rfloordiv__(self, num):
-        return num // self._value
+        return SingleValue(num // self._value)
 
     def __rmod__(self, num):
-        return num % self._value
+        return SingleValue(num % self._value)
 
     def __neg__(self):
-        return -self._value
+        return SingleValue(-self._value)
 
     def __abs__(self):
-        return abs(self._value)
+        return SingleValue(abs(self._value))
 
     def __round__(self, num_digits=0):
-        return round(self._value, num_digits)
+        return SingleValue(round(self._value, num_digits))
 
     def __floor__(self):
-        return self._value.__floor__()
+        return SingleValue(self._value.__floor__())
 
     def __ceil__(self):
-        return self._value.__ceil__()
+        return SingleValue(self._value.__ceil__())
 
 
 class ArrayValue(BaseValue):
@@ -223,7 +223,7 @@ class ArrayValue(BaseValue):
         return "ArrayValue(with {} values)".format(len(self._values))
 
     def __hash__(self):
-        return hash(self.value)
+        return hash(self.values)
 
     def inverse(self):
         try:
@@ -295,55 +295,55 @@ class ArrayValue(BaseValue):
         try:
             return self._value + num
         except AttributeError:
-            return [v + num for v in self._values]
+            return ArrayValue([v + num for v in self._values])
 
     def __sub__(self, num):
         try:
             return self._value - num
         except AttributeError:
-            return [v - num for v in self._values]
+            return ArrayValue([v - num for v in self._values])
 
     def __mul__(self, num):
         try:
             return self._value * num
         except AttributeError:
-            return [v * num for v in self._values]
+            return ArrayValue([v * num for v in self._values])
 
     def __truediv__(self, num):
         try:
             return self._value.__truediv__(num)
         except AttributeError:
-            return [v / num for v in self._values]
+            return ArrayValue([v / num for v in self._values])
 
     def __div__(self, num):
         try:
             return self.__truediv__(num)
         except AttributeError:
-            return [v.__truediv__(num) for v in self._values]
+            return ArrayValue([v.__truediv__(num) for v in self._values])
 
     def __divmod__(self, num):
         try:
             return divmod(self, num)
         except AttributeError:
-            return [divmod(v, num) for v in self._values]
+            return ArrayValue([divmod(v, num) for v in self._values])
 
     def __pow__(self, power):
         try:
             return self._value ** power
         except AttributeError:
-            return [v ** power for v in self._values]
+            return ArrayValue([v ** power for v in self._values])
 
     def __floordiv__(self, num):
         try:
             return self._value // num
         except AttributeError:
-            return [v // num for v in self._values]
+            return ArrayValue([v // num for v in self._values])
 
     def __mod__(self, num):
         try:
             return self._value % num
         except AttributeError:
-            return [v % num for v in self._values]
+            return ArrayValue([v % num for v in self._values])
 
     def __radd__(self, num):
         return self.__add__(num)
@@ -352,61 +352,61 @@ class ArrayValue(BaseValue):
         try:
             return num - self._value
         except AttributeError:
-            return [num - v for v in self._values]
+            return ArrayValue([num - v for v in self._values])
 
     def __rmul__(self, num):
         try:
             return num * self._value
         except AttributeError:
-            return [num * v for v in self._values]
+            return ArrayValue([num * v for v in self._values])
 
     def __rtruediv__(self, num):
         try:
             return num.__truediv__(self._value)
         except AttributeError:
-            return [v.__truediv__(num) for v in self._values]
+            return ArrayValue([v.__truediv__(num) for v in self._values])
 
     def __rdiv__(self, num):
         try:
             return self._values.__rtruediv__(num)
         except AttributeError:
-            return [v.__rtruediv__(num) for v in self._values]
+            return ArrayValue([v.__rtruediv__(num) for v in self._values])
 
     def __rdivmod__(self, num):
         try:
             return divmod(num, self)
         except AttributeError:
-            return [divmod(num, v) for v in self._values]
+            return ArrayValue([divmod(num, v) for v in self._values])
 
     def __rpow__(self, num):
         try:
             return self._values.__rpow__(num)
         except AttributeError:
-            return [num ** v for v in self._values]
+            return ArrayValue([num ** v for v in self._values])
 
     def __rfloordiv__(self, num):
         try:
             return self._values.__rfloordiv__()
         except AttributeError:
-            return [num // v for v in self._values]
+            return ArrayValue([num // v for v in self._values])
 
     def __rmod__(self, num):
         try:
             return self._values.__rmod__()
         except AttributeError:
-            return [num % v for v in self._values]
+            return ArrayValue([num % v for v in self._values])
 
     def __neg__(self):
         try:
             return self._values.__neg__()
         except AttributeError:
-            return [-v for v in self._values]
+            return ArrayValue([-v for v in self._values])
 
     def __abs__(self):
         try:
             return self._values.__abs__()
         except AttributeError:
-            return [abs(v) for v in self._values]
+            return ArrayValue([abs(v) for v in self._values])
 
 
 class RandomValue(BaseValue):
