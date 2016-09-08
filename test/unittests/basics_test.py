@@ -5,7 +5,14 @@ from nineml.utils.testing.comprehensive import (
 
 class TestAccessors(unittest.TestCase):
 
-    pass
+    def test_accessors(self):
+        for name, cls in all_types.iteritems():
+            if hasattr(cls, 'class_to_member'):
+                for member in cls.class_to_member:
+                    for elem in instances_of_all_types[name]:
+                        self.assertIsInstance(
+                            elem._num_members(member, cls.class_to_member),
+                            int)
 
 
 class TestRepr(unittest.TestCase):
