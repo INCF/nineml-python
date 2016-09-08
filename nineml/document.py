@@ -56,6 +56,10 @@ class Document(dict, BaseNineMLObject):
         for element in elements:
             self.add(element)
 
+    def __repr__(self):
+        return "NineMLDocument(url='{}', {} elements)".format(
+            str(self.url), len(self))
+
     def add(self, element):
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
             raise NineMLRuntimeError(

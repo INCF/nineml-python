@@ -491,9 +491,9 @@ def add_with_sub_elements(element):
         if element.nineml_type == 'Annotations':
             return
 
-        all_nineml_objects[element.nineml_type].add(element)
+        instances_of_all_types[element.nineml_type].add(element)
         # Loop through all attributes of the element that are not in the class
-        # definition and attempt to add them to the all_nineml_objects dict
+        # definition and attempt to add them to the instances_of_all_types dict
         loading.append(element)
         for attr in set(dir(element)) - set(dir(element.__class__)):
             add_with_sub_elements(getattr(element, attr))
@@ -511,16 +511,16 @@ def add_with_sub_elements(element):
         for elem in sub_elem_iter:
             add_with_sub_elements(elem)
 
-all_nineml_objects = defaultdict(set)
-all_nineml_objects[document.nineml_type] = [document]
-all_nineml_objects[Reference.nineml_type] = [
+instances_of_all_types = defaultdict(set)
+instances_of_all_types[document.nineml_type] = [document]
+instances_of_all_types[Reference.nineml_type] = [
     Reference(o, document) for o in (
         'dynA', 'dynB', 'dynC', 'dynE', 'dynF', 'dynPropA', 'dynPropB',
         'dynPropC', 'multiDynPropA', 'multiDynPropB', 'ranDistrA',
         'ranDistrPropA', 'popA', 'popB', 'popC', 'popD', 'popE', 'selA',
         'conA', 'conPropA', 'conB', 'projA', 'projB', 'projC',
         'projD', 'projE')]
-all_nineml_objects[Annotations.nineml_type] = [
+instances_of_all_types[Annotations.nineml_type] = [
     Annotations(test1='value1', test2='value2')]
 for elem in document.itervalues():
     add_with_sub_elements(elem)
@@ -532,10 +532,10 @@ for elem in chain(multiDynA.sub_components,
                   multiDynB.sub_components, multiDynA.ports, multiDynB.ports,
                   multiDynA.port_connections, multiDynB.port_connections,
                   multiDynA.aliases, multiDynB.aliases):
-    all_nineml_objects[elem.nineml_type].add(elem)
+    instances_of_all_types[elem.nineml_type].add(elem)
 
 
-all_nineml_types = {}
+all_types = {}
 
 for importer, modname, ispkg in pkgutil.walk_packages(
         path=nineml.__path__, onerror=lambda x: None,  # @UnusedVariable
@@ -548,14 +548,14 @@ for importer, modname, ispkg in pkgutil.walk_packages(
         for cls in module.__dict__.itervalues():  # @UndefinedVariable
             if (isinstance(cls, type) and cls.__module__ == module.__name__): # @UndefinedVariable @IgnorePep8
                 try:
-                    all_nineml_types[cls.nineml_type] = cls
+                    all_types[cls.nineml_type] = cls
                 except AttributeError:
                     pass  # Not a nineml type
 
 
-_all_class_names = set(all_nineml_types.iterkeys())
-_all_object_names = set(all_nineml_objects.iterkeys())
+_all_class_names = set(all_types.iterkeys())
+_all_instance_names = set(instances_of_all_types.iterkeys())
 
-assert not (_all_class_names - _all_object_names), (
+assert not (_all_class_names - _all_instance_names), (
     "Not all 9ML elements are in comprehensive example document, '{}',"
-    .format("', '".join(_all_class_names - _all_object_names)))
+    .format("', '".join(_all_class_names - _all_instance_names)))

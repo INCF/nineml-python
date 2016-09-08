@@ -65,7 +65,10 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         ExpressionWithSimpleLHS.__init__(self, lhs, rhs)
 
     def __repr__(self):
-        return "<Alias: %s := %s>" % (self.lhs, self.rhs)
+        return "Alias(name='{}', rhs='{}')".format(self.lhs, self.rhs)
+
+    def __str__(self):
+        return "{} := {}".format(self.lhs, self.rhs)
 
     @property
     def name(self):
