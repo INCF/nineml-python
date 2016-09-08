@@ -116,6 +116,10 @@ class MultiDynamicsProperties(DynamicsProperties):
         return chain(*[c.attributes_with_units
                        for c in self.sub_components])
 
+    @property
+    def num_sub_components(self):
+        return len(self._sub_components)
+
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):

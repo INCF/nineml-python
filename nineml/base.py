@@ -336,8 +336,8 @@ class ContainerObject(object):
     def _member_names_iter(self, element_type, class_map):
         try:
             return getattr(
-                self, (accessor_name_from_type(class_map, element_type)
-                       + '_names'))
+                self, (accessor_name_from_type(class_map, element_type) +
+                       '_names'))
         except AttributeError:
             raise AttributeError(
                 "Elements of type {} aren't named".format(element_type))
