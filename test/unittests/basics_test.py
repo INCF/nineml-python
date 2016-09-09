@@ -1,11 +1,41 @@
 import unittest
+import collections
 from nineml.utils.testing.comprehensive import (
     all_types, instances_of_all_types)
 
 
 class TestAccessors(unittest.TestCase):
 
-    def test_accessors(self):
+    exceptions = [('AnalogReceivePortExposure', '_name'),
+                  ('AnalogSendPortExposure', '_name'),
+                  ('AnalogReducePortExposure', '_name'),
+                  ('EventReceivePortExposure', '_name'),
+                  ('EventSendPortExposure', '_name'),
+                  ('EventPortConnection', '_sender_role'),
+                  ('AnalogPortConnection', '_sender_role'),
+                  ('EventPortConnection', '_receiver_role'),
+                  ('AnalogPortConnection', '_receiver_role'),
+                  ('EventPortConnection', '_sender_name'),
+                  ('AnalogPortConnection', '_sender_name'),
+                  ('EventPortConnection', '_receiver_name'),
+                  ('AnalogPortConnection', '_receiver_name')]
+
+    def test_defining_attributes(self):
+        for name, cls in all_types.iteritems():
+            if hasattr(cls, 'defining_attributes'):
+                for attr_name in getattr(cls, 'defining_attributes'):
+                    for elem in instances_of_all_types[name]:
+                        if (not isinstance(elem, basestring) and
+                                isinstance(elem, collections.Iterable)):
+                            continue
+                        attr = getattr(elem, attr_name)
+                        if (attr_name.startswith('_') and
+                            hasattr(cls, attr_name[1:]) and
+                                (name, attr_name) not in self.exceptions):
+                            self.assertEqual(attr,
+                                             getattr(elem, attr_name[1:]))
+
+    def test_member_accessors(self):
         """
         Each "ContainerObject" provides accessor methods for each member type
         it contains that return:
