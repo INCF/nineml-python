@@ -564,7 +564,15 @@ class DynamicsProperties(Component):
             except KeyError:
                 raise Exception("Initial value not specified for %s" %
                                 var.name)
-            check_units(initial_value.units, var.dimension)
+            initial_units = initial_value.units
+            initial_dimension = initial_units.dimension
+            var_dimension = var.dimension
+            if initial_dimension != var_dimension:
+                raise NineMLRuntimeError(
+                    "Dimensions for '{}' property, {}, in '{}' don't match "
+                    "that of its definition in '{}', {}."
+                    .format(var.name, initial_dimension, self.name,
+                            self.component_class.name, var_dimension))
 
     def __getinitargs__(self):
         return (self.name, self.definition, self._properties,

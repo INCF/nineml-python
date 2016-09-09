@@ -448,15 +448,6 @@ def safe_dict(vals):
     return d
 
 
-def file_sha1_hexdigest(filename):
-    """Returns the SHA1 hex-digest of a file"""
-
-    f = open(filename, 'rb')
-    hashhex = hashlib.sha1(f.read()).hexdigest()
-    f.close()
-    return hashhex
-
-
 def ensure_iterable(expected_list):
     if isinstance(expected_list, dict):
         raise TypeError("Expected a list, got a dictionary ({})"
@@ -495,25 +486,6 @@ def restore_sys_path(func):
     return newfunc
 
 
-class curry:
-    """
-    http://code.activestate.com/recipes/
-    52549-curry-associating-parameters-with-a-function/
-    """
-    def __init__(self, fun, *args, **kwargs):
-        self.fun = fun
-        self.pending = args[:]
-        self.kwargs = kwargs.copy()
-
-    def __call__(self, *args, **kwargs):
-        if kwargs and self.kwargs:
-            kw = self.kwargs.copy()
-            kw.update(kwargs)
-        else:
-            kw = kwargs or self.kwargs
-
-        return self.fun(*(self.pending + args), **kw)
-
 # Matches strings starting with an alphabetic character and ending with an
 # alphanumeric character and allowing alphanumeric+underscore characters in
 # between.
@@ -537,21 +509,6 @@ valid_uri_re = re.compile(r'^(?:https?|file)://'  # http:// or https://
                           r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 
-def walk(obj, visitor=None, depth=0):
-    if visitor:
-        visitor.depth = depth
-    try:
-        obj.accept_visitor(visitor)
-    except AttributeError:
-        pass
-    if hasattr(obj, "get_children"):
-        get_children = obj.get_children
-    else:
-        get_children = obj.itervalues
-    for child in sorted(get_children()):
-        walk(child, visitor, depth + 1)
-
-
 class ExampleVisitor(object):
 
     def visit(self, obj):
@@ -565,35 +522,6 @@ class Collector(object):
 
     def visit(self, obj):
         self.objects.append(obj)
-
-
-def flatten(obj):
-    collector = Collector()
-    walk(obj, collector)
-    return collector.objects
-
-
-def check_units(units, dimension):
-    # FIXME: primitive unit checking, should really use Pint, Quantities or
-    # Mike Hull's tools
-    if not dimension:
-        raise ValueError("dimension not specified")
-    base_units = {
-        "voltage": "V",
-        "current": "A",
-        "conductance": "S",
-        "capacitance": "F",
-        "time": "s",
-        "frequency": "Hz",
-        "dimensionless": "",
-    }
-    if len(units) == 1:
-        base = units
-    else:
-        base = units[1:]
-    if base != base_units[dimension]:
-        raise ValueError("Units %s are invalid for dimension %s" %
-                         (units, dimension))
 
 
 def nearly_equal(float1, float2, places=15):
@@ -629,21 +557,3 @@ def xml_equal(xml1, xml2):
     return all(xml_equal(c1, c2)
                for c1, c2 in itertools.izip(children1, children2))
 
-
-@restore_sys_path
-def load_py_module(filename):
-    """Takes the fully qualified path of a python file,
-    loads it and returns the module object
-    """
-
-    if not os.path.exists(filename):
-        print "CWD:", os.getcwd()
-        raise NineMLRuntimeError('File does not exist %s' % filename)
-
-    dirname, fname = os.path.split(filename)
-    sys.path = [dirname] + sys.path
-
-    module_name = fname.replace('.py', '')
-
-    module = __import__(module_name)
-    return module
