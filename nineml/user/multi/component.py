@@ -754,13 +754,16 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_port_connection_names(self):
-        return chain(*(d.iterkeys()
-                       for d in self._analog_port_connections.itervalues()))
+        return chain(*[
+            ['___'.join((snd, sprt, rcv, rprt)) for rcv, rprt in rcvs]
+            for (snd,
+                 sprt), rcvs in self._analog_port_connections.iteritems()])
 
     @property
     def event_port_connection_names(self):
-        return chain(*(d.iterkeys()
-                       for d in self._event_port_connections.itervalues()))
+        return chain(*[
+            ['___'.join((snd, sprt, rcv, rprt)) for rcv, rprt in rcvs]
+            for (snd, sprt), rcvs in self._event_port_connections.iteritems()])
 
     @name_error
     def sub_component(self, name):
@@ -769,17 +772,17 @@ class MultiDynamics(Dynamics):
     def analog_port_connection(self, name):
         try:
             sender, send_port, receiver, receive_port = name.split('___')
-        except ValueError:
+        except (ValueError, AttributeError):
             raise NineMLNameError(
                 "Name provided to analog_port_connection '{}' was not a "
                 "4-tuple of (sender, send_port, receiver, receive_port)")
         return self._analog_port_connections[
-            (receiver, receive_port)][(sender, send_port)]
+            (sender, send_port)][(receiver, receive_port)]
 
     def event_port_connection(self, name):
         try:
             sender, send_port, receiver, receive_port = name.split('___')
-        except ValueError:
+        except (ValueError, AttributeError):
             raise NineMLNameError(
                 "Name provided to analog_port_connection '{}' was not a "
                 "4-tuple of (sender, send_port, receiver, receive_port)")

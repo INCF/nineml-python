@@ -576,7 +576,7 @@ class DynamicsProperties(Component):
             return (
                 (self._initial_values[p.name]
                  if p.name in self._initial_values else p)
-                for p in self.definition.component.properties)
+                for p in self.definition.component.initial_values)
         else:
             return self._initial_values.itervalues()
 

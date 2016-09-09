@@ -14,7 +14,7 @@ from ..expressions import ODE
 from .. import BaseALObject
 from nineml.units import dimensionless, Dimension
 from nineml.base import ContainerObject
-from ..expressions import Alias
+from ..expressions import Alias, Expression
 from .transitions import OnEvent, OnCondition, Trigger
 from .visitors.queriers import DynamicsElementFinder
 
@@ -338,12 +338,24 @@ class Regime(BaseALObject, ContainerObject):
         return self._time_derivatives.iterkeys()
 
     @property
+    def time_derivative_names(self):
+        return self.time_derivative_variables
+
+    @property
     def on_event_port_names(self):
         return self._on_events.iterkeys()
 
     @property
+    def on_event_names(self):
+        return self.on_event_port_names
+
+    @property
     def on_condition_triggers(self):
         return self._on_conditions.iterkeys()
+
+    @property
+    def on_condition_names(self):
+        return (Expression(t).rhs_str for t in self.on_condition_triggers)
 
     @property
     def alias_names(self):
