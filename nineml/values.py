@@ -48,7 +48,10 @@ class SingleValue(BaseValue):
 
     def __init__(self, value):
         super(SingleValue, self).__init__()
-        self._value = float(value)
+        try:
+            self._value = float(value)
+        except:
+            raise
 
     @property
     def value(self):
@@ -109,37 +112,34 @@ class SingleValue(BaseValue):
         return int(self._value)
 
     def __add__(self, num):
-        return SingleValue(self._value + num)
+        return SingleValue(self._value + float(num))
 
     def __sub__(self, num):
-        return SingleValue(self._value - num)
+        return SingleValue(self._value - float(num))
 
     def __mul__(self, num):
-        return SingleValue(self._value * num)
+        return SingleValue(self._value * float(num))
 
     def __truediv__(self, num):
-        return SingleValue(self._value / num)
+        return SingleValue(self._value / float(num))
 
     def __div__(self, num):
         return SingleValue(self.__truediv__(num))
-
-    def __divmod__(self, num):
-        return SingleValue(divmod(self, num))
 
     def __pow__(self, power):
         return SingleValue(self._value ** power)
 
     def __floordiv__(self, num):
-        return SingleValue(self._value // num)
+        return SingleValue(self._value // float(num))
 
     def __mod__(self, num):
-        return SingleValue(self._value % num)
+        return SingleValue(self._value % float(num))
 
     def __radd__(self, num):
         return SingleValue(self.__add__(num))
 
     def __rsub__(self, num):
-        return SingleValue(num - self._value)
+        return SingleValue(float(num) - self._value)
 
     def __rmul__(self, num):
         return SingleValue(self.__mul__(num))
@@ -151,31 +151,22 @@ class SingleValue(BaseValue):
         return SingleValue(self.__rtruediv__(num))
 
     def __rdivmod__(self, num):
-        return SingleValue(divmod(num, self))
+        return SingleValue(divmod(float(num), self._value))
 
     def __rpow__(self, num):
-        return SingleValue(num ** self._value)
+        return SingleValue(float(num) ** self._value)
 
     def __rfloordiv__(self, num):
-        return SingleValue(num // self._value)
+        return SingleValue(float(num) // self._value)
 
     def __rmod__(self, num):
-        return SingleValue(num % self._value)
+        return SingleValue(float(num) % self._value)
 
     def __neg__(self):
         return SingleValue(-self._value)
 
     def __abs__(self):
         return SingleValue(abs(self._value))
-
-    def __round__(self, num_digits=0):
-        return SingleValue(round(self._value, num_digits))
-
-    def __floor__(self):
-        return SingleValue(self._value.__floor__())
-
-    def __ceil__(self):
-        return SingleValue(self._value.__ceil__())
 
 
 class ArrayValue(BaseValue):

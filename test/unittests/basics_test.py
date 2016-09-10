@@ -114,5 +114,6 @@ class TestRepr(unittest.TestCase):
                 else:
                     self.assertTrue(
                         repr(elem).startswith(name),
-                        "__repr__ for {} instance does not start with '{}' ('{}')"
+                        "__repr__ for {} instance does not start with '{}' "
+                        "('{}')"
                         .format(name, all_types[name].__name__, repr(elem)))

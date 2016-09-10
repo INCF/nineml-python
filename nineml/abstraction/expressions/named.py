@@ -4,6 +4,7 @@ from .. import BaseALObject
 from .base import ExpressionWithSimpleLHS, ExpressionSymbol
 from nineml.units import unitless, Unit, Quantity
 from nineml.exceptions import NineMLDimensionError
+from nineml.values import BaseValue
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -104,10 +105,10 @@ class Constant(BaseALObject, ExpressionSymbol):
         self._name = name
         if isinstance(value, Quantity):
             if units is None:
-                self._value = float(value)
+                self._value = value._value
                 self._units = value.units
             elif units.dimension == value.units.dimension:
-                self._value = float(value) * 10 ** (units.power -
+                self._value = value._value * 10 ** (units.power -
                                                     value.units.power)
                 self._units = units
             else:
@@ -116,7 +117,10 @@ class Constant(BaseALObject, ExpressionSymbol):
                     "and units ({})".format(value.units.dimension,
                                             units.dimension))
         else:
-            self._value = float(value)
+            if isinstance(value, BaseValue):
+                self._value = value
+            else:
+                self._value = float(value)
             self._units = units if units is not None else unitless
         assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
 

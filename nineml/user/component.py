@@ -7,7 +7,7 @@ from nineml.base import BaseNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
-from nineml.utils import check_units, ensure_valid_identifier
+from nineml.utils import ensure_valid_identifier
 from nineml.xml import (
     from_child_xml, unprocessed_xml, get_xml_attr, E, extract_xmlns, NINEMLv1)
 from ..abstraction import ComponentClass
