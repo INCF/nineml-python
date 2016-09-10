@@ -48,10 +48,7 @@ class SingleValue(BaseValue):
 
     def __init__(self, value):
         super(SingleValue, self).__init__()
-        try:
-            self._value = float(value)
-        except:
-            raise
+        self._value = float(value)
 
     @property
     def value(self):
@@ -149,9 +146,6 @@ class SingleValue(BaseValue):
 
     def __rdiv__(self, num):
         return SingleValue(self.__rtruediv__(num))
-
-    def __rdivmod__(self, num):
-        return SingleValue(divmod(float(num), self._value))
 
     def __rpow__(self, num):
         return SingleValue(float(num) ** self._value)
@@ -284,27 +278,27 @@ class ArrayValue(BaseValue):
 
     def __add__(self, num):
         try:
-            return self._value + num
+            return self._value + float(num)
         except AttributeError:
-            return ArrayValue([v + num for v in self._values])
+            return ArrayValue([v + float(num) for v in self._values])
 
     def __sub__(self, num):
         try:
-            return self._value - num
+            return self._value - float(num)
         except AttributeError:
-            return ArrayValue([v - num for v in self._values])
+            return ArrayValue([v - float(num) for v in self._values])
 
     def __mul__(self, num):
         try:
-            return self._value * num
+            return self._value * float(num)
         except AttributeError:
-            return ArrayValue([v * num for v in self._values])
+            return ArrayValue([v * float(num) for v in self._values])
 
     def __truediv__(self, num):
         try:
             return self._value.__truediv__(num)
         except AttributeError:
-            return ArrayValue([v / num for v in self._values])
+            return ArrayValue([v / float(num) for v in self._values])
 
     def __div__(self, num):
         try:
@@ -312,44 +306,38 @@ class ArrayValue(BaseValue):
         except AttributeError:
             return ArrayValue([v.__truediv__(num) for v in self._values])
 
-    def __divmod__(self, num):
-        try:
-            return divmod(self, num)
-        except AttributeError:
-            return ArrayValue([divmod(v, num) for v in self._values])
-
     def __pow__(self, power):
         try:
-            return self._value ** power
+            return self._value ** float(power)
         except AttributeError:
-            return ArrayValue([v ** power for v in self._values])
+            return ArrayValue([v ** float(power) for v in self._values])
 
     def __floordiv__(self, num):
         try:
-            return self._value // num
+            return self._value // float(num)
         except AttributeError:
-            return ArrayValue([v // num for v in self._values])
+            return ArrayValue([v // float(num) for v in self._values])
 
     def __mod__(self, num):
         try:
-            return self._value % num
+            return self._value % float(num)
         except AttributeError:
-            return ArrayValue([v % num for v in self._values])
+            return ArrayValue([v % float(num) for v in self._values])
 
     def __radd__(self, num):
         return self.__add__(num)
 
     def __rsub__(self, num):
         try:
-            return num - self._value
+            return float(num) - self._value
         except AttributeError:
-            return ArrayValue([num - v for v in self._values])
+            return ArrayValue([float(num) - v for v in self._values])
 
     def __rmul__(self, num):
         try:
-            return num * self._value
+            return float(num) * self._value
         except AttributeError:
-            return ArrayValue([num * v for v in self._values])
+            return ArrayValue([float(num) * v for v in self._values])
 
     def __rtruediv__(self, num):
         try:
@@ -363,29 +351,23 @@ class ArrayValue(BaseValue):
         except AttributeError:
             return ArrayValue([v.__rtruediv__(num) for v in self._values])
 
-    def __rdivmod__(self, num):
-        try:
-            return divmod(num, self)
-        except AttributeError:
-            return ArrayValue([divmod(num, v) for v in self._values])
-
     def __rpow__(self, num):
         try:
             return self._values.__rpow__(num)
         except AttributeError:
-            return ArrayValue([num ** v for v in self._values])
+            return ArrayValue([float(num) ** v for v in self._values])
 
     def __rfloordiv__(self, num):
         try:
             return self._values.__rfloordiv__()
         except AttributeError:
-            return ArrayValue([num // v for v in self._values])
+            return ArrayValue([float(num) // v for v in self._values])
 
     def __rmod__(self, num):
         try:
             return self._values.__rmod__()
         except AttributeError:
-            return ArrayValue([num % v for v in self._values])
+            return ArrayValue([float(num) % v for v in self._values])
 
     def __neg__(self):
         try:
