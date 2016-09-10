@@ -38,7 +38,7 @@ ranDistrA = RandomDistribution(
 ranDistrPropA = RandomDistributionProperties(
     name="ranDistrPropA",
     definition=ranDistrA,
-    properties={'P1': 1.0 * un.unitless})
+    properties={'P1': 81.0 * un.unitless})
 
 dynA = Dynamics(
     name='dynA',
@@ -67,7 +67,7 @@ dynA = Dynamics(
                 Parameter('P2', dimension=un.time),
                 Parameter('P3', dimension=un.voltage),
                 Parameter('P4', dimension=un.current)],
-    constants=[Constant('C1', value=1.0, units=un.mV)]
+    constants=[Constant('C1', value=-71.0, units=un.mV)]
 )
 
 dynB = Dynamics(
@@ -90,7 +90,7 @@ dynB = Dynamics(
             On('SV3 < 0.001', to='R2',
                do=[StateAssignment('SV3', 1)])])
     ],
-    constants=[Constant('C1', 1.0, un.nA)],
+    constants=[Constant('C1', 10.0, un.nA)],
     analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
                   AnalogReducePort('ADP1', operator='+'),
                   AnalogSendPort('A1'),
@@ -133,7 +133,7 @@ dynD = Dynamics(
             name='R1'
         ),
     ],
-    constants=[Constant('C1', 1.0 * un.Mohm)],
+    constants=[Constant('C1', -67.0 * un.Mohm)],
     aliases=[Alias('A1', Expression('SV1 / C1'))],
     analog_ports=[AnalogSendPort('A1', dimension=un.current),
                   AnalogReducePort('ADP1', dimension=un.voltage / un.time),
@@ -190,7 +190,7 @@ dynG = Dynamics(
     parameters=[
         Parameter('P1', dimension=un.dimensionless),
         Parameter('P2', dimension=un.time)],
-    constants=[Constant('C1', 1 * un.nA)],
+    constants=[Constant('C1', 1.3 * un.nA)],
     regimes=[
         Regime(
             name='R1',
@@ -215,61 +215,61 @@ dynPropA = DynamicsProperties(
     name='dynPropA',
     definition=dynA,
     properties={
-        'P1': 1.0 * un.mV,
-        'P2': 1.0 * un.ms,
-        'P3': 1.0 * un.mV,
-        'P4': 1.0 * un.nA},
+        'P1': -5.56 * un.mV,
+        'P2': 78.0 * un.ms,
+        'P3': -90.2 * un.mV,
+        'P4': 152.0 * un.nA},
     initial_values={
-        'SV1': 1.0 * un.unitless,
-        'SV2': 1.0 * un.unitless})
+        'SV1': -1.7 * un.unitless,
+        'SV2': 8.1 * un.unitless})
 
 dynPropB = DynamicsProperties(
     name='dynPropB',
     definition=Definition(dynB),
     properties={
-        'P1': 1.0 * un.unitless,
+        'P1': 11.1 * un.unitless,
         'P2': Quantity(RandomValue(ranDistrPropA), un.unitless),
-        'P3': 1.0 * un.unitless})
+        'P3': -101 * un.unitless})
 
 dynPropC = DynamicsProperties(
     name='dynPropC',
     definition=dynC,
     properties={
-        'P1': 1.0 * un.unitless,
+        'P1': 23.3 * un.unitless,
         'P2': Quantity(ArrayValue([1.0, 2.0, 3.0, 4.0, 5.0]), un.unitless)},
-    initial_values=[Initial('SV1', 0.0 * un.unitless),
-                    Initial('SV2', Quantity(0.0, un.unitless)),
-                    Initial('SV3', 0.0)])
+    initial_values=[Initial('SV1', 3.3 * un.unitless),
+                    Initial('SV2', Quantity(21.7, un.unitless)),
+                    Initial('SV3', 8.0)])
 
 dynPropD = DynamicsProperties(
     name='dynPropD',
     definition=dynD,
     properties={'P1': Quantity(SingleValue(1.0), un.ms),
-                'P2': 1.0 * un.V,
-                'P3': 1.0 * un.mV / (un.s * un.pA)})
+                'P2': 44.1 * un.V,
+                'P3': -75.3 * un.mV / (un.s * un.pA)})
 
 dynPropE = DynamicsProperties(
     name='dynPropE',
     definition=dynE,
-    properties={'P1': 1.0 * un.ms,
-                'P2': 1.0 * un.uF,
-                'P3': 1.0 * un.mV})
+    properties={'P1': 22.1 * un.ms,
+                'P2': 34.2 * un.uF,
+                'P3': -12.0 * un.mV})
 
 dynPropG = DynamicsProperties(
     name='dynPropG',
     definition=dynG,
-    properties={'P1': 1.0,
-                'P2': 10 * un.ms})
+    properties={'P1': 8.8,
+                'P2': 2.3 * un.ms})
 
 dynPropH = DynamicsProperties(
     name='dynPropH',
     definition=dynH,
-    properties={'P1': 1.0, 'P2': 1.0})
+    properties={'P1': -3.3, 'P2': 40.5})
 
 dynPropA2 = DynamicsProperties(
     name='dynPropA2',
     definition=Prototype(dynPropA),
-    properties=[Property('P4', Quantity(2.0, un.mA))])
+    properties=[Property('P4', Quantity(42.0, un.mA))])
 
 
 multiDynPropA = MultiDynamicsProperties(
@@ -325,15 +325,16 @@ popD = Population(
     size=1,
     cell=DynamicsProperties(
         name="dynDProps", definition=dynD,
-        properties={'P1': 1 * un.ms, 'P2': -65 * un.mV,
-                    'P3': 1 * un.V / (un.ms * un.uA)}))
+        properties={'P1': 1.5 * un.ms, 'P2': -65.0 * un.mV,
+                    'P3': 7.7 * un.V / (un.ms * un.uA)}))
 
 popE = Population(
     name="popE",
     size=1,
     cell=DynamicsProperties(
         name="dynEProps", definition=dynE,
-        properties={'P1': 1 * un.ms, 'P2': 1 * un.uF, 'P3': 1 * un.mV}))
+        properties={'P1': 3.2 * un.ms, 'P2': -20.3 * un.uF,
+                    'P3': 0.0 * un.mV}))
 
 popMultiA = Population(
     name='popMultiA',
@@ -363,7 +364,7 @@ conA = ConnectionRule(
 conPropA = ConnectionRuleProperties(
     name="conPropA",
     definition=conA,
-    properties={'number': 1.0 * un.unitless})
+    properties={'number': 0.5 * un.unitless})
 
 conB = ConnectionRule(
     name="conB",
@@ -379,7 +380,7 @@ projA = Projection(
     pre=popA,
     post=popB,
     response=dynPropG,
-    delay=Quantity(2, un.ms),
+    delay=Quantity(3.1, un.ms),
     connectivity=conPropA,
     port_connections=[
         ('pre', 'ESP1', 'response', 'ERP1'),
@@ -392,7 +393,7 @@ projB = Projection(
     response=DynamicsProperties(
         name="dynFProps",
         definition=dynF,
-        properties={'P1': 10 * un.ms, 'P2': 1 * un.nA}),
+        properties={'P1': 10.7 * un.ms, 'P2': 3.1 * un.nA}),
     connectivity=ConnectionRuleProperties(
         name="ConnectionRuleProps",
         definition=conB),
@@ -414,7 +415,7 @@ projC = Projection(
     pre=selA,
     post=popB,
     response=dynPropG,
-    delay=2 * un.ms,
+    delay=2.4 * un.ms,
     connectivity=conPropA,
     port_connections=[
         ('pre', 'ESP1', 'response', 'ERP1'),
@@ -427,7 +428,7 @@ projD = Projection(
     response=DynamicsProperties(
         name="dynFProps",
         definition=dynF,
-        properties={'P1': 10 * un.ms, 'P2': 1 * un.nA}),
+        properties={'P1': -1.72 * un.ms, 'P2': 88.0 * un.nA}),
     connectivity=conPropB,
     delay=1 * un.ms,
     port_connections=[
