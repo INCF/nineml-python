@@ -15,7 +15,8 @@ from nineml.exceptions import (
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
-from nineml.base import ContainerObject, DocumentLevelObject
+from nineml.base import (
+    ContainerObject, DocumentLevelObject, DynamicPortsObject)
 from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
 from nineml import units as un
 from nineml.annotations import VALIDATE_DIMENSIONS
@@ -284,7 +285,7 @@ class SubDynamicsProperties(BaseULObject):
         return self._component.property(local_name)
 
 
-class SubDynamics(BaseULObject):
+class SubDynamics(BaseULObject, DynamicPortsObject):
 
     nineml_type = 'SubDynamics'
     defining_attributes = ('_name', '_component_class')
@@ -401,53 +402,6 @@ class SubDynamics(BaseULObject):
     @property
     def regime_names(self):
         return (p.name for p in self.regimes)
-
-    @name_error
-    def port(self, name):
-        return self.component_class.port(name)
-
-    @property
-    def ports(self):
-        return self.component_class.ports
-
-    @property
-    def port_names(self):
-        return self.component_class.port_names
-
-    @property
-    def num_ports(self):
-        return self.component_class.num_ports
-
-    @name_error
-    def receive_port(self, name):
-        return self.component_class.receive_port(name)
-
-    @property
-    def receive_ports(self):
-        return self.component_class.receive_ports
-
-    @property
-    def receive_port_names(self):
-        return self.component_class.receive_port_names
-
-    @property
-    def num_receive_ports(self):
-        return self.component_class.num_receive_ports
-
-    def send_port(self, name):
-        return self.component_class.send_port(name)
-
-    @property
-    def send_ports(self):
-        return self.component_class.send_ports
-
-    @property
-    def send_port_names(self):
-        return self.component_class.send_port_names
-
-    @property
-    def num_send_ports(self):
-        return self.component_class.num_send_ports
 
     @name_error
     def analog_receive_port(self, name):

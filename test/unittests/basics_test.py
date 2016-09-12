@@ -103,6 +103,45 @@ class TestAccessors(unittest.TestCase):
                             .format(member, members, accessor_members,
                                     elem._name, name))
 
+    def test_port_accessors(self):
+        for cls_name in ('Dynamics', 'DynamicsProperties', 'MultiDynamics',
+                         'MultiDynamicsProperties', 'Population', 'Selection'):
+            cls = all_types[cls_name]
+            for elem in instances_of_all_types[cls_name]:
+                for prefix in ('', 'receive_', 'send_', 'analog_', 'event_',
+                               'analog_receive_', 'event_receive_',
+                               'analog_reduce_'):
+                    num = getattr(elem, 'num_{}ports'.format(prefix))
+                    names = list(getattr(elem, '{}port_names'.format(prefix)))
+                    members = sorted(getattr(elem, '{}ports'.format(prefix)))
+                    accessor_members = sorted(
+                        getattr(elem, '{}port'.format(prefix))(n)
+                        for n in names)
+                    # Check num_* matches number of members and names
+                    self.assertEqual(
+                        len(members), num,
+                        "num_{}ports did not return the same length ({}) as "
+                        "the number of members ({})".format(prefix, num,
+                                                            len(members)))
+                    self.assertEqual(
+                        len(names), num,
+                        "num_{}ports did not return the same length ({}) as "
+                        "the number of names ({})".format(prefix, num,
+                                                          len(names)))
+                    # Check all names are strings and don't contain
+                    # duplicates
+                    self.assertEqual(
+                        len(names), len(set(names)),
+                        "Duplicate names found in {}ports of '{}' {} "
+                        "('{}')".format(prefix, elem._name, cls_name, names))
+                    self.assertEqual(
+                        members, accessor_members,
+                        "{}ports accessed through iterator ({}) do not "
+                        "match members accessed through individual "
+                        "accessor method ({}) for '{}' {}"
+                        .format(prefix, members, accessor_members,
+                                elem._name, cls_name))
+
 
 class TestRepr(unittest.TestCase):
 
