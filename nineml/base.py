@@ -187,6 +187,133 @@ class DocumentLevelObject(object):
         nineml.write(self, fname)  # Calls nineml.document.Document.write
 
 
+class DynamicPortsObject(object):
+    """
+    Defines generic iterators and accessors for objects that expose
+    dynamic ports
+    """
+
+    @property
+    def ports(self):
+        return chain(self.analog_send_ports, self.analog_receive_ports,
+                     self.analog_reduce_ports, self.event_send_ports,
+                     self.event_receive_ports)
+
+    def port(self, name):
+        try:
+            return self.send_port(name)
+        except NineMLNameError:
+            try:
+                return self.receive_port(name)
+            except NineMLNameError:
+                raise NineMLNameError(
+                    "'{}' Dynamics object does not have a port named '{}'"
+                    .format(self.name, name))
+
+    @property
+    def port_names(self):
+        return (p.name for p in self.ports)
+
+    def receive_port(self, name):
+        try:
+            return self.event_receive_port(name)
+        except NineMLNameError:
+            try:
+                return self.analog_receive_port(name)
+            except NineMLNameError:
+                try:
+                    return self.analog_reduce_port(name)
+                except NineMLNameError:
+                    raise NineMLNameError(
+                        "'{}' Dynamics object does not have a receive port "
+                        "named '{}'".format(self.name, name))
+
+    def send_port(self, name):
+        try:
+            return self.event_send_port(name)
+        except NineMLNameError:
+            try:
+                return self.analog_send_port(name)
+            except NineMLNameError:
+                raise NineMLNameError(
+                    "'{}' Dynamics object does not have a send port "
+                    "named '{}'".format(self.name, name))
+
+    @property
+    def send_ports(self):
+        return chain(self.analog_send_ports, self.event_send_ports)
+
+    @property
+    def receive_ports(self):
+        return chain(self.analog_receive_ports, self.analog_reduce_ports,
+                     self.event_receive_ports)
+
+    @property
+    def send_port_names(self):
+        return chain(self.analog_send_port_names, self.event_send_port_names)
+
+    @property
+    def receive_port_names(self):
+        return chain(self.analog_receive_port_names,
+                     self.analog_reduce_port_names,
+                     self.event_receive_port_names)
+
+    @property
+    def num_send_ports(self):
+        return self.num_analog_send_ports + self.num_event_send_ports
+
+    @property
+    def num_receive_ports(self):
+        return (self.num_analog_receive_ports + self.num_analog_reduce_ports +
+                self.num_event_receive_ports)
+
+    @property
+    def num_analog_ports(self):
+        return (self.num_analog_receive_ports + self.num_analog_send_ports +
+                self.num_analog_reduce_ports)
+
+    @property
+    def num_event_ports(self):
+        return (self.num_event_receive_ports + self.num_event_send_ports)
+
+    @property
+    def num_ports(self):
+        return self.num_send_ports + self.num_receive_ports
+
+    @property
+    def analog_ports(self):
+        """Returns an iterator over the local analog port objects"""
+        return chain(self.analog_send_ports, self.analog_receive_ports,
+                     self.analog_reduce_ports)
+
+    @property
+    def analog_port_names(self):
+        return (p.name for p in self.analog_ports)
+
+    @property
+    def event_ports(self):
+        return chain(self.event_send_ports, self.event_receive_ports)
+
+    def analog_port(self, name):
+        try:
+            return self.analog_send_port(name)
+        except KeyError:
+            try:
+                return self.analog_receive_port(name)
+            except KeyError:
+                return self.analog_reduce_port(name)
+
+    def event_port(self, name):
+        try:
+            return self.event_send_port(name)
+        except KeyError:
+            return self.event_receive_port(name)
+
+    @property
+    def event_port_names(self):
+        return (p.name for p in self.event_ports)
+
+
 class ContainerObject(object):
     """
     An abstract base class for handling the manipulation of member objects

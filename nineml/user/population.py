@@ -2,14 +2,14 @@ from itertools import chain
 from . import BaseULObject
 from .component import (
     resolve_reference, write_reference, DynamicsProperties)
-from nineml.base import DocumentLevelObject
+from nineml.base import DocumentLevelObject, DynamicPortsObject
 from nineml.xml import (
     E, unprocessed_xml, from_child_xml, get_xml_attr)
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.utils import ensure_valid_identifier
 
 
-class Population(BaseULObject, DocumentLevelObject):
+class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     """
     A collection of spiking neurons all of the same type.
 
@@ -110,51 +110,6 @@ class Population(BaseULObject, DocumentLevelObject):
                                      dtype=int, **kwargs),
                    cell=cell, document=document)
 
-    def port(self, name):
-        return self.cell.port(name)
-
-    @property
-    def ports(self):
-        return self.cell.ports
-
-    @property
-    def port_names(self):
-        return self.cell.port_names
-
-    @property
-    def num_ports(self):
-        return self.cell.num_ports
-
-    def receive_port(self, name):
-        return self.cell.receive_port(name)
-
-    @property
-    def receive_ports(self):
-        return self.cell.receive_ports
-
-    @property
-    def receive_port_names(self):
-        return self.cell.receive_port_names
-
-    @property
-    def num_receive_ports(self):
-        return self.cell.num_receive_ports
-
-    def send_port(self, name):
-        return self.cell.send_port(name)
-
-    @property
-    def send_ports(self):
-        return self.cell.send_ports
-
-    @property
-    def send_port_names(self):
-        return self.cell.send_port_names
-
-    @property
-    def num_send_ports(self):
-        return self.cell.num_send_ports
-
     def analog_receive_port(self, name):
         return self.cell.analog_receive_port(name)
 
@@ -225,6 +180,10 @@ class Population(BaseULObject, DocumentLevelObject):
     @property
     def event_send_port_names(self):
         return self.cell.event_send_port_names
+
+    @property
+    def num_event_send_ports(self):
+        return self.cell.num_event_send_ports
 
 
 def qstr(obj):

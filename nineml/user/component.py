@@ -14,7 +14,8 @@ from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject
 from nineml.document import Document
-from nineml.base import DocumentLevelObject, ContainerObject
+from nineml.base import (
+    DocumentLevelObject, ContainerObject, DynamicPortsObject)
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from os import path
 
@@ -311,51 +312,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         return [p.value.distribution for p in self.properties
                 if p.value.nineml_type == 'RandomValue']
 
-    def port(self, name):
-        return self.component_class.port(name)
-
-    @property
-    def ports(self):
-        return self.component_class.ports
-
-    @property
-    def port_names(self):
-        return self.component_class.port_names
-
-    @property
-    def num_ports(self):
-        return self.component_class.num_ports
-
-    def send_port(self, name):
-        return self.component_class.send_port(name)
-
-    @property
-    def send_ports(self):
-        return self.component_class.send_ports
-
-    @property
-    def send_port_names(self):
-        return self.component_class.send_port_names
-
-    @property
-    def num_send_ports(self):
-        return self.component_class.num_send_ports
-
-    def receive_port(self, name):
-        return self.component_class.receive_port(name)
-
-    @property
-    def receive_ports(self):
-        return self.component_class.receive_ports
-
-    @property
-    def receive_port_names(self):
-        return self.component_class.receive_port_names
-
-    @property
-    def num_receive_ports(self):
-        return self.component_class.num_receive_ports
-
     def elements(self, local=False):
         """
         Overrides the elements method in ContainerObject base class to allow
@@ -520,7 +476,7 @@ class Initial(Property):
     nineml_type = "Initial"
 
 
-class DynamicsProperties(Component):
+class DynamicsProperties(Component, DynamicPortsObject):
     """
     Container for the set of properties for a component_class.
     """
@@ -733,6 +689,10 @@ class DynamicsProperties(Component):
     @property
     def event_send_port_names(self):
         return self.component_class.event_send_port_names
+
+    @property
+    def num_event_send_ports(self):
+        return self.component_class.num_event_send_ports
 
 
 class ConnectionRuleProperties(Component):

@@ -18,9 +18,10 @@ from nineml.utils import (check_list_contain_same_items,
                           assert_no_duplicates)
 from nineml.xml import nineml_ns, E
 from nineml.annotations import VALIDATE_DIMENSIONS
+from nineml.base import DynamicPortsObject
 
 
-class Dynamics(ComponentClass):
+class Dynamics(ComponentClass, DynamicPortsObject):
 
     """A Dynamics object represents a *component* in NineML.
 
@@ -303,102 +304,6 @@ class Dynamics(ComponentClass):
     def event_receive_ports(self):
         """Returns an iterator over the local |EventReceivePort| objects"""
         return self._event_receive_ports.itervalues()
-
-    @property
-    def ports(self):
-        return chain(super(Dynamics, self).ports,
-                     self.analog_send_ports, self.analog_receive_ports,
-                     self.analog_reduce_ports, self.event_send_ports,
-                     self.event_receive_ports)
-
-    def port(self, name):
-        try:
-            return self.send_port(name)
-        except NineMLNameError:
-            try:
-                return self.receive_port(name)
-            except NineMLNameError:
-                raise NineMLNameError(
-                    "'{}' Dynamics object does not have a port named '{}'"
-                    .format(self.name, name))
-
-    def receive_port(self, name):
-        try:
-            return self.event_receive_port(name)
-        except NineMLNameError:
-            try:
-                return self.analog_receive_port(name)
-            except NineMLNameError:
-                try:
-                    return self.analog_reduce_port(name)
-                except NineMLNameError:
-                    raise NineMLNameError(
-                        "'{}' Dynamics object does not have a receive port "
-                        "named '{}'".format(self.name, name))
-
-    def send_port(self, name):
-        try:
-            return self.event_send_port(name)
-        except NineMLNameError:
-            try:
-                return self.analog_send_port(name)
-            except NineMLNameError:
-                raise NineMLNameError(
-                    "'{}' Dynamics object does not have a send port "
-                    "named '{}'".format(self.name, name))
-
-    @property
-    def send_ports(self):
-        return chain(self.analog_send_ports, self.event_send_ports)
-
-    @property
-    def receive_ports(self):
-        return chain(self.analog_receive_ports, self.analog_reduce_ports,
-                     self.event_receive_ports)
-
-    @property
-    def send_port_names(self):
-        return chain(self.analog_send_port_names, self.event_send_port_names)
-
-    @property
-    def receive_port_names(self):
-        return chain(self.analog_receive_port_names,
-                     self.analog_reduce_port_names,
-                     self.event_receive_port_names)
-
-    @property
-    def num_send_ports(self):
-        return self.num_analog_send_ports + self.num_event_send_ports
-
-    @property
-    def num_receive_ports(self):
-        return (self.num_analog_receive_ports + self.num_analog_reduce_ports +
-                self.num_event_receive_ports)
-
-    @property
-    def analog_ports(self):
-        """Returns an iterator over the local analog port objects"""
-        return chain(self.analog_send_ports, self.analog_receive_ports,
-                     self.analog_reduce_ports)
-
-    @property
-    def event_ports(self):
-        return chain(self.event_send_ports, self.event_receive_ports)
-
-    def analog_port(self, name):
-        try:
-            return self.analog_send_port(name)
-        except KeyError:
-            try:
-                return self.analog_receive_port(name)
-            except KeyError:
-                return self.analog_reduce_port(name)
-
-    def event_port(self, name):
-        try:
-            return self.event_send_port(name)
-        except KeyError:
-            return self.event_receive_port(name)
 
     @property
     def regimes(self):

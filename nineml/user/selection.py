@@ -4,7 +4,7 @@ from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.xml import (
     extract_xmlns, E, from_child_xml, unprocessed_xml, get_xml_attr, NINEMLv1)
-from nineml.base import DocumentLevelObject
+from nineml.base import DocumentLevelObject, DynamicPortsObject
 from .population import Population
 from nineml.exceptions import NineMLNameError
 from nineml.utils import ensure_valid_identifier
@@ -57,13 +57,13 @@ def combined_port_accessor(population_accessor):
 
 def combined_ports_property(population_property):
     def combined_property(self):
-        combined = reduce(and_, (set(population_property(p))
+        combined = reduce(and_, (set(population_property.__get__(p))
                                  for p in self.populations))
         return iter(combined)
-    return combined_property
+    return property(combined_property)
 
 
-class Selection(BaseULObject, DocumentLevelObject):
+class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     """
     Container for combining multiple populations or subsets thereof.
 
@@ -158,36 +158,12 @@ class Selection(BaseULObject, DocumentLevelObject):
         Population.analog_reduce_ports)
 
     @property
-    def port_names(self):
-        return (p.name for p in self.ports)
-
-    @property
-    def num_ports(self):
-        return len(list(self.ports))
-
-    @property
-    def send_port_names(self):
-        return (p.name for p in self.send_ports)
-
-    @property
-    def num_send_ports(self):
-        return len(list(self.analog_receive_ports))
-
-    @property
-    def receive_port_names(self):
-        return (p.name for p in self.receive_ports)
-
-    @property
-    def num_receive_ports(self):
-        return len(list(self.analog_receive_ports))
-
-    @property
     def analog_send_port_names(self):
         return (p.name for p in self.analog_send_ports)
 
     @property
     def num_analog_send_ports(self):
-        return len(list(self.analog_receive_ports))
+        return len(list(self.analog_send_ports))
 
     @property
     def analog_receive_port_names(self):
