@@ -8,7 +8,7 @@ from .selection import Selection
 from . import BaseULObject
 from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLNameError
+from nineml.exceptions import NineMLNameError, name_error
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
 from nineml.user.port_connections import EventPortConnection
@@ -57,12 +57,15 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     def name(self):
         return self._name
 
+    @name_error
     def population(self, name):
         return self._populations[name]
 
+    @name_error
     def projection(self, name):
         return self._projections[name]
 
+    @name_error
     def selection(self, name):
         return self._selections[name]
 

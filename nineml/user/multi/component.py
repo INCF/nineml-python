@@ -730,8 +730,13 @@ class MultiDynamics(Dynamics):
             raise NineMLNameError(
                 "Name provided to analog_port_connection '{}' was not a "
                 "4-tuple of (sender, send_port, receiver, receive_port)")
-        return self._analog_port_connections[
-            (sender, send_port)][(receiver, receive_port)]
+        try:
+            return self._analog_port_connections[
+                (sender, send_port)][(receiver, receive_port)]
+        except KeyError:
+            raise NineMLNameError(
+                "No analog port connection with between {}->{} and {}->{}"
+                .format(sender, send_port, receiver, receive_port))
 
     def event_port_connection(self, name):
         try:
@@ -740,8 +745,13 @@ class MultiDynamics(Dynamics):
             raise NineMLNameError(
                 "Name provided to analog_port_connection '{}' was not a "
                 "4-tuple of (sender, send_port, receiver, receive_port)")
-        return self._event_port_connections[
-            (sender, send_port)][(receiver, receive_port)]
+        try:
+            return self._event_port_connections[
+                (sender, send_port)][(receiver, receive_port)]
+        except KeyError:
+            raise NineMLNameError(
+                "No event port connection with between {}->{} and {}->{}"
+                .format(sender, send_port, receiver, receive_port))
 
     def parameter(self, name):
         _, comp_name = split_namespace(name)
