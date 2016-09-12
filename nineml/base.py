@@ -369,45 +369,72 @@ class ContainerObject(object):
         return chain(*(self._members_iter(et, class_map=class_map)
                        for et in class_map))
 
-    def element(self, name, class_map=None, send_ports=False):
+    def element(self, name, class_map=None, include_send_ports=False):
         """
         Looks a member item by "name" (identifying characteristic)
+
+        Parameters
+        ----------
+        name : str
+            Name of the element to return
+        class_map : dict[str, str]
+            Mapping from element type to accessor name
+        include_send_ports:
+            As send ports will typically mask the name as an alias or
+            state variable (although not necessarily in MultiDynamics objects)
+            they are ignored unless this kwarg is set to True, in which case
+            they will be returned only if no state variable or alias is found.
+
+        Returns
+        -------
+        elem : NineMLBaseObject
+            The element corresponding to the provided 'name' argument
         """
         if class_map is None:
             class_map = self.class_to_member
+        send_port = None
         for element_type in class_map:
             try:
                 elem = self._member_accessor(
                     element_type, class_map=class_map)(name)
                 # Ignore send ports as they otherwise mask
                 # aliases/state variables
-                if not isinstance(elem, SendPortBase) or send_ports:
-                    return elem
+                if isinstance(elem, SendPortBase):
+                    send_port = elem
+                else:
+                    return elem  # No need to wait to end of loop
             except NineMLNameError:
                 pass
-        raise NineMLNameError(
-            "'{}' was not found in '{}' {} object"
-            .format(name, self._name, self.__class__.__name__))
+        if include_send_ports and send_port is not None:
+            return send_port
+        else:
+            raise NineMLNameError(
+                "'{}' was not found in '{}' {} object"
+                .format(name, self._name, self.__class__.__name__))
 
     def num_elements(self, class_map=None):
         if class_map is None:
             class_map = self.class_to_member
         return reduce(operator.add,
-                      *(self._num_members(et, class_map=class_map)
-                        for et in class_map))
+                      (self._num_members(et, class_map=class_map)
+                       for et in class_map))
 
     def element_names(self, class_map=None):
         if class_map is None:
             class_map = self.class_to_member
+        all_names = set()
         for element_type in class_map:
             # Some of these do not meet the stereotypical *_names format, e.g.
             # time_derivative_variables, could change these to *_keys instead
             try:
                 for name in self._member_names_iter(element_type,
                                                     class_map=class_map):
-                    yield name
+                    # Because send ports can have the same name as state
+                    # variables and aliases duplicates need to be avoided
+                    all_names.add(name)
             except AttributeError:
                 pass
+        return iter(all_names)
 
     def __iter__(self):
         raise TypeError("'{}' {} container is not iterable"
@@ -461,13 +488,9 @@ class ContainerObject(object):
             self, pluralise(accessor_name_from_type(class_map, element_type)))
 
     def _member_names_iter(self, element_type, class_map):
-        try:
-            return getattr(
-                self, (accessor_name_from_type(class_map, element_type) +
-                       '_names'))
-        except AttributeError:
-            raise AttributeError(
-                "Elements of type {} aren't named".format(element_type))
+        return getattr(
+            self, (accessor_name_from_type(class_map, element_type) +
+                   '_names'))
 
     def _num_members(self, element_type, class_map):
         return getattr(
