@@ -5,6 +5,7 @@ from operator import (
     iadd, iand, iconcat, idiv, ifloordiv, ilshift, imod, imul, inv, ior, ipow,
     irepeat, isub, itruediv, ixor)
 from nineml.utils.testing.comprehensive import instances_of_all_types
+import numpy
 
 
 single_values = instances_of_all_types['SingleValue']
@@ -28,7 +29,7 @@ class TestUnitsDimensions(unittest.TestCase):
             self.assertEqual(float(val), val._value)
             self.assertLess(float(val) - int(val), 1.0)
 
-    def test_operators(self):
+    def test_single_value_operators(self):
         result = SingleValue(10.5)  # Random starting value
         val_iter = iter(list(single_values) * 10)
         for op in self.ops:
@@ -58,4 +59,32 @@ class TestUnitsDimensions(unittest.TestCase):
                 op_str + " not equal between single value and float")
             self.assertIsInstance(vv_result, SingleValue,
                                   op_str + " did not return a SingleValue")
-            result = SingleValue(vv_result)
+
+    def test_array_value_operators(self):
+        for result in instances_of_all_types['ArrayValue']:
+            numpy_result = numpy.asarray(result)
+            val_iter = iter(list(single_values) * 10)
+            for op in self.ops:
+                if op in self.uniary_ops:
+                    vv_result = op(result)
+                    n_result = op(numpy_result)
+                    op_str = ("{}({})".format(op.__name__, result))
+                else:
+                    val = next(val_iter)
+                    vv_result = op(result, val)
+                    vf_result = op(result, float(val))
+                    n_result = op(numpy_result, float(val))
+                    op_str = ("{}({}, {})".format(op.__name__, result, val))
+                    self.assertTrue(
+                        all(numpy.asarray(vf_result) == n_result),
+                        "{} not equal between array value ({}) and "
+                        "numpy ({})".format(op_str, vf_result, n_result))
+                    self.assertIsInstance(
+                        vf_result, ArrayValue,
+                        op_str + " did not return a ArrayValue")
+                self.assertTrue(
+                    all(numpy.asarray(vv_result) == n_result),
+                    op_str + " not equal between array value and numpy")
+                self.assertIsInstance(vv_result, ArrayValue,
+                                      op_str + " did not return a ArrayValue")
+                numpy_result = n_result

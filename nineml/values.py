@@ -205,7 +205,9 @@ class ArrayValue(BaseValue):
         return len(self._values)
 
     def __repr__(self):
-        return "ArrayValue(with {} values)".format(len(self._values))
+        return "ArrayValue({}{})".format(
+            ', '.join(str(v) for v in self._values[:5]),
+            ('...' if len(self) >= 5 else ''))
 
     def __hash__(self):
         return hash(self.values)
