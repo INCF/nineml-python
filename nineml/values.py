@@ -258,7 +258,7 @@ class ArrayValue(BaseValue):
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         if self._datafile is None:
             return E.ArrayValue(
-                *[E.ArrayValueRow(index=i, value=v).to_xml()
+                *[E.ArrayValueRow(index=str(i), value=str(v))
                   for i, v in enumerate(self._values)])
         else:
             raise NotImplementedError(

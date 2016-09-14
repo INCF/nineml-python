@@ -362,17 +362,13 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        members = []
-        for comp_array, tag_name, port in ((self.source, 'Source',
-                                            self.source_port),
-                                           (self.destination, 'Destination',
-                                            self.destination_port)):
-            members.append(E(tag_name, comp_array.to_xml(
-                document, E=E, as_ref=True, **kwargs), port=port))
-        members.extend([
+        members = [
+            E.Source(name=self.source, port=self.source_port),
+            E.Destination(name=self.destination, port=self.destination_port),
             E.Connectivity(self.connectivity.rule_properties.to_xml(
-                document, E=E, **kwargs)),
-            E.Delay(self.delay.to_xml(document, E=E, **kwargs))])
+                document, E=E, **kwargs))]
+        if self.delay is not None:
+            members.append(E.Delay(self.delay.to_xml(document, E=E, **kwargs)))
         xml = E(self.nineml_type,
                 *members,
                 source_port=self.source_port,
@@ -387,22 +383,20 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         # Get Name
         name = get_xml_attr(element, 'name', document, **kwargs)
-        delay = from_child_xml(element, Quantity, document, within='Delay',
-                               **kwargs)
-        source = from_child_xml(element, ComponentArray, document,
-                                allow_reference='only', within='Source',
-                                **kwargs)
-        destination = from_child_xml(element, ComponentArray, document,
-                                     allow_reference='only',
-                                     within='Destination', **kwargs)
         connectivity = from_child_xml(
             element, ConnectionRuleProperties, document, within='Connectivity',
             allow_reference=True, **kwargs)
         xmlns = extract_xmlns(element.tag)
-        source_port = get_xml_attr(element.find(xmlns + 'Source'), 'port',
-                                   document, **kwargs)
-        destination_port = get_xml_attr(element.find(xmlns + 'Destination'),
-                                        'port', document, **kwargs)
+        source_elem = element.find(xmlns + 'Source')
+        destination_elem = element.find(xmlns + 'Destination')
+        source = get_xml_attr(source_elem, 'name', document, **kwargs)
+        destination = get_xml_attr(destination_elem, 'name', document,
+                                        **kwargs)
+        source_port = get_xml_attr(source_elem, 'port', document, **kwargs)
+        destination_port = get_xml_attr(destination_elem, 'port', document,
+                                        **kwargs)
+        delay = from_child_xml(element, Quantity, document, within='Delay',
+                               allow_none=True, **kwargs)
         return cls(name=name, source=source, destination=destination,
                    source_port=source_port, destination_port=destination_port,
                    connectivity=connectivity, delay=delay, document=None)
