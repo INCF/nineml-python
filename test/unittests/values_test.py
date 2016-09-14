@@ -1,4 +1,5 @@
 import unittest
+import itertools
 import math
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from operator import (
@@ -22,8 +23,7 @@ class TestValues(unittest.TestCase):
         neg, mul, abs, div]
     uniary_ops = [neg, abs]
 
-    iops = [iadd, iand, iconcat, idiv, ifloordiv, ilshift, imod, imul, inv,
-            ior, ipow, irepeat, isub, itruediv, ixor]
+    iops = [iadd, idiv, ifloordiv, imod, imul, ipow, isub, itruediv]
 
     def test_conversions(self):
         for val in single_values:
@@ -88,7 +88,7 @@ class TestValues(unittest.TestCase):
                         array_val = array_val * val_scale
                         np_array_val = np_array_val * val_scale
                         np_val = np_val * val_scale
-                    elif op in (div, truediv):
+                    elif op in (div, truediv, mod):
                         # Ensure there are no zero values
                         array_val = array_val ** 2 + 1
                         np_array_val = np_array_val ** 2 + 1
@@ -174,3 +174,87 @@ class TestValues(unittest.TestCase):
                 array_val = vv_result
                 np_array_val = nv_result
                 np_val = np_result
+
+    def test_single_value_inline_operators(self):
+        result = SingleValue(10.5)  # Random starting value
+        for op, val in zip(self.iops, itertools.cycle(single_values)):
+            if op in (idiv, itruediv, imod) and float(val) == 0.0:
+                val = SingleValue(0.1)
+            ff_result = op(float(result), float(val))
+            vv_result = op(result, val)
+            vf_result = op(result, float(val))
+            op_str = ("{}({}, {})".format(op.__name__, result, val))
+            self.assertEqual(
+                float(vf_result), ff_result,
+                op_str + " not equal between single value and float")
+            self.assertIsInstance(vf_result, SingleValue,
+                                  op_str + " did not return a SingleValue")
+            self.assertEqual(
+                float(vv_result), ff_result,
+                op_str + " not equal between single value and float")
+            self.assertIsInstance(vv_result, SingleValue,
+                                  op_str + " did not return a SingleValue")
+            val = vv_result
+
+    def test_array_value_inline_operators(self):
+        for array_val in instances_of_all_types['ArrayValue']:
+            np_val = numpy.asarray(array_val)
+            np_array_val = ArrayValue(numpy.asarray(array_val))
+            for i, (op, val) in enumerate(zip(self.iops,
+                                              itertools.cycle(single_values))):
+                if op is ipow:
+                    # Negative numbers can't be raised to a fractional
+                    # power so we avoid this by either using absolute
+                    # values and scale back to sensible values to avoid
+                    # overflow errors
+                    if i % 2:
+                        array_val = abs(array_val)
+                        np_array_val = abs(np_array_val)
+                        np_val = abs(np_val)
+                    else:
+                        val = round(val)
+                    val = val / 10. ** round(math.log10(abs(val)))
+                elif op in (idiv, itruediv, imod) and float(val) == 0.0:
+                    val = SingleValue(0.1)
+                vv_result = op(array_val, val)
+                vf_result = op(array_val, float(val))
+                nv_result = op(np_array_val, val)
+                nf_result = op(np_array_val, float(val))
+                np_result = op(np_val, float(val))
+                op_str = ("{}({}, {})".format(op.__name__, array_val, val))
+                self.assertTrue(
+                    all(numpy.asarray(vf_result) == np_result),
+                    "{} not equal between array value ({}) and "
+                    "numpy ({})".format(op_str, vf_result, np_result))
+                self.assertIsInstance(
+                    vf_result, ArrayValue,
+                    op_str + " did not return a ArrayValue")
+                self.assertTrue(
+                    all(numpy.asarray(nf_result) == np_result),
+                    "{} not equal between array value ({}) and "
+                    "numpy ({})".format(op_str, nf_result, np_result))
+                self.assertIsInstance(
+                    nf_result, ArrayValue,
+                    "{} did not return a ArrayValue ({})"
+                    .format(op_str, nf_result))
+                self.assertIsInstance(
+                    nf_result._values, numpy.ndarray,
+                    "{} did not maintain numpy _values in resultant "
+                    "ArrayValue ({})"
+                    .format(op_str, nf_result))
+                self.assertTrue(
+                    all(numpy.asarray(vv_result) == np_result),
+                    op_str + " not equal between array value and numpy")
+                self.assertIsInstance(
+                    vv_result, ArrayValue,
+                    op_str + " did not return a ArrayValue")
+                self.assertTrue(
+                    all(numpy.asarray(nv_result) == np_result),
+                    op_str + " not equal between array value and numpy")
+                self.assertIsInstance(
+                    nv_result, ArrayValue,
+                    op_str + " did not return a ArrayValue")
+                array_val = vv_result
+                np_array_val = nv_result
+                np_val = np_result
+
