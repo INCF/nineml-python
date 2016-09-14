@@ -525,8 +525,8 @@ class DynamicsProperties(Component, DynamicPortsObject):
             var_dimension = var.dimension
             if initial_dimension != var_dimension:
                 raise NineMLRuntimeError(
-                    "Dimensions for '{}' property, {}, in '{}' don't match "
-                    "that of its definition in '{}', {}."
+                    "Dimensions for '{}' initial value, {}, in '{}' don't "
+                    "match that of its definition in '{}', {}."
                     .format(var.name, initial_dimension, self.name,
                             self.component_class.name, var_dimension))
 

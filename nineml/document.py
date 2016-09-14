@@ -27,9 +27,9 @@ class Document(dict, BaseNineMLObject):
     defining_attributes = ('elements',)
     nineml_type = 'NineML'
     write_order = ['Network', 'Population', 'Projection', 'Selection',
-                   'ComponentArray', 'ConnectionGroup',
-                   'Dynamics', 'ConnectionRule', 'RandomDistribution',
-                   'ComponentClass', 'Component',  # For v1.0
+                   'ComponentArray', 'EventConnectionGroup',
+                   'AnalogConnectionGroup', 'Dynamics', 'ConnectionRule',
+                   'RandomDistribution', 'ComponentClass', 'Component',  # For v1.0 @IgnorePep8
                    'DynamicsProperties', 'MultiDynamicsProperties',
                    'MultiCompartment', 'ConnectionRuleProperties',
                    'RandomDistributionProperties', 'Dimension', 'Unit']
@@ -210,16 +210,13 @@ class Document(dict, BaseNineMLObject):
         Resolve an element from its XML description and store back in the
         element dictionary
         """
-        try:
-            if unloaded in self._loading:
-                raise NineMLRuntimeError(
-                    "Circular reference detected in '{}(name={})' element. "
-                    "Resolution stack was:\n"
-                    .format(unloaded.cls.__name__, unloaded.name,
-                            "\n".join('{}(name={})'.format(u.cls.__name__, u.name)
-                                      for u in self._loading)))
-        except:
-            raise
+        if unloaded in self._loading:
+            raise NineMLRuntimeError(
+                "Circular reference detected in '{}(name={})' element. "
+                "Resolution stack was:\n"
+                .format(unloaded.cls.__name__, unloaded.name,
+                        "\n".join('{}(name={})'.format(u.cls.__name__, u.name)
+                                  for u in self._loading)))
         # Keep track of the document-level elements that are in the process of
         # being loaded to catch circular references
         self._loading.append(unloaded)

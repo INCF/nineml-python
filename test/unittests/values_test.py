@@ -1,4 +1,5 @@
 import unittest
+import math
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from operator import (
     add, sub, mul, truediv, div, pow, floordiv, mod, neg,
@@ -11,7 +12,7 @@ import numpy
 single_values = instances_of_all_types['SingleValue']
 
 
-class TestUnitsDimensions(unittest.TestCase):
+class TestValues(unittest.TestCase):
 
     ops = [
         floordiv, pow, truediv, sub, pow, neg, mod, add, pow, floordiv, div,
@@ -73,12 +74,34 @@ class TestUnitsDimensions(unittest.TestCase):
                     op_str = ("{}({})".format(op.__name__, array_val))
                 else:
                     val = next(val_iter)
+                    if op is pow:
+                        # Negative numbers can't be raised to a fractional
+                        # power so we avoid this by either using absolute
+                        # values and scale back to sensible values to avoid
+                        # overflow errors
+                        array_val = abs(array_val)
+                        np_array_val = abs(np_array_val)
+                        np_val = abs(np_val)
+                        val = abs(val)
+                        val = val / 10. ** round(math.log10(val))
+                        val_scale = np_val.max() / 10.0
+                        array_val = array_val * val_scale
+                        np_array_val = np_array_val * val_scale
+                        np_val = np_val * val_scale
+                    elif op in (div, truediv):
+                        # Ensure there are no zero values
+                        array_val = array_val ** 2 + 1
+                        np_array_val = np_array_val ** 2 + 1
+                        np_val = np_val ** 2 + 1
+                        val = val ** 2 + 1
                     vv_result = op(array_val, val)
                     vf_result = op(array_val, float(val))
                     nv_result = op(np_array_val, val)
                     nf_result = op(np_array_val, float(val))
                     np_result = op(np_val, float(val))
                     op_str = ("{}({}, {})".format(op.__name__, array_val, val))
+                    rop_str = ("{}({}, {})".format(op.__name__, val,
+                                                   array_val))
                     self.assertTrue(
                         all(numpy.asarray(vf_result) == np_result),
                         "{} not equal between array value ({}) and "
@@ -92,7 +115,52 @@ class TestUnitsDimensions(unittest.TestCase):
                         "numpy ({})".format(op_str, nf_result, np_result))
                     self.assertIsInstance(
                         nf_result, ArrayValue,
-                        op_str + " did not return a ArrayValue")
+                        "{} did not return a ArrayValue ({})"
+                        .format(op_str, nf_result))
+                    self.assertIsInstance(
+                        nf_result._values, numpy.ndarray,
+                        "{} did not maintain numpy _values in resultant "
+                        "ArrayValue ({})"
+                        .format(op_str, nf_result))
+                    rvv_result = op(val, array_val)
+                    rvf_result = op(float(val), array_val)
+                    rnv_result = op(val, np_array_val)
+                    rnf_result = op(float(val), np_array_val)
+                    rnp_result = op(float(val), np_val)
+                    self.assertTrue(
+                        all(numpy.asarray(rvf_result) == rnp_result),
+                        "{} not equal between array value ({}) and "
+                        "numpy ({})".format(rop_str, rvf_result, rnp_result))
+                    self.assertIsInstance(
+                        rvf_result, ArrayValue,
+                        rop_str + " did not return a ArrayValue")
+                    self.assertTrue(
+                        all(numpy.asarray(rnf_result) == rnp_result),
+                        "{} not equal between array value ({}) and "
+                        "numpy ({})".format(rop_str, rnf_result, rnp_result))
+                    self.assertIsInstance(
+                        rnf_result, ArrayValue,
+                        "{} did not return a ArrayValue ({})"
+                        .format(rop_str, rnf_result))
+                    self.assertIsInstance(
+                        rnf_result._values, numpy.ndarray,
+                        "{} did not maintain numpy _values in resultant "
+                        "ArrayValue ({})"
+                        .format(rop_str, rnf_result))
+                    self.assertTrue(
+                        all(numpy.asarray(rvv_result) == rnp_result),
+                        rop_str + " not equal between array value and numpy")
+                    self.assertIsInstance(
+                        rvv_result, ArrayValue,
+                        rop_str + " did not return a ArrayValue")
+                    self.assertTrue(
+                        all(numpy.asarray(rnv_result) == rnp_result),
+                        "{} not equal between array value ({}) and numpy ({})"
+                        .format(rop_str, numpy.asarray(rnv_result),
+                                rnp_result))
+                    self.assertIsInstance(
+                        rnv_result, ArrayValue,
+                        rop_str + " did not return a ArrayValue")
                 self.assertTrue(
                     all(numpy.asarray(vv_result) == np_result),
                     op_str + " not equal between array value and numpy")
