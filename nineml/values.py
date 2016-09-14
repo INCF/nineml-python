@@ -109,51 +109,83 @@ class SingleValue(BaseValue):
         return int(self._value)
 
     def __add__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__radd__(self)
         return SingleValue(self._value + float(num))
 
     def __sub__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__rsub__(self)
         return SingleValue(self._value - float(num))
 
     def __mul__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__mul__(self)
         return SingleValue(self._value * float(num))
 
     def __truediv__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__rtruediv__(self)
         return SingleValue(self._value / float(num))
 
     def __div__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__rdiv__(self)
         return SingleValue(self.__truediv__(num))
 
-    def __pow__(self, power):
-        return SingleValue(self._value ** power)
+    def __pow__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__rpow__(self)
+        return SingleValue(self._value ** num)
 
     def __floordiv__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__rfloordiv__(self)
         return SingleValue(self._value // float(num))
 
     def __mod__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__rmod__(self)
         return SingleValue(self._value % float(num))
 
     def __radd__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__add__(self)
         return SingleValue(self.__add__(num))
 
     def __rsub__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__sub__(self)
         return SingleValue(float(num) - self._value)
 
     def __rmul__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__mul__(self)
         return SingleValue(self.__mul__(num))
 
     def __rtruediv__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__truediv__(self)
         return SingleValue(num.__truediv__(self._value))
 
     def __rdiv__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__div__(self)
         return SingleValue(self.__rtruediv__(num))
 
     def __rpow__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__pow__(self)
         return SingleValue(float(num) ** self._value)
 
     def __rfloordiv__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__floordiv__(self)
         return SingleValue(float(num) // self._value)
 
     def __rmod__(self, num):
+        if hasattr(num, '__getitem__'):
+            return ArrayValue(num).__mod__(self)
         return SingleValue(float(num) % self._value)
 
     def __neg__(self):
@@ -172,11 +204,15 @@ class ArrayValue(BaseValue):
     def __init__(self, values, datafile=None):
         super(ArrayValue, self).__init__()
         try:
-            iter(values)
-        except TypeError:
-            raise NineMLRuntimeError(
-                "'values' argument provided to ArrayValue is not iterable")
-        self._values = values
+            self._values = values.astype(float)  # If NumPy array
+        except AttributeError:
+            try:
+                self._values = [float(v) for v in values]
+            except (TypeError, ValueError):
+                raise NineMLRuntimeError(
+                    "Values provided to ArrayValue ({}) could not be "
+                    "converted to a list of floats"
+                    .format(type(values)))
         if datafile is None:
             self._datafile = None
         else:
@@ -275,111 +311,103 @@ class ArrayValue(BaseValue):
         return sympy.Matrix(self._values)
 
     def __float__(self):
-        raise NineMLRuntimeError(
+        raise TypeError(
             "ArrayValues cannot be converted to a single float")
 
     def __add__(self, num):
         try:
-            return self._value + float(num)
-        except AttributeError:
-            return ArrayValue([v + float(num) for v in self._values])
+            return ArrayValue(self._values + float(num))  # if numpy array
+        except TypeError:
+            return ArrayValue([float(v + num) for v in self._values])
 
     def __sub__(self, num):
         try:
-            return self._value - float(num)
-        except AttributeError:
-            return ArrayValue([v - float(num) for v in self._values])
+            return ArrayValue(self._values - float(num))  # if numpy array
+        except TypeError:
+            return ArrayValue([float(v - num) for v in self._values])
 
     def __mul__(self, num):
         try:
-            return self._value * float(num)
-        except AttributeError:
-            return ArrayValue([v * float(num) for v in self._values])
+            return ArrayValue(self._values * float(num))  # if numpy array
+        except TypeError:
+            return ArrayValue([float(v * num) for v in self._values])
 
     def __truediv__(self, num):
         try:
-            return self._value.__truediv__(num)
+            return ArrayValue(self._values.__truediv__(num))  # if numpy array
         except AttributeError:
-            return ArrayValue([v / float(num) for v in self._values])
+            return ArrayValue([float(v / num) for v in self._values])
 
     def __div__(self, num):
-        try:
-            return self.__truediv__(num)
-        except AttributeError:
-            return ArrayValue([v.__truediv__(num) for v in self._values])
+        return self.__truediv__(num)
 
     def __pow__(self, power):
         try:
-            return self._value ** float(power)
-        except AttributeError:
-            return ArrayValue([v ** float(power) for v in self._values])
+            return ArrayValue(self._values ** float(power))  # if numpy array
+        except TypeError:
+            return ArrayValue([float(v ** power) for v in self._values])
 
     def __floordiv__(self, num):
         try:
-            return self._value // float(num)
-        except AttributeError:
-            return ArrayValue([v // float(num) for v in self._values])
+            return ArrayValue(self._values // float(num))  # if numpy array
+        except TypeError:
+            return ArrayValue([float(v // num) for v in self._values])
 
     def __mod__(self, num):
         try:
-            return self._value % float(num)
-        except AttributeError:
-            return ArrayValue([v % float(num) for v in self._values])
+            return ArrayValue(self._values % float(num))  # if numpy array
+        except TypeError:
+            return ArrayValue([float(v % num) for v in self._values])
 
     def __radd__(self, num):
         return self.__add__(num)
 
     def __rsub__(self, num):
         try:
-            return float(num) - self._value
-        except AttributeError:
-            return ArrayValue([float(num) - v for v in self._values])
+            return ArrayValue(float(num) - self._values)  # if numpy array
+        except TypeError:
+            return ArrayValue([float(num - v) for v in self._values])
 
     def __rmul__(self, num):
-        try:
-            return float(num) * self._value
-        except AttributeError:
-            return ArrayValue([float(num) * v for v in self._values])
+        return self.__mul__(num)
 
     def __rtruediv__(self, num):
         try:
-            return num.__truediv__(self._value)
+            return ArrayValue(self._values.__rtruediv__(float(num)))  # if np
         except AttributeError:
-            return ArrayValue([v.__truediv__(num) for v in self._values])
+            return ArrayValue([float(num.__truediv__(v))
+                               for v in self._values])
 
     def __rdiv__(self, num):
-        try:
-            return self._values.__rtruediv__(num)
-        except AttributeError:
-            return ArrayValue([v.__rtruediv__(num) for v in self._values])
+        return self.__rtruediv__(num)
 
     def __rpow__(self, num):
         try:
-            return self._values.__rpow__(num)
+            return ArrayValue(self._values.__rpow__(num))  # if numpy array
         except AttributeError:
-            return ArrayValue([float(num) ** v for v in self._values])
+            return ArrayValue([float(num ** v) for v in self._values])
 
     def __rfloordiv__(self, num):
         try:
-            return self._values.__rfloordiv__()
+            return ArrayValue(self._values.__rfloordiv__(num))  # if numpy arr.
         except AttributeError:
-            return ArrayValue([float(num) // v for v in self._values])
+            return ArrayValue([float(num // v) for v in self._values])
 
     def __rmod__(self, num):
         try:
-            return self._values.__rmod__()
+            return ArrayValue(self._values.__rmod__(num))  # if numpy array
         except AttributeError:
-            return ArrayValue([float(num) % v for v in self._values])
+            return ArrayValue([float(num % v) for v in self._values])
 
     def __neg__(self):
         try:
-            return self._values.__neg__()
+            return ArrayValue(self._values.__neg__())  # if numpy array
         except AttributeError:
             return ArrayValue([-v for v in self._values])
 
     def __abs__(self):
         try:
-            return self._values.__abs__()
+            return ArrayValue(self._values.__abs__())
         except AttributeError:
             return ArrayValue([abs(v) for v in self._values])
 
@@ -395,7 +423,7 @@ class RandomValue(BaseValue):
         self._generator = None
 
     def __float__(self):
-        raise NineMLRuntimeError(
+        raise TypeError(
             "RandomValues cannot be converted to a single float")
 
     def __eq__(self, other):

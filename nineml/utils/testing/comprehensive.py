@@ -220,8 +220,9 @@ dynPropA = DynamicsProperties(
         'P3': -90.2 * un.mV,
         'P4': 152.0 * un.nA},
     initial_values={
-        'SV1': -1.7 * un.unitless,
-        'SV2': 8.1 * un.unitless})
+        'SV1': -1.7 * un.V,
+        'SV2': 8.1 * un.nA},
+    check_initial_values=True)
 
 dynPropB = DynamicsProperties(
     name='dynPropB',
@@ -239,7 +240,8 @@ dynPropC = DynamicsProperties(
         'P2': Quantity(ArrayValue([1.0, 2.0, 3.0, 4.0, 5.0]), un.unitless)},
     initial_values=[Initial('SV1', 3.3 * un.unitless),
                     Initial('SV2', Quantity(21.7, un.unitless)),
-                    Initial('SV3', 8.0)])
+                    Initial('SV3', 8.0)],
+    check_initial_values=True)
 
 dynPropD = DynamicsProperties(
     name='dynPropD',
