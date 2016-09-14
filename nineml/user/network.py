@@ -10,8 +10,11 @@ from .component import write_reference, resolve_reference
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLNameError, name_error
 from nineml.base import DocumentLevelObject, ContainerObject
-from nineml.xml import E, from_child_xml, unprocessed_xml, get_xml_attr
+from nineml.xml import (
+    E, from_child_xml, unprocessed_xml, get_xml_attr, extract_xmlns)
 from nineml.user.port_connections import EventPortConnection
+from nineml.user.component import DynamicsProperties, ConnectionRuleProperties
+from nineml.units import Quantity
 from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
 from nineml.utils import ensure_valid_identifier
@@ -116,7 +119,8 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                      (ComponentArray(p.name + '__psr', len(p), p.response)
                       for p in self.projections),
                      (ComponentArray(p.name + '__pls', len(p), p.plasticity)
-                      for p in self.projections))
+                      for p in self.projections
+                      if p.plasticity is not None))
 
     @property
     def connection_groups(self):
@@ -246,6 +250,27 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
     def dynamics_properties(self):
         return self._dynamics_properties
 
+    @write_reference
+    @annotate_xml
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
+        return E(self.nineml_type,
+                 E.Size(str(self.size)),
+                 self.dynamics_properties.to_xml(document, E=E, **kwargs),
+                 name=self.name)
+
+    @classmethod
+    @resolve_reference
+    @read_annotations
+    @unprocessed_xml
+    def from_xml(cls, element, document, **kwargs):
+        dynamics_properties = from_child_xml(
+            element, DynamicsProperties, document,
+            allow_reference=True, **kwargs)
+        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
+                   size=get_xml_attr(element, 'Size', document, in_block=True,
+                                     dtype=int, **kwargs),
+                   dynamics_properties=dynamics_properties, document=document)
+
 
 class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
 
@@ -333,6 +358,54 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
     def _check_ports(self, source_port, destination_port):
         assert isinstance(source_port, SendPort)
         assert isinstance(destination_port, ReceivePort)
+
+    @write_reference
+    @annotate_xml
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
+        members = []
+        for comp_array, tag_name, port in ((self.source, 'Source',
+                                            self.source_port),
+                                           (self.destination, 'Destination',
+                                            self.destination_port)):
+            members.append(E(tag_name, comp_array.to_xml(
+                document, E=E, as_ref=True, **kwargs), port=port))
+        members.extend([
+            E.Connectivity(self.connectivity.rule_properties.to_xml(
+                document, E=E, **kwargs)),
+            E.Delay(self.delay.to_xml(document, E=E, **kwargs))])
+        xml = E(self.nineml_type,
+                *members,
+                source_port=self.source_port,
+                destination_port=self.destination_port,
+                name=self.name)
+        return xml
+
+    @classmethod
+    @resolve_reference
+    @read_annotations
+    @unprocessed_xml
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+        # Get Name
+        name = get_xml_attr(element, 'name', document, **kwargs)
+        delay = from_child_xml(element, Quantity, document, within='Delay',
+                               **kwargs)
+        source = from_child_xml(element, ComponentArray, document,
+                                allow_reference='only', within='Source',
+                                **kwargs)
+        destination = from_child_xml(element, ComponentArray, document,
+                                     allow_reference='only',
+                                     within='Destination', **kwargs)
+        connectivity = from_child_xml(
+            element, ConnectionRuleProperties, document, within='Connectivity',
+            allow_reference=True, **kwargs)
+        xmlns = extract_xmlns(element.tag)
+        source_port = get_xml_attr(element.find(xmlns + 'Source'), 'port',
+                                   document, **kwargs)
+        destination_port = get_xml_attr(element.find(xmlns + 'Destination'),
+                                        'port', document, **kwargs)
+        return cls(name=name, source=source, destination=destination,
+                   source_port=source_port, destination_port=destination_port,
+                   connectivity=connectivity, delay=delay, document=None)
 
 
 class AnalogConnectionGroup(BaseConnectionGroup):
