@@ -13,7 +13,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLXMLError)
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 import contextlib
-from nineml.utils import expect_single
+from nineml.utils import expect_single, logger
 
 
 class Document(dict, BaseNineMLObject):
@@ -520,19 +520,27 @@ def read(url, relative_to=None, force_reload=False, **kwargs):
     If the URL does not have a scheme identifier, it is taken to refer to a
     local file.
     """
+    # FIXME: I'm not sure whether this is necessary as I think the
+    # Document.load method also looks for loaded docs
+    abs_url = os.path.abspath(url)
+    if force_reload:
+        if abs_url in Document._loaded_docs:
+            logger.warning("Reloading '{}' URL, old references to this URL "
+                           "should not be rewritten to file"
+                           .format(abs_url))
+        del Document._loaded_docs[abs_url]
     # Try to read
     doc = None
-    if not force_reload:
-        try:
-            # Get the loaded document if it has been loaded previously and
-            # still in memory
-            doc = Document._loaded_docs[os.path.abspath(url)][0]()
-        except KeyError:
-            pass
+    try:
+        # Get the loaded document if it has been loaded previously and
+        # still in memory
+        doc = Document._loaded_docs[abs_url][0]()
+    except KeyError:
+        pass
     if doc is None:
         xml, url = read_xml(url, relative_to=relative_to)
         root = xml.getroot()
-        doc = Document.load(root, url, **kwargs)
+        doc = Document.load(root, url, force_reload=force_reload, **kwargs)
     return doc
 
 

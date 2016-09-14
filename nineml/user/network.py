@@ -228,9 +228,9 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
     defining_attributes = ('name', "_size", "_dynamics_properties")
 
     def __init__(self, name, size, dynamics_properties, document=None):
+        self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
-        self._name = name
         self.size = size
         self._dynamics_properties = dynamics_properties
 
@@ -281,12 +281,12 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
 
     def __init__(self, name, source, destination, source_port,
                  destination_port, connectivity, delay, document=None):
+        self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
         assert isinstance(name, basestring)
         assert isinstance(source, basestring)
         assert isinstance(destination, basestring)
-        self._name = name
         self._source = source
         self._destination = destination
         self._source_port = source_port
@@ -363,17 +363,17 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         members = [
-            E.Source(name=self.source, port=self.source_port),
-            E.Destination(name=self.destination, port=self.destination_port),
             E.Connectivity(self.connectivity.rule_properties.to_xml(
                 document, E=E, **kwargs))]
         if self.delay is not None:
             members.append(E.Delay(self.delay.to_xml(document, E=E, **kwargs)))
         xml = E(self.nineml_type,
                 *members,
+                name=self.name,
+                source=self.source,
                 source_port=self.source_port,
-                destination_port=self.destination_port,
-                name=self.name)
+                destination=self.destination,
+                destination_port=self.destination_port)
         return xml
 
     @classmethod
@@ -386,14 +386,11 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         connectivity = from_child_xml(
             element, ConnectionRuleProperties, document, within='Connectivity',
             allow_reference=True, **kwargs)
-        xmlns = extract_xmlns(element.tag)
-        source_elem = element.find(xmlns + 'Source')
-        destination_elem = element.find(xmlns + 'Destination')
-        source = get_xml_attr(source_elem, 'name', document, **kwargs)
-        destination = get_xml_attr(destination_elem, 'name', document,
-                                        **kwargs)
-        source_port = get_xml_attr(source_elem, 'port', document, **kwargs)
-        destination_port = get_xml_attr(destination_elem, 'port', document,
+        source = get_xml_attr(element, 'source', document, **kwargs)
+        destination = get_xml_attr(element, 'destination', document,
+                                   **kwargs)
+        source_port = get_xml_attr(element, 'source_port', document, **kwargs)
+        destination_port = get_xml_attr(element, 'destination_port', document,
                                         **kwargs)
         delay = from_child_xml(element, Quantity, document, within='Delay',
                                allow_none=True, **kwargs)

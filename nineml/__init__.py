@@ -16,7 +16,8 @@ from abstraction import (
 from .user import (
     Selection, Population, Projection, Property, Definition,
     DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
-    Network, MultiDynamics, MultiDynamicsProperties, Concatenate)
+    Network, MultiDynamics, MultiDynamicsProperties, Concatenate,
+    ComponentArray, EventConnectionGroup, AnalogConnectionGroup)
 from .values import SingleValue, ArrayValue, RandomValue
 
 __version__ = "0.1"
