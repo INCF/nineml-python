@@ -51,7 +51,8 @@ def strip_xmlns(tag_name):
 
 def from_child_xml(element, child_classes, document, multiple=False,
                    allow_reference=False, allow_none=False, within=None,
-                   unprocessed=None, multiple_within=False, **kwargs):
+                   unprocessed=None, multiple_within=False,
+                   allowed_attrib=[], **kwargs):
     """
     Loads a child element from the element, matching the tag name to the
     appropriate class and calling its 'from_xml' method
@@ -69,11 +70,12 @@ def from_child_xml(element, child_classes, document, multiple=False,
         within_elems = element.findall(xmlns + within)
         if len(within_elems) == 1:
             parent = within_elems[0]
-            if parent.attrib:
+            if any(a not in allowed_attrib for a in parent.attrib):
                 raise NineMLXMLAttributeError(
-                    "{} in '{}' has '{}' attributes when none are expected"
+                    "{} in '{}' has '{}' attributes when {} are expected"
                     .format(identify_element(parent), document.url,
-                            "', '".join(parent.attrib.iterkeys())))
+                            "', '".join(parent.attrib.iterkeys()),
+                            allowed_attrib))
             if not multiple_within and len([
                     c for c in parent.getchildren()
                     if c.tag != xmlns + 'Annotations']) > 1:
@@ -147,30 +149,20 @@ def from_child_xml(element, child_classes, document, multiple=False,
 
 
 def get_xml_attr(element, name, document, unprocessed=None, in_block=False,
-                 dtype=str, **kwargs):  # @UnusedVariable @IgnorePep8
+                 within=None, dtype=str, **kwargs):  # @UnusedVariable @IgnorePep8
     """
     Gets an attribute from an xml element with exception handling
     """
-    xmlns = extract_xmlns(element.tag)
     if in_block:
-        found = element.findall(xmlns + name)
-        if len(found) == 1:
-            attr_str = found[0].text
-            if unprocessed:
-                unprocessed[0].discard(found[0])
-        elif not found:
-            raise NineMLXMLBlockError(
-                "Did not find and child blocks with the tag '{}' within {} in "
-                "'{url}'".format(name, identify_element(element),
-                                 url=document.url))
-        else:
-            raise NineMLXMLBlockError(
-                "Found multiple child blocks with the tag '{}' within {} in "
-                "'{url}'".format(name, identify_element(element),
-                                 url=document.url))
+        sub_elem = get_subblock(element, name, unprocessed, document)
+        attr_str = sub_elem.text
     else:
+        if within is not None:
+            elem = get_subblock(element, within, unprocessed, document)
+        else:
+            elem = element
         try:
-            attr_str = element.attrib[name]
+            attr_str = elem.attrib[name]
             if unprocessed:
                 unprocessed[1].discard(name)
         except KeyError, e:
@@ -180,8 +172,8 @@ def get_xml_attr(element, name, document, unprocessed=None, in_block=False,
                 raise NineMLXMLAttributeError(
                     "{} in '{}' is missing the {} attribute (found '{}' "
                     "attributes)".format(
-                        identify_element(element), document.url, e,
-                        "', '".join(element.attrib.iterkeys())))
+                        identify_element(elem), document.url, e,
+                        "', '".join(elem.attrib.iterkeys())))
     try:
         attr = dtype(attr_str)
     except ValueError, e:
@@ -193,6 +185,34 @@ def get_xml_attr(element, name, document, unprocessed=None, in_block=False,
                 "type".format(name, identify_element(element), document.url,
                               attr_str, dtype))
     return attr
+
+
+def get_subblock(element, name, unprocessed, document, **kwargs):  # @UnusedVariable @IgnorePep8
+    xmlns = extract_xmlns(element.tag)
+    found = element.findall(xmlns + name)
+    if len(found) == 1:
+        if unprocessed:
+            unprocessed[0].discard(found[0])
+    elif not found:
+        raise NineMLXMLBlockError(
+            "Did not find and child blocks with the tag '{}' within {} in "
+            "'{url}'".format(name, identify_element(element),
+                             url=document.url))
+    else:
+        raise NineMLXMLBlockError(
+            "Found multiple child blocks with the tag '{}' within {} in "
+            "'{url}'".format(name, identify_element(element),
+                             url=document.url))
+    return found[0]
+
+
+def get_subblocks(element, name, unprocessed, **kwargs):  # @UnusedVariable
+    xmlns = extract_xmlns(element.tag)
+    children = element.findall(xmlns + name)
+    for child in children:
+        if unprocessed:
+            unprocessed[0].discard(child)
+    return children
 
 
 def identify_element(element):

@@ -87,18 +87,26 @@ class BaseNineMLObject(object):
                       .format(self.nineml_type))
         else:
             result = ''
-        if self.nineml_type != other.nineml_type:
-            result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
-                       .format(self.nineml_type, other.nineml_type))
-        else:
-            for attr_name in self.defining_attributes:
-                self_attr = getattr(self, attr_name)
-                other_attr = getattr(other, attr_name)
-                if self_attr != other_attr:
-                    result += "\n{}Attribute '{}': ".format(indent,
-                                                            attr_name)
-                    result += self._unwrap_mismatch(self_attr, other_attr,
-                                                    indent + '  ')
+        try:
+            if self.nineml_type != other.nineml_type:
+                result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
+                           .format(self.nineml_type, other.nineml_type))
+            else:
+                for attr_name in self.defining_attributes:
+                    self_attr = getattr(self, attr_name)
+                    other_attr = getattr(other, attr_name)
+                    if self_attr != other_attr:
+                        result += "\n{}Attribute '{}': ".format(indent,
+                                                                attr_name)
+                        result += self._unwrap_mismatch(self_attr, other_attr,
+                                                        indent + '  ')
+        except AttributeError:
+            if type(self) != type(other):
+                result += "mismatch in type self:{} and other:{}".format(
+                    type(self).__name__, type(other).__name__)
+            elif self != other:
+                result += ("self:{} != other:{}"
+                           .format(self, other))
         return result
 
     @classmethod
@@ -122,6 +130,7 @@ class BaseNineMLObject(object):
                         result += "\n{}Key '{}':".format(indent + '  ', k)
                         result += cls._unwrap_mismatch(s[k], o[k],
                                                        indent + '  ')
+                        s[k] == o[k]
         elif isinstance(s, list):
             if len(s) != len(o):
                 result += ('differ in length (self:{} to other:{})'
@@ -133,7 +142,11 @@ class BaseNineMLObject(object):
                         result += cls._unwrap_mismatch(s_elem, o_elem,
                                                        indent + '  ')
         else:
-            result += "self:{} != other:{}".format(s, o)
+            if type(s) != type(o):
+                result += "mismatch in type self:{} != other:{}".format(
+                    type(s).__name__, type(o).__name__)
+            else:
+                result += "self:{} != other:{}".format(s, o)
         return result
 
 

@@ -60,8 +60,7 @@ class Definition(BaseReference):
                 if doc_obj != self._referred_to:
                     raise NineMLRuntimeError(
                         "Cannot create reference for '{}' {} in the provided "
-                        "document due to name clash with existing {} "
-                        "object"
+                        "document due to name clash with existing {} object"
                         .format(self._referred_to.name,
                                 type(self._referred_to), type(doc_obj)))
             except NineMLNameError:

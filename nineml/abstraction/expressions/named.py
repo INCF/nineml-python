@@ -105,11 +105,11 @@ class Constant(BaseALObject, ExpressionSymbol):
         self._name = name
         if isinstance(value, Quantity):
             if units is None:
-                self._value = value._value
+                self._value = float(value._value)
                 self._units = value.units
             elif units.dimension == value.units.dimension:
-                self._value = value._value * 10 ** (units.power -
-                                                    value.units.power)
+                self._value = float(value._value * 10 ** (units.power -
+                                                          value.units.power))
                 self._units = units
             else:
                 raise NineMLDimensionError(
@@ -117,10 +117,7 @@ class Constant(BaseALObject, ExpressionSymbol):
                     "and units ({})".format(value.units.dimension,
                                             units.dimension))
         else:
-            if isinstance(value, BaseValue):
-                self._value = value
-            else:
-                self._value = float(value)
+            self._value = float(value)
             self._units = units if units is not None else unitless
         assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
 
