@@ -204,8 +204,9 @@ class Connectivity(BaseConnectivity):
         else:
             N = int(self._rule_props.property('number').value)
             conn = chain(*(
-                izip((math.floor(random.random() * self._src_size)
-                      for _ in xrange(N)), repeat(d))
+                izip((int(math.floor(random.random() * self._src_size))
+                      for _ in xrange(N)),
+                     repeat(d))
                 for d in xrange(self._dest_size)))
             conn, cpy = tee(conn)
             self._cache = list(cpy)
@@ -217,8 +218,9 @@ class Connectivity(BaseConnectivity):
         else:
             N = int(self._rule_props.property('number').value)
             conn = chain(*(
-                izip(repeat(s), (math.floor(random.random() * self._dest_size)
-                                 for _ in xrange(N)))
+                izip(repeat(s),
+                     (int(math.floor(random.random() * self._dest_size))
+                      for _ in xrange(N)))
                 for s in xrange(self._src_size)))
             conn, cpy = tee(conn)
             self._cache = list(cpy)
@@ -332,6 +334,10 @@ class Projection(BaseULObject, DocumentLevelObject):
     @property
     def connectivity(self):
         return self._connectivity
+
+    @property
+    def connections(self):
+        return self.connectivity.connections
 
     @property
     def delay(self):

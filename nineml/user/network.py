@@ -7,8 +7,10 @@ from .projection import Projection, Connectivity, InverseConnectivity
 from .selection import Selection
 from . import BaseULObject
 from .component import write_reference, resolve_reference
+from nineml.abstraction.connectionrule import (
+    explicit_connection_rule, one_to_one_connection_rule)
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLNameError, name_error
+from nineml.exceptions import name_error
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import (
     E, from_child_xml, unprocessed_xml, get_xml_attr)
@@ -19,6 +21,7 @@ from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
 from nineml.utils import ensure_valid_identifier
 import nineml.document
+from nineml import units as un
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -300,44 +303,62 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         return self._connectivity.connections()
 
     @classmethod
-    def from_port_connection(self, port_connection, projection,
-                             component_arrays):
-        if isinstance(port_connection, EventPortConnection):
+    def from_port_connection(self, port_conn, projection, component_arrays):
+        if isinstance(port_conn, EventPortConnection):
             cls = AnalogConnectionGroup
         else:
             cls = EventConnectionGroup
         name = '__'.join((
-            projection.name, port_connection.sender_role,
-            port_connection.send_port_name, port_connection.receiver_role,
-            port_connection.receive_port_name))
-        if port_connection.receiver_role == 'pre':
-            connectivity = InverseConnectivity(projection.connectivity)
+            projection.name, port_conn.sender_role,
+            port_conn.send_port_name, port_conn.receiver_role,
+            port_conn.receive_port_name))
+        if (port_conn.sender_role in ('response', 'plasticity') and
+                port_conn.receiver_role in ('response', 'plasticity')):
+            conn_props = ConnectionRuleProperties(
+                name=name + '_connectivity',
+                definition=one_to_one_connection_rule)
         else:
-            connectivity = projection.connectivity
+            if (port_conn.sender_role == 'pre' and
+                    port_conn.receiver_role == 'post'):
+                source_inds, dest_inds = zip(*projection.connections)
+            elif (port_conn.sender_role == 'post' and
+                  port_conn.receiver_role == 'pre'):
+                source_inds, dest_inds = zip(*(
+                    (d, s) for s, d in projection.connections))
+            elif port_conn.sender_role == 'pre':
+                raise NotImplementedError
+            elif port_conn.receiver_role == 'post':
+                raise NotImplementedError
+            else:
+                assert False
+            conn_props = ConnectionRuleProperties(
+                name=name + '_connectivity',
+                definition=explicit_connection_rule,
+                properties={'sourceIndices': source_inds,
+                            'destinationIndices': dest_inds})
         # FIXME: This will need to change in version 2, when each connection
         #        has its own delay
-        if port_connection.sender_role == 'pre':
+        if port_conn.sender_role == 'pre':
             delay = projection.delay
         else:
             delay = None
         try:
             source = component_arrays[
                 (projection.pre.name
-                 if port_connection.sender_role in ('pre', 'post')
+                 if port_conn.sender_role in ('pre', 'post')
                  else projection.name) +
-                ComponentArray.suffix[port_connection.sender_role]]
+                ComponentArray.suffix[port_conn.sender_role]]
             destination = component_arrays[
                 (projection.pre.name
-                 if port_connection.receiver_role in ('pre', 'post')
+                 if port_conn.receiver_role in ('pre', 'post')
                  else projection.name) +
-                ComponentArray.suffix[port_connection.receiver_role]]
+                ComponentArray.suffix[port_conn.receiver_role]]
         except:
             raise
         return cls(name, source, destination,
-                   source_port=port_connection.send_port_name,
-                   destination_port=port_connection.receive_port_name,
-                   connectivity=connectivity,
-                   delay=delay)
+                   source_port=port_conn.send_port_name,
+                   destination_port=port_conn.receive_port_name,
+                   connectivity=conn_props, delay=delay)
 
     @abstractmethod
     def _check_ports(self, source_port, destination_port):
