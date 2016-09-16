@@ -3,7 +3,7 @@ import re
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 from .population import Population
-from .projection import Projection, InverseConnectivity
+from .projection import Projection, Connectivity, InverseConnectivity
 from .selection import Selection
 from . import BaseULObject
 from .component import write_reference, resolve_reference
@@ -11,7 +11,7 @@ from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLNameError, name_error
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import (
-    E, from_child_xml, unprocessed_xml, get_xml_attr, extract_xmlns)
+    E, from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.user.port_connections import EventPortConnection
 from nineml.user.component import DynamicsProperties, ConnectionRuleProperties
 from nineml.units import Quantity
@@ -112,58 +112,6 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     # Core accessors
     # =========================================================================
 
-    @property
-    def component_arrays(self):
-        return chain((ComponentArray(p.name + '__cell', p.size, p.cell)
-                      for p in self.populations),
-                     (ComponentArray(p.name + '__psr', len(p), p.response)
-                      for p in self.projections),
-                     (ComponentArray(p.name + '__pls', len(p), p.plasticity)
-                      for p in self.projections
-                      if p.plasticity is not None))
-
-    @property
-    def connection_groups(self):
-        return chain(*(
-            (BaseConnectionGroup.from_port_connection(pc, p)
-             for pc in p.port_connections)
-            for p in self.projections))
-
-    def component_array(self, name):
-        try:
-            return next(ca for ca in self.component_arrays if ca.name == name)
-        except StopIteration:
-            raise NineMLNameError(
-                "No component group named '{}' in '{}' network (found '{}')"
-                .format(name, self.name,
-                        "', '".join(self.component_arrays_names)))
-
-    def connection_group(self, name):
-        try:
-            return next(cg for cg in self.connection_groups
-                        if cg.name == name)
-        except StopIteration:
-            raise NineMLNameError(
-                "No connection group named '{}' in '{}' network (found '{}')"
-                .format(name, self.name,
-                        "', '".join(self.connection_group_names)))
-
-    @property
-    def component_array_names(self):
-        return (ca.name for ca in self.component_arrays)
-
-    @property
-    def connection_group_names(self):
-        return (cg.name for cg in self.connection_groups)
-
-    @property
-    def num_component_arrays(self):
-        return len(list(self.component_arrays))
-
-    @property
-    def num_connection_groups(self):
-        return len(list(self.connection_groups))
-
     def get_components(self):
         components = []
         for p in chain(self.populations.values(), self.projections.values()):
@@ -221,11 +169,30 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     _conn_group_name_re = re.compile(
         r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')
 
+    def flatten(self):
+        component_arrays = dict((ca.name, ca) for ca in chain(
+            (ComponentArray(p.name + ComponentArray.suffix['post'], p.size,
+                            p.cell)
+             for p in self.populations),
+            (ComponentArray(p.name + ComponentArray.suffix['response'], len(p),
+                            p.response)
+             for p in self.projections),
+            (ComponentArray(p.name + ComponentArray.suffix['plasticity'],
+                            len(p), p.plasticity)
+             for p in self.projections if p.plasticity is not None)))
+        connection_groups = list(chain(*(
+            (BaseConnectionGroup.from_port_connection(pc, p, component_arrays)
+             for pc in p.port_connections)
+            for p in self.projections)))
+        return component_arrays.values(), connection_groups
+
 
 class ComponentArray(BaseULObject, DocumentLevelObject):
 
     nineml_type = "ComponentArray"
     defining_attributes = ('name', "_size", "_dynamics_properties")
+    suffix = {'pre': '__cell', 'post': '__cell', 'response': '__psr',
+              'plasticity': '__pls'}
 
     def __init__(self, name, size, dynamics_properties, document=None):
         self._name = name
@@ -280,17 +247,21 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                            'destination_port', 'connectivity')
 
     def __init__(self, name, source, destination, source_port,
-                 destination_port, connectivity, delay, document=None):
+                 destination_port, connectivity, delay, document=None,
+                 connectivity_class=Connectivity):
         self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
         assert isinstance(name, basestring)
-        assert isinstance(source, basestring)
-        assert isinstance(destination, basestring)
+        assert isinstance(source, ComponentArray)
+        assert isinstance(destination, ComponentArray)
         self._source = source
         self._destination = destination
         self._source_port = source_port
         self._destination_port = destination_port
+        if isinstance(connectivity, ConnectionRuleProperties):
+            connectivity = connectivity_class(connectivity, source.size,
+                                              destination.size)
         self._connectivity = connectivity
         self._delay = delay
         if isinstance(source_port, Port):
@@ -329,7 +300,8 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         return self._connectivity.connections()
 
     @classmethod
-    def from_port_connection(self, port_connection, projection):
+    def from_port_connection(self, port_connection, projection,
+                             component_arrays):
         if isinstance(port_connection, EventPortConnection):
             cls = AnalogConnectionGroup
         else:
@@ -348,7 +320,20 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
             delay = projection.delay
         else:
             delay = None
-        return cls(name, projection.pre.name, projection.post.name,
+        try:
+            source = component_arrays[
+                (projection.pre.name
+                 if port_connection.sender_role in ('pre', 'post')
+                 else projection.name) +
+                ComponentArray.suffix[port_connection.sender_role]]
+            destination = component_arrays[
+                (projection.pre.name
+                 if port_connection.receiver_role in ('pre', 'post')
+                 else projection.name) +
+                ComponentArray.suffix[port_connection.receiver_role]]
+        except:
+            raise
+        return cls(name, source, destination,
                    source_port=port_connection.send_port_name,
                    destination_port=port_connection.receive_port_name,
                    connectivity=connectivity,
@@ -363,17 +348,17 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         members = [
+            E.Source(self.source.to_xml(document, E=E, **kwargs),
+                     port=self.source_port),
+            E.Destination(self.destination.to_xml(document, E=E, **kwargs),
+                          port=self.destination_port),
             E.Connectivity(self.connectivity.rule_properties.to_xml(
                 document, E=E, **kwargs))]
         if self.delay is not None:
             members.append(E.Delay(self.delay.to_xml(document, E=E, **kwargs)))
         xml = E(self.nineml_type,
                 *members,
-                name=self.name,
-                source=self.source,
-                source_port=self.source_port,
-                destination=self.destination,
-                destination_port=self.destination_port)
+                name=self.name)
         return xml
 
     @classmethod
@@ -386,12 +371,16 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         connectivity = from_child_xml(
             element, ConnectionRuleProperties, document, within='Connectivity',
             allow_reference=True, **kwargs)
-        source = get_xml_attr(element, 'source', document, **kwargs)
-        destination = get_xml_attr(element, 'destination', document,
-                                   **kwargs)
-        source_port = get_xml_attr(element, 'source_port', document, **kwargs)
-        destination_port = get_xml_attr(element, 'destination_port', document,
-                                        **kwargs)
+        source = from_child_xml(
+            element, ComponentArray, document, within='Source',
+            allow_reference=True, allowed_attrib=['port'], **kwargs)
+        destination = from_child_xml(
+            element, ComponentArray, document, within='Destination',
+            allow_reference=True, allowed_attrib=['port'], **kwargs)
+        source_port = get_xml_attr(element, 'port', document,
+                                   within='Source', **kwargs)
+        destination_port = get_xml_attr(element, 'port', document,
+                                        within='Destination', **kwargs)
         delay = from_child_xml(element, Quantity, document, within='Delay',
                                allow_none=True, **kwargs)
         return cls(name=name, source=source, destination=destination,

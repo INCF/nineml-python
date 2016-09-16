@@ -469,9 +469,8 @@ netB = Network(
 document = Document(
     dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, multiDynPropA,
     multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
-    selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA, netB,
-    *list(chain(netA.component_arrays, netB.component_arrays,
-          netA.connection_groups, netB.connection_groups)))
+    selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA,
+    netB, *list(chain(*(netA.flatten() + netB.flatten()))))
 
 # -----------------------------------------------------------------------------
 # Create dictionaries holding all nineml types and corresponding examples in

@@ -33,7 +33,10 @@ class BaseReference(BaseNineMLObject):
         else:
             remote_doc = document
         self._url = url
-        self._referred_to = remote_doc[name]
+        try:
+            self._referred_to = remote_doc[name]
+        except:
+            raise
 
     @property
     def url(self):

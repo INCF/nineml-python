@@ -9,14 +9,17 @@ from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
 from .namespace import append_namespace
+from nineml.utils import ensure_valid_identifier
 
 
 class BasePortExposure(BaseULObject):
 
-    defining_attributes = ('_name', '_sub_component', '_port')
+    defining_attributes = ('name', '_sub_component', '_port')
 
     def __init__(self, component, port, name=None):
         super(BasePortExposure, self).__init__()
+        if name is not None:
+            ensure_valid_identifier(name)
         self._name = name
         if isinstance(component, basestring):
             self._sub_component_name = component
@@ -33,7 +36,7 @@ class BasePortExposure(BaseULObject):
             self._port_name = None
 
     def __eq__(self, other):
-        return (self._name == other._name and
+        return (self.name == other.name and
                 self._sub_component == other._sub_component and
                 self._sub_component_name == other._sub_component_name and
                 self._port == other._port and

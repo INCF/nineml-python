@@ -53,6 +53,7 @@ class Document(dict, BaseNineMLObject):
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
+        self._added_in_write = None
         for element in elements:
             self.add(element)
 
@@ -87,6 +88,8 @@ class Document(dict, BaseNineMLObject):
                         .format(element.name, element.nineml_type,
                                 self.url, element.document.url))
             self[element.name] = element
+        if self._added_in_write is not None:
+            self._added_in_write.append(element)
 
     def remove(self, element, ignore_missing=False):
         if not isinstance(element, DocumentLevelObject):
@@ -255,7 +258,10 @@ class Document(dict, BaseNineMLObject):
                         "Name of unit '{}' conflicts with existing object of "
                         "differring value or type '{}' and '{}'"
                         .format(unit.name, unit, self[unit.name]))
-            self[unit.name] = unit
+            else:
+                self[unit.name] = unit
+                if self._added_in_write is not None:
+                    self._added_in_write.append(unit)
         for dimension in all_dimensions:
             if dimension.name in self:
                 if dimension != self[dimension.name]:
@@ -263,7 +269,10 @@ class Document(dict, BaseNineMLObject):
                         "Name of dimension '{}' conflicts with existing object"
                         " of differring value or type '{}' and '{}'"
                         .format(dimension.name, dimension, self[unit.name]))
-            self[dimension.name] = dimension
+            else:
+                self[dimension.name] = dimension
+                if self._added_in_write is not None:
+                    self._added_in_write.append(dimension)
         # Replace units and dimensions with those in the superset
         for obj in self.itervalues():
             for a in obj.attributes_with_dimension:
@@ -287,10 +296,14 @@ class Document(dict, BaseNineMLObject):
 
     def to_xml(self, E=E, **kwargs):  # @UnusedVariable
         self.standardize_units()
-        return E(
-            self.nineml_type,
-            *[e.to_xml(self, E=E, as_ref=False)
-              for e in self.sorted_elements()])
+        self._added_in_write = []  # Initialise added_in_write
+        elements = [e.to_xml(self, E=E, as_ref=False)
+                    for e in self.sorted_elements()]
+        self.standardize_units()
+        elements.extend(e.to_xml(self, E=E, as_ref=False)
+                        for e in self._added_in_write)
+        self._added_in_write = None
+        return E(self.nineml_type, *elements)
 
     @classmethod
     def from_xml(cls, element, url=None, register_url=True, **kwargs):
