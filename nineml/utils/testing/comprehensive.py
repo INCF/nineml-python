@@ -366,7 +366,7 @@ conA = ConnectionRule(
 conPropA = ConnectionRuleProperties(
     name="conPropA",
     definition=conA,
-    properties={'number': 0.5 * un.unitless})
+    properties={'number': 5 * un.unitless})
 
 conB = ConnectionRule(
     name="conB",

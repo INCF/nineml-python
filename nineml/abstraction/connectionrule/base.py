@@ -12,9 +12,11 @@ docstring goes here
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from .. import Parameter
 from ..componentclass import ComponentClass
 from nineml.xml import E
 from nineml.exceptions import NineMLRuntimeError
+import nineml.units as un
 
 
 class ConnectionRule(ComponentClass):
@@ -109,3 +111,18 @@ from .visitors.queriers import (  # @IgnorePep8
 from .visitors.validators import ConnectionRuleValidator  # @IgnorePep8
 from .visitors.xml import (  # @IgnorePep8
     ConnectionRuleXMLLoader, ConnectionRuleXMLWriter)
+
+
+one_to_one_connection_rule = ConnectionRule(
+    name='one_to_one',
+    standard_library=(ConnectionRule.standard_library_basepath + 'OneToOne'))
+
+explicit_connection_rule = ConnectionRule(
+    name='explicit',
+    standard_library=(ConnectionRule.standard_library_basepath + 'Explicit'),
+    parameters=[
+        Parameter(dimension=un.dimensionless,
+                  name="destinationIndices"),
+        Parameter(dimension=un.dimensionless,
+                  name="sourceIndices")])
+
