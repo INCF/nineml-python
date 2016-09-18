@@ -1,6 +1,6 @@
 from __future__ import division
 from .base import BaseNineMLObject
-from nineml.xml import E, extract_xmlns, get_xml_attr
+from nineml.xml import E, get_xml_attr
 from abc import ABCMeta, abstractmethod
 from nineml.annotations import read_annotations, annotate_xml
 from urllib import urlopen
@@ -12,7 +12,7 @@ from itertools import izip
 from operator import itemgetter
 import numpy
 import nineml
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLValueError
 from nineml.utils import nearly_equal
 from nineml.xml import from_child_xml, unprocessed_xml, get_subblocks
 
@@ -209,7 +209,7 @@ class ArrayValue(BaseValue):
             try:
                 self._values = [float(v) for v in values]
             except (TypeError, ValueError):
-                raise NineMLRuntimeError(
+                raise NineMLValueError(
                     "Values provided to ArrayValue ({}) could not be "
                     "converted to a list of floats"
                     .format(type(values)))

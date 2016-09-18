@@ -320,15 +320,19 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         else:
             if (port_conn.sender_role == 'pre' and
                     port_conn.receiver_role == 'post'):
-                source_inds, dest_inds = zip(*projection.connections)
+                source_inds, dest_inds = zip(*projection.connections())
             elif (port_conn.sender_role == 'post' and
                   port_conn.receiver_role == 'pre'):
                 source_inds, dest_inds = zip(*(
-                    (d, s) for s, d in projection.connections))
+                    (d, s) for s, d in projection.connections()))
             elif port_conn.sender_role == 'pre':
-                raise NotImplementedError
+                source_inds, dest_inds = zip(*(
+                    (s, i) for i, (s, _) in enumerate(
+                        sorted(projection.connections()))))
             elif port_conn.receiver_role == 'post':
-                raise NotImplementedError
+                source_inds, dest_inds = zip(*(
+                    (i, d) for i, (_, d) in enumerate(
+                        sorted(projection.connections()))))
             else:
                 assert False
             conn_props = ConnectionRuleProperties(

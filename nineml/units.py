@@ -9,7 +9,8 @@ from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLDimensionError)
+    NineMLRuntimeError, NineMLNameError, NineMLDimensionError,
+    NineMLValueError)
 from nineml.values import (
     BaseValue, SingleValue, ArrayValue, RandomValue)
 from nineml.utils import ensure_valid_identifier
@@ -613,31 +614,34 @@ class Quantity(BaseNineMLObject):
         python-quantities Quantity objects into 9ML Quantity objects
         """
         if not isinstance(qty, cls):
-            if isinstance(qty, (int, float)):
-                value = float(qty)
+            # Assume it is a python quantities quantity and convert to
+            # 9ML quantity
+            try:
+                unit_name = str(qty.units).split()[1].replace(
+                    '/', '_per_').replace('**', '').replace('*', '_')
+                if unit_name.startswith('_per_'):
+                    unit_name = unit_name[1:]  # strip leading underscore
+                powers = dict(
+                    (cls._pq_si_to_dim[type(u).__name__], p)
+                    for u, p in
+                    qty.units.simplified._dimensionality.iteritems())
+                dimension = Dimension(unit_name + 'Dimension', **powers)
+                units = Unit(
+                    unit_name, dimension=dimension,
+                    power=int(math.log10(float(qty.units.simplified))))
+                value = SingleValue(qty)
+            except AttributeError:
+                if isinstance(qty, (int, float)):
+                    value = SingleValue(qty)
+                else:
+                    try:
+                        value = ArrayValue(qty)
+                    except NineMLValueError:
+                        raise NineMLRuntimeError(
+                            "Cannot '{}' to nineml.Quantity (can only convert "
+                            "quantities.Quantity and numeric objects)"
+                            .format(qty))
                 units = unitless
-            else:
-                # Assume it is a python quantities quantity and convert to
-                # 9ML quantity
-                try:
-                    unit_name = str(qty.units).split()[1].replace(
-                        '/', '_per_').replace('**', '').replace('*', '_')
-                    if unit_name.startswith('_per_'):
-                        unit_name = unit_name[1:]  # strip leading underscore
-                    powers = dict(
-                        (cls._pq_si_to_dim[type(u).__name__], p)
-                        for u, p in
-                        qty.units.simplified._dimensionality.iteritems())
-                    dimension = Dimension(unit_name + 'Dimension', **powers)
-                    units = Unit(
-                        unit_name, dimension=dimension,
-                        power=int(math.log10(float(qty.units.simplified))))
-                    value = float(qty)
-                except AttributeError:
-                    raise NineMLRuntimeError(
-                        "Cannot '{}' to nineml.Quantity (can only convert "
-                        "quantities.Quantity and numeric objects)"
-                        .format(qty))
             qty = Quantity(value, units)
         return qty
 
