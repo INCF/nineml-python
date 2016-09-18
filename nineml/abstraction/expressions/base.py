@@ -257,9 +257,6 @@ class Expression(object):
     def __truediv__(self, other):
         return self.rhs / other
 
-    def __mod__(self, other):
-        return self.rhs % other
-
     def __pow__(self, other):
         return self.rhs ** other
 
@@ -271,6 +268,9 @@ class Expression(object):
 
     def __inv__(self):
         return ~self.rhs
+
+    def __neg__(self):
+        return -self.rhs
 
     def __iadd__(self, expr):
         "self += expr"
@@ -291,6 +291,9 @@ class Expression(object):
         "self /= expr"
         self.rhs = self.rhs / expr
         return self
+
+    def __idiv__(self, expr):
+        return self.__itruediv__(expr)
 
     def __ipow__(self, expr):
         "self **= expr"
@@ -395,9 +398,6 @@ class ExpressionSymbol(object):
 
     def __truediv__(self, other):
         return sympy.sympify(self) / other
-
-    def __mod__(self, other):
-        return sympy.sympify(self) % other
 
     def __pow__(self, other):
         return sympy.sympify(self) ** other
