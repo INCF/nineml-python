@@ -1,16 +1,19 @@
 import unittest
-import itertools
+from itertools import chain, cycle
 import math
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from operator import (
-    add, sub, mul, truediv, div, pow, floordiv, mod, neg,
-    iadd, iand, iconcat, idiv, ifloordiv, ilshift, imod, imul, inv, ior, ipow,
-    irepeat, isub, itruediv, ixor)
+    add, sub, mul, truediv, div, pow, floordiv, mod, neg, iadd, idiv,
+    ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
 from nineml.utils.testing.comprehensive import instances_of_all_types
-import numpy
-
+import numpy  # This is only imported here in the test as it is not dependency
+from sympy import sympify
+from nineml.abstraction.expressions import Expression
 
 single_values = instances_of_all_types['SingleValue']
+
+div_ops = (div, truediv, floordiv, mod, idiv, itruediv, imod)
+uniary_ops = [neg, abs, inv]
 
 
 class TestValues(unittest.TestCase):
@@ -21,7 +24,6 @@ class TestValues(unittest.TestCase):
         truediv, mul, mul, div, mod, mul, abs, abs, pow, neg, add, floordiv,
         add, mul, truediv, sub, div, add, mod, neg, sub, floordiv, sub, sub,
         neg, mul, abs, div]
-    uniary_ops = [neg, abs]
 
     iops = [iadd, idiv, ifloordiv, imod, imul, ipow, isub, itruediv]
 
@@ -32,14 +34,16 @@ class TestValues(unittest.TestCase):
 
     def test_single_value_operators(self):
         result = SingleValue(10.5)  # Random starting value
-        val_iter = iter(list(single_values) * 10)
+        val_iter = cycle(single_values)
         for op in self.ops:
-            if op in self.uniary_ops:
+            if op in uniary_ops:
                 ff_result = op(float(result))
                 vv_result = op(result)
                 op_str = ("{}({})".format(op.__name__, result))
             else:
                 val = next(val_iter)
+                if op in div_ops and float(val) == 0.0:
+                    val = SingleValue(0.1)
                 ff_result = op(float(result), float(val))
                 vv_result = op(result, val)
                 vf_result = op(result, float(val))
@@ -65,9 +69,9 @@ class TestValues(unittest.TestCase):
         for array_val in instances_of_all_types['ArrayValue']:
             np_val = numpy.asarray(array_val)
             np_array_val = ArrayValue(numpy.asarray(array_val))
-            val_iter = iter(list(single_values) * 10)
+            val_iter = cycle(single_values)
             for op in self.ops:
-                if op in self.uniary_ops:
+                if op in uniary_ops:
                     vv_result = op(array_val)
                     nv_result = op(np_array_val)
                     np_result = op(np_val)
@@ -88,7 +92,7 @@ class TestValues(unittest.TestCase):
                         array_val = array_val * val_scale
                         np_array_val = np_array_val * val_scale
                         np_val = np_val * val_scale
-                    elif op in (div, truediv, mod):
+                    elif op in div_ops:
                         # Ensure there are no zero values
                         array_val = array_val ** 2 + 1
                         np_array_val = np_array_val ** 2 + 1
@@ -177,8 +181,8 @@ class TestValues(unittest.TestCase):
 
     def test_single_value_inline_operators(self):
         result = SingleValue(10.5)  # Random starting value
-        for op, val in zip(self.iops, itertools.cycle(single_values)):
-            if op in (idiv, itruediv, imod) and float(val) == 0.0:
+        for op, val in zip(self.iops, cycle(single_values)):
+            if op in div_ops and float(val) == 0.0:
                 val = SingleValue(0.1)
             ff_result = op(float(result), float(val))
             vv_result = op(result, val)
@@ -200,8 +204,8 @@ class TestValues(unittest.TestCase):
         for array_val in instances_of_all_types['ArrayValue']:
             np_val = numpy.asarray(array_val)
             np_array_val = ArrayValue(numpy.asarray(array_val))
-            for i, (op, val) in enumerate(zip(self.iops,
-                                              itertools.cycle(single_values))):
+            for i, (op, val) in enumerate(zip(
+                    self.iops, cycle(single_values))):
                 if op is ipow:
                     # Negative numbers can't be raised to a fractional
                     # power so we avoid this by either using absolute
@@ -214,7 +218,7 @@ class TestValues(unittest.TestCase):
                     else:
                         val = round(val)
                     val = val / 10. ** round(math.log10(abs(val)))
-                elif op in (idiv, itruediv, imod) and float(val) == 0.0:
+                elif op in div_ops and float(val) == 0.0:
                     val = SingleValue(0.1)
                 vv_result = op(array_val, val)
                 vf_result = op(array_val, float(val))
@@ -258,3 +262,117 @@ class TestValues(unittest.TestCase):
                 np_array_val = nv_result
                 np_val = np_result
 
+
+class TestExpressions(unittest.TestCase):
+
+    ops = [
+        pow, truediv, sub, pow, neg, mod, add, pow, div,
+        mod, mod, truediv, truediv, abs, add, abs, pow, neg, div,
+        truediv, mul, mul, div, mod, mul, abs, abs, pow, neg, add,
+        add, mul, truediv, sub, div, add, mod, neg, sub, sub, sub,
+        neg, mul, abs, div]
+    logical_ops = [and_, or_, inv, or_, inv, or_, and_]
+    iops = [iadd, idiv, imod, imul, ipow, isub, itruediv]
+
+    named_expressions = list(chain(*(
+        instances_of_all_types[t] for t in ('Alias', 'StateAssignment'))))
+    logical_expressions = instances_of_all_types['Trigger']
+    anonymous_expressions = instances_of_all_types['TimeDerivative']
+    expressions = list(chain(named_expressions, anonymous_expressions))
+
+    def test_expression_operators(self):
+        result = Expression('a + b')  # Arbitrary starting expression
+        expr_iter = cycle(self.expressions)
+        val_iter = cycle(single_values)
+        for op in self.ops:
+            if op in uniary_ops:
+                ss_result = op(sympify(result))
+                se_result = op(result)
+                op_str = ("{}({})".format(op.__name__, result))
+            else:
+                if op is pow:
+                    expr = next(val_iter)
+                else:
+                    expr = next(expr_iter)
+                if op in div_ops and sympify(expr) == sympify(0.0):
+                    expr = sympify(0.1)
+                ss_result = op(sympify(result), sympify(expr))
+                ee_result = op(result, expr)
+                es_result = op(result, sympify(expr))
+                se_result = op(sympify(result), expr)
+                op_str = ("{}({}, {})".format(op.__name__, result, expr))
+                self.assertEqual(
+                    sympify(es_result), ss_result,
+                    op_str + " not equal between Expression and sympy")
+                self.assertEqual(
+                    sympify(se_result), ss_result,
+                    op_str + " not equal between Expression and sympy")
+                self.assertIsInstance(es_result, Expression,
+                                      op_str + " did not return a Expression")
+                self.assertIsInstance(se_result, Expression,
+                                      op_str + " did not return a Expression")
+            self.assertEqual(
+                sympify(ee_result), ss_result,
+                op_str + " not equal between Expression and sympy")
+            self.assertIsInstance(ee_result, Expression,
+                                  op_str + " did not return a Expression")
+
+    def test_expression_inline_operators(self):
+        result = Expression('a + b')  # Arbitrary starting expression
+        expr_iter = cycle(self.named_expressions)
+        val_iter = cycle(single_values)
+        for op in self.iops:
+            if op is ipow:
+                expr = sympify(next(val_iter))
+            else:
+                expr = next(expr_iter)
+            if op in div_ops and sympify(expr) == sympify(0.0):
+                expr = sympify(0.1)
+            ss_result = op(sympify(result), sympify(expr))
+            ee_result = op(result, expr)
+            es_result = op(result, sympify(expr))
+            op_str = ("{}({}, {})".format(op.__name__, result, expr))
+            self.assertEqual(
+                sympify(es_result), ss_result,
+                op_str + " not equal between expression and sympy")
+            self.assertIsInstance(es_result, SingleValue,
+                                  op_str + " did not return a SingleValue")
+            self.assertEqual(
+                sympify(ee_result), ss_result,
+                op_str + " not equal between expression and sympy")
+            self.assertIsInstance(ee_result, SingleValue,
+                                  op_str + " did not return a SingleValue")
+            expr = ee_result
+
+    def test_expression_logical_operators(self):
+        result = Expression('a > b')  # Arbitrary starting expression
+        expr_iter = iter(list(self.logical_expressions) * 10)
+        for op in self.logical_ops:
+            if op in uniary_ops:
+                ss_result = op(sympify(result))
+                se_result = op(result)
+                op_str = ("{}({})".format(op.__name__, result))
+            else:
+                expr = next(expr_iter)
+                if op in div_ops and sympify(expr) == sympify(0.0):
+                    expr = sympify(0.1)
+                ss_result = op(sympify(result), sympify(expr))
+                ee_result = op(result, expr)
+                es_result = op(result, sympify(expr))
+                se_result = op(sympify(result), expr)
+                op_str = ("{}({}, {})".format(op.__name__, result, expr))
+                self.assertEqual(
+                    sympify(es_result), ss_result,
+                    op_str + " not equal between Expression and sympy")
+                self.assertEqual(
+                    sympify(se_result), ss_result,
+                    op_str + " not equal between Expression and sympy")
+                self.assertIsInstance(es_result, Expression,
+                                      op_str + " did not return a Expression")
+                self.assertIsInstance(se_result, Expression,
+                                      op_str + " did not return a Expression")
+            self.assertEqual(
+                sympify(ee_result), ss_result,
+                op_str + " not equal between Expression and sympy")
+            self.assertIsInstance(ee_result, Expression,
+                                  op_str + " did not return a Expression")

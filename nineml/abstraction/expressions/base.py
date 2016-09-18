@@ -269,6 +269,9 @@ class Expression(object):
     def __or__(self, other):
         return self.rhs | other
 
+    def __inv__(self):
+        return ~self.rhs
+
     def __iadd__(self, expr):
         "self += expr"
         self.rhs = self.rhs + expr
