@@ -283,51 +283,44 @@ class TestExpressions(unittest.TestCase):
     def test_expression_operators(self):
         result = Expression('a + b')  # Arbitrary starting expression
         expr_iter = cycle(self.expressions)
-        val_iter = cycle(single_values)
         for op in self.ops:
             if op in uniary_ops:
-                ss_result = op(sympify(result))
+                ss_result = op(result.rhs)
                 se_result = op(result)
                 op_str = ("{}({})".format(op.__name__, result))
             else:
-                if op is pow:
-                    expr = next(val_iter)
-                else:
-                    expr = next(expr_iter)
-                if op in div_ops and sympify(expr) == sympify(0.0):
+                expr = next(expr_iter)
+                if op in div_ops and expr.rhs == sympify(0.0):
                     expr = sympify(0.1)
-                ss_result = op(sympify(result), sympify(expr))
+                ss_result = op(result.rhs, expr.rhs)
                 ee_result = op(result, expr)
-                es_result = op(result, sympify(expr))
-                se_result = op(sympify(result), expr)
+                es_result = op(result, expr.rhs)
+                se_result = op(expr.rhs, expr)
                 op_str = ("{}({}, {})".format(op.__name__, result, expr))
                 self.assertEqual(
-                    sympify(es_result), ss_result,
+                    es_result, ss_result,
                     op_str + " not equal between Expression and sympy")
                 self.assertEqual(
-                    sympify(se_result), ss_result,
+                    se_result, ss_result,
                     op_str + " not equal between Expression and sympy")
                 self.assertIsInstance(es_result, SympyBaseClass,
                                       op_str + " did not return a Expression")
                 self.assertIsInstance(se_result, SympyBaseClass,
                                       op_str + " did not return a Expression")
             self.assertEqual(
-                sympify(ee_result), ss_result,
+                ee_result, ss_result,
                 "{} not equal between Expression ({}) and sympy ({})"
                 .format(op_str, ee_result, ss_result))
             self.assertIsInstance(ee_result, SympyBaseClass,
                                   op_str + " did not return a Expression")
+            expr = Expression(ee_result)
 
     def test_expression_inline_operators(self):
         result = Alias('a', 'b + c')  # Arbitrary starting expression
         expr_iter = cycle(self.named_expressions)
-        val_iter = cycle(single_values)
         for op in self.iops:
-            if op is ipow:
-                expr = sympify(next(val_iter))
-            else:
-                expr = next(expr_iter)
-            if op in div_ops and sympify(expr) == sympify(0.0):
+            expr = next(expr_iter)
+            if op in div_ops and expr.rhs == sympify(0.0):
                 expr = sympify(0.1)
             ss_result = op(result.rhs, expr)
             ee_result = op(result, expr)
@@ -345,14 +338,14 @@ class TestExpressions(unittest.TestCase):
         expr_iter = iter(list(self.logical_expressions) * 10)
         for op in self.logical_ops:
             if op in uniary_ops:
-                ss_result = op(sympify(result))
+                ss_result = op(result.rhs)
                 se_result = op(result)
                 op_str = ("{}({})".format(op.__name__, result))
             else:
                 expr = next(expr_iter)
-                if op in div_ops and sympify(expr) == sympify(0.0):
+                if op in div_ops and expr.rhs == sympify(0.0):
                     expr = sympify(0.1)
-                ss_result = op(sympify(result), sympify(expr))
+                ss_result = op(result.rhs, expr.rhs)
                 ee_result = op(result, expr)
                 es_result = op(result, sympify(expr))
                 se_result = op(sympify(result), expr)
@@ -368,7 +361,9 @@ class TestExpressions(unittest.TestCase):
                 self.assertIsInstance(se_result, SympyBaseClass,
                                       op_str + " did not return a Expression")
             self.assertEqual(
-                sympify(ee_result), ss_result,
-                op_str + " not equal between Expression and sympy")
+                ee_result, ss_result,
+                "{} not equal between Expression ({}) and sympy ({})"
+                .format(op_str, ee_result, ss_result))
             self.assertIsInstance(ee_result, SympyBaseClass,
                                   op_str + " did not return a Expression")
+            expr = Expression(ee_result)
