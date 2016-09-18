@@ -112,7 +112,7 @@ class Expression(object):
             arg2 = cls._unwrap_bool(expr.args[1])
             expr_str = '({}) || ({})'.format(arg1, arg2)
         elif isinstance(expr, sympy.Not):
-            expr_str = '!({})'.format(arg1, arg2)
+            expr_str = '!({})'.format(expr)
         else:
             expr_str = str(expr)
         return expr_str
@@ -257,6 +257,9 @@ class Expression(object):
     def __truediv__(self, other):
         return self.rhs / other
 
+    def __div__(self, other):
+        return self.__truediv__(other)
+
     def __pow__(self, other):
         return self.rhs ** other
 
@@ -398,6 +401,9 @@ class ExpressionSymbol(object):
 
     def __truediv__(self, other):
         return sympy.sympify(self) / other
+
+    def __div__(self, other):
+        return self.__truediv__(other)
 
     def __pow__(self, other):
         return sympy.sympify(self) ** other

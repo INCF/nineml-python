@@ -1,4 +1,5 @@
 import unittest
+from string import ascii_lowercase
 from itertools import chain, cycle
 import math
 from nineml.values import SingleValue, ArrayValue, RandomValue
@@ -7,7 +8,7 @@ from operator import (
     ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
 from nineml.utils.testing.comprehensive import instances_of_all_types
 import numpy  # This is only imported here in the test as it is not dependency
-from sympy import sympify, Basic as SympyBaseClass
+from sympy import sympify, Basic as SympyBaseClass, Symbol
 from nineml.abstraction.expressions import Expression, Alias
 
 single_values = instances_of_all_types['SingleValue']
@@ -266,11 +267,9 @@ class TestValues(unittest.TestCase):
 class TestExpressions(unittest.TestCase):
 
     ops = [
-        pow, truediv, sub, pow, neg, add, pow, div,
-        truediv, truediv, abs, add, abs, pow, neg, div,
-        truediv, mul, mul, div, mul, abs, abs, pow, neg, add,
-        add, mul, truediv, sub, div, add, neg, sub, sub, sub,
-        neg, mul, abs, div]
+        pow, truediv, sub, pow, neg, add, pow, div, truediv, truediv, add, pow,
+        neg, div, truediv, mul, mul, div, mul, pow, neg, add, add, mul,
+        truediv, sub, div, add, neg, sub, sub, sub, neg, mul, div]
     logical_ops = [and_, or_, inv, or_, inv, or_, and_]
     iops = [iadd, idiv, imul, ipow, isub, itruediv]
 
@@ -280,13 +279,13 @@ class TestExpressions(unittest.TestCase):
     anonymous_expressions = instances_of_all_types['TimeDerivative']
     expressions = list(chain(named_expressions, anonymous_expressions))
 
-    def test_expression_operators(self):
+    def test_anonymous_expression_operators(self):
         result = Expression('a + b')  # Arbitrary starting expression
-        expr_iter = cycle(self.expressions)
+        expr_iter = cycle(self.anonymous_expressions)
         for op in self.ops:
             if op in uniary_ops:
                 ss_result = op(result.rhs)
-                se_result = op(result)
+                ee_result = op(result)
                 op_str = ("{}({})".format(op.__name__, result))
             else:
                 expr = next(expr_iter)
@@ -295,14 +294,15 @@ class TestExpressions(unittest.TestCase):
                 ss_result = op(result.rhs, expr.rhs)
                 ee_result = op(result, expr)
                 es_result = op(result, expr.rhs)
-                se_result = op(expr.rhs, expr)
+                se_result = op(result.rhs, expr)
                 op_str = ("{}({}, {})".format(op.__name__, result, expr))
                 self.assertEqual(
                     es_result, ss_result,
                     op_str + " not equal between Expression and sympy")
                 self.assertEqual(
                     se_result, ss_result,
-                    op_str + " not equal between Expression and sympy")
+                    "{} not equal between Expression ({}) and sympy ({})"
+                    .format(op_str, se_result, ss_result))
                 self.assertIsInstance(es_result, SympyBaseClass,
                                       op_str + " did not return a Expression")
                 self.assertIsInstance(se_result, SympyBaseClass,
@@ -313,7 +313,48 @@ class TestExpressions(unittest.TestCase):
                 .format(op_str, ee_result, ss_result))
             self.assertIsInstance(ee_result, SympyBaseClass,
                                   op_str + " did not return a Expression")
-            expr = Expression(ee_result)
+            result = Expression(ee_result)
+
+    def test_named_expression_operators(self):
+        result = Alias('a', 'a + b')  # Arbitrary starting expression
+        expr_iter = cycle(self.named_expressions)
+        alpha_iter = cycle(ascii_lowercase)
+        for op in self.ops:
+            if op in uniary_ops:
+                ss_result = op(Symbol(result.name))
+                ee_result = op(result)
+                op_str = ("{}({})".format(op.__name__, result))
+            else:
+                expr = next(expr_iter)
+                if op in div_ops and expr.rhs == sympify(0.0):
+                    expr = sympify(0.1)
+                ss_result = op(Symbol(result.name), Symbol(expr.name))
+                ee_result = op(result, expr)
+                es_result = op(result, Symbol(expr.name))
+                se_result = op(Symbol(result.name), expr)
+                op_str = ("{}({}, {})".format(op.__name__, result, expr))
+                self.assertEqual(
+                    es_result, ss_result,
+                    "{} not equal between Expression ({}) and sympy ({})"
+                    .format(op_str, es_result, ss_result))
+                self.assertEqual(
+                    se_result, ss_result,
+                    "{} not equal between Expression ({}) and sympy ({})"
+                    .format(op_str, se_result, ss_result))
+                self.assertIsInstance(es_result, SympyBaseClass,
+                                      op_str + " did not return a Expression")
+                self.assertIsInstance(se_result, SympyBaseClass,
+                                      op_str + " did not return a Expression")
+            self.assertEqual(
+                ee_result, ss_result,
+                "{} not equal between Expression ({}) and sympy ({})"
+                .format(op_str, ee_result, ss_result))
+            self.assertIsInstance(ee_result, SympyBaseClass,
+                                  op_str + " did not return a Expression")
+            next_name = next(alpha_iter)
+            if next_name == 't':
+                next_name = next(alpha_iter)
+            result = Alias(next_name, ee_result)
 
     def test_expression_inline_operators(self):
         result = Alias('a', 'b + c')  # Arbitrary starting expression
@@ -331,7 +372,7 @@ class TestExpressions(unittest.TestCase):
                 .format(op_str, ee_result, ss_result))
             self.assertIsInstance(ee_result, Expression,
                                   op_str + " did not return a SingleValue")
-            expr = ee_result
+            result = ee_result
 
     def test_expression_logical_operators(self):
         result = Expression('a > b')  # Arbitrary starting expression
@@ -339,7 +380,7 @@ class TestExpressions(unittest.TestCase):
         for op in self.logical_ops:
             if op in uniary_ops:
                 ss_result = op(result.rhs)
-                se_result = op(result)
+                ee_result = op(result)
                 op_str = ("{}({})".format(op.__name__, result))
             else:
                 expr = next(expr_iter)
@@ -366,4 +407,4 @@ class TestExpressions(unittest.TestCase):
                 .format(op_str, ee_result, ss_result))
             self.assertIsInstance(ee_result, SympyBaseClass,
                                   op_str + " did not return a Expression")
-            expr = Expression(ee_result)
+            result = Expression(ee_result)
