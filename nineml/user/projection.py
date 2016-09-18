@@ -335,9 +335,8 @@ class Projection(BaseULObject, DocumentLevelObject):
     def connectivity(self):
         return self._connectivity
 
-    @property
     def connections(self):
-        return self.connectivity.connections
+        return self.connectivity.connections()
 
     @property
     def delay(self):

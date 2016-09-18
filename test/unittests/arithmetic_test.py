@@ -82,7 +82,7 @@ class TestValues(unittest.TestCase):
                         array_val = abs(array_val)
                         np_array_val = abs(np_array_val)
                         np_val = abs(np_val)
-                        val = abs(val)
+                        val = abs(val) + 0.001
                         val = val / 10. ** round(math.log10(val))
                         val_scale = np_val.max() / 10.0
                         array_val = array_val * val_scale

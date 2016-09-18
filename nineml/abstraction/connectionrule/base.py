@@ -12,8 +12,8 @@ docstring goes here
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from .. import Parameter
-from ..componentclass import ComponentClass
+
+from ..componentclass import ComponentClass, Parameter
 from nineml.xml import E
 from nineml.exceptions import NineMLRuntimeError
 import nineml.units as un
