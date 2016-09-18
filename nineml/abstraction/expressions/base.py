@@ -168,24 +168,6 @@ class Expression(object):
         functions such as ``sin`` and ``log`` """
         return (str(a) for a in chain(self.rhs_symbol_names, self.rhs_funcs))
 
-    def rhs_atoms_in_namespace(self, namespace):
-        """
-        Deprecated: Should be able to remove once random namespace is removed
-        """
-        if namespace == 'random':
-            atoms = set(str(r)[7:-1] for r in self.rhs_random_distributions)
-        else:
-            atoms = set()
-            for a in chain(self.rhs_atoms, ):
-                try:
-                    ns, func = a.split('.')
-                except ValueError:
-                    ns = ''
-                    func = a
-                if ns == namespace:
-                    atoms.add(func)
-        return atoms
-
     @property
     def rhs_as_python_func(self):
         """ Returns a python callable which evaluates the expression in
@@ -262,6 +244,30 @@ class Expression(object):
             expr_str = re.sub(r'(?<!\w)({})\('.format(old), new, expr_str)
         expr_str = expr_str.replace('**', '^')
         return expr_str
+
+    def __add__(self, other):
+        return self.rhs + other
+
+    def __sub__(self, other):
+        return self.rhs - other
+
+    def __mul__(self, other):
+        return self.rhs * other
+
+    def __truediv__(self, other):
+        return self.rhs / other
+
+    def __mod__(self, other):
+        return self.rhs % other
+
+    def __pow__(self, other):
+        return self.rhs ** other
+
+    def __and__(self, other):
+        return self.rhs & other
+
+    def __or__(self, other):
+        return self.rhs | other
 
     def __iadd__(self, expr):
         "self += expr"
