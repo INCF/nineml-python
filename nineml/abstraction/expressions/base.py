@@ -266,7 +266,7 @@ class Expression(object):
     def __or__(self, other):
         return self.rhs | other
 
-    def __inv__(self):
+    def __invert__(self):
         return ~self.rhs
 
     def __neg__(self):
@@ -407,6 +407,12 @@ class ExpressionSymbol(object):
 
     def __or__(self, other):
         return sympy.sympify(self) | other
+
+    def __invert__(self):
+        return ~sympy.sympify(self)
+
+    def __neg__(self):
+        return -sympy.sympify(self)
 
     @property
     def symbol(self):
