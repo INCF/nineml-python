@@ -13,16 +13,6 @@ def SpikeOutputEvent():
     return OutputEvent('spikeoutput')
 
 
-def cond_to_obj(cond_str):
-    if isinstance(cond_str, Trigger):
-        return cond_str
-    elif cond_str is None:
-        return None
-    elif isinstance(cond_str, str):
-        return Trigger(cond_str.strip())
-    raise ValueError("Trigger: expected None, str, or Trigger object")
-
-
 def do_to_assignments_and_events(doList):
     if not doList:
         return [], []
@@ -48,12 +38,12 @@ def On(trigger, do=None, to=None):
         else:
             return DoOnCondition(condition=trigger, do=do, to=to)
 
-    elif isinstance(trigger, OnCondition):
+    elif isinstance(trigger, Trigger):
         return DoOnCondition(condition=trigger, do=do, to=to)
     else:
-        err = "Unexpected Type for On() trigger: %s %s" % (type(trigger),
-                                                           str(trigger))
-        raise NineMLRuntimeError(err)
+        raise NineMLRuntimeError(
+            "Unexpected Type for On() trigger: {} {}".format(
+                type(trigger), str(trigger)))
 
 
 def DoOnEvent(input_event, do=None, to=None):
