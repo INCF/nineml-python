@@ -62,17 +62,6 @@ def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 
 
-# FIXME: Not sure what this is used for TGC 16/10/2015
-def raise_exception(exception=None):
-    if exception:
-        if isinstance(exception, basestring):
-            raise NineMLRuntimeError(exception)
-        else:
-            raise exception
-    else:
-        raise NineMLRuntimeError()
-
-
 def name_error(accessor):
     def accessor_with_handling(self, name):
         try:

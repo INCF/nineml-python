@@ -234,6 +234,8 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
             if len(numerator):
                 name += '_'
             name += 'per_' + '_'.join(sorted(denominator))
+        if not name:
+            name = 'dimensionless'
         return name
 
     @classmethod
