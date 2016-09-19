@@ -17,7 +17,7 @@ from nineml.abstraction import (
     OutputEvent, StateVariable, StateAssignment, On, AnalogSendPort,
     AnalogReceivePort, AnalogReducePort, ConnectionRule, RandomDistribution,
     EventReceivePort, EventSendPort, OnEvent, OnCondition,
-    TimeDerivative, Expression)
+    TimeDerivative, Expression, Trigger)
 from nineml.user import (
     Population, Selection, Concatenate, Projection, Property,
     Definition, Prototype, Initial, DynamicsProperties,
@@ -51,7 +51,7 @@ dynA = Dynamics(
         Regime(
             'dSV1/dt = -SV1 / P2',
             'dSV2/dt = A3 / ARP2 + SV2 / P2',
-            transitions=[On('SV1 > P3', do=[OutputEvent('ESP1')]),
+            transitions=[On(Trigger('SV1 > P3'), do=[OutputEvent('ESP1')]),
                          On('ERP1', do=[OutputEvent('ESP2')])],
             name='R1'
         ),
