@@ -1,6 +1,6 @@
 import unittest
 from string import ascii_lowercase
-from itertools import chain, cycle
+from itertools import chain, cycle, izip
 import math
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from operator import (
@@ -10,6 +10,7 @@ from nineml.utils.testing.comprehensive import instances_of_all_types
 import numpy  # This is only imported here in the test as it is not dependency
 from sympy import sympify, Basic as SympyBaseClass, Symbol
 from nineml.abstraction.expressions import Expression, Alias
+from nineml import units as un
 
 single_values = instances_of_all_types['SingleValue']
 
@@ -408,3 +409,44 @@ class TestExpressions(unittest.TestCase):
             self.assertIsInstance(ee_result, SympyBaseClass,
                                   op_str + " did not return a Expression")
             result = Expression(ee_result)
+
+
+# class TestUnits(unittest.TestCase):
+# 
+#     ops = [pow, mul, div, truediv, mul, truediv, pow, mul, div, div, pow]
+# 
+#     def test_dimension_operators(self):
+#         result = un.dimensionless  # Arbitrary starting expression
+#         dim_iter = cycle(instances_of_all_types['Dimension'])
+#         val_iter = cycle(instances_of_all_types['SingleValue'])
+#         for op in self.ops:
+#             if op is pow:
+#                 dim = int(next(val_iter) * 10)
+#             else:
+#                 dim = next(dim_iter)
+#             np_result = numpy.log10(op(10 ** numpy.asarray(list(result)),
+#                                        10 ** numpy.asarray(list(dim))))
+#             new_result = op(result, dim)
+#             op_str = ("{}({}, {})".format(op.__name__, result, dim))
+#             self.assertEqual(
+#                 numpy.asarray(list(new_result)), np_result,
+#                 op_str + " not equal between Expression and sympy")
+#             self.assertIsInstance(result, un.Unit,
+#                                   op_str + " did not return a Expression")
+#             result = new_result
+# 
+#     def test_unit_operators(self):
+#         result = un.unitless  # Arbitrary starting expression
+#         unit_iter = cycle(instances_of_all_types['Unit'])
+#         for op, unit in izip(self.ops, ):
+#             unit = next(unit_iter)
+#             while unit.offset == 0.0:  # Cannot use operators for offset units
+#                 unit = next(unit_iter)
+#             new_result = op(result, unit)
+#             op_str = ("{}({}, {})".format(op.__name__, result, unit))
+#             self.assertEqual(
+#                 new_result, result,
+#                 op_str + " not equal between Expression and sympy")
+#             self.assertIsInstance(result, un.Unit,
+#                                   op_str + " did not return a Expression")
+#             result = new_result

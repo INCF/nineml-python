@@ -174,7 +174,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
     def flatten(self):
         component_arrays = dict((ca.name, ca) for ca in chain(
-            (ComponentArray(p.name + ComponentArray.suffix['post'], p.size,
+            (ComponentArray(p.name + ComponentArray.suffix['post'], len(p),
                             p.cell)
              for p in self.populations),
             (ComponentArray(p.name + ComponentArray.suffix['response'], len(p),

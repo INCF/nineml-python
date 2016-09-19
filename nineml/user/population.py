@@ -184,10 +184,3 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     @property
     def num_event_send_ports(self):
         return self.cell.num_event_send_ports
-
-
-def qstr(obj):
-    if isinstance(obj, basestring):
-        return '"%s"' % obj
-    else:
-        return obj.__str__()
