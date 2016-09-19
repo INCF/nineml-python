@@ -171,17 +171,8 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return Dimension(self.make_name([self.name], power=power),
                          dimensions=tuple(s * power for s in self))
 
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    def __rtruediv__(self, other):
-        return other.__truediv__(self)
-
     def __div__(self, other):
         return self.__truediv__(other)
-
-    def __rdiv__(self, other):
-        return self.__rtruediv__(other)
 
     @classmethod
     def make_name(cls, products=[], divisors=[], power=1):
