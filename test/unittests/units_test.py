@@ -2,6 +2,9 @@ import unittest
 from sympy import sympify
 from nineml import Document, units as un
 
+all_dims = [getattr(un, d) for d in dir(un)
+            if isinstance(getattr(un, d), un.Dimension)]
+
 
 class TestUnitsDimensions(unittest.TestCase):
 
@@ -19,6 +22,15 @@ class TestUnitsDimensions(unittest.TestCase):
             self.assertEquals(dim, new_dim,
                               "Sympy roundtrip failed for {}".format(dim))
 
+    def test_accessors(self):
+
+        for i, (abbrev, name) in enumerate((
+            ('m', 'mass'), ('l', 'length'), ('t', 'time'), ('i', 'current'), 
+            ('n', 'amount'), ('k', 'temperature'),
+                ('j', 'luminous_intensity'))):
+            for dim in all_dims:
+                self.assertEqual(getattr(dim, abbrev), dim._dims[i])
+                self.assertEqual(getattr(dim, name), dim._dims[i])
 
 # FIXME: Currently the 'scale' attribute isn't supported, need to work out
 #        whether we want to do this or not.

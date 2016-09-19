@@ -574,19 +574,3 @@ class TestQuantities(unittest.TestCase):
                         q_result.units.dimension, q_result.units.power,
                         units.dimension, units.power))
                 result = q_result
-
-#     def test_unit_operators(self):
-#         result = un.unitless  # Arbitrary starting expression
-#         unit_iter = cycle(instances_of_all_types['Unit'])
-#         for op, unit in izip(self.ops, ):
-#             unit = next(unit_iter)
-#             while unit.offset == 0.0:  # Cannot use operators for offset units
-#                 unit = next(unit_iter)
-#             new_result = op(result, unit)
-#             op_str = ("{}({}, {})".format(op.__name__, result, unit))
-#             self.assertEqual(
-#                 new_result, result,
-#                 op_str + " not equal between Expression and sympy")
-#             self.assertIsInstance(result, un.Unit,
-#                                   op_str + " did not return a Expression")
-#             result = new_result
