@@ -1,6 +1,7 @@
 import unittest
 from string import ascii_lowercase
-from itertools import chain, cycle, izip
+from itertools import chain, cycle
+import traceback
 import math
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from operator import (
@@ -411,30 +412,40 @@ class TestExpressions(unittest.TestCase):
             result = Expression(ee_result)
 
 
-# class TestUnits(unittest.TestCase):
-# 
-#     ops = [pow, mul, div, truediv, mul, truediv, pow, mul, div, div, pow]
-# 
-#     def test_dimension_operators(self):
-#         result = un.dimensionless  # Arbitrary starting expression
-#         dim_iter = cycle(instances_of_all_types['Dimension'])
-#         val_iter = cycle(instances_of_all_types['SingleValue'])
-#         for op in self.ops:
-#             if op is pow:
-#                 dim = int(next(val_iter) * 10)
-#             else:
-#                 dim = next(dim_iter)
-#             np_result = numpy.log10(op(10 ** numpy.asarray(list(result)),
-#                                        10 ** numpy.asarray(list(dim))))
-#             new_result = op(result, dim)
-#             op_str = ("{}({}, {})".format(op.__name__, result, dim))
-#             self.assertEqual(
-#                 numpy.asarray(list(new_result)), np_result,
-#                 op_str + " not equal between Expression and sympy")
-#             self.assertIsInstance(result, un.Unit,
-#                                   op_str + " did not return a Expression")
-#             result = new_result
-# 
+class TestUnits(unittest.TestCase):
+
+    ops = [pow, mul, div, truediv, mul, truediv, pow, mul, div, div, pow]
+
+    def test_dimension_operators(self):
+        result = un.dimensionless  # Arbitrary starting expression
+        dim_iter = cycle(instances_of_all_types['Dimension'])
+        val_iter = cycle(instances_of_all_types['SingleValue'])
+        for op in self.ops:
+            if op is pow:
+                val = int(next(val_iter) * 10)
+                # Scale the value close to 10 to avoid overflow errors
+                if val != 0.0:
+                    val = val / 10 ** round(numpy.log10(abs(val)))
+                dim = np_dim = int(val)
+            else:
+                dim = next(dim_iter)
+                np_dim = 10 ** self._np_array(dim)
+            np_result = numpy.log10(op(10 ** self._np_array(result),
+                                       np_dim))
+            new_result = op(result, dim)
+            op_str = ("{}({}, {})".format(op.__name__, result, dim))
+            self.assertTrue(
+                all(self._np_array(new_result) == np_result),
+                "{} not equal between Expression ({}) and sympy ({})"
+                .format(op_str, self._np_array(new_result), np_result))
+            self.assertIsInstance(result, un.Dimension,
+                                  op_str + " did not return a Dimension")
+            result = new_result
+
+    @classmethod
+    def _np_array(self, dim):
+        return numpy.array(list(dim), dtype=float)
+
 #     def test_unit_operators(self):
 #         result = un.unitless  # Arbitrary starting expression
 #         unit_iter = cycle(instances_of_all_types['Unit'])
