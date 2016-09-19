@@ -86,7 +86,7 @@ class SingleValue(BaseValue):
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type, str(self.value))
+        return E(self.nineml_type, repr(self.value))
 
     @classmethod
     @read_annotations
@@ -258,7 +258,7 @@ class ArrayValue(BaseValue):
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         if self._datafile is None:
             return E.ArrayValue(
-                *[E.ArrayValueRow(index=str(i), value=str(v))
+                *[E.ArrayValueRow(index=str(i), value=repr(v))
                   for i, v in enumerate(self._values)])
         else:
             raise NotImplementedError(

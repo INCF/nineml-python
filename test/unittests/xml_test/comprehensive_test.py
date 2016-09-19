@@ -19,7 +19,7 @@ class TestComprehensiveXML(TestCase):
             doc = document.clone()
             url = os.path.join(self._tmp_dir, 'test{}.xml'.format(i))
             nineml.write(doc, url)
-            print 'open {}'.format(url)
+#             print 'open {}'.format(url)
             reread_doc = nineml.read(url, force_reload=True)
             self.assertEqual(doc, reread_doc,
                              doc.find_mismatch(reread_doc))
