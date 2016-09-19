@@ -1,6 +1,6 @@
 import unittest
 from string import ascii_lowercase
-from itertools import chain, cycle
+from itertools import chain, cycle, repeat
 import traceback
 import math
 from nineml.values import SingleValue, ArrayValue, RandomValue
@@ -393,22 +393,22 @@ class TestExpressions(unittest.TestCase):
                 es_result = op(result, sympify(expr))
                 se_result = op(sympify(result), expr)
                 op_str = ("{}({}, {})".format(op.__name__, result, expr))
+                self.assertIsInstance(es_result, SympyBaseClass,
+                                      op_str + " did not return a Expression")
+                self.assertIsInstance(se_result, SympyBaseClass,
+                                      op_str + " did not return a Expression")
                 self.assertEqual(
                     sympify(es_result), ss_result,
                     op_str + " not equal between Expression and sympy")
                 self.assertEqual(
                     sympify(se_result), ss_result,
                     op_str + " not equal between Expression and sympy")
-                self.assertIsInstance(es_result, SympyBaseClass,
-                                      op_str + " did not return a Expression")
-                self.assertIsInstance(se_result, SympyBaseClass,
-                                      op_str + " did not return a Expression")
+            self.assertIsInstance(ee_result, SympyBaseClass,
+                                  op_str + " did not return a Expression")
             self.assertEqual(
                 ee_result, ss_result,
                 "{} not equal between Expression ({}) and sympy ({})"
                 .format(op_str, ee_result, ss_result))
-            self.assertIsInstance(ee_result, SympyBaseClass,
-                                  op_str + " did not return a Expression")
             result = Expression(ee_result)
 
 
@@ -434,17 +434,152 @@ class TestUnits(unittest.TestCase):
                                        np_dim))
             new_result = op(result, dim)
             op_str = ("{}({}, {})".format(op.__name__, result, dim))
-            self.assertTrue(
-                all(self._np_array(new_result) == np_result),
-                "{} not equal between Expression ({}) and sympy ({})"
-                .format(op_str, self._np_array(new_result), np_result))
             self.assertIsInstance(result, un.Dimension,
                                   op_str + " did not return a Dimension")
+            self.assertTrue(
+                all(self._np_array(new_result) == np_result),
+                "{} not equal between Dimension ({}) and numpy ({})"
+                .format(op_str, self._np_array(new_result), np_result))
             result = new_result
 
     @classmethod
     def _np_array(self, dim):
         return numpy.array(list(dim), dtype=float)
+
+    def test_unit_unit_operators(self):
+        result = un.unitless  # Arbitrary starting expression
+        unit_iter = cycle(instances_of_all_types['Unit'])
+        val_iter = cycle(instances_of_all_types['SingleValue'])
+        for op in self.ops:
+            if op is pow:
+                val = int(next(val_iter) * 10)
+                # Scale the value close to 10 to avoid overflow errors
+                if val != 0:
+                    val = int(val / 10 ** round(numpy.log10(abs(val))))
+                unit = dim = power = val
+            else:
+                unit = next(unit_iter)
+                dim = unit.dimension
+                power = 10 ** unit.power
+            try:
+                dim_result = op(result.dimension, dim)
+                new_result = op(result, unit)
+                power_result = numpy.log10(op(float(10 ** result.power),
+                                              float(power)))
+                op_str = ("{}({}, {})".format(op.__name__, result, unit))
+                self.assertIsInstance(result, un.Unit,
+                                      op_str + " did not return a Dimension")
+                self.assertEqual(
+                    new_result.dimension, dim_result,
+                    "Dimension of {} not equal between Unit ({}) and explicit ({})"
+                    .format(op_str, new_result.dimension, dim_result))
+                self.assertEqual(
+                    new_result.power, power_result,
+                    "Power of {} not equal between Unit ({}) and explicit ({})"
+                    .format(op_str, new_result.power, power_result))
+                result = new_result
+            except:
+                traceback.print_exc()
+                raise
+
+
+class TestQuantities(unittest.TestCase):
+
+    ops = [sub, sub, add, neg, truediv, mul, sub, mul, add, add, truediv, pow,
+           neg, neg, mul, add, pow, neg, abs, add, div, abs, div, pow, sub,
+           div, truediv, truediv, div, abs, neg, mul, abs, truediv, pow, sub,
+           div, mul, pow, abs]
+    matched_dim_ops = [add, sub]
+
+    def test_quantities_operators(self):
+        result = un.Quantity(1.0, un.unitless)  # Arbitrary starting expression
+        val_iter = cycle(instances_of_all_types['SingleValue'])
+        qty_iter = cycle(instances_of_all_types['Quantity'])
+        for op in self.ops:
+            if op in uniary_ops:
+                if len(result.value):
+                    f_result = [op(float(v)) for v in result.value]
+                else:
+                    f_result = op(float(result))
+                q_result = op(result)
+                units = result.units
+                op_str = ("{}({})".format(op.__name__, result))
+            else:
+                if op is pow:
+                    val = int(next(val_iter) * 10)
+                    # Scale the value close to 10 to avoid overflow errors
+                    if val != 0:
+                        val = int(val / 10 ** round(numpy.log10(abs(val))))
+                    qty = val
+                    units = op(result.units, qty)
+                    len_val = 0
+                elif op in self.matched_dim_ops:
+                    val = float(next(val_iter))
+                    qty = val * result.units
+                    units = result.units
+                    len_val = 0
+                else:
+                    qty = next(qty_iter)
+                    while qty.value.nineml_type == 'RandomValue':
+                        qty = next(qty_iter)
+                    val = qty.value
+                    units = op(result.units, qty.units)
+                    print units, qty
+                    len_val = len(val)
+                op_str = ("{}({}, {})".format(op.__name__, result, qty))
+                if len(result.value):
+                    if len_val:
+                        # Get the first value as we can't use two
+                        # array values together
+                        val = next(iter(val))
+                        qty = un.Quantity(val, units)
+                        print qty
+                    result_iter = (float(v) for v in result.value)
+                    q_iter = repeat(float(val))
+                    f_result = [op(r, q)
+                                for r, q in zip(result_iter, q_iter)]
+                elif len_val:
+                    result_iter = repeat(float(result.value))
+                    q_iter = (float(v) for v in val)
+                    f_result = [op(r, q)
+                                for r, q in zip(result_iter, q_iter)]
+                else:
+                    f_result = op(float(result.value), float(val))
+                q_result = op(result, qty)
+                op_str = ("{}({}, {})".format(op.__name__, result, qty))
+                self.assertIsInstance(
+                    q_result, un.Quantity,
+                    "{} did not return a Quantity".format(op_str))
+                if len(result.value) or len_val:
+                    self.assertTrue(
+                        all(numpy.array(q_result.value) ==
+                            numpy.array(f_result)),
+                        "Value of {} quantity not equal between Quantity "
+                        "({}) and explicit ({})"
+                        .format(op_str, f_result, val))
+                else:
+                    self.assertEqual(
+                        float(q_result.value), f_result,
+                        "Value of {} not equal between Quantity "
+                        "({}) and explicit ({})"
+                        .format(op_str, float(q_result.value), f_result))
+                try:
+                    self.assertEqual(
+                        q_result.units, units,
+                        "Units of {} (with {}:{} and {}:{}) not equal between "
+                        "Quantity (dim={}, power={}) and explicit (dim={}, "
+                        "power={})".format(
+                            op_str, result.units.dimension, result.units.power,
+                            (qty.units.dimension
+                             if isinstance(qty, un.Quantity) else ''),
+                            (qty.units.power
+                             if isinstance(qty, un.Quantity) else ''),
+                            q_result.units.dimension, q_result.units.power,
+                            units.dimension, units.power))
+                except:
+                    traceback.print_exc()
+                    raise
+                result = q_result
 
 #     def test_unit_operators(self):
 #         result = un.unitless  # Arbitrary starting expression

@@ -308,13 +308,6 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         return (self.dimension.to_SI_units_str() +
                 ' * 10**({})'.format(self.power) if self.power else '')
 
-    def _sympy_(self):
-        """
-        Create a sympy expression by multiplying symbols representing each of
-        the dimensions together
-        """
-        return self.dimension._sympy_() * 10 ** self.power + self.offset
-
     @property
     def name(self):
         return self._name
@@ -369,8 +362,10 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     def __mul__(self, other):
         "self * other"
         try:
-            assert (self.offset == 0 and other.offset == 0), (
-                "Can't multiply units with nonzero offsets")
+            if (self.offset != 0 or other.offset != 0):
+                raise NineMLRuntimeError(
+                    "Can't multiply units with nonzero offsets ({} and {})"
+                    .format(self, other))
             return Unit(Dimension.make_name([self.name, other.name]),
                         dimension=self.dimension * other.dimension,
                         power=(self.power + other.power))
@@ -380,8 +375,10 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     def __truediv__(self, other):
         "self / expr"
         try:
-            assert (self.offset == 0 and other.offset == 0), (
-                "Can't divide units with nonzero offsets")
+            if (self.offset != 0 or other.offset != 0):
+                raise NineMLRuntimeError(
+                    "Can't divide units with nonzero offsets ({} and {})"
+                    .format(self, other))
             return Unit(Dimension.make_name([self.name], [other.name]),
                         dimension=self.dimension / other.dimension,
                         power=(self.power - other.power))
@@ -390,11 +387,14 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
                 inverted = 1.0 / other
             else:
                 inverted = other.inverse()
-            return Quantity(1.0 / inverted, self.units)
+            return Quantity(inverted, self.units)
 
     def __pow__(self, power):
         "self ** expr"
-        assert self.offset == 0, "Can't raise units with nonzero offsets"
+        if self.offset != 0:
+            raise NineMLRuntimeError(
+                "Can't raise units to power with nonzero offsets ({})"
+                .format(self))
         return Unit(Dimension.make_name([self.name], power=power),
                     dimension=(self.dimension ** power),
                     power=(self.power * power))
@@ -435,6 +435,7 @@ class Quantity(BaseNineMLObject):
             if units is not None:
                 value = value.in_units(units)
             else:
+                units = value.units
                 value = value.value
         elif not isinstance(value, (SingleValue, ArrayValue, RandomValue)):
             try:
@@ -445,10 +446,8 @@ class Quantity(BaseNineMLObject):
                 value = ArrayValue(value)
         if units is None:
             units = unitless
-        if not isinstance(units, Unit):
+        elif not isinstance(units, Unit):
             raise Exception("Units ({}) must of type <Unit>".format(units))
-        if isinstance(value, (int, float)):
-            value = SingleValue(value)
         self._value = value
         self._units = units
 

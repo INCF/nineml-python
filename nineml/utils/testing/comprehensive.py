@@ -42,7 +42,8 @@ ranDistrPropA = RandomDistributionProperties(
 
 dynA = Dynamics(
     name='dynA',
-    aliases=['A1:=P1 * SV2', 'A2 := ARP1 + SV2', 'A3 := SV1'],
+    aliases=['A1:=P1 * SV2', 'A2 := ARP1 + SV2', 'A3 := SV1',
+             'A4 := C2 * SV1'],
     state_variables=[
         StateVariable('SV1', dimension=un.voltage),
         StateVariable('SV2', dimension=un.current)],
@@ -67,7 +68,8 @@ dynA = Dynamics(
                 Parameter('P2', dimension=un.time),
                 Parameter('P3', dimension=un.voltage),
                 Parameter('P4', dimension=un.current)],
-    constants=[Constant('C1', value=-71.0, units=un.mV)]
+    constants=[Constant('C1', value=-71.0, units=un.mV),
+               Constant('C2', value=22.2, units=un.degC)]
 )
 
 dynB = Dynamics(
@@ -240,21 +242,21 @@ dynPropC = DynamicsProperties(
         'P2': Quantity(ArrayValue([1.0, 2.0, 3.0, 4.0, 5.0]), un.unitless)},
     initial_values=[Initial('SV1', 3.3 * un.unitless),
                     Initial('SV2', Quantity(21.7, un.unitless)),
-                    Initial('SV3', 8.0)],
+                    Initial('SV3', Quantity([8, 7, 6, 5, 4], un.unitless))],
     check_initial_values=True)
 
 dynPropD = DynamicsProperties(
     name='dynPropD',
     definition=dynD,
     properties={'P1': Quantity(SingleValue(1.0), un.ms),
-                'P2': 44.1 * un.V,
+                'P2': Quantity(44.1 * un.V, un.mV),
                 'P3': -75.3 * un.mV / (un.s * un.pA)})
 
 dynPropE = DynamicsProperties(
     name='dynPropE',
     definition=dynE,
     properties={'P1': 22.1 * un.ms,
-                'P2': 34.2 * un.uF,
+                'P2': Quantity(34.2 * un.uF),
                 'P3': -12.0 * un.mV})
 
 dynPropG = DynamicsProperties(
