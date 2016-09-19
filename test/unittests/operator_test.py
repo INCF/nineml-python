@@ -524,7 +524,6 @@ class TestQuantities(unittest.TestCase):
                         qty = next(qty_iter)
                     val = qty.value
                     units = op(result.units, qty.units)
-                    print units, qty
                     len_val = len(val)
                 op_str = ("{}({}, {})".format(op.__name__, result, qty))
                 if len(result.value):
@@ -532,8 +531,7 @@ class TestQuantities(unittest.TestCase):
                         # Get the first value as we can't use two
                         # array values together
                         val = next(iter(val))
-                        qty = un.Quantity(val, units)
-                        print qty
+                        qty = un.Quantity(val, qty.units)
                     result_iter = (float(v) for v in result.value)
                     q_iter = repeat(float(val))
                     f_result = [op(r, q)
@@ -563,22 +561,18 @@ class TestQuantities(unittest.TestCase):
                         "Value of {} not equal between Quantity "
                         "({}) and explicit ({})"
                         .format(op_str, float(q_result.value), f_result))
-                try:
-                    self.assertEqual(
-                        q_result.units, units,
-                        "Units of {} (with {}:{} and {}:{}) not equal between "
-                        "Quantity (dim={}, power={}) and explicit (dim={}, "
-                        "power={})".format(
-                            op_str, result.units.dimension, result.units.power,
-                            (qty.units.dimension
-                             if isinstance(qty, un.Quantity) else ''),
-                            (qty.units.power
-                             if isinstance(qty, un.Quantity) else ''),
-                            q_result.units.dimension, q_result.units.power,
-                            units.dimension, units.power))
-                except:
-                    traceback.print_exc()
-                    raise
+                self.assertEqual(
+                    q_result.units, units,
+                    "Units of {} (with {}:{} and {}:{}) not equal between "
+                    "Quantity (dim={}, power={}) and explicit (dim={}, "
+                    "power={})".format(
+                        op_str, result.units.dimension, result.units.power,
+                        (qty.units.dimension
+                         if isinstance(qty, un.Quantity) else ''),
+                        (qty.units.power
+                         if isinstance(qty, un.Quantity) else ''),
+                        q_result.units.dimension, q_result.units.power,
+                        units.dimension, units.power))
                 result = q_result
 
 #     def test_unit_operators(self):
