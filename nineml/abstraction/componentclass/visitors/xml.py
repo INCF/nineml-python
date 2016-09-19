@@ -126,15 +126,15 @@ class ComponentClassXMLWriter(ComponentVisitor):
     def visit_constant(self, constant):
         if self.xmlns == NINEMLv1:
             xml = self.E(Constant.nineml_type,
-                         str(constant.value),
+                         repr(constant.value),
                          name=constant.name,
                          units=constant.units.name)
         else:
             xml = self.E(Constant.nineml_type,
                          name=constant.name,
-                         value=str(constant.value),
+                         value=repr(constant.value),
                          units=constant.units.name)
         return xml
 
 
-from nineml.document import Document
+from nineml.document import Document  # @IgnorePep8

@@ -90,7 +90,7 @@ dynB = Dynamics(
             On('SV3 < 0.001', to='R2',
                do=[StateAssignment('SV3', 1)])])
     ],
-    constants=[Constant('C1', 10.0, un.nA)],
+    constants=[Constant('C1', 10.0 * un.mA, un.nA)],
     analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
                   AnalogReducePort('ADP1', operator='+'),
                   AnalogSendPort('A1'),
