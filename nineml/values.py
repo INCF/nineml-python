@@ -314,63 +314,75 @@ class ArrayValue(BaseValue):
             "ArrayValues cannot be converted to a single float")
 
     def __add__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values + float(num))  # if numpy array
         except TypeError:
             return ArrayValue([float(v + num) for v in self._values])
 
     def __sub__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values - float(num))  # if numpy array
         except TypeError:
             return ArrayValue([float(v - num) for v in self._values])
 
     def __mul__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values * float(num))  # if numpy array
         except TypeError:
             return ArrayValue([float(v * num) for v in self._values])
 
     def __truediv__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__truediv__(num))  # if numpy array
         except AttributeError:
             return ArrayValue([float(v / num) for v in self._values])
 
     def __div__(self, num):
+        self._check_single_value(num)
         return self.__truediv__(num)
 
     def __pow__(self, power):
+        self._check_single_value(power)
         try:
             return ArrayValue(self._values ** float(power))  # if numpy array
         except TypeError:
             return ArrayValue([float(v ** power) for v in self._values])
 
     def __floordiv__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values // float(num))  # if numpy array
         except TypeError:
             return ArrayValue([float(v // num) for v in self._values])
 
     def __mod__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values % float(num))  # if numpy array
         except TypeError:
             return ArrayValue([float(v % num) for v in self._values])
 
     def __radd__(self, num):
+        self._check_single_value(num)
         return self.__add__(num)
 
     def __rsub__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(float(num) - self._values)  # if numpy array
         except TypeError:
             return ArrayValue([float(num - v) for v in self._values])
 
     def __rmul__(self, num):
+        self._check_single_value(num)
         return self.__mul__(num)
 
     def __rtruediv__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__rtruediv__(float(num)))  # if np
         except AttributeError:
@@ -378,21 +390,25 @@ class ArrayValue(BaseValue):
                                for v in self._values])
 
     def __rdiv__(self, num):
+        self._check_single_value(num)
         return self.__rtruediv__(num)
 
     def __rpow__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__rpow__(num))  # if numpy array
         except AttributeError:
             return ArrayValue([float(num ** v) for v in self._values])
 
     def __rfloordiv__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__rfloordiv__(num))  # if numpy arr.
         except AttributeError:
             return ArrayValue([float(num // v) for v in self._values])
 
     def __rmod__(self, num):
+        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__rmod__(num))  # if numpy array
         except AttributeError:
@@ -409,6 +425,14 @@ class ArrayValue(BaseValue):
             return ArrayValue(self._values.__abs__())
         except AttributeError:
             return ArrayValue([abs(v) for v in self._values])
+
+    def _check_single_value(self, num):
+        try:
+            float(num)
+        except TypeError:
+            raise NineMLRuntimeError(
+                "Cannot use {} in array arithmetic operation, only values that"
+                " can be converted to a single float are allowed".format(num))
 
 
 class RandomValue(BaseValue):
