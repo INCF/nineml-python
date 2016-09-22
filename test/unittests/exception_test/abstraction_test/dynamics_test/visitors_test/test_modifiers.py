@@ -24,7 +24,7 @@ class TestDynamicsPortModifierExceptions(unittest.TestCase):
             DynamicsPortModifier.close_analog_port,
             component_class=None,
             port_name=None,
-            value=0)
+            value='0')
 
     def test_close_all_reduce_ports_ninemlruntimeerror(self):
         """

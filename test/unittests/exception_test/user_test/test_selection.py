@@ -37,7 +37,7 @@ class TestConcatenateExceptions(unittest.TestCase):
 
     def test_from_xml_valueerror(self):
         """
-        line #: 257
+        line #: 261
         message: Duplicate indices found in Concatenate list ({})
 
         context:
@@ -68,7 +68,7 @@ class TestConcatenateExceptions(unittest.TestCase):
 
     def test_from_xml_valueerror2(self):
         """
-        line #: 260
+        line #: 264
         message: Indices of Concatenate items must start from 0 ({})
 
         context:
@@ -102,7 +102,7 @@ class TestConcatenateExceptions(unittest.TestCase):
 
     def test_from_xml_valueerror3(self):
         """
-        line #: 263
+        line #: 267
         message: Missing indices in Concatenate items ({}), list must be contiguous.
 
         context:

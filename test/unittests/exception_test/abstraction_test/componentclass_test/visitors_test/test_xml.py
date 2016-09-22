@@ -34,7 +34,7 @@ class TestComponentClassXMLLoaderExceptions(unittest.TestCase):
                 if tag not in block_names:
         """
 
-        componentclassxmlloader = instances_of_all_types['ComponentClassXMLLoader']
+        componentclassxmlloader = next(instances_of_all_types['ComponentClassXMLLoader'].itervalues())
         self.assertRaises(
             NineMLXMLBlockError,
             componentclassxmlloader._load_blocks,

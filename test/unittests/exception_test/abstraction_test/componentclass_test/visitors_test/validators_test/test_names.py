@@ -17,7 +17,7 @@ class TestLocalNameConflictsComponentValidatorExceptions(unittest.TestCase):
         if symbol in self.symbols:
         """
 
-        localnameconflictscomponentvalidator = instances_of_all_types['LocalNameConflictsComponentValidator']
+        localnameconflictscomponentvalidator = next(instances_of_all_types['LocalNameConflictsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             localnameconflictscomponentvalidator.check_conflicting_symbol,
@@ -42,7 +42,7 @@ class TestDimensionNameConflictsComponentValidatorExceptions(unittest.TestCase):
                                self.dimensions[dimension.name]))
         """
 
-        dimensionnameconflictscomponentvalidator = instances_of_all_types['DimensionNameConflictsComponentValidator']
+        dimensionnameconflictscomponentvalidator = next(instances_of_all_types['DimensionNameConflictsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             dimensionnameconflictscomponentvalidator.check_conflicting_dimension,

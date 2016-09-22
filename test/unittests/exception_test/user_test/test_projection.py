@@ -20,7 +20,7 @@ class TestBaseConnectivityExceptions(unittest.TestCase):
                 source_size != destination_size):
         """
 
-        baseconnectivity = instances_of_all_types['BaseConnectivity']
+        baseconnectivity = next(instances_of_all_types['BaseConnectivity'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             baseconnectivity.__init__,

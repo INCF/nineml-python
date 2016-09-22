@@ -17,7 +17,7 @@ class TestDocumentExceptions(unittest.TestCase):
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
         """
 
-        document = instances_of_all_types['Document']
+        document = next(instances_of_all_types['Document'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.add,
@@ -43,7 +43,7 @@ class TestDocumentExceptions(unittest.TestCase):
             if element is not self[element.name]:
         """
 
-        document = instances_of_all_types['Document']
+        document = next(instances_of_all_types['Document'].itervalues())
         self.assertRaises(
             NineMLNameError,
             document.add,
@@ -60,7 +60,7 @@ class TestDocumentExceptions(unittest.TestCase):
         if not isinstance(element, DocumentLevelObject):
         """
 
-        document = instances_of_all_types['Document']
+        document = next(instances_of_all_types['Document'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.remove,
@@ -83,7 +83,7 @@ class TestDocumentExceptions(unittest.TestCase):
         if unloaded in self._loading:
         """
 
-        document = instances_of_all_types['Document']
+        document = next(instances_of_all_types['Document'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document._load_elem_from_xml,
@@ -121,7 +121,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 if unit != self[unit.name]:
         """
 
-        document = instances_of_all_types['Document']
+        document = next(instances_of_all_types['Document'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.standardize_units)
@@ -169,7 +169,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 if dimension != self[dimension.name]:
         """
 
-        document = instances_of_all_types['Document']
+        document = next(instances_of_all_types['Document'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.standardize_units)
@@ -465,7 +465,7 @@ class TestDocumentExceptions(unittest.TestCase):
             if url is None:
         """
 
-        document = instances_of_all_types['Document']
+        document = next(instances_of_all_types['Document'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             document.url = None
 
@@ -489,7 +489,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 if doc_ref():
         """
 
-        document = instances_of_all_types['Document']
+        document = next(instances_of_all_types['Document'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             document.url = None
 

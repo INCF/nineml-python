@@ -21,7 +21,7 @@ class TestRandomDistributionExceptions(unittest.TestCase):
                 standard_library[self._base_len:] not in self.standard_types):
         """
 
-        randomdistribution = instances_of_all_types['RandomDistribution']
+        randomdistribution = next(instances_of_all_types['RandomDistribution'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             randomdistribution.__init__,

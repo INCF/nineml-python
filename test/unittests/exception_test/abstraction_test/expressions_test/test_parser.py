@@ -54,5 +54,5 @@ class TestParserExceptions(unittest.TestCase):
             NineMLMathParseError,
             Parser._parse_relationals,
             expr_string=None,
-            escape=__)
+            escape='__')
 

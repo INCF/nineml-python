@@ -20,7 +20,7 @@ class TestDefinitionExceptions(unittest.TestCase):
             if kwargs:
         """
 
-        definition = instances_of_all_types['Definition']
+        definition = next(instances_of_all_types['Definition'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             definition.__init__)
@@ -41,7 +41,7 @@ class TestDefinitionExceptions(unittest.TestCase):
                 if doc_obj != self._referred_to:
         """
 
-        definition = instances_of_all_types['Definition']
+        definition = next(instances_of_all_types['Definition'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             definition.to_xml,
@@ -71,7 +71,7 @@ class TestDynamicsPropertiesExceptions(unittest.TestCase):
             if initial_dimension != var_dimension:
         """
 
-        dynamicsproperties = instances_of_all_types['DynamicsProperties']
+        dynamicsproperties = next(instances_of_all_types['DynamicsProperties'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             dynamicsproperties.check_initial_values)
@@ -91,7 +91,7 @@ class TestComponentExceptions(unittest.TestCase):
         if prop.units.dimension != param.dimension:
         """
 
-        component = instances_of_all_types['Component']
+        component = next(instances_of_all_types['Component'].itervalues())
         self.assertRaises(
             NineMLUnitMismatchError,
             component.set,
@@ -127,7 +127,7 @@ class TestComponentExceptions(unittest.TestCase):
             # need a more specific type of Exception
         """
 
-        component = instances_of_all_types['Component']
+        component = next(instances_of_all_types['Component'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             component.check_properties)
@@ -169,7 +169,7 @@ class TestComponentExceptions(unittest.TestCase):
             if prop_dimension != param_dimension:
         """
 
-        component = instances_of_all_types['Component']
+        component = next(instances_of_all_types['Component'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             component.check_properties)

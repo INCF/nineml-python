@@ -25,7 +25,7 @@ class TestComponentDimensionResolverExceptions(unittest.TestCase):
         if element is None:
         """
 
-        componentdimensionresolver = instances_of_all_types['ComponentDimensionResolver']
+        componentdimensionresolver = next(instances_of_all_types['ComponentDimensionResolver'].itervalues())
         self.assertRaises(
             NineMLNameError,
             componentdimensionresolver._find_element,

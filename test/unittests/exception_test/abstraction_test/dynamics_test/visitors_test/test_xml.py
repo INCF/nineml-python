@@ -23,7 +23,7 @@ class TestDynamicsXMLLoaderExceptions(unittest.TestCase):
             if any(blocks[block_name] for block_name in version1_main):
         """
 
-        dynamicsxmlloader = instances_of_all_types['DynamicsXMLLoader']
+        dynamicsxmlloader = next(instances_of_all_types['DynamicsXMLLoader'].itervalues())
         self.assertRaises(
             NineMLXMLBlockError,
             dynamicsxmlloader.load_dynamics,

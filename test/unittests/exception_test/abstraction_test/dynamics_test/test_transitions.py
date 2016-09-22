@@ -72,7 +72,7 @@ class TestTransitionExceptions(unittest.TestCase):
         if self._target_regime is None:
         """
 
-        transition = instances_of_all_types['Transition']
+        transition = next(instances_of_all_types['Transition'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print transition.target_regime
 
@@ -95,7 +95,7 @@ class TestTransitionExceptions(unittest.TestCase):
         if self._source_regime is None:
         """
 
-        transition = instances_of_all_types['Transition']
+        transition = next(instances_of_all_types['Transition'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print transition.source_regime
 
@@ -113,7 +113,7 @@ class TestOutputEventExceptions(unittest.TestCase):
         if self._port is None:
         """
 
-        outputevent = instances_of_all_types['OutputEvent']
+        outputevent = next(instances_of_all_types['OutputEvent'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print outputevent.port
 
@@ -131,7 +131,7 @@ class TestOnEventExceptions(unittest.TestCase):
         if self._port is None:
         """
 
-        onevent = instances_of_all_types['OnEvent']
+        onevent = next(instances_of_all_types['OnEvent'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print onevent.port
 

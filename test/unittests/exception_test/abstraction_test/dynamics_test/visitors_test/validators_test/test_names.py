@@ -17,7 +17,7 @@ class TestRegimeAliasMatchesBaseScopeValidatorExceptions(unittest.TestCase):
         if alias.name not in self.component_class.alias_names:
         """
 
-        regimealiasmatchesbasescopevalidator = instances_of_all_types['RegimeAliasMatchesBaseScopeValidator']
+        regimealiasmatchesbasescopevalidator = next(instances_of_all_types['RegimeAliasMatchesBaseScopeValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             regimealiasmatchesbasescopevalidator.action_alias,

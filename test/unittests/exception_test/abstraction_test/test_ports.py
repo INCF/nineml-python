@@ -19,11 +19,11 @@ class TestAnalogReducePortExceptions(unittest.TestCase):
                   (self.__class__.__name__, name, str(operator))
         """
 
-        analogreduceport = instances_of_all_types['AnalogReducePort']
+        analogreduceport = next(instances_of_all_types['AnalogReducePort'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             analogreduceport.__init__,
             name=None,
             dimension=None,
-            operator=+)
+            operator='+')
 

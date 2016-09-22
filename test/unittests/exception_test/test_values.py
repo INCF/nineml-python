@@ -8,7 +8,7 @@ class TestArrayValueExceptions(unittest.TestCase):
 
     def test___float___typeerror(self):
         """
-        line #: 313
+        line #: 321
         message: ArrayValues cannot be converted to a single float
 
         context:
@@ -26,7 +26,7 @@ class TestRandomValueExceptions(unittest.TestCase):
 
     def test___float___typeerror(self):
         """
-        line #: 449
+        line #: 457
         message: RandomValues cannot be converted to a single float
 
         context:
@@ -41,7 +41,7 @@ class TestRandomValueExceptions(unittest.TestCase):
 
     def test___iter___ninemlruntimeerror(self):
         """
-        line #: 469
+        line #: 481
         message: Generator not set for RandomValue '{}'
 
         context:
@@ -57,7 +57,7 @@ class TestRandomValueExceptions(unittest.TestCase):
 
     def test_inverse_notimplementederror(self):
         """
-        line #: 491
+        line #: 503
         message: 
 
         context:

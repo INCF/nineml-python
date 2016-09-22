@@ -21,7 +21,7 @@ class TestRandomDistributionXMLLoaderExceptions(unittest.TestCase):
             if lib_elem.getchildren():
         """
 
-        randomdistributionxmlloader = instances_of_all_types['RandomDistributionXMLLoader']
+        randomdistributionxmlloader = next(instances_of_all_types['RandomDistributionXMLLoader'].itervalues())
         self.assertRaises(
             NineMLXMLBlockError,
             randomdistributionxmlloader.load_randomdistributionclass,

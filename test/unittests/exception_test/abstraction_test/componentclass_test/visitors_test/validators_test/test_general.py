@@ -31,7 +31,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
             if element is None:
         """
 
-        dimensionalitycomponentvalidator = instances_of_all_types['DimensionalityComponentValidator']
+        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             dimensionalitycomponentvalidator._get_dimensions,
@@ -48,7 +48,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
         if dimension - sympify(reference) != 0:
         """
 
-        dimensionalitycomponentvalidator = instances_of_all_types['DimensionalityComponentValidator']
+        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._compare_dimensionality,
@@ -73,7 +73,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
             if element.dimension != port.dimension:
         """
 
-        dimensionalitycomponentvalidator = instances_of_all_types['DimensionalityComponentValidator']
+        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._check_send_port,
@@ -96,7 +96,7 @@ class TestCheckNoLHSAssignmentsToMathsNamespaceComponentValidatorExceptions(unit
             err = 'Symbol: %s found on left-hand-side of an equation'
         """
 
-        checknolhsassignmentstomathsnamespacecomponentvalidator = instances_of_all_types['CheckNoLHSAssignmentsToMathsNamespaceComponentValidator']
+        checknolhsassignmentstomathsnamespacecomponentvalidator = next(instances_of_all_types['CheckNoLHSAssignmentsToMathsNamespaceComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             checknolhsassignmentstomathsnamespacecomponentvalidator.check_lhssymbol_is_valid,
@@ -131,7 +131,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
                 if rhs_atom not in self.available_symbols:
         """
 
-        nounresolvedsymbolscomponentvalidator = instances_of_all_types['NoUnresolvedSymbolsComponentValidator']
+        nounresolvedsymbolscomponentvalidator = next(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             nounresolvedsymbolscomponentvalidator.__init__,
@@ -172,7 +172,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
                         rhs_atom not in reserved_identifiers):
         """
 
-        nounresolvedsymbolscomponentvalidator = instances_of_all_types['NoUnresolvedSymbolsComponentValidator']
+        nounresolvedsymbolscomponentvalidator = next(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             nounresolvedsymbolscomponentvalidator.__init__,
@@ -222,7 +222,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
                         rhs_atom not in reserved_identifiers):
         """
 
-        nounresolvedsymbolscomponentvalidator = instances_of_all_types['NoUnresolvedSymbolsComponentValidator']
+        nounresolvedsymbolscomponentvalidator = next(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             nounresolvedsymbolscomponentvalidator.__init__,
@@ -239,7 +239,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
         if symbol in self.available_symbols:
         """
 
-        nounresolvedsymbolscomponentvalidator = instances_of_all_types['NoUnresolvedSymbolsComponentValidator']
+        nounresolvedsymbolscomponentvalidator = next(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             nounresolvedsymbolscomponentvalidator.add_symbol,

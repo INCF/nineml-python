@@ -22,7 +22,7 @@ class TestConnectionRuleExceptions(unittest.TestCase):
                 standard_library[self._base_len:] not in self.standard_types):
         """
 
-        connectionrule = instances_of_all_types['ConnectionRule']
+        connectionrule = next(instances_of_all_types['ConnectionRule'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             connectionrule.__init__,
