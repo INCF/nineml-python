@@ -16,7 +16,7 @@ class TestBaseValidatorExceptions(unittest.TestCase):
     def get_warnings(self):
         """
 
-        basevalidator = instances_of_all_types['BaseValidator']
+        basevalidator = next(instances_of_all_types['BaseValidator'].itervalues())
         self.assertRaises(
             NotImplementedError,
             basevalidator.get_warnings)

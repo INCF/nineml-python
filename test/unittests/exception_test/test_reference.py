@@ -20,7 +20,7 @@ class TestBaseReferenceExceptions(unittest.TestCase):
                 if document is None or document.url is None:
         """
 
-        basereference = instances_of_all_types['BaseReference']
+        basereference = next(instances_of_all_types['BaseReference'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             basereference.__init__,
@@ -30,7 +30,7 @@ class TestBaseReferenceExceptions(unittest.TestCase):
 
     def test_from_xml_ninemlxmlattributeerror(self):
         """
-        line #: 81
+        line #: 86
         message: References require the element name provided in the XML element text
 
         context:

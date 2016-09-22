@@ -8,7 +8,7 @@ class Test_BaseAnalogPortExposureExceptions(unittest.TestCase):
 
     def test_lhs_name_transform_inplace_ninemlimmutableerror(self):
         """
-        line #: 156
+        line #: 158
         message: Cannot rename LHS of Alias '{}' because it is a analog port exposure
 
         context:
@@ -16,7 +16,7 @@ class Test_BaseAnalogPortExposureExceptions(unittest.TestCase):
     def lhs_name_transform_inplace(self, name_map):
         """
 
-        _baseanalogportexposure = instances_of_all_types['_BaseAnalogPortExposure']
+        _baseanalogportexposure = next(instances_of_all_types['_BaseAnalogPortExposure'].itervalues())
         self.assertRaises(
             NineMLImmutableError,
             _baseanalogportexposure.lhs_name_transform_inplace,
@@ -24,7 +24,7 @@ class Test_BaseAnalogPortExposureExceptions(unittest.TestCase):
 
     def test_set_dimension_ninemlimmutableerror(self):
         """
-        line #: 165
+        line #: 167
         message: Cannot set dimension of port exposure (need to change the dimension of the referenced port).
 
         context:
@@ -32,7 +32,7 @@ class Test_BaseAnalogPortExposureExceptions(unittest.TestCase):
     def set_dimension(self, dimension):
         """
 
-        _baseanalogportexposure = instances_of_all_types['_BaseAnalogPortExposure']
+        _baseanalogportexposure = next(instances_of_all_types['_BaseAnalogPortExposure'].itervalues())
         self.assertRaises(
             NineMLImmutableError,
             _baseanalogportexposure.set_dimension,
@@ -43,7 +43,7 @@ class Test_LocalAnalogPortConnectionsExceptions(unittest.TestCase):
 
     def test_lhs_name_transform_inplace_ninemlimmutableerror(self):
         """
-        line #: 304
+        line #: 306
         message: Cannot rename LHS of Alias '{}' because it is a local AnalogPortConnection
 
         context:
@@ -51,7 +51,7 @@ class Test_LocalAnalogPortConnectionsExceptions(unittest.TestCase):
     def lhs_name_transform_inplace(self, name_map):
         """
 
-        _localanalogportconnections = instances_of_all_types['_LocalAnalogPortConnections']
+        _localanalogportconnections = next(instances_of_all_types['_LocalAnalogPortConnections'].itervalues())
         self.assertRaises(
             NineMLImmutableError,
             _localanalogportconnections.lhs_name_transform_inplace,
@@ -62,7 +62,7 @@ class TestBasePortExposureExceptions(unittest.TestCase):
 
     def test_sub_component_ninemlruntimeerror(self):
         """
-        line #: 64
+        line #: 66
         message: Port exposure is not bound
 
         context:
@@ -71,13 +71,13 @@ class TestBasePortExposureExceptions(unittest.TestCase):
         if self._sub_component is None:
         """
 
-        baseportexposure = instances_of_all_types['BasePortExposure']
+        baseportexposure = next(instances_of_all_types['BasePortExposure'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportexposure.sub_component
 
     def test_port_ninemlruntimeerror(self):
         """
-        line #: 71
+        line #: 73
         message: Port exposure is not bound
 
         context:
@@ -86,7 +86,7 @@ class TestBasePortExposureExceptions(unittest.TestCase):
         if self._port is None:
         """
 
-        baseportexposure = instances_of_all_types['BasePortExposure']
+        baseportexposure = next(instances_of_all_types['BasePortExposure'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportexposure.port
 

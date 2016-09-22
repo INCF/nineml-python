@@ -57,7 +57,7 @@ class Test_NamespaceExpressionExceptions(unittest.TestCase):
     def lhs_name_transform_inplace(self, name_map):
         """
 
-        _namespaceexpression = instances_of_all_types['_NamespaceExpression']
+        _namespaceexpression = next(instances_of_all_types['_NamespaceExpression'].itervalues())
         self.assertRaises(
             NineMLImmutableError,
             _namespaceexpression.lhs_name_transform_inplace,
@@ -73,7 +73,7 @@ class Test_NamespaceExpressionExceptions(unittest.TestCase):
     def rhs(self, rhs):
         """
 
-        _namespaceexpression = instances_of_all_types['_NamespaceExpression']
+        _namespaceexpression = next(instances_of_all_types['_NamespaceExpression'].itervalues())
         with self.assertRaises(NineMLImmutableError):
             _namespaceexpression.rhs = None
 
@@ -87,7 +87,7 @@ class Test_NamespaceExpressionExceptions(unittest.TestCase):
     def rhs_name_transform_inplace(self, name_map):
         """
 
-        _namespaceexpression = instances_of_all_types['_NamespaceExpression']
+        _namespaceexpression = next(instances_of_all_types['_NamespaceExpression'].itervalues())
         self.assertRaises(
             NineMLImmutableError,
             _namespaceexpression.rhs_name_transform_inplace,
@@ -103,7 +103,7 @@ class Test_NamespaceExpressionExceptions(unittest.TestCase):
     def rhs_substituted(self, name_map):
         """
 
-        _namespaceexpression = instances_of_all_types['_NamespaceExpression']
+        _namespaceexpression = next(instances_of_all_types['_NamespaceExpression'].itervalues())
         self.assertRaises(
             NineMLImmutableError,
             _namespaceexpression.rhs_substituted,
@@ -119,7 +119,7 @@ class Test_NamespaceExpressionExceptions(unittest.TestCase):
     def subs(self, old, new):
         """
 
-        _namespaceexpression = instances_of_all_types['_NamespaceExpression']
+        _namespaceexpression = next(instances_of_all_types['_NamespaceExpression'].itervalues())
         self.assertRaises(
             NineMLImmutableError,
             _namespaceexpression.subs,
@@ -136,7 +136,7 @@ class Test_NamespaceExpressionExceptions(unittest.TestCase):
     def rhs_str_substituted(self, name_map={}, funcname_map={}):
         """
 
-        _namespaceexpression = instances_of_all_types['_NamespaceExpression']
+        _namespaceexpression = next(instances_of_all_types['_NamespaceExpression'].itervalues())
         self.assertRaises(
             NineMLImmutableError,
             _namespaceexpression.rhs_str_substituted,

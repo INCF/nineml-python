@@ -400,10 +400,10 @@ def check_list_contain_same_items(lst1, lst2, desc1="", desc2="", ignore=[],
             check_list_contain_same_items,
             lst1=None,
             lst2=None,
-            desc1=,
-            desc2=,
+            desc1='',
+            desc2='',
             ignore=[],
-            desc=)
+            desc='')
 
     def test_safe_dict_ninemlruntimeerror(self):
         """

@@ -16,7 +16,7 @@ class TestExpressionWithLHSExceptions(unittest.TestCase):
     def lhs_name_transform_inplace(self, name_map):
         """
 
-        expressionwithlhs = instances_of_all_types['ExpressionWithLHS']
+        expressionwithlhs = next(instances_of_all_types['ExpressionWithLHS'].itervalues())
         self.assertRaises(
             NotImplementedError,
             expressionwithlhs.lhs_name_transform_inplace,
@@ -32,7 +32,7 @@ class TestExpressionWithLHSExceptions(unittest.TestCase):
     def lhs_atoms(self):
         """
 
-        expressionwithlhs = instances_of_all_types['ExpressionWithLHS']
+        expressionwithlhs = next(instances_of_all_types['ExpressionWithLHS'].itervalues())
         with self.assertRaises(NotImplementedError):
             print expressionwithlhs.lhs_atoms
 
@@ -52,7 +52,7 @@ class TestExpressionWithSimpleLHSExceptions(unittest.TestCase):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
         """
 
-        expressionwithsimplelhs = instances_of_all_types['ExpressionWithSimpleLHS']
+        expressionwithsimplelhs = next(instances_of_all_types['ExpressionWithSimpleLHS'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             expressionwithsimplelhs.__init__,
@@ -76,7 +76,7 @@ class TestExpressionWithSimpleLHSExceptions(unittest.TestCase):
             err = 'Invalid LHS target: %s' % lhs
         """
 
-        expressionwithsimplelhs = instances_of_all_types['ExpressionWithSimpleLHS']
+        expressionwithsimplelhs = next(instances_of_all_types['ExpressionWithSimpleLHS'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             expressionwithsimplelhs.__init__,

@@ -8,7 +8,7 @@ class TestEventPortConnectionExceptions(unittest.TestCase):
 
     def test__check_ports_ninemlruntimeerror(self):
         """
-        line #: 378
+        line #: 382
         message: Send port '{}' must be an EventSendPort to be connected with an EventPortConnection
 
         context:
@@ -17,14 +17,14 @@ class TestEventPortConnectionExceptions(unittest.TestCase):
         if not isinstance(self.send_port, EventSendPort):
         """
 
-        eventportconnection = instances_of_all_types['EventPortConnection']
+        eventportconnection = next(instances_of_all_types['EventPortConnection'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             eventportconnection._check_ports)
 
     def test__check_ports_ninemlruntimeerror2(self):
         """
-        line #: 382
+        line #: 386
         message: Send port '{}' must be an EventSendPort to be connected with an EventPortConnection
 
         context:
@@ -37,7 +37,7 @@ class TestEventPortConnectionExceptions(unittest.TestCase):
         if not isinstance(self.receive_port, EventReceivePort):
         """
 
-        eventportconnection = instances_of_all_types['EventPortConnection']
+        eventportconnection = next(instances_of_all_types['EventPortConnection'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             eventportconnection._check_ports)
@@ -84,7 +84,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
             if sender_name is not None:
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
@@ -144,7 +144,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
             if receiver_name is not None:
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
@@ -157,7 +157,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
 
     def test_sender_ninemlruntimeerror(self):
         """
-        line #: 107
+        line #: 111
         message: Ports have not been bound
 
         context:
@@ -166,13 +166,13 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if not self.is_bound():
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportconnection.sender
 
     def test_receiver_ninemlruntimeerror(self):
         """
-        line #: 113
+        line #: 117
         message: Ports have not been bound
 
         context:
@@ -181,13 +181,13 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if not self.is_bound():
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportconnection.receiver
 
     def test_send_port_ninemlruntimeerror(self):
         """
-        line #: 119
+        line #: 123
         message: Ports have not been bound
 
         context:
@@ -196,13 +196,13 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if not self.is_bound():
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportconnection.send_port
 
     def test_receive_port_ninemlruntimeerror(self):
         """
-        line #: 125
+        line #: 129
         message: Ports have not been bound
 
         context:
@@ -211,13 +211,13 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if not self.is_bound():
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportconnection.receive_port
 
     def test_sender_role_ninemlruntimeerror(self):
         """
-        line #: 145
+        line #: 149
         message: Sender object was not identified by its role
 
         context:
@@ -226,13 +226,13 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if self._sender_role is None:
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportconnection.sender_role
 
     def test_receiver_role_ninemlruntimeerror(self):
         """
-        line #: 152
+        line #: 156
         message: Sender object was not identified by its role
 
         context:
@@ -241,13 +241,13 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if self._receiver_role is None:
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportconnection.receiver_role
 
     def test_sender_name_ninemlruntimeerror(self):
         """
-        line #: 159
+        line #: 163
         message: Sender object was not identified by its name
 
         context:
@@ -256,13 +256,13 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if self._sender_name is None:
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportconnection.sender_name
 
     def test_receiver_name_ninemlruntimeerror(self):
         """
-        line #: 166
+        line #: 170
         message: Sender object was not identified by its name
 
         context:
@@ -271,7 +271,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if self._receiver_name is None:
         """
 
-        baseportconnection = instances_of_all_types['BasePortConnection']
+        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print baseportconnection.receiver_name
 
@@ -280,7 +280,7 @@ class TestAnalogPortConnectionExceptions(unittest.TestCase):
 
     def test__check_ports_ninemlruntimeerror(self):
         """
-        line #: 354
+        line #: 358
         message: Send port '{}' must be an AnalogSendPort to be connected with an AnalogPortConnection
 
         context:
@@ -289,14 +289,14 @@ class TestAnalogPortConnectionExceptions(unittest.TestCase):
         if not isinstance(self.send_port, AnalogSendPort):
         """
 
-        analogportconnection = instances_of_all_types['AnalogPortConnection']
+        analogportconnection = next(instances_of_all_types['AnalogPortConnection'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             analogportconnection._check_ports)
 
     def test__check_ports_ninemlruntimeerror2(self):
         """
-        line #: 359
+        line #: 363
         message: Send port '{}' must be an AnalogSendPort to be connected with an AnalogPortConnection
 
         context:
@@ -310,14 +310,14 @@ class TestAnalogPortConnectionExceptions(unittest.TestCase):
                                               AnalogReducePort)):
         """
 
-        analogportconnection = instances_of_all_types['AnalogPortConnection']
+        analogportconnection = next(instances_of_all_types['AnalogPortConnection'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             analogportconnection._check_ports)
 
     def test__check_ports_ninemldimensionerror(self):
         """
-        line #: 363
+        line #: 367
         message: Dimensions do not match in analog port connection: sender port '{}' has dimensions of '{}' and receive port '{}' has dimensions of '{}'
 
         context:
@@ -335,7 +335,7 @@ class TestAnalogPortConnectionExceptions(unittest.TestCase):
         if self.send_port.dimension != self.receive_port.dimension:
         """
 
-        analogportconnection = instances_of_all_types['AnalogPortConnection']
+        analogportconnection = next(instances_of_all_types['AnalogPortConnection'].itervalues())
         self.assertRaises(
             NineMLDimensionError,
             analogportconnection._check_ports)

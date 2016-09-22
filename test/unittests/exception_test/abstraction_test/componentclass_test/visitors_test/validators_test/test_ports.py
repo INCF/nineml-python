@@ -32,7 +32,7 @@ class TestPortConnectionsComponentValidatorExceptions(unittest.TestCase):
                 err = 'Duplicate Port Connection: %s -> %s' % (pc[0], pc[1])
         """
 
-        portconnectionscomponentvalidator = instances_of_all_types['PortConnectionsComponentValidator']
+        portconnectionscomponentvalidator = next(instances_of_all_types['PortConnectionsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             portconnectionscomponentvalidator.__init__,
@@ -71,7 +71,7 @@ class TestPortConnectionsComponentValidatorExceptions(unittest.TestCase):
             if src not in self.ports:
         """
 
-        portconnectionscomponentvalidator = instances_of_all_types['PortConnectionsComponentValidator']
+        portconnectionscomponentvalidator = next(instances_of_all_types['PortConnectionsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             portconnectionscomponentvalidator.__init__,
@@ -114,7 +114,7 @@ class TestPortConnectionsComponentValidatorExceptions(unittest.TestCase):
             if self.ports[src].is_incoming():
         """
 
-        portconnectionscomponentvalidator = instances_of_all_types['PortConnectionsComponentValidator']
+        portconnectionscomponentvalidator = next(instances_of_all_types['PortConnectionsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             portconnectionscomponentvalidator.__init__,
@@ -162,7 +162,7 @@ class TestPortConnectionsComponentValidatorExceptions(unittest.TestCase):
             if sink not in self.ports:
         """
 
-        portconnectionscomponentvalidator = instances_of_all_types['PortConnectionsComponentValidator']
+        portconnectionscomponentvalidator = next(instances_of_all_types['PortConnectionsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             portconnectionscomponentvalidator.__init__,
@@ -215,7 +215,7 @@ class TestPortConnectionsComponentValidatorExceptions(unittest.TestCase):
             if not self.ports[sink].is_incoming():
         """
 
-        portconnectionscomponentvalidator = instances_of_all_types['PortConnectionsComponentValidator']
+        portconnectionscomponentvalidator = next(instances_of_all_types['PortConnectionsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             portconnectionscomponentvalidator.__init__,
@@ -274,7 +274,7 @@ class TestPortConnectionsComponentValidatorExceptions(unittest.TestCase):
                 if self.ports[sink] in connected_recv_ports:
         """
 
-        portconnectionscomponentvalidator = instances_of_all_types['PortConnectionsComponentValidator']
+        portconnectionscomponentvalidator = next(instances_of_all_types['PortConnectionsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             portconnectionscomponentvalidator.__init__,
@@ -291,7 +291,7 @@ class TestPortConnectionsComponentValidatorExceptions(unittest.TestCase):
         if port.name in self.ports:
         """
 
-        portconnectionscomponentvalidator = instances_of_all_types['PortConnectionsComponentValidator']
+        portconnectionscomponentvalidator = next(instances_of_all_types['PortConnectionsComponentValidator'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             portconnectionscomponentvalidator._action_port,

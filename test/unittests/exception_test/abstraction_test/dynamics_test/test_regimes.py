@@ -64,7 +64,7 @@ class TestRegimeExceptions(unittest.TestCase):
                 err = 'Unexpected Arg: %s' % arg
         """
 
-        regime = instances_of_all_types['Regime']
+        regime = next(instances_of_all_types['Regime'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             regime.__init__)
@@ -148,7 +148,7 @@ class TestRegimeExceptions(unittest.TestCase):
             if not isinstance(alias, Alias):
         """
 
-        regime = instances_of_all_types['Regime']
+        regime = next(instances_of_all_types['Regime'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             regime.__init__)

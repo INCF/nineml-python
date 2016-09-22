@@ -16,7 +16,7 @@ class TestBaseNineMLObjectExceptions(unittest.TestCase):
     def accept_visitor(self, visitor):
         """
 
-        baseninemlobject = instances_of_all_types['BaseNineMLObject']
+        baseninemlobject = next(instances_of_all_types['BaseNineMLObject'].itervalues())
         self.assertRaises(
             NotImplementedError,
             baseninemlobject.accept_visitor,
@@ -38,7 +38,7 @@ class TestContainerObjectExceptions(unittest.TestCase):
             if element._name in dct:
         """
 
-        containerobject = instances_of_all_types['ContainerObject']
+        containerobject = next(instances_of_all_types['ContainerObject'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             containerobject.add)
@@ -53,7 +53,7 @@ class TestContainerObjectExceptions(unittest.TestCase):
     def __iter__(self):
         """
 
-        containerobject = instances_of_all_types['ContainerObject']
+        containerobject = next(instances_of_all_types['ContainerObject'].itervalues())
         self.assertRaises(
             TypeError,
             containerobject.__iter__)

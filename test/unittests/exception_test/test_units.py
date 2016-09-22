@@ -17,7 +17,7 @@ class TestUnitExceptions(unittest.TestCase):
         if self.offset != 0.0:
         """
 
-        unit = instances_of_all_types['Unit']
+        unit = next(instances_of_all_types['Unit'].itervalues())
         self.assertRaises(
             Exception,
             unit.to_SI_units_str)
@@ -35,7 +35,7 @@ class TestUnitExceptions(unittest.TestCase):
             if (self.offset != 0 or other.offset != 0):
         """
 
-        unit = instances_of_all_types['Unit']
+        unit = next(instances_of_all_types['Unit'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             unit.__mul__,
@@ -54,7 +54,7 @@ class TestUnitExceptions(unittest.TestCase):
             if (self.offset != 0 or other.offset != 0):
         """
 
-        unit = instances_of_all_types['Unit']
+        unit = next(instances_of_all_types['Unit'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             unit.__truediv__,
@@ -72,7 +72,7 @@ class TestUnitExceptions(unittest.TestCase):
         if self.offset != 0:
         """
 
-        unit = instances_of_all_types['Unit']
+        unit = next(instances_of_all_types['Unit'].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             unit.__pow__,
@@ -83,7 +83,7 @@ class TestQuantityExceptions(unittest.TestCase):
 
     def test_set_units_ninemldimensionerror(self):
         """
-        line #: 483
+        line #: 487
         message: Can't change dimension of quantity from '{}' to '{}'
 
         context:
@@ -92,7 +92,7 @@ class TestQuantityExceptions(unittest.TestCase):
         if units.dimension != self.units.dimension:
         """
 
-        quantity = instances_of_all_types['Quantity']
+        quantity = next(instances_of_all_types['Quantity'].itervalues())
         self.assertRaises(
             NineMLDimensionError,
             quantity.set_units,
@@ -100,7 +100,7 @@ class TestQuantityExceptions(unittest.TestCase):
 
     def test_in_units_ninemldimensionerror(self):
         """
-        line #: 495
+        line #: 499
         message: Can't change convert quantity dimension from '{}' to '{}'
 
         context:
@@ -113,7 +113,7 @@ class TestQuantityExceptions(unittest.TestCase):
         if units.dimension != self.units.dimension:
         """
 
-        quantity = instances_of_all_types['Quantity']
+        quantity = next(instances_of_all_types['Quantity'].itervalues())
         self.assertRaises(
             NineMLDimensionError,
             quantity.in_units,
@@ -121,7 +121,7 @@ class TestQuantityExceptions(unittest.TestCase):
 
     def test__scaled_value_ninemldimensionerror(self):
         """
-        line #: 589
+        line #: 593
         message: Cannot scale value as dimensions do not match ('{}' and '{}')
 
         context:
@@ -131,7 +131,7 @@ class TestQuantityExceptions(unittest.TestCase):
             if qty.units.dimension != self.units.dimension:
         """
 
-        quantity = instances_of_all_types['Quantity']
+        quantity = next(instances_of_all_types['Quantity'].itervalues())
         self.assertRaises(
             NineMLDimensionError,
             quantity._scaled_value,

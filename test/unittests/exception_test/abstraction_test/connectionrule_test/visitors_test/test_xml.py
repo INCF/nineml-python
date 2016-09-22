@@ -21,7 +21,7 @@ class TestConnectionRuleXMLLoaderExceptions(unittest.TestCase):
             if lib_elem.getchildren():
         """
 
-        connectionrulexmlloader = instances_of_all_types['ConnectionRuleXMLLoader']
+        connectionrulexmlloader = next(instances_of_all_types['ConnectionRuleXMLLoader'].itervalues())
         self.assertRaises(
             NineMLXMLBlockError,
             connectionrulexmlloader.load_connectionruleclass,
