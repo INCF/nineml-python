@@ -102,6 +102,10 @@ class BasePortConnection(BaseULObject):
              else self.receiver_name), self.receive_port_name))
 
     @property
+    def _name(self):
+        return self.name  # For generic methods that look for a name in all obj
+
+    @property
     def sender(self):
         if not self.is_bound():
             raise NineMLRuntimeError("Ports have not been bound")

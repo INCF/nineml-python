@@ -28,6 +28,8 @@ from nineml.user.multi import (
     EventSendPortExposure, EventReceivePortExposure, AnalogSendPortExposure,
     AnalogReceivePortExposure, AnalogReducePortExposure)
 from nineml.xml import nineml_v1_ns
+import sympy
+from nineml.user.projection import Connectivity
 
 
 ranDistrA = RandomDistribution(
@@ -489,21 +491,21 @@ def add_with_sub_elements(element):
     """
     if isinstance(element, (basestring, Document)) or element in loading:
         return
-    try:
+    if not isinstance(element, (dict, list, tuple, int, float, str,
+                                sympy.Basic, Connectivity)):
         # If element has an attribute called 'nineml_type' add it to the
         # dictionary of all 9ML elements
         if element.nineml_type == 'Annotations':
             return
 
-        instances_of_all_types[element.nineml_type].add(element)
+        instances_of_all_types[element.nineml_type][element._name] = element
         # Loop through all attributes of the element that are not in the class
         # definition and attempt to add them to the instances_of_all_types dict
         loading.append(element)
         for attr in set(dir(element)) - set(dir(element.__class__)):
             add_with_sub_elements(getattr(element, attr))
         loading.pop()
-    except AttributeError:
-
+    else:
         # If element is a dictionary or list
         try:
             sub_elem_iter = element.itervalues()
@@ -515,8 +517,8 @@ def add_with_sub_elements(element):
         for elem in sub_elem_iter:
             add_with_sub_elements(elem)
 
-instances_of_all_types = defaultdict(set)
-instances_of_all_types[document.nineml_type] = [document]
+instances_of_all_types = defaultdict(dict)
+instances_of_all_types[document.nineml_type]['base'] = [document]
 instances_of_all_types[Reference.nineml_type] = [
     Reference(o, document) for o in (
         'dynA', 'dynB', 'dynC', 'dynE', 'dynF', 'dynPropA', 'dynPropB',
@@ -536,7 +538,7 @@ for elem in chain(multiDynA.sub_components,
                   multiDynB.sub_components, multiDynA.ports, multiDynB.ports,
                   multiDynA.port_connections, multiDynB.port_connections,
                   multiDynA.aliases, multiDynB.aliases):
-    instances_of_all_types[elem.nineml_type].add(elem)
+    instances_of_all_types[elem.nineml_type][elem._name] = elem
 
 
 all_types = {}
