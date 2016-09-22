@@ -65,7 +65,7 @@ class Definition(BaseReference):
                                 type(self._referred_to), type(doc_obj)))
             except NineMLNameError:
                 document.add(self._referred_to)
-        return super(Definition, self).to_xml(document, E=E, **kwargs)
+        return super(Definition, self).to_xml(document, E=E, **kwargs) 
 
 
 class Prototype(Definition):

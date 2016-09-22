@@ -42,6 +42,11 @@ class BaseReference(BaseNineMLObject):
     def url(self):
         return self._url
 
+    @property
+    def _name(self):
+        return (self._referred_to._name +
+                self.url if self.url is not None else '') 
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False

@@ -215,6 +215,10 @@ class Concatenate(BaseULObject):
         return "Concatenate(%s)" % ", ".join(repr(item) for item in self.items)
 
     @property
+    def _name(self):
+        return '_'.join(i._name for i in self._items[:10])
+
+    @property
     def items(self):
         """Return a list of the items in the concatenation."""
         # should this perhaps flatten to a list of Populations, where the

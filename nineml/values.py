@@ -54,6 +54,10 @@ class SingleValue(BaseValue):
     def value(self):
         return self._value
 
+    @property
+    def _name(self):
+        return str(self._value)
+
     def __iter__(self):
         """Infinitely iterate the same value"""
         return itertools.repeat(self._value)
@@ -221,6 +225,10 @@ class ArrayValue(BaseValue):
     @property
     def values(self):
         return iter(self._values)
+
+    @property
+    def _name(self):
+        return str('_'.join(str(v) for v in self._values[:10]))
 
     def __eq__(self, other):
         try:
@@ -448,6 +456,10 @@ class RandomValue(BaseValue):
     def __float__(self):
         raise TypeError(
             "RandomValues cannot be converted to a single float")
+
+    @property
+    def _name(self):
+        return self._distribution.name
 
     def __eq__(self, other):
         try:
