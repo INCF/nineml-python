@@ -15,7 +15,7 @@ class TestComprehensiveXML(TestCase):
         shutil.rmtree(self._tmp_dir)
 
     def test_write_read_roundtrip(self):
-        for i, document in enumerate(instances_of_all_types['NineML']):
+        for i, document in enumerate(instances_of_all_types['NineML'].values()):
             doc = document.clone()
             url = os.path.join(self._tmp_dir, 'test{}.xml'.format(i))
             nineml.write(doc, url)

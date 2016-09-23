@@ -25,7 +25,7 @@ class TestAccessors(unittest.TestCase):
         for name, cls in all_types.iteritems():
             if hasattr(cls, 'defining_attributes'):
                 for attr_name in getattr(cls, 'defining_attributes'):
-                    for elem in instances_of_all_types[name]:
+                    for elem in instances_of_all_types[name].itervalues():
                         if (not isinstance(elem, basestring) and
                                 isinstance(elem, collections.Iterable)):
                             continue
@@ -50,7 +50,7 @@ class TestAccessors(unittest.TestCase):
         """
         for name, cls in all_types.iteritems():
             if hasattr(cls, 'class_to_member'):
-                for elem in instances_of_all_types[name]:
+                for elem in instances_of_all_types[name].values():
                     for member in cls.class_to_member:
                         num = elem._num_members(member, cls.class_to_member)
                         names = list(elem._member_names_iter(
@@ -151,7 +151,7 @@ class TestAccessors(unittest.TestCase):
         for cls_name in ('Dynamics', 'DynamicsProperties', 'MultiDynamics',
                          'MultiDynamicsProperties', 'Population', 'Selection'):
             cls = all_types[cls_name]
-            for elem in instances_of_all_types[cls_name]:
+            for elem in instances_of_all_types[cls_name].values():
                 for prefix in ('', 'receive_', 'send_', 'analog_', 'event_',
                                'analog_receive_', 'event_receive_',
                                'analog_reduce_'):
