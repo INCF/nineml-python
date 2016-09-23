@@ -1,12 +1,63 @@
 import unittest
-from nineml.user.selection import (Concatenate, accessor)
+from nineml.user.selection import (Concatenate, find_difference, combined_port_accessor, combined_port_accessor)
 from nineml.utils.testing.comprehensive import instances_of_all_types
 from nineml.exceptions import (NineMLNameError)
 
 
 class TestExceptions(unittest.TestCase):
 
+    def test_find_difference_exception(self):
+        """
+        line #: 30
+        message: errmsg
+
+        context:
+        --------
+def find_difference(this, that):
+    assert isinstance(that, this.__class__)
+    if this != that:
+        if isinstance(this, BaseULObject):
+            for attr in this.defining_attributes:
+                a = getattr(this, attr)
+                b = getattr(that, attr)
+                if a != b:
+                    if attr in this.children:
+                        find_difference(a, b)
+                    else:
+                        errmsg = ("'%s' attribute of %s instance '%s' differs:"
+                                  " '%r' != '%r'" % (attr,
+                                                     this.__class__.__name__,
+                                                     this.name, a, b))
+                        if type(a) != type(b):
+                            errmsg += "(%s, %s)" % (type(a), type(b))
+        """
+
+        self.assertRaises(
+            Exception,
+            find_difference,
+            this=None,
+            that=None)
+
     def test_accessor_ninemlnameerror(self):
+        """
+        line #: 43
+        message: '{}' {} is not present in all populations '{}' of the selection
+
+        context:
+        --------
+def combined_port_accessor(population_accessor):
+    def accessor(self, name):
+        try:
+            ports = [population_accessor(p, name) for p in self.populations]
+        except NineMLNameError:
+        """
+
+        self.assertRaises(
+            NineMLNameError,
+            combined_port_accessor(population_accessor=None),
+            name=None)
+
+    def test_accessor_ninemlnameerror2(self):
         """
         line #: 50
         message: {} '{}' in populations '{}' are not equivalent
@@ -29,7 +80,7 @@ def combined_port_accessor(population_accessor):
 
         self.assertRaises(
             NineMLNameError,
-            accessor,
+            combined_port_accessor(population_accessor=None),
             name=None)
 
 

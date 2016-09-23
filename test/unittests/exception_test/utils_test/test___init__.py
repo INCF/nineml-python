@@ -1,7 +1,7 @@
 import unittest
-from nineml.utils.__init__ import (LocationMgr, _dispatch_error_func, expect_single, expect_single, expect_none_or_single, expect_none_or_single, invert_dictionary, flatten_first_level, flatten_first_level, flatten_first_level, check_list_contain_same_items, safe_dict, safe_dict, ensure_iterable, ensure_valid_identifier)
+from nineml.utils.__init__ import (LocationMgr, _dispatch_error_func, _dispatch_error_func, _dispatch_error_func, _dispatch_error_func, expect_single, expect_single, expect_none_or_single, expect_none_or_single, invert_dictionary, flatten_first_level, flatten_first_level, flatten_first_level, check_list_contain_same_items, safe_dict, safe_dict, ensure_iterable, ensure_valid_identifier)
 from nineml.utils.testing.comprehensive import instances_of_all_types
-from nineml.exceptions import (error_func, NineMLRuntimeError)
+from nineml.exceptions import (error_func, default_error, NineMLRuntimeError)
 
 
 class TestExceptions(unittest.TestCase):
@@ -25,6 +25,95 @@ def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
 
         self.assertRaises(
             error_func,
+            _dispatch_error_func,
+            error_func=None,
+            default_error=NineMLRuntimeError())
+
+    def test__dispatch_error_func_ninemlruntimeerror(self):
+        """
+        line #: 35
+        message: error_func
+
+        context:
+        --------
+def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
+    \"\"\"Internal function for dispatching errors.
+
+    This was seperated out because it happens in a lot of utility functions
+    \"\"\"
+
+    if error_func:
+        if isinstance(error_func, Exception):
+            raise error_func
+        elif isinstance(error_func, basestring):
+        """
+
+        self.assertRaises(
+            NineMLRuntimeError,
+            _dispatch_error_func,
+            error_func=None,
+            default_error=NineMLRuntimeError())
+
+    def test__dispatch_error_func_default_error(self):
+        """
+        line #: 41
+        message: 
+
+        context:
+        --------
+def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
+    \"\"\"Internal function for dispatching errors.
+
+    This was seperated out because it happens in a lot of utility functions
+    \"\"\"
+
+    if error_func:
+        if isinstance(error_func, Exception):
+            raise error_func
+        elif isinstance(error_func, basestring):
+            raise NineMLRuntimeError(error_func)
+        else:
+            error_func()
+            internal_error('error_func failed to raise Exception')
+    else:
+        if isinstance(default_error, Exception):
+        """
+
+        self.assertRaises(
+            default_error,
+            _dispatch_error_func,
+            error_func=None,
+            default_error=NineMLRuntimeError())
+
+    def test__dispatch_error_func_ninemlruntimeerror2(self):
+        """
+        line #: 43
+        message: default_error
+
+        context:
+        --------
+def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
+    \"\"\"Internal function for dispatching errors.
+
+    This was seperated out because it happens in a lot of utility functions
+    \"\"\"
+
+    if error_func:
+        if isinstance(error_func, Exception):
+            raise error_func
+        elif isinstance(error_func, basestring):
+            raise NineMLRuntimeError(error_func)
+        else:
+            error_func()
+            internal_error('error_func failed to raise Exception')
+    else:
+        if isinstance(default_error, Exception):
+            raise default_error
+        elif isinstance(default_error, basestring):
+        """
+
+        self.assertRaises(
+            NineMLRuntimeError,
             _dispatch_error_func,
             error_func=None,
             default_error=NineMLRuntimeError())

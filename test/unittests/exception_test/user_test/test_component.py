@@ -1,7 +1,7 @@
 import unittest
 from nineml.user.component import (Definition, DynamicsProperties, Component)
 from nineml.utils.testing.comprehensive import instances_of_all_types
-from nineml.exceptions import (NineMLUnitMismatchError, NineMLRuntimeError)
+from nineml.exceptions import (NineMLUnitMismatchError, NineMLNameError, NineMLRuntimeError)
 
 
 class TestDefinitionExceptions(unittest.TestCase):
@@ -18,6 +18,34 @@ class TestDefinitionExceptions(unittest.TestCase):
             BaseNineMLObject.__init__(self)
             self._referred_to = args[0]
             if kwargs:
+        """
+
+        definition = next(instances_of_all_types['Definition'].itervalues())
+        self.assertRaises(
+            NineMLRuntimeError,
+            definition.__init__)
+
+    def test___init___ninemlruntimeerror2(self):
+        """
+        line #: 44
+        message: Wrong number of arguments ({}), provided to Definition __init__, can either be one (the component class) or zero
+
+        context:
+        --------
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1:
+            BaseNineMLObject.__init__(self)
+            self._referred_to = args[0]
+            if kwargs:
+                raise NineMLRuntimeError(
+                    "Cannot provide name, document or url arguments with "
+                    "explicit component class")
+            self._url = None
+        elif not args:
+            super(Definition, self).__init__(
+                name=kwargs['name'], document=kwargs['document'],
+                url=kwargs['url'])
+        else:
         """
 
         definition = next(instances_of_all_types['Definition'].itervalues())
@@ -51,6 +79,25 @@ class TestDefinitionExceptions(unittest.TestCase):
 
 class TestDynamicsPropertiesExceptions(unittest.TestCase):
 
+    def test_check_initial_values_exception(self):
+        """
+        line #: 520
+        message: BinOp(left=Str(s='Initial value not specified for %s'), op=Mod(), right=Attribute(value=Name(id='var', ctx=Load()), attr='name', ctx=Load()))
+
+        context:
+        --------
+    def check_initial_values(self):
+        for var in self.definition.component_class.state_variables:
+            try:
+                initial_value = self.initial_value(var.name)
+            except KeyError:
+        """
+
+        dynamicsproperties = next(instances_of_all_types['DynamicsProperties'].itervalues())
+        self.assertRaises(
+            Exception,
+            dynamicsproperties.check_initial_values)
+
     def test_check_initial_values_ninemlruntimeerror(self):
         """
         line #: 526
@@ -76,8 +123,125 @@ class TestDynamicsPropertiesExceptions(unittest.TestCase):
             NineMLRuntimeError,
             dynamicsproperties.check_initial_values)
 
+    def test_initial_value_ninemlnameerror(self):
+        """
+        line #: 554
+        message: No initial value named '{}' in component class
+
+        context:
+        --------
+    def initial_value(self, name):
+        try:
+            return self._initial_values[name]
+        except KeyError:
+            try:
+                return self.definition.component.initial_value(name)
+            except AttributeError:
+        """
+
+        dynamicsproperties = next(instances_of_all_types['DynamicsProperties'].itervalues())
+        self.assertRaises(
+            NineMLNameError,
+            dynamicsproperties.initial_value,
+            name=None)
+
+    def test_set_ninemlnameerror(self):
+        """
+        line #: 565
+        message: '{}' Dynamics does not have a Parameter or StateVariable named '{}'
+
+        context:
+        --------
+    def set(self, prop):
+        try:
+            super(DynamicsProperties, self).set(prop)
+        except NineMLNameError:
+            try:
+                state_variable = self.component_class.state_variable(prop.name)
+            except NineMLNameError:
+        """
+
+        dynamicsproperties = next(instances_of_all_types['DynamicsProperties'].itervalues())
+        self.assertRaises(
+            NineMLNameError,
+            dynamicsproperties.set,
+            prop=None)
+
+    def test_set_ninemlunitmismatcherror(self):
+        """
+        line #: 569
+        message: Dimensions for '{}' property ('{}') don't match that of component_class class ('{}').
+
+        context:
+        --------
+    def set(self, prop):
+        try:
+            super(DynamicsProperties, self).set(prop)
+        except NineMLNameError:
+            try:
+                state_variable = self.component_class.state_variable(prop.name)
+            except NineMLNameError:
+                raise NineMLNameError(
+                    "'{}' Dynamics does not have a Parameter or StateVariable "
+                    "named '{}'".format(self.component_class.name, prop.name))
+            if prop.units.dimension != state_variable.dimension:
+        """
+
+        dynamicsproperties = next(instances_of_all_types['DynamicsProperties'].itervalues())
+        self.assertRaises(
+            NineMLUnitMismatchError,
+            dynamicsproperties.set,
+            prop=None)
+
 
 class TestComponentExceptions(unittest.TestCase):
+
+    def test___init___valueerror(self):
+        """
+        line #: 150
+        message: 'definition' must be either a 'Definition' or 'Prototype' element
+
+        context:
+        --------
+    def __init__(self, name, definition, properties={}, document=None):
+        \"\"\"
+        Create a new component_class with the given name, definition and
+        properties, or create a prototype to another component_class that will
+        be resolved later.
+        \"\"\"
+        ensure_valid_identifier(name)
+        self._name = name
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self, document)
+        ContainerObject.__init__(self)
+        if isinstance(definition, basestring):
+            if "#" in definition:
+                defn_url, name = definition.split("#")
+            else:
+                defn_url, name = definition, path.basename(
+                    definition).replace(".xml", "")
+            definition = Definition(
+                name=name,
+                document=document,
+                url=defn_url)
+        elif (isinstance(definition, ComponentClass) or
+              definition.nineml_type in ('Dynamics', 'MultiDynamics')):
+            definition = Definition(definition)
+        elif (isinstance(definition, Component) or
+              definition.nineml_type in ('DynamicsProperties',
+                                         'MultiDynamicsProperties')):
+            definition = Prototype(definition)
+        elif definition.nineml_type not in ('Definition', 'Prototype'):
+        """
+
+        component = next(instances_of_all_types['Component'].itervalues())
+        self.assertRaises(
+            ValueError,
+            component.__init__,
+            name=None,
+            definition=None,
+            properties={},
+            document=None)
 
     def test_set_ninemlunitmismatcherror(self):
         """
@@ -173,4 +337,26 @@ class TestComponentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             component.check_properties)
+
+    def test_property_ninemlnameerror(self):
+        """
+        line #: 380
+        message: No property named '{}' in component class
+
+        context:
+        --------
+    def property(self, name):
+        try:
+            return self._properties[name]
+        except KeyError:
+            try:
+                return self.definition.component.property(name)
+            except AttributeError:
+        """
+
+        component = next(instances_of_all_types['Component'].itervalues())
+        self.assertRaises(
+            NineMLNameError,
+            component.property,
+            name=None)
 

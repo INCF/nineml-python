@@ -1,7 +1,7 @@
 import unittest
 from nineml.abstraction.dynamics.transitions import (Trigger, Transition, OutputEvent, OnEvent)
 from nineml.utils.testing.comprehensive import instances_of_all_types
-from nineml.exceptions import (NineMLNoSolutionException, NineMLRuntimeError)
+from nineml.exceptions import (NineMLNoSolutionException, NineMLInvalidElementTypeException, NineMLRuntimeError)
 
 
 class TestTriggerExceptions(unittest.TestCase):
@@ -43,6 +43,70 @@ class TestTriggerExceptions(unittest.TestCase):
             solution = sympy.solvers.solve(equality, t)
             try:
                 if len(solution) != 1:
+        """
+
+        self.assertRaises(
+            NineMLNoSolutionException,
+            Trigger._becomes_true,
+            expr=None)
+
+    def test__becomes_true_ninemlnosolutionexception3(self):
+        """
+        line #: 479
+        message: 
+
+        context:
+        --------
+    def _becomes_true(cls, expr):
+        if t not in expr.atoms():
+            # TODO: For sub expressions that don't involve t, this could be
+            #       handled by a piecewise expression
+            raise NineMLNoSolutionException
+        if isinstance(expr, (sympy.StrictGreaterThan,
+                             sympy.StrictLessThan)):
+            # Get the equation for the transition between true and false
+            equality = sympy.Eq(*expr.args)
+            solution = sympy.solvers.solve(equality, t)
+            try:
+                if len(solution) != 1:
+                    raise NineMLNoSolutionException
+            except TypeError:
+        """
+
+        self.assertRaises(
+            NineMLNoSolutionException,
+            Trigger._becomes_true,
+            expr=None)
+
+    def test__becomes_true_ninemlnosolutionexception4(self):
+        """
+        line #: 487
+        message: 
+
+        context:
+        --------
+    def _becomes_true(cls, expr):
+        if t not in expr.atoms():
+            # TODO: For sub expressions that don't involve t, this could be
+            #       handled by a piecewise expression
+            raise NineMLNoSolutionException
+        if isinstance(expr, (sympy.StrictGreaterThan,
+                             sympy.StrictLessThan)):
+            # Get the equation for the transition between true and false
+            equality = sympy.Eq(*expr.args)
+            solution = sympy.solvers.solve(equality, t)
+            try:
+                if len(solution) != 1:
+                    raise NineMLNoSolutionException
+            except TypeError:
+                raise NineMLNoSolutionException
+            time_expr = solution[0]
+        elif isinstance(expr, sympy.Or):
+            time_expr = sympy.Min(*(cls._becomes_true(a) for a in expr.args))
+        else:
+            # TODO: Should add handling for And expressions but will need
+            # conditional handling for expressions that are true and then
+            # become false.
         """
 
         self.assertRaises(
@@ -98,6 +162,48 @@ class TestTransitionExceptions(unittest.TestCase):
         transition = next(instances_of_all_types['Transition'].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             print transition.source_regime
+
+    def test_add_ninemlinvalidelementtypeexception(self):
+        """
+        line #: 306
+        message: Could not add element of type '{}' to {} class
+
+        context:
+        --------
+    def add(self, element):
+        if isinstance(element, StateAssignment):
+            self._state_assignments[element.name] = element
+        elif isinstance(element, OutputEvent):
+            self._output_events[element.name] = element
+        else:
+        """
+
+        transition = next(instances_of_all_types['Transition'].itervalues())
+        self.assertRaises(
+            NineMLInvalidElementTypeException,
+            transition.add,
+            element=None)
+
+    def test_remove_ninemlinvalidelementtypeexception(self):
+        """
+        line #: 316
+        message: Could not remove element of type '{}' to {} class
+
+        context:
+        --------
+    def remove(self, element):
+        if isinstance(element, StateAssignment):
+            self._state_assignments.pop(element.name)
+        elif isinstance(element, OutputEvent):
+            self._output_events.pop(element.name)
+        else:
+        """
+
+        transition = next(instances_of_all_types['Transition'].itervalues())
+        self.assertRaises(
+            NineMLInvalidElementTypeException,
+            transition.remove,
+            element=None)
 
 
 class TestOutputEventExceptions(unittest.TestCase):
