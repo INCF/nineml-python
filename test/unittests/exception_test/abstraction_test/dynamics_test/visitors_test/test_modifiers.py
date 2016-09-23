@@ -26,6 +26,43 @@ class TestDynamicsPortModifierExceptions(unittest.TestCase):
             port_name=None,
             value='0')
 
+    def test_close_analog_port_typeerror(self):
+        """
+        line #: 78
+        message: Expected an analog port
+
+        context:
+        --------
+    def close_analog_port(cls, component_class, port_name, value="0"):
+        \"\"\"Closes an incoming analog port by assigning its value to 0\"\"\"
+
+        if not component_class.is_flat():
+            raise NineMLRuntimeError('close_analog_port() on non-flat '
+                                     'component_class')
+
+        # Subsitute the value in:
+        component_class.accept_visitor(cls._ExpandPortDefinition(port_name,
+                                                                value))
+
+        # Remove it from the list of ports:
+        port = filter_expect_single(component_class.analog_ports,
+                                    lambda ap: ap.name == port_name)
+        if isinstance(port, AnalogSendPort):
+            component_class._analog_send_ports.pop(port_name)
+        elif isinstance(port, AnalogReceivePort):
+            component_class._analog_receive_ports.pop(port_name)
+        elif isinstance(port, AnalogReducePort):
+            component_class._analog_reduce_ports.pop(port_name)
+        else:
+        """
+
+        self.assertRaises(
+            TypeError,
+            DynamicsPortModifier.close_analog_port,
+            component_class=None,
+            port_name=None,
+            value='0')
+
     def test_close_all_reduce_ports_ninemlruntimeerror(self):
         """
         line #: 87

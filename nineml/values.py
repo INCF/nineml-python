@@ -260,7 +260,7 @@ class ArrayValue(BaseValue):
         try:
             return ArrayValue(1.0 / self._values)
         except AttributeError:
-            raise ArrayValue(1.0 / v for v in self._values)
+            return ArrayValue(1.0 / v for v in self._values)
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
