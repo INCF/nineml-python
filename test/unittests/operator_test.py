@@ -15,7 +15,7 @@ from nineml import units as un
 
 single_values = instances_of_all_types['SingleValue'].values()
 
-div_ops = (div, truediv, floordiv, mod, idiv, itruediv, imod)
+div_ops = (div, truediv, floordiv, mod, idiv, itruediv, ifloordiv, imod)
 uniary_ops = [neg, abs, inv]
 
 
@@ -220,7 +220,7 @@ class TestValues(unittest.TestCase):
                         np_val = abs(np_val)
                     else:
                         val = round(val)
-                    val = val / 10. ** round(math.log10(abs(val)))
+                    val = abs(val) / 10. ** round(math.log10(abs(val)))
                 elif op in div_ops and float(val) == 0.0:
                     val = SingleValue(0.1)
                 vv_result = op(array_val, val)
@@ -522,9 +522,11 @@ class TestQuantities(unittest.TestCase):
                     qty = next(qty_iter)
                     while qty.value.nineml_type == 'RandomValue':
                         qty = next(qty_iter)
+                    if op in div_ops:
+                        qty._value = qty.value ** 2 + 0.1  # Ensure that not 0
                     val = qty.value
-                    units = op(result.units, qty.units)
                     len_val = len(val)
+                    units = op(result.units, qty.units)
                 op_str = ("{}({}, {})".format(op.__name__, result, qty))
                 if len(result.value):
                     if len_val:

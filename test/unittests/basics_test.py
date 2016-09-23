@@ -191,7 +191,7 @@ class TestRepr(unittest.TestCase):
 
     def test_repr(self):
         for name, elems in instances_of_all_types.iteritems():
-            for elem in elems:
+            for elem in elems.itervalues():
                 if name == 'NineMLDocument':
                     self.assertTrue(repr(elem).startswith('Document'))
                 else:
