@@ -13,7 +13,7 @@ from sympy import sympify, Basic as SympyBaseClass, Symbol
 from nineml.abstraction.expressions import Expression, Alias
 from nineml import units as un
 
-single_values = instances_of_all_types['SingleValue']
+single_values = instances_of_all_types['SingleValue'].values()
 
 div_ops = (div, truediv, floordiv, mod, idiv, itruediv, imod)
 uniary_ops = [neg, abs, inv]
@@ -69,7 +69,7 @@ class TestValues(unittest.TestCase):
                                   op_str + " did not return a SingleValue")
 
     def test_array_value_operators(self):
-        for array_val in instances_of_all_types['ArrayValue']:
+        for array_val in instances_of_all_types['ArrayValue'].values():
             np_val = numpy.asarray(array_val)
             np_array_val = ArrayValue(numpy.asarray(array_val))
             val_iter = cycle(single_values)
@@ -204,7 +204,7 @@ class TestValues(unittest.TestCase):
             val = vv_result
 
     def test_array_value_inline_operators(self):
-        for array_val in instances_of_all_types['ArrayValue']:
+        for array_val in instances_of_all_types['ArrayValue'].values():
             np_val = numpy.asarray(array_val)
             np_array_val = ArrayValue(numpy.asarray(array_val))
             for i, (op, val) in enumerate(zip(
@@ -275,10 +275,10 @@ class TestExpressions(unittest.TestCase):
     logical_ops = [and_, or_, inv, or_, inv, or_, and_]
     iops = [iadd, idiv, imul, ipow, isub, itruediv]
 
-    named_expressions = list(chain(*(
-        instances_of_all_types[t] for t in ('Alias', 'StateAssignment'))))
-    logical_expressions = instances_of_all_types['Trigger']
-    anonymous_expressions = instances_of_all_types['TimeDerivative']
+    named_expressions = list(chain(*(instances_of_all_types[t].values()
+                                     for t in ('Alias', 'StateAssignment'))))
+    logical_expressions = instances_of_all_types['Trigger'].values()
+    anonymous_expressions = instances_of_all_types['TimeDerivative'].values()
     expressions = list(chain(named_expressions, anonymous_expressions))
 
     def test_anonymous_expression_operators(self):
@@ -418,8 +418,8 @@ class TestUnits(unittest.TestCase):
 
     def test_dimension_operators(self):
         result = un.dimensionless  # Arbitrary starting expression
-        dim_iter = cycle(instances_of_all_types['Dimension'])
-        val_iter = cycle(instances_of_all_types['SingleValue'])
+        dim_iter = cycle(instances_of_all_types['Dimension'].values())
+        val_iter = cycle(instances_of_all_types['SingleValue'].values())
         for op in self.ops:
             if op is pow:
                 val = int(next(val_iter) * 10)
@@ -448,8 +448,8 @@ class TestUnits(unittest.TestCase):
 
     def test_unit_unit_operators(self):
         result = un.unitless  # Arbitrary starting expression
-        unit_iter = cycle(instances_of_all_types['Unit'])
-        val_iter = cycle(instances_of_all_types['SingleValue'])
+        unit_iter = cycle(instances_of_all_types['Unit'].values())
+        val_iter = cycle(instances_of_all_types['SingleValue'].values())
         for op in self.ops:
             if op is pow:
                 val = int(next(val_iter) * 10)
@@ -493,8 +493,8 @@ class TestQuantities(unittest.TestCase):
 
     def test_quantities_operators(self):
         result = un.Quantity(1.0, un.unitless)  # Arbitrary starting expression
-        val_iter = cycle(instances_of_all_types['SingleValue'])
-        qty_iter = cycle(instances_of_all_types['Quantity'])
+        val_iter = cycle(instances_of_all_types['SingleValue'].values())
+        qty_iter = cycle(instances_of_all_types['Quantity'].values())
         for op in self.ops:
             if op in uniary_ops:
                 if len(result.value):
