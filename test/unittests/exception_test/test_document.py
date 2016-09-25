@@ -58,7 +58,8 @@ class TestDocumentExceptions(unittest.TestCase):
     def test_add_ninemlruntimeerror(self):
         """
         line #: 66
-        message: Could not add {} to document '{}' as it is not a 'document level NineML object' ('{}')
+        message: Could not add {} to document '{}' as it is not a 'document
+        level NineML object' ('{}')
         """
         document = next(
             instances_of_all_types[Document.nineml_type].itervalues())
@@ -70,7 +71,8 @@ class TestDocumentExceptions(unittest.TestCase):
     def test_add_ninemlnameerror(self):
         """
         line #: 75
-        message: Could not add element '{}' as an element with that name already exists in the document '{}'
+        message: Could not add element '{}' as an element with that name
+        already exists in the document '{}'
 
         context:
         --------
@@ -98,7 +100,9 @@ class TestDocumentExceptions(unittest.TestCase):
     def test_add_ninemlnameerror2(self):
         """
         line #: 84
-        message: Attempting to add the same object '{}' {} to '{}' document when it is already in '{}'. Please remove it from the original document first
+        message: Attempting to add the same object '{}' {} to '{}'
+        document when it is already in '{}'. Please remove it from the original
+        document first
 
         context:
         --------
