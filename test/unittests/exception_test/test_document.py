@@ -1,107 +1,71 @@
 import unittest
-from nineml.document import (Document, read_xml, read_xml, get_component_class_type)
+from nineml.document import (Document, read_xml, get_component_class_type)
 from nineml.utils.testing.comprehensive import instances_of_all_types
-from nineml.exceptions import (NineMLXMLError, NineMLNameError, NineMLRuntimeError)
+from nineml.exceptions import (NineMLXMLError, NineMLNameError,
+                               NineMLRuntimeError)
+from tempfile import mkdtemp
+import os.path
+from nineml.xml import Ev1
+from nineml.abstraction.dynamics import Trigger
+import shutil
 
 
-class TestExceptions(unittest.TestCase):
+class TestDocumentExceptions(unittest.TestCase):
+
+    def setUp(self):
+        self._temp_dir = mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self._temp_dir)
 
     def test_read_xml_ninemlruntimeerror(self):
         """
         line #: 582
-        message: Could not read 9ML URL '{}': 
-{}
-
-        context:
-        --------
-def read_xml(url, relative_to):
-    if url.startswith('.') and relative_to:
-        url = os.path.abspath(os.path.join(relative_to, url))
-    try:
-        if not isinstance(url, file):
-            try:
-                with contextlib.closing(urlopen(url)) as f:
-                    xml = etree.parse(f)
-            except IOError, e:
+        message: Could not read 9ML URL '{}': {}
         """
 
         self.assertRaises(
             NineMLRuntimeError,
             read_xml,
-            url=None,
-            relative_to=None)
+            url='http://this_is_a_bad_url.html',
+            relative_to='/a_file.xml')
 
     def test_read_xml_ninemlruntimeerror2(self):
         """
         line #: 587
-        message: Could not parse XML of 9ML file '{}': 
- {}
-
-        context:
-        --------
-def read_xml(url, relative_to):
-    if url.startswith('.') and relative_to:
-        url = os.path.abspath(os.path.join(relative_to, url))
-    try:
-        if not isinstance(url, file):
-            try:
-                with contextlib.closing(urlopen(url)) as f:
-                    xml = etree.parse(f)
-            except IOError, e:
-                raise NineMLRuntimeError("Could not read 9ML URL '{}': \n{}"
-                                         .format(url, e))
-        else:
-            xml = etree.parse(url)
-    except etree.LxmlError, e:
+        message: Could not parse XML of 9ML file '{}': {}
         """
-
+        bad_xml_path = os.path.join(self._temp_dir, 'bad_xml.xml')
+        with open(bad_xml_path, 'w') as f:
+            f.write("this file doesn't contain xml")
         self.assertRaises(
             NineMLRuntimeError,
             read_xml,
-            url=None,
-            relative_to=None)
+            url=bad_xml_path,
+            relative_to='/a_file.xml')
 
     def test_get_component_class_type_ninemlxmlerror(self):
         """
         line #: 607
         message: No type defining block in ComponentClass
-
-        context:
-        --------
-def get_component_class_type(elem):
-    if elem.findall(NINEMLv1 + 'Dynamics'):
-        cls = nineml.Dynamics
-    elif elem.findall(NINEMLv1 + 'ConnectionRule'):
-        cls = nineml.ConnectionRule
-    elif elem.findall(NINEMLv1 + 'RandomDistribution'):
-        cls = nineml.RandomDistribution
-    else:
         """
-
+        elem = Ev1.ComponentClass(name="a")
         self.assertRaises(
             NineMLXMLError,
             get_component_class_type,
-            elem=None)
-
-
-class TestDocumentExceptions(unittest.TestCase):
+            elem=elem)
 
     def test_add_ninemlruntimeerror(self):
         """
         line #: 66
         message: Could not add {} to document '{}' as it is not a 'document level NineML object' ('{}')
-
-        context:
-        --------
-    def add(self, element):
-        if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
         """
-
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(
+            instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.add,
-            element=None)
+            element=Trigger('a > b'))
 
     def test_add_ninemlnameerror(self):
         """
@@ -123,11 +87,13 @@ class TestDocumentExceptions(unittest.TestCase):
             if element is not self[element.name]:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = instances_of_all_types[Document.nineml_type]['doc1']
+        dynB = instances_of_all_types['Dynamics']['dynA'].clone()
+        dynB._name = 'dynB'
         self.assertRaises(
             NineMLNameError,
             document.add,
-            element=None)
+            element=dynB)
 
     def test_add_ninemlnameerror2(self):
         """
@@ -158,7 +124,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 else:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLNameError,
             document.add,
@@ -175,7 +141,7 @@ class TestDocumentExceptions(unittest.TestCase):
         if not isinstance(element, DocumentLevelObject):
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.remove,
@@ -200,7 +166,7 @@ class TestDocumentExceptions(unittest.TestCase):
             if not ignore_missing:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLNameError,
             document.remove,
@@ -228,7 +194,7 @@ class TestDocumentExceptions(unittest.TestCase):
         except KeyError:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLNameError,
             document.__getitem__,
@@ -250,7 +216,7 @@ class TestDocumentExceptions(unittest.TestCase):
         if unloaded in self._loading:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document._load_elem_from_xml,
@@ -288,7 +254,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 if unit != self[unit.name]:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.standardize_units)
@@ -336,7 +302,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 if dimension != self[dimension.name]:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.standardize_units)
@@ -783,7 +749,7 @@ class TestDocumentExceptions(unittest.TestCase):
         elif self.url != url:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
             document.write,
@@ -902,7 +868,7 @@ class TestDocumentExceptions(unittest.TestCase):
             if url is None:
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             document.url = None
 
@@ -926,7 +892,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 if doc_ref():
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             document.url = None
 
@@ -966,7 +932,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 if not isinstance(url, basestring):
         """
 
-        document = next(instances_of_all_types['Document'].itervalues())
+        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         with self.assertRaises(NineMLRuntimeError):
             document.url = None
 

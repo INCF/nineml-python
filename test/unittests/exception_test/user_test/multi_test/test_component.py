@@ -1,7 +1,8 @@
 import unittest
-from nineml.user.multi.component import (MultiDynamics, _MultiRegime, _MultiTransition, SubDynamicsProperties)
+from nineml.user.multi.component import (
+    MultiDynamics, _MultiRegime, _MultiTransition, SubDynamicsProperties)
 from nineml.utils.testing.comprehensive import instances_of_all_types
-from nineml.exceptions import (NineMLNameError, KeyError, NineMLRuntimeError)
+from nineml.exceptions import (NineMLNameError, NineMLRuntimeError)
 
 
 class TestMultiDynamicsExceptions(unittest.TestCase):

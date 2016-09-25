@@ -518,7 +518,7 @@ def add_with_sub_elements(element):
             add_with_sub_elements(elem)
 
 instances_of_all_types = defaultdict(dict)
-instances_of_all_types[document.nineml_type]['base'] = document
+instances_of_all_types[document.nineml_type]['doc1'] = document
 instances_of_all_types[Reference.nineml_type] = dict((r._name, r) for r in (
     Reference(o, document) for o in (
         'dynA', 'dynB', 'dynC', 'dynE', 'dynF', 'dynPropA', 'dynPropB',

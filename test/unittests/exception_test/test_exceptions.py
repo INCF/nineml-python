@@ -23,7 +23,6 @@ def name_error(accessor):
             type_name = ''.join(p.capitalize()
                                 for p in accessor.__name__.split('_'))
         """
-
         self.assertRaises(
             NineMLNameError,
             name_error(accessor=None),
