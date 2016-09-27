@@ -13,7 +13,10 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLXMLError)
 from nineml.base import BaseNineMLObject, DocumentLevelObject
 import contextlib
-from nineml.utils import expect_single, logger
+from nineml.utils import expect_single
+from logging import getLogger
+
+logger = getLogger('lib9ml')
 
 
 class Document(dict, BaseNineMLObject):
@@ -81,7 +84,7 @@ class Document(dict, BaseNineMLObject):
                 if element.document is None:
                     element._document = self  # Set its document to this one
                 else:
-                    raise NineMLNameError(
+                    raise NineMLRuntimeError(
                         "Attempting to add the same object '{}' {} to '{}' "
                         "document when it is already in '{}'. Please "
                         "remove it from the original document first"
@@ -95,7 +98,8 @@ class Document(dict, BaseNineMLObject):
         if not isinstance(element, DocumentLevelObject):
             raise NineMLRuntimeError(
                 "Could not remove {} from document as it is not a document "
-                "level NineML object ('{}') ".format(element.nineml_type))
+                "level NineML object ('{}') ".format(element._name,
+                                                     element.nineml_type))
         try:
             del self[element.name]
         except KeyError:

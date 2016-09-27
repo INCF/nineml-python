@@ -64,6 +64,9 @@ class ConnectionRule(ComponentClass):
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
+    def clone(self):
+        return ConnectionRuleCloner().visit(self)
+
     def dimension_of(self, element):
         try:
             resolver = self._dimension_resolver
@@ -109,6 +112,7 @@ from .visitors.queriers import (  # @IgnorePep8
     ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder,
     ConnectionRuleExpressionExtractor, ConnectionRuleDimensionResolver)
 from .visitors.validators import ConnectionRuleValidator  # @IgnorePep8
+from .visitors.cloner import ConnectionRuleCloner  # @IgnorePep8
 from .visitors.xml import (  # @IgnorePep8
     ConnectionRuleXMLLoader, ConnectionRuleXMLWriter)
 
@@ -116,6 +120,10 @@ from .visitors.xml import (  # @IgnorePep8
 one_to_one_connection_rule = ConnectionRule(
     name='one_to_one',
     standard_library=(ConnectionRule.standard_library_basepath + 'OneToOne'))
+
+all_to_all_connection_rule = ConnectionRule(
+    name='all_to_all',
+    standard_library=(ConnectionRule.standard_library_basepath + 'AllToAll'))
 
 explicit_connection_rule = ConnectionRule(
     name='explicit',
@@ -126,3 +134,23 @@ explicit_connection_rule = ConnectionRule(
         Parameter(dimension=un.dimensionless,
                   name="sourceIndices")])
 
+probabilistic_rule = ConnectionRule(
+    name='probabilistic',
+    standard_library=(ConnectionRule.standard_library_basepath +
+                      'Probabilistic'),
+    parameters=[Parameter(dimension=un.dimensionless,
+                          name='probability')])
+
+random_fan_in_rule = ConnectionRule(
+    name='random_fan_in',
+    standard_library=(ConnectionRule.standard_library_basepath +
+                      'RandomFanIn'),
+    parameters=[Parameter(dimension=un.dimensionless,
+                          name='number')])
+
+random_fan_out_rule = ConnectionRule(
+    name='random_fan_out',
+    standard_library=(ConnectionRule.standard_library_basepath +
+                      'RandomFanOut'),
+    parameters=[Parameter(dimension=un.dimensionless,
+                          name='number')])

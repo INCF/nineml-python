@@ -470,7 +470,7 @@ netB = Network(
     populations=[popC, popD],
     projections=[projB])
 
-document = Document(
+doc1 = Document(
     dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, multiDynPropA,
     multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
     selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA,
@@ -518,9 +518,9 @@ def add_with_sub_elements(element):
             add_with_sub_elements(elem)
 
 instances_of_all_types = defaultdict(dict)
-instances_of_all_types[document.nineml_type]['doc1'] = document
+instances_of_all_types[doc1.nineml_type]['doc1'] = doc1
 instances_of_all_types[Reference.nineml_type] = dict((r._name, r) for r in (
-    Reference(o, document) for o in (
+    Reference(o, doc1) for o in (
         'dynA', 'dynB', 'dynC', 'dynE', 'dynF', 'dynPropA', 'dynPropB',
         'dynPropC', 'multiDynPropA', 'multiDynPropB', 'ranDistrA',
         'ranDistrPropA', 'popA', 'popB', 'popC', 'popD', 'popE', 'selA',
@@ -528,7 +528,7 @@ instances_of_all_types[Reference.nineml_type] = dict((r._name, r) for r in (
         'projD', 'projE')))
 instances_of_all_types[Annotations.nineml_type]['example'] = (
     Annotations(test1='value1', test2='value2'))
-for elem in document.itervalues():
+for elem in doc1.itervalues():
     add_with_sub_elements(elem)
 # Add remaining elements that are not picked up by recursive
 # search
