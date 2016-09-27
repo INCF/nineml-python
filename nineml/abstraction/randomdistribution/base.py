@@ -51,6 +51,9 @@ class RandomDistribution(ComponentClass):
     def required_for(self, expressions):
         return RandomDistributionRequiredDefinitions(self, expressions)
 
+    def clone(self):
+        return RandomDistributionCloner().visit(self)
+
     def dimension_of(self, element):
         try:
             resolver = self._dimension_resolver
@@ -81,12 +84,13 @@ class RandomDistribution(ComponentClass):
         return RandomDistributionXMLLoader(
             document).load_randomdistributionclass(element)
 
-from .visitors.modifiers import(
+from .visitors.modifiers import(  # @IgnorePep8
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
-from .visitors.queriers import (RandomDistributionRequiredDefinitions,
+from .visitors.queriers import (RandomDistributionRequiredDefinitions,  # @IgnorePep8
                                 RandomDistributionElementFinder,
                                 RandomDistributionExpressionExtractor,
                                 RandomDistributionDimensionResolver)
-from .visitors.validators import RandomDistributionValidator
-from .visitors.xml import (
+from .visitors.validators import RandomDistributionValidator  # @IgnorePep8
+from .visitors.cloner import RandomDistributionCloner  # @IgnorePep8
+from .visitors.xml import (  # @IgnorePep8
     RandomDistributionXMLLoader, RandomDistributionXMLWriter)

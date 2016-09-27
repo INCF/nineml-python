@@ -1,13 +1,18 @@
 import unittest
 from nineml.document import (Document, read_xml, get_component_class_type)
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.testing.comprehensive import (
+    instances_of_all_types, doc1, conPropB, dynPropA)
 from nineml.exceptions import (NineMLXMLError, NineMLNameError,
                                NineMLRuntimeError)
 from tempfile import mkdtemp
 import os.path
-from nineml.xml import Ev1
+from nineml.xml import Ev1, E
 from nineml.abstraction.dynamics import Trigger
 import shutil
+import nineml.units as un
+from nineml.user import (
+    DynamicsProperties, ConnectionRuleProperties, Definition)
+from nineml.abstraction.connectionrule import random_fan_in_rule
 
 
 class TestDocumentExceptions(unittest.TestCase):
@@ -61,11 +66,9 @@ class TestDocumentExceptions(unittest.TestCase):
         message: Could not add {} to document '{}' as it is not a 'document
         level NineML object' ('{}')
         """
-        document = next(
-            instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
-            document.add,
+            doc1.add,
             element=Trigger('a > b'))
 
     def test_add_ninemlnameerror(self):
@@ -73,192 +76,99 @@ class TestDocumentExceptions(unittest.TestCase):
         line #: 75
         message: Could not add element '{}' as an element with that name
         already exists in the document '{}'
-
-        context:
-        --------
-    def add(self, element):
-        if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
-            raise NineMLRuntimeError(
-                "Could not add {} to document '{}' as it is not a 'document "
-                "level NineML object' ('{}')"
-                .format(element.nineml_type, self.url,
-                        "', '".join(self.write_order)))
-        if element.name in self:
-            # Ignore if the element is already added (this can happen
-            # implictly when writing other elements that refer to this element)
-            if element is not self[element.name]:
         """
-
-        document = instances_of_all_types[Document.nineml_type]['doc1']
         dynB = instances_of_all_types['Dynamics']['dynA'].clone()
         dynB._name = 'dynB'
         self.assertRaises(
             NineMLNameError,
-            document.add,
+            doc1.add,
             element=dynB)
 
-    def test_add_ninemlnameerror2(self):
+    def test_add_ninemlruntimeerror2(self):
         """
         line #: 84
         message: Attempting to add the same object '{}' {} to '{}'
         document when it is already in '{}'. Please remove it from the original
         document first
-
-        context:
-        --------
-    def add(self, element):
-        if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
-            raise NineMLRuntimeError(
-                "Could not add {} to document '{}' as it is not a 'document "
-                "level NineML object' ('{}')"
-                .format(element.nineml_type, self.url,
-                        "', '".join(self.write_order)))
-        if element.name in self:
-            # Ignore if the element is already added (this can happen
-            # implictly when writing other elements that refer to this element)
-            if element is not self[element.name]:
-                raise NineMLNameError(
-                    "Could not add element '{}' as an element with that name "
-                    "already exists in the document '{}'"
-                    .format(element.name, self.url))
-        else:
-            if not isinstance(element, self._Unloaded):
-                if element.document is None:
-                    element._document = self  # Set its document to this one
-                else:
         """
 
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        doc1 = instances_of_all_types[Document.nineml_type]['doc1']
+        doc2 = Document()
         self.assertRaises(
-            NineMLNameError,
-            document.add,
-            element=None)
+            NineMLRuntimeError,
+            doc2.add,
+            element=doc1['dynA'])
 
     def test_remove_ninemlruntimeerror(self):
         """
         line #: 96
-        message: Could not remove {} from document as it is not a document level NineML object ('{}') 
-
-        context:
-        --------
-    def remove(self, element, ignore_missing=False):
-        if not isinstance(element, DocumentLevelObject):
+        message: Could not remove {} from document as it is not a document
+        level NineML object ('{}')
         """
-
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLRuntimeError,
-            document.remove,
-            element=None,
-            ignore_missing=False)
+            doc1.remove,
+            element=Trigger('a > b'))
 
     def test_remove_ninemlnameerror(self):
         """
         line #: 103
         message: Could not find '{}' element to remove from document '{}'
-
-        context:
-        --------
-    def remove(self, element, ignore_missing=False):
-        if not isinstance(element, DocumentLevelObject):
-            raise NineMLRuntimeError(
-                "Could not remove {} from document as it is not a document "
-                "level NineML object ('{}') ".format(element.nineml_type))
-        try:
-            del self[element.name]
-        except KeyError:
-            if not ignore_missing:
         """
-
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        conPropZZ = ConnectionRuleProperties(name='ZZ', definition=conPropB)
         self.assertRaises(
             NineMLNameError,
-            document.remove,
-            element=None,
+            doc1.remove,
+            element=conPropZZ,
             ignore_missing=False)
 
     def test___getitem___ninemlnameerror(self):
         """
         line #: 137
-        message: '{}' was not found in the NineML document {} (elements in the document were '{}').
-
-        context:
-        --------
-    def __getitem__(self, name):
-        \"\"\"
-        Returns the element referenced by the given name
-        \"\"\"
-        if name is None:
-            # This simplifies code in a few places where an optional
-            # attribute refers to a name of an object which
-            # should be resolved if present but be set to None if not.
-            return None
-        try:
-            elem = super(Document, self).__getitem__(name)
-        except KeyError:
+        message: '{}' was not found in the NineML document {} (elements in the
+        document were '{}').
         """
-
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
         self.assertRaises(
             NineMLNameError,
-            document.__getitem__,
-            name=None)
+            doc1.__getitem__,
+            name='ZZ')
 
     def test__load_elem_from_xml_ninemlruntimeerror(self):
         """
         line #: 217
-        message: Circular reference detected in '{}(name={})' element. Resolution stack was:
-
-
-        context:
-        --------
-    def _load_elem_from_xml(self, unloaded):
-        \"\"\"
-        Resolve an element from its XML description and store back in the
-        element dictionary
-        \"\"\"
-        if unloaded in self._loading:
+        message: Circular reference detected in '{}(name={})' element.
+        Resolution stack was:
         """
-
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        xml = E(Document.nineml_type,
+                E(DynamicsProperties.nineml_type,
+                  E(Definition.nineml_type, name="B"),
+                  name="A"),
+                E(DynamicsProperties.nineml_type,
+                  E(Definition.nineml_type, name="A"),
+                  name="B"))
+        document = Document.load(xml)
         self.assertRaises(
             NineMLRuntimeError,
             document._load_elem_from_xml,
-            unloaded=None)
+            unloaded=super(Document, document).__getitem__('A'))
 
     def test_standardize_units_ninemlruntimeerror(self):
         """
         line #: 257
-        message: Name of unit '{}' conflicts with existing object of differring value or type '{}' and '{}'
-
-        context:
-        --------
-    def standardize_units(self):
-        \"\"\"
-        Standardized the units into a single set (no duplicates). Used to avoid
-        naming conflicts when writing to file.
-        \"\"\"
-        # Get the set of all units and dimensions that are used in the document
-        # Note that Dimension & Unit objects are equal even if they have
-        # different names so when this set is traversed the dimension/unit will
-        # be substituted for the first equivalent dimension/unit.
-        all_units = set(chain(*[o.all_units for o in self.itervalues()]))
-        all_dimensions = set(chain(
-            [u.dimension for u in all_units],
-            *[o.all_dimensions for o in self.itervalues()]))
-        # Delete unused units from the document
-        for k, o in self.items():
-            if ((isinstance(o, nineml.Unit) and o not in all_units) or
-                (isinstance(o, nineml.Dimension) and
-                 o not in all_dimensions)):
-                del self[k]
-        # Add missing units and dimensions to the document
-        for unit in all_units:
-            if unit.name in self:
-                if unit != self[unit.name]:
+        message: Name of unit '{}' conflicts with existing object of differring
+        value or type '{}' and '{}'
         """
-
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        a = ConnectionRuleProperties(
+            name='A',
+            definition=random_fan_in_rule,
+            properties={'number': un.Unit(dimension=un.dimensionless, power=0,
+                                          name='U')})
+        b = ConnectionRuleProperties(
+            name='B',
+            definition=random_fan_in_rule,
+            properties={'number': un.Unit(dimension=un.dimensionless, power=1,
+                                          name='U')})
+        document = Document(a, b)
         self.assertRaises(
             NineMLRuntimeError,
             document.standardize_units)
@@ -305,8 +215,17 @@ class TestDocumentExceptions(unittest.TestCase):
             if dimension.name in self:
                 if dimension != self[dimension.name]:
         """
-
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        a = DynamicsProperties(
+            name='A',
+            definition=dynPropA,
+            properties={'P2': 1.0 * un.Unit(
+                name='U1', power=0, dimension=un.Dimension(t=1, name='D'))})
+        b = DynamicsProperties(
+            name='B',
+            definition=dynPropA,
+            properties={'P4': 1.0 * un.Unit(
+                name='U2', power=0, dimension=un.Dimension(i=1, name='D'))})
+        document = Document(a, b)
         self.assertRaises(
             NineMLRuntimeError,
             document.standardize_units)
@@ -753,10 +672,10 @@ class TestDocumentExceptions(unittest.TestCase):
         elif self.url != url:
         """
 
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        
         self.assertRaises(
             NineMLRuntimeError,
-            document.write,
+            doc1.write,
             url=None,
             version=2.0)
 
@@ -872,9 +791,9 @@ class TestDocumentExceptions(unittest.TestCase):
             if url is None:
         """
 
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        
         with self.assertRaises(NineMLRuntimeError):
-            document.url = None
+            doc1.url = None
 
     def test_url_ninemlruntimeerror2(self):
         """
@@ -896,9 +815,9 @@ class TestDocumentExceptions(unittest.TestCase):
                 if doc_ref():
         """
 
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        
         with self.assertRaises(NineMLRuntimeError):
-            document.url = None
+            doc1.url = None
 
     def test_url_ninemlruntimeerror3(self):
         """
@@ -936,7 +855,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 if not isinstance(url, basestring):
         """
 
-        document = next(instances_of_all_types[Document.nineml_type].itervalues())
+        
         with self.assertRaises(NineMLRuntimeError):
-            document.url = None
+            doc1.url = None
 

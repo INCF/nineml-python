@@ -17,9 +17,6 @@ import collections
 from ..exceptions import internal_error
 from ..exceptions import NineMLRuntimeError
 from nineml.base import ContainerObject
-from logging import Logger
-
-logger = Logger('lib9ML')
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):

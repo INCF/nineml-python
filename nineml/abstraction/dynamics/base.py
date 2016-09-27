@@ -203,6 +203,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
+    def clone(self):
+        return DynamicsCloner().visit(self)
+
     def dimension_of(self, element):
         try:
             resolver = self._dimension_resolver
@@ -495,14 +498,15 @@ def inf_check(l1, l2, desc):
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
 # Import visitor modules and those which import visitor modules
-from .regimes import StateVariable
-from .visitors.validators import DynamicsValidator
-from .visitors import DynamicsInterfaceInferer
-from .visitors.queriers import (DynamicsElementFinder,
+from .regimes import StateVariable  # @IgnorePep8
+from .visitors.validators import DynamicsValidator  # @IgnorePep8
+from .visitors import DynamicsInterfaceInferer  # @IgnorePep8
+from .visitors.cloner import DynamicsCloner  # @IgnorePep8
+from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsRequiredDefinitions,
                                 DynamicsExpressionExtractor,
                                 DynamicsDimensionResolver)
-from .visitors.modifiers import (
+from .visitors.modifiers import (  # @IgnorePep8
     DynamicsRenameSymbol, DynamicsAssignIndices,
     DynamicsExpandAliasDefinition)
-from .visitors.xml import DynamicsXMLLoader, DynamicsXMLWriter
+from .visitors.xml import DynamicsXMLLoader, DynamicsXMLWriter  # @IgnorePep8
