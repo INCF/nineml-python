@@ -272,7 +272,8 @@ class Document(dict, BaseNineMLObject):
                     raise NineMLRuntimeError(
                         "Name of dimension '{}' conflicts with existing object"
                         " of differring value or type '{}' and '{}'"
-                        .format(dimension.name, dimension, self[unit.name]))
+                        .format(dimension.name, dimension,
+                                self[dimension.name]))
             else:
                 self[dimension.name] = dimension
                 if self._added_in_write is not None:
@@ -321,7 +322,7 @@ class Document(dict, BaseNineMLObject):
             raise NineMLXMLError("'{}' document does not have a NineML root "
                                  "('{}')".format(url, element.tag))
         # Initialise the document
-        elements = []
+        elements = {}
         # Loop through child elements, determine the class needed to extract
         # them and add them to the dictionary
         annotations = None
@@ -354,10 +355,6 @@ class Document(dict, BaseNineMLObject):
                         raise NineMLXMLError(
                             "Did not find matching NineML class for '{}' "
                             "element".format(nineml_type))
-                if not issubclass(child_cls, DocumentLevelObject):
-                    raise NineMLXMLError(
-                        "'{}' is not a valid top-level NineML element"
-                        .format(nineml_type))
             else:
                 raise NotImplementedError(
                     "Cannot load '{}' element (extensions not implemented)"
@@ -378,8 +375,8 @@ class Document(dict, BaseNineMLObject):
                     "Duplicate identifier '{ob1}:{name}'in NineML file '{url}'"
                     .format(name=name, ob1=elements[name].cls.nineml_type,
                             ob2=child_cls.nineml_type, url=url or ''))
-            elements.append(cls._Unloaded(name, child, child_cls, kwargs))
-        document = cls(*elements, url=url, annotations=annotations,
+            elements[name] = cls._Unloaded(name, child, child_cls, kwargs)
+        document = cls(*elements.values(), url=url, annotations=annotations,
                        register_url=register_url)
         return document
 
