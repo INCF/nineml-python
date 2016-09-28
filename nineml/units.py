@@ -474,10 +474,10 @@ class Quantity(BaseNineMLObject):
         return self._units
 
     def __getitem__(self, index):
-        if self.is_array():
-            return self._value.values[index]
-        elif self.is_single():
-            return self._value.value
+        if self.value.is_array():
+            return self._value.values[index] * self.units
+        elif self.value.is_single():
+            return self._value.value * self.units
         else:
             raise NineMLRuntimeError(
                 "Cannot get item from random distribution")

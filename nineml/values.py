@@ -32,6 +32,15 @@ class BaseValue(BaseNineMLObject):
             element, (SingleValue, ArrayValue, RandomValue),
             document, allow_reference=True, **kwargs)
 
+    def is_array(self):
+        return False
+
+    def is_single(self):
+        return False
+
+    def is_random(self):
+        return False
+
 
 class SingleValue(BaseValue):
     """
@@ -57,6 +66,9 @@ class SingleValue(BaseValue):
     @property
     def _name(self):
         return str(self._value)
+
+    def is_single(self):
+        return True
 
     def __iter__(self):
         """Infinitely iterate the same value"""
@@ -229,6 +241,9 @@ class ArrayValue(BaseValue):
     @property
     def _name(self):
         return str('_'.join(str(v) for v in self._values[:10]))
+
+    def is_array(self):
+        return True
 
     def __eq__(self, other):
         try:
@@ -437,7 +452,7 @@ class ArrayValue(BaseValue):
     def _check_single_value(self, num):
         try:
             float(num)
-        except TypeError:
+        except (TypeError, ValueError):
             raise NineMLRuntimeError(
                 "Cannot use {} in array arithmetic operation, only values that"
                 " can be converted to a single float are allowed".format(num))
@@ -460,6 +475,9 @@ class RandomValue(BaseValue):
     @property
     def _name(self):
         return self._distribution.name
+
+    def is_random(self):
+        return True
 
     def __eq__(self, other):
         try:
