@@ -8,12 +8,33 @@ from operator import (
     add, sub, mul, truediv, div, pow, floordiv, mod, neg, iadd, idiv,
     ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
 from nineml.utils.testing.comprehensive import instances_of_all_types
-import numpy  # This is only imported here in the test as it is not dependency
+import numpy as np  # This is only imported here in the test as it is not dependency
 from sympy import sympify, Basic as SympyBaseClass, Symbol
 from nineml.abstraction.expressions import Expression, Alias
 from nineml import units as un
 
-single_values = instances_of_all_types['SingleValue'].values()
+INCR = 0.01
+NUM_VALUES = 20
+ARRAY_SIZE = 10
+
+single_values = [SingleValue(v) for v in np.arange(
+    INCR, INCR * NUM_VALUES + INCR, INCR)]
+array_values = [ArrayValue(np.arange(INCR * i, INCR * i * ARRAY_SIZE,
+                                     INCR * i))
+                for i in range(1, NUM_VALUES + 1)]
+units = [getattr(un, u) for u in dir(un)
+         if isinstance(getattr(un, u), un.Unit)]
+dimensions = [getattr(un, d) for d in dir(un)
+              if isinstance(getattr(un, d), un.Dimension)]
+quantities = [un.Quantity(v, u) for v, u in zip(
+    chain(single_values, array_values), cycle(units))]
+
+named_expressions = sorted(chain(*(instances_of_all_types[t].values()
+                                 for t in ('Alias', 'StateAssignment'))))
+logical_expressions = sorted(instances_of_all_types['Trigger'].values())
+anonymous_expressions = sorted(
+    instances_of_all_types['TimeDerivative'].values())
+expressions = list(chain(named_expressions, anonymous_expressions))
 
 div_ops = (div, truediv, floordiv, mod, idiv, itruediv, ifloordiv, imod)
 uniary_ops = [neg, abs, inv]
@@ -69,9 +90,9 @@ class TestValues(unittest.TestCase):
                                   op_str + " did not return a SingleValue")
 
     def test_array_value_operators(self):
-        for array_val in instances_of_all_types['ArrayValue'].values():
-            np_val = numpy.asarray(array_val)
-            np_array_val = ArrayValue(numpy.asarray(array_val))
+        for array_val in array_values:
+            np_val = np.asarray(array_val)
+            np_array_val = ArrayValue(np.asarray(array_val))
             val_iter = cycle(single_values)
             for op in self.ops:
                 if op in uniary_ops:
@@ -110,14 +131,14 @@ class TestValues(unittest.TestCase):
                     rop_str = ("{}({}, {})".format(op.__name__, val,
                                                    array_val))
                     self.assertTrue(
-                        all(numpy.asarray(vf_result) == np_result),
+                        all(np.asarray(vf_result) == np_result),
                         "{} not equal between array value ({}) and "
                         "numpy ({})".format(op_str, vf_result, np_result))
                     self.assertIsInstance(
                         vf_result, ArrayValue,
                         op_str + " did not return a ArrayValue")
                     self.assertTrue(
-                        all(numpy.asarray(nf_result) == np_result),
+                        all(np.asarray(nf_result) == np_result),
                         "{} not equal between array value ({}) and "
                         "numpy ({})".format(op_str, nf_result, np_result))
                     self.assertIsInstance(
@@ -125,7 +146,7 @@ class TestValues(unittest.TestCase):
                         "{} did not return a ArrayValue ({})"
                         .format(op_str, nf_result))
                     self.assertIsInstance(
-                        nf_result._values, numpy.ndarray,
+                        nf_result._values, np.ndarray,
                         "{} did not maintain numpy _values in resultant "
                         "ArrayValue ({})"
                         .format(op_str, nf_result))
@@ -135,14 +156,14 @@ class TestValues(unittest.TestCase):
                     rnf_result = op(float(val), np_array_val)
                     rnp_result = op(float(val), np_val)
                     self.assertTrue(
-                        all(numpy.asarray(rvf_result) == rnp_result),
+                        all(np.asarray(rvf_result) == rnp_result),
                         "{} not equal between array value ({}) and "
                         "numpy ({})".format(rop_str, rvf_result, rnp_result))
                     self.assertIsInstance(
                         rvf_result, ArrayValue,
                         rop_str + " did not return a ArrayValue")
                     self.assertTrue(
-                        all(numpy.asarray(rnf_result) == rnp_result),
+                        all(np.asarray(rnf_result) == rnp_result),
                         "{} not equal between array value ({}) and "
                         "numpy ({})".format(rop_str, rnf_result, rnp_result))
                     self.assertIsInstance(
@@ -150,31 +171,31 @@ class TestValues(unittest.TestCase):
                         "{} did not return a ArrayValue ({})"
                         .format(rop_str, rnf_result))
                     self.assertIsInstance(
-                        rnf_result._values, numpy.ndarray,
+                        rnf_result._values, np.ndarray,
                         "{} did not maintain numpy _values in resultant "
                         "ArrayValue ({})"
                         .format(rop_str, rnf_result))
                     self.assertTrue(
-                        all(numpy.asarray(rvv_result) == rnp_result),
+                        all(np.asarray(rvv_result) == rnp_result),
                         rop_str + " not equal between array value and numpy")
                     self.assertIsInstance(
                         rvv_result, ArrayValue,
                         rop_str + " did not return a ArrayValue")
                     self.assertTrue(
-                        all(numpy.asarray(rnv_result) == rnp_result),
+                        all(np.asarray(rnv_result) == rnp_result),
                         "{} not equal between array value ({}) and numpy ({})"
-                        .format(rop_str, numpy.asarray(rnv_result),
+                        .format(rop_str, np.asarray(rnv_result),
                                 rnp_result))
                     self.assertIsInstance(
                         rnv_result, ArrayValue,
                         rop_str + " did not return a ArrayValue")
                 self.assertTrue(
-                    all(numpy.asarray(vv_result) == np_result),
+                    all(np.asarray(vv_result) == np_result),
                     op_str + " not equal between array value and numpy")
                 self.assertIsInstance(vv_result, ArrayValue,
                                       op_str + " did not return a ArrayValue")
                 self.assertTrue(
-                    all(numpy.asarray(nv_result) == np_result),
+                    all(np.asarray(nv_result) == np_result),
                     op_str + " not equal between array value and numpy")
                 self.assertIsInstance(nv_result, ArrayValue,
                                       op_str + " did not return a ArrayValue")
@@ -204,9 +225,9 @@ class TestValues(unittest.TestCase):
             val = vv_result
 
     def test_array_value_inline_operators(self):
-        for array_val in instances_of_all_types['ArrayValue'].values():
-            np_val = numpy.asarray(array_val)
-            np_array_val = ArrayValue(numpy.asarray(array_val))
+        for array_val in array_values:
+            np_val = np.asarray(array_val)
+            np_array_val = ArrayValue(np.asarray(array_val))
             for i, (op, val) in enumerate(zip(
                     self.iops, cycle(single_values))):
                 if op is ipow:
@@ -230,14 +251,14 @@ class TestValues(unittest.TestCase):
                 np_result = op(np_val, float(val))
                 op_str = ("{}({}, {})".format(op.__name__, array_val, val))
                 self.assertTrue(
-                    all(numpy.asarray(vf_result) == np_result),
+                    all(np.asarray(vf_result) == np_result),
                     "{} not equal between array value ({}) and "
                     "numpy ({})".format(op_str, vf_result, np_result))
                 self.assertIsInstance(
                     vf_result, ArrayValue,
                     op_str + " did not return a ArrayValue")
                 self.assertTrue(
-                    all(numpy.asarray(nf_result) == np_result),
+                    all(np.asarray(nf_result) == np_result),
                     "{} not equal between array value ({}) and "
                     "numpy ({})".format(op_str, nf_result, np_result))
                 self.assertIsInstance(
@@ -245,18 +266,18 @@ class TestValues(unittest.TestCase):
                     "{} did not return a ArrayValue ({})"
                     .format(op_str, nf_result))
                 self.assertIsInstance(
-                    nf_result._values, numpy.ndarray,
+                    nf_result._values, np.ndarray,
                     "{} did not maintain numpy _values in resultant "
                     "ArrayValue ({})"
                     .format(op_str, nf_result))
                 self.assertTrue(
-                    all(numpy.asarray(vv_result) == np_result),
+                    all(np.asarray(vv_result) == np_result),
                     op_str + " not equal between array value and numpy")
                 self.assertIsInstance(
                     vv_result, ArrayValue,
                     op_str + " did not return a ArrayValue")
                 self.assertTrue(
-                    all(numpy.asarray(nv_result) == np_result),
+                    all(np.asarray(nv_result) == np_result),
                     op_str + " not equal between array value and numpy")
                 self.assertIsInstance(
                     nv_result, ArrayValue,
@@ -275,15 +296,9 @@ class TestExpressions(unittest.TestCase):
     logical_ops = [and_, or_, inv, or_, inv, or_, and_]
     iops = [iadd, idiv, imul, ipow, isub, itruediv]
 
-    named_expressions = list(chain(*(instances_of_all_types[t].values()
-                                     for t in ('Alias', 'StateAssignment'))))
-    logical_expressions = instances_of_all_types['Trigger'].values()
-    anonymous_expressions = instances_of_all_types['TimeDerivative'].values()
-    expressions = list(chain(named_expressions, anonymous_expressions))
-
     def test_anonymous_expression_operators(self):
         result = Expression('a + b')  # Arbitrary starting expression
-        expr_iter = cycle(self.anonymous_expressions)
+        expr_iter = cycle(anonymous_expressions)
         for op in self.ops:
             if op in uniary_ops:
                 ss_result = op(result.rhs)
@@ -319,7 +334,7 @@ class TestExpressions(unittest.TestCase):
 
     def test_named_expression_operators(self):
         result = Alias('a', 'a + b')  # Arbitrary starting expression
-        expr_iter = cycle(self.named_expressions)
+        expr_iter = cycle(named_expressions)
         alpha_iter = cycle(ascii_lowercase)
         for op in self.ops:
             if op in uniary_ops:
@@ -360,7 +375,7 @@ class TestExpressions(unittest.TestCase):
 
     def test_expression_inline_operators(self):
         result = Alias('a', 'b + c')  # Arbitrary starting expression
-        expr_iter = cycle(self.named_expressions)
+        expr_iter = cycle(named_expressions)
         for op in self.iops:
             expr = next(expr_iter)
             if op in div_ops and expr.rhs == sympify(0.0):
@@ -378,7 +393,7 @@ class TestExpressions(unittest.TestCase):
 
     def test_expression_logical_operators(self):
         result = Expression('a > b')  # Arbitrary starting expression
-        expr_iter = iter(list(self.logical_expressions) * 10)
+        expr_iter = iter(list(logical_expressions) * 10)
         for op in self.logical_ops:
             if op in uniary_ops:
                 ss_result = op(result.rhs)
@@ -418,19 +433,19 @@ class TestUnits(unittest.TestCase):
 
     def test_dimension_operators(self):
         result = un.dimensionless  # Arbitrary starting expression
-        dim_iter = cycle(instances_of_all_types['Dimension'].values())
-        val_iter = cycle(instances_of_all_types['SingleValue'].values())
+        dim_iter = cycle(dimensions)
+        val_iter = cycle(single_values)
         for op in self.ops:
             if op is pow:
                 val = int(next(val_iter) * 10)
                 # Scale the value close to 10 to avoid overflow errors
                 if val != 0.0:
-                    val = val / 10 ** round(numpy.log10(abs(val)))
+                    val = val / 10 ** round(np.log10(abs(val)))
                 dim = np_dim = int(val)
             else:
                 dim = next(dim_iter)
                 np_dim = 10 ** self._np_array(dim)
-            np_result = numpy.log10(op(10 ** self._np_array(result),
+            np_result = np.log10(op(10 ** self._np_array(result),
                                        np_dim))
             new_result = op(result, dim)
             op_str = ("{}({}, {})".format(op.__name__, result, dim))
@@ -444,18 +459,18 @@ class TestUnits(unittest.TestCase):
 
     @classmethod
     def _np_array(self, dim):
-        return numpy.array(list(dim), dtype=float)
+        return np.array(list(dim), dtype=float)
 
     def test_unit_unit_operators(self):
         result = un.unitless  # Arbitrary starting expression
-        unit_iter = cycle(instances_of_all_types['Unit'].values())
-        val_iter = cycle(instances_of_all_types['SingleValue'].values())
+        unit_iter = cycle(units)
+        val_iter = cycle(single_values)
         for op in self.ops:
             if op is pow:
                 val = int(next(val_iter) * 10)
                 # Scale the value close to 10 to avoid overflow errors
                 if val != 0:
-                    val = int(val / 10 ** round(numpy.log10(abs(val))))
+                    val = int(val / 10 ** round(np.log10(abs(val))))
                 unit = dim = power = val
             else:
                 unit = next(unit_iter)
@@ -464,15 +479,15 @@ class TestUnits(unittest.TestCase):
             try:
                 dim_result = op(result.dimension, dim)
                 new_result = op(result, unit)
-                power_result = numpy.log10(op(float(10 ** result.power),
+                power_result = np.log10(op(float(10 ** result.power),
                                               float(power)))
                 op_str = ("{}({}, {})".format(op.__name__, result, unit))
                 self.assertIsInstance(result, un.Unit,
                                       op_str + " did not return a Dimension")
                 self.assertEqual(
                     new_result.dimension, dim_result,
-                    "Dimension of {} not equal between Unit ({}) and explicit ({})"
-                    .format(op_str, new_result.dimension, dim_result))
+                    "Dimension of {} not equal between Unit ({}) and explicit "
+                    "({})".format(op_str, new_result.dimension, dim_result))
                 self.assertEqual(
                     new_result.power, power_result,
                     "Power of {} not equal between Unit ({}) and explicit ({})"
@@ -493,8 +508,8 @@ class TestQuantities(unittest.TestCase):
 
     def test_quantities_operators(self):
         result = un.Quantity(1.0, un.unitless)  # Arbitrary starting expression
-        val_iter = cycle(instances_of_all_types['SingleValue'].values())
-        qty_iter = cycle(instances_of_all_types['Quantity'].values())
+        val_iter = cycle(single_values)
+        qty_iter = cycle(quantities)
         for op in self.ops:
             if op in uniary_ops:
                 if len(result.value):
@@ -509,7 +524,7 @@ class TestQuantities(unittest.TestCase):
                     val = int(next(val_iter) * 10)
                     # Scale the value close to 10 to avoid overflow errors
                     if val != 0:
-                        val = int(val / 10 ** round(numpy.log10(abs(val))))
+                        val = int(val / 10 ** round(np.log10(abs(val))))
                     qty = val
                     units = op(result.units, qty)
                     len_val = 0
@@ -552,8 +567,7 @@ class TestQuantities(unittest.TestCase):
                     "{} did not return a Quantity".format(op_str))
                 if len(result.value) or len_val:
                     self.assertTrue(
-                        all(numpy.array(q_result.value) ==
-                            numpy.array(f_result)),
+                        all(np.array(q_result.value) == np.array(f_result)),
                         "Value of {} quantity not equal between Quantity "
                         "({}) and explicit ({})"
                         .format(op_str, f_result, val))
