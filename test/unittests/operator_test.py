@@ -14,14 +14,16 @@ from nineml.abstraction.expressions import Expression, Alias
 from nineml import units as un
 
 INCR = 0.01
-NUM_VALUES = 20
-ARRAY_SIZE = 10
+NUM_VALUES = 10
+ARRAY_SIZE = 5
 
 single_values = [SingleValue(v) for v in np.arange(
     INCR, INCR * NUM_VALUES + INCR, INCR)]
 array_values = [ArrayValue(np.arange(INCR * i, INCR * i * ARRAY_SIZE,
                                      INCR * i))
                 for i in range(1, NUM_VALUES + 1)]
+# Add non-numpy version of array values
+array_values += [ArrayValue(list(iter(v))) for v in array_values]
 units = [getattr(un, u) for u in dir(un)
          if isinstance(getattr(un, u), un.Unit)]
 dimensions = [getattr(un, d) for d in dir(un)
