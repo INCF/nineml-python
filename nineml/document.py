@@ -1,4 +1,5 @@
 import os.path
+import re
 from itertools import chain
 from urllib import urlopen
 import weakref
@@ -17,6 +18,17 @@ from nineml.utils import expect_single
 from logging import getLogger
 
 logger = getLogger('lib9ml')
+
+url_re = re.compile(
+    r'^(?:http|ftp)s?://'  # http:// or https://
+    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|'
+    '[A-Z0-9-]{2,}\.?)|'  # domain...
+    r'localhost|'  # localhost...
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+    r'(?::\d+)?'  # optional port
+    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+file_path_re = re.compile(r'^(\.){0,2}\/+([\w\._\-]\/+)*[\w\._\-]')
 
 
 class Document(dict, BaseNineMLObject):
@@ -419,12 +431,6 @@ class Document(dict, BaseNineMLObject):
         """
         if isinstance(xml, basestring):
             xml = etree.fromstring(xml)
-            mod_time = None
-        else:
-            if url is None:
-                mod_time = None
-            else:
-                mod_time = time.ctime(os.path.getmtime(url))
         doc = None
         if url is not None and register_url:
             # Check whether the document has already been loaded and is is
@@ -432,21 +438,18 @@ class Document(dict, BaseNineMLObject):
             try:
                 # Loaded docs are stored as weak refs to allow the document to
                 # be released from memory by the garbarge collector
-                doc_ref, saved_time = cls._loaded_docs[url]
+                doc_ref, _ = cls._loaded_docs[url]
                 # NB: weakrefs to garbarge collected objs eval to None
                 doc = doc_ref()
-                if doc is not None and saved_time is not None:
-                    if mod_time is None:
-                        raise NineMLRuntimeError(
-                            "Cannot reuse the '{}' url for two different XML "
-                            "strings".format(url))
-                    elif saved_time != mod_time:
-                        raise NineMLRuntimeError(
-                            "'{}' has been modified between reads. To reload "
-                            "please remove all references to the original "
-                            "version and permit it to be garbarge collected "
-                            "(see https://docs.python.org/2/c-api/intro.html"
-                            "#objects-types-and-reference-counts)".format(url))
+                if doc is not None and doc.to_xml() != xml:
+                    raise NineMLRuntimeError(
+                        "Cannot reuse the '{}' url for two different XML "
+                        "representations. The file may have been modified "
+                        "between reads. To reload please remove all references"
+                        "to the original version and permit it to be garbarge "
+                        "collected "
+                        "(see https://docs.python.org/2/c-api/intro.html"
+                        "#objects-types-and-reference-counts)".format(url))
             except KeyError:  # If the url hasn't been loaded before
                 pass
         if doc is None:
@@ -466,6 +469,11 @@ class Document(dict, BaseNineMLObject):
                     "Cannot reset a documents url to None once it has been set"
                     "('{}') please duplicate the document instead"
                     .format(self.url))
+            if not isinstance(url, basestring) or (
+                file_path_re.match(url) is None and
+                    url_re.match(url) is None):
+                raise NineMLRuntimeError(
+                    "{} is not a valid URL or file path")
             url = os.path.abspath(url)
             try:
                 doc_ref, _ = self._loaded_docs[url]
@@ -484,10 +492,6 @@ class Document(dict, BaseNineMLObject):
                 self._register_url(self, url)
             else:
                 url = os.path.abspath(url)
-                # TODO: should validate URL properly
-                if not isinstance(url, basestring):
-                    raise NineMLRuntimeError(
-                        "{} is not a valid URL")
                 # Change the reference to the document in the loaded docs
                 doc_and_time = self._loaded_docs.pop(self.url, None)
                 if doc_and_time:
@@ -638,4 +642,4 @@ def get_component_type(comp_xml, doc_xml, relative_to):
     assert False
 
 
-import nineml
+import nineml  # @IgnorePep8

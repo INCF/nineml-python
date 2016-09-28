@@ -634,8 +634,8 @@ class Quantity(BaseNineMLObject):
                         value = ArrayValue(qty)
                     except NineMLValueError:
                         raise NineMLRuntimeError(
-                            "Cannot '{}' to nineml.Quantity (can only convert "
-                            "quantities.Quantity and numeric objects)"
+                            "Cannot convert '{}' to nineml.Quantity (can only "
+                            "convert quantities.Quantity and numeric objects)"
                             .format(qty))
                 units = unitless
             qty = Quantity(value, units)

@@ -163,13 +163,15 @@ class TestDocumentExceptions(unittest.TestCase):
         a = ConnectionRuleProperties(
             name='A',
             definition=random_fan_in_rule,
-            properties={'number': un.Unit(dimension=un.dimensionless, power=0,
-                                          name='U')})
+            properties={'number': (
+                1.0 * un.Unit(dimension=un.dimensionless, power=0,
+                              name='U'))})
         b = ConnectionRuleProperties(
             name='B',
             definition=random_fan_in_rule,
-            properties={'number': un.Unit(dimension=un.dimensionless, power=1,
-                                          name='U')})
+            properties={'number': (
+                1.0 * un.Unit(dimension=un.dimensionless, power=1,
+                              name='U'))})
         document = Document(a, b)
         self.assertRaises(
             NineMLRuntimeError,
@@ -307,41 +309,6 @@ class TestDocumentExceptions(unittest.TestCase):
         """
         line #: 439
         message: Cannot reuse the '{}' url for two different XML strings
-
-        context:
-        --------
-    def load(cls, xml, url=None, register_url=True, **kwargs):
-        \"\"\"
-        Loads the lib9ml object model from a root lxml.etree.Element. If the
-        document has been previously loaded it is reused. To reload a document
-        that has been changed on file, please delete any references to it first
-
-        xml -- the 'NineML' etree.Element to load the object model
-               from
-        url -- specifies the url that the xml should be considered
-               to have been read from in order to resolve relative
-               references
-        \"\"\"
-        if isinstance(xml, basestring):
-            xml = etree.fromstring(xml)
-            mod_time = None
-        else:
-            if url is None:
-                mod_time = None
-            else:
-                mod_time = time.ctime(os.path.getmtime(url))
-        doc = None
-        if url is not None and register_url:
-            # Check whether the document has already been loaded and is is
-            # still in memory
-            try:
-                # Loaded docs are stored as weak refs to allow the document to
-                # be released from memory by the garbarge collector
-                doc_ref, saved_time = cls._loaded_docs[url]
-                # NB: weakrefs to garbarge collected objs eval to None
-                doc = doc_ref()
-                if doc is not None and saved_time is not None:
-                    if mod_time is None:
         """
         xml = Document(
             Dynamics(
@@ -360,135 +327,71 @@ class TestDocumentExceptions(unittest.TestCase):
             url=url,
             register_url=True)
 
-    def test_load_ninemlruntimeerror2(self):
-        """
-        line #: 443
-        message: '{}' has been modified between reads. To reload please remove all references to the original version and permit it to be garbarge collected (see https://docs.python.org/2/c-api/intro.html#objects-types-and-reference-counts)
-
-        context:
-        --------
-    def load(cls, xml, url=None, register_url=True, **kwargs):
-        \"\"\"
-        Loads the lib9ml object model from a root lxml.etree.Element. If the
-        document has been previously loaded it is reused. To reload a document
-        that has been changed on file, please delete any references to it first
-
-        xml -- the 'NineML' etree.Element to load the object model
-               from
-        url -- specifies the url that the xml should be considered
-               to have been read from in order to resolve relative
-               references
-        \"\"\"
-        if isinstance(xml, basestring):
-            xml = etree.fromstring(xml)
-            mod_time = None
-        else:
-            if url is None:
-                mod_time = None
-            else:
-                mod_time = time.ctime(os.path.getmtime(url))
-        doc = None
-        if url is not None and register_url:
-            # Check whether the document has already been loaded and is is
-            # still in memory
-            try:
-                # Loaded docs are stored as weak refs to allow the document to
-                # be released from memory by the garbarge collector
-                doc_ref, saved_time = cls._loaded_docs[url]
-                # NB: weakrefs to garbarge collected objs eval to None
-                doc = doc_ref()
-                if doc is not None and saved_time is not None:
-                    if mod_time is None:
-                        raise NineMLRuntimeError(
-                            "Cannot reuse the '{}' url for two different XML "
-                            "strings".format(url))
-                    elif saved_time != mod_time:
-        """
-
-        self.assertRaises(
-            NineMLRuntimeError,
-            Document.load,
-            xml=None,
-            url=None,
-            register_url=True)
-
     def test_url_ninemlruntimeerror(self):
         """
         line #: 464
-        message: Cannot reset a documents url to None once it has been set('{}') please duplicate the document instead
-
-        context:
-        --------
-    def url(self, url):
-        if url != self.url:
-            if url is None:
+        message: Cannot reset a documents url to None once it has been
+        set('{}') please duplicate the document instead
         """
-
-        
+        doc = Document(
+            Dynamics(
+                name='A',
+                parameters=[
+                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+                regime=Regime(name='default'),
+                aliases=['A1 := P1 * 2']))
+        tmp_dir = tempfile.mkdtemp()
+        url = os.path.join(tmp_dir, 'a_url.xml')
+        doc.url = url
         with self.assertRaises(NineMLRuntimeError):
-            doc1.url = None
+            doc.url = None
 
     def test_url_ninemlruntimeerror2(self):
         """
         line #: 472
-        message: Cannot set url of document to '{}' as there is already a document loaded in memory with that url. Please remove all references to it first (see https://docs.python.org/2/c-api/intro.html#objects-types-and-reference-counts)
-
-        context:
-        --------
-    def url(self, url):
-        if url != self.url:
-            if url is None:
-                raise NineMLRuntimeError(
-                    "Cannot reset a documents url to None once it has been set"
-                    "('{}') please duplicate the document instead"
-                    .format(self.url))
-            url = os.path.abspath(url)
-            try:
-                doc_ref, _ = self._loaded_docs[url]
-                if doc_ref():
+        message: Cannot set url of document to '{}' as there is already a
+        document loaded in memory with that url. Please remove all references
+        to it first
+        (see https://docs.python.org/2/c-api/intro.html#objects-types-and-
+        reference-counts)
         """
-
-        
+        a = Document(
+            Dynamics(
+                name='A',
+                parameters=[
+                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+                regime=Regime(name='default'),
+                aliases=['A1 := P1 * 2']))
+        b = Document(
+            Dynamics(
+                name='A',
+                parameters=[
+                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+                regime=Regime(name='default'),
+                aliases=['A1 := P1 * 2']))
+        tmp_dir = tempfile.mkdtemp()
+        url = os.path.join(tmp_dir, 'a_url.xml')
+        a.url = url
         with self.assertRaises(NineMLRuntimeError):
-            doc1.url = None
+            b.url = url
 
     def test_url_ninemlruntimeerror3(self):
         """
         line #: 488
         message: {} is not a valid URL
-
-        context:
-        --------
-    def url(self, url):
-        if url != self.url:
-            if url is None:
-                raise NineMLRuntimeError(
-                    "Cannot reset a documents url to None once it has been set"
-                    "('{}') please duplicate the document instead"
-                    .format(self.url))
-            url = os.path.abspath(url)
-            try:
-                doc_ref, _ = self._loaded_docs[url]
-                if doc_ref():
-                    raise NineMLRuntimeError(
-                        "Cannot set url of document to '{}' as there is "
-                        "already a document loaded in memory with that url. "
-                        "Please remove all references to it first (see "
-                        "https://docs.python.org/2/c-api/intro.html"
-                        "#objects-types-and-reference-counts)"
-                        .format(url))
-            except KeyError:
-                pass
-            # Register the url with the Document class to avoid reloading
-            if self.url is None:
-                self._register_url(self, url)
-            else:
-                url = os.path.abspath(url)
-                # TODO: should validate URL properly
-                if not isinstance(url, basestring):
         """
-
-        
+        doc = Document(
+            Dynamics(
+                name='A',
+                parameters=[
+                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+                regime=Regime(name='default'),
+                aliases=['A1 := P1 * 2']))
         with self.assertRaises(NineMLRuntimeError):
-            doc1.url = None
-
+            doc.url = 1
+        with self.assertRaises(NineMLRuntimeError):
+            doc.url = '*;l22f23'
+        with self.assertRaises(NineMLRuntimeError):
+            doc.url = 'a_file.xml'  # Not relative file path
+        with self.assertRaises(NineMLRuntimeError):
+            doc.url = '.../a_file.xml'  # Not relative file path
