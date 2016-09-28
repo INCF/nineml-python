@@ -236,8 +236,11 @@ def identify_element(element):
 def unprocessed_xml(from_xml):
     def from_xml_with_exception_handling(cls, element, *args, **kwargs):  # @UnusedVariable @IgnorePep8
         # Get the document object for error messages
-        if args:  # if UL classmethod
-            document = args[0]
+        if args or 'document' in kwargs:  # if UL classmethod
+            if args:
+                document = args[0]
+            else:
+                document = kwargs['document']
             xmlns = extract_xmlns(element.tag)
             if xmlns == NINEMLv1:
                 try:

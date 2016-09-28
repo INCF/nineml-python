@@ -9,19 +9,7 @@ class TestExceptions(unittest.TestCase):
     def test_accessor_with_handling_ninemlnameerror(self):
         """
         line #: 74
-        message: '{}' {} does not have {} named '{}
-
-        context:
-        --------
-def name_error(accessor):
-    def accessor_with_handling(self, name):
-        try:
-            return accessor(self, name)
-        except KeyError:
-            # Get the name of the element type to be accessed making use of a
-            # strict naming convention of the accessors
-            type_name = ''.join(p.capitalize()
-                                for p in accessor.__name__.split('_'))
+        message: '{}' {} does not have {} named '{}'
         """
         class Dummy(object):
             nineml_type = 'Dummy'
