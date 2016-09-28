@@ -10,10 +10,9 @@ from ...componentclass.visitors.cloner import ComponentCloner
 class ConnectionRuleCloner(ComponentCloner):
 
     def visit_componentclass(self, component_class, **kwargs):
-        super(ConnectionRuleCloner, self).visit_componentclass(component_class)
         ccn = component_class.__class__(
             name=component_class.name,
+            standard_library=component_class.standard_library,
             parameters=[p.accept_visitor(self, **kwargs)
-                        for p in component_class.parameters],
-            standard_libary=component_class.standard_library)
+                        for p in component_class.parameters])
         return ccn

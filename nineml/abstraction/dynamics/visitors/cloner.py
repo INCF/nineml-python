@@ -47,7 +47,9 @@ class DynamicsCloner(ComponentCloner):
             time_derivatives=[t.accept_visitor(self, **kwargs)
                               for t in regime.time_derivatives],
             transitions=[t.accept_visitor(self, **kwargs)
-                         for t in regime.transitions])
+                         for t in regime.transitions],
+            aliases=[a.accept_visitor(self, **kwargs)
+                     for a in regime.aliases])
         self.copy_indices(regime, r)
         return r
 
