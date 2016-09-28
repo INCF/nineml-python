@@ -1,17 +1,19 @@
 import unittest
+import tempfile
 from nineml.document import (Document, read_xml, get_component_class_type)
 from nineml.utils.testing.comprehensive import (
-    instances_of_all_types, doc1, conPropB, dynPropA)
+    instances_of_all_types, doc1, conPropB, dynA)
 from nineml.exceptions import (NineMLXMLError, NineMLNameError,
                                NineMLRuntimeError)
 from tempfile import mkdtemp
 import os.path
-from nineml.xml import Ev1, E
+from nineml.xml import Ev1, E, ElementMaker
 from nineml.abstraction.dynamics import Trigger
 import shutil
 import nineml.units as un
 from nineml.user import (
     DynamicsProperties, ConnectionRuleProperties, Definition)
+from nineml.abstraction import Parameter, Dynamics, Regime
 from nineml.abstraction.connectionrule import random_fan_in_rule
 
 
@@ -176,55 +178,21 @@ class TestDocumentExceptions(unittest.TestCase):
     def test_standardize_units_ninemlruntimeerror2(self):
         """
         line #: 268
-        message: Name of dimension '{}' conflicts with existing object of differring value or type '{}' and '{}'
-
-        context:
-        --------
-    def standardize_units(self):
-        \"\"\"
-        Standardized the units into a single set (no duplicates). Used to avoid
-        naming conflicts when writing to file.
-        \"\"\"
-        # Get the set of all units and dimensions that are used in the document
-        # Note that Dimension & Unit objects are equal even if they have
-        # different names so when this set is traversed the dimension/unit will
-        # be substituted for the first equivalent dimension/unit.
-        all_units = set(chain(*[o.all_units for o in self.itervalues()]))
-        all_dimensions = set(chain(
-            [u.dimension for u in all_units],
-            *[o.all_dimensions for o in self.itervalues()]))
-        # Delete unused units from the document
-        for k, o in self.items():
-            if ((isinstance(o, nineml.Unit) and o not in all_units) or
-                (isinstance(o, nineml.Dimension) and
-                 o not in all_dimensions)):
-                del self[k]
-        # Add missing units and dimensions to the document
-        for unit in all_units:
-            if unit.name in self:
-                if unit != self[unit.name]:
-                    raise NineMLRuntimeError(
-                        "Name of unit '{}' conflicts with existing object of "
-                        "differring value or type '{}' and '{}'"
-                        .format(unit.name, unit, self[unit.name]))
-            else:
-                self[unit.name] = unit
-                if self._added_in_write is not None:
-                    self._added_in_write.append(unit)
-        for dimension in all_dimensions:
-            if dimension.name in self:
-                if dimension != self[dimension.name]:
+        message: Name of dimension '{}' conflicts with existing object of
+        differring value or type '{}' and '{}'
         """
-        a = DynamicsProperties(
+        a = Dynamics(
             name='A',
-            definition=dynPropA,
-            properties={'P2': 1.0 * un.Unit(
-                name='U1', power=0, dimension=un.Dimension(t=1, name='D'))})
-        b = DynamicsProperties(
+            parameters=[
+                Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+            regime=Regime(name='default'),
+            aliases=['A1 := P1 * 2'])
+        b = Dynamics(
             name='B',
-            definition=dynPropA,
-            properties={'P4': 1.0 * un.Unit(
-                name='U2', power=0, dimension=un.Dimension(i=1, name='D'))})
+            parameters=[
+                Parameter('P1', dimension=un.Dimension(name='D', l=1))],
+            regime=Regime(name='default'),
+            aliases=['A1 := P1 * 2'])
         document = Document(a, b)
         self.assertRaises(
             NineMLRuntimeError,
@@ -234,450 +202,106 @@ class TestDocumentExceptions(unittest.TestCase):
         """
         line #: 312
         message: Unrecognised XML namespace '{}', can be one of '{}'
-
-        context:
-        --------
-    def from_xml(cls, element, url=None, register_url=True, **kwargs):
-        xmlns = extract_xmlns(element.tag)
-        if xmlns not in ALL_NINEML:
         """
-
+        bad_E = ElementMaker(namespace='http://bad_namespace.net')
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
-            element=None,
-            url=None,
-            register_url=True)
+            element=bad_E.AnElement())
 
     def test_from_xml_ninemlxmlerror2(self):
         """
         line #: 317
         message: '{}' document does not have a NineML root ('{}')
-
-        context:
-        --------
-    def from_xml(cls, element, url=None, register_url=True, **kwargs):
-        xmlns = extract_xmlns(element.tag)
-        if xmlns not in ALL_NINEML:
-            raise NineMLXMLError(
-                "Unrecognised XML namespace '{}', can be one of '{}'"
-                .format(xmlns[1:-1],
-                        "', '".join(ns[1:-1] for ns in ALL_NINEML)))
-        if element.tag[len(xmlns):] != cls.nineml_type:
         """
-
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
-            element=None,
-            url=None,
-            register_url=True)
+            element=E.BadRoot())
 
     def test_from_xml_ninemlruntimeerror(self):
         """
         line #: 340
-        message: '{}' element does not correspond to a recognised document-level object
-
-        context:
-        --------
-    def from_xml(cls, element, url=None, register_url=True, **kwargs):
-        xmlns = extract_xmlns(element.tag)
-        if xmlns not in ALL_NINEML:
-            raise NineMLXMLError(
-                "Unrecognised XML namespace '{}', can be one of '{}'"
-                .format(xmlns[1:-1],
-                        "', '".join(ns[1:-1] for ns in ALL_NINEML)))
-        if element.tag[len(xmlns):] != cls.nineml_type:
-            raise NineMLXMLError("'{}' document does not have a NineML root "
-                                 "('{}')".format(url, element.tag))
-        # Initialise the document
-        elements = []
-        # Loop through child elements, determine the class needed to extract
-        # them and add them to the dictionary
-        annotations = None
-        for child in element.getchildren():
-            if isinstance(child, etree._Comment):
-                continue
-            if child.tag.startswith(xmlns):
-                nineml_type = child.tag[len(xmlns):]
-                if nineml_type == Annotations.nineml_type:
-                    assert annotations is None, \
-                        "Multiple annotations tags found"
-                    annotations = Annotations.from_xml(child, **kwargs)
-                    continue
-                try:
-                    # Note that all `DocumentLevelObjects` need to be imported
-                    # into the root nineml package
-                    child_cls = getattr(nineml, nineml_type)
-                    if (not issubclass(child_cls, DocumentLevelObject) or
-                            not hasattr(child_cls, 'from_xml')):
+        message: '{}' element does not correspond to a recognised
+        document-level object
         """
-
         self.assertRaises(
             NineMLRuntimeError,
             Document.from_xml,
-            element=None,
-            url=None,
-            register_url=True)
+            element=E(Trigger.nineml_type, 'a > b'))
 
     def test_from_xml_ninemlxmlerror3(self):
         """
         line #: 350
         message: Did not find matching NineML class for '{}' element
-
-        context:
-        --------
-    def from_xml(cls, element, url=None, register_url=True, **kwargs):
-        xmlns = extract_xmlns(element.tag)
-        if xmlns not in ALL_NINEML:
-            raise NineMLXMLError(
-                "Unrecognised XML namespace '{}', can be one of '{}'"
-                .format(xmlns[1:-1],
-                        "', '".join(ns[1:-1] for ns in ALL_NINEML)))
-        if element.tag[len(xmlns):] != cls.nineml_type:
-            raise NineMLXMLError("'{}' document does not have a NineML root "
-                                 "('{}')".format(url, element.tag))
-        # Initialise the document
-        elements = []
-        # Loop through child elements, determine the class needed to extract
-        # them and add them to the dictionary
-        annotations = None
-        for child in element.getchildren():
-            if isinstance(child, etree._Comment):
-                continue
-            if child.tag.startswith(xmlns):
-                nineml_type = child.tag[len(xmlns):]
-                if nineml_type == Annotations.nineml_type:
-                    assert annotations is None, \
-                        "Multiple annotations tags found"
-                    annotations = Annotations.from_xml(child, **kwargs)
-                    continue
-                try:
-                    # Note that all `DocumentLevelObjects` need to be imported
-                    # into the root nineml package
-                    child_cls = getattr(nineml, nineml_type)
-                    if (not issubclass(child_cls, DocumentLevelObject) or
-                            not hasattr(child_cls, 'from_xml')):
-                        raise NineMLRuntimeError(
-                            "'{}' element does not correspond to a recognised "
-                            "document-level object".format(child_cls.__name__))
-                except AttributeError:
-                    # Check for v1 document-level objects
-                    if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
-                        child_cls = get_component_class_type(child)
-                    elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
-                        child_cls = get_component_type(child, element, url)
-                    else:
         """
-
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
-            element=None,
-            url=None,
-            register_url=True)
-
-    def test_from_xml_ninemlxmlerror4(self):
-        """
-        line #: 354
-        message: '{}' is not a valid top-level NineML element
-
-        context:
-        --------
-    def from_xml(cls, element, url=None, register_url=True, **kwargs):
-        xmlns = extract_xmlns(element.tag)
-        if xmlns not in ALL_NINEML:
-            raise NineMLXMLError(
-                "Unrecognised XML namespace '{}', can be one of '{}'"
-                .format(xmlns[1:-1],
-                        "', '".join(ns[1:-1] for ns in ALL_NINEML)))
-        if element.tag[len(xmlns):] != cls.nineml_type:
-            raise NineMLXMLError("'{}' document does not have a NineML root "
-                                 "('{}')".format(url, element.tag))
-        # Initialise the document
-        elements = []
-        # Loop through child elements, determine the class needed to extract
-        # them and add them to the dictionary
-        annotations = None
-        for child in element.getchildren():
-            if isinstance(child, etree._Comment):
-                continue
-            if child.tag.startswith(xmlns):
-                nineml_type = child.tag[len(xmlns):]
-                if nineml_type == Annotations.nineml_type:
-                    assert annotations is None, \
-                        "Multiple annotations tags found"
-                    annotations = Annotations.from_xml(child, **kwargs)
-                    continue
-                try:
-                    # Note that all `DocumentLevelObjects` need to be imported
-                    # into the root nineml package
-                    child_cls = getattr(nineml, nineml_type)
-                    if (not issubclass(child_cls, DocumentLevelObject) or
-                            not hasattr(child_cls, 'from_xml')):
-                        raise NineMLRuntimeError(
-                            "'{}' element does not correspond to a recognised "
-                            "document-level object".format(child_cls.__name__))
-                except AttributeError:
-                    # Check for v1 document-level objects
-                    if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
-                        child_cls = get_component_class_type(child)
-                    elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
-                        child_cls = get_component_type(child, element, url)
-                    else:
-                        raise NineMLXMLError(
-                            "Did not find matching NineML class for '{}' "
-                            "element".format(nineml_type))
-                if not issubclass(child_cls, DocumentLevelObject):
-        """
-
-        self.assertRaises(
-            NineMLXMLError,
-            Document.from_xml,
-            element=None,
-            url=None,
-            register_url=True)
+            element=E.BadElement())
 
     def test_from_xml_notimplementederror(self):
         """
         line #: 358
         message: Cannot load '{}' element (extensions not implemented)
-
-        context:
-        --------
-    def from_xml(cls, element, url=None, register_url=True, **kwargs):
-        xmlns = extract_xmlns(element.tag)
-        if xmlns not in ALL_NINEML:
-            raise NineMLXMLError(
-                "Unrecognised XML namespace '{}', can be one of '{}'"
-                .format(xmlns[1:-1],
-                        "', '".join(ns[1:-1] for ns in ALL_NINEML)))
-        if element.tag[len(xmlns):] != cls.nineml_type:
-            raise NineMLXMLError("'{}' document does not have a NineML root "
-                                 "('{}')".format(url, element.tag))
-        # Initialise the document
-        elements = []
-        # Loop through child elements, determine the class needed to extract
-        # them and add them to the dictionary
-        annotations = None
-        for child in element.getchildren():
-            if isinstance(child, etree._Comment):
-                continue
-            if child.tag.startswith(xmlns):
-                nineml_type = child.tag[len(xmlns):]
-                if nineml_type == Annotations.nineml_type:
-                    assert annotations is None, \
-                        "Multiple annotations tags found"
-                    annotations = Annotations.from_xml(child, **kwargs)
-                    continue
-                try:
-                    # Note that all `DocumentLevelObjects` need to be imported
-                    # into the root nineml package
-                    child_cls = getattr(nineml, nineml_type)
-                    if (not issubclass(child_cls, DocumentLevelObject) or
-                            not hasattr(child_cls, 'from_xml')):
-                        raise NineMLRuntimeError(
-                            "'{}' element does not correspond to a recognised "
-                            "document-level object".format(child_cls.__name__))
-                except AttributeError:
-                    # Check for v1 document-level objects
-                    if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
-                        child_cls = get_component_class_type(child)
-                    elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
-                        child_cls = get_component_type(child, element, url)
-                    else:
-                        raise NineMLXMLError(
-                            "Did not find matching NineML class for '{}' "
-                            "element".format(nineml_type))
-                if not issubclass(child_cls, DocumentLevelObject):
-                    raise NineMLXMLError(
-                        "'{}' is not a valid top-level NineML element"
-                        .format(nineml_type))
-            else:
         """
-
+        unrecogised_E = ElementMaker(namespace='http://unrecognised.net')
+        element = E(Document.nineml_type,
+                    unrecogised_E.UnrecognisedExtension())
         self.assertRaises(
             NotImplementedError,
             Document.from_xml,
-            element=None,
-            url=None,
-            register_url=True)
+            element=element)
 
     def test_from_xml_ninemlxmlerror5(self):
         """
         line #: 369
-        message: Missing 'name' (or 'symbol') attribute from document level object '{}'
-
-        context:
-        --------
-    def from_xml(cls, element, url=None, register_url=True, **kwargs):
-        xmlns = extract_xmlns(element.tag)
-        if xmlns not in ALL_NINEML:
-            raise NineMLXMLError(
-                "Unrecognised XML namespace '{}', can be one of '{}'"
-                .format(xmlns[1:-1],
-                        "', '".join(ns[1:-1] for ns in ALL_NINEML)))
-        if element.tag[len(xmlns):] != cls.nineml_type:
-            raise NineMLXMLError("'{}' document does not have a NineML root "
-                                 "('{}')".format(url, element.tag))
-        # Initialise the document
-        elements = []
-        # Loop through child elements, determine the class needed to extract
-        # them and add them to the dictionary
-        annotations = None
-        for child in element.getchildren():
-            if isinstance(child, etree._Comment):
-                continue
-            if child.tag.startswith(xmlns):
-                nineml_type = child.tag[len(xmlns):]
-                if nineml_type == Annotations.nineml_type:
-                    assert annotations is None, \
-                        "Multiple annotations tags found"
-                    annotations = Annotations.from_xml(child, **kwargs)
-                    continue
-                try:
-                    # Note that all `DocumentLevelObjects` need to be imported
-                    # into the root nineml package
-                    child_cls = getattr(nineml, nineml_type)
-                    if (not issubclass(child_cls, DocumentLevelObject) or
-                            not hasattr(child_cls, 'from_xml')):
-                        raise NineMLRuntimeError(
-                            "'{}' element does not correspond to a recognised "
-                            "document-level object".format(child_cls.__name__))
-                except AttributeError:
-                    # Check for v1 document-level objects
-                    if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
-                        child_cls = get_component_class_type(child)
-                    elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
-                        child_cls = get_component_type(child, element, url)
-                    else:
-                        raise NineMLXMLError(
-                            "Did not find matching NineML class for '{}' "
-                            "element".format(nineml_type))
-                if not issubclass(child_cls, DocumentLevelObject):
-                    raise NineMLXMLError(
-                        "'{}' is not a valid top-level NineML element"
-                        .format(nineml_type))
-            else:
-                raise NotImplementedError(
-                    "Cannot load '{}' element (extensions not implemented)"
-                    .format(child.tag))
-            # Units use 'symbol' as their unique identifier (from LEMS) all
-            # other elements use 'name'
-            try:
-                try:
-                    name = child.attrib['name']
-                except KeyError:
-                    name = child.attrib['symbol']
-            except KeyError:
+        message: Missing 'name' (or 'symbol') attribute from document level
+        object '{}'
         """
-
+        elem = E(Document.nineml_type,
+                 E(Dynamics.nineml_type))
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
-            element=None,
-            url=None,
-            register_url=True)
+            element=elem)
 
     def test_from_xml_ninemlxmlerror6(self):
         """
         line #: 373
         message: Duplicate identifier '{ob1}:{name}'in NineML file '{url}'
-
-        context:
-        --------
-    def from_xml(cls, element, url=None, register_url=True, **kwargs):
-        xmlns = extract_xmlns(element.tag)
-        if xmlns not in ALL_NINEML:
-            raise NineMLXMLError(
-                "Unrecognised XML namespace '{}', can be one of '{}'"
-                .format(xmlns[1:-1],
-                        "', '".join(ns[1:-1] for ns in ALL_NINEML)))
-        if element.tag[len(xmlns):] != cls.nineml_type:
-            raise NineMLXMLError("'{}' document does not have a NineML root "
-                                 "('{}')".format(url, element.tag))
-        # Initialise the document
-        elements = []
-        # Loop through child elements, determine the class needed to extract
-        # them and add them to the dictionary
-        annotations = None
-        for child in element.getchildren():
-            if isinstance(child, etree._Comment):
-                continue
-            if child.tag.startswith(xmlns):
-                nineml_type = child.tag[len(xmlns):]
-                if nineml_type == Annotations.nineml_type:
-                    assert annotations is None, \
-                        "Multiple annotations tags found"
-                    annotations = Annotations.from_xml(child, **kwargs)
-                    continue
-                try:
-                    # Note that all `DocumentLevelObjects` need to be imported
-                    # into the root nineml package
-                    child_cls = getattr(nineml, nineml_type)
-                    if (not issubclass(child_cls, DocumentLevelObject) or
-                            not hasattr(child_cls, 'from_xml')):
-                        raise NineMLRuntimeError(
-                            "'{}' element does not correspond to a recognised "
-                            "document-level object".format(child_cls.__name__))
-                except AttributeError:
-                    # Check for v1 document-level objects
-                    if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
-                        child_cls = get_component_class_type(child)
-                    elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
-                        child_cls = get_component_type(child, element, url)
-                    else:
-                        raise NineMLXMLError(
-                            "Did not find matching NineML class for '{}' "
-                            "element".format(nineml_type))
-                if not issubclass(child_cls, DocumentLevelObject):
-                    raise NineMLXMLError(
-                        "'{}' is not a valid top-level NineML element"
-                        .format(nineml_type))
-            else:
-                raise NotImplementedError(
-                    "Cannot load '{}' element (extensions not implemented)"
-                    .format(child.tag))
-            # Units use 'symbol' as their unique identifier (from LEMS) all
-            # other elements use 'name'
-            try:
-                try:
-                    name = child.attrib['name']
-                except KeyError:
-                    name = child.attrib['symbol']
-            except KeyError:
-                raise NineMLXMLError(
-                    "Missing 'name' (or 'symbol') attribute from document "
-                    "level object '{}'".format(child))
-            if name in elements:
         """
-
+        xml = E(Document.nineml_type,
+                E(Dynamics.nineml_type,
+                  name='A'),
+                E(Dynamics.nineml_type,
+                  name='A'))
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
-            element=None,
-            url=None,
-            register_url=True)
+            element=xml)
 
     def test_write_ninemlruntimeerror(self):
         """
         line #: 395
-        message: Cannot write the same Document object to two different locations '{}' and '{}'. Please either explicitly change its `url` property or create a duplicate using the `duplicate` method before attempting to write it to the new location
-
-        context:
-        --------
-    def write(self, url, version=2.0, **kwargs):
-        if self.url is None:
-            self.url = url  # Required so relative urls can be generated
-        elif self.url != url:
+        message: Cannot write the same Document object to two different
+        locations '{}' and '{}'. Please either explicitly change its `url`
+        property or create a duplicate using the `duplicate` method before
+        attempting to write it to the new location
         """
-
-        
+        doc = Document(
+            Dynamics(
+                name='A',
+                parameters=[
+                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+                regime=Regime(name='default'),
+                aliases=['A1 := P1 * 2']))
+        tmp_dir = tempfile.mkdtemp()
+        doc.write(os.path.join(tmp_dir, 'a_url.xml'))
         self.assertRaises(
             NineMLRuntimeError,
-            doc1.write,
-            url=None,
-            version=2.0)
+            doc.write,
+            url='./another_url.xml')
 
     def test_load_ninemlruntimeerror(self):
         """
@@ -719,12 +343,21 @@ class TestDocumentExceptions(unittest.TestCase):
                 if doc is not None and saved_time is not None:
                     if mod_time is None:
         """
-
+        xml = Document(
+            Dynamics(
+                name='A',
+                parameters=[
+                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+                regime=Regime(name='default'),
+                aliases=['A1 := P1 * 2'])).to_xml()
+        tmp_dir = tempfile.mkdtemp()
+        url = os.path.join(tmp_dir, 'a_url.xml')
+        doc1.write(url)
         self.assertRaises(
             NineMLRuntimeError,
             Document.load,
-            xml=None,
-            url=None,
+            xml=xml,
+            url=url,
             register_url=True)
 
     def test_load_ninemlruntimeerror2(self):
