@@ -450,8 +450,8 @@ class ContainerObject(object):
         return iter(all_names)
 
     def __iter__(self):
-        raise TypeError("'{}' {} container is not iterable"
-                         .format(self._name, type(self).__name__))
+        raise TypeError("{} containers are not iterable"
+                         .format(type(self).__name__))
 
     def index_of(self, element, key=None, class_map=None):
         """
@@ -556,4 +556,4 @@ class SendPortBase(object):
     """
 
 
-import nineml
+import nineml  # @IgnorePep8
