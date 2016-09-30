@@ -540,7 +540,6 @@ for elem in chain(multiDynA.sub_components,
                   multiDynA.aliases, multiDynB.aliases):
     instances_of_all_types[elem.nineml_type][elem._name] = elem
 
-
 all_types = {}
 
 for importer, modname, ispkg in pkgutil.walk_packages(
