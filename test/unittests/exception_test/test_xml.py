@@ -10,18 +10,6 @@ class TestExceptions(unittest.TestCase):
         """
         line #: 39
         message: Unrecognised 9ML version {} (1.0
-
-        context:
-        --------
-def get_element_maker(version):
-    if isinstance(version, int):
-        version = float(version)
-    version = str(version)
-    if str(version) == '1.0':
-        element_maker = Ev1
-    elif str(version) == '2.0':
-        element_maker = E
-    else:
         """
         self.assertRaises(
             NineMLRuntimeError,

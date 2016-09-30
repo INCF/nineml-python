@@ -2,8 +2,7 @@ import unittest
 from nineml.base import (
     BaseNineMLObject, DynamicPortsObject, ContainerObject,
     accessor_name_from_type)
-from nineml.utils.testing.comprehensive import (
-    instances_of_subtypes, dynA)
+from nineml.utils.testing.comprehensive import dynA
 from nineml.exceptions import (
     NineMLNameError, NineMLInvalidElementTypeException, NineMLRuntimeError)
 from nineml.abstraction import Dynamics, Trigger, Parameter
