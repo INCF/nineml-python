@@ -147,8 +147,9 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                                          'MultiDynamicsProperties')):
             definition = Prototype(definition)
         elif definition.nineml_type not in ('Definition', 'Prototype'):
-            raise ValueError("'definition' must be either a 'Definition' or "
-                             "'Prototype' element")
+            raise ValueError("'definition' must be either a 'Definition', "
+                             "'Prototype' element or url pointing to a "
+                             "dynamics class")
         self._definition = definition
         if isinstance(properties, dict):
             self._properties = dict((name, Property(name, qty))
@@ -517,8 +518,8 @@ class DynamicsProperties(Component, DynamicPortsObject):
             try:
                 initial_value = self.initial_value(var.name)
             except KeyError:
-                raise Exception("Initial value not specified for %s" %
-                                var.name)
+                raise NineMLRuntimeError(
+                    "Initial value not specified for {}".format(var.name))
             initial_units = initial_value.units
             initial_dimension = initial_units.dimension
             var_dimension = var.dimension
@@ -567,8 +568,8 @@ class DynamicsProperties(Component, DynamicPortsObject):
                     "named '{}'".format(self.component_class.name, prop.name))
             if prop.units.dimension != state_variable.dimension:
                 raise NineMLUnitMismatchError(
-                    "Dimensions for '{}' property ('{}') don't match that of "
-                    "component_class class ('{}')."
+                    "Dimensions for '{}' initial value ('{}') don't match that"
+                    " of state variable in component class ('{}')."
                     .format(prop.name, prop.units.dimension.name,
                             state_variable.dimension.name))
             self._initial_values[prop.name] = prop
