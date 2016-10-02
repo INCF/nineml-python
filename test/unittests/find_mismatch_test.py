@@ -30,13 +30,13 @@ class TestFindMismatch(unittest.TestCase):
               other:'A1', 'A3'
             """
 
-    Cref = """"""
-
-    Dref = """
+    Cref = """
             Attribute '_aliases':
                 Key 'A4':
                   Attribute 'rhs': self:C2*SV1 != other:2*C2*SV1
             """
+
+    Dref = ""
 
     def test_find_difference(self):
         dyn = Dynamics(
@@ -139,7 +139,7 @@ class TestFindMismatch(unittest.TestCase):
         C = Dynamics(
             name='dyn',
             aliases=['A1:=P1 * SV2', 'A2 := ARP1 + SV2', 'A3 := SV1',
-                     'A4 := C2 * SV1'],
+                     'A4 := 2*C2 * SV1'],
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage),
                 StateVariable('SV2', dimension=un.current)],
@@ -172,7 +172,7 @@ class TestFindMismatch(unittest.TestCase):
         D = Dynamics(
             name='dyn',
             aliases=['A1:=P1 * SV2', 'A2 := ARP1 + SV2', 'A3 := SV1',
-                     'A4 := 2*C2 * SV1'],
+                     'A4 := C2 * SV1'],
             state_variables=[
                 StateVariable('SV1', dimension=un.voltage),
                 StateVariable('SV2', dimension=un.current)],
