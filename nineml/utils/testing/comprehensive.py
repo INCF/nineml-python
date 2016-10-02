@@ -292,6 +292,8 @@ multiDynPropA = MultiDynamicsProperties(
         ('e', 'SV1'),
         ('e', 'ESP1')])
 
+multiDynA = multiDynPropA.component_class
+
 multiDynPropB = MultiDynamicsProperties(
     name='multiDynPropB',
     sub_components={
@@ -310,6 +312,8 @@ multiDynPropB = MultiDynamicsProperties(
         AnalogSendPortExposure('f', 'SV1', name='ASP1'),
         AnalogReceivePortExposure('c', 'ARP1', name='ARP1'),
         AnalogReceivePortExposure('multiA', 'ARP1__d', name='ARP2')])
+
+multiDynB = multiDynPropB.component_class
 
 popA = Population(
     name="popA",

@@ -26,7 +26,8 @@ class BasePortExposure(BaseULObject):
             self._sub_component = None
         else:
             self._sub_component_name = None
-            assert isinstance(component, Dynamics)
+            assert isinstance(component,
+                              nineml.user.multi.component.SubDynamics)
             self._sub_component = component
         if isinstance(port, basestring):
             self._port_name = port
@@ -306,3 +307,6 @@ class _LocalAnalogPortConnections(Alias):
         raise NineMLImmutableError(
             "Cannot rename LHS of Alias '{}' because it is a local "
             "AnalogPortConnection".format(self.lhs))
+
+
+import nineml.user.multi.component

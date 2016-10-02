@@ -544,7 +544,8 @@ class MultiDynamics(Dynamics):
                     exposure.name] = exposure
             else:
                 raise NineMLRuntimeError(
-                    "Unrecognised port exposure '{}'".format(exposure))
+                    "Unrecognised port exposure type {}"
+                    .format(type(exposure)))
         # =====================================================================
         # Set port connections
         # =====================================================================
