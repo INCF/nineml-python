@@ -76,6 +76,11 @@ class MultiDynamicsProperties(DynamicsProperties):
             port_exposures=port_exposures,
             port_connections=port_connections))
 
+    def flatten(self):
+        return DynamicsProperties(
+            self.name, self.definition.flatten(), properties=self.properties,
+            initial_values=self.initial_values)
+
     @property
     def name(self):
         return self._name
@@ -261,7 +266,10 @@ class SubDynamicsProperties(BaseULObject):
     def initial_value(self, name):
         local_name, comp_name = split_namespace(name)
         if comp_name != self.name:
-            raise KeyError(name)
+            raise NineMLNameError(
+                "'{}' does not name an initial value in '{}'"
+                "SubDynamicsProperties as it does not include the sub "
+                "component name '{}'".format(name, self.name, self.name))
         return self._component.initial_value(local_name)
 
     @property
@@ -281,7 +289,10 @@ class SubDynamicsProperties(BaseULObject):
     def property(self, name):
         local_name, comp_name = split_namespace(name)
         if comp_name != self.name:
-            raise KeyError(name)
+            raise NineMLNameError(
+                "'{}' does not name an property in '{}'"
+                "SubDynamicsProperties as it does not include the sub "
+                "component name '{}'".format(name, self.name, self.name))
         return self._component.property(local_name)
 
 
@@ -657,7 +668,6 @@ class MultiDynamics(Dynamics):
 
     @property
     def constants(self):
-        1 + 1
         # We need to insert a 0-valued constant for each internal reduce port
         # that doesn't receive any connections
         unused_reduce_ports = (

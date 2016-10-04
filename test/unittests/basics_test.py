@@ -3,6 +3,9 @@ import collections
 from nineml.utils.testing.comprehensive import (
     all_types, instances_of_all_types)
 from nineml.abstraction.ports import SendPortBase
+from nineml.base import pluralise
+from nineml.user.multi import append_namespace
+from numpy import sum, product
 
 
 class TestAccessors(unittest.TestCase):
@@ -55,7 +58,7 @@ class TestAccessors(unittest.TestCase):
                         num = elem._num_members(member, cls.class_to_member)
                         names = list(elem._member_names_iter(
                             member, cls.class_to_member))
-                        members = sorted(elem._members_iter(
+                        members = sorted(elem._members(
                             member, cls.class_to_member))
                         accessor_members = sorted(
                             elem._member_accessor(member,
@@ -185,6 +188,92 @@ class TestAccessors(unittest.TestCase):
                         "accessor method ({}) for '{}' {}"
                         .format(prefix, members, accessor_members,
                                 elem._name, cls_name))
+
+    def test_multi_dynamics_accessors(self):
+        for class_name, mutli_class_name, subcomp_name in (
+            (('Dynamics', 'MultiDynamics', 'component_class'),
+             ('DynamicsProperties', 'MultiDynamicsProperties', 'component'))):
+            cls = all_types[class_name]
+            for elem in instances_of_all_types[mutli_class_name].values():
+                flat_elem = elem.flatten()
+                for accessor_name in cls.class_to_member.itervalues():
+                    all_sc_nums = []
+                    all_sc_names = []
+                    all_sc_members = []
+                    for sub_comp in elem.sub_components:
+                        comp = getattr(sub_comp, subcomp_name)
+                        c_num = self._num_memberss(comp, accessor_name)
+                        c_names = self._member_names(sub_comp, accessor_name)
+                        c_members = self._members(sub_comp, accessor_name)
+                        sc_num = self._num_memberss(sub_comp, accessor_name)
+                        sc_names = self._member_names(sub_comp, accessor_name)
+                        sc_members = self._members(sub_comp, accessor_name)
+                        sc_acc_members = self._accessor_members(
+                            sub_comp, accessor_name, sc_names)
+                        self.assertEqual(sc_num, c_num)
+                        self.assertEqual(sc_names,
+                                         [append_namespace(n, sub_comp.name)
+                                          for n in c_names])
+                        self.assertEqual(c_members,
+                                         [getattr(sc, subcomp_name)
+                                          for sc in sc_members])
+                        self.assertEqual(sc_members, sc_acc_members)
+                        all_sc_nums.append(sc_num)
+                        all_sc_names.extend(sc_names)
+                        all_sc_members.extend(sc_members)
+                    num = self._num_members(elem, accessor_name)
+                    names = self._member_names(elem, accessor_name)
+                    members = self._members(elem, accessor_name)
+                    # Basic consistency checks
+                    self.assertEqual(num, len(names))
+                    self.assertEqual(num, len(members))
+                    self.assertEqual(
+                        members,
+                        self._accessor_members(elem, accessor_name, names))
+                    # Check with flatttened version
+                    flat_num = self._num_members(flat_elem, accessor_name)
+                    flat_names = self._member_names(flat_elem, accessor_name)
+                    flat_members = self._members(flat_elem, accessor_name)
+                    self.assertEqual(
+                        flat_members,
+                        self._accessor_members(flat_elem, accessor_name,
+                                               names))
+                    self.assertEqual(num, flat_num)
+                    self.assertEqual(names, flat_names)
+                    self.assertEqual(members, flat_members)
+                    if class_name == 'Dynamics' and accessor_name in (
+                            'alias', 'constant', 'state_variable', 'regime'):
+                        if accessor_name == 'regime':
+                            self.assertEqual(num, product(all_sc_nums))
+                        else:
+                            # Additional members representing local port
+                            # connections and reduce ports are appended to list
+                            # of certain members when flattening.
+                            self.assertGreaterEqual(num, sum(all_sc_nums))
+                    else:
+                        self.assertEqual(num, sum(all_sc_nums))
+                        self.assertEqual(names, sorted(all_sc_names))
+                        self.assertEqual(
+                            members,
+                            sorted(all_sc_members, key=lambda e: e._name))
+
+    @classmethod
+    def _num_members(cls, elem, accessor_name):
+        return getattr(elem, 'num_' + pluralise(accessor_name))
+
+    @classmethod
+    def _member_names(cls, elem, accessor_name):
+        return sorted(getattr(elem, accessor_name + '_names'))
+
+    @classmethod
+    def _members(cls, elem, accessor_name):
+        return sorted(getattr(elem, pluralise(accessor_name)),
+                      key=lambda e: e._name)
+
+    @classmethod
+    def _accessor_members(cls, elem, accessor_name, names):
+        accessor = getattr(elem, accessor_name)
+        return [accessor(n) for n in names]
 
 
 class TestRepr(unittest.TestCase):
