@@ -130,7 +130,6 @@ class BaseNineMLObject(object):
                         result += "\n{}Key '{}':".format(indent + '  ', k)
                         result += cls._unwrap_mismatch(s[k], o[k],
                                                        indent + '  ')
-                        s[k] == o[k]
         elif isinstance(s, list):
             if len(s) != len(o):
                 result += ('differ in length (self:{} to other:{})'
