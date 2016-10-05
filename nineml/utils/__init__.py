@@ -415,12 +415,10 @@ class Settings(object):
     use_developer_path = False
 
 
-def check_inferred_against_declared(declared, inferred, ignore=[], desc='',
+def check_inferred_against_declared(declared, inferred, desc='',
                                     strict_unused=True):
     decl_set = set(declared)
     inf_set = set(inferred)
-    for i in ignore:
-        inf_set.discard(i)
     if strict_unused:
         fail = decl_set != inf_set
     else:

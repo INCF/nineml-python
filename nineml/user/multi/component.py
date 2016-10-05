@@ -31,8 +31,9 @@ from .port_exposures import (
 from .namespace import (
     _NamespaceAlias, _NamespaceRegime, _NamespaceStateVariable,
     _NamespaceConstant, _NamespaceParameter, _NamespaceProperty,
-    _NamespaceOnCondition, append_namespace, split_namespace, make_regime_name,
-    make_delay_trigger_name, split_multi_regime_name)
+    _NamespaceInitial, _NamespaceOnCondition, append_namespace,
+    split_namespace, make_regime_name, make_delay_trigger_name,
+    split_multi_regime_name)
 
 
 class MultiDynamicsProperties(DynamicsProperties):
@@ -78,8 +79,8 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     def flatten(self):
         return DynamicsProperties(
-            self.name, self.definition.flatten(), properties=self.properties,
-            initial_values=self.initial_values)
+            self.name, self.component_class.flatten(),
+            properties=self.properties, initial_values=self.initial_values)
 
     @property
     def name(self):
@@ -251,7 +252,7 @@ class SubDynamicsProperties(BaseULObject):
 
     @property
     def initial_values(self):
-        return (_NamespaceProperty(self, iv)
+        return (_NamespaceInitial(self, iv)
                 for iv in self._component.initial_values)
 
     @property
@@ -270,7 +271,8 @@ class SubDynamicsProperties(BaseULObject):
                 "'{}' does not name an initial value in '{}'"
                 "SubDynamicsProperties as it does not include the sub "
                 "component name '{}'".format(name, self.name, self.name))
-        return self._component.initial_value(local_name)
+        return _NamespaceInitial(self,
+                                 self._component.initial_value(local_name))
 
     @property
     def properties(self):
@@ -293,7 +295,7 @@ class SubDynamicsProperties(BaseULObject):
                 "'{}' does not name an property in '{}'"
                 "SubDynamicsProperties as it does not include the sub "
                 "component name '{}'".format(name, self.name, self.name))
-        return self._component.property(local_name)
+        return _NamespaceProperty(self, self._component.property(local_name))
 
 
 class SubDynamics(BaseULObject, DynamicPortsObject):

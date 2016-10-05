@@ -168,9 +168,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             state_var_names = [p.name for p in self.state_variables]
             check_inferred_against_declared(
                 state_var_names, inferred_struct.state_variable_names,
-                ("\nPlease check for time derivatives of missing state "
-                 "variables in component class '{}'.\n"
-                 .format(self.name)))
+                desc=("\nPlease check for time derivatives of missing state "
+                      "variables in component class '{}'.\n"
+                      .format(self.name)))
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
@@ -183,9 +183,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             check_inferred_against_declared(
                 self._event_receive_ports.keys(),
                 inferred_struct.input_event_port_names,
-                ("\nPlease check OnEvents for references to missing "
-                 "EventReceivePorts in component class '{}'.\n"
-                 .format(self.name)))
+                desc=("\nPlease check OnEvents for references to missing "
+                      "EventReceivePorts in component class '{}'.\n"
+                      .format(self.name)))
         else:
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.input_event_port_names:
@@ -202,9 +202,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             check_inferred_against_declared(
                 self._event_send_ports.keys(),
                 inferred_struct.event_out_port_names,
-                ("\nPlease check OutputEvent for references to missing "
-                 "EventSendPorts in component class '{}'.\n"
-                 .format(self.name)))
+                desc=("\nPlease check OutputEvent for references to missing "
+                      "EventSendPorts in component class '{}'.\n"
+                      .format(self.name)))
         else:
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.event_out_port_names:
