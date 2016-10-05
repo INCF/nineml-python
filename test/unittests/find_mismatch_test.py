@@ -38,7 +38,7 @@ class TestFindMismatch(unittest.TestCase):
 
     Dref = ""
 
-    def test_find_difference(self):
+    def test_find_mismatch(self):
         dyn = Dynamics(
             name='dyn',
             aliases=['A1:=P1 * SV2', 'A2 := ARP1 + SV2', 'A3 := SV1',
