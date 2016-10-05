@@ -152,7 +152,8 @@ class TestAccessors(unittest.TestCase):
 
     def test_port_accessors(self):
         for cls_name in ('Dynamics', 'DynamicsProperties', 'MultiDynamics',
-                         'MultiDynamicsProperties', 'Population', 'Selection'):
+                         'MultiDynamicsProperties', 'Population', 'Selection',
+                         'SubDynamics'):
             cls = all_types[cls_name]
             for elem in instances_of_all_types[cls_name].values():
                 for prefix in ('', 'receive_', 'send_', 'analog_', 'event_',
