@@ -10,31 +10,6 @@ from nineml.exceptions import NineMLNameError
 from nineml.utils import ensure_valid_identifier
 
 
-def find_difference(this, that):
-    assert isinstance(that, this.__class__)
-    if this != that:
-        if isinstance(this, BaseULObject):
-            for attr in this.defining_attributes:
-                a = getattr(this, attr)
-                b = getattr(that, attr)
-                if a != b:
-                    if attr in this.children:
-                        find_difference(a, b)
-                    else:
-                        errmsg = ("'%s' attribute of %s instance '%s' differs:"
-                                  " '%r' != '%r'" % (attr,
-                                                     this.__class__.__name__,
-                                                     this.name, a, b))
-                        if type(a) != type(b):
-                            errmsg += "(%s, %s)" % (type(a), type(b))
-                        raise Exception(errmsg)
-        else:
-            assert sorted(this.keys()) == sorted(
-                that.keys())  # need to handle case of different keys
-            for key in this:
-                find_difference(this[key], that[key])
-
-
 def combined_port_accessor(population_accessor):
     def accessor(self, name):
         try:
