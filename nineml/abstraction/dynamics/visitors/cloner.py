@@ -37,7 +37,8 @@ class DynamicsCloner(ComponentCloner):
                 s.accept_visitor(self, **kwargs)
                 for s in component_class.state_variables],
             constants=[c.accept_visitor(self, **kwargs)
-                       for c in component_class.constants])
+                       for c in component_class.constants],
+            strict_unused=False)
         self.copy_indices(component_class, cc)
         return cc
 
