@@ -244,6 +244,7 @@ class TestAccessors(unittest.TestCase):
                     if class_name == 'Dynamics' and accessor_name in (
                             'alias', 'constant', 'state_variable', 'regime'):
                         if accessor_name == 'regime':
+                            # All combination of sub-regimes
                             self.assertEqual(num, product(all_sc_nums))
                         else:
                             # Additional members representing local port

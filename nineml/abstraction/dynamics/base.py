@@ -59,22 +59,45 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[], regimes=None, aliases=None,
                  state_variables=None, constants=None,
-                 validate_dimensions=True, document=None, **kwargs):
-        """Constructs a Dynamics
+                 validate_dimensions=True, document=None, strict_unused=True,
+                 **kwargs):
+        """Constructs a Dynamics component class
 
-        :param name: The name of the component_class.
-        :param parameters: A list containing either |Parameter| objects
+        Parameters
+        ----------
+        name : str
+            The name of the component_class.
+        parameters : list(Parameter | str) | None
+            A list containing either |Parameter| objects
             or strings representing the parameter names. If ``None``, then the
             parameters are automatically inferred from the |Dynamics| block.
-        :param analog_ports: A list of |AnalogPorts|, which will be the
+        analog_ports : list(AnalogPort)
+            A list of |AnalogPorts|, which will be the
             local |AnalogPorts| for this object.
-        :param event_ports: A list of |EventPorts| objects, which will be the
+        event_ports: list(EventPort)
+            A list of |EventPorts| objects, which will be the
             local event-ports for this object. If this is ``None``, then they
             will be automatically inferred from the dynamics block.
-        :param interface: A shorthand way of specifying the **interface** for
-            this component_class; |Parameters|, |AnalogPorts| and |EventPorts|.
-            ``interface`` takes a list of these objects, and automatically
-            resolves them by type into the correct types.
+        regimes: list(Regime)
+            List of the regimes within the Dynamics component class
+        aliases : list(Alias)
+            List of the aliases within the Dynamics component class
+        state_variables : list(StateVariable)
+            List of the state variables within the Dynamics component class
+        constants : list(Constant)
+            List of the constants within the Dynamics component class
+        validate_dimensions : bool
+            Flags whether to perform dimensionality checking on the component
+            class or not
+        document : Document
+            The NineML document the dynamics object belongs to (if any)
+        strict_unused : bool
+            Flags whether to raise an Exception if there are unused parameters
+            or ports within the Dynamics component class. Very useful when
+            manually creating a dynamics class as it typically signifies an
+            error but needs to be disabled when flattening a multi-dynamics
+            class as some on-event transitions are omitted if their ports are
+            not exposed, which can lead to unused parameters/analog ports.
 
         Examples:
 
@@ -493,8 +516,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             element, **kwargs)
 
 
-def inf_check(l1, l2, desc):
-    check_list_contain_same_items(l1, l2, desc1='Declared',
+def inf_check(declared, inferred, desc, strict_unused):
+    check_list_contain_same_items(declared, inferred, desc1='Declared',
                                   desc2='Inferred', ignore=['t'], desc=desc)
 
 # Import visitor modules and those which import visitor modules

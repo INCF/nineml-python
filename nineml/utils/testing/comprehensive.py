@@ -299,17 +299,17 @@ multiDynPropB = MultiDynamicsProperties(
     sub_components={
         'multiA': multiDynPropA,
         'c': dynPropC,
-        'f': dynPropG},
+        'g': dynPropG},
     port_connections=[
         EventPortConnection('ESP1__e', 'ERP1',
-                            sender_name='multiA', receiver_name='f'),
+                            sender_name='multiA', receiver_name='g'),
         AnalogPortConnection('SV1', 'ARP2',
-                             sender_name='f', receiver_name='c')],
+                             sender_name='g', receiver_name='c')],
     port_exposures=[
         EventSendPortExposure('multiA', 'ESP1__e', name='ESP1'),
         EventReceivePortExposure('multiA', 'ERP1__d', name='ERP1'),
         AnalogReducePortExposure('multiA', 'ADP1__d', name='ADP1'),
-        AnalogSendPortExposure('f', 'SV1', name='ASP1'),
+        AnalogSendPortExposure('g', 'SV1', name='ASP1'),
         AnalogReceivePortExposure('c', 'ARP1', name='ARP1'),
         AnalogReceivePortExposure('multiA', 'ARP1__d', name='ARP2')])
 
