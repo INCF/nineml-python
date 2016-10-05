@@ -5,7 +5,7 @@ name clashes in the global scope
 """
 import re
 import sympy
-from ..component import Property
+from ..component import Property, Initial
 from nineml.abstraction import (
     Alias, TimeDerivative, Regime, OnEvent, OnCondition, StateAssignment,
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
@@ -348,6 +348,13 @@ class _NamespaceStateAssignment(_NamespaceNamed, _NamespaceExpression,
 
 
 class _NamespaceProperty(_NamespaceNamed, Property):
+
+    @property
+    def quantity(self):
+        return self._object.quantity
+
+
+class _NamespaceInitial(_NamespaceNamed, Initial):
 
     @property
     def quantity(self):

@@ -47,13 +47,6 @@ class Testcheck_inferred_against_declared(unittest.TestCase):
             [1, 2, 3, 4, 5],
         )
 
-        # Chack ignoring:
-        check_inferred_against_declared(
-            [1, 3, 4, 5, 2],
-            [1, 2, 3, 4, 5, 6],
-            ignore=[6],
-        )
-
 
 # Testing Skeleton for function:
 class Testfilter_expect_single(unittest.TestCase):

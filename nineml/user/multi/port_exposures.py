@@ -190,8 +190,6 @@ class _PortExposureAlias(Alias):
 
 class _SendPortExposureAlias(_PortExposureAlias):
 
-    nineml_type = '_SendPortExposureAlias'
-
     @property
     def lhs(self):
         return self.exposure.name
@@ -203,10 +201,7 @@ class _SendPortExposureAlias(_PortExposureAlias):
                 self.exposure.port_name))
 
 
-
 class _ReceivePortExposureAlias(_PortExposureAlias):
-
-    nineml_type = '_ReceivePortExposureAlias'
 
     @property
     def lhs(self):

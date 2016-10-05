@@ -58,7 +58,7 @@ class TestAccessors(unittest.TestCase):
                         num = elem._num_members(member, cls.class_to_member)
                         names = list(elem._member_names_iter(
                             member, cls.class_to_member))
-                        members = sorted(elem._members(
+                        members = sorted(elem._members_iter(
                             member, cls.class_to_member))
                         accessor_members = sorted(
                             elem._member_accessor(member,
@@ -197,6 +197,8 @@ class TestAccessors(unittest.TestCase):
             for elem in instances_of_all_types[mutli_class_name].values():
                 flat_elem = elem.flatten()
                 for accessor_name in cls.class_to_member.itervalues():
+                    if accessor_name.endswith('_port'):
+                        continue  # Already covered in previous test
                     all_sc_nums = []
                     all_sc_names = []
                     all_sc_members = []
