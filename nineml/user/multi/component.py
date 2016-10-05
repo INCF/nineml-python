@@ -491,6 +491,10 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
     def event_send_port_names(self):
         return self.component_class.event_send_port_names
 
+    @property
+    def num_event_send_ports(self):
+        return self.component_class.num_event_send_ports
+
 
 class MultiDynamics(Dynamics):
 
