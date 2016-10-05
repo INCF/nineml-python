@@ -190,7 +190,7 @@ class TestAccessors(unittest.TestCase):
                                 elem._name, cls_name))
 
     def test_multi_dynamics_accessors(self):
-        for class_name, mutli_class_name, subcomp_name in (
+        for class_name, mutli_class_name, non_ns_property in (
             (('Dynamics', 'MultiDynamics', 'component_class'),
              ('DynamicsProperties', 'MultiDynamicsProperties', 'component'))):
             cls = all_types[class_name]
@@ -201,11 +201,11 @@ class TestAccessors(unittest.TestCase):
                     all_sc_names = []
                     all_sc_members = []
                     for sub_comp in elem.sub_components:
-                        comp = getattr(sub_comp, subcomp_name)
-                        c_num = self._num_memberss(comp, accessor_name)
-                        c_names = self._member_names(sub_comp, accessor_name)
-                        c_members = self._members(sub_comp, accessor_name)
-                        sc_num = self._num_memberss(sub_comp, accessor_name)
+                        comp = getattr(sub_comp, non_ns_property)
+                        c_num = self._num_members(comp, accessor_name)
+                        c_names = self._member_names(comp, accessor_name)
+                        c_members = self._members(comp, accessor_name)
+                        sc_num = self._num_members(sub_comp, accessor_name)
                         sc_names = self._member_names(sub_comp, accessor_name)
                         sc_members = self._members(sub_comp, accessor_name)
                         sc_acc_members = self._accessor_members(
@@ -215,8 +215,7 @@ class TestAccessors(unittest.TestCase):
                                          [append_namespace(n, sub_comp.name)
                                           for n in c_names])
                         self.assertEqual(c_members,
-                                         [getattr(sc, subcomp_name)
-                                          for sc in sc_members])
+                                         [sc._object for sc in sc_members])
                         self.assertEqual(sc_members, sc_acc_members)
                         all_sc_nums.append(sc_num)
                         all_sc_names.extend(sc_names)

@@ -14,7 +14,7 @@ from nineml.abstraction.componentclass import (
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
-from nineml.utils import (check_list_contain_same_items,
+from nineml.utils import (check_inferred_against_declared,
                           assert_no_duplicates)
 from nineml.xml import nineml_ns, E
 from nineml.annotations import VALIDATE_DIMENSIONS
@@ -154,12 +154,11 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
         # Check any supplied parameters match:
         if parameters is not None:
-            inf_check((self._parameters.keys() +
-                       kwargs.get('additional_parameters', [])),
-                      inferred_struct.parameter_names,
-                      desc=("\nPlease check for references to missing "
-                            "parameters in component class '{}'.\n"
-                            .format(self.name)))
+            check_inferred_against_declared(
+                self._parameters.keys(), inferred_struct.parameter_names,
+                desc=("\nPlease check for references to missing "
+                      "parameters in component class '{}'.\n"
+                      .format(self.name)), strict_unused=strict_unused)
         else:
             self._parameters = dict((n, Parameter(n))
                                     for n in inferred_struct.parameter_names)
@@ -167,29 +166,26 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         # Check any supplied state_variables match:
         if self.num_state_variables:
             state_var_names = [p.name for p in self.state_variables]
-            inf_check(state_var_names, inferred_struct.state_variable_names,
-                      ("\nPlease check for time derivatives of missing state "
-                       "variables in component class '{}'.\n"
-                       .format(self.name)))
+            check_inferred_against_declared(
+                state_var_names, inferred_struct.state_variable_names,
+                ("\nPlease check for time derivatives of missing state "
+                 "variables in component class '{}'.\n"
+                 .format(self.name)))
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
             self._state_variables = state_vars
 
         # Set and check event receive ports match inferred
-        self._event_receive_ports = dict(
-            (p.name, p) for p in event_ports if isinstance(p,
-                                                           EventReceivePort))
+        self._event_receive_ports = dict((p.name, p) for p in event_ports
+                                         if isinstance(p, EventReceivePort))
         if len(self._event_receive_ports):
-            # FIXME: not all OutputEvents are necessarily exposed as Ports,
-            # so really we should just check that all declared output event
-            # ports are in the list of inferred ports, not that the declared
-            # list is identical to the inferred one.
-            inf_check(self._event_receive_ports.keys(),
-                      inferred_struct.input_event_port_names,
-                      ("\nPlease check OnEvents for references to missing "
-                       "EventReceivePorts in component class '{}'.\n"
-                       .format(self.name)))
+            check_inferred_against_declared(
+                self._event_receive_ports.keys(),
+                inferred_struct.input_event_port_names,
+                ("\nPlease check OnEvents for references to missing "
+                 "EventReceivePorts in component class '{}'.\n"
+                 .format(self.name)))
         else:
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.input_event_port_names:
@@ -199,23 +195,28 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         self._event_send_ports = dict(
             (p.name, p) for p in event_ports if isinstance(p, EventSendPort))
         if len(self._event_send_ports):
-            inf_check(self._event_send_ports.keys(),
-                      inferred_struct.event_out_port_names,
-                      ("\nPlease check OutputEvent for references to missing "
-                       "EventSendPorts in component class '{}'.\n"
-                       .format(self.name)))
+            # FIXME: not all OutputEvents are necessarily exposed as Ports,
+            # so really we should just check that all declared output event
+            # ports are in the list of inferred ports, not that the declared
+            # list is identical to the inferred one.
+            check_inferred_against_declared(
+                self._event_send_ports.keys(),
+                inferred_struct.event_out_port_names,
+                ("\nPlease check OutputEvent for references to missing "
+                 "EventSendPorts in component class '{}'.\n"
+                 .format(self.name)))
         else:
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.event_out_port_names:
                 self._event_send_ports[pname] = EventSendPort(name=pname)
+
+        # TODO: Add check for inferred analog ports??
 
         self.annotations[nineml_ns][VALIDATE_DIMENSIONS] = validate_dimensions
         for transition in self.all_transitions():
             transition.bind(self)
         # Is the finished component_class valid?:
         self.validate(**kwargs)
-
-    # -------------------------- #
 
     def rename_symbol(self, old_symbol, new_symbol):
         DynamicsRenameSymbol(self, old_symbol, new_symbol)
@@ -514,11 +515,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def from_xml(cls, element, document, **kwargs):
         return DynamicsXMLLoader(document).load_dynamics(
             element, **kwargs)
-
-
-def inf_check(declared, inferred, desc, strict_unused):
-    check_list_contain_same_items(declared, inferred, desc1='Declared',
-                                  desc2='Inferred', ignore=['t'], desc=desc)
 
 # Import visitor modules and those which import visitor modules
 from .regimes import StateVariable  # @IgnorePep8

@@ -778,9 +778,8 @@ class MultiDynamics(Dynamics):
             try:
                 # An alias that is actually a local analog port connection
                 alias = _LocalAnalogPortConnections(
-                    name, comp_name,
-                    self._analog_port_connections[(comp_name, local)].values(),
-                    self)
+                    local, comp_name, self._analog_port_connections[
+                        (comp_name, local)].values(), self)
             except KeyError:
                 # An alias of a sub component
                 alias = self.sub_component(comp_name).alias(name)

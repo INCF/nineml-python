@@ -4,7 +4,7 @@ import types
 import numbers
 import sys
 
-from nineml.utils import (check_list_contain_same_items, expect_single,
+from nineml.utils import (check_inferred_against_declared, expect_single,
                           flatten_first_level, invert_dictionary,
                           assert_no_duplicates, restore_sys_path, safe_dict,
                           safe_dictionary_merge, filter_expect_single,
@@ -12,43 +12,43 @@ from nineml.utils import (check_list_contain_same_items, expect_single,
 from nineml.exceptions import NineMLRuntimeError
 
 
-class Testcheck_list_contain_same_items(unittest.TestCase):
+class Testcheck_inferred_against_declared(unittest.TestCase):
 
-    def test_check_list_contain_same_items(self):
+    def test_check_inferred_against_declared(self):
         # Signature: name(lst1, lst2, desc1='', desc2='', ignore=[], desc='')
                 # No Docstring
 
         self.assertRaises(
             NineMLRuntimeError,
-            check_list_contain_same_items,
+            check_inferred_against_declared,
             [1, 2, 3, 4, 5],
             [1, 2, 3, 4],
         )
         self.assertRaises(
             NineMLRuntimeError,
-            check_list_contain_same_items,
+            check_inferred_against_declared,
             ['some', 'funny', 'order', 'in', 'extra'],
             ['some', 'funny', 'order', 'in'],
         )
 
         # Good cases:
-        check_list_contain_same_items(
+        check_inferred_against_declared(
             ['in', 'some', 'funny', 'order', ],
             ['some', 'funny', 'order', 'in'],
         )
 
-        check_list_contain_same_items(
+        check_inferred_against_declared(
             [1, 2, 3, 4, 5],
             [1, 2, 3, 4, 5],
         )
 
-        check_list_contain_same_items(
+        check_inferred_against_declared(
             [1, 3, 4, 5, 2],
             [1, 2, 3, 4, 5],
         )
 
         # Chack ignoring:
-        check_list_contain_same_items(
+        check_inferred_against_declared(
             [1, 3, 4, 5, 2],
             [1, 2, 3, 4, 5, 6],
             ignore=[6],

@@ -415,22 +415,28 @@ class Settings(object):
     use_developer_path = False
 
 
-def check_list_contain_same_items(lst1, lst2, desc1="", desc2="", ignore=[],
-                                  desc=""):
-    set1 = set(lst1)
-    set2 = set(lst2)
+def check_inferred_against_declared(declared, inferred, ignore=[], desc='',
+                                    strict_unused=True):
+    decl_set = set(declared)
+    inf_set = set(inferred)
     for i in ignore:
-        set1.discard(i)
-        set2.discard(i)
+        inf_set.discard(i)
+    if strict_unused:
+        fail = decl_set != inf_set
+    else:
+        fail = bool(inf_set - decl_set)
     # Are the lists subsets of each other.
-    if not set1.issubset(set2) or not set2.issubset(set1):
-        errmsg = "Lists were suppose to contain the same elements, but don't!!"
+    if fail:
+        errmsg = "Error! Declared items did not match inferred:\n"
         if desc:
             errmsg += '\n' + desc
-        errmsg += "\n1: [%s]: %s" % (desc1, sorted(set1))
-        errmsg += "\n2: [%s]: %s" % (desc2, sorted(set2))
-        errmsg += "\nElements in : 1 (not 2): %s" % (sorted(set1 - set2))
-        errmsg += "\nElements in : 2 (not 1): %s" % (sorted(set2 - set1))
+        errmsg += "\n1: Declared: {}".format(sorted(decl_set))
+        errmsg += "\n2: Inferred: {}".format(sorted(inf_set))
+        errmsg += ("\nInferred elements not declared: {}"
+                   .format(sorted(inf_set - decl_set)))
+        if strict_unused:
+            errmsg += ("\nDeclared elements not inferred: {}"
+                       .format(sorted(decl_set - inf_set)))
         raise NineMLRuntimeError(errmsg)
 
 
