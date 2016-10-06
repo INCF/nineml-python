@@ -3,12 +3,12 @@ import re
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 from .population import Population
-from .projection import Projection, Connectivity, InverseConnectivity
+from .projection import Projection
 from .selection import Selection
 from . import BaseULObject
 from .component import write_reference, resolve_reference
 from nineml.abstraction.connectionrule import (
-    explicit_connection_rule, one_to_one_connection_rule)
+    explicit_connection_rule, one_to_one_connection_rule, Connectivity)
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import name_error
 from nineml.base import DocumentLevelObject, ContainerObject
@@ -21,7 +21,6 @@ from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
 from nineml.utils import ensure_valid_identifier
 import nineml.document
-from nineml import units as un
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
