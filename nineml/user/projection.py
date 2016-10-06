@@ -6,8 +6,8 @@ from nineml.reference import resolve_reference, write_reference
 from nineml.xml import (
     E, from_child_xml, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
 from nineml.annotations import read_annotations, annotate_xml
-from .component import (
-    ConnectionRuleProperties, DynamicsProperties)
+from .connectionrule import ConnectionRuleProperties, Connectivity
+from .dynamics import DynamicsProperties
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from itertools import chain
 from .population import Population
@@ -18,7 +18,6 @@ from nineml.utils import expect_single, ensure_valid_identifier
 from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
-from nineml.abstraction.connectionrule import Connectivity
 
 
 class Projection(BaseULObject, DocumentLevelObject):

@@ -1,7 +1,7 @@
 from itertools import chain
 from . import BaseULObject
-from .component import (
-    resolve_reference, write_reference, DynamicsProperties)
+from .component import resolve_reference, write_reference
+from .dynamics import DynamicsProperties
 from nineml.base import DocumentLevelObject, DynamicPortsObject
 from nineml.xml import (
     E, unprocessed_xml, from_child_xml, get_xml_attr)
