@@ -609,11 +609,12 @@ def get_component_type(comp_xml, doc_xml, relative_to):
             if ref_elem.tag == NINEMLv1 + 'ComponentClass':
                 cc_cls = get_component_class_type(ref_elem)
                 if cc_cls == nineml.Dynamics:
-                    cls = nineml.user.component.DynamicsProperties
+                    cls = nineml.user.dynamics.DynamicsProperties
                 elif cc_cls == nineml.ConnectionRule:
-                    cls = nineml.user.component.ConnectionRuleProperties
+                    cls = nineml.user.connectionrule.ConnectionRuleProperties
                 elif cc_cls == nineml.RandomDistribution:
-                    cls = nineml.user.component.RandomDistributionProperties
+                    cls = (nineml.user.randomdistribution.
+                           RandomDistributionProperties)
                 else:
                     assert False
             else:

@@ -18,7 +18,7 @@ from nineml.abstraction import BaseALObject
 from nineml.base import (
     ContainerObject, DocumentLevelObject, DynamicPortsObject)
 from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
-from nineml import units as un
+# from nineml import units as un
 from nineml.annotations import VALIDATE_DIMENSIONS
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, EventReceivePort,

@@ -5,7 +5,8 @@ name clashes in the global scope
 """
 import re
 import sympy
-from ..component import Property, Initial
+from ..component import Property
+from ..dynamics import Initial
 from nineml.abstraction import (
     Alias, TimeDerivative, Regime, OnEvent, OnCondition, StateAssignment,
     Trigger, OutputEvent, StateVariable, Constant, Parameter)

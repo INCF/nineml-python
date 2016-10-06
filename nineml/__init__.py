@@ -6,7 +6,7 @@ A Python library for working with 9ML model descriptions.
 """
 
 from .document import read, write, Document
-from . import abstraction
+# from . import abstraction
 from . import user
 from . import exceptions
 from . import units

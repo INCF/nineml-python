@@ -14,7 +14,7 @@ import nineml.units as un
 from nineml.user import (
     DynamicsProperties, ConnectionRuleProperties, Definition)
 from nineml.abstraction import Parameter, Dynamics, Regime
-from nineml.abstraction.connectionrule import random_fan_in_rule
+from nineml.abstraction.connectionrule import random_fan_in_connection_rule
 
 
 class TestDocumentExceptions(unittest.TestCase):
@@ -162,13 +162,13 @@ class TestDocumentExceptions(unittest.TestCase):
         """
         a = ConnectionRuleProperties(
             name='A',
-            definition=random_fan_in_rule,
+            definition=random_fan_in_connection_rule,
             properties={'number': (
                 1.0 * un.Unit(dimension=un.dimensionless, power=0,
                               name='U'))})
         b = ConnectionRuleProperties(
             name='B',
-            definition=random_fan_in_rule,
+            definition=random_fan_in_connection_rule,
             properties={'number': (
                 1.0 * un.Unit(dimension=un.dimensionless, power=1,
                               name='U'))})
