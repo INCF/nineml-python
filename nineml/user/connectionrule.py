@@ -1,9 +1,10 @@
-from itertools import chain
+import sys
+from itertools import chain, product
 import math
 from abc import ABCMeta, abstractmethod
 from copy import copy
 from itertools import izip, repeat, tee
-import random
+from random import Random, randint
 from nineml.exceptions import NineMLRuntimeError
 from nineml.user.component import Component
 
@@ -27,12 +28,15 @@ class ConnectionRuleProperties(Component):
 
 
 class BaseConnectivity(object):
+    """
+    An abstract base classes for instances of connectivity
+    (i.e. connection-rule + properties + random seed)
+    """
 
     __metaclass__ = ABCMeta
 
     def __init__(self, connection_rule_properties, source_size,
-                 destination_size,
-                 **kwargs):  # @UnusedVariable
+                 destination_size):
         if (connection_rule_properties.lib_type == 'OneToOne' and
                 source_size != destination_size):
             raise NineMLRuntimeError(
@@ -42,8 +46,6 @@ class BaseConnectivity(object):
         self._rule_props = connection_rule_properties
         self._src_size = source_size
         self._dest_size = destination_size
-        self._cache = None
-        self._kwargs = kwargs
 
     def __eq__(self, other):
         try:
@@ -141,92 +143,100 @@ class InverseConnectivity(object):
 
 class Connectivity(BaseConnectivity):
     """
-    A reference implementation of the Connectivity class, it is not recommended
-    for large networks as it is not designed for efficiency (although perhaps
-    with JIT it would be okay, see PyPy). More efficient implementations, which
-    use external libraries such as NumPy can be supplied to the Projection as a
-    kwarg.
+    A reference implementation of the Connectivity class.
     """
 
-    def connections(self, **kwargs):
+    def __init__(self, connection_rule_properties, source_size,
+                 destination_size, random_seed=None, rng_cls=None):
+        """
+        Parameters
+        ----------
+        connection_rule_properties: ConnectionRuleProperties
+            Connection rule and properties that define the connectivity
+            instance
+        source_size : int
+            Size of the source component array
+        destination_size : int
+            Size of the destination component array
+        random_seed : int | None
+            Seed for the random generator (if required). If None then a
+            random integer is drawn from random.randint
+        rng_cls : random generator class (i.e. random.Random) | None
+            Class for the random generator. Can be any random generator that
+            implements the 'random' method to return a float between 0 and 1
+            (e.g. numpy.Random). If not supplied then random.Random is used
+        """
+        super(Connectivity, self).__init__(
+            connection_rule_properties, source_size, destination_size)
+        if random_seed is None:
+            random_seed = randint(0, sys.maxint)
+        self._seed = random_seed
+        if rng_cls is None:
+            rng_cls = Random
+        self._rng_cls = rng_cls
+
+    def connections(self):
         """
         Returns an iterator over all the source/destination index pairings
         with a connection.
         `src`  -- the indices to get the connections from
         `dest` -- the indices to get the connections to
         """
-        if self._kwargs:
-            kw = kwargs
-            kwargs = copy(self._kwargs)
-            kwargs.update(kw)
         if self.lib_type == 'AllToAll':
-            conn = self._all_to_all(**kwargs)
+            conn = self._all_to_all()
         elif self.lib_type == 'OneToOne':
-            conn = self._one_to_one(**kwargs)
+            conn = self._one_to_one()
         elif self.lib_type == 'Explicit':
-            conn = self._explicit_connection_list(**kwargs)
+            conn = self._explicit_connection_list()
         elif self.lib_type == 'Probabilistic':
-            conn = self._probabilistic_connectivity(**kwargs)
+            conn = self._probabilistic_connectivity()
         elif self.lib_type == 'RandomFanIn':
-            conn = self._random_fan_in(**kwargs)
+            conn = self._random_fan_in()
         elif self.lib_type == 'RandomFanOut':
-            conn = self._random_fan_out(**kwargs)
+            conn = self._random_fan_out()
         else:
             assert False
         return conn
 
-    def _all_to_all(self, **kwargs):  # @UnusedVariable
-        return chain(*(((s, d) for d in xrange(self._dest_size))
-                       for s in xrange(self._src_size)))
+    def _all_to_all(self):  # @UnusedVariable
+        return product(xrange(self._src_size), xrange(self._dest_size))
 
-    def _one_to_one(self, **kwargs):  # @UnusedVariable
+    def _one_to_one(self):  # @UnusedVariable
+        assert self._src_size == self._dest_size
         return ((i, i) for i in xrange(self._src_size))
 
-    def _explicit_connection_list(self, **kwargs):  # @UnusedVariable
+    def _explicit_connection_list(self):  # @UnusedVariable
         return izip(
             self._rule_props.property('sourceIndices').value.values,
             self._rule_props.property('destinationIndices').value.values)
 
-    def _probabilistic_connectivity(self, **kwargs):  # @UnusedVariable
-        if self._cache:
-            conn = iter(self._cache)
-        else:
-            p = self._rule_props.property('probability').value
-            # Get an iterator over all of the source dest pairs to test
-            conn = chain(*(((s, d) for d in xrange(self._dest_size)
-                            if random.random() < p)
-                           for s in xrange(self._src_size)))
-            conn, cpy = tee(conn)
-            self._cache = list(cpy)
-        return conn
+    def _probabilistic_connectivity(self):  # @UnusedVariable
+        # Reinitialise the connectivity generator with the same RNG so that
+        # it selects the same numbers
+        rng = self._rng_cls(self._seed)
+        p = float(self._rule_props.property('probability').value)
+        # Get an iterator over all of the source dest pairs to test
+        return chain(*(((s, d) for d in xrange(self._dest_size)
+                        if rng.random() < p)
+                       for s in xrange(self._src_size)))
 
-    def _random_fan_in(self, **kwargs):  # @UnusedVariable
-        if self._cache:
-            conn = iter(self._cache)
-        else:
-            N = int(self._rule_props.property('number').value)
-            conn = chain(*(
-                izip((int(math.floor(random.random() * self._src_size))
-                      for _ in xrange(N)),
-                     repeat(d))
-                for d in xrange(self._dest_size)))
-            conn, cpy = tee(conn)
-            self._cache = list(cpy)
-        return conn
+    def _random_fan_in(self):  # @UnusedVariable
+        N = int(self._rule_props.property('number').value)
+        rng = self._rng_cls(self._seed)
+        return chain(*(
+            izip((int(math.floor(rng.random() * self._src_size))
+                  for _ in xrange(N)),
+                 repeat(d))
+            for d in xrange(self._dest_size)))
 
-    def _random_fan_out(self, **kwargs):  # @UnusedVariable
-        if self._cache:
-            conn = iter(self._cache)
-        else:
-            N = int(self._rule_props.property('number').value)
-            conn = chain(*(
-                izip(repeat(s),
-                     (int(math.floor(random.random() * self._dest_size))
-                      for _ in xrange(N)))
-                for s in xrange(self._src_size)))
-            conn, cpy = tee(conn)
-            self._cache = list(cpy)
-        return conn
+    def _random_fan_out(self):  # @UnusedVariable
+        N = int(self._rule_props.property('number').value)
+        rng = self._rng_cls(self._seed)
+        return chain(*(
+            izip(repeat(s),
+                 (int(math.floor(rng.random() * self._dest_size))
+                  for _ in xrange(N)))
+            for s in xrange(self._src_size)))
 
     def has_been_sampled(self):
         """
