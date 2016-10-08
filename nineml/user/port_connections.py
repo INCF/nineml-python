@@ -171,39 +171,32 @@ class BasePortConnection(BaseULObject):
                 "Sender object was not identified by its name")
         return self._receiver_name
 
-    def assign_names_to_roles(self, name_map={}, role_map={},
-                              port_namespaces={}):
+    def assign_names_from_roles(self, name_map):
         """
         Assigns a name to a role, or specifies a new role for any role in the
         role map. Roles not in the map are left as they are.
         """
-        # Check role doesn't appear in both name_map and role_map
-        assert not (set(name_map.iterkeys()) & set(role_map.iterkeys()))
-        kwargs = {}
-        try:
-            kwargs['sender_name'] = name_map[self.sender_role]
-        except KeyError:
-            kwargs['sender_role'] = role_map.get(self.sender_role,
-                                                 self.sender_role)
-        try:
-            kwargs['receiver_name'] = name_map[self.receiver_role]
-        except KeyError:
-            kwargs['receiver_role'] = role_map.get(self.receiver_role,
-                                                   self.receiver_role)
-        try:
-            send_port = nineml.user.append_namespace(
-                self.send_port_name, port_namespaces[self.sender_role])
-        except KeyError:
-            send_port = self.send_port_name
-        try:
-            receive_port = nineml.user.append_namespace(
-                self.receive_port_name, port_namespaces[self.receiver_role])
-        except KeyError:
-            receive_port = self.receive_port_name
         # Return a new port connection with the roles mapped to names or new
         # roles
+        return self.__class__(send_port=self.send_port_name,
+                              receive_port=self.receive_port_name,
+                              sender_name=name_map[self.sender_role],
+                              receiver_name=name_map[self.receiver_role])
+
+    def append_namespace_from_roles(self, port_namespaces):
+        """
+        Assigns a name to a role, or specifies a new role for any role in the
+        role map. Roles not in the map are left as they are.
+        """
+        send_port = nineml.user.append_namespace(
+            self.send_port_name, port_namespaces[self.sender_role])
+        receive_port = nineml.user.append_namespace(
+            self.receive_port_name, port_namespaces[self.receiver_role])
+        # Return a new port connection with the role namespace appended to the
+        # port names.
         return self.__class__(send_port=send_port, receive_port=receive_port,
-                              **kwargs)
+                              sender_role=self.sender_role,
+                              receiver_role=self.receiver_role)
 
     def expose_ports(self, role_map):
         exposures = []
