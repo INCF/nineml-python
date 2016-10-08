@@ -301,9 +301,11 @@ multiDynPropB = MultiDynamicsProperties(
         'c': dynPropC,
         'g': dynPropG},
     port_connections=[
-        EventPortConnection('ESP1__e', 'ERP1',
+        EventPortConnection(multiDynA.send_port('ESP1__e'),
+                            dynG.receive_port('ERP1'),
                             sender_name='multiA', receiver_name='g'),
-        AnalogPortConnection('SV1', 'ARP2',
+        AnalogPortConnection(dynG.send_port('SV1'),
+                             dynC.receive_port('ARP2'),
                              sender_name='g', receiver_name='c')],
     port_exposures=[
         EventSendPortExposure('multiA', 'ESP1__e', name='ESP1'),

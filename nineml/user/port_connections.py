@@ -171,7 +171,8 @@ class BasePortConnection(BaseULObject):
                 "Sender object was not identified by its name")
         return self._receiver_name
 
-    def assign_roles(self, name_map={}, role_map={}, port_namespaces={}):
+    def assign_names_to_roles(self, name_map={}, role_map={},
+                              port_namespaces={}):
         """
         Assigns a name to a role, or specifies a new role for any role in the
         role map. Roles not in the map are left as they are.
@@ -247,14 +248,8 @@ class BasePortConnection(BaseULObject):
 
     def is_bound(self):
         if self._sender is None:
-#             assert self._receiver is None
-#             assert self._send_port is None
-#             assert self._receive_port is None
             bound = False
         else:
-#             assert self._receiver is not None
-#             assert self._send_port is not None
-#             assert self._receive_port is not None
             bound = True
         return bound
 

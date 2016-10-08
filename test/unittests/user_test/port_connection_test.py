@@ -23,3 +23,34 @@ class TestPortConnection(unittest.TestCase):
         pc2 = EventPortConnection.from_xml(xml, document)
         self.assertEquals(pc1, pc2,
                           "XML round trip failed for AnalogPortConnection")
+
+    def test_assign_roles(self):
+        role2name = {
+            'pre': 'pre_cell', 'post': 'post_cell', 'response': 'psr',
+            'plasticity': 'pls'}
+        epc = EventPortConnection(
+            send_port='ESP1',
+            receive_port='ERP1',
+            sender_role='pre',
+            receiver_role='plasticity')
+        apc = AnalogPortConnection(
+            send_port='SV1',
+            receive_port='ARP1',
+            sender_role='response',
+            receiver_role='post')
+        internal_epc = epc.assign_names_to_roles(name_map=role2name)
+        self.assertEqual(internal_epc.send_port_name, 'ESP1')
+        self.assertEqual(internal_epc.receive_port_name, 'ERP1')
+        self.assertEqual(internal_epc.sender_name, 'pre_cell')
+        self.assertEqual(internal_epc.receiver_name, 'pls')
+        external_epc = epc.assign_names_to_roles(port_namespaces=role2name)
+        self.assertEqual(external_epc.send_port_name, 'ESP1__pre_cell')
+        self.assertEqual(external_epc.receive_port_name, 'ERP1__pls')
+        internal_apc = apc.assign_names_to_roles(name_map=role2name)
+        self.assertEqual(internal_apc.send_port_name, 'SV1')
+        self.assertEqual(internal_apc.receive_port_name, 'ARP1')
+        self.assertEqual(internal_apc.sender_name, 'psr')
+        self.assertEqual(internal_apc.receiver_name, 'post_cell')
+        external_apc = apc.assign_names_to_roles(name_map=role2name)
+        self.assertEqual(external_apc.send_port_name, 'SV1__psr')
+        self.assertEqual(external_apc.receive_port_name, 'ARP1__post_cell')
