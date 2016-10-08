@@ -171,27 +171,53 @@ class BasePortConnection(BaseULObject):
                 "Sender object was not identified by its name")
         return self._receiver_name
 
-    def assign_names_from_roles(self, name_map):
+    def assign_names_from_roles(self, role_map):
         """
-        Assigns a name to a role, or specifies a new role for any role in the
-        role map. Roles not in the map are left as they are.
+        Returns a new port connection with the sender/receiver roles mapped to
+        the name of a sub-component, which can be used in the aggregation of
+        synapses and post-synaptic cells into single MultiDynamics objects
+
+        Parameters
+        ----------
+        role_map : dict(str,str)
+            A dictionary containing maps from the port-connection role to sub-
+            component name
+
+        Returns
+        -------
+        port_connection : PortConnection
+            Returns a port connection of the same type with the roles of the
+            sender/receiver mapped to sub-component names in the role_map arg
         """
         # Return a new port connection with the roles mapped to names or new
         # roles
         return self.__class__(send_port=self.send_port_name,
                               receive_port=self.receive_port_name,
-                              sender_name=name_map[self.sender_role],
-                              receiver_name=name_map[self.receiver_role])
+                              sender_name=role_map[self.sender_role],
+                              receiver_name=role_map[self.receiver_role])
 
-    def append_namespace_from_roles(self, port_namespaces):
+    def append_namespace_from_roles(self, role_map):
         """
-        Assigns a name to a role, or specifies a new role for any role in the
-        role map. Roles not in the map are left as they are.
+        Test the appending of role names to port_connection ports for
+        use in the creation of MultiDynamics objects
+
+        Parameters
+        ----------
+        role_map : dict(str,str)
+            A dictionary containing maps from the port-connection role to sub-
+            component name
+
+        Returns
+        -------
+        port_connection : PortConnection
+            Returns a port connection of the same type with the port names
+            appended with the namespace of the sub-component the
+            sender/receiver maps to
         """
         send_port = nineml.user.append_namespace(
-            self.send_port_name, port_namespaces[self.sender_role])
+            self.send_port_name, role_map[self.sender_role])
         receive_port = nineml.user.append_namespace(
-            self.receive_port_name, port_namespaces[self.receiver_role])
+            self.receive_port_name, role_map[self.receiver_role])
         # Return a new port connection with the role namespace appended to the
         # port names.
         return self.__class__(send_port=send_port, receive_port=receive_port,
@@ -199,6 +225,25 @@ class BasePortConnection(BaseULObject):
                               receiver_role=self.receiver_role)
 
     def expose_ports(self, role_map):
+        """
+        Create port exposures for the send and/or receive ports in the role
+        map. Used when aggregating synapse and post-synaptic cell dynamics into
+        MultiDynamics object to expose the ports required for the port
+        connection
+
+        Parameters
+        ----------
+        role_map : dict(str,str)
+            A dictionary containing maps from the port-connection role to sub-
+            component name
+
+        Returns
+        -------
+        exposures : list(PortExposure)
+            Returns a list of port exposures of length 0-2 containing the port
+            exposures required to connect the port connection to sub-
+            component names in the role map.
+        """
         exposures = []
         try:
             exposures.append(nineml.user.multi.BasePortExposure.from_port(
