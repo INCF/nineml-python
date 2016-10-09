@@ -71,18 +71,6 @@ class TestArrayValueExceptions(unittest.TestCase):
                 float,
                 val)
 
-    def test__check_single_value_ninemlruntimeerror(self):
-        """
-        line #: 441
-        message: Cannot use {} in array arithmetic operation, only values that
-        can be converted to a single float are allowed
-        """
-        val = next(instances_of_all_types['ArrayValue'].itervalues())
-        self.assertRaises(
-            NineMLRuntimeError,
-            val._check_single_value,
-            num='bad_float')
-
 
 class TestRandomValueExceptions(unittest.TestCase):
 

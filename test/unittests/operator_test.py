@@ -71,7 +71,10 @@ class TestValues(unittest.TestCase):
                 if op in div_ops and float(val) == 0.0:
                     val = SingleValue(0.1)
                 ff_result = op(float(result), float(val))
-                vv_result = op(result, val)
+                try:
+                    vv_result = op(result, val)
+                except:
+                    op(result, val)
                 vf_result = op(result, float(val))
                 fv_result = op(float(result), val)
                 op_str = ("{}({}, {})".format(op.__name__, result, val))
@@ -592,3 +595,13 @@ class TestQuantities(unittest.TestCase):
                         q_result.units.dimension, q_result.units.power,
                         units.dimension, units.power))
                 result = q_result
+
+    def test_value_op_unit(self):
+        self.assertEqual(10.0 * un.s, un.Quantity(10.0, un.s))
+        self.assertEqual(un.s * 10.0, un.Quantity(10.0, un.s))
+        self.assertEqual(10.0 / un.s, un.Quantity(10.0, un.Hz))
+        self.assertEqual(un.s / 10.0, un.Quantity(0.1, un.s))
+        self.assertEqual(SingleValue(10.0) * un.s, un.Quantity(10.0, un.s))
+        self.assertEqual(un.s * SingleValue(10.0), un.Quantity(10.0, un.s))
+        self.assertEqual(SingleValue(10.0) / un.s, un.Quantity(10.0, un.Hz))
+        self.assertEqual(un.s / SingleValue(10.0), un.Quantity(0.1, un.s))

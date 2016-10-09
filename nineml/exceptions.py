@@ -34,6 +34,10 @@ class NineMLValueError(ValueError, NineMLRuntimeError):
     pass
 
 
+class NineMLTypeError(TypeError, NineMLRuntimeError):
+    pass
+
+
 class NineMLInvalidElementTypeException(TypeError, NineMLRuntimeError):
     pass
 

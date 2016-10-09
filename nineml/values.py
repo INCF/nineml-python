@@ -12,9 +12,63 @@ from itertools import izip
 from operator import itemgetter
 import numpy
 import nineml
-from nineml.exceptions import NineMLRuntimeError, NineMLValueError
+from nineml.exceptions import (
+    NineMLRuntimeError, NineMLValueError)
 from nineml.utils import nearly_equal
 from nineml.xml import from_child_xml, unprocessed_xml, get_subblocks
+
+
+# =============================================================================
+# Operator argument decorators
+# =============================================================================
+
+
+def parse_right_operand(op_method):
+    """
+    Decorate SingleValue operator magic methods so they convert the 'other'
+    operand to a float or ArrayValue if possible first
+    """
+    def decorated_operator(self, other):
+        try:
+            return op_method(self, float(other))
+        except TypeError:
+            if isinstance(other, BaseValue):
+                # Let other's righthand operator handle the operation
+                return NotImplemented
+            try:
+                # If other can be converted to an array value, do so and
+                # call corresponding "righthand" operator of the ArrayValue
+                return getattr(
+                    ArrayValue(other),
+                    '__r{}__'.format(op_method.__name__[2:-2]))(self)
+            except (TypeError, ValueError):
+                # Can't convert to float or ArrayValue other's righthand method
+                # have a shot
+                return NotImplemented
+    return decorated_operator
+
+
+def parse_left_operand(op_method):
+    def decorated_operator(self, other):
+        try:
+            return op_method(self, float(other))
+        except TypeError:
+            return NotImplemented
+    return decorated_operator
+
+
+def parse_float_operand(op_method):
+    def decorated_operator(self, num):
+        try:
+            return op_method(self, float(num))
+        except (TypeError, ValueError):
+            return NotImplemented
+    return decorated_operator
+
+
+# =============================================================================
+# Value classes
+# =============================================================================
 
 
 class BaseValue(BaseNineMLObject):
@@ -124,85 +178,68 @@ class SingleValue(BaseValue):
     def __int__(self):
         return int(self._value)
 
+    @parse_right_operand
     def __add__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__radd__(self)
-        return SingleValue(self._value + float(num))
+        return SingleValue(self._value + num)
 
+    @parse_right_operand
     def __sub__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__rsub__(self)
-        return SingleValue(self._value - float(num))
+        return SingleValue(self._value - num)
 
+    @parse_right_operand
     def __mul__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__mul__(self)
-        return SingleValue(self._value * float(num))
+        return SingleValue(self._value * num)
 
-    def __truediv__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__rtruediv__(self)
-        return SingleValue(self._value / float(num))
-
-    def __div__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__rdiv__(self)
-        return SingleValue(self.__truediv__(num))
-
+    @parse_right_operand
     def __pow__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__rpow__(self)
         return SingleValue(self._value ** num)
 
+    @parse_right_operand
     def __floordiv__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__rfloordiv__(self)
-        return SingleValue(self._value // float(num))
+        return SingleValue(self._value // num)
 
+    @parse_right_operand
     def __mod__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__rmod__(self)
-        return SingleValue(self._value % float(num))
+        return SingleValue(self._value % num)
 
+    @parse_right_operand
+    def __truediv__(self, num):
+        return SingleValue(self._value.__truediv__(num))
+
+    def __div__(self, num):
+        return self.__truediv__(num)
+
+    @parse_left_operand
     def __radd__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__add__(self)
-        return SingleValue(self.__add__(num))
+        return self.__add__(num)
 
+    @parse_left_operand
     def __rsub__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__sub__(self)
         return SingleValue(float(num) - self._value)
 
+    @parse_left_operand
     def __rmul__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__mul__(self)
-        return SingleValue(self.__mul__(num))
+        return self.__mul__(num)
 
+    @parse_left_operand
+    def __rpow__(self, num):
+        return SingleValue(num ** self._value)
+
+    @parse_left_operand
+    def __rfloordiv__(self, num):
+        return SingleValue(num // self._value)
+
+    @parse_left_operand
+    def __rmod__(self, num):
+        return SingleValue(num % self._value)
+
+    @parse_left_operand
     def __rtruediv__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__truediv__(self)
         return SingleValue(num.__truediv__(self._value))
 
+    @parse_left_operand
     def __rdiv__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__div__(self)
-        return SingleValue(self.__rtruediv__(num))
-
-    def __rpow__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__pow__(self)
-        return SingleValue(float(num) ** self._value)
-
-    def __rfloordiv__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__floordiv__(self)
-        return SingleValue(float(num) // self._value)
-
-    def __rmod__(self, num):
-        if hasattr(num, '__getitem__'):
-            return ArrayValue(num).__mod__(self)
-        return SingleValue(float(num) % self._value)
+        return self.__rtruediv__(num)
 
     def __neg__(self):
         return SingleValue(-self._value)
@@ -336,102 +373,100 @@ class ArrayValue(BaseValue):
         raise TypeError(
             "ArrayValues cannot be converted to a single float")
 
+    @parse_float_operand
     def __add__(self, num):
-        self._check_single_value(num)
         try:
-            return ArrayValue(self._values + float(num))  # if numpy array
+            return ArrayValue(self._values + num)  # if numpy array
         except TypeError:
             return ArrayValue([float(v + num) for v in self._values])
 
+    @parse_float_operand
     def __sub__(self, num):
-        self._check_single_value(num)
         try:
-            return ArrayValue(self._values - float(num))  # if numpy array
+            return ArrayValue(self._values - num)  # if numpy array
         except TypeError:
             return ArrayValue([float(v - num) for v in self._values])
 
+    @parse_float_operand
     def __mul__(self, num):
-        self._check_single_value(num)
         try:
-            return ArrayValue(self._values * float(num))  # if numpy array
+            return ArrayValue(self._values * num)  # if numpy array
         except TypeError:
             return ArrayValue([float(v * num) for v in self._values])
 
+    @parse_float_operand
     def __truediv__(self, num):
-        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__truediv__(num))  # if numpy array
         except AttributeError:
             return ArrayValue([float(v / num) for v in self._values])
 
+    @parse_float_operand
     def __div__(self, num):
-        self._check_single_value(num)
         return self.__truediv__(num)
 
+    @parse_float_operand
     def __pow__(self, power):
-        self._check_single_value(power)
         try:
-            return ArrayValue(self._values ** float(power))  # if numpy array
+            return ArrayValue(self._values ** power)  # if numpy array
         except TypeError:
             return ArrayValue([float(v ** power) for v in self._values])
 
+    @parse_float_operand
     def __floordiv__(self, num):
-        self._check_single_value(num)
         try:
-            return ArrayValue(self._values // float(num))  # if numpy array
+            return ArrayValue(self._values // num)  # if numpy array
         except TypeError:
             return ArrayValue([float(v // num) for v in self._values])
 
+    @parse_float_operand
     def __mod__(self, num):
-        self._check_single_value(num)
         try:
-            return ArrayValue(self._values % float(num))  # if numpy array
+            return ArrayValue(self._values % num)  # if numpy array
         except TypeError:
             return ArrayValue([float(v % num) for v in self._values])
 
     def __radd__(self, num):
-        self._check_single_value(num)
         return self.__add__(num)
 
+    @parse_float_operand
     def __rsub__(self, num):
-        self._check_single_value(num)
         try:
-            return ArrayValue(float(num) - self._values)  # if numpy array
+            return ArrayValue(num - self._values)  # if numpy array
         except TypeError:
             return ArrayValue([float(num - v) for v in self._values])
 
     def __rmul__(self, num):
-        self._check_single_value(num)
         return self.__mul__(num)
 
+    @parse_float_operand
     def __rtruediv__(self, num):
-        self._check_single_value(num)
         try:
-            return ArrayValue(self._values.__rtruediv__(float(num)))  # if np
+            return ArrayValue(self._values.__rtruediv__(num))  # if np
         except AttributeError:
             return ArrayValue([float(num.__truediv__(v))
                                for v in self._values])
 
+    @parse_float_operand
     def __rdiv__(self, num):
-        self._check_single_value(num)
         return self.__rtruediv__(num)
 
+    @parse_float_operand
     def __rpow__(self, num):
-        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__rpow__(num))  # if numpy array
         except AttributeError:
             return ArrayValue([float(num ** v) for v in self._values])
 
+    @parse_float_operand
     def __rfloordiv__(self, num):
-        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__rfloordiv__(num))  # if numpy arr.
         except AttributeError:
             return ArrayValue([float(num // v) for v in self._values])
 
+    @parse_float_operand
     def __rmod__(self, num):
-        self._check_single_value(num)
         try:
             return ArrayValue(self._values.__rmod__(num))  # if numpy array
         except AttributeError:
@@ -448,14 +483,6 @@ class ArrayValue(BaseValue):
             return ArrayValue(self._values.__abs__())
         except AttributeError:
             return ArrayValue([abs(v) for v in self._values])
-
-    def _check_single_value(self, num):
-        try:
-            float(num)
-        except (TypeError, ValueError):
-            raise NineMLRuntimeError(
-                "Cannot use {} in array arithmetic operation, only values that"
-                " can be converted to a single float are allowed".format(num))
 
 
 class RandomValue(BaseValue):
