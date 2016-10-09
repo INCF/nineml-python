@@ -387,7 +387,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
                 inverted = 1.0 / other
             else:
                 inverted = other.inverse()
-            return Quantity(inverted, self.units)
+            return Quantity(inverted, self)
 
     def __pow__(self, power):
         "self ** expr"
@@ -403,10 +403,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         return self.__mul__(other)
 
     def __rtruediv__(self, other):
-        try:
-            return other.__truediv__(self)
-        except NotImplementedError:
-            return Quantity(float(other), unitless / self)
+        return Quantity(float(other), unitless / self)
 
     def __div__(self, other):
         return self.__truediv__(other)
