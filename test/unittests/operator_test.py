@@ -7,7 +7,6 @@ from nineml.values import SingleValue, ArrayValue, RandomValue
 from operator import (
     add, sub, mul, truediv, div, pow, floordiv, mod, neg, iadd, idiv,
     ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
-from math import floor, ceil, trunc
 from nineml.utils.testing.comprehensive import instances_of_all_types
 import numpy as np  # This is only imported here in the test as it is not dependency
 from sympy import sympify, Basic as SympyBaseClass, Symbol
@@ -40,16 +39,16 @@ anonymous_expressions = sorted(
 expressions = list(chain(named_expressions, anonymous_expressions))
 
 div_ops = (div, truediv, floordiv, mod, idiv, itruediv, ifloordiv, imod)
-uniary_ops = [neg, abs, inv, floor, ceil, trunc, round]
+uniary_ops = [neg, abs, inv]
 
 
 class TestValues(unittest.TestCase):
 
     ops = [
         floordiv, pow, truediv, sub, pow, neg, mod, add, pow, floordiv, div,
-        mod, trunc, mod, floordiv, truediv, truediv, floor, abs, add, abs, pow,
-        neg, div, truediv, mul, mul, div, mod, mul, abs, abs, pow, round, neg,
-        add, floordiv, add, ceil, mul, truediv, sub, div, add, mod, neg, sub,
+        mod, mod, floordiv, truediv, truediv, abs, add, abs, pow,
+        neg, div, truediv, mul, mul, div, mod, mul, abs, abs, pow, neg,
+        add, floordiv, add, mul, truediv, sub, div, add, mod, neg, sub,
         floordiv, sub, sub, neg, mul, abs, div]
 
     iops = [iadd, idiv, ifloordiv, imod, imul, ipow, isub, itruediv]
@@ -66,10 +65,6 @@ class TestValues(unittest.TestCase):
             if op in uniary_ops:
                 ff_result = op(float(result))
                 vv_result = op(result)
-                if op is round:
-                    # This is a Python 2 "feature" that round calls float first
-                    # before calling __round__, so the result is always a float
-                    vv_result = SingleValue(vv_result)
                 op_str = ("{}({})".format(op.__name__, result))
             else:
                 val = next(val_iter)
@@ -153,17 +148,19 @@ class TestValues(unittest.TestCase):
                         "{} not equal between array value ({}) and "
                         "numpy ({})".format(op_str, nf_result, np_result))
                     self.assertIsInstance(
-                        nf_result, ArrayValue,
+                        nv_result, ArrayValue,
                         "{} did not return a ArrayValue ({})"
                         .format(op_str, nf_result))
-                    try:
-                        self.assertIsInstance(
-                            nf_result._values, np.ndarray,
-                            "{} did not maintain numpy _values in resultant "
-                            "ArrayValue ({})"
-                            .format(op_str, nf_result))
-                    except:
-                        op(np_array_val, float(val))
+                    self.assertIsInstance(
+                        nv_result._values, np.ndarray,
+                        "{} did not maintain numpy _values in resultant "
+                        "ArrayValue ({})"
+                        .format(op_str, nv_result))
+                    self.assertIsInstance(
+                        nf_result._values, np.ndarray,
+                        "{} did not maintain numpy _values in resultant "
+                        "ArrayValue ({})"
+                        .format(op_str, nf_result))
                     rvv_result = op(val, array_val)
                     rvf_result = op(float(val), array_val)
                     rnv_result = op(val, np_array_val)
