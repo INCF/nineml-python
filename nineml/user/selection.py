@@ -60,7 +60,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
         self._operation = operation
 
     def __repr__(self):
-        return "Selection('%s', '%r')" % (self.name, self.operation)
+        return "Selection(name='{}', {})".format(self.name, self.operation)
 
     @property
     def name(self):
@@ -184,7 +184,7 @@ class Concatenate(BaseULObject):
 
     def __init__(self, *items):
         super(Concatenate, self).__init__()
-        self._items = items
+        self._items = list(items)
 
     def __repr__(self):
         return "Concatenate(%s)" % ", ".join(repr(item) for item in self.items)
@@ -199,7 +199,7 @@ class Concatenate(BaseULObject):
         # should this perhaps flatten to a list of Populations, where the
         # concatenation includes other Selections? or should that be a separate
         # method?
-        return self._items
+        return iter(self._items)
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
