@@ -220,6 +220,10 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
     def dynamics_properties(self):
         return self._dynamics_properties
 
+    @property
+    def component_class(self):
+        return self.dynamics_properties.component_class
+
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
@@ -255,9 +259,6 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
-        assert isinstance(name, basestring)
-        assert isinstance(source, ComponentArray)
-        assert isinstance(destination, ComponentArray)
         self._source = source
         self._destination = destination
         self._source_port = source_port
