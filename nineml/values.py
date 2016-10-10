@@ -4,7 +4,6 @@ from nineml.xml import E, get_xml_attr
 from abc import ABCMeta, abstractmethod
 from nineml.annotations import read_annotations, annotate_xml
 from urllib import urlopen
-from math import floor, ceil, trunc
 import contextlib
 import collections
 import sympy
@@ -100,15 +99,6 @@ class BaseValue(BaseNineMLObject):
 
     def round(self, n):
         return self.__round__(n)
-
-    def ceil(self):
-        return self.__ceil__()
-
-    def floor(self):
-        return self.__floor__()
-
-    def trunc(self):
-        return self.__floor__()
 
 
 class SingleValue(BaseValue):
@@ -261,18 +251,6 @@ class SingleValue(BaseValue):
 
     def __abs__(self):
         return SingleValue(abs(self._value))
-
-    def __round__(self, n):
-        return SingleValue(round(self._value, n))
-
-    def __floor__(self):
-        return SingleValue(floor(self._value))
-
-    def __ceil__(self):
-        return SingleValue(ceil(self._value))
-
-    def __trunc__(self):
-        return SingleValue(trunc(self._value))
 
 
 class ArrayValue(BaseValue):
@@ -510,30 +488,6 @@ class ArrayValue(BaseValue):
             return ArrayValue(self._values.__abs__())
         except AttributeError:
             return ArrayValue([abs(v) for v in self._values])
-
-    def __round__(self, n):
-        try:
-            return ArrayValue(self._values.__round__(n))
-        except AttributeError:
-            return ArrayValue([round(v, n) for v in self._values])
-
-    def __floor__(self):
-        try:
-            return ArrayValue(self._values.__floor__())
-        except AttributeError:
-            return ArrayValue([floor(v) for v in self._values])
-
-    def __ceil__(self):
-        try:
-            return ArrayValue(self._values.__ceil__())
-        except AttributeError:
-            return ArrayValue([ceil(v) for v in self._values])
-
-    def __trunc__(self):
-        try:
-            return ArrayValue(self._values.__trunc__())
-        except AttributeError:
-            return ArrayValue([trunc(v) for v in self._values])
 
 
 class RandomValue(BaseValue):
