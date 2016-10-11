@@ -488,6 +488,8 @@ doc1 = Document(
     netB, *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))))
 
 doc2 = Document(
+    # Need to clone the elements as they can only belong to one document at a
+    # time
     *[e.clone() for e in (
         dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC,
         ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,

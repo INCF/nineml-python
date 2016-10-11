@@ -1,8 +1,17 @@
+
 lib9ML
 ======
-NineML is a language for describing the dynamics and connectivity of neuronal network simulations (http://nineml.net). The language is defined as an object model, described in the NineML specification (http://nineml.net/specification), with a standardized serialization as XML, although other serializations are possible.
 
-lib9ML is a software library written in Python, which maps the NineML object model onto Python classes for convenient creation, manipulation and validation of NineML models, as well as handling their serialization to/from XML.
+NineML is a language for describing the dynamics and connectivity of neuronal
+network simulations (http://nineml.net). The language is defined as an object
+model, described in the NineML specification (http://nineml.net/specification),
+with a standardized serialization as XML, although other serializations are
+possible.
+
+lib9ML is a software library written in Python, which maps the NineML object
+model onto Python classes for convenient creation, manipulation and validation
+of NineML models, as well as handling their serialization to and from XML.
+
 
 Installation
 ------------
@@ -10,18 +19,40 @@ lib9ML can be installed using Python setuptools with the following command
 
     python setup.py install
 
-from the root directory of the repository, which will also install the prerequisites, Sympy (http://sympy.org) and lxml (http://pypi.python.org/pypi/lxml), if they are not installed already.
+called from the root directory of the repository, which will also install the
+prerequisites packages sympy (http://sympy.org) and lxml
+(http://pypi.python.org/pypi/lxml) if they are not already installed.
+
 
 Relation to the NineML Specification
 ------------------------------------
 
-The layout of the Python modules and classes lib9ML relates closely to the structure of the NineML specification v1.0, which can be downloaded from http://incf.github.io/nineml/9ML/1.0/NineML_v1.0.pdf. However, there are notable exceptions where lib9ML uses names and relationships that are planned to be changed in v2.0 of the specification, such as the renaming of ``ComponentClass`` to separate ``Dynamics``, ``ConnectionRule`` and ``RandomDistribution`` classes (see https://github.com/INCF/nineml/issues/94). A full list of changes planned for NineML v2.0 can be found at https://github.com/INCF/nineml/milestone/3. When serializing NineML models to XML the v1.0 syntax is used unless the version=2.0 keyword argument is used.
+The layout of the Python modules and classes lib9ML relates closely to the
+structure of the NineML specification v1.0 
+(http://incf.github.io/nineml/9ML/1.0/NineML_v1.0.pdf). However, there are
+notable exceptions where lib9ML uses names and relationships that are planned
+to be changed in v2.0 of the specification, such as the renaming of
+``ComponentClass`` elements to separate ``Dynamics``, ``ConnectionRule`` and
+``RandomDistribution`` elements (see https://github.com/INCF/nineml/issues/94).
+A full list of changes planned for NineML v2.0 can be found at
+https://github.com/INCF/nineml/milestone/3. When serializing NineML models to
+XML the v1.0 syntax is used unless the version=2.0 keyword argument is used.
 
-In addition to classes that directly correspond to the NineML object model, a range of shorthand notations ("syntactic sugar") exist to make writing 9ML models by hand more convenient (see the *nineml.sugar* module). These notations are frequently demonstrated in the *examples* directory of the repository.
+In addition to classes that directly correspond to the NineML object model, a
+range of shorthand notations ("syntactic sugar") exist to make writing 9ML
+models by hand more convenient (see the *nineml.sugar* module). These notations
+are frequently demonstrated in the *examples* directory of the repository.
+
 
 NineML Catalog
 --------------
-The NineML Catalog (http://github.com/INCF/NineMLCatalog) contains a collection of validated NineML models that can be loaded and maninpulated with lib9ML. If you create a model that you believe will be of wider use to the computational neuroscience community please consider contributing to the catalog via a pull request.
+
+The NineML Catalog (http://github.com/INCF/NineMLCatalog) contains a collection
+of validated NineML models that can be loaded and maninpulated with lib9ML.
+If you create a model that you believe will be of wider use to the
+computational neuroscience community please consider contributing to the
+catalog via a pull request.
+
 
 Links
 -----
@@ -29,6 +60,7 @@ Links
 * Documentation: http://nineml.readthedocs.org
 * Mailing list: nineml-users@incf.org
 * Issue tracker: https://github.com/INCF/lib9ML/issues
+
 
 :copyright: Copyright 20011-2016 by the lib9ML team, see AUTHORS.
 :license: BSD 3, see LICENSE for details.
