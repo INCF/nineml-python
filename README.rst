@@ -23,6 +23,11 @@ called from the root directory of the repository, which will also install the
 prerequisites packages sympy (http://sympy.org) and lxml
 (http://pypi.python.org/pypi/lxml) if they are not already installed.
 
+NB: As of 12/10/2016 Sympy v1.0 has a bug in its ccode printer, which is
+used by lib9ML to write expressions within MathInline elements. This bug has
+been fixed in the development branch so please either use sympy >= 1.0dev or
+the earlier version e.g. 0.7.6.1.
+
 
 Relation to the NineML Specification
 ------------------------------------
