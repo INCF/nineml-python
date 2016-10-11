@@ -476,11 +476,22 @@ netB = Network(
     populations=[popC, popD],
     projections=[projB])
 
+netC = Network(
+    name='netC',
+    populations=[popMultiA, popMultiB],
+    projections=[projE])
+
 doc1 = Document(
     dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, multiDynPropA,
     multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
     selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA,
-    netB, *list(chain(*(netA.flatten() + netB.flatten()))))
+    netB, *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))))
+
+doc2 = Document(
+    *[e.clone() for e in (
+        dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC,
+        ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
+        selA, conA, conPropA, conB, projA, projB, projC, projD, netA, netB)])
 
 # -----------------------------------------------------------------------------
 # Create dictionaries holding all nineml types and corresponding examples in
@@ -522,6 +533,8 @@ def add_with_sub_elements(element):
                 return
         for elem in sub_elem_iter:
             add_with_sub_elements(elem)
+
+v1_safe_docs = [doc2]
 
 instances_of_all_types = defaultdict(dict)
 instances_of_all_types[doc1.nineml_type]['doc1'] = doc1
