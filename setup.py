@@ -6,7 +6,7 @@ setup(
     name="lib9ML",
     version="0.1",
     packages=find_packages(),
-    author="Andrew P. Davison, Thomas G. Close, Eilif Muller, Mike Hull",
+    author="Andrew P. Davison, Mike Hull, Thomas G. Close, Eilif Muller",
     # add your name here if you contribute to the code
     author_email="nineml-users@incf.org",
     description=(
@@ -23,6 +23,6 @@ setup(
                  'Operating System :: OS Independent',
                  'Programming Language :: Python :: 2',
                  'Topic :: Scientific/Engineering'],
-    install_requires=['lxml'], # , 'sympy'], sympy 1.0 has a bug in ccode, which is fixed in the master branch 30/7/16
+    install_requires=['lxml', 'sympy'], # NB: sympy 1.0 has a bug in ccode, which is fixed in the master branch 30/7/16
     tests_require=['nose', 'numpy']
 )
