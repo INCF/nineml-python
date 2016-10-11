@@ -182,10 +182,10 @@ class Projection(BaseULObject, DocumentLevelObject):
                     E('From' + self.v2tov1[pc.sender_role],
                       send_port=pc.send_port_name,
                       receive_port=pc.receive_port_name))
-            args = [E.Source(self.pre.to_xml(document, E=E, **kwargs),
-                             *pcs['pre']),
-                    E.Destination(self.post.to_xml(document, E=E, **kwargs),
-                                  *pcs['post']),
+            args = [E.Source(self.pre.to_xml(document, E=E, as_ref=True,
+                                             **kwargs), *pcs['pre']),
+                    E.Destination(self.post.to_xml(document, E=E, as_ref=True,
+                                                   **kwargs), *pcs['post']),
                     E.Response(self.response.to_xml(document, E=E, **kwargs),
                                *pcs['response']),
                     E.Connectivity(

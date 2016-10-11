@@ -250,9 +250,12 @@ def unprocessed_xml(from_xml):
             else:
                 nineml_type = cls.nineml_type
             # Check the tag of the element matches the class names
-            assert element.tag in (xmlns + nineml_type), (
-                "Found '{}' element, expected '{}'"
-                .format(element.tag, cls.nineml_type))
+            try:
+                assert element.tag in (xmlns + nineml_type), (
+                    "Found '{}' element, expected '{}'"
+                    .format(element.tag, cls.nineml_type))
+            except:
+                raise
         else:
             document = cls.document  # if AL visitor method
         # Keep track of which blocks and attributes were processed within the
