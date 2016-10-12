@@ -507,6 +507,9 @@ class ODE(ExpressionWithLHS):
 
     """
 
+    defining_attributes = ('_rhs', '_independent_variable',
+                           '_dependent_variable')
+
     def __init__(self, dependent_variable, independent_variable, rhs):
         ExpressionWithLHS.__init__(self, rhs)
 

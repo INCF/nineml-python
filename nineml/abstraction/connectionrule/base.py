@@ -63,8 +63,14 @@ class ConnectionRule(ComponentClass):
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
-    def clone(self):
-        return ConnectionRuleCloner().visit(self)
+    def clone(self, memo=None, **kwargs):  # @UnusedVariable
+        if memo is None:
+            memo = {}
+        try:
+            clone = memo[id(self)]
+        except KeyError:
+            clone = ConnectionRuleCloner().visit(self)
+        return clone
 
     def dimension_of(self, element):
         try:

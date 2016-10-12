@@ -152,6 +152,12 @@ class BasePortExposure(BaseULObject):
         self._sub_component_name = None
         self._port_name = None
 
+    def _clone_defining_attr(self, clone, memo, **kwargs):
+        super(BasePortExposure, self)._clone_defining_attr(clone, memo,
+                                                           **kwargs)
+        clone._port_name = self._port_name
+        clone._sub_component_name = self._sub_component_name
+
 
 class _BaseAnalogPortExposure(BasePortExposure):
 

@@ -44,7 +44,7 @@ class Parameter(BaseALObject):
         self._dimension = dimension if dimension is not None else dimensionless
         assert isinstance(self._dimension, Dimension), (
             "dimension must be None or a nineml.Dimension instance")
-        self.constraints = []  # TODO: constraints can be added in the future.
+#         self.constraints = []  # TODO: constraints can be added in the future
 
     def __eq__(self, other):
         if not isinstance(other, Parameter):

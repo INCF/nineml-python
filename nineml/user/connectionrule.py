@@ -92,6 +92,10 @@ class BaseConnectivity(object):
     def has_been_sampled(self):
         pass
 
+    @abstractmethod
+    def clone(self, memo, **kwargs):
+        pass
+
 
 class InverseConnectivity(object):
     """
@@ -238,13 +242,24 @@ class Connectivity(BaseConnectivity):
                   for _ in xrange(N)))
             for s in xrange(self._src_size)))
 
+    def clone(self, memo=None, random_seeds=False, **kwargs):
+        if memo is None:
+            memo = {}
+        try:
+            # See if the attribute has already been cloned in memo
+            clone = memo[id(self)]
+        except KeyError:
+            if random_seeds:
+                random_seed = self._seed
+            else:
+                random_seed = None
+            clone = self.__class__(
+                self.rule_properties.clone(memo=memo,
+                                           random_seeds=random_seeds,
+                                           **kwargs),
+                self.source_size, self.destination_size,
+                random_seed=random_seed, rng_cls=self._rng_cls)
+        return clone
+
     def has_been_sampled(self):
-        """
-        Check to see whether randomly drawn values in the Connectivity object
-        have been sampled (and cached) or not. Caching of random values allows
-        multiple connection groups to reference the same instance of the
-        connectivity (for example if they form part of one logical projection)
-        """
-        return (self.lib_type not in ('AllToAll', 'OneToOne',
-                                      'ExplicitConnectionList') and
-                self._cache is not None)
+        return True  # Because seed and RNG class is set at start

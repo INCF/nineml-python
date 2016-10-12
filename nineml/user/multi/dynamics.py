@@ -14,7 +14,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, name_error)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
-from nineml.abstraction import BaseALObject
+from nineml.abstraction import BaseALObject, ComponentClass
 import nineml.units as un
 from nineml.base import (
     ContainerObject, DocumentLevelObject, DynamicPortsObject)
@@ -916,6 +916,11 @@ class MultiDynamics(Dynamics):
              for pe in self.analog_reduce_ports),
             ((pc.receiver_name, pc.receive_port)
              for pc in self.analog_port_connections))
+
+    def clone(self, **kwargs):
+        # Avoid "Cloner" visitor method that Dynamics uses to clone and use
+        # the method defined in BaseNineMLObject instead
+        return ComponentClass.clone(self, **kwargs)
 
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and

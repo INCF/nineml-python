@@ -1,4 +1,5 @@
 import os
+from copy import copy
 from operator import and_
 from .base import BaseNineMLObject
 from nineml.xml import (
@@ -116,6 +117,12 @@ class Reference(BaseReference):
         """The object being referred to."""
         return self._referred_to
 
+    def clone(self, **kwargs):  # @UnusedVariable
+        # Typically won't be called unless Reference is created and referenced
+        # explicitly as the referenced object themselves is typically referred
+        # to in the containing container.
+        return copy(self)
+
 
 def resolve_reference(from_xml):
     def resolving_from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -194,4 +201,4 @@ def write_reference(to_xml):
     return unresolving_to_xml
 
 
-from .document import read
+from .document import read  # @IgnorePep8

@@ -17,6 +17,7 @@ from nineml.base import (
     DocumentLevelObject, ContainerObject)
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from os import path
+import nineml
 
 
 class Definition(BaseReference):
@@ -65,6 +66,26 @@ class Definition(BaseReference):
             except NineMLNameError:
                 document.add(self._referred_to)
         return super(Definition, self).to_xml(document, E=E, **kwargs)
+
+    def clone(self, memo=None, definitions=False, **kwargs):
+        """
+        Since the document they belong to is reset for clones simply return
+        the clone of the referenced object
+
+        Parameters
+        ----------
+        definitions : bool
+            Flat to specify whether to clone component class referenced by the
+            definition or just the definition itself
+        """
+        if memo is None:
+            memo = {}
+        if definitions:
+            referred_to = self._referred_to.clone(
+                definitions=definitions, memo=memo, **kwargs)
+        else:
+            referred_to = self._referred_to
+        return self.__class__(referred_to)
 
 
 class Prototype(Definition):
