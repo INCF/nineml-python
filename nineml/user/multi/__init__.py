@@ -1,4 +1,4 @@
-from .component import (
+from .dynamics import (
     MultiDynamics, MultiDynamicsProperties, SubDynamics, SubDynamicsProperties)
 from .port_exposures import (
     AnalogReceivePortExposure, AnalogReducePortExposure, BasePortExposure,

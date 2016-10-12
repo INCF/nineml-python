@@ -424,7 +424,7 @@ class EventPortConnection(BasePortConnection):
     def delay(self):
         """
         Included for compatibility with code written in
-        nineml.user.multi.component for future versions
+        nineml.user.multi.dynamics for future versions
         """
         return 0.0
 
