@@ -424,7 +424,7 @@ class OnCondition(Transition):
         This is included to allow OnConditions to be polymorphic with
         other named structures
         """
-        return self.trigger.rhs
+        return str(sympy.simplify(self.trigger.rhs))
 
 
 class Trigger(BaseALObject, Expression):
