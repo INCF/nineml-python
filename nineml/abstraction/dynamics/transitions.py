@@ -441,9 +441,7 @@ class Trigger(BaseALObject, Expression):
 
     def __init__(self, rhs):
         BaseALObject.__init__(self)
-        # Simplify the trigger so that it can be used as a key for OnConditions
         Expression.__init__(self, rhs)
-        self.simplify()
 
     def __repr__(self):
         return "Trigger('%s')" % (self.rhs)
