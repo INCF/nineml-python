@@ -967,7 +967,7 @@ class _MultiRegime(Regime):
         return self._sub_regimes[sub_component]
 
     @property
-    def _name(self):
+    def name(self):
         return make_regime_name(self._sub_regimes)
 
     def lookup_member_dict(self, element):
@@ -975,7 +975,7 @@ class _MultiRegime(Regime):
         Looks up the appropriate member dictionary for objects of type element
         """
         dct_name = self.lookup_members_name(element)
-        comp_name = MultiDynamics.split_namespace(element._name)[1]
+        comp_name = MultiDynamics.split_namespace(element.key)[1]
         return getattr(self.sub_regime(comp_name), dct_name)
 
     @property
@@ -1145,7 +1145,7 @@ class _MultiTransition(BaseALObject, ContainerObject):
             if namespace in self._sub_transitions:
                 raise NineMLRuntimeError(
                     "Transition loop with non-zero delay found in on-event "
-                    "chain beggining with {}".format(chained_event._name))
+                    "chain beggining with {}".format(chained_event.key))
             self._sub_transitions[namespace] = chained_event
         self._parent = parent
 
@@ -1300,7 +1300,7 @@ class _ExposedOutputEvent(OutputEvent):
         self._port_exposure = port_exposure
 
     @property
-    def _name(self):
+    def key(self):
         return self.port_name
 
     @property

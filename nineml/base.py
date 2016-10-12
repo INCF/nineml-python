@@ -53,8 +53,8 @@ class BaseNineMLObject(object):
                 # Try to sort the elements by their '_name' attribute (so they
                 # are order non-specific) if they are an iterable
                 try:
-                    self_elem = sorted(self_elem, key=lambda x: str(x._name))
-                    other_elem = sorted(other_elem, key=lambda x: str(x._name))
+                    self_elem = sorted(self_elem, key=lambda x: str(x.key))
+                    other_elem = sorted(other_elem, key=lambda x: str(x.key))
                 except (TypeError, ValueError, AttributeError):
                     pass
             if self_elem != other_elem:
@@ -147,6 +147,19 @@ class BaseNineMLObject(object):
             else:
                 result += "self:{} != other:{}".format(s, o)
         return result
+
+    @property
+    def key(self):
+        """
+        Key with which to uniquely identify the 9ML object from others in its
+        container
+        """
+        try:
+            return self.name
+        except AttributeError:
+            assert False, (
+                "{} class does not have a name and doesn't implement the 'key'"
+                " property".format(self.__class__.__name__))
 
 
 class DocumentLevelObject(object):
@@ -341,23 +354,23 @@ class ContainerObject(object):
     def add(self, *elements):
         for element in elements:
             dct = self._member_dict(element)
-            if element._name in dct:
+            if element.key in dct:
                 raise NineMLRuntimeError(
-                    "Could not add '{}' {} to component class as it clashes "
+                    "Could not add '{}' {} to container as it clashes "
                     "with an existing element of the same name"
                     .format(element.name, type(element).__name__))
-            dct[element._name] = element
+            dct[element.key] = element
 
     def remove(self, *elements):
         for element in elements:
             dct = self._member_dict(element)
             try:
-                del dct[element._name]
+                del dct[element.key]
             except KeyError:
                 raise NineMLRuntimeError(
-                    "Could not remove '{}' from component class as it was not "
+                    "Could not remove '{}' from container as it was not "
                     "found in member dictionary (use 'ignore_missing' option "
-                    "to ignore)".format(element._name))
+                    "to ignore)".format(element.key))
 
     def _update_member_key(self, old_key, new_key):
         """
@@ -520,7 +533,7 @@ class ContainerObject(object):
         return sorted(
             self.elements(**kwargs),
             key=lambda e: (self.write_order.index(e.nineml_type),
-                           str(e._name)))
+                           str(e.key)))
 
 
 def accessor_name_from_type(class_map, element_type):

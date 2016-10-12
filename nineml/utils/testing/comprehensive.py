@@ -517,7 +517,7 @@ def add_with_sub_elements(element):
         if element.nineml_type == 'Annotations':
             return
 
-        instances_of_all_types[element.nineml_type][element._name] = element
+        instances_of_all_types[element.nineml_type][element.key] = element
         # Loop through all attributes of the element that are not in the class
         # definition and attempt to add them to the instances_of_all_types dict
         loading.append(element)
@@ -540,7 +540,7 @@ v1_safe_docs = []  # doc2]
 
 instances_of_all_types = defaultdict(dict)
 instances_of_all_types[doc1.nineml_type]['doc1'] = doc1
-instances_of_all_types[Reference.nineml_type] = dict((r._name, r) for r in (
+instances_of_all_types[Reference.nineml_type] = dict((r.key, r) for r in (
     Reference(o, doc1) for o in (
         'dynA', 'dynB', 'dynC', 'dynE', 'dynF', 'dynPropA', 'dynPropB',
         'dynPropC', 'multiDynPropA', 'multiDynPropB', 'ranDistrA',
@@ -559,7 +559,7 @@ for elem in chain(multiDynA.sub_components,
                   multiDynB.sub_components, multiDynA.ports, multiDynB.ports,
                   multiDynA.port_connections, multiDynB.port_connections,
                   multiDynA.aliases, multiDynB.aliases):
-    instances_of_all_types[elem.nineml_type][elem._name] = elem
+    instances_of_all_types[elem.nineml_type][elem.key] = elem
 
 all_types = {}
 

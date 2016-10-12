@@ -86,18 +86,18 @@ class TestAccessors(unittest.TestCase):
                         self.assertTrue(
                             all(isinstance(n, basestring) for n in names),
                             "Not all names of {} in '{} {} were strings "
-                            "('{}')".format(member, elem._name, name,
+                            "('{}')".format(member, elem.key, name,
                                             names))
                         self.assertEqual(
                             len(names), len(set(names)),
                             "Duplicate names found in {} members of '{}' {} "
-                            "('{}')".format(member, elem._name, name, names))
+                            "('{}')".format(member, elem.key, name, names))
                         # Check all members are of the correct type
                         self.assertTrue(
                             all(m.nineml_type == member for m in members),
                             "Not all {} members accessed in '{}' {} via "
                             "iterator were of {} type ({})"
-                            .format(member, elem._name, name, member,
+                            .format(member, elem.key, name, member,
                                     ', '.join(str(m) for m in members)))
                         self.assertEqual(
                             members, accessor_members,
@@ -105,7 +105,7 @@ class TestAccessors(unittest.TestCase):
                             "match members accessed through individual "
                             "accessor method ({}) for '{}' {}"
                             .format(member, members, accessor_members,
-                                    elem._name, name))
+                                    elem.key, name))
                     total_num = elem.num_elements()
                     all_names = list(elem.element_names())
                     all_members = sorted(elem.elements())
@@ -126,11 +126,11 @@ class TestAccessors(unittest.TestCase):
                     self.assertTrue(
                         all(isinstance(n, basestring) for n in all_names),
                         "Not all element names in '{} {} were strings "
-                        "('{}')".format(elem._name, name, all_names))
+                        "('{}')".format(elem.key, name, all_names))
                     self.assertEqual(
                         len(all_names), len(set(all_names)),
                         "Duplicate element names found in '{}' {} "
-                        "('{}')".format(elem._name, name, all_names))
+                        "('{}')".format(elem.key, name, all_names))
                     # Check all all_members are of the correct type
                     self.assertGreaterEqual(
                         len(all_members), len(all_names),
@@ -139,7 +139,7 @@ class TestAccessors(unittest.TestCase):
                         "wasn't the case for '{}' {}. NB: "
                         "send ports will be masked by state variables and "
                         "aliases".format(len(all_members), len(all_names),
-                                         elem._name, name))
+                                         elem.key, name))
                     diff = set(all_members) - set(all_accessor_members)
                     self.assertTrue(
                         all(isinstance(m, SendPortBase) for m in diff),
@@ -148,7 +148,7 @@ class TestAccessors(unittest.TestCase):
                         "accessor method ({}) for '{}' {}, with the exception "
                         "of send ports"
                         .format(all_members, all_accessor_members,
-                                elem._name, name))
+                                elem.key, name))
 
     def test_port_accessors(self):
         for cls_name in ('Dynamics', 'DynamicsProperties', 'MultiDynamics',
@@ -181,14 +181,14 @@ class TestAccessors(unittest.TestCase):
                     self.assertEqual(
                         len(names), len(set(names)),
                         "Duplicate names found in {}ports of '{}' {} "
-                        "('{}')".format(prefix, elem._name, cls_name, names))
+                        "('{}')".format(prefix, elem.key, cls_name, names))
                     self.assertEqual(
                         members, accessor_members,
                         "{}ports accessed through iterator ({}) do not "
                         "match members accessed through individual "
                         "accessor method ({}) for '{}' {}"
                         .format(prefix, members, accessor_members,
-                                elem._name, cls_name))
+                                elem.key, cls_name))
 
     def test_multi_dynamics_accessors(self):
         for class_name, mutli_class_name, non_ns_property in (
@@ -258,7 +258,7 @@ class TestAccessors(unittest.TestCase):
                         self.assertEqual(names, sorted(all_sc_names))
                         self.assertEqual(
                             members,
-                            sorted(all_sc_members, key=lambda e: e._name))
+                            sorted(all_sc_members, key=lambda e: e.key))
 
     @classmethod
     def _num_members(cls, elem, accessor_name):
@@ -271,7 +271,7 @@ class TestAccessors(unittest.TestCase):
     @classmethod
     def _members(cls, elem, accessor_name):
         return sorted(getattr(elem, pluralise(accessor_name)),
-                      key=lambda e: e._name)
+                      key=lambda e: e.key)
 
     @classmethod
     def _accessor_members(cls, elem, accessor_name, names):

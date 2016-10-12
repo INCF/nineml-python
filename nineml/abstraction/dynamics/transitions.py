@@ -117,7 +117,7 @@ class OutputEvent(BaseALObject):
         return "OutputEvent('%s')" % self.port_name
 
     @property
-    def _name(self):
+    def key(self):
         """
         This is included to allow State-assignments to be polymorphic with
         other named structures
@@ -363,7 +363,7 @@ class OnEvent(Transition):
         return """OnEvent( %s )""" % self.src_port_name
 
     @property
-    def _name(self):
+    def key(self):
         """
         This is included to allow OnEvents to be polymorphic with
         other named structures
@@ -411,7 +411,7 @@ class OnCondition(Transition):
         return self._trigger
 
     @property
-    def _name(self):
+    def key(self):
         """
         This is included to allow OnConditions to be polymorphic with
         other named structures
@@ -435,7 +435,7 @@ class Trigger(BaseALObject, Expression):
         return "Trigger('%s')" % (self.rhs)
 
     @property
-    def _name(self):
+    def key(self):
         """
         This is included to allow OnConditions to be polymorphic with
         other named structures
