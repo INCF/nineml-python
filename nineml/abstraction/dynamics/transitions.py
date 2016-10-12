@@ -281,12 +281,16 @@ class Transition(BaseALObject, ContainerObject):
         return self._state_assignments.iterkeys()
 
     @property
-    def state_assignment_names(self):
+    def state_assignment_keys(self):
         return self.state_assignment_variables
 
     @property
-    def output_event_names(self):
+    def output_event_port_names(self):
         return self._output_events.iterkeys()
+
+    @property
+    def output_event_keys(self):
+        return self.output_event_port_names
 
     @property
     def output_events(self):

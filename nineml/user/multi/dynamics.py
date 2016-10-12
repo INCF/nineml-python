@@ -15,6 +15,7 @@ from nineml.exceptions import (
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
+import nineml.units as un
 from nineml.base import (
     ContainerObject, DocumentLevelObject, DynamicPortsObject)
 from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
@@ -1024,7 +1025,7 @@ class _MultiRegime(Regime):
         nonzero_delay_receive_ports = [
             pc.receive_port.name
             for pc in self._parent.nonzero_delay_event_port_connections]
-        key = lambda oc: oc.trigger  # Group key for on conditions
+        key = lambda oc: oc.trigger  # Group key for on conditions @IgnorePep8
         # Chain delayed on events and grouped on conditions
         return chain(
             (_MultiOnCondition((_DelayedOnEvent(oe),), self)

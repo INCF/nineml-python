@@ -282,6 +282,7 @@ class ArrayValue(BaseValue):
 
     @property
     def key(self):
+        # TODO: Should put a hash on the end of this to make it unique
         return str('_'.join(str(v) for v in self._values[:10]))
 
     def is_array(self):
@@ -506,6 +507,7 @@ class RandomValue(BaseValue):
 
     @property
     def key(self):
+        # FIXME: This should include a hash of the properties
         return self._distribution.name
 
     def is_random(self):

@@ -338,7 +338,7 @@ class Regime(BaseALObject, ContainerObject):
         return self._time_derivatives.iterkeys()
 
     @property
-    def time_derivative_names(self):
+    def time_derivative_keys(self):
         return self.time_derivative_variables
 
     @property
@@ -346,7 +346,7 @@ class Regime(BaseALObject, ContainerObject):
         return self._on_events.iterkeys()
 
     @property
-    def on_event_names(self):
+    def on_event_keys(self):
         return self.on_event_port_names
 
     @property
@@ -354,7 +354,7 @@ class Regime(BaseALObject, ContainerObject):
         return self._on_conditions.iterkeys()
 
     @property
-    def on_condition_names(self):
+    def on_condition_keys(self):
         return (Expression(t).rhs_str for t in self.on_condition_triggers)
 
     @property
