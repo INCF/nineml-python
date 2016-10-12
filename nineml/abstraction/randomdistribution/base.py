@@ -6,7 +6,7 @@ from nineml.exceptions import NineMLRuntimeError
 class RandomDistribution(ComponentClass):
 
     nineml_type = 'RandomDistribution'
-    defining_attributes = ('name', '_parameters')
+    defining_attributes = ('_name', '_parameters')
     # Maintains order of elements between writes
     write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 

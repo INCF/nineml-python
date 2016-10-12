@@ -33,7 +33,7 @@ class Port(BaseALObject):
     """
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
-    defining_attributes = ('name',)
+    defining_attributes = ('_name',)
 
     def __init__(self, name):
         """ Port Constructor.
@@ -62,7 +62,7 @@ class DimensionedPort(Port, ExpressionSymbol):
     Analog and Property ports).
     """
 
-    defining_attributes = ('name', 'dimension')
+    defining_attributes = ('_name', '_dimension')
 
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 

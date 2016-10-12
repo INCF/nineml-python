@@ -424,7 +424,7 @@ class Quantity(BaseNineMLObject):
     numbers, e.g. a RandomDistribution instance.
     """
     nineml_type = 'Quantity'
-    defining_attributes = ("value", "units")
+    defining_attributes = ("_value", "_units")
 
     def __init__(self, value, units=None):
         super(Quantity, self).__init__()

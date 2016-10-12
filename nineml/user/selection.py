@@ -50,7 +50,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
             selection. Only :class:`Concatenate` is currently supported.
     """
     nineml_type = "Selection"
-    defining_attributes = ('name', 'operation')
+    defining_attributes = ('_name', '_operation')
 
     def __init__(self, name, operation, document=None):
         ensure_valid_identifier(name)
@@ -180,7 +180,7 @@ class Concatenate(BaseULObject):
     """
 
     nineml_type = 'Concatenate'
-    defining_attributes = ('items',)
+    defining_attributes = ('_items',)
 
     def __init__(self, *items):
         super(Concatenate, self).__init__()
@@ -255,7 +255,7 @@ class Concatenate(BaseULObject):
 #     Network.
 #     """
 #     nineml_type = "Selection"
-#     defining_attributes = ("name", "condition")
+#     defining_attributes = ("_name", "_condition")
 #
 #     def __init__(self, name, condition):
 #         """
@@ -360,7 +360,7 @@ class Concatenate(BaseULObject):
 #
 # class Operator(BaseULObject):
 #     super(Property, self).__init__()
-#     defining_attributes = ("operands",)
+#     defining_attributes = ("_operands",)
 #     children = ("operands",)
 #
 #     def __init__(self, *operands):

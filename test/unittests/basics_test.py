@@ -27,7 +27,7 @@ class TestAccessors(unittest.TestCase):
     def test_defining_attributes(self):
         for name, cls in all_types.iteritems():
             if hasattr(cls, 'defining_attributes'):
-                for attr_name in getattr(cls, 'defining_attributes'):
+                for attr_name in cls.defining_attributes:
                     for elem in instances_of_all_types[name].itervalues():
                         if (not isinstance(elem, basestring) and
                                 isinstance(elem, collections.Iterable)):

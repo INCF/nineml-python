@@ -174,35 +174,35 @@ class _NamespaceExpression(_NamespaceObject):
     def rhs(self, rhs):
         raise NineMLImmutableError(
             "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
+            "multi-dynamics element. The multi-dynamics element should either"
             " be flattened or the substitution should be done in the "
             "sub-component")
 
     def rhs_name_transform_inplace(self, name_map):
         raise NineMLImmutableError(
             "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
+            "multi-dynamics element. The multi-dynamics element should either"
             " be flattened or the substitution should be done in the "
             "sub-component")
 
     def rhs_substituted(self, name_map):
         raise NineMLImmutableError(
             "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
+            "multi-dynamics element. The multi-dynamics element should either"
             " be flattened or the substitution should be done in the "
             "sub-component")
 
     def subs(self, old, new):
         raise NineMLImmutableError(
             "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
+            "multi-dynamics element. The multi-dynamics element should either"
             " be flattened or the substitution should be done in the "
             "sub-component")
 
     def rhs_str_substituted(self, name_map={}, funcname_map={}):
         raise NineMLImmutableError(
             "Cannot change expression in global namespace of "
-            "multi-component element. The multi-component elemnt should either"
+            "multi-dynamics element. The multi-dynamics element should either"
             " be flattened or the substitution should be done in the "
             "sub-component")
 

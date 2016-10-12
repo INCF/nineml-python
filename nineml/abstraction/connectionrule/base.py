@@ -21,7 +21,7 @@ import nineml.units as un
 class ConnectionRule(ComponentClass):
 
     nineml_type = 'ConnectionRule'
-    defining_attributes = ('name', '_parameters', 'standard_library')
+    defining_attributes = ('_name', '_parameters', '_standard_library')
     # Maintains order of elements between writes
     write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 

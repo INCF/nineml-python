@@ -28,7 +28,7 @@ class StateVariable(BaseALObject):
     """
 
     nineml_type = 'StateVariable'
-    defining_attributes = ('name', 'dimension')
+    defining_attributes = ('_name', '_dimension')
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -156,7 +156,7 @@ class Regime(BaseALObject, ContainerObject):
 
     nineml_type = 'Regime'
     defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
-                           'name', '_aliases')
+                           '_name', '_aliases')
     class_to_member = {'TimeDerivative': 'time_derivative',
                        'OnEvent': 'on_event',
                        'OnCondition': 'on_condition',

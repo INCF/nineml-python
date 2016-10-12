@@ -39,7 +39,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
             a dict containing the selections contained in the network.
     """
     nineml_type = "Network"
-    defining_attributes = ('name', "_populations", "_projections",
+    defining_attributes = ('_name', "_populations", "_projections",
                            "_selections")
     class_to_member = {'Population': 'population',
                        'Projection': 'projection',
@@ -193,7 +193,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 class ComponentArray(BaseULObject, DocumentLevelObject):
 
     nineml_type = "ComponentArray"
-    defining_attributes = ('name', "_size", "_dynamics_properties")
+    defining_attributes = ('_name', "_size", "_dynamics_properties")
     suffix = {'pre': '__cell', 'post': '__cell', 'response': '__psr',
               'plasticity': '__pls'}
 
@@ -250,8 +250,8 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
 
     __metaclass__ = ABCMeta
 
-    defining_attributes = ('name', 'source', 'destination', 'source_port',
-                           'destination_port', 'connectivity')
+    defining_attributes = ('_name', '_source', '_destination', '_source_port',
+                           '_destination_port', '_connectivity')
 
     def __init__(self, name, source, destination, source_port,
                  destination_port, connectivity, delay, document=None,
