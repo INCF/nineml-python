@@ -39,7 +39,7 @@ class Document(dict, BaseNineMLObject):
     demand so it doesn't matter which order they appear in the NineML file.
     """
 
-    defining_attributes = ('_elements',)
+    defining_attributes = ('elements',)
     nineml_type = 'NineML'
     write_order = ['Network', 'Population', 'Projection', 'Selection',
                    'ComponentArray', 'EventConnectionGroup',

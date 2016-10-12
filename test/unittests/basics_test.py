@@ -1,43 +1,48 @@
-import unittest
 import collections
+import unittest
 from nineml.utils.testing.comprehensive import (
     all_types, instances_of_all_types)
 from nineml.abstraction.ports import SendPortBase
 from nineml.base import pluralise
 from nineml.user.multi import append_namespace
 from numpy import sum, product
+import re
 
 
 class TestAccessors(unittest.TestCase):
 
-    exceptions = [('AnalogReceivePortExposure', '_name'),
-                  ('AnalogSendPortExposure', '_name'),
-                  ('AnalogReducePortExposure', '_name'),
-                  ('EventReceivePortExposure', '_name'),
-                  ('EventSendPortExposure', '_name'),
-                  ('EventPortConnection', '_sender_role'),
-                  ('AnalogPortConnection', '_sender_role'),
-                  ('EventPortConnection', '_receiver_role'),
-                  ('AnalogPortConnection', '_receiver_role'),
-                  ('EventPortConnection', '_sender_name'),
-                  ('AnalogPortConnection', '_sender_name'),
-                  ('EventPortConnection', '_receiver_name'),
-                  ('AnalogPortConnection', '_receiver_name')]
+    defattr_prop_exceptions = [
+        (re.compile(r'(Analog|Event)(Send|Reduce|Receive)PortExposure'),
+         re.compile(r'_name')),
+        (re.compile(r'(Event|Analog)PortConnection'),
+         re.compile(r'_(sender|receiver)_(name|role)'))]
 
     def test_defining_attributes(self):
         for name, cls in all_types.iteritems():
             if hasattr(cls, 'defining_attributes'):
                 for attr_name in cls.defining_attributes:
                     for elem in instances_of_all_types[name].itervalues():
-                        if (not isinstance(elem, basestring) and
-                                isinstance(elem, collections.Iterable)):
-                            continue
+                        if elem.__class__.__name__.startswith('_'):
+                            continue  # Skip temporary objects
                         attr = getattr(elem, attr_name)
-                        if (attr_name.startswith('_') and
-                            hasattr(cls, attr_name[1:]) and
-                                (name, attr_name) not in self.exceptions):
-                            self.assertEqual(attr,
-                                             getattr(elem, attr_name[1:]))
+                        # Get corresponding property if present and it is not
+                        # one of the exceptions
+                        if not attr_name.startswith('_'):
+                            continue
+                        if not hasattr(cls, attr_name[1:]):
+                            continue
+                        if any(c.match(name) and a.match(attr_name)
+                               for c, a in self.defattr_prop_exceptions):
+                            continue
+                        prop = getattr(elem, attr_name[1:])
+                        if isinstance(prop, collections.Iterator):
+                            continue
+                        # If none of the above conditions are true then the
+                        # accessor should be the same as the property
+                        self.assertEqual(attr, prop,
+                                         "'{}' in {} ({}) does not match "
+                                         "property ({})".format(
+                                             attr_name, elem, attr, prop))
 
     def test_member_accessors(self):
         """

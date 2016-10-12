@@ -424,7 +424,11 @@ class OnCondition(Transition):
         This is included to allow OnConditions to be polymorphic with
         other named structures
         """
-        return str(sympy.simplify(self.trigger.rhs))
+        return self.trigger.rhs
+
+    @property
+    def sort_key(self):
+        return hash(self.key)
 
 
 class Trigger(BaseALObject, Expression):
@@ -437,7 +441,9 @@ class Trigger(BaseALObject, Expression):
 
     def __init__(self, rhs):
         BaseALObject.__init__(self)
+        # Simplify the trigger so that it can be used as a key for OnConditions
         Expression.__init__(self, rhs)
+        self.simplify()
 
     def __repr__(self):
         return "Trigger('%s')" % (self.rhs)

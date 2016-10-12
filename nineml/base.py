@@ -5,10 +5,14 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException)
 
 
-def key(elem):
-    return elem.key
+def sort_key(elem):
+    return elem.sort_key
 
-f = open('/Users/tclose/Desktop/compare.txt', 'w')
+
+def hash_non_str(key):
+    if not isinstance(key, basestring):
+        key = hash(key)
+    return key
 
 
 class BaseNineMLObject(object):
@@ -38,27 +42,23 @@ class BaseNineMLObject(object):
         except AttributeError:
             return False
         for name in defining_attributes:
-            if hasattr(self, name) and hasattr(other, name):
-                # Attempt to compare attribute directly
+            try:
+                # Attempt to compare attributes directly
                 self_elem = getattr(self, name)
                 other_elem = getattr(other, name)
-            else:
-                # If one or both of self and elem are extended classes use the
+            except AttributeError:
+                # If one or both of self and other are extended classes use the
                 # associated property with the same name as the attribute minus
                 # the leading '_'.
                 assert name.startswith('_')
                 self_elem = getattr(self, name[1:])
                 other_elem = getattr(other, name[1:])
-                if isinstance(self_elem, Iterator):
-                    assert isinstance(other_elem, Iterator)
-                    try:
-                        self_elem = sorted(self_elem, key=key)
-                        other_elem = sorted(other_elem, key=key)
-                    except:
-                        raise
+            if isinstance(self_elem, Iterator):
+                assert isinstance(other_elem, Iterator)
+                self_elem = sorted(self_elem, key=sort_key)
+                other_elem = sorted(other_elem, key=sort_key)
             if self_elem != other_elem:
                 return False
-            f.write('{} == {}: {}\n'.format(self, other, name))
 #             try:
 #                 self_elem = getattr(self, name)
 #             except AttributeError:
@@ -155,15 +155,21 @@ class BaseNineMLObject(object):
         if isinstance(s, BaseNineMLObject):
             result += s.find_mismatch(o, indent=indent + '  ')
         elif isinstance(s, dict):
-            if set(s.keys()) != set(o.keys()):
+            s_keys = set(s.keys())
+            o_keys = set(o.keys())
+            if s_keys != o_keys:
                 result += (
                     "keys do not match:\n{}  self:{}\n{}  other:{}".format(
-                        indent,
-                        ", ".join("'{}'".format(k) if isinstance(k, basestring)
-                                  else str(k) for k in sorted(s.keys())),
-                        indent,
-                        ", ".join("'{}'".format(k) if isinstance(k, basestring)
-                                  else str(k) for k in sorted(o.keys()))))
+                        indent, ", ".join(
+                            "'{}'".format(k)
+                            if isinstance(k, basestring)
+                            else str(k) for k in sorted(s_keys,
+                                                        key=hash_non_str)),
+                        indent, ", ".join(
+                            "'{}'".format(k)
+                            if isinstance(k, basestring)
+                            else str(k) for k in sorted(o_keys,
+                                                        key=hash_non_str))))
             else:
                 for k in s:
                     if s[k] != o[k]:
@@ -200,6 +206,14 @@ class BaseNineMLObject(object):
             assert False, (
                 "{} class does not have a name and doesn't implement the 'key'"
                 " property".format(self.__class__.__name__))
+
+    @property
+    def sort_key(self):
+        """
+        Returns a key that can be used to sort the 9ML object with others in
+        its class
+        """
+        return self.key
 
 
 class DocumentLevelObject(object):
