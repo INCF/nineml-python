@@ -23,7 +23,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
     Container for the set of properties for a component_class.
     """
     nineml_type = 'DynamicsProperties'
-    defining_attributes = ('name', 'component_class', '_properties',
+    defining_attributes = ('_name', '_definition', '_properties',
                            '_initial_values')
     class_to_member = dict(
         tuple(Component.class_to_member.iteritems()) +

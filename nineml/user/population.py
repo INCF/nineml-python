@@ -24,7 +24,7 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
             parameterisation).
     """
     nineml_type = "Population"
-    defining_attributes = ("name", "size", "cell")
+    defining_attributes = ('_name', '_size', '_cell')
 
     def __init__(self, name, size, cell, document=None):
         ensure_valid_identifier(name)

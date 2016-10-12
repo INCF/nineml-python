@@ -109,7 +109,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     """
     __metaclass__ = ABCMeta  # Abstract base class
     v1_nineml_type = 'Component'
-    defining_attributes = ('name', 'component_class', '_properties')
+    defining_attributes = ('_name', '_definition', '_properties')
     children = ("Property", "Definition", 'Prototype')
     write_order = ('Property',)
 
@@ -393,7 +393,7 @@ class Property(BaseULObject):
     numbers, e.g. a RandomDistribution instance.
     """
     nineml_type = "Property"
-    defining_attributes = ("name", "quantity")
+    defining_attributes = ('_name', '_quantity')
 
     def __init__(self, name, quantity):
         super(Property, self).__init__()

@@ -36,7 +36,7 @@ class Expression(object):
     the basic interface for parsing, yielding of python functions,
     C equivalents, name substitution """
 
-    defining_attributes = ('rhs',)
+    defining_attributes = ('_rhs',)
 
     # Regular expression for extracting function names from strings (i.e. a
     # chain of valid identifiers followed by an open parenthesis.
@@ -461,7 +461,7 @@ class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):
     That is, a single symbol, for example 's = t+1'
     """
 
-    defining_attributes = ('name', 'rhs')
+    defining_attributes = ('_name', '_rhs')
 
     def __init__(self, lhs, rhs, assign_to_reserved=False):
         ExpressionWithLHS.__init__(self, rhs)

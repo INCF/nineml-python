@@ -112,7 +112,7 @@ class SingleValue(BaseValue):
     numbers, e.g. a RandomDistribution instance.
     """
     nineml_type = "SingleValue"
-    defining_attributes = ("value",)
+    defining_attributes = ("_value",)
 
     def __init__(self, value):
         super(SingleValue, self).__init__()
@@ -494,7 +494,7 @@ class ArrayValue(BaseValue):
 class RandomValue(BaseValue):
 
     nineml_type = "RandomValue"
-    defining_attributes = ("distribution",)
+    defining_attributes = ("_distribution",)
 
     def __init__(self, distribution):
         super(RandomValue, self).__init__()

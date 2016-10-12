@@ -17,10 +17,10 @@ class TestFindMismatch(unittest.TestCase):
             other:'P2', 'P3', 'P4'
         Attribute '_aliases':
             Key 'A1':
-              Attribute 'rhs': mismatch in type self:Mul != other:Symbol
+              Attribute '_rhs': mismatch in type self:Mul != other:Symbol
         Attribute '_analog_send_ports':
             Key 'A1':
-              Attribute 'dimension':
+              Attribute '_dimension':
                   Attribute '_dims': self:(1, 2, -3, 0, 0, 0, 0) != other:(0, 0, 0, 1, 0, 0, 0)
         """
 
@@ -33,7 +33,7 @@ class TestFindMismatch(unittest.TestCase):
     Cref = """
             Attribute '_aliases':
                 Key 'A4':
-                  Attribute 'rhs': self:C2*SV1 != other:2*C2*SV1
+                  Attribute '_rhs': self:C2*SV1 != other:2*C2*SV1
             """
 
     Dref = ""

@@ -354,7 +354,11 @@ class OnEvent(Transition):
 
     @property
     def src_port_name(self):
-        return self._src_port_name
+        if self._port is not None:
+            name = self._port.name
+        else:
+            name = self._src_port_name
+        return name
 
     @property
     def port(self):
@@ -383,7 +387,7 @@ class OnEvent(Transition):
 class OnCondition(Transition):
 
     nineml_type = "OnCondition"
-    defining_attributes = (Transition.defining_attributes + ('trigger',))
+    defining_attributes = (Transition.defining_attributes + ('_trigger',))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
