@@ -27,7 +27,7 @@ class BasePortExposure(BaseULObject):
         else:
             self._sub_component_name = None
             assert isinstance(component,
-                              nineml.user.multi.component.SubDynamics)
+                              nineml.user.multi.dynamics.SubDynamics)
             self._sub_component = component
         if isinstance(port, basestring):
             self._port_name = port
@@ -304,4 +304,4 @@ class _LocalAnalogPortConnections(Alias):
             "AnalogPortConnection".format(self.lhs))
 
 
-import nineml.user.multi.component
+import nineml.user.multi.dynamics

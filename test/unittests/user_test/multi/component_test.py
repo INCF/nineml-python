@@ -3,7 +3,7 @@ import unittest
 import sympy
 from nineml import units as un
 from nineml import Document
-from nineml.user.multi.component import (
+from nineml.user.multi.dynamics import (
     MultiDynamicsProperties, SubDynamicsProperties, MultiDynamics,
     AnalogReceivePortExposure)
 from nineml.abstraction import (

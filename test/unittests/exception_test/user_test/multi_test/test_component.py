@@ -1,11 +1,11 @@
 import unittest
-from nineml.user.multi.component import (
+from nineml.user.multi.dynamics import (
     MultiDynamics, _MultiRegime, _MultiTransition, SubDynamicsProperties)
 from nineml.utils.testing.comprehensive import (
     multiDynPropA, multiDynA, dynD, dynE)
 from nineml.exceptions import (NineMLNameError, NineMLRuntimeError)
 from nineml.user.multi.port_exposures import BasePortExposure
-from nineml.user.multi.component import SubDynamics
+from nineml.user.multi.dynamics import SubDynamics
 
 
 class TestMultiDynamicsExceptions(unittest.TestCase):
