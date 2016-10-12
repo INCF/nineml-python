@@ -444,22 +444,22 @@ class ContainerObject(object):
                       (self._num_members(et, class_map=class_map)
                        for et in class_map))
 
-    def element_names(self, class_map=None):
+    def element_keys(self, class_map=None):
         if class_map is None:
             class_map = self.class_to_member
-        all_names = set()
+        all_keys = set()
         for element_type in class_map:
             # Some of these do not meet the stereotypical *_names format, e.g.
             # time_derivative_variables, could change these to *_keys instead
             try:
-                for name in self._member_names_iter(element_type,
+                for key in self._member_keys_iter(element_type,
                                                     class_map=class_map):
                     # Because send ports can have the same name as state
                     # variables and aliases duplicates need to be avoided
-                    all_names.add(name)
+                    all_keys.add(key)
             except AttributeError:
                 pass
-        return iter(all_names)
+        return iter(all_keys)
 
     def __iter__(self):
         raise TypeError("{} containers are not iterable"
@@ -509,24 +509,24 @@ class ContainerObject(object):
         Looks up the name of values iterator from the nineml_type of the
         element argument.
         """
-        return getattr(
-            self, pluralise(accessor_name_from_type(class_map, element_type)))
+        acc_name = accessor_name_from_type(class_map, element_type)
+        return getattr(self, pluralise(acc_name))
 
-    def _member_names_iter(self, element_type, class_map):
-        return getattr(
-            self, (accessor_name_from_type(class_map, element_type) +
-                   '_names'))
+    def _member_keys_iter(self, element_type, class_map):
+        acc_name = accessor_name_from_type(class_map, element_type)
+        try:
+            return getattr(self, (acc_name + '_names'))
+        except AttributeError:
+            # For members that don't have proper names, such as OnConditions
+            return getattr(self, (acc_name + '_keys'))
 
     def _num_members(self, element_type, class_map):
-        return getattr(
-            self, (
-                'num_' +
-                pluralise(accessor_name_from_type(class_map, element_type))))
+        acc_name = accessor_name_from_type(class_map, element_type)
+        return getattr(self, 'num_' + pluralise(acc_name))
 
     def _member_dict(self, element_type):
-        return getattr(
-            self, '_' + pluralise(accessor_name_from_type(self.class_to_member,
-                                                          element_type)))
+        acc_name = accessor_name_from_type(self.class_to_member, element_type)
+        return getattr(self, '_' + pluralise(acc_name))
 
     def sorted_elements(self, **kwargs):
         """Sorts the element into a consistent, logical order before write"""
