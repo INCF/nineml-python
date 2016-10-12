@@ -56,7 +56,7 @@ class TestAccessors(unittest.TestCase):
                 for elem in instances_of_all_types[name].values():
                     for member in cls.class_to_member:
                         num = elem._num_members(member, cls.class_to_member)
-                        names = list(elem._member_names_iter(
+                        names = list(elem._member_keys_iter(
                             member, cls.class_to_member))
                         members = sorted(elem._members_iter(
                             member, cls.class_to_member))
@@ -107,11 +107,11 @@ class TestAccessors(unittest.TestCase):
                             .format(member, members, accessor_members,
                                     elem.key, name))
                     total_num = elem.num_elements()
-                    all_names = list(elem.element_names())
+                    all_keys = list(elem.element_keys())
                     all_members = sorted(elem.elements())
                     all_accessor_members = sorted(
                         elem.element(n, include_send_ports=True)
-                        for n in all_names)
+                        for n in all_keys)
                     self.assertIsInstance(
                         total_num, int,
                         ("num_elements did not return an integer ({})"
@@ -121,24 +121,24 @@ class TestAccessors(unittest.TestCase):
                         "num_elements did not return the same length "
                         "({}) as the number of all_members ({})".format(
                             total_num, len(all_members)))
-                    # Check all all_names are strings and don't contain
+                    # Check all all_keys are strings and don't contain
                     # duplicates
                     self.assertTrue(
-                        all(isinstance(n, basestring) for n in all_names),
+                        all(isinstance(n, basestring) for n in all_keys),
                         "Not all element names in '{} {} were strings "
-                        "('{}')".format(elem.key, name, all_names))
+                        "('{}')".format(elem.key, name, all_keys))
                     self.assertEqual(
-                        len(all_names), len(set(all_names)),
+                        len(all_keys), len(set(all_keys)),
                         "Duplicate element names found in '{}' {} "
-                        "('{}')".format(elem.key, name, all_names))
+                        "('{}')".format(elem.key, name, all_keys))
                     # Check all all_members are of the correct type
                     self.assertGreaterEqual(
-                        len(all_members), len(all_names),
+                        len(all_members), len(all_keys),
                         "The length of all members ({}) should be equal to or "
                         "greater than the length of member names ({}), which "
                         "wasn't the case for '{}' {}. NB: "
                         "send ports will be masked by state variables and "
-                        "aliases".format(len(all_members), len(all_names),
+                        "aliases".format(len(all_members), len(all_keys),
                                          elem.key, name))
                     diff = set(all_members) - set(all_accessor_members)
                     self.assertTrue(
