@@ -1,8 +1,14 @@
 from itertools import chain
 import operator
-from collections import defaultdict
+from collections import defaultdict, Iterator
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException)
+
+
+def key(elem):
+    return elem.key
+
+f = open('/Users/tclose/Desktop/compare.txt', 'w')
 
 
 class BaseNineMLObject(object):
@@ -32,34 +38,68 @@ class BaseNineMLObject(object):
         except AttributeError:
             return False
         for name in defining_attributes:
-            try:
+            if hasattr(self, name) and hasattr(other, name):
+                # Attempt to compare attribute directly
                 self_elem = getattr(self, name)
                 other_elem = getattr(other, name)
-            except AttributeError:
-                # This is when comparing to derived classes that don't contain
-                # the member dictionary, just an iterator over generated
-                # members, e.g. _Namespace* classes. NB: The member iterator
-                # could in principle be used for all cases, however that would
-                # miss mis-matching dictionary keys (which shouldn't happen but
-                # are tested using __eq__ in unit-tests just to make sure).
-                if name.startswith('_'):
-                    name = name[1:]
-                    self_elem = getattr(self, name)
-                    other_elem = getattr(other, name)
-                else:
-                    raise
-            if not isinstance(
-                    self_elem, (dict, basestring, BaseNineMLObject)):
-                # Try to sort the elements by their '_name' attribute (so they
-                # are order non-specific) if they are an iterable
-                try:
-                    self_elem = sorted(self_elem, key=lambda x: str(x.key))
-                    other_elem = sorted(other_elem, key=lambda x: str(x.key))
-                except (TypeError, ValueError, AttributeError):
-                    pass
+            else:
+                # If one or both of self and elem are extended classes use the
+                # associated property with the same name as the attribute minus
+                # the leading '_'.
+                assert name.startswith('_')
+                self_elem = getattr(self, name[1:])
+                other_elem = getattr(other, name[1:])
+                if isinstance(self_elem, Iterator):
+                    assert isinstance(other_elem, Iterator)
+                    try:
+                        self_elem = sorted(self_elem, key=key)
+                        other_elem = sorted(other_elem, key=key)
+                    except:
+                        raise
             if self_elem != other_elem:
                 return False
+            f.write('{} == {}: {}\n'.format(self, other, name))
+#             try:
+#                 self_elem = getattr(self, name)
+#             except AttributeError:
+#                 # Extension classes will typically override the associated
+#                 # property attribute, which has the same name as the defining
+#                 # attribute minus the leading underscore (sorry if this feels
+#                 # a bit hacky)
+#                 assert name.startswith('_')
+#                 self_elem = getattr(self, name[1:])
+#                 if isinstance(self_elem, Iterator):
+#                     compare_iterators = True
+#                     self_elem = sorted(self_elem)   # Create list from iterator
+#             try:
+#                 other_elem = getattr(self, name)
+#                 if compare_iterators:
+#                     other_elem = self._sorted_values(other_elem)
+#             except AttributeError:
+#                 assert name.startswith('_')
+#                 other_elem = getattr(self, name[1:])
+#                 if isinstance(other_elem, Iterator):
+#                     other_elem = sorted(other_elem)
+#             if (isinstance(self_elem, (basestring, BaseNineMLObject)) or
+#                     all(isinstance(e, dict) for e in (self_elem, other_elem))):
+#                 equality = (self_elem == other_elem)
+#             else:
+#             if not all(isinstance(e, (dict, basestring, BaseNineMLObject))
+#                        for e in (self_elem, other_elem)):
+#                 # Try to sort the elements by their '_name' attribute (so they
+#                 # are order non-specific) if they are an iterable
+#                 try:
+#                     self_elem = sorted(self_elem, key=lambda x: str(x.key))
+#                     other_elem = sorted(other_elem, key=lambda x: str(x.key))
+#                 except (TypeError, ValueError, AttributeError):
+#                     pass
         return True
+
+    @classmethod
+    def _sorted_values(self, container):
+        if isinstance(container, dict):
+            container = dict.itervalues()
+        return sorted(container)
 
     def __repr__(self):
         return "{}(name='{}')".format(self.nineml_type, self._name)
