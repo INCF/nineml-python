@@ -13,7 +13,7 @@ class TestExceptions(unittest.TestCase):
         """
         class Dummy(object):
             nineml_type = 'Dummy'
-            _name = 'dummy'
+            key = 'dummy'
 
             @name_error
             def accessor(self, name):

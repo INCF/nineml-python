@@ -105,7 +105,7 @@ class Document(dict, BaseNineMLObject):
         if not isinstance(element, DocumentLevelObject):
             raise NineMLRuntimeError(
                 "Could not remove {} from document as it is not a document "
-                "level NineML object ('{}') ".format(element._name,
+                "level NineML object ('{}') ".format(element.key,
                                                      element.nineml_type))
         try:
             del self[element.name]

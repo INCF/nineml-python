@@ -176,7 +176,7 @@ class _PortExposureAlias(Alias):
         self._exposure = exposure
 
     @property
-    def _name(self):
+    def name(self):
         return self.lhs
 
     @property
@@ -283,7 +283,7 @@ class _LocalAnalogPortConnections(Alias):
         return self.lhs
 
     @property
-    def _name(self):
+    def key(self):
         # Required for duck-typing
         return self.name
 

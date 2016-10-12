@@ -503,7 +503,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
                         raise NineMLRuntimeError(
                             "Can't find regime '{}' referenced from '{}' "
                             "transition".format(trans.target_regime,
-                                                trans._name))
+                                                trans.key))
                 trans.set_target_regime(target)
 
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable

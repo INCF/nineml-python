@@ -348,7 +348,7 @@ class DimensionalityComponentValidator(BaseValidator):
         if element is None:
             msg += ' expression'
         else:
-            msg += " {} '{}'".format(element.__class__.__name__, element._name)
+            msg += " {} '{}'".format(element.__class__.__name__, element.key)
         msg += ", {} [{}, with {}], ".format(
             dimension, expr, ', '.join(
                 '{}={}'.format(a, self._get_dimensions(a)) for a in symbols))

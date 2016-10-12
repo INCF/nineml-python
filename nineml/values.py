@@ -123,7 +123,7 @@ class SingleValue(BaseValue):
         return self._value
 
     @property
-    def _name(self):
+    def key(self):
         return str(self._value)
 
     def is_single(self):
@@ -281,7 +281,7 @@ class ArrayValue(BaseValue):
         return iter(self._values)
 
     @property
-    def _name(self):
+    def key(self):
         return str('_'.join(str(v) for v in self._values[:10]))
 
     def is_array(self):
@@ -505,7 +505,7 @@ class RandomValue(BaseValue):
             "RandomValues cannot be converted to a single float")
 
     @property
-    def _name(self):
+    def key(self):
         return self._distribution.name
 
     def is_random(self):

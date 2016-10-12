@@ -190,8 +190,8 @@ class Concatenate(BaseULObject):
         return "Concatenate(%s)" % ", ".join(repr(item) for item in self.items)
 
     @property
-    def _name(self):
-        return '_'.join(i._name for i in self._items[:10])
+    def key(self):
+        return '_'.join(i.key for i in self._items[:10])
 
     @property
     def items(self):

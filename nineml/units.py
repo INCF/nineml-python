@@ -452,8 +452,8 @@ class Quantity(BaseNineMLObject):
         return hash(self.value) ^ hash(self.units)
 
     @property
-    def _name(self):
-        return self._value._name + '_' + self._units.name
+    def key(self):
+        return self._value.key + '_' + self._units.name
 
     def __iter__(self):
         """For conveniently expanding quantities like a tuple"""

@@ -107,7 +107,7 @@ class TimeDerivative(ODE, BaseALObject):
         BaseALObject.__init__(self)
 
     @property
-    def _name(self):
+    def key(self):
         """
         This is included to allow Time-derivatives to be polymorphic with other
         named structures

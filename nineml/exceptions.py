@@ -77,5 +77,5 @@ def name_error(accessor):
                                 for p in accessor.__name__.split('_'))
             raise NineMLNameError(
                 "'{}' {} does not have {} named '{}"
-                .format(self._name, self.nineml_type, type_name, name))
+                .format(self.key, self.nineml_type, type_name, name))
     return accessor_with_handling
