@@ -387,14 +387,20 @@ class Document(dict, BaseNineMLObject):
         document = cls(*elements.values(), url=url, annotations=annotations)
         return document
 
-    def clone(self):
+    def clone(self, memo=None, **kwargs):
         """
         Creates a duplicate of the current document with its url set to None to
         allow it to be written to a different file
         """
-        new = deepcopy(self)
-        new._url = None
-        return new
+        if memo is None:
+            memo = {}
+        try:
+            clone = memo[id(self)]
+        except KeyError:
+            clone = Document(
+                (e.clone(memo, **kwargs)
+                 if not isinstance(e, self._Unloaded) else e) for e in self)
+        return clone
 
     def write(self, url, version=2.0, **kwargs):
         if self.url is None:

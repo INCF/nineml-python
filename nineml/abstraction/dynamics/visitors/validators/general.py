@@ -106,19 +106,23 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
         BaseDynamicsValidator.__init__(
             self, require_explicit_overrides=False, **kwargs)
         self.connected_regimes_from_regime = defaultdict(set)
-        self.regimes = set
+        self.component_class = component_class
         self.visit(component_class)
-        def add_connected_regimes_recursive(regime, connected):  # @IgnorePep8
-            connected.add(regime)
-            for r in self.connected_regimes_from_regime[regime]:
-                if r not in connected:
-                    add_connected_regimes_recursive(r, connected)
-        connected = set()
+        self.connected = set()
         if self.regimes:
-            add_connected_regimes_recursive(self.regimes[0], connected)
-            if len(connected) < len(self.regimes):
-                raise NineMLRuntimeError("Transition graph contains islands")
-            elif len(connected) > len(self.regimes):
+            self._add_connected_regimes_recursive(self.regimes[0])
+            if len(self.connected) < len(self.regimes):
+                # FIXME: This should probably be a warning not an error
+                raise NineMLRuntimeError(
+                    "Transition graph of {} contains islands: {} regimes "
+                    "('{}') and {} connected ('{}'):\n\n{}".format(
+                        component_class,
+                        len(self.regimes),
+                        "', '".join(r.name for r in self.regimes),
+                        len(self.connected),
+                        "', '".join(r.name for r in self.connected),
+                        self.connected_regimes_from_regime))
+            elif len(self.connected) > len(self.regimes):
                 assert False
 
     def action_componentclass(self, component_class):
@@ -130,6 +134,12 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
                 transition.target_regime)
             self.connected_regimes_from_regime[transition.target_regime].add(
                 regime)
+
+    def _add_connected_regimes_recursive(self, regime):  # @IgnorePep8
+        self.connected.add(regime)
+        for r in self.connected_regimes_from_regime[regime]:
+            if r not in self.connected:
+                self._add_connected_regimes_recursive(r)
 
 
 class NoDuplicatedObjectsDynamicsValidator(

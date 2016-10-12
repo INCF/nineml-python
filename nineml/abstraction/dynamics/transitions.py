@@ -428,7 +428,7 @@ class OnCondition(Transition):
 
     @property
     def sort_key(self):
-        return hash(self.key)
+        return self.trigger.sort_key
 
 
 class Trigger(BaseALObject, Expression):
@@ -453,6 +453,10 @@ class Trigger(BaseALObject, Expression):
         other named structures
         """
         return self.rhs
+
+    @property
+    def sort_key(self):
+        return str(self.rhs)
 
     @property
     def reactivate_condition(self):

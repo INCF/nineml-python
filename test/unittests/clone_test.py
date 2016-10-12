@@ -30,3 +30,31 @@ class TestCloners(unittest.TestCase):
             self.assertEqual(rd, clone,
                              "Clone of '{}' Dynamics doesn't match original:\n"
                              "{}".format(rd.name, rd.find_mismatch(clone)))
+
+    def test_instances_of_all_types(self):
+        prev_elem = None
+        for elems in instances_of_all_types.itervalues():
+            for elem in elems.itervalues():
+                clone = elem.clone()
+                self.assertNotEqual(id(clone), id(elem))
+                elem_keys = set(elem.__dict__.keys())
+                clone_keys = set(clone.__dict__.keys())
+                try:
+                    self.assertEqual(
+                        elem_keys, clone_keys,
+                        "Not all attributes were copied to clone ({}) of {}"
+                        .format("', '".join(elem_keys - clone_keys), elem))
+                except:
+                    elem.clone()
+                try:
+                    self.assertEqual(elem, clone,
+                                     "Clone of {} does not match original:\n{}"
+                                     .format(elem, elem.find_mismatch(clone)))
+                except:
+                    elem == clone
+                self.assertNotEqual(elem, prev_elem,
+                                    "{} matches previous elem {}:\n{}"
+                                    .format(elem, prev_elem,
+                                            elem.find_mismatch(prev_elem)))
+
+                prev_elem = elem

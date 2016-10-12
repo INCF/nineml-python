@@ -1,6 +1,8 @@
 from itertools import chain
+from copy import copy
 import operator
-from collections import defaultdict, Iterator
+from collections import defaultdict, Iterator, Iterable
+import sympy
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException)
 
@@ -34,13 +36,18 @@ class BaseNineMLObject(object):
         return self._annotations
 
     def __eq__(self, other, defining_attributes=None):
-        if defining_attributes is None:
-            defining_attributes = self.defining_attributes
+        # Not equal if of different types
         try:
             if self.nineml_type != other.nineml_type:
                 return False
         except AttributeError:
             return False
+        # If defining attributes aren't passed explicitly use the ones for the
+        # current class
+        if defining_attributes is None:
+            defining_attributes = self.defining_attributes
+        # Check if any attribute in the defining attributes doesn't match and
+        # if so return False
         for name in defining_attributes:
             try:
                 # Attempt to compare attributes directly
@@ -53,46 +60,15 @@ class BaseNineMLObject(object):
                 assert name.startswith('_')
                 self_elem = getattr(self, name[1:])
                 other_elem = getattr(other, name[1:])
+            # Convert iterators to list of sorted values so they can be
+            # compared
             if isinstance(self_elem, Iterator):
                 assert isinstance(other_elem, Iterator)
                 self_elem = sorted(self_elem, key=sort_key)
                 other_elem = sorted(other_elem, key=sort_key)
             if self_elem != other_elem:
                 return False
-#             try:
-#                 self_elem = getattr(self, name)
-#             except AttributeError:
-#                 # Extension classes will typically override the associated
-#                 # property attribute, which has the same name as the defining
-#                 # attribute minus the leading underscore (sorry if this feels
-#                 # a bit hacky)
-#                 assert name.startswith('_')
-#                 self_elem = getattr(self, name[1:])
-#                 if isinstance(self_elem, Iterator):
-#                     compare_iterators = True
-#                     self_elem = sorted(self_elem)   # Create list from iterator
-#             try:
-#                 other_elem = getattr(self, name)
-#                 if compare_iterators:
-#                     other_elem = self._sorted_values(other_elem)
-#             except AttributeError:
-#                 assert name.startswith('_')
-#                 other_elem = getattr(self, name[1:])
-#                 if isinstance(other_elem, Iterator):
-#                     other_elem = sorted(other_elem)
-#             if (isinstance(self_elem, (basestring, BaseNineMLObject)) or
-#                     all(isinstance(e, dict) for e in (self_elem, other_elem))):
-#                 equality = (self_elem == other_elem)
-#             else:
-#             if not all(isinstance(e, (dict, basestring, BaseNineMLObject))
-#                        for e in (self_elem, other_elem)):
-#                 # Try to sort the elements by their '_name' attribute (so they
-#                 # are order non-specific) if they are an iterable
-#                 try:
-#                     self_elem = sorted(self_elem, key=lambda x: str(x.key))
-#                     other_elem = sorted(other_elem, key=lambda x: str(x.key))
-#                 except (TypeError, ValueError, AttributeError):
-#                     pass
+        # If none of the defining attributes don't match then they are equal.
         return True
 
     @classmethod
@@ -120,7 +96,8 @@ class BaseNineMLObject(object):
 
     def find_mismatch(self, other, indent='  '):
         """
-        A function used for debugging where two NineML objects differ
+        A method for displaying where two NineML objects differ. Used in
+        debugging and error messages.
         """
         if not indent:
             result = ("Mismatch between '{}' types:"
@@ -211,12 +188,68 @@ class BaseNineMLObject(object):
     def sort_key(self):
         """
         Returns a key that can be used to sort the 9ML object with others in
-        its class
+        its class. Typically the same as 'key' but in some classes such as
+        Triggers and OnConditions, which use the condition equation as a key
+        a string representation needs to be used instead.
         """
         return self.key
 
+    def clone(self, memo=None, **kwargs):
+        """
+        General purpose clone operation, which copies the attributes used
+        to define equality between 9ML objects. Other attributes, such as
+        the document the 9ML object belongs to are re-initialised. Use this
+        in favour of Python's copy and deepcopy functions unless you know what
+        you want (i.e. things are likely to break if you are not careful).
+        """
+        if memo is None:
+            memo = {}
+        try:
+            # See if the attribute has already been cloned in memo
+            clone = memo[id(self)]
+        except KeyError:
+            clone = copy(self)  # Create a new object of the same type
+            clone.__dict__ = {}  # Wipe it clean to start from scratch
+            # The actual setting of attributes is handled by _copy_to_clone is
+            # used to allow sub classes to override it and control inheritance
+            # from super classes
+            self._copy_to_clone(clone, memo, **kwargs)
+            # Save the element in the memo to avoid it being cloned twice in
+            # the object hierarchy
+            memo[id(self)] = clone
+        return clone
 
-class DocumentLevelObject(object):
+    def _copy_to_clone(self, clone, memo, **kwargs):
+        self._clone_defining_attr(clone, memo, **kwargs)
+        clone._annotations = nineml.annotations.Annotations()
+
+    def _clone_defining_attr(self, clone, memo, **kwargs):
+        for attr_name in self.defining_attributes:
+            setattr(clone, attr_name,
+                    _clone_attr(getattr(self, attr_name), memo, **kwargs))
+
+
+def _clone_attr(attr, memo, **kwargs):
+    """Recursively clone an attribute"""
+    if attr is None or isinstance(attr, (basestring, float, int, bool,
+                                         sympy.Basic)):
+        clone = attr  # "primitive" type that doesn't need to be cloned
+    elif hasattr(attr, 'clone'):
+        clone = attr.clone(memo=memo, **kwargs)
+    elif isinstance(attr, dict):
+        clone = dict((k, _clone_attr(v, memo, **kwargs))
+                     for k, v in attr.iteritems())
+    elif isinstance(attr, Iterable):
+        assert not isinstance(attr, Iterator)
+        clone = attr.__class__(_clone_attr(a, memo, **kwargs)
+                               for a in attr)
+    else:
+        assert False, "Unhandled attribute type {} ({})".format(type(attr),
+                                                                attr)
+    return clone
+
+
+class DocumentLevelObject(BaseNineMLObject):
 
     def __init__(self, document):
         # Document level objects can be nested inside other document-level
@@ -265,8 +298,12 @@ class DocumentLevelObject(object):
         """
         nineml.write(self, fname)  # Calls nineml.document.Document.write
 
+    def _copy_to_clone(self, clone, memo, **kwargs):
+        super(DocumentLevelObject, self)._copy_to_clone(clone, memo, **kwargs)
+        clone._document = None
 
-class DynamicPortsObject(object):
+
+class DynamicPortsObject(BaseNineMLObject):
     """
     Defines generic iterators and accessors for objects that expose
     dynamic ports
@@ -393,7 +430,7 @@ class DynamicPortsObject(object):
         return (p.name for p in self.event_ports)
 
 
-class ContainerObject(object):
+class ContainerObject(BaseNineMLObject):
     """
     An abstract base class for handling the manipulation of member objects
     (which are stored in dictionaries that can be detected by member type).
@@ -588,6 +625,10 @@ class ContainerObject(object):
             self.elements(**kwargs),
             key=lambda e: (self.write_order.index(e.nineml_type),
                            str(e.key)))
+
+    def _copy_to_clone(self, clone, memo, **kwargs):
+        super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)
+        clone._indices = defaultdict(dict)
 
 
 def accessor_name_from_type(class_map, element_type):

@@ -16,7 +16,7 @@ from nineml.values import (
 from nineml.utils import ensure_valid_identifier
 
 
-class Dimension(BaseNineMLObject, DocumentLevelObject):
+class Dimension(DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
@@ -271,7 +271,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return Quantity(0.0, Unit(self.name + 'SIUnit', self, power=0))
 
 
-class Unit(BaseNineMLObject, DocumentLevelObject):
+class Unit(DocumentLevelObject):
     """
     Defines the units of a quantity
     """

@@ -126,6 +126,17 @@ class _NamespaceObject(object):
     def annotations(self):
         return self._object.annotations
 
+    def clone(self, memo=None, **kwargs):  # @UnusedVariable
+        if memo is None:
+            memo = {}
+        try:
+            # See if the attribute has already been cloned in memo
+            clone = memo[id(self)]
+        except KeyError:
+            clone = self.__class__(self._sub_component, self._object,
+                                   self._parent)
+        return clone
+
 
 class _NamespaceNamed(_NamespaceObject):
     """
@@ -338,6 +349,10 @@ class _NamespaceTimeDerivative(_NamespaceNamed, _NamespaceExpression,
     def dependent_variable(self):
         return append_namespace(self._object.dependent_variable,
                                 self._sub_component.name)
+
+    @property
+    def independent_variable(self):
+        return self.variable
 
 
 class _NamespaceStateAssignment(_NamespaceNamed, _NamespaceExpression,

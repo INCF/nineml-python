@@ -497,7 +497,8 @@ valid_identifier_re = re.compile(r'[a-zA-Z](\w*[a-zA-Z0-9])?$')
 
 
 def ensure_valid_identifier(name):
-    if valid_identifier_re.match(name) is None:
+    if (not isinstance(name, basestring) or
+            valid_identifier_re.match(name) is None):
         raise NineMLRuntimeError(
             "Invalid identifier '{}'. Identifiers must start with an "
             "alphabetic character, only contain alphnumeric and "
