@@ -490,6 +490,13 @@ class ArrayValue(BaseValue):
         except AttributeError:
             return ArrayValue([abs(v) for v in self._values])
 
+    def _copy_to_clone(self, clone, memo, **kwargs):
+        super(ArrayValue, self)._copy_to_clone(clone, memo, **kwargs)
+        if self._datafile is None:
+            clone._datafile = None
+        else:
+            clone._datafile = self.DataFile(*self._datafile)
+
 
 class RandomValue(BaseValue):
 
@@ -562,3 +569,7 @@ class RandomValue(BaseValue):
             element, nineml.user.RandomDistributionProperties,
             document, allow_reference=True, **kwargs)
         return cls(distribution)
+
+    def _copy_to_clone(self, clone, memo, **kwargs):
+        super(RandomValue, self)._copy_to_clone(clone, memo, **kwargs)
+        clone._generator = None

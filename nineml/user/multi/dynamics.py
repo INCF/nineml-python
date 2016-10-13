@@ -307,6 +307,7 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
     def __init__(self, name, component_class):
         assert isinstance(name, basestring)
         assert isinstance(component_class, Dynamics)
+        BaseULObject.__init__(self)
         self._name = name
         self._component_class = component_class
 
