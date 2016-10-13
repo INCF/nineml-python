@@ -210,13 +210,14 @@ class BaseNineMLObject(object):
         except KeyError:
             clone = copy(self)  # Create a new object of the same type
             clone.__dict__ = {}  # Wipe it clean to start from scratch
+            # Save the element in the memo to avoid it being cloned twice in
+            # the object hierarchy. Due to possible recursion this needs to be
+            # set before the '_copy_to_clone' method is called.
+            memo[id(self)] = clone
             # The actual setting of attributes is handled by _copy_to_clone is
             # used to allow sub classes to override it and control inheritance
             # from super classes
             self._copy_to_clone(clone, memo, **kwargs)
-            # Save the element in the memo to avoid it being cloned twice in
-            # the object hierarchy
-            memo[id(self)] = clone
         return clone
 
     def _copy_to_clone(self, clone, memo, **kwargs):
@@ -225,8 +226,11 @@ class BaseNineMLObject(object):
 
     def _clone_defining_attr(self, clone, memo, **kwargs):
         for attr_name in self.defining_attributes:
-            setattr(clone, attr_name,
-                    _clone_attr(getattr(self, attr_name), memo, **kwargs))
+            try:
+                setattr(clone, attr_name,
+                        _clone_attr(getattr(self, attr_name), memo, **kwargs))
+            except:
+                raise
 
 
 def _clone_attr(attr, memo, **kwargs):

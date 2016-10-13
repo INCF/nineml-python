@@ -7,6 +7,7 @@ This file contains the definitions for the Events
 
 from copy import copy
 import sympy.solvers
+from nineml.base import _clone_attr
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction.componentclass import BaseALObject
 from ..expressions import Expression, ExpressionWithSimpleLHS, t
@@ -35,13 +36,15 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
     nineml_type = 'StateAssignment'
 
     def __init__(self, lhs, rhs):
-        """StateAssignment Constructor
+        """
+        StateAssignment
 
-        `lhs` -- A `string`, which must be a state-variable of the
-                 component_class.
-        `rhs` -- A `string`, representing the new value of the state after
-                 this assignment.
-
+        Parameters
+        ----------
+        lhs: str
+            A state-variable of the component_class.
+        rhs: str | sympy.Basic
+            A expression for the new value of the state after an assignment.
         """
         BaseALObject.__init__(self)
         ExpressionWithSimpleLHS.__init__(self, lhs=lhs, rhs=rhs)
@@ -55,7 +58,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         return visitor.visit_stateassignment(self, **kwargs)
 
     def __repr__(self):
-        return "StateAssignment('%s', '%s')" % (self.lhs, self.rhs)
+        return "StateAssignment('{}', '{}')".format(self.lhs, self.rhs)
 
     @classmethod
     def from_str(cls, state_assignment_string):
@@ -65,9 +68,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
 
 
 class OutputEvent(BaseALObject):
-
-    """OutputEvent
-
+    """
     OutputEvents can occur during transitions, and correspond to
     an event being generated on the relevant EventPort port in
     the component.
@@ -81,9 +82,11 @@ class OutputEvent(BaseALObject):
         return visitor.visit_outputevent(self, **kwargs)
 
     def __init__(self, port_name):
-        """OutputEvent Constructor
-
-        :param port: The name of the output EventPort that should
+        """
+        Parameters
+        ----------
+        port_name: str
+            The name of the output EventPort that should
             transmit an event. An `EventPort` with a mode of 'send' must exist
             with a corresponding name in the component_class, otherwise a
             ``NineMLRuntimeException`` will be raised.
@@ -128,6 +131,13 @@ class OutputEvent(BaseALObject):
         self._port = component_class.event_send_port(self.port_name)
         self._port_name = None
 
+    def _clone_defining_attr(self, clone, memo, **kwargs):
+        if self._port is not None:
+            clone._port = self.port.clone(memo, **kwargs)
+        else:
+            clone._port = None
+        clone._port_name = self._port_name
+
 
 class Transition(BaseALObject, ContainerObject):
 
@@ -139,30 +149,27 @@ class Transition(BaseALObject, ContainerObject):
 
     def __init__(self, state_assignments=None, output_events=None,
                  target_regime=None):
-        """Abstract class representing a transition from one |Regime| to
+        """Abstract class representing a transition from one Regime to
         another.
 
-        |Transition| objects are not created directly, but via the subclasses
-        |OnEvent| and |OnCondition|.
+        Transition objects are not created directly, but via the subclasses
+        OnEvent and OnCondition.
 
-        :param state_assignments: A list of the state-assignments performed
+        Parameters
+        ----------
+        state_assignments: list(StateAssignment)
+            A list of the state-assignments performed
             when this transition occurs. Objects in this list are either
-            `string` (e.g A = A+13) or |StateAssignment| objects.
-        :param output_events: A list of |OutputEvent| objects emitted when
+            `string` (e.g A = A+13) or StateAssignment objects.
+        output_events: list(OutputEvent)
+            A list of OutputEvent objects emitted when
             this transition occurs.
-        :param target_regime_name: The name of the regime to go into after this
-            transition.  ``None`` implies staying in the same regime. This has
+        target_regime_name: str | None
+            The name of the regime to go into after this
+            transition.  `None` implies staying in the same regime. This has
             to be specified as a string, not the object, because in general the
             |Regime| object is not yet constructed. This is automatically
-            resolved by the |Dynamics| in
-            ``_ResolveTransitionRegimeNames()`` during construction.
-
-
-        .. todo::
-
-            For more information about what happens at a regime transition, see
-            here: XXXXXXX
-
+            resolved by the Dynamics during construction.
         """
         BaseALObject.__init__(self)
         ContainerObject.__init__(self)
@@ -194,13 +201,14 @@ class Transition(BaseALObject, ContainerObject):
 
     @property
     def target_regime(self):
-        """Returns the target regime of this transition.
+        """
+        Returns the target regime of this transition.
 
-        .. note::
-
-            This method will only be available after the Dynamics
-            containing this transition has been built. See
-            ``set_source_regime``
+        Notes
+        -----
+        This method will only be available after the Dynamics
+        containing this transition has been built. See
+        ``set_source_regime``
         """
         if self._target_regime is None:
             raise NineMLRuntimeError(
@@ -219,13 +227,14 @@ class Transition(BaseALObject, ContainerObject):
 
     @property
     def source_regime(self):
-        """Returns the source regime of this transition.
+        """
+        Returns the source regime of this transition.
 
-        .. note::
-
-            This method will only be available after the |Dynamics|
-            containing this transition has been built. See
-            ``set_source_regime``
+        Notes
+        -----
+        This method will only be available after the |Dynamics|
+        containing this transition has been built. See
+        ``set_source_regime``
         """
         if self._source_regime is None:
             raise NineMLRuntimeError(
@@ -237,11 +246,11 @@ class Transition(BaseALObject, ContainerObject):
     def set_target_regime(self, regime):
         """Returns the target regime of this transition.
 
-        .. note::
-
-            This method will only be available after the Dynamics
-            containing this transition has been built. See
-            ``set_source_regime``
+        Notes
+        -----
+        This method will only be available after the Dynamics
+        containing this transition has been built. See
+        ``set_source_regime``
         """
         assert regime.nineml_type == 'Regime'
         self._target_regime = regime
@@ -252,9 +261,11 @@ class Transition(BaseALObject, ContainerObject):
 
         .. note::
 
-            This method will only be available after the Dynamics
-            containing this transition has been built. See
-            ``set_source_regime``
+        Notes
+        -----
+        This method will only be available after the Dynamics
+        containing this transition has been built. See
+        ``set_source_regime``
         """
         assert regime.nineml_type == 'Regime'
         self._source_regime = regime
@@ -325,6 +336,17 @@ class Transition(BaseALObject, ContainerObject):
         for output_event in self.output_events:
             output_event.bind(component_class)
 
+    def _clone_defining_attr(self, clone, memo, **kwargs):
+        clone._state_assignments = _clone_attr(self._state_assignments, memo,
+                                               **kwargs)
+        clone._output_events = _clone_attr(self._output_events, memo,
+                                           **kwargs)
+        clone._target_regime_name = self._target_regime_name
+        clone._target_regime = (self._target_regime.clone(memo, **kwargs)
+                                if self._target_regime is not None else None)
+        clone._source_regime = (self._source_regime.clone(memo, **kwargs)
+                                if self._source_regime is not None else None)
+
 
 class OnEvent(Transition):
 
@@ -337,13 +359,13 @@ class OnEvent(Transition):
 
     def __init__(self, src_port_name, state_assignments=None,
                  output_events=None, target_regime=None):
-        """Constructor for ``OnEvent``
+        """
+        Constructor for ``OnEvent``
 
-            :param src_port_name: The name of the |EventPort| that triggers
-            this transition
-
-            See ``Transition.__init__`` for the definitions of the remaining
-            parameters.
+        Parameters
+        ----------
+        src_port_name: str
+            The name of the |EventPort| that triggers this transition
         """
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
@@ -368,7 +390,7 @@ class OnEvent(Transition):
         return self._port
 
     def __repr__(self):
-        return """OnEvent( %s )""" % self.src_port_name
+        return "OnEvent({})".format(self.src_port_name)
 
     @property
     def key(self):
@@ -381,7 +403,13 @@ class OnEvent(Transition):
     def bind(self, component_class):
         super(OnEvent, self).bind(component_class)
         self._port = component_class.event_receive_port(self.src_port_name)
-        self._port_name = None
+        self._src_port_name = None
+
+    def _clone_defining_attr(self, clone, memo, **kwargs):
+        super(OnEvent, self)._clone_defining_attr(clone, memo, **kwargs)
+        clone._src_port_name = self._src_port_name
+        clone._port = (self._port.clone(memo, **kwargs)
+                       if self._port is not None else None)
 
 
 class OnCondition(Transition):
@@ -395,14 +423,13 @@ class OnCondition(Transition):
 
     def __init__(self, trigger, state_assignments=None,
                  output_events=None, target_regime=None):
-        """Constructor for ``OnEvent``
-
-            :param trigger: Either a |Trigger| object or a ``string`` object
-                specifying the conditions under which this transition should
-                occur.
-
-            See ``Transition.__init__`` for the definitions of the remaining
-            parameters.
+        """
+        Parameters
+        ----------
+        trigger: str | sympy.Basic | Trigger
+            Either a |Trigger| object, sympy expr or a ``string`` object
+            specifying the conditions under which this transition should
+            occur.
         """
         if isinstance(trigger, Trigger):
             trigger = trigger.rhs
@@ -429,6 +456,10 @@ class OnCondition(Transition):
     @property
     def sort_key(self):
         return self.trigger.sort_key
+
+    def _clone_defining_attr(self, clone, memo, **kwargs):
+        super(OnCondition, self)._clone_defining_attr(clone, memo, **kwargs)
+        clone._trigger = self._trigger
 
 
 class Trigger(BaseALObject, Expression):

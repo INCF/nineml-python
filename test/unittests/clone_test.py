@@ -1,6 +1,7 @@
 import unittest
 from nineml.abstraction import Dynamics, ConnectionRule, RandomDistribution
 from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml import Document
 
 
 class TestCloners(unittest.TestCase):
@@ -33,9 +34,10 @@ class TestCloners(unittest.TestCase):
 
     def test_instances_of_all_types(self):
         prev_elem = None
+        memo = {}
         for elems in instances_of_all_types.itervalues():
             for elem in elems.itervalues():
-                clone = elem.clone()
+                clone = elem.clone(memo=memo)
                 self.assertNotEqual(id(clone), id(elem))
                 elem_keys = set(elem.__dict__.keys())
                 clone_keys = set(clone.__dict__.keys())
@@ -45,7 +47,7 @@ class TestCloners(unittest.TestCase):
                         "Not all attributes were copied to clone ({}) of {}"
                         .format("', '".join(elem_keys - clone_keys), elem))
                 except:
-                    elem.clone()
+                    elem.clone(memo=memo)
                 try:
                     self.assertEqual(elem, clone,
                                      "Clone of {} does not match original:\n{}"

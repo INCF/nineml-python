@@ -123,6 +123,11 @@ class Document(dict, BaseNineMLObject):
         return element
 
     def __eq__(self, other):
+        try:
+            if self.nineml_type != other.nineml_type:
+                return False
+        except AttributeError:
+            return False
         # Ensure all objects are loaded
         self.values()
         other.values()
@@ -397,9 +402,9 @@ class Document(dict, BaseNineMLObject):
         try:
             clone = memo[id(self)]
         except KeyError:
-            clone = Document(
-                (e.clone(memo, **kwargs)
-                 if not isinstance(e, self._Unloaded) else e) for e in self)
+            clone = Document(*((e.clone(memo, **kwargs)
+                                if not isinstance(e, self._Unloaded) else e)
+                               for e in self.itervalues()))
         return clone
 
     def write(self, url, version=2.0, **kwargs):
@@ -501,12 +506,16 @@ class Document(dict, BaseNineMLObject):
         A function used to display where two documents differ (typically used
         in unit test debugging)
         """
-        result = 'Mismatch between documents:'
-        for k, s in self.iteritems():
-            if k not in other:
-                result = "{} is not present in other document".format(k)
-            elif s != other[k]:
-                result += s.find_mismatch(other[k])
+        result = 'Mismatch between documents: '
+        if self.nineml_type != other.nineml_type:
+            result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
+                       .format(self.nineml_type, other.nineml_type))
+        else:
+            for k, s in self.iteritems():
+                if k not in other:
+                    result = "{} is not present in other document".format(k)
+                elif s != other[k]:
+                    result += s.find_mismatch(other[k])
         return result
 
     def as_network(self, name):

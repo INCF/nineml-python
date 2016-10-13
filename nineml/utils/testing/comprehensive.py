@@ -547,8 +547,11 @@ instances_of_all_types[Reference.nineml_type] = dict((r.key, r) for r in (
         'ranDistrPropA', 'popA', 'popB', 'popC', 'popD', 'popE', 'selA',
         'conA', 'conPropA', 'conB', 'projA', 'projB', 'projC',
         'projD', 'projE')))
-instances_of_all_types[Annotations.nineml_type]['example'] = (
-    Annotations(test1='value1', test2='value2'))
+
+annotations = Annotations()
+annotations['NS_1']['key1'] = 'value1'
+annotations['NS_2']['key2'] = 'value2'
+instances_of_all_types[Annotations.nineml_type]['example'] = annotations
 for elem in doc1.itervalues():
     add_with_sub_elements(elem)
 # Add remaining elements that are not picked up by recursive
@@ -574,7 +577,8 @@ for importer, modname, ispkg in pkgutil.walk_packages(
         for cls in module.__dict__.itervalues():  # @UndefinedVariable
             if (isinstance(cls, type) and cls.__module__ == module.__name__): # @UndefinedVariable @IgnorePep8
                 try:
-                    all_types[cls.nineml_type] = cls
+                    if not cls.nineml_type.startswith('_'):
+                        all_types[cls.nineml_type] = cls
                 except AttributeError:
                     pass  # Not a nineml type
 
