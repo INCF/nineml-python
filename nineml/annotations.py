@@ -1,116 +1,9 @@
 from copy import copy
+from collections import defaultdict
 from nineml.xml import E, extract_xmlns, strip_xmlns
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
-
-
-class AnnotationsBase(BaseNineMLObject):
-
-    def __init__(self, branches=None):
-        if branches is None:
-            branches = {}
-        self._branches = branches
-
-    @property
-    def branches(self):
-        return self._branches.itervalues()
-
-    def __getitem__(self, key):
-        try:
-            val = self._branches[key]
-        except KeyError:
-            # Create a new annotations branch next level of annotations
-            val = self._branches[key] = _AnnotationsBranch(key)
-        return val
-
-
-class _AnnotationsBranch(AnnotationsBase):
-
-    nineml_type = '_AnnotationsBranch'
-    defining_attributes = ('_branches', '_attr')
-
-    def __init__(self, name, attr=None, branches=None):
-        super(_AnnotationsBranch, self).__init__(branches)
-        if attr is None:
-            attr = {}
-        self._name = name
-        self._attr = {}
-
-    @property
-    def name(self):
-        return self._name
-
-    def __iter__(self):
-        return self.keys()
-
-    def values(self):
-        return self._attr.itervalues()
-
-    def keys(self):
-        return self._attr.iterkeys()
-
-    def items(self):
-        return self._attr.iteritems()
-
-    def get(self, key, default=None):
-        """Like getitem but doesn't create a new branch if one isn't present"""
-        try:
-            val = self._attr[key]
-        except KeyError:
-            val = default
-        return val
-
-    def __setitem__(self, key, val):
-        self._attr[key] = str(val)
-
-    def to_xml(self, **kwargs):  # @UnusedVariable
-        return E(self.name,
-                 *(sb.to_xml(**kwargs) for sb in self._branches),
-                 **self._attr)
-
-    @classmethod
-    def from_xml(cls, element, **kwargs):  # @UnusedVariable
-        name = strip_xmlns(element.tag)
-        branches = {}
-        for child in element.getchildren():
-            branches[
-                strip_xmlns(child.tag)] = _AnnotationsBranch.from_xml(child)
-        attr = dict(element.attrib)
-        return cls(name, attr, branches)
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        self._clone_defining_attr(clone, memo, **kwargs)
-
-
-class Annotations(DocumentLevelObject, AnnotationsBase):
-    """
-    Defines the dimension used for quantity units
-    """
-
-    nineml_type = 'Annotations'
-    defining_attributes = ('_branches',)
-
-    def __init__(self, branches=None):
-        AnnotationsBase.__init__(self, branches)
-
-    def __repr__(self):
-        return "Annotations('{}')".format("', '".join(self._branches.keys()))
-
-    def to_xml(self, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 *(b.to_xml(**kwargs) for b in self.branches))
-
-    @classmethod
-    def from_xml(cls, element, **kwargs):  # @UnusedVariable
-        assert strip_xmlns(element.tag) == cls.nineml_type
-        branches = {}
-        for child in element.getchildren():
-            branches[
-                strip_xmlns(child.tag)] = _AnnotationsBranch.from_xml(child)
-        return cls(**kwargs)
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        self._clone_defining_attr(clone, memo, **kwargs)
+from nineml.xml import ElementMaker, nineml_ns
 
 
 def read_annotations(from_xml):
@@ -157,8 +50,130 @@ def annotate_xml(to_xml):
     return annotate_to_xml
 
 
+class Annotations(DocumentLevelObject):
+    """
+    Is able to handle a basic hierarchical annotations format where the first
+    level is the namespace of each sub element in the Annotations block
+    """
+
+    nineml_type = 'Annotations'
+    defining_attributes = ('_namespaces',)
+
+    def __init__(self, namespaces=None, document=None):
+        super(Annotations, self).__init__(document)
+        if namespaces is None:
+            namespaces = defaultdict(dict)
+        self._namespaces = namespaces
+
+    def __repr__(self):
+        return "Annotations('{}')".format("', '".join(self._branches.keys()))
+
+    def to_xml(self, **kwargs):  # @UnusedVariable
+        members = []
+        for ns, branch in self._namespaces.iteritems():
+            if isinstance(ns, _AnnotationsBranch):
+                for sub_branch in branch.branches:
+                    members.append(sub_branch.to_xml(ns=ns, **kwargs))
+            else:
+                members.append(branch)  # Append unprocessed XML
+        return E(self.nineml_type, *members)
+
+    @classmethod
+    def from_xml(cls, element, annotation_namespaces=[], **kwargs):  # @UnusedVariable @IgnorePep8
+        assert strip_xmlns(element.tag) == cls.nineml_type
+        namespaces = defaultdict(dict)
+        for child in element.getchildren():
+            ns = extract_xmlns(child.tag)
+            if ns == nineml_ns or ns in annotation_namespaces:
+                name = strip_xmlns(child.tag)
+                namespaces[ns][name] = _AnnotationsBranch.from_xml(child)
+            else:
+                namespaces[ns] = child  # Don't process, just ignore
+        return cls(**kwargs)
+
+    def _copy_to_clone(self, clone, memo, **kwargs):
+        self._clone_defining_attr(clone, memo, **kwargs)
+        clone._document = self._document
+
+
+class _AnnotationsBranch(BaseNineMLObject):
+
+    nineml_type = '_AnnotationsBranch'
+    defining_attributes = ('_branches', '_attr')
+
+    def __init__(self, name, attr=None, branches=None):
+        if attr is None:
+            attr = {}
+        if branches is None:
+            branches = {}
+        self._branches = branches
+        self._name = name
+        self._attr = {}
+
+    @property
+    def name(self):
+        return self._name
+
+    def __iter__(self):
+        return self.keys()
+
+    def values(self):
+        return self._attr.itervalues()
+
+    def keys(self):
+        return self._attr.iterkeys()
+
+    def items(self):
+        return self._attr.iteritems()
+
+    @property
+    def branches(self):
+        return self._branches.itervalues()
+
+    def __getitem__(self, key):
+        try:
+            val = self._branches[key]
+        except KeyError:
+            # Create a new annotations branch next level of annotations
+            val = self._branches[key] = _AnnotationsBranch(key)
+        return val
+
+    def get(self, key, default=None):
+        """Like getitem but doesn't create a new branch if one isn't present"""
+        try:
+            val = self._attr[key]
+        except KeyError:
+            val = default
+        return val
+
+    def __setitem__(self, key, val):
+        self._attr[key] = str(val)
+
+    def to_xml(self, ns=None, **kwargs):  # @UnusedVariable
+        if ns is None:
+            ns = nineml_ns
+        E = ElementMaker(namespace=ns, nsmap={None: ns})
+        return E(self.name,
+                 *(sb.to_xml(**kwargs) for sb in self._branches),
+                 **self._attr)
+
+    @classmethod
+    def from_xml(cls, element, **kwargs):  # @UnusedVariable
+        name = strip_xmlns(element.tag)
+        branches = {}
+        for child in element.getchildren():
+            branches[
+                strip_xmlns(child.tag)] = _AnnotationsBranch.from_xml(child)
+        attr = dict(element.attrib)
+        return cls(name, attr, branches)
+
+    def _copy_to_clone(self, clone, memo, **kwargs):
+        self._clone_defining_attr(clone, memo, **kwargs)
+
+
 VALIDATE_DIMENSIONS = 'ValidateDimensions'
 
 xml_visitor_module_re = re.compile(r'nineml\.abstraction\.\w+\.visitors\.xml')
 
-from nineml.utils import expect_none_or_single
+
+from nineml.utils import expect_none_or_single  # @IgnorePep8
