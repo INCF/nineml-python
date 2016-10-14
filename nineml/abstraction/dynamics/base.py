@@ -252,8 +252,10 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return DynamicsElementFinder(element).found_in(self)
 
     def validate(self, validate_dimensions=None, **kwargs):
-        self.annotations.get(nineml_ns, VALIDATION, DIMENSIONALITY,
-                             default=True)
+        if validate_dimensions is None:
+            validate_dimensions = (
+                self.annotations.get(nineml_ns, VALIDATION,
+                                     DIMENSIONALITY, default='True') == 'True')
         self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self, validate_dimensions,
                                                   **kwargs)
@@ -512,7 +514,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         self.standardize_unit_dimensions()
         self.validate()
-        return DynamicsXMLWriter(document, E, **kwargs).visit(self)
+        return DynamicsXMLWriter(document=document, E=E, **kwargs).visit(self,
+                                                                         E=E)
 
     @classmethod
     def from_xml(cls, element, document, **kwargs):

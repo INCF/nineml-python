@@ -205,7 +205,7 @@ class DynamicsXMLLoader(ComponentClassXMLLoader, DynamicsVisitor):
 class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
 
     @annotate_xml
-    def visit_componentclass(self, component_class):
+    def visit_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         child_elems = [
             e.accept_visitor(self)
             for e in component_class.sorted_elements(
@@ -226,70 +226,70 @@ class DynamicsXMLWriter(ComponentClassXMLWriter, DynamicsVisitor):
         return xml
 
     @annotate_xml
-    def visit_regime(self, regime):
+    def visit_regime(self, regime, **kwargs):  # @UnusedVariable
         return self.E('Regime', name=regime.name,
                       *(e.accept_visitor(self)
                         for e in regime.sorted_elements()))
 
     @annotate_xml
-    def visit_statevariable(self, state_variable):
+    def visit_statevariable(self, state_variable, **kwargs):  # @UnusedVariable
         return self.E('StateVariable',
                       name=state_variable.name,
                       dimension=state_variable.dimension.name)
 
     @annotate_xml
-    def visit_outputevent(self, event_out):
+    def visit_outputevent(self, event_out, **kwargs):  # @UnusedVariable
         return self.E('OutputEvent',
                       port=event_out.port_name)
 
     @annotate_xml
-    def visit_analogreceiveport(self, port):
+    def visit_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
         return self.E('AnalogReceivePort', name=port.name,
                       dimension=port.dimension.name)
 
     @annotate_xml
-    def visit_analogreduceport(self, port):
+    def visit_analogreduceport(self, port, **kwargs):  # @UnusedVariable
         return self.E('AnalogReducePort', name=port.name,
                       dimension=port.dimension.name, operator=port.operator)
 
     @annotate_xml
-    def visit_analogsendport(self, port):
+    def visit_analogsendport(self, port, **kwargs):  # @UnusedVariable
         return self.E('AnalogSendPort', name=port.name,
                       dimension=port.dimension.name)
 
     @annotate_xml
-    def visit_eventsendport(self, port):
+    def visit_eventsendport(self, port, **kwargs):  # @UnusedVariable
         return self.E('EventSendPort', name=port.name)
 
     @annotate_xml
-    def visit_eventreceiveport(self, port):
+    def visit_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
         return self.E('EventReceivePort', name=port.name)
 
     @annotate_xml
-    def visit_stateassignment(self, assignment):
+    def visit_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         return self.E('StateAssignment',
                       self.E("MathInline", assignment.rhs_xml),
                       variable=assignment.lhs)
 
     @annotate_xml
-    def visit_timederivative(self, time_derivative):
+    def visit_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         return self.E('TimeDerivative',
                       self.E("MathInline", time_derivative.rhs_xml),
                       variable=time_derivative.variable)
 
     @annotate_xml
-    def visit_oncondition(self, on_condition):
+    def visit_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         return self.E('OnCondition', on_condition.trigger.accept_visitor(self),
                       target_regime=on_condition._target_regime.name,
                       *(e.accept_visitor(self)
                         for e in on_condition.sorted_elements()))
 
     @annotate_xml
-    def visit_trigger(self, trigger):
+    def visit_trigger(self, trigger, **kwargs):  # @UnusedVariable
         return self.E('Trigger', self.E("MathInline", trigger.rhs_xml))
 
     @annotate_xml
-    def visit_onevent(self, on_event):
+    def visit_onevent(self, on_event, **kwargs):  # @UnusedVariable
         return self.E('OnEvent', port=on_event.src_port_name,
                       target_regime=on_event.target_regime.name,
                       *(e.accept_visitor(self)

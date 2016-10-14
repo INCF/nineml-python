@@ -67,7 +67,7 @@ class Definition(BaseReference):
                 document.add(self._referred_to)
         return super(Definition, self).to_xml(document, E=E, **kwargs)
 
-    def clone(self, memo=None, definitions=False, **kwargs):
+    def clone(self, memo=None, clone_definitions=False, **kwargs):
         """
         Since the document they belong to is reset for clones simply return
         the clone of the referenced object
@@ -80,9 +80,9 @@ class Definition(BaseReference):
         """
         if memo is None:
             memo = {}
-        if definitions:
+        if clone_definitions:
             referred_to = self._referred_to.clone(
-                definitions=definitions, memo=memo, **kwargs)
+                definitions=clone_definitions, memo=memo, **kwargs)
         else:
             referred_to = self._referred_to
         return self.__class__(referred_to)

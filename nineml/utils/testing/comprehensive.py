@@ -486,13 +486,11 @@ doc1 = Document(
     selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA,
     netB, *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))))
 
-# doc2 = Document(
-#     # Need to clone the elements as they can only belong to one document at a
-#     # time
-#     *[e.clone() for e in (
-#         dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC,
-#         ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
-#         selA, conA, conPropA, conB, projA, projB, projC, projD, netA, netB)])
+doc2 = Document(
+    dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC,
+    ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
+    selA, conA, conPropA, conB, projA, projB, projC, projD, netA, netB,
+    clone=True, clone_definitions=True)
 
 # -----------------------------------------------------------------------------
 # Create dictionaries holding all nineml types and corresponding examples in
@@ -535,7 +533,7 @@ def add_with_sub_elements(element):
         for elem in sub_elem_iter:
             add_with_sub_elements(elem)
 
-v1_safe_docs = []  # doc2]
+v1_safe_docs = [doc2]
 
 instances_of_all_types = defaultdict(dict)
 instances_of_all_types[doc1.nineml_type]['doc1'] = doc1

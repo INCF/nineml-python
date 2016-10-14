@@ -50,8 +50,10 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     """
     nineml_type = "Projection"
-    defining_attributes = ("_name", "_pre", "_post", "_connectivity",
-                           "_response", "_plasticity", "_delay")
+    defining_attributes = ('_name', '_pre', '_post', '_connectivity',
+                           '_response', '_plasticity', '_delay',
+                           '_analog_port_connections',
+                           '_event_port_connections')
 
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
