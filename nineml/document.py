@@ -4,11 +4,10 @@ from itertools import chain
 from urllib import urlopen
 import weakref
 from copy import deepcopy
-import time
 from lxml import etree
 import collections
 from nineml.xml import (
-    E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker)
+    E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
 from nineml.annotations import Annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLXMLError)
@@ -409,7 +408,7 @@ class Document(dict, BaseNineMLObject):
                                for e in self.itervalues()))
         return clone
 
-    def write(self, url, version=2.0, **kwargs):
+    def write(self, url, version=XML_VERSION, **kwargs):
         if self.url is None:
             self.url = url  # Required so relative urls can be generated
         elif self.url != url:

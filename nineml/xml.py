@@ -11,9 +11,18 @@ from nineml.exceptions import (
 import re
 import nineml
 
+XML_VERSION = 2.0
 
-nineml_ns = 'http://nineml.net/9ML/2.0'
 nineml_v1_ns = 'http://nineml.net/9ML/1.0'
+nineml_v2_ns = 'http://nineml.net/9ML/2.0'
+
+if XML_VERSION == 1.0:
+    nineml_ns = nineml_v1_ns
+elif XML_VERSION == 2.0:
+    nineml_ns = nineml_v2_ns
+else:
+    assert False
+
 NINEML = '{' + nineml_ns + '}'
 NINEMLv1 = '{' + nineml_v1_ns + '}'
 ALL_NINEML = (NINEML, NINEMLv1)
@@ -23,8 +32,9 @@ UNCERTML = "{http://www.uncertml.org/2.0}"
 # Extracts the xmlns from an lxml element tag
 xmlns_re = re.compile(r'(\{.*\})(.*)')
 
-E = ElementMaker(namespace=nineml_ns, nsmap={None: nineml_ns})
 Ev1 = ElementMaker(namespace=nineml_v1_ns, nsmap={None: nineml_v1_ns})
+Ev2 = ElementMaker(namespace=nineml_v2_ns, nsmap={None: nineml_v2_ns})
+E = ElementMaker(namespace=nineml_ns, nsmap={None: nineml_ns})
 
 
 def get_element_maker(version):
@@ -34,7 +44,7 @@ def get_element_maker(version):
     if str(version) == '1.0':
         element_maker = Ev1
     elif str(version) == '2.0':
-        element_maker = E
+        element_maker = Ev2
     else:
         raise NineMLRuntimeError(
             "Unrecognised 9ML version {} (1.0".format(version))
