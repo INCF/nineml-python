@@ -1,9 +1,9 @@
 from copy import copy
-from collections import defaultdict
 from nineml.xml import E, extract_xmlns, strip_xmlns
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
-from nineml.xml import ElementMaker, nineml_ns
+from nineml.xml import ElementMaker, nineml_ns, etree
+from nineml.exceptions import NineMLXMLError, NineMLRuntimeError
 
 
 def read_annotations(from_xml):
@@ -59,41 +59,86 @@ class Annotations(DocumentLevelObject):
     nineml_type = 'Annotations'
     defining_attributes = ('_namespaces',)
 
-    def __init__(self, namespaces=None, document=None):
+    def __init__(self, document=None):
         super(Annotations, self).__init__(document)
-        if namespaces is None:
-            namespaces = defaultdict(dict)
-        self._namespaces = namespaces
+        self._namespaces = {}
 
     def __repr__(self):
-        return "Annotations('{}')".format("', '".join(self._branches.keys()))
+        return "Annotations:\n{}".format(
+            "\n".join('{}: {}'.format(k, v)
+                      for k, v in self._namespaces.iteritems()))
+
+    def __getitem__(self, key):
+        try:
+            val = self._namespaces[key]
+        except KeyError:
+            val = self._namespaces[key] = _AnnotationsNamespace(key)
+        return val
 
     def to_xml(self, **kwargs):  # @UnusedVariable
         members = []
         for ns, branch in self._namespaces.iteritems():
-            if isinstance(ns, _AnnotationsBranch):
+            if isinstance(branch, _AnnotationsBranch):
                 for sub_branch in branch.branches:
                     members.append(sub_branch.to_xml(ns=ns, **kwargs))
             else:
+                assert isinstance(branch, _AnnotationsNamespace)
                 members.append(branch)  # Append unprocessed XML
         return E(self.nineml_type, *members)
 
     @classmethod
     def from_xml(cls, element, annotation_namespaces=[], **kwargs):  # @UnusedVariable @IgnorePep8
         assert strip_xmlns(element.tag) == cls.nineml_type
-        namespaces = defaultdict(dict)
+        annot = cls(**kwargs)
         for child in element.getchildren():
             ns = extract_xmlns(child.tag)
+            if not ns:
+                raise NineMLXMLError(
+                    "All annotations must have a namespace: {}".format(
+                        etree.tostring(child, pretty_print=True)))
+            ns = ns[1:-1]  # strip braces
             if ns == nineml_ns or ns in annotation_namespaces:
                 name = strip_xmlns(child.tag)
-                namespaces[ns][name] = _AnnotationsBranch.from_xml(child)
+                annot[ns][name] = _AnnotationsBranch.from_xml(child)
             else:
-                namespaces[ns] = child  # Don't process, just ignore
-        return cls(**kwargs)
+                annot._namespaces[ns] = child  # Don't process, just ignore
+        return annot
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
         clone._document = self._document
+
+
+class _AnnotationsNamespace(dict):
+    """
+    Like a defaultdict, but initialises AnnotationsBranch with a name
+    """
+
+    def __init__(self, ns):
+        self._ns = ns
+
+    @property
+    def ns(self):
+        return self._ns
+
+    def __repr__(self):
+        rep = '"{}":\n'.format(self.ns)
+        rep += '\n'.join(v._repr('  ') for v in self.itervalues())
+        return rep
+
+    def __getitem__(self, key):
+        try:
+            val = super(_AnnotationsNamespace, self).__getitem__(key)
+        except KeyError:
+            val = self[key] = _AnnotationsBranch(key)
+        return val
+
+    def __setitem__(self, key, val):
+        if not isinstance(val, _AnnotationsBranch):
+            raise NineMLRuntimeError(
+                "Attempting to set directly to Annotations namespace '{}' "
+                "(key={}, val={})".format(self.name, key, val))
+        super(_AnnotationsNamespace, self).__setitem__(key, val)
 
 
 class _AnnotationsBranch(BaseNineMLObject):
@@ -108,11 +153,24 @@ class _AnnotationsBranch(BaseNineMLObject):
             branches = {}
         self._branches = branches
         self._name = name
-        self._attr = {}
+        self._attr = attr
 
     @property
     def name(self):
         return self._name
+
+    def __repr__(self):
+        return self._repr()
+
+    def _repr(self, indent=''):
+        rep = "{}{}:".format(indent, self.name)
+        if self._attr:
+            rep += '\n' + '\n'.join('{}{}={}'.format(indent + '  ', *i)
+                                    for i in self._attr.iteritems())
+        if self._branches:
+            rep += '\n' + '\n'.join(b._repr(indent=indent + '  ')
+                                    for b in self._branches.itervalues())
+        return rep
 
     def __iter__(self):
         return self.keys()
