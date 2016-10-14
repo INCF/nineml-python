@@ -11,7 +11,7 @@ from nineml.exceptions import (
 import re
 import nineml
 
-XML_VERSION = 2.0
+XML_VERSION = 1.0
 
 nineml_v1_ns = 'http://nineml.net/9ML/1.0'
 nineml_v2_ns = 'http://nineml.net/9ML/2.0'
@@ -25,7 +25,8 @@ else:
 
 NINEML = '{' + nineml_ns + '}'
 NINEMLv1 = '{' + nineml_v1_ns + '}'
-ALL_NINEML = (NINEML, NINEMLv1)
+NINEMLv2 = '{' + nineml_v2_ns + '}'
+ALL_NINEML = (NINEMLv1, NINEMLv2)
 MATHML = "{http://www.w3.org/1998/Math/MathML}"
 UNCERTML = "{http://www.uncertml.org/2.0}"
 

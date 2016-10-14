@@ -7,7 +7,8 @@ from copy import deepcopy
 from lxml import etree
 import collections
 from nineml.xml import (
-    E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
+    E, ALL_NINEML, extract_xmlns, NINEMLv1, NINEMLv2, get_element_maker,
+    XML_VERSION)
 from nineml.annotations import Annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLXMLError)
@@ -613,32 +614,47 @@ def get_component_class_type(elem):
 
 
 def get_component_type(comp_xml, doc_xml, relative_to):
+    if relative_to is not None and not relative_to.endswith('/'):
+        relative_to = os.path.dirname(relative_to)
     definition = expect_single(chain(
         comp_xml.findall(NINEMLv1 + 'Definition'),
         comp_xml.findall(NINEMLv1 + 'Prototype')))
     url = definition.get('url')
     if url:
-        doc_xml = read_xml(url, relative_to)
-    for ref_elem in chain(doc_xml.findall(NINEMLv1 + 'ComponentClass'),
-                          doc_xml.findall(NINEMLv1 + 'Component')):
-        if ref_elem.attrib['name'] == definition.text:
-            if ref_elem.tag == NINEMLv1 + 'ComponentClass':
-                cc_cls = get_component_class_type(ref_elem)
-                if cc_cls == nineml.Dynamics:
-                    cls = nineml.user.dynamics.DynamicsProperties
-                elif cc_cls == nineml.ConnectionRule:
-                    cls = nineml.user.connectionrule.ConnectionRuleProperties
-                elif cc_cls == nineml.RandomDistribution:
-                    cls = (nineml.user.randomdistribution.
-                           RandomDistributionProperties)
+        xml, url = read_xml(url, relative_to)
+        doc_xml = xml.getroot()
+    xmlns = extract_xmlns(doc_xml)
+    if xmlns == NINEMLv1:
+        for ref_elem in chain(doc_xml.findall(NINEMLv1 + 'ComponentClass'),
+                              doc_xml.findall(NINEMLv1 + 'Component')):
+            if ref_elem.attrib['name'] == definition.text:
+                if ref_elem.tag == NINEMLv1 + 'ComponentClass':
+                    cc_cls = get_component_class_type(ref_elem)
+                    if cc_cls == nineml.Dynamics:
+                        cls = nineml.user.dynamics.DynamicsProperties
+                    elif cc_cls == nineml.ConnectionRule:
+                        cls = (nineml.user.connectionrule.
+                               ConnectionRuleProperties)
+                    elif cc_cls == nineml.RandomDistribution:
+                        cls = (nineml.user.randomdistribution.
+                               RandomDistributionProperties)
+                    else:
+                        assert False, "Unrecognised component tag '{}".format(
+                            ref_elem.tag)
                 else:
-                    assert False
-            else:
-                # Recurse through the prototype until we find the component
-                # class at the bottom of it.
-                cls = get_component_type(ref_elem, doc_xml, url)
-            return cls
-    assert False
+                    # Recurse through the prototype until we find the component
+                    # class at the bottom of it.
+                    cls = get_component_type(ref_elem, doc_xml, url)
+                return cls
+        assert False, ("Did not find component or component class in '{}' tags"
+                   .format("', '".join(c.tag for c in doc_xml.getchildren())))
+    elif xmlns == NINEMLv2:  # In case of a v1.0 doc referencing a v2.0
+        pass
+    else:
+        raise NineMLRuntimeError(
+            "Unrecognised namespace \"{}\" found at referenced url '{}' "
+            .format(xmlns, url))
+    
 
 
 import nineml  # @IgnorePep8

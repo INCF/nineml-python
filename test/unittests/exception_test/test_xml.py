@@ -1,16 +1,14 @@
 import unittest
 from itertools import chain
 from nineml.xml import (
-    get_element_maker, from_child_xml, from_child_xml, from_child_xml,
-    from_child_xml, from_child_xml, from_child_xml, get_xml_attr, get_xml_attr,
-    get_subblock, get_subblock, unprocessed_xml, unprocessed_xml)
-from nineml.utils.testing.comprehensive import (
-    instances_of_all_types, doc1, popA, dynPropA)
+    get_element_maker, from_child_xml, from_child_xml,
+    from_child_xml, from_child_xml, from_child_xml, get_xml_attr,
+    get_subblock)
+from nineml.utils.testing.comprehensive import (doc1, dynPropA)
 from nineml.exceptions import (
     NineMLXMLAttributeError, NineMLXMLBlockError, NineMLRuntimeError)
 from nineml.user import Projection, Population, Definition, DynamicsProperties
-from nineml.units import Quantity
-from nineml.xml import E
+from nineml.xml import Ev2
 from nineml.reference import Reference
 
 
@@ -31,10 +29,10 @@ class TestExceptions(unittest.TestCase):
         line #: 74
         message: {} in '{}' has '{}' attributes when {} are expected
         """
-        elem = E(Projection.nineml_type,
-                 E.Pre(E(Reference.nineml_type,
-                         name="popA"),
-                       bad_attr="bar"))
+        elem = Ev2(Projection.nineml_type,
+                   Ev2.Pre(Ev2(Reference.nineml_type,
+                               name="popA"),
+                           bad_attr="bar"))
         self.assertRaises(
             NineMLXMLAttributeError,
             from_child_xml,
@@ -55,11 +53,11 @@ class TestExceptions(unittest.TestCase):
         message: {} in '{}' is only expected to contain a single child block,
         found {}
         """
-        elem = E(Projection.nineml_type,
-                 E.Pre(E(Reference.nineml_type,
-                         name="popA"),
-                       E(Reference.nineml_type,
-                         name="popA")))
+        elem = Ev2(Projection.nineml_type,
+                   Ev2.Pre(Ev2(Reference.nineml_type,
+                               name="popA"),
+                           Ev2(Reference.nineml_type,
+                               name="popA")))
         self.assertRaises(
             NineMLXMLBlockError,
             from_child_xml,
@@ -79,7 +77,7 @@ class TestExceptions(unittest.TestCase):
         line #: 93
         message: Did not find {} block within {} element in '{}'
         """
-        elem = E(Projection.nineml_type)
+        elem = Ev2(Projection.nineml_type)
         self.assertRaises(
             NineMLXMLBlockError,
             from_child_xml,
@@ -99,11 +97,11 @@ class TestExceptions(unittest.TestCase):
         line #: 97
         message: Found unexpected multiple {} blocks within {} in '{}'
         """
-        elem = E(Projection.nineml_type,
-                 E.Pre(E(Reference.nineml_type,
-                         name="popA")),
-                 E.Pre(E(Reference.nineml_type,
-                         name="popB")))
+        elem = Ev2(Projection.nineml_type,
+                   Ev2.Pre(Ev2(Reference.nineml_type,
+                               name="popA")),
+                   Ev2.Pre(Ev2(Reference.nineml_type,
+                               name="popB")))
         self.assertRaises(
             NineMLXMLBlockError,
             from_child_xml,
@@ -124,11 +122,11 @@ class TestExceptions(unittest.TestCase):
         message: Did not find any child blocks with the tag{s}
         '{child_cls_names}'in the {parent_name} in '{url}'
         """
-        elem = E(DynamicsProperties.nineml_type,
-                 E(Definition.nineml_type,
-                   name="dynA"),
-                 E(Definition.nineml_type,
-                   name="dynB"))
+        elem = Ev2(DynamicsProperties.nineml_type,
+                   Ev2(Definition.nineml_type,
+                       name="dynA"),
+                   Ev2(Definition.nineml_type,
+                       name="dynB"))
         self.assertRaises(
             NineMLXMLBlockError,
             from_child_xml,
@@ -148,7 +146,7 @@ class TestExceptions(unittest.TestCase):
         line #: 145
         message: Multiple children of types '{}' found within {} in '{}'
         """
-        elem = E(DynamicsProperties.nineml_type)
+        elem = Ev2(DynamicsProperties.nineml_type)
         self.assertRaises(
             NineMLXMLBlockError,
             from_child_xml,
@@ -168,7 +166,7 @@ class TestExceptions(unittest.TestCase):
         line #: 172
         message: {} in '{}' is missing the {} attribute (found '{}' attributes)
         """
-        elem = E(DynamicsProperties.nineml_type)
+        elem = Ev2(DynamicsProperties.nineml_type)
         self.assertRaises(
             NineMLXMLAttributeError,
             get_xml_attr,
@@ -182,8 +180,8 @@ class TestExceptions(unittest.TestCase):
         message: '{}' attribute of {} in '{}', {}, cannot be converted to {}
         type
         """
-        elem = E(DynamicsProperties.nineml_type,
-                 name='foo')
+        elem = Ev2(DynamicsProperties.nineml_type,
+                   name='foo')
         self.assertRaises(
             NineMLXMLAttributeError,
             get_xml_attr,
@@ -198,8 +196,8 @@ class TestExceptions(unittest.TestCase):
         message: Did not find and child blocks with the tag '{}' within {} in
         '{url}'
         """
-        elem = E(Population.nineml_type,
-                 E('ASubBlock'))
+        elem = Ev2(Population.nineml_type,
+                   Ev2('ASubBlock'))
         self.assertRaises(
             NineMLXMLBlockError,
             get_subblock,
@@ -214,9 +212,9 @@ class TestExceptions(unittest.TestCase):
         message: Found multiple child blocks with the tag '{}' within {} in
         '{url}'
         """
-        elem = E(Population.nineml_type,
-                 E('ASubBlock'),
-                 E('ASubBlock'))
+        elem = Ev2(Population.nineml_type,
+                   Ev2('ASubBlock'),
+                   Ev2('ASubBlock'))
         self.assertRaises(
             NineMLXMLBlockError,
             get_subblock,
@@ -231,13 +229,13 @@ class TestExceptions(unittest.TestCase):
         message: Found unrecognised block{s} '{remaining}' within {elem_name}
         in '{url}'
         """
-        elem = E(DynamicsProperties.nineml_type,
-                 dynPropA.to_xml(doc1),
-                 E('BadBlock'),
-                 *list(chain(
-                     (p.to_xml(doc1) for p in dynPropA.properties),
-                     (v.to_xml(doc1) for v in dynPropA.initial_values))),
-                 name='dynPropA2')
+        elem = Ev2(DynamicsProperties.nineml_type,
+                   dynPropA.to_xml(doc1),
+                   Ev2('BadBlock'),
+                   *list(chain(
+                       (p.to_xml(doc1) for p in dynPropA.properties),
+                       (v.to_xml(doc1) for v in dynPropA.initial_values))),
+                   name='dynPropA2')
         self.assertRaises(
             NineMLXMLBlockError,
             DynamicsProperties.from_xml,
@@ -250,13 +248,13 @@ class TestExceptions(unittest.TestCase):
         message: Found unrecognised attribute{s} '{remaining}' within
         {elem_name} in '{url}'
         """
-        elem = E(DynamicsProperties.nineml_type,
-                 dynPropA.to_xml(doc1),
-                 *list(chain(
-                     (p.to_xml(doc1) for p in dynPropA.properties),
-                     (v.to_xml(doc1) for v in dynPropA.initial_values))),
-                 name='dynPropA2',
-                 bad_attr='bad')
+        elem = Ev2(DynamicsProperties.nineml_type,
+                   dynPropA.to_xml(doc1),
+                   *list(chain(
+                       (p.to_xml(doc1) for p in dynPropA.properties),
+                       (v.to_xml(doc1) for v in dynPropA.initial_values))),
+                   name='dynPropA2',
+                   bad_attr='bad')
         self.assertRaises(
             NineMLXMLBlockError,
             DynamicsProperties.from_xml,
