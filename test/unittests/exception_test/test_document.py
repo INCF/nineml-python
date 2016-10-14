@@ -7,7 +7,7 @@ from nineml.exceptions import (NineMLXMLError, NineMLNameError,
                                NineMLRuntimeError)
 from tempfile import mkdtemp
 import os.path
-from nineml.xml import Ev1, E, ElementMaker
+from nineml.xml import Ev1, Ev2, ElementMaker
 from nineml.abstraction.dynamics import Trigger
 import shutil
 import nineml.units as un
@@ -141,13 +141,13 @@ class TestDocumentExceptions(unittest.TestCase):
         message: Circular reference detected in '{}(name={})' element.
         Resolution stack was:
         """
-        xml = E(Document.nineml_type,
-                E(DynamicsProperties.nineml_type,
-                  E(Definition.nineml_type, name="B"),
-                  name="A"),
-                E(DynamicsProperties.nineml_type,
-                  E(Definition.nineml_type, name="A"),
-                  name="B"))
+        xml = Ev2(Document.nineml_type,
+                  Ev2(DynamicsProperties.nineml_type,
+                      Ev2(Definition.nineml_type, name="B"),
+                      name="A"),
+                  Ev2(DynamicsProperties.nineml_type,
+                      Ev2(Definition.nineml_type, name="A"),
+                      name="B"))
         document = Document.load(xml)
         self.assertRaises(
             NineMLRuntimeError,
@@ -219,7 +219,7 @@ class TestDocumentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
-            element=E.BadRoot())
+            element=Ev2.BadRoot())
 
     def test_from_xml_ninemlruntimeerror(self):
         """
@@ -230,7 +230,7 @@ class TestDocumentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             Document.from_xml,
-            element=E(Trigger.nineml_type, 'a > b'))
+            element=Ev2(Trigger.nineml_type, 'a > b'))
 
     def test_from_xml_ninemlxmlerror3(self):
         """
@@ -240,7 +240,7 @@ class TestDocumentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
-            element=E.BadElement())
+            element=Ev2.BadElement())
 
     def test_from_xml_notimplementederror(self):
         """
@@ -248,8 +248,8 @@ class TestDocumentExceptions(unittest.TestCase):
         message: Cannot load '{}' element (extensions not implemented)
         """
         unrecogised_E = ElementMaker(namespace='http://unrecognised.net')
-        element = E(Document.nineml_type,
-                    unrecogised_E.UnrecognisedExtension())
+        element = Ev2(Document.nineml_type,
+                      unrecogised_E.UnrecognisedExtension())
         self.assertRaises(
             NotImplementedError,
             Document.from_xml,
@@ -261,8 +261,8 @@ class TestDocumentExceptions(unittest.TestCase):
         message: Missing 'name' (or 'symbol') attribute from document level
         object '{}'
         """
-        elem = E(Document.nineml_type,
-                 E(Dynamics.nineml_type))
+        elem = Ev2(Document.nineml_type,
+                   Ev2(Dynamics.nineml_type))
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
@@ -273,11 +273,11 @@ class TestDocumentExceptions(unittest.TestCase):
         line #: 373
         message: Duplicate identifier '{ob1}:{name}'in NineML file '{url}'
         """
-        xml = E(Document.nineml_type,
-                E(Dynamics.nineml_type,
-                  name='A'),
-                E(Dynamics.nineml_type,
-                  name='A'))
+        xml = Ev2(Document.nineml_type,
+                  Ev2(Dynamics.nineml_type,
+                      name='A'),
+                  Ev2(Dynamics.nineml_type,
+                      name='A'))
         self.assertRaises(
             NineMLXMLError,
             Document.from_xml,
