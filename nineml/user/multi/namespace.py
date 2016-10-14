@@ -352,7 +352,7 @@ class _NamespaceTimeDerivative(_NamespaceNamed, _NamespaceExpression,
 
     @property
     def independent_variable(self):
-        return self.variable
+        return 't'
 
 
 class _NamespaceStateAssignment(_NamespaceNamed, _NamespaceExpression,

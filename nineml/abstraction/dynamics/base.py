@@ -212,8 +212,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
         # TODO: Add check for inferred analog ports??
 
-        self.annotations[nineml_ns][VALIDATION][DIMENSIONALITY] = (
-            validate_dimensions)
+        self.annotations.set(nineml_ns, VALIDATION, DIMENSIONALITY,
+                             validate_dimensions)
         for transition in self.all_transitions():
             transition.bind(self)
         # Is the finished component_class valid?:
@@ -252,10 +252,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return DynamicsElementFinder(element).found_in(self)
 
     def validate(self, validate_dimensions=None, **kwargs):
-        if (validate_dimensions is None and nineml_ns in self.annotations and
-                VALIDATION in self.annotations[nineml_ns]):
-            validate_dimensions = self.annotations[nineml_ns][VALIDATION].get(
-                DIMENSIONALITY, True)
+        self.annotations.get(nineml_ns, VALIDATION, DIMENSIONALITY,
+                             default=True)
         self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self, validate_dimensions,
                                                   **kwargs)
