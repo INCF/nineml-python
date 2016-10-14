@@ -20,7 +20,7 @@ from nineml.base import (
     ContainerObject, DocumentLevelObject, DynamicPortsObject)
 from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
 # from nineml import units as un
-from nineml.annotations import VALIDATE_DIMENSIONS
+from nineml.annotations import VALIDATION, DIMENSIONALITY
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, EventReceivePort,
     StateVariable, OnEvent, OnCondition, OutputEvent, StateAssignment,
@@ -597,7 +597,7 @@ class MultiDynamics(Dynamics):
                                 port_connection.receiver_name, name))
                 self._analog_port_connections[
                     rcv_key][snd_key] = port_connection
-        self.annotations[nineml_ns][VALIDATE_DIMENSIONS] = validate_dimensions
+        self.annotations[nineml_ns][VALIDATION][DIMENSIONALITY] = validate_dimensions
         self.validate(**kwargs)
 
     def __getitem__(self, comp_name):
