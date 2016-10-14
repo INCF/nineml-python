@@ -3,8 +3,8 @@ from nineml.xml import E, extract_xmlns, strip_xmlns
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
 from nineml.xml import ElementMaker, nineml_ns, etree
-from nineml.exceptions import NineMLXMLError, NineMLRuntimeError
-import nineml
+from nineml.exceptions import (
+    NineMLXMLError, NineMLRuntimeError, NineMLNameError)
 
 
 def read_annotations(from_xml):
@@ -91,7 +91,8 @@ class Annotations(DocumentLevelObject):
             if 'default' in kwargs:
                 return kwargs['default']
             else:
-                raise
+                raise NineMLNameError(
+                    "No annotation at path '{}'".format("', '".join(args)))
 
     def to_xml(self, E=E, **kwargs):  # @UnusedVariable
         members = []
@@ -183,7 +184,7 @@ class _AnnotationsNamespace(BaseNineMLObject):
         if not isinstance(val, _AnnotationsBranch):
             raise NineMLRuntimeError(
                 "Attempting to set directly to Annotations namespace '{}' "
-                "(key={}, val={})".format(self.name, key, val))
+                "(key={}, val={})".format(self._ns, key, val))
         self._branches[key] = val
 
     def set(self, key, *args):
@@ -200,7 +201,8 @@ class _AnnotationsNamespace(BaseNineMLObject):
             if 'default' in kwargs:
                 return kwargs['default']
             else:
-                raise
+                raise NineMLNameError(
+                    "No annotation at path '{}'".format("', '".join(args)))
 
 
 class _AnnotationsBranch(BaseNineMLObject):
@@ -251,7 +253,15 @@ class _AnnotationsBranch(BaseNineMLObject):
         return self._branches.itervalues()
 
     def __getitem__(self, key):
-        return self._branches[key]
+        try:
+            return self._attr[key]
+        except KeyError:
+            try:
+                return self._branches[key]
+            except KeyError:
+                raise NineMLNameError(
+                    "'{}' does not have branch or attribute '{}'"
+                    .format(self._name, key))
 
     def set(self, key, *args):
         if not args:
@@ -283,7 +293,8 @@ class _AnnotationsBranch(BaseNineMLObject):
                 if 'default' in kwargs:
                     return kwargs['default']
                 else:
-                    raise
+                    raise NineMLNameError(
+                        "No annotation at path '{}'".format("', '".join(args)))
         return val
 
     def __setitem__(self, key, val):
