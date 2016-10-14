@@ -71,8 +71,7 @@ dynA = Dynamics(
                 Parameter('P3', dimension=un.voltage),
                 Parameter('P4', dimension=un.current)],
     constants=[Constant('C1', value=-71.0, units=un.mV),
-               Constant('C2', value=22.2, units=un.degC)]
-)
+               Constant('C2', value=22.2, units=un.degC)])
 
 dynB = Dynamics(
     name='dynB',

@@ -20,14 +20,14 @@ def read_annotations(from_xml):
                                         Annotations.nineml_type))
         else:
             annotations = Annotations()
-        if (cls.__class__.__name__ == 'DynamicsXMLLoader' and
-            nineml_ns in annotations._namespaces and
-            VALIDATION in annotations[nineml_ns] and
-                DIMENSIONALITY in annotations[nineml_ns][VALIDATION]):
+        if cls.__class__.__name__ == 'DynamicsXMLLoader':
             # FIXME: Hack until I work out the best way to let other 9ML
             #        objects ignore this kwarg TGC 6/15
-            kwargs['validate_dimensions'] = (
-                annotations[nineml_ns][VALIDATION][DIMENSIONALITY] == 'True')
+            try:
+                valid_dims = annotations[nineml_ns][VALIDATION][DIMENSIONALITY]
+                kwargs['validate_dimensions'] = (valid_dims == 'True')
+            except KeyError:
+                pass
         nineml_object = from_xml(cls, element, *args, **kwargs)
         nineml_object._annotations = annotations
         return nineml_object
@@ -72,17 +72,23 @@ class Annotations(DocumentLevelObject):
         return len(self._namespaces)
 
     def __getitem__(self, key):
+        return self._namespaces[key]
+
+    def set(self, namespace, *args):
         try:
-            val = self._namespaces[key]
+            ns = self[namespace]
         except KeyError:
-            val = self._namespaces[key] = _AnnotationsNamespace(key)
-        return val
+            ns = self._namespaces[namespace] = _AnnotationsNamespace(namespace)
+        ns.set(*args)
+
+    def get(self, namespace, *args, **kwargs):
+        self[namespace].get(*args, **kwargs)
 
     def to_xml(self, **kwargs):  # @UnusedVariable
         members = []
         for ns, annot_ns in self._namespaces.iteritems():
             if isinstance(annot_ns, _AnnotationsNamespace):
-                for branch in annot_ns.itervalues():
+                for branch in annot_ns.branches:
                     members.append(branch.to_xml(ns=ns, **kwargs))
             else:
                 members.append(annot_ns)  # Append unprocessed XML
@@ -105,7 +111,12 @@ class Annotations(DocumentLevelObject):
             ns = ns[1:-1]  # strip braces
             if ns == nineml_ns or ns in read_annotation_ns:
                 name = strip_xmlns(child.tag)
-                annot[ns][name] = _AnnotationsBranch.from_xml(child)
+                try:
+                    namespace = annot[ns]
+                except KeyError:
+                    annot._namespaces[ns] = _AnnotationsNamespace(ns)
+                    namespace = annot._namespaces[ns]
+                namespace[name] = _AnnotationsBranch.from_xml(child)
             else:
                 annot._namespaces[ns] = child  # Don't process, just ignore
         return annot
@@ -132,36 +143,49 @@ class Annotations(DocumentLevelObject):
         return True
 
 
-class _AnnotationsNamespace(dict):
+class _AnnotationsNamespace(BaseNineMLObject):
     """
     Like a defaultdict, but initialises AnnotationsBranch with a name
     """
+    nineml_type = '_AnnotationsNamespace'
+    defining_attributes = ('_ns', '_branches')
 
     def __init__(self, ns):
         self._ns = ns
+        self._branches = {}
 
     @property
     def ns(self):
         return self._ns
 
+    @property
+    def branches(self):
+        return self._branches.itervalues()
+
     def __repr__(self):
         rep = '"{}":\n'.format(self.ns)
-        rep += '\n'.join(v._repr('  ') for v in self.itervalues())
+        rep += '\n'.join(v._repr('  ') for v in self.branches)
         return rep
 
     def __getitem__(self, key):
-        try:
-            val = super(_AnnotationsNamespace, self).__getitem__(key)
-        except KeyError:
-            val = self[key] = _AnnotationsBranch(key)
-        return val
+        return self._branches[key]
 
     def __setitem__(self, key, val):
         if not isinstance(val, _AnnotationsBranch):
             raise NineMLRuntimeError(
                 "Attempting to set directly to Annotations namespace '{}' "
                 "(key={}, val={})".format(self.name, key, val))
-        super(_AnnotationsNamespace, self).__setitem__(key, val)
+        self._branches[key] = val
+
+    def set(self, key, *args):
+        try:
+            branch = self[key]
+        except KeyError:
+            branch = self._branches[key] = _AnnotationsBranch(key)
+        branch.set(*args)
+
+    def get(self, key, *args, **kwargs):
+        self[key].get(*args, **kwargs)
 
 
 class _AnnotationsBranch(BaseNineMLObject):
@@ -219,12 +243,31 @@ class _AnnotationsBranch(BaseNineMLObject):
             val = self._branches[key] = _AnnotationsBranch(key)
         return val
 
-    def get(self, key, default=None):
-        """Like getitem but doesn't create a new branch if one isn't present"""
-        try:
-            val = self._attr[key]
-        except KeyError:
-            val = default
+    def set(self, key, *args):
+        if not args:
+            raise NineMLRuntimeError("No value was provided to set of '{}' "
+                                     "in annotations branch '{}'"
+                                     .format(key, self.name))
+        if len(args) == 1:
+            self._attr[key] = str(args[0])
+        else:
+            # Recurse into branches while there are remaining args
+            try:
+                branch = self._branches[key]
+            except KeyError:
+                # If branch doesn't exist then create it
+                branch = self._branches[key] = _AnnotationsBranch(key)
+            branch.set(*args)  # recurse into branch
+
+    def get(self, key, *args, **kwargs):
+        if not args:
+            if 'default' in kwargs:
+                val = self._attr.get(key, kwargs['default'])
+            else:
+                val = self._attr[key]
+        else:
+            # Recurse into branches while there are remaining args
+            val = self._branches[key].get(*args, **kwargs)
         return val
 
     def __setitem__(self, key, val):

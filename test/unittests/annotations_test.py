@@ -46,13 +46,13 @@ class TestAnnotations(unittest.TestCase):
         loaded_annot = Annotations.from_xml(
             annot_xml, read_annotation_ns=[foreign_ns])
         annot = Annotations()
-        annot[nineml_ns]['Foo']['Bar']['a'] = '1'
-        annot[foreign_ns]['Woo']['Car']['b'] = 1
-        annot[foreign_ns]['Woo']['Jar']['c'] = 2
-        annot[nineml_ns]['Boo']['Mar']['Wee']['d'] = 3
-        annot[nineml_ns]['Boo']['Mar']['Wee']['e'] = 4
-        annot[nineml_ns]['Boo']['Mar']['Waa']['f'] = 5
-        annot[nineml_ns]['Boo']['Mar']['Waa']['g'] = 6
+        annot.set(nineml_ns, 'Foo', 'Bar', 'a', '1')
+        annot.set(foreign_ns, 'Woo', 'Car', 'b', 1)
+        annot.set(foreign_ns, 'Woo', 'Jar', 'c', 2)
+        annot.set(nineml_ns, 'Boo', 'Mar', 'Wee', 'd', 3)
+        annot.set(nineml_ns, 'Boo', 'Mar', 'Wee', 'e', 4)
+        annot.set(nineml_ns, 'Boo', 'Mar', 'Waa', 'f', 5)
+        annot.set(nineml_ns, 'Boo', 'Mar', 'Waa', 'g', 6)
         self.assertEqual(annot[nineml_ns], loaded_annot[nineml_ns],
                          "Manual annotations do not match loaded "
                          "annotations:\n\n{}\nvs\n\n{}\n".format(
