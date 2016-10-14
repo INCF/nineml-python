@@ -27,7 +27,7 @@ def read_annotations(from_xml):
             kwargs['validate_dimensions'] = (
                 annotations[nineml_xmlns][VALIDATE_DIMENSIONS] == 'True')
         nineml_object = from_xml(cls, element, *args, **kwargs)
-        nineml_object.annotations.update(annotations.iteritems())
+        nineml_object._annotations = annotations
         return nineml_object
     return annotate_from_xml
 
@@ -65,8 +65,7 @@ class Annotations(DocumentLevelObject):
 
     def __repr__(self):
         return "Annotations:\n{}".format(
-            "\n".join('{}: {}'.format(k, v)
-                      for k, v in self._namespaces.iteritems()))
+            "\n".join(str(v) for v in self._namespaces.itervalues()))
 
     def __getitem__(self, key):
         try:
@@ -87,7 +86,11 @@ class Annotations(DocumentLevelObject):
         return E(self.nineml_type, *members)
 
     @classmethod
-    def from_xml(cls, element, annotation_namespaces=[], **kwargs):  # @UnusedVariable @IgnorePep8
+    def from_xml(cls, element, read_annotation_ns=None, **kwargs):  # @UnusedVariable @IgnorePep8
+        if read_annotation_ns is None:
+            read_annotation_ns = []
+        elif isinstance(read_annotation_ns, basestring):
+            read_annotation_ns = [read_annotation_ns]
         assert strip_xmlns(element.tag) == cls.nineml_type
         annot = cls(**kwargs)
         for child in element.getchildren():
@@ -97,7 +100,7 @@ class Annotations(DocumentLevelObject):
                     "All annotations must have a namespace: {}".format(
                         etree.tostring(child, pretty_print=True)))
             ns = ns[1:-1]  # strip braces
-            if ns == nineml_ns or ns in annotation_namespaces:
+            if ns == nineml_ns or ns in read_annotation_ns:
                 name = strip_xmlns(child.tag)
                 annot[ns][name] = _AnnotationsBranch.from_xml(child)
             else:

@@ -1,6 +1,11 @@
 import unittest
 from nineml.annotations import Annotations
-from nineml.xml import etree, nineml_ns, ElementMaker
+from nineml.xml import etree, nineml_ns, ElementMaker, E
+from nineml.abstraction import Parameter
+from nineml.units import Dimension
+from nineml.abstraction.dynamics.visitors.xml import DynamicsXMLLoader
+from nineml import Document
+from nineml.utils import xml_equal
 
 
 foreign_ns = "http://some.other.namespace.org"
@@ -18,7 +23,7 @@ annot_str = """
             <Jar c="2"/>
         </Woo>
         <Foo xmlns="{unprocess}">
-            <Bar>invalid in simple annotations format</Bar>
+            <Bar>invalid in simple annotations format so just kept as XML</Bar>
         </Foo>
         <Boo>
             <Mar>
@@ -34,10 +39,10 @@ annot_xml = etree.fromstring(annot_str)
 
 class TestAnnotations(unittest.TestCase):
 
-    def test_annotations_load(self):
+    def test_basic(self):
 
         loaded_annot = Annotations.from_xml(
-            annot_xml, annotation_namespaces=[foreign_ns])
+            annot_xml, read_annotation_ns=[foreign_ns])
         annot = Annotations()
         annot[nineml_ns]['Foo']['Bar']['a'] = '1'
         annot[foreign_ns]['Woo']['Car']['b'] = 1
@@ -52,3 +57,29 @@ class TestAnnotations(unittest.TestCase):
                              annot[nineml_ns], loaded_annot[nineml_ns]))
         self.assertEqual(annot[foreign_ns], loaded_annot[foreign_ns])
         self.assertIsInstance(loaded_annot[unprocess_ns], etree._Element)
+        reloaded_annot = Annotations.from_xml(
+            annot_xml, read_annotation_ns=foreign_ns)
+        self.assertEqual(loaded_annot, reloaded_annot)
+
+    def test_read(self):
+        param_xml = E(Parameter.nineml_type,
+                            annot_xml, name="P1", dimension="dimensionless")
+        dim_xml = E(Dimension.nineml_type,
+                     annot_xml, name='dimensionless')
+        annot = Annotations.from_xml(
+            annot_xml, read_annotation_ns=foreign_ns)
+        doc = Document()
+        dimension = Dimension.from_xml(dim_xml, doc,
+                                       read_annotation_ns=foreign_ns)
+        doc.add(dimension)
+        loader = DynamicsXMLLoader(doc)
+        parameter = loader.load_parameter(param_xml,
+                                          read_annotation_ns=foreign_ns)
+        self.assertEqual(parameter.annotations, annot,
+                         "{}\n\nvs\n\n{}".format(parameter.annotations, annot))
+        self.assertEqual(dimension.annotations, annot,
+                         "{}\n\nvs\n\n{}".format(dimension.annotations, annot))
+        re_param_xml = parameter.to_xml()
+        re_dim_xml = dimension.to_xml()
+        self.assertTrue(xml_equal(param_xml, re_param_xml))
+        self.assertTrue(xml_equal(dim_xml, re_dim_xml))
