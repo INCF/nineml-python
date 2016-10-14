@@ -58,20 +58,20 @@ class Document(dict, BaseNineMLObject):
         BaseNineMLObject.__init__(self,
                                   annotations=kwargs.pop('annotations', None))
         self._url = self._standardise_url(kwargs.pop('url', None))
-        assert len(kwargs) == 0, ("Unrecognised kwargs '{}'"
-                                  .format("', '".join(kwargs.iterkeys())))
+        clone = kwargs.pop('clone', False)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
         self._added_in_write = None
+        memo = {}
         for element in elements:
-            self.add(element)
+            self.add(element, clone=clone, memo=memo, **kwargs)
 
     def __repr__(self):
         return "NineMLDocument(url='{}', {} elements)".format(
             str(self.url), len(self))
 
-    def add(self, element):
+    def add(self, element, clone=False, **kwargs):
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
             raise NineMLRuntimeError(
                 "Could not add {} to document '{}' as it is not a 'document "
@@ -88,15 +88,17 @@ class Document(dict, BaseNineMLObject):
                     .format(element.name, self.url))
         else:
             if not isinstance(element, self._Unloaded):
-                if element.document is None:
-                    element._document = self  # Set its document to this one
-                else:
+                if clone:
+                    element = element.clone(**kwargs)
+                elif element.document is not None:
                     raise NineMLRuntimeError(
                         "Attempting to add the same object '{}' {} to '{}' "
                         "document when it is already in '{}'. Please "
-                        "remove it from the original document first"
+                        "remove it from the original document first or use the"
+                        "'clone' keyword to add a clone of the element instead"
                         .format(element.name, element.nineml_type,
                                 self.url, element.document.url))
+                element._document = self  # Set its document to this one
             self[element.name] = element
         if self._added_in_write is not None:
             self._added_in_write.append(element)

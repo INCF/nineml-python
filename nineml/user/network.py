@@ -251,7 +251,7 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
     __metaclass__ = ABCMeta
 
     defining_attributes = ('_name', '_source', '_destination', '_source_port',
-                           '_destination_port', '_connectivity')
+                           '_destination_port', '_connectivity', '_delay')
 
     def __init__(self, name, source, destination, source_port,
                  destination_port, connectivity, delay, document=None,

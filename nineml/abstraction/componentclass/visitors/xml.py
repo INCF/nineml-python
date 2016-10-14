@@ -111,19 +111,19 @@ class ComponentClassXMLWriter(ComponentVisitor):
         return self.E._namespace
 
     @annotate_xml
-    def visit_parameter(self, parameter):
+    def visit_parameter(self, parameter, **kwargs):
         return self.E(Parameter.nineml_type,
                       name=parameter.name,
                       dimension=parameter.dimension.name)
 
     @annotate_xml
-    def visit_alias(self, alias):
+    def visit_alias(self, alias, **kwargs):
         return self.E(Alias.nineml_type,
                       self.E("MathInline", alias.rhs_xml),
                       name=alias.lhs)
 
     @annotate_xml
-    def visit_constant(self, constant):
+    def visit_constant(self, constant, **kwargs):
         if self.xmlns == NINEMLv1:
             xml = self.E(Constant.nineml_type,
                          repr(constant.value),

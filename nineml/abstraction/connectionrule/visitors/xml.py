@@ -73,4 +73,5 @@ class ConnectionRuleXMLWriter(ComponentClassXMLWriter):
                          standard_library=component_class.standard_library)
         return xml
 
-from ..base import ConnectionRule
+
+from ..base import ConnectionRule  # @IgnorePep8

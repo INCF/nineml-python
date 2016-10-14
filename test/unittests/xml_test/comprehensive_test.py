@@ -16,7 +16,7 @@ class TestComprehensiveXML(TestCase):
         shutil.rmtree(self._tmp_dir)
 
     def test_write_read_roundtrip(self):
-        for version in (2.0,):  # (1.0, 2.0):
+        for version in (1.0, 2.0):
             if version == 1.0:
                 docs = v1_safe_docs
             else:

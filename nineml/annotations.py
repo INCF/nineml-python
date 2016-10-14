@@ -4,6 +4,7 @@ from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
 from nineml.xml import ElementMaker, nineml_ns, etree
 from nineml.exceptions import NineMLXMLError, NineMLRuntimeError
+import nineml
 
 
 def read_annotations(from_xml):
@@ -24,10 +25,12 @@ def read_annotations(from_xml):
             # FIXME: Hack until I work out the best way to let other 9ML
             #        objects ignore this kwarg TGC 6/15
             try:
-                valid_dims = annotations[nineml_ns][VALIDATION][DIMENSIONALITY]
-                kwargs['validate_dimensions'] = (valid_dims == 'True')
+                valid_dims = (
+                    annotations[nineml_ns][VALIDATION][DIMENSIONALITY] ==
+                    'True')
             except KeyError:
-                pass
+                valid_dims = True
+            kwargs['validate_dimensions'] = valid_dims
         nineml_object = from_xml(cls, element, *args, **kwargs)
         nineml_object._annotations = annotations
         return nineml_object
@@ -35,7 +38,7 @@ def read_annotations(from_xml):
 
 
 def annotate_xml(to_xml):
-    def annotate_to_xml(self, document_or_obj, **kwargs):
+    def annotate_to_xml(self, document_or_obj, E=E, **kwargs):
         # If Abstraction Layer class
         if xml_visitor_module_re.match(type(self).__module__):
             obj = document_or_obj
@@ -44,9 +47,9 @@ def annotate_xml(to_xml):
         else:
             obj = self
             options = kwargs
-        elem = to_xml(self, document_or_obj, **kwargs)
+        elem = to_xml(self, document_or_obj, E=E, **kwargs)
         if not options.get('no_annotations', False) and len(obj.annotations):
-            elem.append(obj.annotations.to_xml(**kwargs))
+            elem.append(obj.annotations.to_xml(E=E, **kwargs))
         return elem
     return annotate_to_xml
 
@@ -90,12 +93,12 @@ class Annotations(DocumentLevelObject):
             else:
                 raise
 
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, E=E, **kwargs):  # @UnusedVariable
         members = []
         for ns, annot_ns in self._namespaces.iteritems():
             if isinstance(annot_ns, _AnnotationsNamespace):
                 for branch in annot_ns.branches:
-                    members.append(branch.to_xml(ns=ns, **kwargs))
+                    members.append(branch.to_xml(ns=ns, E=E, **kwargs))
             else:
                 members.append(annot_ns)  # Append unprocessed XML
         return E(self.nineml_type, *members)
@@ -192,7 +195,7 @@ class _AnnotationsNamespace(BaseNineMLObject):
 
     def get(self, key, *args, **kwargs):
         try:
-            self[key].get(*args, **kwargs)
+            return self[key].get(*args, **kwargs)
         except KeyError:
             if 'default' in kwargs:
                 return kwargs['default']
@@ -248,12 +251,7 @@ class _AnnotationsBranch(BaseNineMLObject):
         return self._branches.itervalues()
 
     def __getitem__(self, key):
-        try:
-            val = self._branches[key]
-        except KeyError:
-            # Create a new annotations branch next level of annotations
-            val = self._branches[key] = _AnnotationsBranch(key)
-        return val
+        return self._branches[key]
 
     def set(self, key, *args):
         if not args:
@@ -291,10 +289,9 @@ class _AnnotationsBranch(BaseNineMLObject):
     def __setitem__(self, key, val):
         self._attr[key] = str(val)
 
-    def to_xml(self, ns=None, **kwargs):  # @UnusedVariable
-        if ns is None:
-            ns = nineml_ns
-        E = ElementMaker(namespace=ns, nsmap={None: ns})
+    def to_xml(self, ns=None, E=E, **kwargs):  # @UnusedVariable
+        if ns is not None:
+            E = ElementMaker(namespace=ns, nsmap={None: ns})
         return E(self.name,
                  *(sb.to_xml(**kwargs) for sb in self.branches),
                  **self._attr)
@@ -314,7 +311,7 @@ class _AnnotationsBranch(BaseNineMLObject):
 
 
 VALIDATION = 'Validation'
-DIMENSIONALITY = 'Dimensionality'
+DIMENSIONALITY = 'dimensionality'
 
 xml_visitor_module_re = re.compile(r'nineml\.abstraction\.\w+\.visitors\.xml')
 

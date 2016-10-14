@@ -32,7 +32,7 @@ the earlier version e.g. 0.7.6.1.
 Relation to the NineML Specification
 ------------------------------------
 
-The layout of the Python modules and classes lib9ML relates closely to the
+The layout of the Python modules and classes in lib9ML relates closely to the
 structure of the NineML specification v1.0 
 (http://incf.github.io/nineml/9ML/1.0/NineML_v1.0.pdf). However, there are
 notable exceptions where lib9ML uses names and relationships that are planned
