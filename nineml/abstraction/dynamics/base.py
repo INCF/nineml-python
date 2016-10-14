@@ -17,7 +17,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
 from nineml.utils import (check_inferred_against_declared,
                           assert_no_duplicates)
 from nineml.xml import nineml_ns, E
-from nineml.annotations import VALIDATE_DIMENSIONS
+from nineml.annotations import VALIDATION, DIMENSIONALITY
 from nineml.base import DynamicPortsObject
 
 
@@ -212,7 +212,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
         # TODO: Add check for inferred analog ports??
 
-        self.annotations[nineml_ns][VALIDATE_DIMENSIONS] = validate_dimensions
+        self.annotations[nineml_ns][VALIDATION][DIMENSIONALITY] = (
+            validate_dimensions)
         for transition in self.all_transitions():
             transition.bind(self)
         # Is the finished component_class valid?:

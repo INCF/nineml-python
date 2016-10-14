@@ -1,9 +1,11 @@
 import unittest
+from copy import deepcopy
 from nineml.annotations import Annotations
 from nineml.xml import etree, nineml_ns, ElementMaker, E
 from nineml.abstraction import Parameter
 from nineml.units import Dimension
-from nineml.abstraction.dynamics.visitors.xml import DynamicsXMLLoader
+from nineml.abstraction.dynamics.visitors.xml import (
+    DynamicsXMLLoader, DynamicsXMLWriter)
 from nineml import Document
 from nineml.utils import xml_equal
 
@@ -61,11 +63,12 @@ class TestAnnotations(unittest.TestCase):
             annot_xml, read_annotation_ns=foreign_ns)
         self.assertEqual(loaded_annot, reloaded_annot)
 
-    def test_read(self):
+    def test_read_annotations_and_annotate_xml(self):
         param_xml = E(Parameter.nineml_type,
-                            annot_xml, name="P1", dimension="dimensionless")
+                      deepcopy(annot_xml), name="P1",
+                      dimension="dimensionless")
         dim_xml = E(Dimension.nineml_type,
-                     annot_xml, name='dimensionless')
+                     deepcopy(annot_xml), name='dimensionless')
         annot = Annotations.from_xml(
             annot_xml, read_annotation_ns=foreign_ns)
         doc = Document()
@@ -79,7 +82,8 @@ class TestAnnotations(unittest.TestCase):
                          "{}\n\nvs\n\n{}".format(parameter.annotations, annot))
         self.assertEqual(dimension.annotations, annot,
                          "{}\n\nvs\n\n{}".format(dimension.annotations, annot))
-        re_param_xml = parameter.to_xml()
-        re_dim_xml = dimension.to_xml()
+        writer = DynamicsXMLWriter(doc, E)
+        re_param_xml = writer.visit_parameter(parameter)
+        re_dim_xml = dimension.to_xml(doc)
         self.assertTrue(xml_equal(param_xml, re_param_xml))
         self.assertTrue(xml_equal(dim_xml, re_dim_xml))

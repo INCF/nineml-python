@@ -13,7 +13,7 @@ def read_annotations(from_xml):
             element.findall(nineml_xmlns + Annotations.nineml_type))
         if annot_elem is not None:
             # Extract the annotations
-            annotations = Annotations.from_xml(annot_elem)
+            annotations = Annotations.from_xml(annot_elem, **kwargs)
             # Get a copy of the element with the annotations stripped
             element = copy(element)
             element.remove(element.find(nineml_xmlns +
@@ -21,11 +21,13 @@ def read_annotations(from_xml):
         else:
             annotations = Annotations()
         if (cls.__class__.__name__ == 'DynamicsXMLLoader' and
-                VALIDATE_DIMENSIONS in annotations[nineml_xmlns]):
+            nineml_ns in annotations._namespaces and
+            VALIDATION in annotations[nineml_ns] and
+                DIMENSIONALITY in annotations[nineml_ns][VALIDATION]):
             # FIXME: Hack until I work out the best way to let other 9ML
             #        objects ignore this kwarg TGC 6/15
             kwargs['validate_dimensions'] = (
-                annotations[nineml_xmlns][VALIDATE_DIMENSIONS] == 'True')
+                annotations[nineml_ns][VALIDATION][DIMENSIONALITY] == 'True')
         nineml_object = from_xml(cls, element, *args, **kwargs)
         nineml_object._annotations = annotations
         return nineml_object
@@ -43,8 +45,7 @@ def annotate_xml(to_xml):
             obj = self
             options = kwargs
         elem = to_xml(self, document_or_obj, **kwargs)
-        if (not options.get('no_annotations', False) and
-                any(a for a in obj.annotations.itervalues())):
+        if not options.get('no_annotations', False) and len(obj.annotations):
             elem.append(obj.annotations.to_xml(**kwargs))
         return elem
     return annotate_to_xml
@@ -67,6 +68,9 @@ class Annotations(DocumentLevelObject):
         return "Annotations:\n{}".format(
             "\n".join(str(v) for v in self._namespaces.itervalues()))
 
+    def __len__(self):
+        return len(self._namespaces)
+
     def __getitem__(self, key):
         try:
             val = self._namespaces[key]
@@ -76,13 +80,12 @@ class Annotations(DocumentLevelObject):
 
     def to_xml(self, **kwargs):  # @UnusedVariable
         members = []
-        for ns, branch in self._namespaces.iteritems():
-            if isinstance(branch, _AnnotationsBranch):
-                for sub_branch in branch.branches:
-                    members.append(sub_branch.to_xml(ns=ns, **kwargs))
+        for ns, annot_ns in self._namespaces.iteritems():
+            if isinstance(annot_ns, _AnnotationsNamespace):
+                for branch in annot_ns.itervalues():
+                    members.append(branch.to_xml(ns=ns, **kwargs))
             else:
-                assert isinstance(branch, _AnnotationsNamespace)
-                members.append(branch)  # Append unprocessed XML
+                members.append(annot_ns)  # Append unprocessed XML
         return E(self.nineml_type, *members)
 
     @classmethod
@@ -110,6 +113,23 @@ class Annotations(DocumentLevelObject):
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
         clone._document = self._document
+
+    def __eq__(self, other):
+        try:
+            if self.nineml_type != other.nineml_type:
+                return False
+        except AttributeError:
+            return False
+        if set(self._namespaces.keys()) != set(other._namespaces.keys()):
+            return False
+        for k, s in self._namespaces.iteritems():
+            o = other._namespaces[k]
+            if not isinstance(s, _AnnotationsNamespace):
+                s = etree.tostring(s)
+                o = etree.tostring(o)
+            if s != o:
+                return False
+        return True
 
 
 class _AnnotationsNamespace(dict):
@@ -215,7 +235,7 @@ class _AnnotationsBranch(BaseNineMLObject):
             ns = nineml_ns
         E = ElementMaker(namespace=ns, nsmap={None: ns})
         return E(self.name,
-                 *(sb.to_xml(**kwargs) for sb in self._branches),
+                 *(sb.to_xml(**kwargs) for sb in self.branches),
                  **self._attr)
 
     @classmethod
@@ -232,7 +252,8 @@ class _AnnotationsBranch(BaseNineMLObject):
         self._clone_defining_attr(clone, memo, **kwargs)
 
 
-VALIDATE_DIMENSIONS = 'ValidateDimensions'
+VALIDATION = 'Validation'
+DIMENSIONALITY = 'Dimensionality'
 
 xml_visitor_module_re = re.compile(r'nineml\.abstraction\.\w+\.visitors\.xml')
 
