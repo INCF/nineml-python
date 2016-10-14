@@ -548,8 +548,8 @@ instances_of_all_types[Reference.nineml_type] = dict((r.key, r) for r in (
         'projD', 'projE')))
 
 annotations = Annotations()
-annotations['NS_1']['key1'] = 'value1'
-annotations['NS_2']['key2'] = 'value2'
+annotations.set('NS_1', 'cat1', 'key1', 'value1')
+annotations.set('NS_2', 'cat2', 'key2', 'value2')
 instances_of_all_types[Annotations.nineml_type]['example'] = annotations
 for elem in doc1.itervalues():
     add_with_sub_elements(elem)

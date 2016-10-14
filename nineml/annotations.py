@@ -82,7 +82,13 @@ class Annotations(DocumentLevelObject):
         ns.set(*args)
 
     def get(self, namespace, *args, **kwargs):
-        self[namespace].get(*args, **kwargs)
+        try:
+            return self[namespace].get(*args, **kwargs)
+        except KeyError:
+            if 'default' in kwargs:
+                return kwargs['default']
+            else:
+                raise
 
     def to_xml(self, **kwargs):  # @UnusedVariable
         members = []
@@ -185,7 +191,13 @@ class _AnnotationsNamespace(BaseNineMLObject):
         branch.set(*args)
 
     def get(self, key, *args, **kwargs):
-        self[key].get(*args, **kwargs)
+        try:
+            self[key].get(*args, **kwargs)
+        except KeyError:
+            if 'default' in kwargs:
+                return kwargs['default']
+            else:
+                raise
 
 
 class _AnnotationsBranch(BaseNineMLObject):
@@ -266,8 +278,14 @@ class _AnnotationsBranch(BaseNineMLObject):
             else:
                 val = self._attr[key]
         else:
-            # Recurse into branches while there are remaining args
-            val = self._branches[key].get(*args, **kwargs)
+            try:
+                # Recurse into branches while there are remaining args
+                val = self._branches[key].get(*args, **kwargs)
+            except KeyError:
+                if 'default' in kwargs:
+                    return kwargs['default']
+                else:
+                    raise
         return val
 
     def __setitem__(self, key, val):

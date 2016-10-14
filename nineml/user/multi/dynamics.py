@@ -597,7 +597,8 @@ class MultiDynamics(Dynamics):
                                 port_connection.receiver_name, name))
                 self._analog_port_connections[
                     rcv_key][snd_key] = port_connection
-        self.annotations[nineml_ns][VALIDATION][DIMENSIONALITY] = validate_dimensions
+        self.annotations.set(nineml_ns, VALIDATION, DIMENSIONALITY,
+                             validate_dimensions)
         self.validate(**kwargs)
 
     def __getitem__(self, comp_name):
