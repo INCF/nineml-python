@@ -251,13 +251,11 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def _find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)
 
-#     def __repr__(self):
-#         return "<dynamics.Dynamics %s>" % self.name
-
     def validate(self, validate_dimensions=None, **kwargs):
-        if validate_dimensions is None:
-            validate_dimensions = self.annotations[nineml_ns].get(
-                VALIDATE_DIMENSIONS, True)
+        if (validate_dimensions is None and nineml_ns in self.annotations and
+                VALIDATION in self.annotations[nineml_ns]):
+            validate_dimensions = self.annotations[nineml_ns][VALIDATION].get(
+                DIMENSIONALITY, True)
         self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self, validate_dimensions,
                                                   **kwargs)
