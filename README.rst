@@ -15,7 +15,7 @@ of NineML models, as well as handling their serialization to and from XML.
 
 Installation
 ------------
-lib9ML can be installed using `pip` from the cloned/downloaded repo 
+lib9ML can be installed using `pip` from the cloned/downloaded repo directory
 
     pip install -r requirements.txt .
 
@@ -71,10 +71,10 @@ Links
 :copyright: Copyright 20011-2016 by the lib9ML team, see AUTHORS.
 :license: BSD 3, see LICENSE for details.
 
-.. image:: https://travis-ci.org/ICNF/lib9ML.svg
+.. image:: https://travis-ci.org/INCF/lib9ML.svg?branch=master
    :target: https://travis-ci.org/ICNF/lib9ML
    :alt: Unit Test Status
-.. image:: https://coveralls.io/repos/github/ICNF/lib9ML/badge.svg
+.. image:: https://coveralls.io/repos/INCF/lib9ML/badge.svg
    :target: https://coveralls.io/github/ICNF/lib9ML
    :alt: Unit Test Coverage
  
