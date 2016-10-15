@@ -4,8 +4,6 @@ python:
   - "2.7"
 # command to install dependencies
 install:
-  # Sympy v1.0 has a bug that effects ccode printing, which was fixed in the master branch 30/7/16
-  - wget https://github.com/sympy/sympy/archive/master.zip && unzip master.zip && pip install ./sympy-master
   - pip install -r requirements.txt
   - pip install coveralls
   - pip install numpy
