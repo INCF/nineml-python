@@ -15,7 +15,7 @@ of NineML models, as well as handling their serialization to and from XML.
 
 Installation
 ------------
-lib9ML can be installed using `pip` from the cloned/downloaded repo 
+lib9ML can be installed using `pip` from the cloned/downloaded repo directory
 
     pip install -r requirements.txt .
 
