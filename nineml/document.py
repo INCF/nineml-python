@@ -7,8 +7,7 @@ from copy import deepcopy
 from lxml import etree
 import collections
 from nineml.xml import (
-    E, ALL_NINEML, extract_xmlns, NINEMLv1, NINEMLv2, get_element_maker,
-    XML_VERSION)
+    E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
 from nineml.annotations import Annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLXMLError)
@@ -16,6 +15,7 @@ from nineml.base import BaseNineMLObject, DocumentLevelObject
 import contextlib
 from nineml.utils import expect_single
 from logging import getLogger
+
 
 logger = getLogger('lib9ml')
 
@@ -365,7 +365,10 @@ class Document(dict, BaseNineMLObject):
                     if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
                         child_cls = get_component_class_type(child)
                     elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
-                        child_cls = get_component_type(child, element, url)
+                        relative_to = (os.path.dirname(url)
+                                       if url is not None else None)
+                        child_cls = get_component_type(child, element,
+                                                       relative_to)
                     else:
                         raise NineMLXMLError(
                             "Did not find matching NineML class for '{}' "
@@ -614,47 +617,50 @@ def get_component_class_type(elem):
 
 
 def get_component_type(comp_xml, doc_xml, relative_to):
-    if relative_to is not None and not relative_to.endswith('/'):
-        relative_to = os.path.dirname(relative_to)
     definition = expect_single(chain(
         comp_xml.findall(NINEMLv1 + 'Definition'),
         comp_xml.findall(NINEMLv1 + 'Prototype')))
-    url = definition.get('url')
+    name = definition.text
+    url = definition.get('url', None)
     if url:
-        xml, url = read_xml(url, relative_to)
-        doc_xml = xml.getroot()
-    xmlns = extract_xmlns(doc_xml)
-    if xmlns == NINEMLv1:
+        doc = read(url, relative_to)
+        cc_cls = doc[name].__class__
+    else:
+        cc_cls = None
         for ref_elem in chain(doc_xml.findall(NINEMLv1 + 'ComponentClass'),
                               doc_xml.findall(NINEMLv1 + 'Component')):
-            if ref_elem.attrib['name'] == definition.text:
+            if ref_elem.attrib['name'] == name:
                 if ref_elem.tag == NINEMLv1 + 'ComponentClass':
                     cc_cls = get_component_class_type(ref_elem)
-                    if cc_cls == nineml.Dynamics:
-                        cls = nineml.user.dynamics.DynamicsProperties
-                    elif cc_cls == nineml.ConnectionRule:
-                        cls = (nineml.user.connectionrule.
-                               ConnectionRuleProperties)
-                    elif cc_cls == nineml.RandomDistribution:
-                        cls = (nineml.user.randomdistribution.
-                               RandomDistributionProperties)
-                    else:
-                        assert False, "Unrecognised component tag '{}".format(
-                            ref_elem.tag)
-                else:
+                    break
+                elif ref_elem.tag == NINEMLv1 + 'Component':
                     # Recurse through the prototype until we find the component
                     # class at the bottom of it.
-                    cls = get_component_type(ref_elem, doc_xml, url)
-                return cls
-        assert False, ("Did not find component or component class in '{}' tags"
-                   .format("', '".join(c.tag for c in doc_xml.getchildren())))
-    elif xmlns == NINEMLv2:  # In case of a v1.0 doc referencing a v2.0
-        pass
-    else:
-        raise NineMLRuntimeError(
-            "Unrecognised namespace \"{}\" found at referenced url '{}' "
-            .format(xmlns, url))
-    
+                    return get_component_type(ref_elem, doc_xml, url)
+                else:
+                    raise NineMLXMLError(
+                        "'{}' refers to a '{}' element not a ComponentClass or"
+                        " Component element".format(name, ref_elem.tag))
+        if cc_cls is None:
+            raise NineMLXMLError(
+                "Did not find component or component class in '{}' tags"
+                .format("', '".join(c.tag for c in doc_xml.getchildren())))
+    cls = None
+    while cls is None:
+        if cc_cls == nineml.Dynamics:
+            cls = nineml.user.dynamics.DynamicsProperties
+        elif cc_cls == nineml.ConnectionRule:
+            cls = (nineml.user.connectionrule.
+                   ConnectionRuleProperties)
+        elif cc_cls == nineml.RandomDistribution:
+            cls = (nineml.user.randomdistribution.
+                   RandomDistributionProperties)
+        elif issubclass(cc_cls, nineml.user.Component):
+            cls = cc_cls
+        else:
+            assert False, ("Unrecognised component class type '{}"
+                           .format(cc_cls))
+    return cls
 
 
 import nineml  # @IgnorePep8
