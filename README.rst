@@ -71,7 +71,7 @@ Links
 :copyright: Copyright 20011-2016 by the lib9ML team, see AUTHORS.
 :license: BSD 3, see LICENSE for details.
 
-.. image:: https://travis-ci.org/ICNF/lib9ML.svg?branch=master
+.. image:: https://travis-ci.org/INCF/lib9ML.svg?branch=master
    :target: https://travis-ci.org/ICNF/lib9ML
    :alt: Unit Test Status
 .. image:: https://coveralls.io/repos/INCF/lib9ML/badge.svg
