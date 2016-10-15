@@ -1,4 +1,4 @@
 recursive-include doc/source *
-rune .deprecated
+prune .deprecated
 recursive-exclude * .gitignore
 recursive-exclude * .DS_Store
