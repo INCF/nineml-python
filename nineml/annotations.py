@@ -75,7 +75,11 @@ class Annotations(DocumentLevelObject):
         return len(self._namespaces)
 
     def __getitem__(self, key):
-        return self._namespaces[key]
+        try:
+            return self._namespaces[key]
+        except KeyError:
+            raise NineMLNameError(
+                "'{}' namespace not in annotations".format(key))
 
     def set(self, namespace, *args):
         try:
