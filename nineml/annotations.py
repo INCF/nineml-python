@@ -140,9 +140,9 @@ class Annotations(DocumentLevelObject):
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
-        clone._document = self._document
+        clone._document = None
 
-    def __eq__(self, other):
+    def equals(self, other, **kwargs):  # @UnusedVariable
         try:
             if self.nineml_type != other.nineml_type:
                 return False
@@ -211,11 +211,19 @@ class _AnnotationsNamespace(BaseNineMLObject):
                 raise NineMLNameError(
                     "No annotation at path '{}'".format("', '".join(args)))
 
+    def equals(self, other, **kwargs):  # @UnusedVariable
+        try:
+            if self.nineml_type != other.nineml_type:
+                return False
+        except AttributeError:
+            return False
+        return self._ns == other._ns and self._branches == other._branches
+
 
 class _AnnotationsBranch(BaseNineMLObject):
 
     nineml_type = '_AnnotationsBranch'
-    defining_attributes = ('_branches', '_attr')
+    defining_attributes = ('_branches', '_attr', '_name')
 
     def __init__(self, name, attr=None, branches=None):
         if attr is None:
@@ -232,6 +240,19 @@ class _AnnotationsBranch(BaseNineMLObject):
 
     def __repr__(self):
         return self._repr()
+
+    def equals(self, other, **kwargs):  # @UnusedVariable
+        try:
+            if self.nineml_type != other.nineml_type:
+                return False
+        except AttributeError:
+            return False
+        try:
+            return (self._branches == other._branches and
+                    self._name == other._name and
+                    self._attr == other._attr)
+        except:
+            raise
 
     def _repr(self, indent=''):
         rep = "{}{}:".format(indent, self.name)
