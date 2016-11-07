@@ -24,13 +24,6 @@ class BaseNineMLObject(object):
     """
     children = []
 
-    def __init__(self, annotations=None):
-        if annotations is None:
-            annotations = nineml.annotations.Annotations()
-        else:
-            assert isinstance(annotations, nineml.annotations.Annotations)
-        self._annotations = annotations
-
     @property
     def annotations(self):
         return self._annotations
@@ -111,30 +104,6 @@ class BaseNineMLObject(object):
                         return False
             else:
                 if self_elem != other_elem:
-                    return False
-        return self.annotations_equal(other, **kwargs)
-
-    def annotations_equal(self, other, annotations_ns=[], **kwargs):  # @UnusedVariable @IgnorePep8
-        """
-        Check for equality between annotations within specified namespaces of
-        two 9ML objects.
-
-        Parameters
-        ----------
-        annotation_ns : list(str)
-            List of annotation namespaces to check for in equality check
-
-        Returns
-        -------
-        equality : bool
-            Whether the annotations of the two 9ML objects are equal
-        """
-        for ns in annotations_ns:
-            if ns in self.annotations:
-                try:
-                    if self.annotations[ns] != other.annotations[ns]:
-                        return False
-                except KeyError:
                     return False
         return True
 
@@ -295,15 +264,8 @@ class BaseNineMLObject(object):
             self._copy_to_clone(clone, memo, **kwargs)
         return clone
 
-    def _copy_to_clone(self, clone, memo, exclude_annotations=False, **kwargs):
-        self._clone_defining_attr(clone, memo,
-                                  exclude_annotations=exclude_annotations,
-                                  **kwargs)
-        if hasattr(self, '_annotations'):
-            if exclude_annotations:
-                clone._annotations = nineml.annotations.Annotations()
-            else:
-                clone._annotations = self._annotations.clone(memo, **kwargs)
+    def _copy_to_clone(self, clone, memo, **kwargs):
+        self._clone_defining_attr(clone, memo, **kwargs)
 
     def _clone_defining_attr(self, clone, memo, **kwargs):
         for attr_name in self.defining_attributes:
@@ -329,6 +291,52 @@ def _clone_attr(attr, memo, **kwargs):
         assert False, "Unhandled attribute type {} ({})".format(type(attr),
                                                                 attr)
     return clone
+
+
+class AnnotatedNineMLObject(BaseNineMLObject):
+
+    def __init__(self, annotations=None):
+        if annotations is None:
+            annotations = nineml.annotations.Annotations()
+        else:
+            assert isinstance(annotations, nineml.annotations.Annotations)
+        self._annotations = annotations
+
+    def _copy_to_clone(self, clone, memo, exclude_annotations=False, **kwargs):
+        super(AnnotatedNineMLObject, self)._copy_to_clone(clone, memo,
+                                                          **kwargs)
+        if exclude_annotations:
+            clone._annotations = nineml.annotations.Annotations()
+        else:
+            clone._annotations = self._annotations.clone(memo, **kwargs)
+
+    def equals(self, other, **kwargs):
+        return (super(AnnotatedNineMLObject, self).equals(other, **kwargs) and
+                self.annotations_equal(other, **kwargs))
+
+    def annotations_equal(self, other, annotations_ns=[], **kwargs):  # @UnusedVariable @IgnorePep8
+        """
+        Check for equality between annotations within specified namespaces of
+        two 9ML objects.
+
+        Parameters
+        ----------
+        annotation_ns : list(str)
+            List of annotation namespaces to check for in equality check
+
+        Returns
+        -------
+        equality : bool
+            Whether the annotations of the two 9ML objects are equal
+        """
+        for ns in annotations_ns:
+            if ns in self.annotations:
+                try:
+                    if self.annotations[ns] != other.annotations[ns]:
+                        return False
+                except KeyError:
+                    return False
+        return True
 
 
 class DocumentLevelObject(BaseNineMLObject):

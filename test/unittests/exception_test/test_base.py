@@ -1,7 +1,6 @@
 import unittest
 from nineml.base import (
-    BaseNineMLObject, DynamicPortsObject, ContainerObject,
-    accessor_name_from_type)
+    BaseNineMLObject, accessor_name_from_type)
 from nineml.utils.testing.comprehensive import dynA
 from nineml.exceptions import (
     NineMLNameError, NineMLInvalidElementTypeException, NineMLRuntimeError)

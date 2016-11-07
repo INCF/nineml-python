@@ -1,5 +1,5 @@
 from __future__ import division
-from .base import BaseNineMLObject
+from .base import AnnotatedNineMLObject
 from nineml.xml import E, get_xml_attr
 from abc import ABCMeta, abstractmethod
 from nineml.annotations import read_annotations, annotate_xml
@@ -71,7 +71,7 @@ def parse_float_operand(op_method):
 # =============================================================================
 
 
-class BaseValue(BaseNineMLObject):
+class BaseValue(AnnotatedNineMLObject):
 
     __metaclass__ = ABCMeta
 

@@ -2,7 +2,7 @@
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error)
-from nineml.base import BaseNineMLObject
+from nineml.base import AnnotatedNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
 from nineml.annotations import read_annotations, annotate_xml
@@ -17,7 +17,6 @@ from nineml.base import (
     DocumentLevelObject, ContainerObject)
 from nineml.values import SingleValue, ArrayValue, RandomValue
 from os import path
-import nineml
 
 
 class Definition(BaseReference):
@@ -29,7 +28,7 @@ class Definition(BaseReference):
 
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
-            BaseNineMLObject.__init__(self)
+            AnnotatedNineMLObject.__init__(self)
             self._referred_to = args[0]
             if kwargs:
                 raise NineMLRuntimeError(

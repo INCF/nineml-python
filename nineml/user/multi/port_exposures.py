@@ -191,7 +191,7 @@ class _PortExposureAlias(Alias):
         return "{}(name='{}', rhs='{}')".format(self.nineml_type,
                                                 self.lhs, self.rhs)
 
-    def _clone_defining_attr(self, clone, memo, **kwargs):
+    def _copy_to_clone(self, clone, memo, **kwargs):
         clone._exposure = self._exposure.clone(memo=memo, **kwargs)
 
 
@@ -310,7 +310,7 @@ class _LocalAnalogPortConnections(Alias):
             "Cannot rename LHS of Alias '{}' because it is a local "
             "AnalogPortConnection".format(self.lhs))
 
-    def _clone_defining_attr(self, clone, memo, **kwargs):
+    def _copy_to_clone(self, clone, memo, **kwargs):
         clone._receive_port_name = self._receive_port_name
         clone._receiver_name = self._receiver_name
         clone._port_connections = [

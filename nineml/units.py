@@ -6,7 +6,7 @@ from sympy import Symbol
 import sympy
 import math
 from nineml.xml import E, unprocessed_xml, get_xml_attr
-from nineml.base import BaseNineMLObject, DocumentLevelObject
+from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLDimensionError,
@@ -16,7 +16,7 @@ from nineml.values import (
 from nineml.utils import ensure_valid_identifier
 
 
-class Dimension(DocumentLevelObject):
+class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
@@ -32,7 +32,7 @@ class Dimension(DocumentLevelObject):
     def __init__(self, name, dimensions=None, **kwargs):
         ensure_valid_identifier(name)
         self._name = name
-        BaseNineMLObject.__init__(self)
+        AnnotatedNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, kwargs.pop('document', None))
         if dimensions is not None:
             assert len(dimensions) == 7, "Incorrect dimension length"
@@ -275,7 +275,7 @@ class Dimension(DocumentLevelObject):
         clone._name = self._name
 
 
-class Unit(DocumentLevelObject):
+class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     """
     Defines the units of a quantity
     """
@@ -286,7 +286,7 @@ class Unit(DocumentLevelObject):
     def __init__(self, name, dimension, power, offset=0.0, document=None):
         ensure_valid_identifier(name)
         self._name = name
-        BaseNineMLObject.__init__(self)
+        AnnotatedNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self, document)
         assert isinstance(dimension, Dimension)
         self._dimension = dimension
@@ -420,7 +420,7 @@ class Unit(DocumentLevelObject):
         clone._name = self._name
 
 
-class Quantity(BaseNineMLObject):
+class Quantity(AnnotatedNineMLObject):
 
     """
     Representation of a numerical- or string-valued parameter.

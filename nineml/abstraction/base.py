@@ -1,7 +1,7 @@
-from ..base import BaseNineMLObject
+from ..base import AnnotatedNineMLObject
 
 
-class BaseALObject(BaseNineMLObject):
+class BaseALObject(AnnotatedNineMLObject):
 
     """
     Base class for abstraction layer classes
