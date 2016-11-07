@@ -347,19 +347,16 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
             delay = projection.delay
         else:
             delay = None
-        try:
-            source = component_arrays[
-                (projection.pre.name
-                 if port_conn.sender_role in ('pre', 'post')
-                 else projection.name) +
-                ComponentArray.suffix[port_conn.sender_role]]
-            destination = component_arrays[
-                (projection.pre.name
-                 if port_conn.receiver_role in ('pre', 'post')
-                 else projection.name) +
-                ComponentArray.suffix[port_conn.receiver_role]]
-        except:
-            raise
+        source = component_arrays[
+            (projection.pre.name
+             if port_conn.sender_role in ('pre', 'post')
+             else projection.name) +
+            ComponentArray.suffix[port_conn.sender_role]]
+        destination = component_arrays[
+            (projection.pre.name
+             if port_conn.receiver_role in ('pre', 'post')
+             else projection.name) +
+            ComponentArray.suffix[port_conn.receiver_role]]
         return cls(name, source, destination,
                    source_port=port_conn.send_port_name,
                    destination_port=port_conn.receive_port_name,
