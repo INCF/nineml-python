@@ -1,4 +1,4 @@
-from itertools import chain
+from itertools import chain, izip
 from copy import copy
 import operator
 from collections import defaultdict, Iterator, Iterable
@@ -86,11 +86,32 @@ class BaseNineMLObject(object):
                 self_elem = sorted(self_elem, key=sort_key)
                 other_elem = sorted(other_elem, key=sort_key)
             if isinstance(self_elem, BaseNineMLObject):
-                elems_equal = self_elem.equals(other_elem, **kwargs)
+                if not self_elem.equals(other_elem, **kwargs):
+                    return False
+            elif isinstance(self_elem, dict):
+                try:
+                    if set(self_elem.keys()) != set(other_elem.keys()):
+                        return False
+                except AttributeError:
+                    return False
+                for k, v in self_elem.iteritems():
+                    try:
+                        if not v.equals(other_elem[k], **kwargs):
+                            return False
+                    except AttributeError:
+                        if v != other_elem[k]:
+                            return False
+            elif isinstance(self_elem, list):
+                try:
+                    if not all(s.equals(o, **kwargs)
+                               for s, o in izip(self_elem, other_elem)):
+                        return False
+                except AttributeError:
+                    if self_elem != other_elem:
+                        return False
             else:
-                elems_equal = (self_elem == other_elem)
-            if not elems_equal:
-                return False
+                if self_elem != other_elem:
+                    return False
         return self.annotations_equal(other, **kwargs)
 
     def annotations_equal(self, other, annotations_ns=[], **kwargs):  # @UnusedVariable @IgnorePep8
@@ -247,6 +268,14 @@ class BaseNineMLObject(object):
         the document the 9ML object belongs to are re-initialised. Use this
         in favour of Python's copy and deepcopy functions unless you know what
         you want (i.e. things are likely to break if you are not careful).
+
+        Parameters
+        ----------
+        memo : dict
+            A dictionary to hold copies of objects that have already been
+            cloned to avoid issues with circular references
+        exclude_annotations : bool
+            Flags that annotations should be omitted from the clone
         """
         if memo is None:
             memo = {}
@@ -266,17 +295,20 @@ class BaseNineMLObject(object):
             self._copy_to_clone(clone, memo, **kwargs)
         return clone
 
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        self._clone_defining_attr(clone, memo, **kwargs)
-        clone._annotations = nineml.annotations.Annotations()
+    def _copy_to_clone(self, clone, memo, exclude_annotations=False, **kwargs):
+        self._clone_defining_attr(clone, memo,
+                                  exclude_annotations=exclude_annotations,
+                                  **kwargs)
+        if hasattr(self, '_annotations'):
+            if exclude_annotations:
+                clone._annotations = nineml.annotations.Annotations()
+            else:
+                clone._annotations = self._annotations.clone(memo, **kwargs)
 
     def _clone_defining_attr(self, clone, memo, **kwargs):
         for attr_name in self.defining_attributes:
-            try:
-                setattr(clone, attr_name,
-                        _clone_attr(getattr(self, attr_name), memo, **kwargs))
-            except:
-                raise
+            setattr(clone, attr_name,
+                    _clone_attr(getattr(self, attr_name), memo, **kwargs))
 
 
 def _clone_attr(attr, memo, **kwargs):

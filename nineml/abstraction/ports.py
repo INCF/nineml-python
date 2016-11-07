@@ -222,6 +222,7 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     """
     nineml_type = 'AnalogReducePort'
     mode = "reduce"
+    defining_attributes = ('_name', '_dimension', '_operator')
     _operator_map = {'add': '+', '+': '+', }
 
     def __init__(self, name, dimension=None, operator='+'):
