@@ -81,6 +81,9 @@ class Annotations(DocumentLevelObject):
             raise NineMLNameError(
                 "'{}' namespace not in annotations".format(key))
 
+    def __contains__(self, key):
+        return key in self._namespaces
+
     def set(self, namespace, *args):
         try:
             ns = self[namespace]

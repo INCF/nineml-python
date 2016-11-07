@@ -94,7 +94,7 @@ def split_multi_regime_name(name):
     return tuple(more_than_double_underscore_re.sub(r'\1', p) for p in parts)
 
 
-class _NamespaceObject(object):
+class _NamespaceObject(BaseNineMLObject):
 
     def __init__(self, sub_component, element, parent=None):
         self._sub_component = sub_component
@@ -111,12 +111,10 @@ class _NamespaceObject(object):
         return (hash(self.sub_component) ^ hash(self._object) ^
                 hash(self._parent))
 
-    def __eq__(self, other):
-        return BaseNineMLObject.__eq__(
-            self, other, defining_attributes=self._object.defining_attributes)
-
-    def __neq__(self, other):
-        return not (other == self)
+    def equals(self, other, annotations_ns=[]):
+        return BaseNineMLObject.equals(
+            self, other, annotations_ns=annotations_ns,
+            defining_attributes=self._object.defining_attributes)
 
     @property
     def sub_component(self):

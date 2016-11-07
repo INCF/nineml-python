@@ -44,7 +44,8 @@ class ComponentCloner(ComponentVisitor):
         return new_constant
 
     def copy_indices(self, source, destination, **kwargs):  # @UnusedVariable
-        if source == destination:  # a work around until I remove NSs
+        # Copy indices if destination is of same type (i.e. not flattened)
+        if source.nineml_type == destination.nineml_type:
             assert isinstance(source, ContainerObject)
             for s in source.elements():
                 d = destination._member_dict(s)[s.key]

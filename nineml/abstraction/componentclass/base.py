@@ -46,11 +46,6 @@ class Parameter(BaseALObject):
             "dimension must be None or a nineml.Dimension instance")
 #         self.constraints = []  # TODO: constraints can be added in the future
 
-    def __eq__(self, other):
-        if not isinstance(other, Parameter):
-            return False
-        return self.name == other.name and self.dimension == other.dimension
-
     @property
     def name(self):
         """Returns the name of the parameter"""

@@ -36,17 +36,15 @@ class BasePortExposure(BaseULObject):
             self._port = port
             self._port_name = None
 
-    def __eq__(self, other):
+    def equals(self, other, **kwargs):
         if not isinstance(other, self.__class__):
             return False
         return (self.name == other.name and
                 self._sub_component == other._sub_component and
                 self._sub_component_name == other._sub_component_name and
                 self._port == other._port and
-                self._port_name == other._port_name)
-
-    def __ne__(self, other):
-        return not (self == other)
+                self._port_name == other._port_name and
+                self.annotations_equal(other, **kwargs))
 
     def __hash__(self):
         return (hash(self._name) ^ hash(self._sub_component) ^

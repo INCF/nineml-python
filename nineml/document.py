@@ -31,7 +31,7 @@ url_re = re.compile(
 file_path_re = re.compile(r'^(\.){0,2}\/+([\w\._\-]\/+)*[\w\._\-]')
 
 
-class Document(dict, BaseNineMLObject):
+class Document(BaseNineMLObject, dict):
     """
     Loads and stores all top-level elements in a NineML file (i.e. any element
     that is able to sit directly within <NineML>...</NineML> tags). All
@@ -124,21 +124,18 @@ class Document(dict, BaseNineMLObject):
         self.remove(element)
         return element
 
-    def __eq__(self, other):
-        try:
-            if self.nineml_type != other.nineml_type:
-                return False
-        except AttributeError:
-            return False
-        # Ensure all objects are loaded
-        self.values()
-        other.values()
-        # Use the parent dictionary class equality
-        return (super(Document, self).__eq__(other) and
-                self.url == other.url)
-
-    def __ne__(self, other):
-        return not self == other
+#     def equals(self, other, **kwargs):
+#         try:
+#             if self.nineml_type != other.nineml_type:
+#                 return False
+#         except AttributeError:
+#             return False
+#         # Ensure all objects are loaded
+#         self.values()
+#         other.values()
+#         # Use the parent dictionary class equality
+#         return (super(Document, self).equals(other) and
+#                 self.url == other.url)
 
     def __getitem__(self, name):
         """

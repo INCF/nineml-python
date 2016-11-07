@@ -2,13 +2,14 @@ import unittest
 from copy import deepcopy
 from nineml.annotations import Annotations
 from nineml.xml import etree, nineml_ns, ElementMaker, E
-from nineml.abstraction import Parameter
+from nineml.abstraction import Parameter, Dynamics, Alias
 from nineml.units import Dimension
 from nineml.abstraction.dynamics.visitors.xml import (
     DynamicsXMLLoader, DynamicsXMLWriter)
 from nineml import Document
 from nineml.utils import xml_equal
 from nineml.exceptions import NineMLRuntimeError
+import nineml.units as un
 
 
 foreign_ns = "http://some.other.namespace.org"
@@ -117,4 +118,24 @@ class TestAnnotations(unittest.TestCase):
         self.assertEqual(sorted(branch.items()), [('x', '4.0'),
                                                   ('y', '5.0'),
                                                   ('z', '6.0')])
-        
+
+    def test_equals_with_annotation_ns(self):
+        a = Dynamics(
+            name='D',
+            parameters=[Parameter('P', dimension=un.dimensionless)],
+            aliases=[Alias('A', 'P')])
+        b = a.clone()
+        c = a.clone()
+        d = a.clone()
+        e = a.clone()
+        a.parameter('P').annotations.set('dummy_ns', 'annot1', 'val1', 1.0)
+        b.parameter('P').annotations.set('dummy_ns', 'annot1', 'val1', 1.0)
+        c.parameter('P').annotations.set('dummy_ns', 'annot1', 'val1', 2.0)
+        e.parameter('P').annotations.set('dummy_ns2', 'annot1', 'val1', 1.0)
+        self.assertTrue(a.equals(b, annotations_ns=['dummy_ns']))
+        self.assertTrue(a.equals(c))
+        self.assertFalse(a.equals(c, annotations_ns=['dummy_ns']))
+        self.assertTrue(a.equals(d))
+        self.assertFalse(a.equals(d, annotations_ns=['dummy_ns']))
+        self.assertTrue(a.equals(e))
+        self.assertFalse(a.equals(e, annotations_ns=['dummy_ns']))

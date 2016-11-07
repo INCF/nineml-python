@@ -35,7 +35,26 @@ class BaseNineMLObject(object):
     def annotations(self):
         return self._annotations
 
-    def __eq__(self, other, defining_attributes=None):
+    def __eq__(self, other):
+        return self.equals(other)
+
+    def equals(self, other, defining_attributes=None, **kwargs):
+        """
+        Check for equality between 9ML objects.
+
+        Parameters
+        ----------
+        defining_attributes : list(str)
+            Overrides list of attributes to include in the check. If None, uses
+            class member of same name
+        annotation_ns : list(str)
+            List of annotation namespaces to check for in equality check
+
+        Returns
+        -------
+        equality : bool
+            Whether the two 9ML objects are equal
+        """
         # Not equal if of different types
         try:
             if self.nineml_type != other.nineml_type:
@@ -66,9 +85,36 @@ class BaseNineMLObject(object):
                 assert isinstance(other_elem, Iterator)
                 self_elem = sorted(self_elem, key=sort_key)
                 other_elem = sorted(other_elem, key=sort_key)
-            if self_elem != other_elem:
+            if isinstance(self_elem, BaseNineMLObject):
+                elems_equal = self_elem.equals(other_elem, **kwargs)
+            else:
+                elems_equal = (self_elem == other_elem)
+            if not elems_equal:
                 return False
-        # If none of the defining attributes don't match then they are equal.
+        return self.annotations_equal(other, **kwargs)
+
+    def annotations_equal(self, other, annotations_ns=[], **kwargs):  # @UnusedVariable @IgnorePep8
+        """
+        Check for equality between annotations within specified namespaces of
+        two 9ML objects.
+
+        Parameters
+        ----------
+        annotation_ns : list(str)
+            List of annotation namespaces to check for in equality check
+
+        Returns
+        -------
+        equality : bool
+            Whether the annotations of the two 9ML objects are equal
+        """
+        for ns in annotations_ns:
+            if ns in self.annotations:
+                try:
+                    if self.annotations[ns] != other.annotations[ns]:
+                        return False
+                except KeyError:
+                    return False
         return True
 
     @classmethod

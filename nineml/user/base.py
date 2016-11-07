@@ -30,10 +30,10 @@ class BaseULObject(BaseNineMLObject):
 #             except NineMLNameError:
 #                 document.add(self)
 #             self.from_reference = Reference(self.name, document, url=None)
-# 
+#
 #     def __lt__(self, other):
 #         """Used for sorting"""
-#         
+#
 #         if self.__class__.__name__ < other.__class__.__name__:
 #             return True
 #         else:

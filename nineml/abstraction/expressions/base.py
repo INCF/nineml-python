@@ -13,6 +13,7 @@ from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions.elementary.piecewise import ExprCondPair
 import re
 # import math_namespace
+from nineml.base import BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError
 
 
@@ -30,7 +31,7 @@ from .parser import Parser  # @IgnorePep8
 t = sympy.Symbol('t')  # The symbol for time
 
 
-class Expression(object):
+class Expression(BaseNineMLObject):
 
     """ This is a base class for Expressions and Conditionals which provides
     the basic interface for parsing, yielding of python functions,
@@ -58,10 +59,14 @@ class Expression(object):
     def __init__(self, rhs):
         self.rhs = rhs
 
-    def __eq__(self, other):
+    def equals(self, other, **kwargs):
         if not isinstance(other, Expression):
             return False
-        return sympy.simplify(self.rhs - other.rhs) == 0
+        try:
+            expr_eq = (sympy.expand(self.rhs - other.rhs) == 0)
+        except TypeError:
+            expr_eq = sympy.Equivalent(self.rhs, other.rhs) == sympy.true
+        return expr_eq and self.annotations_equal(other, **kwargs)
 
     @property
     def rhs(self):
@@ -450,8 +455,8 @@ class ExpressionWithLHS(Expression):
     def lhs_atoms(self):
         raise NotImplementedError()
 
-    def __eq__(self, other):
-        return (super(ExpressionWithLHS, self).__eq__(other) and
+    def equals(self, other, **kwargs):
+        return (super(ExpressionWithLHS, self).equals(other, **kwargs) and
                 self.lhs == other.lhs)
 
 

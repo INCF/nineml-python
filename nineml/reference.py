@@ -48,11 +48,12 @@ class BaseReference(BaseNineMLObject):
         return (self._referred_to.key +
                 self.url if self.url is not None else '')
 
-    def __eq__(self, other):
+    def equals(self, other, **kwargs):
         if not isinstance(other, self.__class__):
             return False
-        return reduce(and_, (self._referred_to == other._referred_to,
-                             self.url == other.url))
+        return (self._referred_to == other._referred_to and
+                self.url == other.url and
+                self.annotations_equal(other, **kwargs))
 
     def __hash__(self):
         return (hash(self.__class__) ^ hash(self._referred_to.name) ^
