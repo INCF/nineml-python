@@ -49,10 +49,9 @@ class BaseConnectivity(object):
 
     def __eq__(self, other):
         try:
-            result = (self._rule_props == other._rule_props and
-                      self._src_size == other._src_size and
-                      self._dest_size == other._dest_size)
-            return result
+            return (self._rule_props == other._rule_props and
+                    self._src_size == other._src_size and
+                    self._dest_size == other._dest_size)
         except AttributeError:
             return False
 

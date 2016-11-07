@@ -475,7 +475,7 @@ class ComponentClass_test(unittest.TestCase):
         b = Dynamics.from_xml(a_xml, Document(un.dimensionless))
         self.assertEqual(a, b,
                          "Dynamics with regime-specific alias failed xml "
-                         "roundtrip")
+                         "roundtrip:\n{}".format(a.find_mismatch(b)))
 
     def test_state_variables(self):
         # No parameters; nothing to infer

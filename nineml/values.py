@@ -133,16 +133,15 @@ class SingleValue(BaseValue):
         """Infinitely iterate the same value"""
         return itertools.repeat(self._value)
 
-    def __eq__(self, other):
+    def equals(self, other, **kwargs):
         try:
             if self.nineml_type != other.nineml_type:
                 return False
         except AttributeError:
             return False
-        return nearly_equal(self._value, other._value)
-
-    def __neq__(self, other):
-        return not self == other
+        if not nearly_equal(self._value, other._value):
+            return False
+        return self.annotations_equal(other, **kwargs)
 
     def __len__(self):
         return 0
@@ -288,14 +287,16 @@ class ArrayValue(BaseValue):
     def is_array(self):
         return True
 
-    def __eq__(self, other):
+    def equals(self, other, **kwargs):
         try:
             if self.nineml_type != other.nineml_type:
                 return False
         except AttributeError:
             return False
-        return all(nearly_equal(s, o)
-                   for s, o in izip(self._values, other._values))
+        if not all(nearly_equal(s, o)
+                   for s, o in izip(self._values, other._values)):
+            return False
+        return self.annotations_equal(other, **kwargs)
 
     def __iter__(self):
         return iter(self._values)
@@ -520,13 +521,15 @@ class RandomValue(BaseValue):
     def is_random(self):
         return True
 
-    def __eq__(self, other):
+    def equals(self, other, **kwargs):
         try:
             if self.nineml_type != other.nineml_type:
                 return False
         except AttributeError:
             return False
-        return self.distribution == other.distribution
+        if self.distribution != other.distribution:
+            return False
+        return self.annotations_equal(other, **kwargs)
 
     @property
     def distribution(self):
