@@ -247,12 +247,9 @@ class _AnnotationsBranch(BaseNineMLObject):
                 return False
         except AttributeError:
             return False
-        try:
-            return (self._branches == other._branches and
-                    self._name == other._name and
-                    self._attr == other._attr)
-        except:
-            raise
+        return (self._branches == other._branches and
+                self._name == other._name and
+                self._attr == other._attr)
 
     def _repr(self, indent=''):
         rep = "{}{}:".format(indent, self.name)
