@@ -1,9 +1,9 @@
-from ..base import BaseNineMLObject
+from ..base import AnnotatedNineMLObject
 # from nineml.exceptions import NineMLRuntimeError, NineMLNameError
 # from nineml.reference import Reference
 
 
-class BaseULObject(BaseNineMLObject):
+class BaseULObject(AnnotatedNineMLObject):
 
     """
     Base class for user layer classes
@@ -12,7 +12,7 @@ class BaseULObject(BaseNineMLObject):
     layer = 'user'
 
     def __init__(self):
-        BaseNineMLObject.__init__(self)
+        AnnotatedNineMLObject.__init__(self)
 
 #     def set_local_reference(self, document, overwrite=False):
 #         """

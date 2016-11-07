@@ -1,7 +1,6 @@
 import os
 from copy import copy
-from operator import and_
-from .base import BaseNineMLObject
+from .base import AnnotatedNineMLObject
 from nineml.xml import (
     E, ALL_NINEML, unprocessed_xml, get_xml_attr, extract_xmlns, NINEMLv1)
 from nineml.annotations import read_annotations
@@ -9,7 +8,7 @@ from nineml.exceptions import NineMLRuntimeError, NineMLXMLAttributeError
 from nineml.exceptions import NineMLNameError
 
 
-class BaseReference(BaseNineMLObject):
+class BaseReference(AnnotatedNineMLObject):
 
     """
     Base class for references to model components that are defined in the

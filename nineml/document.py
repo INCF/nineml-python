@@ -11,7 +11,7 @@ from nineml.xml import (
 from nineml.annotations import Annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLXMLError)
-from nineml.base import BaseNineMLObject, DocumentLevelObject
+from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 import contextlib
 from nineml.utils import expect_single
 from logging import getLogger
@@ -31,7 +31,7 @@ url_re = re.compile(
 file_path_re = re.compile(r'^(\.){0,2}\/+([\w\._\-]\/+)*[\w\._\-]')
 
 
-class Document(BaseNineMLObject, dict):
+class Document(AnnotatedNineMLObject, dict):
     """
     Loads and stores all top-level elements in a NineML file (i.e. any element
     that is able to sit directly within <NineML>...</NineML> tags). All
@@ -55,8 +55,8 @@ class Document(BaseNineMLObject, dict):
     _loaded_docs = {}
 
     def __init__(self, *elements, **kwargs):
-        BaseNineMLObject.__init__(self,
-                                  annotations=kwargs.pop('annotations', None))
+        AnnotatedNineMLObject.__init__(
+            self, annotations=kwargs.pop('annotations', None))
         self._url = self._standardise_url(kwargs.pop('url', None))
         clone = kwargs.pop('clone', False)
         # Stores the list of elements that are being loaded to check for
