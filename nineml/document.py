@@ -124,19 +124,6 @@ class Document(AnnotatedNineMLObject, dict):
         self.remove(element)
         return element
 
-#     def equals(self, other, **kwargs):
-#         try:
-#             if self.nineml_type != other.nineml_type:
-#                 return False
-#         except AttributeError:
-#             return False
-#         # Ensure all objects are loaded
-#         self.values()
-#         other.values()
-#         # Use the parent dictionary class equality
-#         return (super(Document, self).equals(other) and
-#                 self.url == other.url)
-
     def __getitem__(self, name):
         """
         Returns the element referenced by the given name
