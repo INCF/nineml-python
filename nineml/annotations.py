@@ -112,11 +112,11 @@ class Annotations(DocumentLevelObject):
         return E(self.nineml_type, *members)
 
     @classmethod
-    def from_xml(cls, element, read_annotation_ns=None, **kwargs):  # @UnusedVariable @IgnorePep8
-        if read_annotation_ns is None:
-            read_annotation_ns = []
-        elif isinstance(read_annotation_ns, basestring):
-            read_annotation_ns = [read_annotation_ns]
+    def from_xml(cls, element, annotations_ns=None, **kwargs):  # @UnusedVariable @IgnorePep8
+        if annotations_ns is None:
+            annotations_ns = []
+        elif isinstance(annotations_ns, basestring):
+            annotations_ns = [annotations_ns]
         assert strip_xmlns(element.tag) == cls.nineml_type
         annot = cls(**kwargs)
         for child in element.getchildren():
@@ -126,7 +126,7 @@ class Annotations(DocumentLevelObject):
                     "All annotations must have a namespace: {}".format(
                         etree.tostring(child, pretty_print=True)))
             ns = ns[1:-1]  # strip braces
-            if ns == nineml_ns or ns in read_annotation_ns:
+            if ns == nineml_ns or ns in annotations_ns:
                 name = strip_xmlns(child.tag)
                 try:
                     namespace = annot[ns]
