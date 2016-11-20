@@ -45,7 +45,7 @@ class TestAnnotations(unittest.TestCase):
 
     def setUp(self):
         self.annot = Annotations.from_xml(
-            annot_xml, read_annotation_ns=[foreign_ns])
+            annot_xml, annotations_ns=[foreign_ns])
 
     def test_basic(self):
         annot = Annotations()
@@ -63,7 +63,7 @@ class TestAnnotations(unittest.TestCase):
         self.assertEqual(annot[foreign_ns], self.annot[foreign_ns])
         self.assertIsInstance(self.annot[unprocess_ns], etree._Element)
         reloaded_annot = Annotations.from_xml(
-            annot_xml, read_annotation_ns=foreign_ns)
+            annot_xml, annotations_ns=foreign_ns)
         self.assertEqual(self.annot, reloaded_annot)
 
     def test_read_annotations_and_annotate_xml(self):
@@ -74,11 +74,11 @@ class TestAnnotations(unittest.TestCase):
                      deepcopy(annot_xml), name='dimensionless')
         doc = Document()
         dimension = Dimension.from_xml(dim_xml, doc,
-                                       read_annotation_ns=foreign_ns)
+                                       annotations_ns=foreign_ns)
         doc.add(dimension)
         loader = DynamicsXMLLoader(doc)
         parameter = loader.load_parameter(param_xml,
-                                          read_annotation_ns=foreign_ns)
+                                          annotations_ns=foreign_ns)
         self.assertEqual(parameter.annotations, self.annot,
                          "{}\n\nvs\n\n{}".format(parameter.annotations,
                                                  self.annot))
