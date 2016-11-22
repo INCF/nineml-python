@@ -118,6 +118,10 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
         """Returns the name of the component"""
         return self._name
 
+    @name.setter
+    def name(self, name):
+        self._name = name
+
     @property
     def num_parameters(self):
         return len(self._parameters)
