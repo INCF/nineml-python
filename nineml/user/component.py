@@ -181,6 +181,10 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     def name(self):
         return self._name
 
+    @name.setter
+    def name(self, name):
+        self._name = name
+
     @abstractmethod
     def get_nineml_type(self):
         "Used to stop accidental construction of this class"
