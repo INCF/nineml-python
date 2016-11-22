@@ -43,10 +43,11 @@ class Document(AnnotatedNineMLObject, dict):
     nineml_type = 'NineML'
     write_order = ['Network', 'Population', 'Projection', 'Selection',
                    'ComponentArray', 'EventConnectionGroup',
-                   'AnalogConnectionGroup', 'Dynamics', 'ConnectionRule',
-                   'RandomDistribution', 'ComponentClass', 'Component',  # For v1.0 @IgnorePep8
-                   'DynamicsProperties', 'MultiDynamicsProperties',
-                   'MultiCompartment', 'ConnectionRuleProperties',
+                   'AnalogConnectionGroup', 'Dynamics', 'MultiDynamics',
+                   'ConnectionRule', 'RandomDistribution', 'ComponentClass',
+                   'Component', 'DynamicsProperties',
+                   'MultiDynamicsProperties', 'MultiCompartment',
+                   'ConnectionRuleProperties',
                    'RandomDistributionProperties', 'Dimension', 'Unit']
 
     # A tuple to hold the unresolved elements
@@ -570,13 +571,13 @@ def read_xml(url, relative_to):
                 with contextlib.closing(urlopen(url)) as f:
                     xml = etree.parse(f)
             except IOError, e:
-                raise NineMLRuntimeError("Could not read 9ML URL '{}': \n{}"
-                                         .format(url, e))
+                raise NineMLXMLError("Could not read 9ML URL '{}': \n{}"
+                                     .format(url, e))
         else:
             xml = etree.parse(url)
     except etree.LxmlError, e:
-        raise NineMLRuntimeError("Could not parse XML of 9ML file '{}': \n {}"
-                                 .format(url, e))
+        raise NineMLXMLError("Could not parse XML of 9ML file '{}': \n {}"
+                             .format(url, e))
     return xml, url
 
 

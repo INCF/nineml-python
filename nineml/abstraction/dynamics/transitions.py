@@ -7,10 +7,12 @@ This file contains the definitions for the Events
 
 from copy import copy
 import sympy.solvers
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from nineml.base import _clone_attr
 from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction.componentclass import BaseALObject
-from ..expressions import Expression, ExpressionWithSimpleLHS, t
+from nineml.abstraction.expressions import (
+    Expression, ExpressionWithSimpleLHS, t)
 from nineml.exceptions import (NineMLRuntimeError,
                                NineMLInvalidElementTypeException, name_error)
 from nineml.base import ContainerObject
@@ -473,6 +475,7 @@ class Trigger(BaseALObject, Expression):
     def __init__(self, rhs):
         BaseALObject.__init__(self)
         Expression.__init__(self, rhs)
+        self._rhs = self._make_strict(self.rhs)
 
     def __repr__(self):
         return "Trigger('%s')" % (self.rhs)
@@ -491,9 +494,11 @@ class Trigger(BaseALObject, Expression):
 
     @property
     def reactivate_condition(self):
-        negated = copy(self)
-        negated.negate()
-        return negated
+        """
+        Return the condition under which the trigger should be reactivated
+        after it has been triggered.
+        """
+        return Expression(self._make_strict(sympy.Not(self.rhs)))
 
     @property
     def crossing_time_expr(self):
@@ -533,6 +538,20 @@ class Trigger(BaseALObject, Expression):
             # become false.
             raise NineMLNoSolutionException
         return time_expr
+
+    @classmethod
+    def _make_strict(cls, expr):
+        """
+        Converts inequalities to strict inequalities
+        """
+        if isinstance(expr, sympy.GreaterThan):
+            expr = sympy.StrictGreaterThan(*expr.args)
+        elif isinstance(expr, sympy.LessThan):
+            expr = sympy.StrictLessThan(*expr.args)
+        elif not isinstance(expr, (sympy.Symbol, sympy.Number, BooleanTrue,
+                                   BooleanFalse, int, float, bool)):
+            expr = expr.__class__(*(cls._make_strict(a) for a in expr.args))
+        return expr
 
 
 from .visitors.queriers import DynamicsElementFinder  # @IgnorePep8

@@ -784,6 +784,12 @@ class OnCondition_test(unittest.TestCase):
         self.assertEqual(
             Trigger('t > t_next || a < b').crossing_time_expr, None)
 
+    def test_make_strict(self):
+        self.assertEqual(
+            Trigger._make_strict(
+                sympify('(a >= 0.5) & ~(b < (10 * c * e)) | (c <= d)')),
+            sympify('(a > 0.5) & (b > (10 * c * e)) | (c < d)'))
+
 
 class OnEvent_test(unittest.TestCase):
 
