@@ -10,7 +10,7 @@ from nineml.xml import (
     E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
 from nineml.annotations import Annotations
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLXMLError)
+    NineMLRuntimeError, NineMLNameError, NineMLXMLError, NineMLXMLTagError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 import contextlib
 from nineml.utils import expect_single
@@ -337,27 +337,10 @@ class Document(AnnotatedNineMLObject, dict):
                     annotations = Annotations.from_xml(child, **kwargs)
                     continue
                 try:
-                    # Note that all `DocumentLevelObjects` need to be imported
-                    # into the root nineml package
-                    child_cls = getattr(nineml, nineml_type)
-                    if (not issubclass(child_cls, DocumentLevelObject) or
-                            not hasattr(child_cls, 'from_xml')):
-                        raise NineMLRuntimeError(
-                            "'{}' element does not correspond to a recognised "
-                            "document-level object".format(child_cls.__name__))
-                except AttributeError:
-                    # Check for v1 document-level objects
-                    if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
-                        child_cls = get_component_class_type(child)
-                    elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
-                        relative_to = (os.path.dirname(url)
-                                       if url is not None else None)
-                        child_cls = get_component_type(child, element,
-                                                       relative_to)
-                    else:
-                        raise NineMLXMLError(
-                            "Did not find matching NineML class for '{}' "
-                            "element".format(nineml_type))
+                    child_cls = cls._get_class_from_type(nineml_type)
+                except NineMLXMLTagError:
+                    child_cls = cls._get_class_from_v1(nineml_type, xmlns,
+                                                       child, element, url)
             else:
                 raise NotImplementedError(
                     "Cannot load '{}' element (extensions not implemented)"
@@ -381,6 +364,37 @@ class Document(AnnotatedNineMLObject, dict):
             elements[name] = cls._Unloaded(name, child, child_cls, kwargs)
         document = cls(*elements.values(), url=url, annotations=annotations)
         return document
+
+    @classmethod
+    def _get_class_from_type(cls, nineml_type):
+        # Note that all `DocumentLevelObjects` need to be imported
+        # into the root nineml package
+        try:
+            child_cls = getattr(nineml, nineml_type)
+            if (not issubclass(child_cls, DocumentLevelObject) or
+                    not hasattr(child_cls, 'from_xml')):
+                raise NineMLRuntimeError(
+                    "'{}' element does not correspond to a recognised "
+                    "document-level object".format(child_cls.__name__))
+        except AttributeError:
+            raise NineMLXMLTagError
+        return child_cls
+
+    @classmethod
+    def _get_class_from_v1(cls, nineml_type, xmlns, child, element, url):
+        # Check for v1 document-level objects
+        if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
+            child_cls = get_component_class_type(child)
+        elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
+            relative_to = (os.path.dirname(url)
+                           if url is not None else None)
+            child_cls = get_component_type(child, element,
+                                           relative_to)
+        else:
+            raise NineMLXMLTagError(
+                "Did not find matching NineML class for '{}' " "element"
+                .format(nineml_type))
+        return child_cls
 
     def clone(self, memo=None, **kwargs):
         """

@@ -348,8 +348,9 @@ class DocumentLevelObject(BaseNineMLObject):
         # FIXME: Once network is its own element in the 9ML spec then the
         #        check for the nineml_type == 'Network' will no longer be
         #        necessary
-        if document is not None and (self.name in document or
-                                     self.nineml_type == 'Network'):
+        if (document is not None and
+            self.nineml_type != 'Annotations' and
+                (self.nineml_type == 'Network' or self.name in document)):
             self._document = document
         else:
             self._document = None
@@ -711,10 +712,13 @@ class ContainerObject(BaseNineMLObject):
 
     def sorted_elements(self, **kwargs):
         """Sorts the element into a consistent, logical order before write"""
-        return sorted(
-            self.elements(**kwargs),
-            key=lambda e: (self.write_order.index(e.nineml_type),
-                           str(e.key)))
+        try:
+            return sorted(
+                self.elements(**kwargs),
+                key=lambda e: (self.write_order.index(e.nineml_type),
+                               str(e.key)))
+        except ValueError as e:
+            raise
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)

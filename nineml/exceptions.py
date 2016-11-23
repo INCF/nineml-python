@@ -50,6 +50,10 @@ class NineMLXMLError(NineMLRuntimeError):
     pass
 
 
+class NineMLXMLTagError(NineMLXMLError):
+    pass
+
+
 class NineMLXMLAttributeError(NineMLXMLError):
     pass
 
