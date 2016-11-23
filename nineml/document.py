@@ -441,13 +441,13 @@ class Document(AnnotatedNineMLObject, dict):
         if isinstance(xml, basestring):
             xml = etree.fromstring(xml)
         url = cls._standardise_url(url)
-        doc = Document.from_xml(xml, url=url, **kwargs)
+        doc = cls.from_xml(xml, url=url, **kwargs)
         if force_reload:
-            if url in Document._loaded_docs:
+            if url in cls._loaded_docs:
                 logger.warning("Reloading '{}' URL, old references to this URL"
                                " should not be rewritten to file"
                                .format(url))
-                del Document._loaded_docs[url]
+                del cls._loaded_docs[url]
         if register_url:
             if url is not None:
                 # Check whether the document has already been loaded and is is
