@@ -73,7 +73,10 @@ class Definition(BaseReference):
 
         Parameters
         ----------
-        definitions : bool
+        memo : dict[int, BaseNinemlObject]
+            A dictionary containing already cloned nineml objects to avoid
+            circular references.
+        clone_definitions : bool
             Flat to specify whether to clone component class referenced by the
             definition or just the definition itself
         """

@@ -262,9 +262,9 @@ def unprocessed_xml(from_xml):
                 nineml_type = cls.nineml_type
             # Check the tag of the element matches the class names
             try:
-                assert element.tag in (xmlns + nineml_type), (
+                assert element.tag == (xmlns + nineml_type), (
                     "Found '{}' element, expected '{}'"
-                    .format(element.tag, cls.nineml_type))
+                    .format(element.tag, xmlns + nineml_type))
             except:
                 raise
         else:

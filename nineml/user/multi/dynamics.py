@@ -42,6 +42,7 @@ class MultiDynamicsProperties(DynamicsProperties):
     nineml_type = "MultiDynamicsProperties"
     defining_attributes = ('_name', '_definition', '_sub_components')
     class_to_member = {'SubDynamicsProperties': 'sub_component'}
+    write_order = ('Definition', 'SubDynamicsProperties')
 
     def __init__(self, name, sub_components, port_connections=[],
                  port_exposures=[], document=None, check_initial_values=False):
@@ -234,23 +235,6 @@ class SubDynamicsProperties(BaseULObject):
     def attributes_with_units(self):
         return self.properties
 
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 self._component.to_xml(document, E=E, **kwargs),
-                 name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):
-        dynamics_properties = from_child_xml(
-            element, (DynamicsProperties, MultiDynamicsProperties), document,
-            allow_reference=True, **kwargs)
-        return cls(get_xml_attr(element, 'name', document, **kwargs),
-                   dynamics_properties)
-
     @property
     def initial_values(self):
         return (_NamespaceInitial(self, iv)
@@ -297,6 +281,23 @@ class SubDynamicsProperties(BaseULObject):
                 "SubDynamicsProperties as it does not include the sub "
                 "component name '{}'".format(name, self.name, self.name))
         return _NamespaceProperty(self, self._component.property(local_name))
+
+    @annotate_xml
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
+        return E(self.nineml_type,
+                 self._component.to_xml(document, E=E, **kwargs),
+                 name=self.name)
+
+    @classmethod
+    @resolve_reference
+    @read_annotations
+    @unprocessed_xml
+    def from_xml(cls, element, document, **kwargs):
+        dynamics_properties = from_child_xml(
+            element, (DynamicsProperties, MultiDynamicsProperties), document,
+            allow_reference=True, **kwargs)
+        return cls(get_xml_attr(element, 'name', document, **kwargs),
+                   dynamics_properties)
 
 
 class SubDynamics(BaseULObject, DynamicPortsObject):
@@ -497,6 +498,23 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
     def num_event_send_ports(self):
         return self.component_class.num_event_send_ports
 
+    @annotate_xml
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
+        return E(self.nineml_type,
+                 self._component_class.to_xml(document, E=E, **kwargs),
+                 name=self.name)
+
+    @classmethod
+    @resolve_reference
+    @read_annotations
+    @unprocessed_xml
+    def from_xml(cls, element, document, **kwargs):
+        dynamics = from_child_xml(
+            element, (Dynamics, MultiDynamics), document,
+            allow_reference=True, **kwargs)
+        return cls(get_xml_attr(element, 'name', document, **kwargs),
+                   dynamics)
+
 
 class MultiDynamics(Dynamics):
 
@@ -515,6 +533,10 @@ class MultiDynamics(Dynamics):
         'AnalogReducePortExposure': 'analog_reduce_port',
         'EventSendPortExposure': 'event_send_port',
         'EventReceivePortExposure': 'event_receive_port'}
+    write_order = ('SubDynamics', 'AnalogPortConnection',
+                   'EventPortConnection', 'AnalogSendPortExposure',
+                   'AnalogReceivePortExposure', 'AnalogReducePortExposure',
+                   'EventSendPortExposure', 'EventReceivePortExposure')
     core_type = Dynamics
 
     def __init__(self, name, sub_components, port_connections=[],
@@ -648,6 +670,10 @@ class MultiDynamics(Dynamics):
     @property
     def port_connections(self):
         return chain(self.analog_port_connections, self.event_port_connections)
+
+    @property
+    def port_exposures(self):
+        return self.ports
 
     # =========================================================================
     # Dynamics members properties and accessors
@@ -923,6 +949,40 @@ class MultiDynamics(Dynamics):
         # Avoid "Cloner" visitor method that Dynamics uses to clone and use
         # the method defined in BaseNineMLObject instead
         return ComponentClass.clone(self, **kwargs)
+
+    @write_reference
+    @annotate_xml
+    def to_xml(self, document, E=E, **kwargs):
+        members = [c.to_xml(document, E=E, **kwargs)
+                   for c in self.sub_components]
+        members.extend(pe.to_xml(document, E=E, **kwargs)
+                        for pe in self.port_exposures)
+        members.extend(pc.to_xml(document, E=E, **kwargs)
+                       for pc in self.port_connections)
+        return E(self.nineml_type, *members, name=self.name)
+
+    @classmethod
+    @resolve_reference
+    @read_annotations
+    @unprocessed_xml
+    def from_xml(cls, element, document, **kwargs):
+        sub_components = from_child_xml(
+            element, SubDynamics, document, multiple=True,
+            **kwargs)
+        port_exposures = from_child_xml(
+            element,
+            (AnalogSendPortExposure, AnalogReceivePortExposure,
+             AnalogReducePortExposure, EventSendPortExposure,
+             EventReceivePortExposure), document, multiple=True,
+            allow_none=True, **kwargs)
+        port_connections = from_child_xml(
+            element,
+            (AnalogPortConnection, EventPortConnection), document,
+            multiple=True, allow_none=True, **kwargs)
+        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
+                   sub_components=sub_components,
+                   port_exposures=port_exposures,
+                   port_connections=port_connections)
 
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and
