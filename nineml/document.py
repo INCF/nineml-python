@@ -570,7 +570,7 @@ def write(document, filename, **kwargs):
     """
     # Encapsulate the NineML element in a document if it is not already
     if not isinstance(document, Document):
-        element = deepcopy(document)
+        element = document.clone()
         element._document = None
         document = Document(element)
     document.write(filename, **kwargs)
