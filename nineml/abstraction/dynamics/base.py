@@ -170,7 +170,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
                 state_var_names, inferred_struct.state_variable_names,
                 desc=("\nPlease check for time derivatives of missing state "
                       "variables in component class '{}'.\n"
-                      .format(self.name)))
+                      .format(self.name)), strict_unused=False)
         else:
             state_vars = dict((n, StateVariable(n)) for n in
                               inferred_struct.state_variable_names)
