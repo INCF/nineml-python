@@ -705,10 +705,12 @@ class MultiDynamics(Dynamics):
     def constants(self):
         # We need to insert a 0-valued constant for each internal reduce port
         # that doesn't receive any connections
-        unused_reduce_ports = (
-            set(chain(*(izip(repeat(sc.name), sc.analog_reduce_ports)
-                        for sc in self.sub_components))) -
-            set(self._connected_reduce_ports()))
+        unused_reduce_ports = set()
+        for sub_component in self.sub_components:
+            for reduce_port in sub_component.analog_reduce_ports:
+                if ((sub_component.name, reduce_port.name)
+                        not in self._connected_reduce_ports()):
+                    unused_reduce_ports.add((sub_component.name, reduce_port))
         return chain(
             (Constant(append_namespace(port.name, sub_comp_name), 0.0,
                                        port.dimension.origin.units)
@@ -842,7 +844,7 @@ class MultiDynamics(Dynamics):
         except NineMLNameError:
             try:
                 reduce_port = sub_component.analog_reduce_port(port_name)
-                if ((sub_component.name, reduce_port) not in
+                if ((sub_component.name, reduce_port.name) not in
                         self._connected_reduce_ports()):
                     return Constant(
                         name, 0.0, reduce_port.dimension.origin.units)
@@ -940,10 +942,10 @@ class MultiDynamics(Dynamics):
 
     def _connected_reduce_ports(self):
         return chain(
-            ((pe.sub_component.name, pe.port)
-             for pe in self.analog_reduce_ports),
-            ((pc.receiver_name, pc.receive_port)
-             for pc in self.analog_port_connections))
+            ((pe.sub_component.name, pe.port.name)
+             for pe in self.analog_reduce_ports),  # Exposed
+            ((pc.receiver_name, pc.receive_port.name)
+             for pc in self.analog_port_connections))  # Internally connected
 
     def clone(self, **kwargs):
         # Avoid "Cloner" visitor method that Dynamics uses to clone and use
