@@ -69,7 +69,7 @@ class ConnectionRule(ComponentClass):
         try:
             clone = memo[id(self)]
         except KeyError:
-            clone = ConnectionRuleCloner().visit(self)
+            clone = ConnectionRuleCloner().visit(self, **kwargs)
         return clone
 
     def dimension_of(self, element):

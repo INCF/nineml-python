@@ -40,7 +40,7 @@ class BaseNineMLObject(object):
         defining_attributes : list(str)
             Overrides list of attributes to include in the check. If None, uses
             class member of same name
-        annotation_ns : list(str)
+        annotations_ns : list(str)
             List of annotation namespaces to check for in equality check
 
         Returns
@@ -321,7 +321,7 @@ class AnnotatedNineMLObject(BaseNineMLObject):
 
         Parameters
         ----------
-        annotation_ns : list(str)
+        annotations_ns : list(str)
             List of annotation namespaces to check for in equality check
 
         Returns
