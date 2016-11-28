@@ -119,7 +119,7 @@ class TestAnnotations(unittest.TestCase):
                                                   ('y', '5.0'),
                                                   ('z', '6.0')])
 
-    def test_equals_with_annotation_ns(self):
+    def test_equals_with_annotations_ns(self):
         a = Dynamics(
             name='D',
             parameters=[Parameter('P', dimension=un.dimensionless)],

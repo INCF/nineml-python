@@ -169,9 +169,7 @@ class _BaseAnalogPortExposure(BasePortExposure):
         return self.port.dimension
 
     def set_dimension(self, dimension):
-        raise NineMLImmutableError(
-            "Cannot set dimension of port exposure (need to change the "
-            "dimension of the referenced port).")
+        self.port.set_dimension(dimension)
 
 
 class _PortExposureAlias(Alias):

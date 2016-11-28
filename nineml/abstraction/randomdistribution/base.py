@@ -57,7 +57,7 @@ class RandomDistribution(ComponentClass):
         try:
             clone = memo[id(self)]
         except KeyError:
-            clone = RandomDistributionCloner().visit(self)
+            clone = RandomDistributionCloner().visit(self, **kwargs)
         return clone
 
     def dimension_of(self, element):

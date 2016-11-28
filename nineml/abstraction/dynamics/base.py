@@ -234,7 +234,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         try:
             clone = memo[id(self)]
         except KeyError:
-            clone = DynamicsCloner().visit(self)
+            clone = DynamicsCloner().visit(self, **kwargs)
         return clone
 
     def dimension_of(self, element):
