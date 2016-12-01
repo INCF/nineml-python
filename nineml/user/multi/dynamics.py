@@ -1282,8 +1282,8 @@ class _MultiTransition(BaseALObject, ContainerObject):
                         if sa.variable == variable)
         except StopIteration:
             raise NineMLNameError(
-                "No state assignment for variable '{}' found in transition"
-                .format(variable))
+                "State assignment '{}' is not present in transition '{}'"
+                .format(variable, self.key))
 
     def output_event(self, name):
         exposure = self._parent._parent.event_send_port(name)

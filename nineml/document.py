@@ -93,10 +93,11 @@ class Document(AnnotatedNineMLObject, dict):
                     element = element.clone(**kwargs)
                 elif element.document is not None:
                     raise NineMLRuntimeError(
-                        "Attempting to add the same object '{}' {} to '{}' "
-                        "document when it is already in '{}'. Please "
-                        "remove it from the original document first or use the"
-                        "'clone' keyword to add a clone of the element instead"
+                        "Attempting to add the same object '{}' {} to document"
+                        " '{}' document when it is already in another "
+                        "document, '{}'. Please remove it from the original "
+                        "document first or use the 'clone' keyword to add a "
+                        "clone of the element instead"
                         .format(element.name, element.nineml_type,
                                 self.url, element.document.url))
                 element._document = self  # Set its document to this one
