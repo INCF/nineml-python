@@ -11,7 +11,35 @@ from ..base import Parameter
 from ...expressions import Constant, Alias
 
 
+def lookup_memo(visit_elem):
+    """
+    Decorator that checks the cloner's "memo" dictionary for a previously
+    cloned version before returning a new clone
+    """
+    def visit_elem_with_memo_lookup(cloner, elem, **kwargs):
+        try:
+            clone = cloner.memo[id(self)]
+        except KeyError:
+            clone = visit_elem(cloner, elem, **kwargs)
+        return clone
+    return visit_elem_with_memo_lookup
+
+
 class ComponentCloner(ComponentVisitor):
+    """
+    Abstract base class for cloning abstraction layer objects
+
+    Parameters
+    ----------
+    memo : dict[int, BaseNineMLObject]
+        A dictionary containing mapping of object IDs of previously cloned
+        objects to avoid re-cloning the same objects
+    """
+    def __init__(self, memo=None, **kwargs):
+        super(ComponentCloner, self).__init__(**kwargs)
+        if memo is None:
+            memo = {}
+        self.memo = memo
 
     def prefix_variable(self, variable, **kwargs):
         prefix = kwargs.get('prefix', '')
@@ -24,11 +52,13 @@ class ComponentCloner(ComponentVisitor):
         else:
             return prefix + variable
 
+    @lookup_memo
     def visit_parameter(self, parameter, **kwargs):
         return Parameter(
             name=self.prefix_variable(parameter.name, **kwargs),
             dimension=parameter.dimension)
 
+    @lookup_memo
     def visit_alias(self, alias, **kwargs):
         new_alias = Alias(lhs=alias.lhs, rhs=alias.rhs)
         name_map = dict([(a, self.prefix_variable(a, **kwargs))
@@ -37,6 +67,7 @@ class ComponentCloner(ComponentVisitor):
         # FIXME:? TGC 1/15 Doesn't the LHS need updating too?
         return new_alias
 
+    @lookup_memo
     def visit_constant(self, constant, **kwargs):  # @UnusedVariable
         new_constant = Constant(
             name=self.prefix_variable(constant.name, **kwargs),

@@ -4,7 +4,7 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ...componentclass.visitors.cloner import ComponentCloner
+from ...componentclass.visitors.cloner import ComponentCloner, lookup_memo
 from ..regimes import TimeDerivative, Regime, StateVariable
 from ..transitions import (
     OnCondition, OnEvent, Trigger, StateAssignment, OutputEvent)
@@ -15,6 +15,7 @@ from ...ports import (
 
 class DynamicsCloner(ComponentCloner):
 
+    @lookup_memo
     def visit_componentclass(self, component_class, **kwargs):
         try:
             cls = component_class.core_type
@@ -42,6 +43,7 @@ class DynamicsCloner(ComponentCloner):
         self.copy_indices(component_class, cc)
         return cc
 
+    @lookup_memo
     def visit_regime(self, regime, **kwargs):
         r = Regime(
             name=regime.name,
@@ -54,38 +56,46 @@ class DynamicsCloner(ComponentCloner):
         self.copy_indices(regime, r)
         return r
 
+    @lookup_memo
     def visit_statevariable(self, state_variable, **kwargs):
         return StateVariable(
             name=self.prefix_variable(state_variable.name, **kwargs),
             dimension=state_variable.dimension)
 
+    @lookup_memo
     def visit_analogreceiveport(self, port, **kwargs):
         return AnalogReceivePort(
             name=self.prefix_variable(port.name, **kwargs),
             dimension=port.dimension)
 
+    @lookup_memo
     def visit_analogreduceport(self, port, **kwargs):
         return AnalogReducePort(
             name=self.prefix_variable(port.name, **kwargs),
             dimension=port.dimension)
 
+    @lookup_memo
     def visit_analogsendport(self, port, **kwargs):
         return AnalogSendPort(
             name=self.prefix_variable(port.name, **kwargs),
             dimension=port.dimension)
 
+    @lookup_memo
     def visit_eventsendport(self, port, **kwargs):
         return EventSendPort(
             name=self.prefix_variable(port.name, **kwargs))
 
+    @lookup_memo
     def visit_eventreceiveport(self, port, **kwargs):
         return EventReceivePort(
             name=self.prefix_variable(port.name, **kwargs))
 
+    @lookup_memo
     def visit_outputevent(self, event_out, **kwargs):
         return OutputEvent(
             port_name=self.prefix_variable(event_out.port_name, **kwargs))
 
+    @lookup_memo
     def visit_stateassignment(self, assignment, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
@@ -95,6 +105,7 @@ class DynamicsCloner(ComponentCloner):
                                       excludes=prefix_excludes)
         return StateAssignment(lhs=lhs, rhs=rhs)
 
+    @lookup_memo
     def visit_timederivative(self, time_derivative, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
@@ -106,6 +117,7 @@ class DynamicsCloner(ComponentCloner):
                                            excludes=prefix_excludes)
         return TimeDerivative(variable=dep, rhs=rhs)
 
+    @lookup_memo
     def visit_trigger(self, trigger, **kwargs):
         prefix = kwargs.get('prefix', '')
         prefix_excludes = kwargs.get('prefix_excludes', [])
@@ -113,6 +125,7 @@ class DynamicsCloner(ComponentCloner):
                                    excludes=prefix_excludes)
         return Trigger(rhs=rhs)
 
+    @lookup_memo
     def visit_oncondition(self, on_condition, **kwargs):
         oc = OnCondition(
             trigger=on_condition.trigger.accept_visitor(self, **kwargs),
@@ -125,6 +138,7 @@ class DynamicsCloner(ComponentCloner):
         self.copy_indices(on_condition, oc)
         return oc
 
+    @lookup_memo
     def visit_onevent(self, on_event, **kwargs):
         oe = OnEvent(
             src_port_name=self.prefix_variable(on_event.src_port_name,
