@@ -37,6 +37,12 @@ class TestCloners(unittest.TestCase):
         for elems in instances_of_all_types.itervalues():
             for elem in elems.itervalues():
                 clone = elem.clone(memo=memo)
+                if hasattr(clone, 'validate'):
+                    try:
+                        clone.validate()
+                    except:
+                        clone = elem.clone()
+                        raise
                 self.assertNotEqual(id(clone), id(elem))
                 elem_keys = set(elem.__dict__.keys())
                 clone_keys = set(clone.__dict__.keys())

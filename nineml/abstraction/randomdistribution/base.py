@@ -52,13 +52,7 @@ class RandomDistribution(ComponentClass):
         return RandomDistributionRequiredDefinitions(self, expressions)
 
     def clone(self, memo=None, **kwargs):  # @UnusedVariable
-        if memo is None:
-            memo = {}
-        try:
-            clone = memo[id(self)]
-        except KeyError:
-            clone = RandomDistributionCloner().visit(self, **kwargs)
-        return clone
+        return RandomDistributionCloner(memo=memo).visit(self, **kwargs)
 
     def dimension_of(self, element):
         try:
