@@ -482,11 +482,6 @@ class ComponentClass_test(unittest.TestCase):
         c = Dynamics(name='cl')
         self.assertEqual(len(list(c.state_variables)), 0)
 
-        # Mismatch between inferred and actual statevariables
-        self.assertRaises(
-            NineMLRuntimeError,
-            Dynamics, name='cl', state_variables=['a'])
-
         # From State Assignments and Differential Equations, and Conditionals
         c = Dynamics(
             name='cl',
