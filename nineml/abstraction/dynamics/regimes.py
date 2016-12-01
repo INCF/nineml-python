@@ -9,13 +9,14 @@ import re
 import sympy
 from nineml.utils import (filter_discrete_types, ensure_valid_identifier,
                             normalise_parameter_as_list, assert_no_duplicates)
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, name_error
 from ..expressions import ODE
 from .. import BaseALObject
 from nineml.units import dimensionless, Dimension
-from nineml.base import MemberContainerObject
+from nineml.base import ContainerObject
+from ..expressions import Alias, Expression
 from .transitions import OnEvent, OnCondition, Trigger
-from .utils.visitors import DynamicsElementFinder
+from .visitors.queriers import DynamicsElementFinder
 
 
 class StateVariable(BaseALObject):
@@ -26,7 +27,8 @@ class StateVariable(BaseALObject):
     future, wrapping in into its own object may make the transition easier
     """
 
-    defining_attributes = ('name', 'dimension')
+    nineml_type = 'StateVariable'
+    defining_attributes = ('_name', '_dimension')
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -70,6 +72,8 @@ class TimeDerivative(ODE, BaseALObject):
 
     """
 
+    nineml_type = 'TimeDerivative'
+
     def __init__(self, variable, rhs):
         """Time Derivative Constructor
 
@@ -103,7 +107,7 @@ class TimeDerivative(ODE, BaseALObject):
         BaseALObject.__init__(self)
 
     @property
-    def _name(self):
+    def key(self):
         """
         This is included to allow Time-derivatives to be polymorphic with other
         named structures
@@ -117,6 +121,9 @@ class TimeDerivative(ODE, BaseALObject):
     def __repr__(self):
         return "TimeDerivative( d%s/dt = %s )" % \
             (self.variable, self.rhs)
+
+    def str(self):
+        return 'd-{}/dt := {}'.format(self.variable, self.rhs)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -139,7 +146,7 @@ class TimeDerivative(ODE, BaseALObject):
         return TimeDerivative(variable=variable, rhs=rhs)
 
 
-class Regime(BaseALObject, MemberContainerObject):
+class Regime(BaseALObject, ContainerObject):
 
     """
     A Regime is something that contains |TimeDerivatives|, has temporal extent,
@@ -147,11 +154,15 @@ class Regime(BaseALObject, MemberContainerObject):
     be join the Regimes to other Regimes.
     """
 
+    nineml_type = 'Regime'
     defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
-                           'name')
-    class_to_member_dict = {TimeDerivative: '_time_derivatives',
-                            OnEvent: '_on_events',
-                            OnCondition: '_on_conditions'}
+                           '_name', '_aliases')
+    class_to_member = {'TimeDerivative': 'time_derivative',
+                       'OnEvent': 'on_event',
+                       'OnCondition': 'on_condition',
+                       'Alias': 'alias'}
+
+    write_order = ('TimeDerivative', 'OnEvent', 'OnCondition', 'Alias')
 
     _n = 0
 
@@ -185,8 +196,8 @@ class Regime(BaseALObject, MemberContainerObject):
 
         """
         BaseALObject.__init__(self)
-        MemberContainerObject.__init__(self)
-        valid_kwargs = ('name', 'transitions', 'time_derivatives')
+        ContainerObject.__init__(self)
+        valid_kwargs = ('name', 'transitions', 'time_derivatives', 'aliases')
         for arg in kwargs:
             if arg not in valid_kwargs:
                 err = 'Unexpected Arg: %s' % arg
@@ -198,30 +209,26 @@ class Regime(BaseALObject, MemberContainerObject):
         else:
             self._name = name.strip()
             ensure_valid_identifier(self._name)
-        transitions = kwargs.get('transitions', None)
-        kw_tds = normalise_parameter_as_list(kwargs.get('time_derivatives',
-                                                        None))
+        # Get Time derivatives from args or kwargs
+        kw_tds = normalise_parameter_as_list(
+            kwargs.get('time_derivatives', None))
         time_derivatives = list(args) + kw_tds
-
         # Un-named arguments are time_derivatives:
         time_derivatives = normalise_parameter_as_list(time_derivatives)
         # time_derivatives.extend( args )
-
         td_types = (basestring, TimeDerivative)
         td_type_dict = filter_discrete_types(time_derivatives, td_types)
         td_from_str = [TimeDerivative.from_str(o)
                        for o in td_type_dict[basestring]]
         time_derivatives = td_type_dict[TimeDerivative] + td_from_str
-
         # Check for double definitions:
         td_dep_vars = [td.variable for td in time_derivatives]
         assert_no_duplicates(
             td_dep_vars,
-            msg=("Multiple time derivatives found for the same state variable "
+            ("Multiple time derivatives found for the same state variable "
                  "in regime '{}' (found '{}')".format(
                      self.name,
                      "', '".join(td.variable for td in time_derivatives))))
-
         # Store as a dictionary
         self._time_derivatives = dict((td.variable, td)
                                       for td in time_derivatives)
@@ -229,14 +236,23 @@ class Regime(BaseALObject, MemberContainerObject):
         # We support passing in 'transitions', which is a list of both OnEvents
         # and OnConditions. So, lets filter this by type and add them
         # appropriately:
-        transitions = normalise_parameter_as_list(transitions)
+        transitions = normalise_parameter_as_list(kwargs.get('transitions',
+                                                             None))
         f_dict = filter_discrete_types(transitions, (OnEvent, OnCondition))
         self._on_events = {}
         self._on_conditions = {}
-
         # Add all the OnEvents and OnConditions:
         for elem in chain(f_dict[OnEvent], f_dict[OnCondition]):
             self.add(elem)
+
+        self._aliases = {}
+        # Add regime specific aliases
+        for alias in normalise_parameter_as_list(kwargs.get('aliases', None)):
+            if not isinstance(alias, Alias):
+                raise NineMLRuntimeError(
+                    "'{}' provided to Regime 'aliases' kwarg, 'Alias' expected"
+                    .format(alias))
+            self._aliases[alias.name] = alias
 
     def add(self, elem):
         """Add an element to the regime
@@ -255,6 +271,22 @@ class Regime(BaseALObject, MemberContainerObject):
 
     # Regime Properties:
     # ------------------
+    @property
+    def num_time_derivatives(self):
+        return len(self._time_derivatives)
+
+    @property
+    def num_on_events(self):
+        return len(self._on_events)
+
+    @property
+    def num_on_conditions(self):
+        return len(self._on_conditions)
+
+    @property
+    def num_aliases(self):
+        return len(self._aliases)
+
     @property
     def time_derivatives(self):
         """Returns the state-variable time-derivatives in this regime.
@@ -279,28 +311,55 @@ class Regime(BaseALObject, MemberContainerObject):
         conditions"""
         return self._on_conditions.itervalues()
 
+    @property
+    def aliases(self):
+        return self._aliases.itervalues()
+
+    @name_error
     def time_derivative(self, variable):
         return self._time_derivatives[variable]
 
+    @name_error
     def on_event(self, port_name):
         return self._on_events[port_name]
 
+    @name_error
     def on_condition(self, condition):
         if not isinstance(condition, sympy.Basic):
             condition = Trigger(condition).rhs
         return self._on_conditions[condition]
+
+    @name_error
+    def alias(self, name):
+        return self._aliases[name]
 
     @property
     def time_derivative_variables(self):
         return self._time_derivatives.iterkeys()
 
     @property
+    def time_derivative_keys(self):
+        return self.time_derivative_variables
+
+    @property
     def on_event_port_names(self):
         return self._on_events.iterkeys()
 
     @property
+    def on_event_keys(self):
+        return self.on_event_port_names
+
+    @property
     def on_condition_triggers(self):
         return self._on_conditions.iterkeys()
+
+    @property
+    def on_condition_keys(self):
+        return (Expression(t).rhs_str for t in self.on_condition_triggers)
+
+    @property
+    def alias_names(self):
+        return self._aliases.iterkeys()
 
     @property
     def transitions(self):
@@ -311,6 +370,24 @@ class Regime(BaseALObject, MemberContainerObject):
 
         return chain(self.on_events, self.on_conditions)
 
+    def all_triggers(self):
+        return (oc.trigger for oc in self.on_conditions)
+
+    def all_target_triggers(self):
+        return chain(*[[oc.trigger for oc in t.target_regime.on_conditions]
+                       for t in self.transitions if t.target_regime != self])
+
+    def all_state_assignments(self):
+        return chain(*(t.state_assignments for t in self.transitions))
+
     @property
     def name(self):
         return self._name
+
+    def no_time_derivatives(self, state_variables):
+        """
+        Returns the state variables from the list provided that don't have
+        time derivatives in the current regime
+        """
+        return (sv for sv in state_variables
+                if sv.name not in self.time_derivative_variables)

@@ -5,18 +5,19 @@ A Python library for working with 9ML model descriptions.
 :license: BSD-3, see LICENSE for details.
 """
 
-__version__ = "0.2dev"
-
-from .base import BaseNineMLObject, DocumentLevelObject
-from document import read, write, load, Document
-import abstraction
-import user
-import exceptions
-import units
-from .units import Unit, Dimension
+from .document import read, write, Document
+# from . import abstraction
+from . import user
+from . import exceptions
+from . import units
+from .units import Unit, Dimension, Quantity
 from abstraction import (
-    Dynamics, ConnectionRule, RandomDistribution,
-    ComponentClass)
+    Dynamics, ConnectionRule, RandomDistribution)
 from .user import (
-    DynamicsComponent, ConnectionRuleComponent, RandomDistributionComponent,
-    Selection, Population, Projection, Property, Definition, Component)
+    Selection, Population, Projection, Property, Definition,
+    DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
+    Network, MultiDynamics, MultiDynamicsProperties, Concatenate,
+    ComponentArray, EventConnectionGroup, AnalogConnectionGroup)
+from .values import SingleValue, ArrayValue, RandomValue
+
+__version__ = "0.1"

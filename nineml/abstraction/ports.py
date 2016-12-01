@@ -33,7 +33,7 @@ class Port(BaseALObject):
     """
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
-    defining_attributes = ('name',)
+    defining_attributes = ('_name',)
 
     def __init__(self, name):
         """ Port Constructor.
@@ -62,7 +62,7 @@ class DimensionedPort(Port, ExpressionSymbol):
     Analog and Property ports).
     """
 
-    defining_attributes = ('name', 'dimension')
+    defining_attributes = ('_name', '_dimension')
 
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
@@ -82,8 +82,12 @@ class DimensionedPort(Port, ExpressionSymbol):
 
     def __repr__(self):
         classstring = self.__class__.__name__
+        try:
+            dim_name = self.dimension.name
+        except NineMLRuntimeError:
+            dim_name = '<unknown>'
         return "{}('{}', dimension='{}')".format(classstring, self.name,
-                                                 self.dimension)
+                                                 dim_name)
 
 
 class SendPort(SendPortBase):
@@ -121,6 +125,7 @@ class AnalogPort(DimensionedPort):
     Component. For example, this could be the membrane-voltage into a synapse
     component, or the current provided by a ion-channel.
     """
+    communicates = 'analog'
 
     def type_matches(self, port):
         return isinstance(port, AnalogPort)
@@ -134,6 +139,7 @@ class EventPort(Port):
     notify other components that it had fired; or synapses could receive events
     to notify them to provide current to a post-synaptic neuron.
     """
+    communicates = 'event'
 
     def type_matches(self, port):
         return isinstance(port, AnalogPort)
@@ -147,6 +153,8 @@ class AnalogSendPort(AnalogPort, SendPort):
     component, or the current provided by a ion-channel.
 
     """
+
+    nineml_type = 'AnalogSendPort'
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -162,6 +170,8 @@ class AnalogReceivePort(AnalogPort, ReceivePort):
 
     """
 
+    nineml_type = 'AnalogReceivePort'
+
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_analogreceiveport(self, **kwargs)
@@ -175,6 +185,8 @@ class EventSendPort(EventPort, SendPort):
     notify other components that it had fired.
     """
 
+    nineml_type = 'EventSendPort'
+
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_eventsendport(self, **kwargs)
@@ -187,6 +199,8 @@ class EventReceivePort(EventPort, ReceivePort):
     points in time. For example, synapses could receive events
     to notify them to provide current to a post-synaptic neuron.
     """
+
+    nineml_type = 'EventReceivePort'
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -206,7 +220,9 @@ class AnalogReducePort(AnalogPort, ReceivePort):
         Currently support ``operator`` s are: ``+``.
 
     """
+    nineml_type = 'AnalogReducePort'
     mode = "reduce"
+    defining_attributes = ('_name', '_dimension', '_operator')
     _operator_map = {'add': '+', '+': '+', }
 
     def __init__(self, name, dimension=None, operator='+'):

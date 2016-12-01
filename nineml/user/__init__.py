@@ -1,73 +1,16 @@
 # encoding: utf-8
-"""
-Python module for reading/writing 9ML user layer files in XML format.
-
-Functions
----------
-
-    parse - read a 9ML file in XML format and parse it into a Model instance.
-
-Classes
--------
-    Model
-    Definition
-    Component
-        SpikingNodeType
-        SynapseType
-        CurrentSourceType
-        Structure
-        ConnectionRuleComponent
-        ConnectionType
-        RandomDistributionComponent
-    Parameter
-    PropertySet
-    Value
-    Network
-    Population
-    PositionList
-    Projection
-    Selection
-    Operator
-        Any
-        All
-        Not
-        Comparison
-        Eq
-        In
-
-
-:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
-:license: BSD-3, see LICENSE for details.
-
-"""
-from .. import BaseNineMLObject
-
-
-class BaseULObject(BaseNineMLObject):
-
-    """
-    Base class for user layer classes
-    """
-
-    def __init__(self):
-        super(BaseULObject, self).__init__()
-        self.from_reference = None
-
-    def __lt__(self, other):
-        if self.__class__.__name__ < other.__class__.__name__:
-            return True
-        else:
-            return self.name < other.name
-
-
-from .network import Network
-from .population import Population, PositionList, Structure
+from .base import BaseULObject
+from .population import Population
 from .selection import Selection, Concatenate
-from .projection import Projection, PortConnection, Delay
-from .component import (PropertySet, Property, Component, Definition,
-                        Prototype, DynamicsComponent, ConnectionRuleComponent,
-                        RandomDistributionComponent, resolve_reference,
-                        write_reference, Reference, Initial, InitialSet)
-from .syntactic_sugar import (
-    SpikingNodeType, IonDynamicsType, SynapseType, CurrentSourceType,
-    ConnectionType)
+from .projection import Projection
+from .component import (Property, Component, Definition,
+                        Prototype, resolve_reference, write_reference)
+from .dynamics import Initial, DynamicsProperties
+from .connectionrule import (
+    ConnectionRuleProperties, Connectivity, InverseConnectivity)
+from .randomdistribution import RandomDistributionProperties
+from .multi import MultiDynamics, MultiDynamicsProperties, append_namespace
+from .port_connections import (
+    AnalogPortConnection, EventPortConnection)
+from .network import (
+    Network, ComponentArray, AnalogConnectionGroup, EventConnectionGroup)

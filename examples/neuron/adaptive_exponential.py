@@ -1,6 +1,6 @@
 from nineml import units as un
-from nineml import abstraction as al, user as ul
-from nineml.xmlns import E, etree
+from nineml import abstraction as al, user as ul, Document
+from nineml.xml import E, etree
 
 
 def create_adaptive_exponential():
@@ -66,22 +66,22 @@ def create_adaptive_exponential():
 def parameterise_adaptive_exponential(definition=None):
     if definition is None:
         definition = create_adaptive_exponential()
-    comp = ul.DynamicsComponent(
+    comp = ul.DynamicsProperties(
         name='SampleAdaptiveExpIntegrateAndFire',
         definition=definition,
-        properties=[ul.Property('C_m', 1, un.pF),
-                    ul.Property('g_L', 0.1, un.nS),
-                    ul.Property('E_L', -65, un.mV),
-                    ul.Property('Delta', 1, un.mV),
-                    ul.Property('V_T', -58, un.mV),
+        properties=[ul.Property('C_m', 1 * un.pF),
+                    ul.Property('g_L', 0.1 * un.nS),
+                    ul.Property('E_L', -65 * un.mV),
+                    ul.Property('Delta', 1 * un.mV),
+                    ul.Property('V_T', -58 * un.mV),
                     ul.Property('S', 0.1),
-                    ul.Property('tspike', 0.5, un.ms),
-                    ul.Property('trefractory', 0.25, un.ms),
-                    ul.Property('tau_w', 4, un.ms),
-                    ul.Property('a', 1, un.per_mV),
+                    ul.Property('tspike', 0.5 * un.ms),
+                    ul.Property('trefractory', 0.25 * un.ms),
+                    ul.Property('tau_w', 4 * un.ms),
+                    ul.Property('a', 1 * un.per_mV),
                     ul.Property('b', 2)],
-        initial_values=[ul.Initial('V', -70, un.mV),
-                        ul.Initial('w', 0.1, un.mV)])
+        initial_values=[ul.Initial('V', -70 * un.mV),
+                        ul.Initial('w', 0.1 * un.mV)])
     return comp
 
 
@@ -103,10 +103,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.mode == 'print':
+        document = Document()
         print etree.tostring(
             E.NineML(
-                create_adaptive_exponential().to_xml(),
-                parameterise_adaptive_exponential().to_xml()),
+                create_adaptive_exponential().to_xml(document),
+                parameterise_adaptive_exponential().to_xml(document)),
             encoding="UTF-8", pretty_print=True, xml_declaration=True)
     elif args.mode == 'compare':
         if ninemlcatalog is None:

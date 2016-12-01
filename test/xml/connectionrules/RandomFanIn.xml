@@ -1,6 +1,5 @@
-<NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="AllToAll">
+<NineML xmlns="http://nineml.net/9ML/2.0">
+  <ConnectionRule name="RandomFanIn" standard_library="http://nineml.net/connectionrules/RandomFanIn">
     <Parameter name="probability" dimension="dimensionless"/>
-    <ConnectionRule standard_library="http://nineml.net/standardlibraries/connectionrules/AllToAll"/>
-  </ComponentClass>
+  </ConnectionRule>
 </NineML>

@@ -1,9 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="StudentTDistribution">
+<NineML xmlns="http://nineml.net/9ML/2.0">
+  <RandomDistribution name="StudentTDistribution" standard_library="http://www.uncertml.org/distributions/student-t">
     <Parameter name="location"/>
     <Parameter name="scale"/>
     <Parameter name="degreesOfFreedom"/>
-    <RandomDistribution standard_library="http://www.uncertml.org/distributions/student-t.xml"/>
-  </ComponentClass>
+  </RandomDistribution>
 </NineML>

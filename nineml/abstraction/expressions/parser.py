@@ -7,7 +7,9 @@ from sympy.parsing.sympy_tokenize import NAME, OP
 import operator
 import re
 from nineml.exceptions import NineMLMathParseError
-from .base import builtin_constants, builtin_functions
+from .base import (
+    builtin_constants, builtin_functions, reserved_symbols,
+    reserved_identifiers)
 
 # # Inline randoms are deprecated in favour of RandomVariable elements,
 # # but included here to get Brunel model to work
@@ -19,13 +21,23 @@ class Parser(object):
     # Escape all objects in sympy namespace that aren't defined in NineML
     # by predefining them as symbol names to avoid naming conflicts when
     # sympifying RHS strings.
-    _to_escape = set(s for s in dir(sympy)
-                     if s not in chain(builtin_constants, builtin_functions))
+    _to_escape = (set(dir(sympy)) -
+                  set(chain(builtin_constants, builtin_functions)))
     _valid_funcs = set((sympy.And, sympy.Or, sympy.Not)) | builtin_functions
     _func_to_op_map = {sympy.Function('pow'): operator.pow}
+    _valid_identifier_re = re.compile(r'^[a-zA-Z_]\w*$')
     _escape_random_re = re.compile(r'(?<!\w)random\.(\w+)(?!\w)')
     _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_(?!\w)')
+    _logic_relation_re = re.compile(r'(?:&|\||<|>|=)')
+    # Matches logic and relational expressions, as well as parens and funcname(
+    _tokenize_logic_re = re.compile(r'\s*(&{1,2}|\|{1,2}|<=?|>=?|==?|'
+                                    r'(?:\w+|!|~)?\s*\(|\))\s*')
+    # Matches function names+plus opening paren and just opening paren
+    _left_paren_func_re = re.compile(r'(?:\w+|!|~)?\s*\(')
     _sympy_transforms = list(standard_transformations) + [convert_xor]
+    _precedence = {'&&': 2, '&': 2, '|': 3, '||': 3, '>=': 1, '>': 1,
+                   '<': 1, '<=': 1, '==': 1, '=': 1}
+    _whitespace_re = re.compile(r'\s+')
     inline_randoms_dict = {
         'random_uniform_': sympy.Function('random_uniform_'),
         'random_binomial_': sympy.Function('random_binomial_'),
@@ -33,28 +45,42 @@ class Parser(object):
         'random_exponential_': sympy.Function('random_exponential_')}
 
     def __init__(self):
-        self.escaped_names = set()
+        self.escaped_names = None
 
     def parse(self, expr):
-        if not isinstance(expr, (int, float)):
-            if isinstance(expr, sympy.Basic):
-                self._check_valid_funcs(expr)
-            elif isinstance(expr, basestring):
-                try:
-                    expr = self.escape_random_namespace(expr)
-                    expr = sympy_parse(
-                        expr, transformations=[self] + self._sympy_transforms,
-                        local_dict=self.inline_randoms_dict)
-                    expr = self._postprocess(expr)
-                except Exception, e:
-                    raise NineMLMathParseError(
-                        "Could not parse math-inline expression: {}\n\n{}"
-                        .format(expr, e))
-            else:
-                raise TypeError("Cannot convert value '{}' of type '{}' to "
-                                " SymPy expression".format(repr(expr),
-                                                           type(expr)))
+        if isinstance(expr, (int, float)):
+            pass
+        elif isinstance(expr, sympy.Basic):
+            self._check_valid_funcs(expr)
+        elif self.valid_identifier(expr, safe_symbols=reserved_symbols):
+            # Feeling lucky, first check we can get away with just converting
+            # the expression into a symbol to avoid full parsing for trivial
+            # cases
+            expr = sympy.Symbol(expr)
+        elif isinstance(expr, basestring):
+            return self._parse_expr(expr)
+        else:
+            raise TypeError("Cannot convert value '{}' of type '{}' to "
+                            " SymPy expression".format(repr(expr),
+                                                       type(expr)))
         return expr
+
+    def _parse_expr(self, expr):
+        # Strip non-space whitespace
+        expr = self._whitespace_re.sub(' ', expr)
+        expr = self.escape_random_namespace(expr)
+        if self._logic_relation_re.search(expr):
+            expr = self._parse_relationals(expr)
+        self.escaped_names = set()
+        try:
+            expr = sympy_parse(
+                expr, transformations=([self] + self._sympy_transforms),
+                local_dict=self.inline_randoms_dict)
+        except Exception, e:
+            raise NineMLMathParseError(
+                "Could not parse math-inline expression: "
+                "{}\n\n{}".format(expr, e))
+        return self._postprocess(expr)
 
     def _preprocess(self, tokens):
         """
@@ -70,11 +96,14 @@ class Parser(object):
                 if tokval in self._to_escape:
                     self.escaped_names.add(tokval)
                     tokval = self._escape(tokval)
-                # Convert logical identities from ANSI to Python names
+                # Convert logical identities from ANSI C -> Python names
                 elif tokval == 'true':
                     tokval = 'True'
                 elif tokval == 'false':
                     tokval = 'False'
+                # Unescape relationals escaped in _parse_relationals
+                elif tokval.endswith('__'):
+                    tokval = tokval[:-2]
             # Handle multiple negations
             elif toknum == OP and tokval.startswith('!'):
                 # NB: Multiple !'s are grouped into the one token
@@ -113,14 +142,17 @@ class Parser(object):
         return new_result
 
     def _postprocess(self, expr):
-        # Convert symbol names that were escaped to avoid clashes with in-built
-        # Sympy functions back to their original form
-        while self.escaped_names:
-            name = self.escaped_names.pop()
-            expr = expr.xreplace(
-                {sympy.Symbol(self._escape(name)): sympy.Symbol(name)})
-        # Convert ANSI C functions to corresponding operator (i.e. 'pow')
-        expr = self._func_to_op(expr)
+        # Replace 'pow' functions with sympy '**'
+        if isinstance(expr, sympy.Basic):
+            expr = expr.replace(sympy.Function('pow'), lambda b, e: b ** e)
+            # Convert symbol names that were escaped to avoid clashes with in-
+            # built Sympy functions back to their original form
+            while self.escaped_names:
+                name = self.escaped_names.pop()
+                expr = expr.xreplace(
+                    {sympy.Symbol(self._escape(name)): sympy.Symbol(name)})
+            # Convert ANSI C functions to corresponding operator (i.e. 'pow')
+            expr = self._func_to_op(expr)
         return expr
 
     def __call__(self, tokens, local_dict, global_dict):  # @UnusedVariable
@@ -129,6 +161,12 @@ class Parser(object):
         to the Sympy parser
         """
         return self._preprocess(tokens)
+
+    @classmethod
+    def valid_identifier(cls, expr, safe_symbols=set([])):
+        if expr in reserved_identifiers - safe_symbols:
+            return False
+        return cls._valid_identifier_re.match(expr)
 
     @classmethod
     def _escape(self, s):
@@ -152,6 +190,7 @@ class Parser(object):
 
     @classmethod
     def _check_valid_funcs(cls, expr):
+        """Checks if the provided Sympy function is a valid 9ML function"""
         if (isinstance(expr, sympy.Function) and
                 str(type(expr)) not in chain(
                     cls._valid_funcs, cls.inline_randoms_dict.iterkeys())):
@@ -172,3 +211,128 @@ class Parser(object):
     @classmethod
     def inline_random_distributions(cls):
         return cls.inline_randoms_dict.itervalues()
+
+    @classmethod
+    def _parse_relationals(cls, expr_string, escape='__'):
+        """
+        Based on shunting-yard algorithm
+        (see http://en.wikipedia.org/wiki/Shunting-yard_algorithm)
+        with modifications for skipping over non logical/relational operators
+        and associated parentheses.
+        """
+        if isinstance(expr_string, bool):
+            return expr_string
+        # Splits and throws away empty tokens (between parens and operators)
+        # and encloses the whole expression in parens
+        tokens = (['('] +
+                  [t for t in cls._tokenize_logic_re.split(expr_string.strip())
+                   if t] + [')'])
+        if len([1 for t in tokens
+                if t.strip().endswith('(')]) != tokens.count(')'):
+            raise NineMLMathParseError(
+                "Unbalanced parentheses in expression: {}".format(expr_string))
+        tokens = tokens
+        operators = []  # stack (in SY algorithm terminology)
+        operands = []  # output stream
+        is_relational = []  # whether the current parens should be parsed
+        # Num operands to concat when not parsing relation/bool. Because we are
+        # also splitting on parenthesis, non-logic/relational expressions will
+        # still be split on parenthesis and we need to keep track of how many
+        # pieces they are in.
+        num_args = [0]  # top-level should always be set to 1
+        for tok in tokens:
+            # If opening paren or function name + paren
+            if cls._left_paren_func_re.match(tok):
+                operators.append(tok)
+                is_relational.append(False)
+                num_args.append(0)
+            # Closing paren.
+            elif tok == ')':
+                # Join together sub-expressions that have been split by parens
+                # not used for relational/boolean expressions (e.g. functions)
+                n = num_args.pop()
+                if n > 1:
+                    operands = operands[:-n] + [''.join(operands[-n:])]
+                # If parens enclosed relat/logic (i.e. '&', '|', '<', '>', etc)
+                if is_relational.pop():
+                    # Get all the operators within the enclosing parens.
+                    # Need to sort by order of precedence
+                    try:
+                        # Get index of last open paren
+                        i = -1
+                        while not cls._left_paren_func_re.match(operators[i]):
+                            i -= 1
+                    except IndexError:
+                        raise NineMLMathParseError(
+                            "Unbalanced parentheses in expression: {}"
+                            .format(expr_string))
+                    # Get lists of operators and operands at this level
+                    # (i.e. after the last left paren)
+                    level_operators = operators[(i + 1):]
+                    level_operands = operands[i:]
+                    # Pop these operators and operands off the list
+                    # (along with the paren/function-call)
+                    open_paren = operators[i]
+                    operators = operators[:i]
+                    operands = operands[:i]
+                    while level_operators:
+                        # Sort in order of precedence
+                        prec = [cls._precedence[o] for o in level_operators]
+                        i = sorted(range(len(prec)), key=prec.__getitem__)[0]
+                        # Pop first operator
+                        operator = level_operators.pop(i)
+                        arg1, arg2 = (level_operands.pop(i),
+                                      level_operands.pop(i))
+                        if operator.startswith('&'):
+                            func = "And{}({}, {})".format(escape, arg1, arg2)
+                        elif operator.startswith('|'):
+                            func = "Or{}({}, {})".format(escape, arg1, arg2)
+                        elif operator.startswith('='):
+                            func = "Eq{}({}, {})".format(escape, arg1, arg2)
+                        elif operator == '<':
+                            func = "Lt{}({}, {})".format(escape, arg1, arg2)
+                        elif operator == '>':
+                            func = "Gt{}({}, {})".format(escape, arg1, arg2)
+                        elif operator == '<=':
+                            func = "Le{}({}, {})".format(escape, arg1, arg2)
+                        elif operator == '>=':
+                            func = "Ge{}({}, {})".format(escape, arg1, arg2)
+                        else:
+                            assert False
+                        level_operands.insert(i, func)
+                    new_operand = level_operands[0]
+                    if open_paren != '(':  # Function/logical negation
+                        new_operand = open_paren + new_operand + ')'
+                    operands.append(new_operand)
+                # If parens enclosed something else
+                else:
+                    try:
+                        # Apply the function/parens to the last operand
+                        operands[-1] = operators.pop() + operands[-1] + ')'
+                    except IndexError:
+                        raise NineMLMathParseError(
+                            "Unbalanced parentheses in expression: {}"
+                            .format(expr_string))
+                num_args[-1] += 1
+            # If the token is one of ('&', '|', '<', '>', '<=', '>=' or '==')
+            elif cls._tokenize_logic_re.match(tok):
+                operators.append(tok)
+                is_relational[-1] = True  # parse the last set of parenthesis
+                # Check if there are more than one LHS sub-expr. to concatenate
+                n = num_args[-1]
+                if n == 0:
+                    raise NineMLMathParseError(
+                        "Logical/relational operator directly after a "
+                        "parenthesis or start of expression: {}"
+                        .format(expr_string))
+                elif n > 1:
+                    operands = operands[:-n] + [''.join(operands[-n:])]
+                num_args[-1] = 0
+            # If the token is an atom or a subexpr not containing any
+            # logic/relational operators or parens.
+            else:
+                operands.append(tok)
+                num_args[-1] += 1
+        # After it is processed, operands should contain the parsed expression
+        # as a single item
+        return operands[0]

@@ -1,9 +1,4 @@
 recursive-include doc/source *
-prune examples
-graft examples/AL/sample_components
-graft examples/AL/demos
-graft examples/AL/doc_tutorials
-graft examples/UL
 prune .deprecated
 recursive-exclude * .gitignore
 recursive-exclude * .DS_Store

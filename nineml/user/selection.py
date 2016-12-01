@@ -1,39 +1,44 @@
-from operator import itemgetter
+from operator import itemgetter, and_
 from . import BaseULObject
-from .component import resolve_reference, write_reference, Reference
-from nineml.xmlns import NINEML, E
+from nineml.reference import resolve_reference, write_reference, Reference
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.utils import expect_single, check_tag
-from nineml import DocumentLevelObject
-from nineml.exceptions import handle_xml_exceptions
+from nineml.xml import (
+    extract_xmlns, E, from_child_xml, unprocessed_xml, get_xml_attr, NINEMLv1)
+from nineml.base import DocumentLevelObject, DynamicPortsObject
+from .population import Population
+from nineml.exceptions import NineMLNameError
+from nineml.utils import ensure_valid_identifier
 
 
-def find_difference(this, that):
-    assert isinstance(that, this.__class__)
-    if this != that:
-        if isinstance(this, BaseULObject):
-            for attr in this.defining_attributes:
-                a = getattr(this, attr)
-                b = getattr(that, attr)
-                if a != b:
-                    if attr in this.children:
-                        find_difference(a, b)
-                    else:
-                        errmsg = ("'%s' attribute of %s instance '%s' differs:"
-                                  " '%r' != '%r'" % (attr,
-                                                     this.__class__.__name__,
-                                                     this.name, a, b))
-                        if type(a) != type(b):
-                            errmsg += "(%s, %s)" % (type(a), type(b))
-                        raise Exception(errmsg)
-        else:
-            assert sorted(this.keys()) == sorted(
-                that.keys())  # need to handle case of different keys
-            for key in this:
-                find_difference(this[key], that[key])
+def combined_port_accessor(population_accessor):
+    def accessor(self, name):
+        try:
+            ports = [population_accessor(p, name) for p in self.populations]
+        except NineMLNameError:
+            raise NineMLNameError(
+                "'{}' {} is not present in all populations '{}' of the "
+                "selection"
+                .format(name, population_accessor.__name__,
+                        "', '".join(p.name for p in self.populations)))
+        port = ports[0]
+        if any(p != port for p in ports):
+            raise NineMLNameError(
+                "{} '{}' in populations '{}' are not equivalent"
+                .format(population_accessor.__name__.capitalize(),
+                        name, "', '".join(p.name for p in self.populations)))
+        return port
+    return accessor
 
 
-class Selection(BaseULObject, DocumentLevelObject):
+def combined_ports_property(population_property):
+    def combined_property(self):
+        combined = reduce(and_, (set(population_property.__get__(p))
+                                 for p in self.populations))
+        return iter(combined)
+    return property(combined_property)
+
+
+class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     """
     Container for combining multiple populations or subsets thereof.
 
@@ -44,40 +49,128 @@ class Selection(BaseULObject, DocumentLevelObject):
             a "selector" object which determines which neurons form part of the
             selection. Only :class:`Concatenate` is currently supported.
     """
-    element_name = "Selection"
-    defining_attributes = ('name', 'operation')
+    nineml_type = "Selection"
+    defining_attributes = ('_name', '_operation')
 
-    def __init__(self, name, operation, url=None):
+    def __init__(self, name, operation, document=None):
+        ensure_valid_identifier(name)
+        self._name = name
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, url)
-        self.name = name
-        self.operation = operation
+        DocumentLevelObject.__init__(self, document)
+        self._operation = operation
 
     def __repr__(self):
-        return "Selection('%s', '%r')" % (self.name, self.operation)
+        return "Selection(name='{}', {})".format(self.name, self.operation)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def operation(self):
+        return self._operation
 
     @write_reference
     @annotate_xml
-    def to_xml(self):
-        return E(self.element_name,
-                 self.operation.to_xml(),
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
+        return E(self.nineml_type,
+                 self.operation.to_xml(document, E=E, **kwargs),
                  name=self.name)
 
     @classmethod
     @resolve_reference
     @read_annotations
-    @handle_xml_exceptions
-    def from_xml(cls, element, document):
-        check_tag(element, cls)
+    @unprocessed_xml
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         # The only supported op at this stage
-        op = Concatenate.from_xml(
-            expect_single(element.findall(NINEML + 'Concatenate')), document)
-        return cls(element.attrib['name'], op, url=document.url)
+        op = from_child_xml(
+            element, Concatenate, document, **kwargs)
+        return cls(get_xml_attr(element, 'name', document, **kwargs), op,
+                   document=document)
 
     def evaluate(self):
         assert isinstance(self.operation, Concatenate), \
             "Only concatenation is currently supported"
-        return (item.user_object for item in self.operation.items)
+        return self.operation.items
+
+    @property
+    def populations(self):
+        return self.operation.items
+
+    @property
+    def component_classes(self):
+        return (p.component_class for p in self.populations)
+
+    @property
+    def size(self):
+        return sum(p.size for p in self.populations)
+
+    port = combined_port_accessor(Population.port)
+    ports = combined_ports_property(Population.ports)
+    send_port = combined_port_accessor(Population.send_port)
+    send_ports = combined_ports_property(Population.send_ports)
+    receive_port = combined_port_accessor(Population.receive_port)
+    receive_ports = combined_ports_property(Population.receive_ports)
+    event_receive_port = combined_port_accessor(
+        Population.event_receive_port)
+    event_receive_ports = combined_ports_property(
+        Population.event_receive_ports)
+    event_send_port = combined_port_accessor(
+        Population.event_send_port)
+    event_send_ports = combined_ports_property(
+        Population.event_send_ports)
+    analog_receive_port = combined_port_accessor(
+        Population.analog_receive_port)
+    analog_receive_ports = combined_ports_property(
+        Population.analog_receive_ports)
+    analog_send_port = combined_port_accessor(
+        Population.analog_send_port)
+    analog_send_ports = combined_ports_property(
+        Population.analog_send_ports)
+    analog_reduce_port = combined_port_accessor(
+        Population.analog_reduce_port)
+    analog_reduce_ports = combined_ports_property(
+        Population.analog_reduce_ports)
+
+    @property
+    def analog_send_port_names(self):
+        return (p.name for p in self.analog_send_ports)
+
+    @property
+    def num_analog_send_ports(self):
+        return len(list(self.analog_send_ports))
+
+    @property
+    def analog_receive_port_names(self):
+        return (p.name for p in self.analog_receive_ports)
+
+    @property
+    def num_analog_receive_ports(self):
+        return len(list(self.analog_reduce_ports))
+
+    @property
+    def analog_reduce_port_names(self):
+        return (p.name for p in self.analog_reduce_ports)
+
+    @property
+    def num_analog_reduce_ports(self):
+        return len(list(self.analog_reduce_ports))
+
+    @property
+    def event_send_port_names(self):
+        return (p.name for p in self.event_send_ports)
+
+    @property
+    def num_event_send_ports(self):
+        return len(list(self.event_receive_ports))
+
+    @property
+    def event_receive_port_names(self):
+        return (p.name for p in self.event_receive_ports)
+
+    @property
+    def num_event_receive_ports(self):
+        return len(list(self.event_receive_ports))
 
 
 class Concatenate(BaseULObject):
@@ -86,15 +179,19 @@ class Concatenate(BaseULObject):
     together into a larger :class:`Selection`.
     """
 
-    element_name = 'Concatenate'
-    defining_attributes = ('items',)
+    nineml_type = 'Concatenate'
+    defining_attributes = ('_items',)
 
     def __init__(self, *items):
         super(Concatenate, self).__init__()
-        self._items = items
+        self._items = list(items)
 
     def __repr__(self):
         return "Concatenate(%s)" % ", ".join(repr(item) for item in self.items)
+
+    @property
+    def key(self):
+        return '_'.join(i.key for i in self._items[:10])
 
     @property
     def items(self):
@@ -102,29 +199,36 @@ class Concatenate(BaseULObject):
         # should this perhaps flatten to a list of Populations, where the
         # concatenation includes other Selections? or should that be a separate
         # method?
-        return self._items
+        return iter(self._items)
 
-    @write_reference
     @annotate_xml
-    def to_xml(self):
+    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         def item_to_xml(item):
             if isinstance(item, Reference):
-                return item.to_xml()
-            else:
+                return item.to_xml(document, E=E, **kwargs)
+            elif E._namespace == NINEMLv1:
                 return E.Reference(item.name)
-        return E(self.element_name,
+            else:
+                return E.Reference(name=item.name)
+        return E(self.nineml_type,
                  *[E.Item(item_to_xml(item), index=str(i))
                    for i, item in enumerate(self.items)])
 
     @classmethod
-    @resolve_reference
     @read_annotations
-    @handle_xml_exceptions
-    def from_xml(cls, element, document):
+    @unprocessed_xml
+    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+        items = []
         # Load references and indices from xml
-        items = ((e.attrib['index'],
-                  Reference.from_xml(e.find(NINEML + 'Reference'), document))
-                 for e in element.findall(NINEML + 'Item'))
+        for it_elem in element.findall(extract_xmlns(element.tag) + 'Item'):
+            items.append((
+                get_xml_attr(it_elem, 'index', document, dtype=int, **kwargs),
+                from_child_xml(it_elem, Population, document,
+                               allow_reference='only', **kwargs)))
+            try:
+                kwargs['unprocessed'][0].discard(it_elem)
+            except KeyError:
+                pass
         # Sort by 'index' attribute
         indices, items = zip(*sorted(items, key=itemgetter(0)))
         indices = [int(i) for i in indices]
@@ -150,8 +254,8 @@ class Concatenate(BaseULObject):
 #     A set of network nodes selected from existing populations within the
 #     Network.
 #     """
-#     element_name = "Selection"
-#     defining_attributes = ("name", "condition")
+#     nineml_type = "Selection"
+#     defining_attributes = ("_name", "_condition")
 #
 #     def __init__(self, name, condition):
 #         """
@@ -164,17 +268,16 @@ class Concatenate(BaseULObject):
 #         self.populations = []
 #         self.evaluated = False
 #
-#     def to_xml(self):
-#         return E(self.element_name,
-#                  E.select(self.condition.to_xml()),
+#     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
+#         return E(self.nineml_type,
+#                  E.select(self.condition.to_xml(document, E=E, **kwargs)),
 #                  name=self.name)
 #
 #     @classmethod
 #     def from_xml(cls, element, components):
-#         check_tag(element, cls)
 #         select_element = element.find(NINEML + 'select')
 #         assert len(select_element) == 1
-#         return cls(element.attrib["name"],
+#         return cls(get_xml_attr(element, 'name', document, **kwargs),
 #                    Operator.from_xml(select_element.getchildren()[0]))
 #
 #     def evaluate(self, group):
@@ -212,21 +315,21 @@ class Concatenate(BaseULObject):
 #
 #
 # class Any(SelectionOperator):
-#     element_name = "Any"
+#     nineml_type = "Any"
 #
 #     def __str__(self):
 #         return "(" + ") or (".join(qstr(op) for op in self.operands) + ")"
 #
 #
 # class All(SelectionOperator):
-#     element_name = "All"
+#     nineml_type = "All"
 #
 #     def __str__(self):
 #         return "(" + ") and (".join(qstr(op) for op in self.operands) + ")"
 #
 #
 # class Not(SelectionOperator):
-#     element_name = "Not"
+#     nineml_type = "Not"
 #
 #     def __init__(self, *operands):
 #         assert len(operands) == 1
@@ -240,14 +343,14 @@ class Concatenate(BaseULObject):
 #
 #
 # class Eq(Comparison):
-#     element_name = "Equal"
+#     nineml_type = "Equal"
 #
 #     def __str__(self):
 #         return "(%s) == (%s)" % tuple(qstr(op) for op in self.operands)
 #
 #
 # class In(Comparison):
-#     element_name = "In"
+#     nineml_type = "In"
 #
 #     def __init__(self, item, sequence):
 #         Operator.__init__(self, item, sequence)
@@ -257,33 +360,33 @@ class Concatenate(BaseULObject):
 #
 # class Operator(BaseULObject):
 #     super(Property, self).__init__()
-#     defining_attributes = ("operands",)
+#     defining_attributes = ("_operands",)
 #     children = ("operands",)
 #
 #     def __init__(self, *operands):
 #         self.operands = operands
 #
-#     def to_xml(self):
+#     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
 #         operand_elements = []
 #         for c in self.operands:
 #             if isinstance(c, (basestring, float, int)):
-#                 operand_elements.append(E(StringValue.element_name, str(c)))
+#                 operand_elements.append(E(StringValue.nineml_type, str(c)))
 #             else:
-#                 operand_elements.append(c.to_xml())
-#         return E(self.element_name,
+#                 operand_elements.append(c.to_xml(document, E=E, **kwargs))
+#         return E(self.nineml_type,
 #                  *operand_elements)
 #
 #     @classmethod
 #     def from_xml(cls, element):
-#         if hasattr(cls, "element_name") and element.tag == (NINEML +
-#                                                            cls.element_name):
+#         if hasattr(cls, "nineml_type") and element.tag == (NINEML +
+#                                                            cls.nineml_type):
 #             dispatch = {
-#                 NINEML + StringValue.element_name: StringValue.from_xml,
-#                 NINEML + Eq.element_name: Eq.from_xml,
-#                 NINEML + Any.element_name: Any.from_xml,
-#                 NINEML + All.element_name: All.from_xml,
-#                 NINEML + Not.element_name: Not.from_xml,
-#                 NINEML + In.element_name: In.from_xml,
+#                 NINEML + StringValue.nineml_type: StringValue.from_xml,
+#                 NINEML + Eq.nineml_type: Eq.from_xml,
+#                 NINEML + Any.nineml_type: Any.from_xml,
+#                 NINEML + All.nineml_type: All.from_xml,
+#                 NINEML + Not.nineml_type: Not.from_xml,
+#                 NINEML + In.nineml_type: In.from_xml,
 #             }
 #             operands = []
 #             for child in element.iterchildren():
@@ -291,10 +394,10 @@ class Concatenate(BaseULObject):
 #             return cls(*operands)
 #         else:
 #             return {
-#                 NINEML + Eq.element_name: Eq,
-#                 NINEML + Any.element_name: Any,
-#                 NINEML + All.element_name: All,
-#                 NINEML + Not.element_name: Not,
-#                 NINEML + StringValue.element_name: StringValue,
-#                 NINEML + In.element_name: In,
+#                 NINEML + Eq.nineml_type: Eq,
+#                 NINEML + Any.nineml_type: Any,
+#                 NINEML + All.nineml_type: All,
+#                 NINEML + Not.nineml_type: Not,
+#                 NINEML + StringValue.nineml_type: StringValue,
+#                 NINEML + In.nineml_type: In,
 #             }[element.tag].from_xml(element)

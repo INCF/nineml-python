@@ -18,23 +18,6 @@ extensions to the language. The current modules are:
     * random - a module for specifying random distributions.
     * structure - a module for describing the spatial positioning of neurons (under development, not yet documented).
 
-
-Common elements
-===============
-
-A number of elements are common across all modules.
-
-Dimensions and units
---------------------
-
-.. autoclass:: Dimension
-   :members:
-
-.. autoclass:: Unit
-   :members:
-
-A number of :class:`Dimension`\s and :class:`Unit`\ have been pre-defined, for example:
-
 .. code-block:: python
 
     >>> from nineml.abstraction.units import time, voltage, capacitance, nA, mol_per_cm3, Mohm

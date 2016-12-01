@@ -1,3 +1,2 @@
 from .. import BaseALObject
-from .base import ComponentClass, Parameter, MainBlock
-from .namespace import NamespaceAddress
+from .base import ComponentClass, Parameter

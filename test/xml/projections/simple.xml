@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<NineML xmlns="http://nineml.net/9ML/1.0">
+<NineML xmlns="http://nineml.net/9ML/2.0">
   <Dimension name="time" t="1"/>
   <Dimension name="voltage" m="1" l="2" t="-3" i="-1"/>
   <Dimension name="conductance" m="-1" l="-2" t="3" i="2"/>
@@ -7,36 +7,44 @@
   <Unit symbol="mV" dimension="voltage" power="-3"/>
   <Unit symbol="S" dimension="conductance"/>
   <Projection name="Izhikevich2HH">
-    <Source>
-      <Reference url="../populations/simple.xml">IzhiPopulation</Reference>
-    </Source>
-    <Destination>
-      <Reference url="../populations/simple.xml">HHPopulation</Reference>
+    <Pre>
+      <Reference name="IzhiPopulation" url="../populations/simple.xml"/>
+    </Pre>
+    <Post>
+      <Reference name="HHPopulation" url="../populations/simple.xml"/>
       <FromResponse send_port="i" receive_port="iSynapse"/>
-    </Destination>
+    </Post>
     <Response>
-      <Component name="AMPA">
-        <Definition url="../postsynapticresponses/DoubleExpCondSynapse.xml">DoubleExpCondSynapse</Definition>
-        <Property name="gBar" units="S">
-          <SingleValue>2.6e-3</SingleValue>
+      <DynamicsProperties name="AMPA">
+        <Definition name="DoubleExpCondSynapse" url="../postsynapticresponses/DoubleExpCondSynapse.xml"/>
+        <Property name="gBar">
+          <Quantity units="S">
+            <SingleValue>2.6e-3</SingleValue>
+          </Quantity>
         </Property>        
-        <Property name="tau1" units="ms">
-          <SingleValue>0.03</SingleValue>
+        <Property name="tau1">
+          <Quantity units="ms">
+            <SingleValue>0.03</SingleValue>
+          </Quantity>
         </Property>
-        <Property name="tau2" units="ms">
-          <SingleValue>0.05</SingleValue>
+        <Property name="tau2">
+          <Quantity units="ms">
+            <SingleValue>0.05</SingleValue>
+          </Quantity>
         </Property>
-        <Property name="eReversal" units="mV">
-          <SingleValue>-0.1</SingleValue>
+        <Property name="eReversal">
+          <Quantity units="mV">
+            <SingleValue>-0.1</SingleValue>
+          </Quantity>
         </Property>
-      </Component>
+      </DynamicsProperties>
       <FromSource send_port="spikeOutput" receive_port="spike"/>
       <FromDestination send_port="v" receive_port="v"/>
     </Response>
     <Connectivity>
-      <Component name="AllToAll">
-        <Definition url="../connectionrules/AllToAll.xml">AllToAll</Definition>
-      </Component>
+      <ConnectionRuleProperties name="AllToAll">
+        <Definition name="AllToAll" url="../connectionrules/AllToAll.xml"/>
+      </ConnectionRuleProperties>
     </Connectivity>
     <Delay units="ms">
       <SingleValue>0.5</SingleValue>

@@ -2,7 +2,9 @@
 from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
 from .base import ExpressionWithSimpleLHS, ExpressionSymbol
-from nineml.units import unitless, Unit
+from nineml.units import unitless, Unit, Quantity
+from nineml.exceptions import NineMLDimensionError
+from nineml.values import BaseValue
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -46,8 +48,8 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
 
     """
-    element_name = 'Alias'
-    defining_attributes = ('name', 'rhs')
+    nineml_type = 'Alias'
+    defining_attributes = ('_name', '_rhs')
 
     def __init__(self, lhs=None, rhs=None):
         """ Constructor for an Alias
@@ -64,7 +66,10 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         ExpressionWithSimpleLHS.__init__(self, lhs, rhs)
 
     def __repr__(self):
-        return "<Alias: %s := %s>" % (self.lhs, self.rhs)
+        return "Alias(name='{}', rhs='{}')".format(self.lhs, self.rhs)
+
+    def __str__(self):
+        return "{} := {}".format(self.lhs, self.rhs)
 
     @property
     def name(self):
@@ -92,15 +97,32 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
 class Constant(BaseALObject, ExpressionSymbol):
 
-    element_name = 'Constant'
-    defining_attributes = ('name', 'value', 'units')
+    nineml_type = 'Constant'
+    defining_attributes = ('_name', '_value', '_units')
 
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)
         self._name = name
-        self._value = float(value)
-        self._units = units if units is not None else unitless
+        if isinstance(value, Quantity):
+            if units is None:
+                self._value = float(value._value)
+                self._units = value.units
+            elif units.dimension == value.units.dimension:
+                self._value = float(value._value * 10 ** (units.power -
+                                                          value.units.power))
+                self._units = units
+            else:
+                raise NineMLDimensionError(
+                    "Dimensions do not match between provided quantity ({}) "
+                    "and units ({})".format(value.units.dimension,
+                                            units.dimension))
+        else:
+            self._value = float(value)
+            self._units = units if units is not None else unitless
         assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
+
+    def __hash__(self):
+        return hash(self.name) ^ hash(self.value) ^ hash(self.units)
 
     @property
     def name(self):

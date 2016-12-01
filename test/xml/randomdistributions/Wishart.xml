@@ -1,8 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<NineML xmlns="http://nineml.net/9ML/1.0">
-  <ComponentClass name="WishartDistribution">
+<NineML xmlns="http://nineml.net/9ML/2.0">
+  <RandomDistribution name="WishartDistribution" standard_library="http://www.uncertml.org/distributions/wishart">
     <Parameter name="degreesOfFreedom"/>
     <Parameter name="scaleMatrix"/>
-    <RandomDistribution standard_library="http://www.uncertml.org/distributions/wishart.xml"/>
-  </ComponentClass>
+  </RandomDistribution>
 </NineML>
