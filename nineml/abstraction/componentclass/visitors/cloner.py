@@ -19,10 +19,7 @@ def lookup_memo(visit_elem):
     def visit_elem_with_memo_lookup(cloner, elem, **kwargs):
         try:
             clone = cloner.memo[clone_id(elem)]
-            try:
-                assert clone == visit_elem(cloner, elem, **kwargs)
-            except:
-                raise
+            assert clone == visit_elem(cloner, elem, **kwargs)
         except KeyError:
             clone = visit_elem(cloner, elem, **kwargs)
             cloner.memo[clone_id(elem)] = clone
