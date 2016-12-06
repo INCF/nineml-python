@@ -38,7 +38,11 @@ class TestCloners(unittest.TestCase):
             for elem in elems.itervalues():
                 clone = elem.clone(memo=memo)
                 if hasattr(clone, 'validate'):
-                    clone.validate()
+                    try:
+                        clone.validate()
+                    except:
+                        clone.validate()
+                        raise
                 self.assertNotEqual(id(clone), id(elem))
                 elem_keys = set(elem.__dict__.keys())
                 clone_keys = set(clone.__dict__.keys())
@@ -55,3 +59,20 @@ class TestCloners(unittest.TestCase):
                                             elem.find_mismatch(prev_elem)))
 
                 prev_elem = elem
+
+
+if __name__ == '__main__':
+    multi_dyn = instances_of_all_types['MultiDynamics']['multiDynPropB_Dynamics']
+    oc = multi_dyn.regime('R1___R1___R1_____R1').on_condition(
+        'SV1__e__multiA > P3__e__multiA')
+    oe = oc.output_event('ESP1')
+    oe_port = oe.port
+    pe = multi_dyn.event_send_port('ESP1')
+    pe_port = pe.port
+    multi_dyn_clone = multi_dyn.clone()
+    oc_clone = multi_dyn_clone.regime('R1___R1___R1_____R1').on_condition(
+        'SV1__e__multiA > P3__e__multiA')
+    pe_clone = multi_dyn.event_send_port('ESP1')
+    pe_port_clone = pe_clone.port
+    oe_clone = oc_clone.output_event('ESP1')
+    print oe
