@@ -62,17 +62,32 @@ class TestCloners(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    multi_dyn = instances_of_all_types['MultiDynamics']['multiDynPropB_Dynamics']
-    oc = multi_dyn.regime('R1___R1___R1_____R1').on_condition(
-        'SV1__e__multiA > P3__e__multiA')
-    oe = oc.output_event('ESP1')
-    oe_port = oe.port
-    pe = multi_dyn.event_send_port('ESP1')
+
+    # Original
+    multi_dyn = instances_of_all_types['MultiDynamics']['multiDynPropB_Dynamics'].sub_component('multiA').component_class
+    oc = multi_dyn.regime('R1___R1').on_condition(
+        'SV1__e > P3__e')
+    e = multi_dyn.sub_component('e').component_class
+    e_port = e.event_send_port('ESP1')
+    print "id(e_port): {}".format(id(e_port))
+    pe = multi_dyn.event_send_port('ESP1__e')
     pe_port = pe.port
+    print "id(pe_port): {}".format(id(pe_port))
+    oe = oc.output_event('ESP1__e')
+    oe_port = oe.port.port
+    print "id(oe_port): {}".format(id(oe_port))
+
+    # Clone
     multi_dyn_clone = multi_dyn.clone()
-    oc_clone = multi_dyn_clone.regime('R1___R1___R1_____R1').on_condition(
-        'SV1__e__multiA > P3__e__multiA')
-    pe_clone = multi_dyn.event_send_port('ESP1')
-    pe_port_clone = pe_clone.port
-    oe_clone = oc_clone.output_event('ESP1')
+    e_clone = multi_dyn_clone.sub_component('e').component_class
+    e_clone_port = e_clone.event_send_port('ESP1')
+    print "id(e_clone_port): {}".format(id(e_clone_port))
+    oc_clone = multi_dyn_clone.regime('R1___R1').on_condition(
+        'SV1__e > P3__e')
+    pe_clone = multi_dyn_clone.event_send_port('ESP1__e')
+    pe_clone_port = pe_clone.port
+    print "id(pe_clone_port): {}".format(id(pe_clone_port))
+    oe_clone = oc_clone.output_event('ESP1__e')
+    oe_clone_port = oe_clone.port.port
+    print "id(oe_clone_port): {}".format(id(oe_clone_port))
     print oe
