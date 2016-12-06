@@ -12,7 +12,7 @@ from nineml.abstraction import (
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
 from nineml.exceptions import NineMLImmutableError, NineMLNameError
 from nineml.abstraction.expressions import reserved_identifiers
-from nineml.base import BaseNineMLObject
+from nineml.base import BaseNineMLObject, clone_id
 
 
 # Matches multiple underscores, so they can be escaped by appending another
@@ -129,11 +129,21 @@ class _NamespaceObject(BaseNineMLObject):
             memo = {}
         try:
             # See if the attribute has already been cloned in memo
-            clone = memo[id(self)]
+            clone = memo[clone_id(self)]
         except KeyError:
             clone = self.__class__(self._sub_component, self._object,
                                    self._parent)
+            memo[clone_id(self)] = clone
         return clone
+
+    @property
+    def clone_id(self):
+        """
+        Return a unique ID for the namespace object that is invariant on
+        separate accessor calls (namespace objects are generated on the fly).
+        """
+        return (clone_id(self._sub_component), clone_id(self._object),
+                clone_id(self._parent))
 
 
 class _NamespaceNamed(_NamespaceObject):

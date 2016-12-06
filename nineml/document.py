@@ -3,9 +3,9 @@ import re
 from itertools import chain
 from urllib import urlopen
 import weakref
-from copy import deepcopy
 from lxml import etree
 import collections
+from nineml.base import clone_id
 from nineml.xml import (
     E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
 from nineml.annotations import Annotations
@@ -405,11 +405,12 @@ class Document(AnnotatedNineMLObject, dict):
         if memo is None:
             memo = {}
         try:
-            clone = memo[id(self)]
+            clone = memo[clone_id(self)]
         except KeyError:
             clone = Document(*((e.clone(memo, **kwargs)
                                 if not isinstance(e, self._Unloaded) else e)
                                for e in self.itervalues()))
+            memo[clone_id(self)] = clone
         return clone
 
     def write(self, url, version=XML_VERSION, **kwargs):

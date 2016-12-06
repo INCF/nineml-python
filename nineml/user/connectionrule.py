@@ -2,9 +2,9 @@ import sys
 from itertools import chain, product
 import math
 from abc import ABCMeta, abstractmethod
-from copy import copy
-from itertools import izip, repeat, tee
+from itertools import izip, repeat
 from random import Random, randint
+from nineml.base import clone_id
 from nineml.exceptions import NineMLRuntimeError
 from nineml.user.component import Component
 
@@ -246,7 +246,7 @@ class Connectivity(BaseConnectivity):
             memo = {}
         try:
             # See if the attribute has already been cloned in memo
-            clone = memo[id(self)]
+            clone = memo[clone_id(self)]
         except KeyError:
             if random_seeds:
                 random_seed = self._seed
@@ -258,6 +258,7 @@ class Connectivity(BaseConnectivity):
                                            **kwargs),
                 self.source_size, self.destination_size,
                 random_seed=random_seed, rng_cls=self._rng_cls)
+            memo[clone_id(self)] = clone
         return clone
 
     def has_been_sampled(self):

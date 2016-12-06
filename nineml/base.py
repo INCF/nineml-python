@@ -17,6 +17,24 @@ def hash_non_str(key):
     return key
 
 
+def clone_id(obj):
+    """
+    Used in storing cloned objects in 'memo' dictionary to avoid duplicate
+    clones of the same object referenced from different points in a complex
+    data tree. First looks for special method 'clone_id' and falls back on the
+    'id' function that returns a memory-address based ID.
+
+    Parameters
+    ----------
+    obj : object
+        Any object
+    """
+    try:
+        return obj.clone_id
+    except AttributeError:
+        return id(obj)
+
+
 class BaseNineMLObject(object):
 
     """
@@ -250,14 +268,14 @@ class BaseNineMLObject(object):
             memo = {}
         try:
             # See if the attribute has already been cloned in memo
-            clone = memo[id(self)]
+            clone = memo[clone_id(self)]
         except KeyError:
             clone = copy(self)  # Create a new object of the same type
             clone.__dict__ = {}  # Wipe it clean to start from scratch
             # Save the element in the memo to avoid it being cloned twice in
             # the object hierarchy. Due to possible recursion this needs to be
             # set before the '_copy_to_clone' method is called.
-            memo[id(self)] = clone
+            memo[clone_id(self)] = clone
             # The actual setting of attributes is handled by _copy_to_clone is
             # used to allow sub classes to override it and control inheritance
             # from super classes
@@ -539,8 +557,8 @@ class ContainerObject(BaseNineMLObject):
             if element.key in dct:
                 raise NineMLRuntimeError(
                     "Could not add '{}' {} to container as it clashes "
-                    "with an existing element of the same name"
-                    .format(element.name, type(element).__name__))
+                    "with an existing element with the same key"
+                    .format(element.key, type(element).__name__))
             dct[element.key] = element
 
     def remove(self, *elements):

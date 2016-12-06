@@ -6,7 +6,7 @@ docstring needed
 """
 from ...expressions.utils import is_builtin_symbol
 from .base import ComponentVisitor
-from nineml.base import ContainerObject, accessor_name_from_type
+from nineml.base import ContainerObject, accessor_name_from_type, clone_id
 from ..base import Parameter
 from ...expressions import Constant, Alias
 
@@ -18,10 +18,14 @@ def lookup_memo(visit_elem):
     """
     def visit_elem_with_memo_lookup(cloner, elem, **kwargs):
         try:
-            clone = cloner.memo[id(elem)]
+            clone = cloner.memo[clone_id(elem)]
+            try:
+                assert clone == visit_elem(cloner, elem, **kwargs)
+            except:
+                raise
         except KeyError:
             clone = visit_elem(cloner, elem, **kwargs)
-            cloner.memo[id(elem)] = clone
+            cloner.memo[clone_id(elem)] = clone
         return clone
     return visit_elem_with_memo_lookup
 
