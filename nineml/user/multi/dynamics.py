@@ -1,4 +1,5 @@
 from itertools import chain
+import collections
 from copy import copy
 from .. import BaseULObject
 import sympy
@@ -36,6 +37,11 @@ from .namespace import (
     _NamespaceInitial, _NamespaceOnCondition, append_namespace,
     split_namespace, make_regime_name, make_delay_trigger_name,
     split_multi_regime_name)
+
+
+# Used to create initial regime name from sub-component initial regimes
+_DummyNamespaceRegime = collections.namedtuple('_DummyNamespaceRegime',
+                                               'relative_name')
 
 
 class MultiDynamicsProperties(DynamicsProperties):
@@ -182,6 +188,12 @@ class MultiDynamicsProperties(DynamicsProperties):
         return len(list(self.initial_values))
 
     @property
+    def initial_regime(self):
+        return make_regime_name(dict(
+            (name, _DummyNamespaceRegime(scp.initial_regime))
+            for name, scp in self._sub_components.iteritems()))
+
+    @property
     def properties(self):
         """
         The set of component_class properties (parameter values).
@@ -226,6 +238,10 @@ class SubDynamicsProperties(BaseULObject):
     def component(self):
         return self._component
 
+    @property
+    def component_class(self):
+        return self.component.component_class
+
     def __iter__(self):
         return self.properties
 
@@ -240,6 +256,10 @@ class SubDynamicsProperties(BaseULObject):
     def initial_values(self):
         return (_NamespaceInitial(self, iv)
                 for iv in self._component.initial_values)
+
+    @property
+    def initial_regime(self):
+        return self._component.initial_regime
 
     @property
     def num_initial_values(self):

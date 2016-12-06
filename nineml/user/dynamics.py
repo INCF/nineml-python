@@ -24,14 +24,15 @@ class DynamicsProperties(Component, DynamicPortsObject):
     """
     nineml_type = 'DynamicsProperties'
     defining_attributes = ('_name', '_definition', '_properties',
-                           '_initial_values')
+                           '_initial_values', 'initial_regime')
     class_to_member = dict(
         tuple(Component.class_to_member.iteritems()) +
         (('Initial', 'initial_value'),))
     write_order = ('Property', 'Initial')
 
     def __init__(self, name, definition, properties={}, initial_values={},
-                 document=None, check_initial_values=False):
+                 initial_regime=None, document=None,
+                 check_initial_values=False):
         super(DynamicsProperties, self).__init__(
             name=name, definition=definition, properties=properties,
             document=document)
@@ -43,6 +44,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
             self._initial_values = dict((iv.name, iv) for iv in initial_values)
         if check_initial_values:
             self.check_initial_values()
+        self.initial_regime = initial_regime
 
     @property
     def component_classes(self):
@@ -97,6 +99,24 @@ class DynamicsProperties(Component, DynamicPortsObject):
                 raise NineMLNameError(
                     "No initial value named '{}' in component class"
                     .format(name))
+
+    @property
+    def initial_regime(self):
+        return self._initial_regime
+
+    @initial_regime.setter
+    def initial_regime(self, regime_name):
+        if regime_name is None:
+            # If regime not provided pick the regime with the most time derivs.
+            regime_name = max(self.component_class.regimes,
+                              key=lambda x: x.num_time_derivatives).name
+        elif regime_name not in self.component_class.regime_names:
+            raise NineMLRuntimeError(
+                "Specified initial regime, '{}', is not a name of a regime in "
+                "'{}' Dynamics class (available '{}')"
+                .format(regime_name, self.component_class.name,
+                        "', '".join(self.component_class.regime_names)))
+        self._initial_regime = regime_name
 
     def set(self, prop):
         try:
