@@ -677,11 +677,8 @@ class ContainerObject(BaseNineMLObject):
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
         """
-        if class_map is None:
-            class_map = self.class_to_member
-        if key is None:
-            key = accessor_name_from_type(class_map, element)
-        dct = self._indices[key]
+
+        dct = self._get_indices_dict(element, key, class_map)
         try:
             index = dct[element]
         except KeyError:
@@ -693,6 +690,29 @@ class ContainerObject(BaseNineMLObject):
                 index = len(dct)
             dct[element] = index
         return index
+
+    def from_index(self, index, element_type=None, key=None, class_map=None):
+        """
+        The inverse of the index_of method for retrieving an object from its
+        index
+        """
+        try:
+            dct = self._get_indices_dict(element_type, key, class_map)
+            for elem, i in dct.iteritems():
+                if i == index:
+                    return elem
+        except KeyError:
+            pass
+        raise NineMLRuntimeError(
+            "Could not find index {} for '{}'".format(
+                index, (element_type if element_type is not None else key)))
+
+    def _get_indices_dict(self, element_type, key, class_map):
+        if class_map is None:
+            class_map = self.class_to_member
+        if key is None:
+            key = accessor_name_from_type(class_map, element_type)
+        return self._indices[key]
 
     # =========================================================================
     # Each member nineml_type is associated with a member accessor by the
