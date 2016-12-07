@@ -108,6 +108,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
     def initial_regime(self, regime_name):
         if regime_name is None:
             # If regime not provided pick the regime with the most time derivs.
+            # this is a bit of a hack until the state-layer is implemented
             regime_name = max(self.component_class.regimes,
                               key=lambda x: x.num_time_derivatives).name
         elif regime_name not in self.component_class.regime_names:

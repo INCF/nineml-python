@@ -750,13 +750,10 @@ class ContainerObject(BaseNineMLObject):
 
     def sorted_elements(self, **kwargs):
         """Sorts the element into a consistent, logical order before write"""
-        try:
-            return sorted(
-                self.elements(**kwargs),
-                key=lambda e: (self.write_order.index(e.nineml_type),
-                               str(e.key)))
-        except ValueError as e:
-            raise
+        return sorted(
+            self.elements(**kwargs),
+            key=lambda e: (self.write_order.index(e.nineml_type),
+                           str(e.key)))
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)

@@ -489,26 +489,22 @@ class TestUnits(unittest.TestCase):
                 unit = next(unit_iter)
                 dim = unit.dimension
                 power = 10 ** unit.power
-            try:
-                dim_result = op(result.dimension, dim)
-                new_result = op(result, unit)
-                power_result = np.log10(op(float(10 ** result.power),
-                                              float(power)))
-                op_str = ("{}({}, {})".format(op.__name__, result, unit))
-                self.assertIsInstance(result, un.Unit,
-                                      op_str + " did not return a Dimension")
-                self.assertEqual(
-                    new_result.dimension, dim_result,
-                    "Dimension of {} not equal between Unit ({}) and explicit "
-                    "({})".format(op_str, new_result.dimension, dim_result))
-                self.assertEqual(
-                    new_result.power, power_result,
-                    "Power of {} not equal between Unit ({}) and explicit ({})"
-                    .format(op_str, new_result.power, power_result))
-                result = new_result
-            except:
-                traceback.print_exc()
-                raise
+            dim_result = op(result.dimension, dim)
+            new_result = op(result, unit)
+            power_result = np.log10(op(float(10 ** result.power),
+                                          float(power)))
+            op_str = ("{}({}, {})".format(op.__name__, result, unit))
+            self.assertIsInstance(result, un.Unit,
+                                  op_str + " did not return a Dimension")
+            self.assertEqual(
+                new_result.dimension, dim_result,
+                "Dimension of {} not equal between Unit ({}) and explicit "
+                "({})".format(op_str, new_result.dimension, dim_result))
+            self.assertEqual(
+                new_result.power, power_result,
+                "Power of {} not equal between Unit ({}) and explicit ({})"
+                .format(op_str, new_result.power, power_result))
+            result = new_result
 
 
 class TestQuantities(unittest.TestCase):
