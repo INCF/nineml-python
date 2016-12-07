@@ -552,17 +552,23 @@ class Document(AnnotatedNineMLObject, dict):
         return url
 
 
-def read(url, relative_to=None, **kwargs):
+def read(url, relative_to=None, name=None, **kwargs):
     """
     Read a NineML file and parse its child elements
 
     If the URL does not have a scheme identifier, it is taken to refer to a
     local file.
     """
+    if '#' in url:
+        url, name = url.split('#')
     xml, url = read_xml(url, relative_to=relative_to)
     root = xml.getroot()
     doc = Document.load(root, url, **kwargs)
-    return doc
+    if name is None:
+        model = doc
+    else:
+        model = doc[name]
+    return model
 
 
 def write(document, filename, **kwargs):
