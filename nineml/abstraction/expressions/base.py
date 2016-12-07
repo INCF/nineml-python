@@ -13,7 +13,7 @@ from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions.elementary.piecewise import ExprCondPair
 import re
 # import math_namespace
-from nineml.base import BaseNineMLObject
+from nineml.base import AnnotatedNineMLObject
 from nineml.exceptions import NineMLRuntimeError
 
 
@@ -31,7 +31,7 @@ from .parser import Parser  # @IgnorePep8
 t = sympy.Symbol('t')  # The symbol for time
 
 
-class Expression(BaseNineMLObject):
+class Expression(AnnotatedNineMLObject):
 
     """ This is a base class for Expressions and Conditionals which provides
     the basic interface for parsing, yielding of python functions,
@@ -56,7 +56,8 @@ class Expression(BaseNineMLObject):
     _multiple_whitespace_re = re.compile(r'\s+')
     _ccode_print_warn_re = re.compile(r'// (?:Not supported in C:|abs)\n')
 
-    def __init__(self, rhs):
+    def __init__(self, rhs, **kwargs):
+        super(Expression, self).__init__(**kwargs)
         self.rhs = rhs
 
     def equals(self, other, **kwargs):
