@@ -150,8 +150,11 @@ class DynamicsProperties(Component, DynamicPortsObject):
 
     @property
     def attributes_with_units(self):
-        return chain(super(DynamicsProperties, self).attributes_with_units,
-                     self.initial_values)
+        return chain(
+            super(DynamicsProperties, self).attributes_with_units,
+            self.initial_values, *[
+                v.value.distribution.properties for v in self.initial_values
+                if v.value.is_random()])
 
     def elements(self, local=False):
         """

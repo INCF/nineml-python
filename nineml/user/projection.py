@@ -164,7 +164,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         """
         Return a list of all components used by the projection.
         """
-        components = [self.connectivity.rule, self.response]
+        components = [self.connectivity.rule_properties, self.response]
         if self.plasticity is not None:
             components.append(self.plasticity)
         return components

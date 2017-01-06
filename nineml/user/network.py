@@ -17,7 +17,7 @@ from nineml.xml import (
 from nineml.user.port_connections import EventPortConnection
 from nineml.user.dynamics import DynamicsProperties
 from nineml.user.connectionrule import ConnectionRuleProperties, Connectivity
-from nineml.units import Quantity
+from nineml.units import Quantity, ms
 from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
 from nineml.utils import ensure_valid_identifier
@@ -62,6 +62,11 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     @property
     def name(self):
         return self._name
+
+    @property
+    def attributes_with_units(self):
+        return chain(*[c.attributes_with_units for c in chain(
+            self.populations, self.selections, self.projections)])
 
     @name_error
     def population(self, name):
@@ -128,6 +133,21 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     def connectivity_has_been_sampled(self):
         return any(p.connectivity.has_been_sampled() for p in self.projections)
 
+    def delay_limits(self):
+        """
+        Returns the minimum delay and the maximum delay of projections in the
+        network in ms
+        """
+        min_delay = float('inf')
+        max_delay = 0.0
+        for proj in self.projections:
+            delay = float(Quantity(proj.delay, ms))
+            if delay > max_delay:
+                max_delay = delay
+            if delay < min_delay:
+                min_delay = delay
+        return min_delay, max_delay
+
     @write_reference
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
@@ -154,7 +174,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                                     allow_none=True, **kwargs)
         network = cls(name=get_xml_attr(element, 'name', document, **kwargs),
                       populations=populations, projections=projections,
-                      selections=selections)
+                      selections=selections, document=document)
         return network
 
     @classmethod

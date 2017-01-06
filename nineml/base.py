@@ -401,11 +401,11 @@ class DocumentLevelObject(BaseNineMLObject):
     def all_dimensions(self):
         return [a.dimension for a in self.attributes_with_dimension]
 
-    def write(self, fname):
+    def write(self, fname, **kwargs):
         """
         Writes the top-level NineML object to file in XML.
         """
-        nineml.write(self, fname)  # Calls nineml.document.Document.write
+        nineml.write(self, fname, **kwargs)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         super(DocumentLevelObject, self)._copy_to_clone(clone, memo, **kwargs)

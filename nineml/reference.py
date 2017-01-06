@@ -19,7 +19,7 @@ class BaseReference(AnnotatedNineMLObject):
 
     def __init__(self, name, document, url=None):
         super(BaseReference, self).__init__()
-        if url:
+        if url is not None and url != document.url:
             if url.startswith('.'):
                 if document is None or document.url is None:
                     raise NineMLRuntimeError(
@@ -32,12 +32,11 @@ class BaseReference(AnnotatedNineMLObject):
             remote_doc = read(url, relative_to=relative_to)
         else:
             remote_doc = document
-        self._url = url
         self._referred_to = remote_doc[name]
 
     @property
     def url(self):
-        return self._url
+        return self._referred_to.url
 
     @property
     def key(self):

@@ -24,6 +24,6 @@ setup(
                  'Programming Language :: Python :: 2',
                  'Topic :: Scientific/Engineering'],
     install_requires=['lxml',
-                      'sympy==0.7.6'], # NB: sympy 1.0 has a bug in ccode, which is fixed in the master branch 30/7/16
+                      'sympy==0.7.6'],  # NB: sympy 1.0 has a bug in ccode, which is fixed in the master branch 30/7/16
     tests_require=['nose', 'numpy']
 )

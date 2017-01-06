@@ -220,7 +220,7 @@ class Document(AnnotatedNineMLObject, dict):
         if unloaded in self._loading:
             raise NineMLRuntimeError(
                 "Circular reference detected in '{}(name={})' element. "
-                "Resolution stack was:\n"
+                "Resolution stack was:\n{}"
                 .format(unloaded.cls.__name__, unloaded.name,
                         "\n".join('{}(name={})'.format(u.cls.__name__, u.name)
                                   for u in self._loading)))
@@ -458,6 +458,9 @@ class Document(AnnotatedNineMLObject, dict):
                     # Loaded docs are stored as weak refs to allow the document
                     # to be released from memory by the garbarge collector
                     loaded_doc_ref = cls._loaded_docs[url]
+                except KeyError:  # If the url hasn't been loaded before
+                    loaded_doc_ref = None
+                if loaded_doc_ref is not None:
                     # NB: weakrefs to garbarge collected objs eval to None
                     loaded_doc = loaded_doc_ref()
                     if loaded_doc is not None and loaded_doc != doc:
@@ -470,8 +473,6 @@ class Document(AnnotatedNineMLObject, dict):
                             "(see https://docs.python.org/2/c-api/intro.html"
                             "#objects-types-and-reference-counts): {}".format(
                                 url, doc.find_mismatch(loaded_doc)))
-                except KeyError:  # If the url hasn't been loaded before
-                    pass
             doc.url = url
         else:
             doc._url = url  # Bypass registering the URL, used in testing
@@ -525,6 +526,9 @@ class Document(AnnotatedNineMLObject, dict):
         return result
 
     def as_network(self, name):
+        # Ensure that all elements are loaded
+        loaded_elems = self.values()  # @UnusedVariable
+        # Return Document as a Network object
         return nineml.user.Network(
             name, populations=self.populations, projections=self.projections,
             selections=self.selections, document=self)

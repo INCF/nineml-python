@@ -1,4 +1,5 @@
 # encoding: utf-8
+from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error)
@@ -34,7 +35,6 @@ class Definition(BaseReference):
                 raise NineMLRuntimeError(
                     "Cannot provide name, document or url arguments with "
                     "explicit component class")
-            self._url = None
         elif not args:
             super(Definition, self).__init__(
                 name=kwargs['name'], document=kwargs['document'],
@@ -194,7 +194,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         pass
 
     def __getinitargs__(self):
-        return (self.name, self.definition, self._properties, self._url)
+        return (self.name, self.definition, self._properties, self.url)
 
     def __iter__(self):
         return self.properties
@@ -234,7 +234,9 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @property
     def attributes_with_units(self):
-        return self.properties
+        return chain(self.properties, *[
+            p.value.distribution.properties for p in self.properties
+            if p.value.is_random()])
 
     def __repr__(self):
         return ('%s(name="%s", component_class="%s")' %
