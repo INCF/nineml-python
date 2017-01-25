@@ -244,7 +244,10 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         for pop in scaled.populations:
             pop.size = int(math.ceil(pop.size * scale))
         for proj in scaled.projections:
-            props = proj.connectivity.rule_properties
+            conn = proj.connectivity
+            props = conn.rule_properties
+            conn._src_size = proj.pre.size
+            conn._dest_size = proj.post.size
             if 'number' in props.property_names:
                 number = props.property('number')
                 props.set(Property(
