@@ -1,6 +1,9 @@
 import os.path
 import re
+import math
 from itertools import chain
+from .component import Property
+import nineml.units as un
 from abc import ABCMeta, abstractmethod
 from .population import Population
 from .projection import Projection
@@ -193,6 +196,18 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')
 
     def flatten(self):
+        """
+        Flattens the populations and projections of the network into
+        component arrays and connection groups (i.e. core 9ML objects)
+
+        Returns
+        -------
+        component_arrays : list(ComponentArray)
+            List of component arrays the populations and projection synapses
+            have been flattened to
+        connection_groups : list(ConnectionGroup)
+            List of connection groups the projections have been flattened to
+        """
         component_arrays = dict((ca.name, ca) for ca in chain(
             (ComponentArray(p.name + ComponentArray.suffix['post'], len(p),
                             p.cell)
@@ -208,6 +223,34 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
              for pc in p.port_connections)
             for p in self.projections)))
         return component_arrays.values(), connection_groups
+
+    def scale(self, scale):
+        """
+        Scales the size of the populations in the network and corresponding
+        projection sizes
+
+        Parameters
+        ----------
+        scale : float
+            Scalar with which to scale the size of the network
+
+        Returns
+        -------
+        scaled : Network
+            A scaled copy of the network
+        """
+        scaled = self.clone()
+        # rescale populations
+        for pop in scaled.populations:
+            pop.size = int(math.ceil(pop.size * scale))
+        for proj in scaled.projections:
+            props = proj.connectivity.rule_properties
+            if 'number' in props.property_names:
+                number = props.property('number')
+                props.set(Property(
+                    number.name,
+                    int(math.ceil(float(number.value) * scale)) * un.unitless))
+        return scaled
 
 
 class ComponentArray(BaseULObject, DocumentLevelObject):
