@@ -108,10 +108,10 @@ class TestAnnotations(unittest.TestCase):
                           annot['dummy_ns'].__setitem__,
                           'another_ns', {})
         branch = annot['dummy_ns']['a']['b']
-        branch['x'] = 4.0
-        branch['y'] = 5.0
-        branch['z'] = 6.0
-        self.assertEqual(branch['x'], '4.0')
+        branch.set('x', 4.0)
+        branch.set('y', 5.0)
+        branch.set('z', 6.0)
+        self.assertEqual(branch.get('x'), '4.0')
         self.assertEqual(sorted(branch), ['x', 'y', 'z'])
         self.assertEqual(sorted(branch.keys()), ['x', 'y', 'z'])
         self.assertEqual(sorted(branch.values()), ['4.0', '5.0', '6.0'])

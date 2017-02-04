@@ -24,12 +24,8 @@ def read_annotations(from_xml):
         if cls.__class__.__name__ == 'DynamicsXMLLoader':
             # FIXME: Hack until I work out the best way to let other 9ML
             #        objects ignore this kwarg TGC 6/15
-            try:
-                valid_dims = (
-                    annotations[nineml_ns][VALIDATION][DIMENSIONALITY] ==
-                    'True')
-            except KeyError:
-                valid_dims = True
+            valid_dims = annotations.get(
+                PY9ML_NS, VALIDATION, DIMENSIONALITY, default='True') == 'True'
             kwargs['validate_dimensions'] = valid_dims
         nineml_object = from_xml(cls, element, *args, **kwargs)
         nineml_object._annotations = annotations
@@ -279,14 +275,14 @@ class _AnnotationsBranch(BaseNineMLObject):
 
     def __getitem__(self, key):
         try:
-            return self._attr[key]
+            return self._branches[key]
         except KeyError:
-            try:
-                return self._branches[key]
-            except KeyError:
-                raise NineMLNameError(
-                    "'{}' does not have branch or attribute '{}'"
-                    .format(self._name, key))
+            raise NineMLNameError(
+                "'{}' does not have branch or attribute '{}'"
+                .format(self._name, key))
+# 
+#     def __setitem__(self, key, val):
+#         self._attr[key] = str(val)
 
     def set(self, key, *args):
         if not args:
@@ -322,9 +318,6 @@ class _AnnotationsBranch(BaseNineMLObject):
                         "No annotation at path '{}'".format("', '".join(args)))
         return val
 
-    def __setitem__(self, key, val):
-        self._attr[key] = str(val)
-
     def to_xml(self, ns=None, E=E, **kwargs):  # @UnusedVariable
         if ns is not None:
             E = ElementMaker(namespace=ns, nsmap={None: ns})
@@ -348,6 +341,7 @@ class _AnnotationsBranch(BaseNineMLObject):
 
 VALIDATION = 'Validation'
 DIMENSIONALITY = 'dimensionality'
+PY9ML_NS = 'http://python-nineml.org'
 
 xml_visitor_module_re = re.compile(r'nineml\.abstraction\.\w+\.visitors\.xml')
 
