@@ -287,12 +287,13 @@ class _AnnotationsBranch(BaseNineMLObject):
         return self._branches.keys()
 
     def __getitem__(self, key):
-        try:
-            return self._branches[key]
-        except KeyError:
+        if key in self._branches:
+            key_branches = self._branches[key]
+        else:
             raise NineMLNameError(
                 "'{}' does not have branch or attribute '{}'"
                 .format(self._name, key))
+        return key_branches
 
     def set(self, key, *args):
         if not args:
@@ -323,21 +324,22 @@ class _AnnotationsBranch(BaseNineMLObject):
             else:
                 val = self._attr[key]
         else:
-            key_branches = self._branches[key]
-            if len(key_branches) == 1:
-                # Recurse into branches while there are remaining args
-                val = key_branches[0].get(*args, **kwargs)
-            elif not key_branches:
+            if key in self._branches:
+                key_branches = self._branches[key]
+                if len(key_branches) == 1:
+                    # Recurse into branches while there are remaining args
+                    val = key_branches[0].get(*args, **kwargs)
+                else:
+                    raise NineMLNameError(
+                        "Multiple branches found for key '{}' in annoations "
+                        "branch '{}', cannot use 'get' method".format(
+                            key, self._name))
+            else:
                 if 'default' in kwargs:
                     return kwargs['default']
                 else:
                     raise NineMLNameError(
                         "No annotation at path '{}'".format("', '".join(args)))
-            else:
-                raise NineMLNameError(
-                    "Multiple branches found for key '{}' in annoations branch"
-                    " '{}', cannot use 'get' method".format(
-                        key, self._name))
         return val
 
     def to_xml(self, default_ns=None, E=E, **kwargs):  # @UnusedVariable
