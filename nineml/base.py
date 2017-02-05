@@ -714,6 +714,11 @@ class ContainerObject(BaseNineMLObject):
             key = accessor_name_from_type(class_map, element_type)
         return self._indices[key]
 
+    def all_indices(self):
+        for key, dct in self._indices.iteritems():
+            for elem, index in dct.iteritems():
+                yield key, elem, index
+
     # =========================================================================
     # Each member nineml_type is associated with a member accessor by the
     # class attribute 'class_to_member' dictionary. From this name accessors

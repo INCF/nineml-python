@@ -2,7 +2,7 @@ from copy import copy
 from collections import defaultdict
 from itertools import chain
 from nineml.xml import E, extract_xmlns, strip_xmlns
-from nineml.base import DocumentLevelObject, BaseNineMLObject
+from nineml.base import DocumentLevelObject, BaseNineMLObject, ContainerObject
 import re
 from nineml.xml import ElementMaker, nineml_ns, etree
 from nineml.exceptions import (
@@ -37,6 +37,12 @@ def read_annotations(from_xml):
 
 def annotate_xml(to_xml):
     def annotate_to_xml(self, document_or_obj, E=E, **kwargs):
+        """
+        Parameters
+        ----------
+        save_indices : bool
+            Whether to save the indices assigned to sub-elements or not
+        """
         # If Abstraction Layer class
         if xml_visitor_module_re.match(type(self).__module__):
             obj = document_or_obj
@@ -46,8 +52,22 @@ def annotate_xml(to_xml):
             obj = self
             options = kwargs
         elem = to_xml(self, document_or_obj, E=E, **kwargs)
-        if not options.get('no_annotations', False) and len(obj.annotations):
-            elem.append(obj.annotations.to_xml(E=E, **kwargs))
+        annot = False
+        if not options.get('no_annotations', False):
+            annot = obj.annotations
+            # Append sub-element indices if 'save_indices' is provided and true
+            if (options.get('save_indices', False) and
+                    isinstance(obj, ContainerObject)):
+                indices = list(obj.all_indices())
+                if indices:
+                    annot = annot.clone()
+                    for key, elem, index in indices:
+                        annot.set(PY9ML_NS, INDEX_TAG, INDEX_KEY_ATTR, key)
+                        annot.set(PY9ML_NS, INDEX_TAG, INDEX_NAME_ATTR,
+                                  elem.name)
+                        annot.set(PY9ML_NS, INDEX_TAG, INDEX_INDEX_ATTR, index)
+        if annot:
+            elem.append(annot.to_xml(E=E, **kwargs))
         return elem
     return annotate_to_xml
 
@@ -374,9 +394,20 @@ class _AnnotationsBranch(BaseNineMLObject):
         self._clone_defining_attr(clone, memo, **kwargs)
 
 
+# Python-9ML library specific annotations
+
+PY9ML_NS = 'http://github.com/INCF/lib9ml'
+
+# Annotation
+INDEX_TAG = 'Index'
+INDEX_KEY_ATTR = 'key'
+INDEX_NAME_ATTR = 'name'
+INDEX_INDEX_ATTR = 'index'
+
+# Dimension validation
 VALIDATION = 'Validation'
 DIMENSIONALITY = 'dimensionality'
-PY9ML_NS = 'http://github.com/INCF/lib9ml'
+
 
 xml_visitor_module_re = re.compile(r'nineml\.abstraction\.\w+\.visitors\.xml')
 
