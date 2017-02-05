@@ -19,9 +19,10 @@ class BaseReference(AnnotatedNineMLObject):
 
     def __init__(self, name, document, url=None):
         super(BaseReference, self).__init__()
-        if url is not None and url != document.url:
+        document_url = document.url if document is not None else None
+        if url is not None and url != document_url:
             if url.startswith('.'):
-                if document is None or document.url is None:
+                if document_url is None:
                     raise NineMLRuntimeError(
                         "Must supply a document with a non-None URL that is "
                         "being referenced from if definition is a relative URL"
@@ -67,7 +68,7 @@ class BaseReference(AnnotatedNineMLObject):
         else:
             attrs = {'name': name}
             body = []
-        if self.url:
+        if self.url is not None and self.url != document.url:
             attrs['url'] = self.url
         element = E(self.nineml_type, *body, **attrs)
         return element

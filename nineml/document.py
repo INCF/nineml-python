@@ -397,20 +397,31 @@ class Document(AnnotatedNineMLObject, dict):
                 .format(nineml_type))
         return child_cls
 
-    def clone(self, memo=None, **kwargs):
+    def clone(self, memo=None, refs=None, **kwargs):
         """
         Creates a duplicate of the current document with its url set to None to
         allow it to be written to a different file
+
+        Parameters
+        ----------
+        refs : list[BaseReference]
+            A list of all the references within the clone that may need to be
+            updated once all objects are cloned
         """
         if memo is None:
             memo = {}
+        if refs is None:
+            refs = []
         try:
             clone = memo[clone_id(self)]
         except KeyError:
-            clone = Document(*((e.clone(memo, **kwargs)
-                                if not isinstance(e, self._Unloaded) else e)
+            clone = Document(*(e.clone(memo, refs=refs, **kwargs)
                                for e in self.itervalues()))
             memo[clone_id(self)] = clone
+            # Updated any cloned references to point to cloned objects
+            for ref in refs:
+                if id(ref._referred_to) in memo:
+                    ref._referred_to = memo[id(ref._referred_to)]
         return clone
 
     def write(self, url, version=XML_VERSION, **kwargs):
