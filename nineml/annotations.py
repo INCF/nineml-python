@@ -223,7 +223,7 @@ class _AnnotationsBranch(BaseNineMLObject):
     nineml_type = '_AnnotationsBranch'
     defining_attributes = ('_branches', '_attr', '_name')
 
-    def __init__(self, name, attr=None, branches=None):
+    def __init__(self, name, attr=None, branches=None, text=None, ns=None):
         if attr is None:
             attr = {}
         if branches is None:
@@ -231,10 +231,20 @@ class _AnnotationsBranch(BaseNineMLObject):
         self._branches = branches
         self._name = name
         self._attr = attr
+        self._text = text
+        self._ns = ns
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def text(self):
+        return self._text
+
+    @property
+    def ns(self):
+        return self._ns
 
     def __repr__(self):
         return self._repr()
@@ -330,13 +340,22 @@ class _AnnotationsBranch(BaseNineMLObject):
                         key, self._name))
         return val
 
-    def to_xml(self, ns=None, E=E, **kwargs):  # @UnusedVariable
-        if ns is not None:
-            E = ElementMaker(namespace=ns, nsmap={None: ns})
-        return E(self.name,
-                 *chain(*((sb.to_xml(**kwargs) for sb in key_branches)
-                          for key_branches in self._branches.itervalues())),
-                 **self._attr)
+    def to_xml(self, default_ns=None, E=E, **kwargs):  # @UnusedVariable
+        nsmap = {}
+        if default_ns is not None:
+            nsmap[None] = default_ns
+            ns = default_ns
+        if self.ns is not None:
+            ns = self.ns
+        if nsmap:
+            E = ElementMaker(namespace=ns, nsmap=nsmap)
+        args = []
+        if self.text is not None:
+            args.append(self.text)
+        for key_branches in self._branches.itervalues():
+            args.extend(sb.to_xml(default_ns=None, E=E, **kwargs)
+                        for sb in key_branches)
+        return E(self.name, *args, **self._attr)
 
     @classmethod
     def from_xml(cls, element, **kwargs):  # @UnusedVariable
@@ -346,7 +365,8 @@ class _AnnotationsBranch(BaseNineMLObject):
             branches[strip_xmlns(child.tag)].append(
                 _AnnotationsBranch.from_xml(child))
         attr = dict(element.attrib)
-        return cls(name, attr, branches)
+        text = element.text if element.text else None
+        return cls(name, attr, branches, text=text)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
