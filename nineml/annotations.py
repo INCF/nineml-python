@@ -1,4 +1,6 @@
 from copy import copy
+from collections import defaultdict
+from itertools import chain
 from nineml.xml import E, extract_xmlns, strip_xmlns
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
@@ -225,7 +227,7 @@ class _AnnotationsBranch(BaseNineMLObject):
         if attr is None:
             attr = {}
         if branches is None:
-            branches = {}
+            branches = defaultdict(list)
         self._branches = branches
         self._name = name
         self._attr = attr
@@ -253,25 +255,26 @@ class _AnnotationsBranch(BaseNineMLObject):
             rep += '\n' + '\n'.join('{}{}={}'.format(indent + '  ', *i)
                                     for i in self._attr.iteritems())
         if self._branches:
-            rep += '\n' + '\n'.join(b._repr(indent=indent + '  ')
-                                    for b in self._branches.itervalues())
+            rep += '\n' + '\n'.join(
+                chain(*((b._repr(indent=indent + '  ') for b in key_branch)
+                        for key_branch in self._branches.itervalues())))
         return rep
 
-    def __iter__(self):
-        return self.keys()
-
-    def values(self):
+    def attr_values(self):
         return self._attr.itervalues()
 
-    def keys(self):
+    def attr_keys(self):
         return self._attr.iterkeys()
 
-    def items(self):
+    def attr_items(self):
         return self._attr.iteritems()
 
     @property
     def branches(self):
         return self._branches.itervalues()
+
+    def __iter__(self):
+        return self._branches.keys()
 
     def __getitem__(self, key):
         try:
@@ -280,9 +283,6 @@ class _AnnotationsBranch(BaseNineMLObject):
             raise NineMLNameError(
                 "'{}' does not have branch or attribute '{}'"
                 .format(self._name, key))
-# 
-#     def __setitem__(self, key, val):
-#         self._attr[key] = str(val)
 
     def set(self, key, *args):
         if not args:
@@ -293,11 +293,17 @@ class _AnnotationsBranch(BaseNineMLObject):
             self._attr[key] = str(args[0])
         else:
             # Recurse into branches while there are remaining args
-            try:
-                branch = self._branches[key]
-            except KeyError:
-                # If branch doesn't exist then create it
-                branch = self._branches[key] = _AnnotationsBranch(key)
+            key_branches = self._branches[key]
+            if len(key_branches) == 1:
+                branch = key_branches[0]
+            elif not key_branches:
+                branch = _AnnotationsBranch(key)
+                key_branches.append(branch)
+            else:
+                raise NineMLNameError(
+                    "Multiple branches found for key '{}' in annoations branch"
+                    " '{}', cannot use 'set' method".format(
+                        key, self._name))
             branch.set(*args)  # recurse into branch
 
     def get(self, key, *args, **kwargs):
@@ -307,31 +313,38 @@ class _AnnotationsBranch(BaseNineMLObject):
             else:
                 val = self._attr[key]
         else:
-            try:
+            key_branches = self._branches[key]
+            if len(key_branches) == 1:
                 # Recurse into branches while there are remaining args
-                val = self._branches[key].get(*args, **kwargs)
-            except KeyError:
+                val = key_branches[0].get(*args, **kwargs)
+            elif not key_branches:
                 if 'default' in kwargs:
                     return kwargs['default']
                 else:
                     raise NineMLNameError(
                         "No annotation at path '{}'".format("', '".join(args)))
+            else:
+                raise NineMLNameError(
+                    "Multiple branches found for key '{}' in annoations branch"
+                    " '{}', cannot use 'get' method".format(
+                        key, self._name))
         return val
 
     def to_xml(self, ns=None, E=E, **kwargs):  # @UnusedVariable
         if ns is not None:
             E = ElementMaker(namespace=ns, nsmap={None: ns})
         return E(self.name,
-                 *(sb.to_xml(**kwargs) for sb in self.branches),
+                 *chain(*((sb.to_xml(**kwargs) for sb in key_branches)
+                          for key_branches in self._branches.itervalues())),
                  **self._attr)
 
     @classmethod
     def from_xml(cls, element, **kwargs):  # @UnusedVariable
         name = strip_xmlns(element.tag)
-        branches = {}
+        branches = defaultdict(list)
         for child in element.getchildren():
-            branches[
-                strip_xmlns(child.tag)] = _AnnotationsBranch.from_xml(child)
+            branches[strip_xmlns(child.tag)].append(
+                _AnnotationsBranch.from_xml(child))
         attr = dict(element.attrib)
         return cls(name, attr, branches)
 

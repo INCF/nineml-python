@@ -107,17 +107,16 @@ class TestAnnotations(unittest.TestCase):
         self.assertRaises(NineMLRuntimeError,
                           annot['dummy_ns'].__setitem__,
                           'another_ns', {})
-        branch = annot['dummy_ns']['a']['b']
-        branch.set('x', 4.0)
-        branch.set('y', 5.0)
-        branch.set('z', 6.0)
-        self.assertEqual(branch.get('x'), '4.0')
-        self.assertEqual(sorted(branch), ['x', 'y', 'z'])
-        self.assertEqual(sorted(branch.keys()), ['x', 'y', 'z'])
-        self.assertEqual(sorted(branch.values()), ['4.0', '5.0', '6.0'])
-        self.assertEqual(sorted(branch.items()), [('x', '4.0'),
-                                                  ('y', '5.0'),
-                                                  ('z', '6.0')])
+        annot.set('dummy_ns', 'a', 'b', 'x', 4.0)
+        annot.set('dummy_ns', 'a', 'b', 'y', 5.0)
+        annot.set('dummy_ns', 'a', 'b', 'z', 6.0)
+        self.assertEqual(annot.get('dummy_ns', 'a', 'b', 'x'), '4.0')
+        branch = annot['dummy_ns']['a']['b'][0]
+        self.assertEqual(sorted(branch.attr_keys()), ['x', 'y', 'z'])
+        self.assertEqual(sorted(branch.attr_values()), ['4.0', '5.0', '6.0'])
+        self.assertEqual(sorted(branch.attr_items()), [('x', '4.0'),
+                                                       ('y', '5.0'),
+                                                       ('z', '6.0')])
 
     def test_equals_with_annotations_ns(self):
         a = Dynamics(
