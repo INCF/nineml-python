@@ -341,7 +341,7 @@ class _AnnotationsBranch(BaseNineMLObject):
 
 VALIDATION = 'Validation'
 DIMENSIONALITY = 'dimensionality'
-PY9ML_NS = 'http://python-nineml.org'
+PY9ML_NS = 'http://github.com/INCF/lib9ml'
 
 xml_visitor_module_re = re.compile(r'nineml\.abstraction\.\w+\.visitors\.xml')
 
