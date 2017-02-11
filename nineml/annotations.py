@@ -291,7 +291,7 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
                 rep += '\n' + b._repr(indent='  ')
         return rep
 
-    def to_xml(self, **kwargs):  # @UnusedVariable
+    def to_xml(self, E=E, **kwargs):  # @UnusedVariable
         return E(self.nineml_type, *self._sub_branches_to_xml(**kwargs))
 
     @classmethod
@@ -321,15 +321,15 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
         """
         if not isinstance(key, tuple):
             raise NineMLXMLError(
-                "All annotations under the root must have a namespace: {}"
-                .format(key))
+                "All annotations under the root must have an explicit, "
+                "'{}' branch does not".format(key))
         return key
 
 
 class _AnnotationsBranch(BaseAnnotations):
 
     nineml_type = '_AnnotationsBranch'
-    defining_attributes = ('_branches', '_attr', '_name')
+    defining_attributes = ('_branches', '_attr', '_name', '_ns', '_text')
 
     def __init__(self, name, ns, attr=None, branches=None, text=None):
         super(_AnnotationsBranch, self).__init__(branches)
@@ -353,23 +353,25 @@ class _AnnotationsBranch(BaseAnnotations):
         return self._text
 
     @property
-    def is_ns(self):
-        return self._is_ns
+    def attr(self):
+        return self._attr
 
     def equals(self, other, **kwargs):  # @UnusedVariable
         return (super(_AnnotationsBranch, self).equals(other) and
                 self.name == other.name and
                 self.attr == other.attr and
                 self.text == other.text and
-                self.is_ns == other.is_ns)
+                self.ns == other.ns)
 
     def _repr(self, indent=''):
         rep = "{}{{{}}}{}:".format(indent, self.ns, self.name)
         for attr, val in self.attr_items():
             rep += '\n{}{}={}'.format(indent + '  ', attr, val)
-        for key_branches in self._branches:
+        for key_branches in self._branches.itervalues():
             for branch in key_branches:
                 rep += '\n' + branch._repr(indent=indent + '  ')
+        if self.text is not None:
+            rep += '\n{}__text__={}'.format(indent + '  ', self.text)
         return rep
 
     def attr_values(self):
@@ -444,9 +446,13 @@ class _AnnotationsBranch(BaseAnnotations):
         name, ns = cls._extract_key(element)
         branches = defaultdict(list)
         for child in element.getchildren():
-            branches[(name, ns)].append(_AnnotationsBranch.from_xml(child))
+            branches[cls._extract_key(child)].append(
+                _AnnotationsBranch.from_xml(child))
         attr = dict(element.attrib)
-        text = element.text if element.text else None
+        if element.text is not None and element.text.strip():
+            text = element.text.strip()
+        else:
+            text = None
         return cls(name, ns, attr=attr, branches=branches, text=text)
 
     def _copy_to_clone(self, clone, memo, **kwargs):

@@ -1,6 +1,6 @@
 import unittest
 from copy import deepcopy
-from nineml.annotations import Annotations
+from nineml.annotations import Annotations, PY9ML_NS
 from nineml.xml import etree, nineml_ns, ElementMaker, E
 from nineml.abstraction import (
     Parameter, Dynamics, Alias, EventSendPort, AnalogSendPort, StateVariable,
@@ -15,30 +15,30 @@ import nineml.units as un
 
 
 foreign_ns = "http://some.other.namespace.org"
-unprocess_ns = "http://some.other.unprocessable.namespace.org"
+another_ns = "http://another.namespace.org"
 
-unp_E = ElementMaker(namespace=unprocess_ns, nsmap={None: unprocess_ns})
+another_E = ElementMaker(namespace=another_ns)
 
 annot_str = """
     <Annotations xmlns="{nineml}">
-        <Foo>
-            <Bar a="1"/>
+        <Foo xmlns="{py9ml}">
+            <Bar a="1" xmlns="{py9ml}"/>
         </Foo>
         <Woo xmlns="{foreign}">
             <Car b="1"/>
             <Jar c="2"/>
         </Woo>
-        <Foo xmlns="{unprocess}">
-            <Bar>invalid in simple annotations format so just kept as XML</Bar>
+        <Foo xmlns="{another}">
+            <Bar xmlns="{another}">annotations with text fields</Bar>
         </Foo>
-        <Boo>
-            <Mar>
-                <Wee d="3" e="4"/>
-                <Waa f="5" g="6"/>
+        <Boo xmlns="{py9ml}">
+            <Mar xmlns="{py9ml}">
+                <Wee d="3" e="4" xmlns="{py9ml}"/>
+                <Waa f="5" g="6" xmlns="{py9ml}"/>
             </Mar>
         </Boo>
-    </Annotations>""".format(nineml=nineml_ns,
-                             foreign=foreign_ns, unprocess=unprocess_ns)
+    </Annotations>""".format(nineml=nineml_ns, py9ml=PY9ML_NS,
+                             foreign=foreign_ns, another=another_ns)
 
 annot_xml = etree.fromstring(annot_str)
 
@@ -50,21 +50,23 @@ class TestAnnotations(unittest.TestCase):
 
     def test_basic(self):
         annot = Annotations()
-        annot.set(nineml_ns, 'Foo', 'Bar', 'a', '1')
-        annot.set(foreign_ns, 'Woo', 'Car', 'b', 1)
-        annot.set(foreign_ns, 'Woo', 'Jar', 'c', 2)
-        annot.set(nineml_ns, 'Boo', 'Mar', 'Wee', 'd', 3)
-        annot.set(nineml_ns, 'Boo', 'Mar', 'Wee', 'e', 4)
-        annot.set(nineml_ns, 'Boo', 'Mar', 'Waa', 'f', 5)
-        annot.set(nineml_ns, 'Boo', 'Mar', 'Waa', 'g', 6)
-        self.assertEqual(annot[nineml_ns], self.annot[nineml_ns],
+        annot.set(('Foo', PY9ML_NS), 'Bar', 'a', '1')
+        annot.set(('Woo', foreign_ns), 'Car', 'b', 1)
+        annot.set(('Woo', foreign_ns), 'Jar', 'c', 2)
+        annot.add(('Foo', another_ns), 'Bar')
+        annot[('Foo',
+               another_ns)][0]['Bar'][0]._text = 'annotations with text fields'
+        annot.set(('Boo', PY9ML_NS), 'Mar', 'Wee', 'd', 3)
+        annot.set(('Boo', PY9ML_NS), 'Mar', 'Wee', 'e', 4)
+        annot.set(('Boo', PY9ML_NS), 'Mar', 'Waa', 'f', 5)
+        annot.set(('Boo', PY9ML_NS), 'Mar', 'Waa', 'g', 6)
+        annot.find_mismatch(self.annot)
+        self.assertEqual(annot, self.annot,
                          "Manual annotations do not match loaded "
-                         "annotations:\n\n{}\nvs\n\n{}\n".format(
-                             annot[nineml_ns], self.annot[nineml_ns]))
-        self.assertEqual(annot[foreign_ns], self.annot[foreign_ns])
-        self.assertIsInstance(self.annot[unprocess_ns], etree._Element)
-        reloaded_annot = Annotations.from_xml(
-            annot_xml, annotations_ns=foreign_ns)
+                         "annotations:\n\n{}\nvs\n\n{}\n\nMismatch:\n{}"
+                         .format(annot, self.annot,
+                                 annot.find_mismatch(self.annot)))
+        reloaded_annot = Annotations.from_xml(annot_xml)
         self.assertEqual(self.annot, reloaded_annot)
 
     def test_read_annotations_and_annotate_xml(self):
@@ -94,24 +96,24 @@ class TestAnnotations(unittest.TestCase):
 
     def test_get_set(self):
         annot = Annotations()
-        annot.set('dummy_ns', 'a', 'b', 'c', 'd', 1.5)
+        annot.set(('a', 'dummy_ns'), 'b', 'c', 'd', 1.5)
         self.assertEqual(
-            annot.get('dummy_ns', 'a', 'b', 'c', 'd'), '1.5')
+            annot.get(('a', 'dummy_ns'), 'b', 'c', 'd'), '1.5')
         self.assertRaises(
-            KeyError, annot.get, 'dummy_ns', 'a', 'b', 'c', 'e')
+            KeyError, annot.get, ('a', 'dummy_ns'), 'b', 'c', 'e')
         self.assertEqual(
-            annot.get('dummy_ns', 'a', 'b', 'c', 'e', default=2.0), 2.0)
+            annot.get(('a', 'dummy_ns'), 'b', 'c', 'e', default=2.0), 2.0)
         self.assertRaises(
-            KeyError, annot.get, 'wummy_ns', 'a', 'b', 'c', 'd')
+            KeyError, annot.get, ('a', 'wummy_ns'), 'b', 'c', 'd')
         self.assertEqual(
-            annot.get('wummy_ns', 'a', 'b', 'c', 'd', default=3.0), 3.0)
+            annot.get(('a', 'wummy_ns'), 'b', 'c', 'd', default=3.0), 3.0)
         self.assertRaises(NineMLRuntimeError,
                           annot['dummy_ns'].__setitem__,
                           'another_ns', {})
-        annot.set('dummy_ns', 'a', 'b', 'x', 4.0)
-        annot.set('dummy_ns', 'a', 'b', 'y', 5.0)
-        annot.set('dummy_ns', 'a', 'b', 'z', 6.0)
-        self.assertEqual(annot.get('dummy_ns', 'a', 'b', 'x'), '4.0')
+        annot.set(('a', 'dummy_ns'), 'b', 'x', 4.0)
+        annot.set(('a', 'dummy_ns'), 'b', 'y', 5.0)
+        annot.set(('a', 'dummy_ns'), 'b', 'z', 6.0)
+        self.assertEqual(annot.get(('a', 'dummy_ns'), 'b', 'x'), '4.0')
         branch = annot['dummy_ns']['a']['b'][0]
         self.assertEqual(sorted(branch.attr_keys()), ['x', 'y', 'z'])
         self.assertEqual(sorted(branch.attr_values()), ['4.0', '5.0', '6.0'])
@@ -128,10 +130,10 @@ class TestAnnotations(unittest.TestCase):
         c = a.clone()
         d = a.clone()
         e = a.clone()
-        a.parameter('P').annotations.set('dummy_ns', 'annot1', 'val1', 1.0)
-        b.parameter('P').annotations.set('dummy_ns', 'annot1', 'val1', 1.0)
-        c.parameter('P').annotations.set('dummy_ns', 'annot1', 'val1', 2.0)
-        e.parameter('P').annotations.set('dummy_ns2', 'annot1', 'val1', 1.0)
+        a.parameter('P').annotations.set(('annot1', 'dummy_ns'), 'val1', 1.0)
+        b.parameter('P').annotations.set(('annot1', 'dummy_ns'), 'val1', 1.0)
+        c.parameter('P').annotations.set(('annot1', 'dummy_ns'), 'val1', 2.0)
+        e.parameter('P').annotations.set(('annot1', 'dummy_ns2'), 'val1', 1.0)
         self.assertTrue(a.equals(b, annotations_ns=['dummy_ns']))
         self.assertTrue(a.equals(c))
         self.assertFalse(a.equals(c, annotations_ns=['dummy_ns']))
@@ -181,7 +183,7 @@ class TestAnnotations(unittest.TestCase):
         a.index_of(a.event_send_port('ESP1'))
         doc = Document(un.dimensionless)
         serialised = a.to_xml(doc, save_indices=True)
-        print etree.tostring(serialised, pretty_print=True)
+#         print etree.tostring(serialised, pretty_print=True)
         re_a = Dynamics.from_xml(serialised, doc)
         self.assertEqual(re_a.index_of(re_a.parameter('P1')),
                          a.index_of(a.parameter('P1')))
