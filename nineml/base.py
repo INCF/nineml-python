@@ -350,12 +350,15 @@ class AnnotatedNineMLObject(BaseNineMLObject):
         equality : bool
             Whether the annotations of the two 9ML objects are equal
         """
-        for ns in annotations_ns:
-            if ns in self.annotations:
+        if not hasattr(self, 'annotations'):
+            return True
+        for name, ns in self.annotations:
+            if ns in annotations_ns:
                 try:
-                    if self.annotations[ns] != other.annotations[ns]:
+                    if self.annotations[(name, ns)] != other.annotations[(name,
+                                                                          ns)]:
                         return False
-                except KeyError:
+                except NineMLNameError:
                     return False
         return True
 

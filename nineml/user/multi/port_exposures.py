@@ -2,7 +2,7 @@ from itertools import chain
 from .. import BaseULObject
 import sympy
 import operator
-from nineml.base import clone_id
+from nineml.base import clone_id, BaseNineMLObject
 from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
@@ -267,6 +267,7 @@ class EventReceivePortExposure(BasePortExposure, EventReceivePort):
 class _LocalAnalogPortConnections(Alias):
 
     def __init__(self, receive_port, receiver, port_connections, parent):
+        BaseNineMLObject.__init__(self)
         self._receive_port_name = receive_port
         self._receiver_name = receiver
         self._port_connections = port_connections

@@ -112,7 +112,7 @@ class BaseAnnotations(BaseNineMLObject):
         return self._branches == other._branches
 
     def __iter__(self):
-        return self._branches.keys()
+        return self._branches.iterkeys()
 
     def __contains__(self, key):
         return self._parse_key(key) in self._branches
@@ -131,7 +131,7 @@ class BaseAnnotations(BaseNineMLObject):
             key_branches = self._branches[key]
         else:
             raise NineMLNameError(
-                "'{}' does not have branch or attribute '{}'"
+                "{} annotations branch does not have branch or attribute '{}'"
                 .format(self._name, key))
         return key_branches
 
@@ -325,6 +325,10 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
                 "'{}' branch does not".format(key))
         return key
 
+    @property
+    def _name(self):
+        return 'Root'
+
 
 class _AnnotationsBranch(BaseAnnotations):
 
@@ -431,7 +435,7 @@ class _AnnotationsBranch(BaseAnnotations):
             else:
                 val = self._attr[key]
         else:
-            super(_AnnotationsBranch, self).get(key, *args, **kwargs)
+            val = super(_AnnotationsBranch, self).get(key, *args, **kwargs)
         return val
 
     def to_xml(self, **kwargs):  # @UnusedVariable

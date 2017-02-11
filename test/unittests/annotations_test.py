@@ -76,12 +76,10 @@ class TestAnnotations(unittest.TestCase):
         dim_xml = E(Dimension.nineml_type,
                      deepcopy(annot_xml), name='dimensionless')
         doc = Document()
-        dimension = Dimension.from_xml(dim_xml, doc,
-                                       annotations_ns=foreign_ns)
+        dimension = Dimension.from_xml(dim_xml, doc)
         doc.add(dimension)
         loader = DynamicsXMLLoader(doc)
-        parameter = loader.load_parameter(param_xml,
-                                          annotations_ns=foreign_ns)
+        parameter = loader.load_parameter(param_xml)
         self.assertEqual(parameter.annotations, self.annot,
                          "{}\n\nvs\n\n{}".format(parameter.annotations,
                                                  self.annot))
@@ -107,14 +105,11 @@ class TestAnnotations(unittest.TestCase):
             KeyError, annot.get, ('a', 'wummy_ns'), 'b', 'c', 'd')
         self.assertEqual(
             annot.get(('a', 'wummy_ns'), 'b', 'c', 'd', default=3.0), 3.0)
-        self.assertRaises(NineMLRuntimeError,
-                          annot['dummy_ns'].__setitem__,
-                          'another_ns', {})
         annot.set(('a', 'dummy_ns'), 'b', 'x', 4.0)
         annot.set(('a', 'dummy_ns'), 'b', 'y', 5.0)
         annot.set(('a', 'dummy_ns'), 'b', 'z', 6.0)
         self.assertEqual(annot.get(('a', 'dummy_ns'), 'b', 'x'), '4.0')
-        branch = annot['dummy_ns']['a']['b'][0]
+        branch = annot[('a', 'dummy_ns')][0]['b'][0]
         self.assertEqual(sorted(branch.attr_keys()), ['x', 'y', 'z'])
         self.assertEqual(sorted(branch.attr_values()), ['4.0', '5.0', '6.0'])
         self.assertEqual(sorted(branch.attr_items()), [('x', '4.0'),
