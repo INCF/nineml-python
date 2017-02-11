@@ -17,7 +17,7 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
 from nineml.utils import (check_inferred_against_declared,
                           assert_no_duplicates)
 from nineml.xml import nineml_ns, E
-from nineml.annotations import VALIDATION, DIMENSIONALITY
+from nineml.annotations import VALIDATION, DIMENSIONALITY, PY9ML_NS
 from nineml.base import DynamicPortsObject
 
 
@@ -209,10 +209,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             # Event ports not supplied, so lets use the inferred ones.
             for pname in inferred_struct.event_out_port_names:
                 self._event_send_ports[pname] = EventSendPort(name=pname)
-
         # TODO: Add check for inferred analog ports??
-
-        self.annotations.set(nineml_ns, VALIDATION, DIMENSIONALITY,
+        self.annotations.set((VALIDATION, PY9ML_NS), DIMENSIONALITY,
                              validate_dimensions)
         for transition in self.all_transitions():
             transition.bind(self)
@@ -248,8 +246,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def validate(self, validate_dimensions=None, **kwargs):
         if validate_dimensions is None:
             validate_dimensions = (
-                self.annotations.get(nineml_ns, VALIDATION,
-                                     DIMENSIONALITY, default='True') == 'True')
+                self.annotations.get((VALIDATION, PY9ML_NS), DIMENSIONALITY,
+                                     default='True') == 'True')
         self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self, validate_dimensions,
                                                   **kwargs)

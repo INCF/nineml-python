@@ -149,9 +149,24 @@ class TimeDerivative(ODE, BaseALObject):
 class Regime(BaseALObject, ContainerObject):
 
     """
-    A Regime is something that contains |TimeDerivatives|, has temporal extent,
-    defines a set of |Transitions| which occur based on |Conditions|, and can
+    A Regime is something that contains TimeDerivatives, has temporal extent,
+    defines a set of Transitions which occur based on |Conditions|, and can
     be join the Regimes to other Regimes.
+
+    Parameters
+    ----------
+    name : str
+        The name of the constructor. If none, then a name will
+        be automatically generated.
+    time_derivatives : list(TimeDerivative)
+        A list of time derivatives, as
+        either ``string``s (e.g 'dg/dt = g/gtau') or as
+        |TimeDerivative| objects.
+    transitions : list(Transition)
+        A list containing either OnEvent or OnCondition objects, which will
+        automatically be sorted into the appropriate classes automatically.
+    *args : list(TimeDerivative)
+        Any non-keyword arguments will be treated as time_derivatives.
     """
 
     nineml_type = 'Regime'
@@ -180,21 +195,6 @@ class Regime(BaseALObject, ContainerObject):
         return visitor.visit_regime(self, **kwargs)
 
     def __init__(self, *args, **kwargs):
-        """Regime constructor
-
-            :param name: The name of the constructor. If none, then a name will
-                be automatically generated.
-            :param time_derivatives: A list of time derivatives, as
-                either ``string``s (e.g 'dg/dt = g/gtau') or as
-                |TimeDerivative| objects.
-            :param transitions: A list containing either |OnEvent| or
-                |OnCondition| objects, which will automatically be sorted into
-                the appropriate classes automatically.
-            :param *args: Any non-keyword arguments will be treated as
-                time_derivatives.
-
-
-        """
         BaseALObject.__init__(self)
         ContainerObject.__init__(self)
         valid_kwargs = ('name', 'transitions', 'time_derivatives', 'aliases')

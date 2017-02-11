@@ -2,7 +2,9 @@ import unittest
 from copy import deepcopy
 from nineml.annotations import Annotations
 from nineml.xml import etree, nineml_ns, ElementMaker, E
-from nineml.abstraction import Parameter, Dynamics, Alias
+from nineml.abstraction import (
+    Parameter, Dynamics, Alias, EventSendPort, AnalogSendPort, StateVariable,
+    Regime, TimeDerivative, OnCondition, OutputEvent)
 from nineml.units import Dimension
 from nineml.abstraction.dynamics.visitors.xml import (
     DynamicsXMLLoader, DynamicsXMLWriter)
@@ -44,8 +46,7 @@ annot_xml = etree.fromstring(annot_str)
 class TestAnnotations(unittest.TestCase):
 
     def setUp(self):
-        self.annot = Annotations.from_xml(
-            annot_xml, annotations_ns=[foreign_ns])
+        self.annot = Annotations.from_xml(annot_xml)
 
     def test_basic(self):
         annot = Annotations()
@@ -138,3 +139,51 @@ class TestAnnotations(unittest.TestCase):
         self.assertFalse(a.equals(d, annotations_ns=['dummy_ns']))
         self.assertTrue(a.equals(e))
         self.assertFalse(a.equals(e, annotations_ns=['dummy_ns']))
+
+    def test_indices_annotations(self):
+        a = Dynamics(
+            name='a',
+            parameters=[Parameter('P1'), Parameter('P2'), Parameter('P3')],
+            ports=[AnalogSendPort('ASP1'), AnalogSendPort('ASP2'),
+                   EventSendPort('ESP1'), EventSendPort('ESP2'),
+                   EventSendPort('ESP3')],
+            state_variables=[StateVariable('SV1'),
+                             StateVariable('SV2'),
+                             StateVariable('SV3')],
+            regimes=[Regime(name='R1',
+                            time_derivatives=[
+                                TimeDerivative('SV1', 'SV2/t'),
+                                TimeDerivative('SV2', 'SV2/t')],
+                            transitions=[
+                                OnCondition('SV1 > P1',
+                                            output_events=[
+                                                OutputEvent('ESP1'),
+                                                OutputEvent('ESP2')]),
+                                OnCondition('SV2 < P2 + P3',
+                                            output_events=[
+                                                OutputEvent('ESP3')],
+                                            target_regime='R2')]),
+                     Regime(name='R2',
+                            time_derivatives=[
+                                TimeDerivative('SV3', 'SV3/t')],
+                            transitions=[
+                                OnCondition('SV3 > 100',
+                                            output_events=[
+                                                OutputEvent('ESP3'),
+                                                OutputEvent('ESP2')],
+                                            target_regime='R1')])])
+        # Set indices of parameters in non-ascending order so that they
+        # can be differentiated from indices on read.
+        a.index_of(a.parameter('P1'))
+        a.index_of(a.parameter('P3'))
+        a.index_of(a.parameter('P2'))
+        a.index_of(a.event_send_port('ESP2'))
+        a.index_of(a.event_send_port('ESP1'))
+        doc = Document(un.dimensionless)
+        serialised = a.to_xml(doc, save_indices=True)
+        re_a = Dynamics.from_xml(serialised, doc)
+        self.assertEqual(re_a.index_of('P1'), a.index_of('P1'))
+        self.assertEqual(re_a.index_of('P2'), a.index_of('P2'))
+        self.assertEqual(re_a.index_of('P3'), a.index_of('P3'))
+        self.assertEqual(re_a.index_of('ESP1'), a.index_of('ESP1'))
+        self.assertEqual(re_a.index_of('ESP2'), a.index_of('ESP2'))
