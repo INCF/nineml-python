@@ -27,22 +27,19 @@ def read_annotations(from_xml):
             # FIXME: Hack until I work out the best way to let other 9ML
             #        objects ignore this kwarg TGC 6/15
             valid_dims = annotations.get(
-                PY9ML_NS, VALIDATION, DIMENSIONALITY, default='True') == 'True'
+                (VALIDATION, PY9ML_NS), DIMENSIONALITY,
+                default='True') == 'True'
             kwargs['validate_dimensions'] = valid_dims
         nineml_object = from_xml(cls, element, *args, **kwargs)
         # Extract saved indices from annotations and save them in container
         # object.
-        try:
-            for ind in annotations[PY9ML_NS].pop(INDEX_TAG):
+        if (INDEX_TAG, PY9ML_NS) in annotations:
+            for ind in annotations.pop((INDEX_TAG, PY9ML_NS)):
                 key = ind.get(INDEX_KEY_ATTR)
                 name = ind.get(INDEX_NAME_ATTR)
                 index = ind.get(INDEX_INDEX_ATTR)
-                nineml_object._indices[key][
-                    nineml_object.element(name)] = index
-        except NineMLNameError:
-            pass
-        except:
-            raise
+                nineml_object._indices[
+                    key][getattr(nineml_object, key)(name)] = int(index)
         # Set extracted annotations in nineml_object
         nineml_object._annotations = annotations
         return nineml_object
@@ -75,13 +72,13 @@ def annotate_xml(to_xml):
                     isinstance(obj, ContainerObject)):
                 # Create empty annot_elem if container element doesn't have any
                 # other annotations
-                ind_annot = Annotations()
+                indices_annot = Annotations()
                 for key, elem, index in obj.all_indices():
-                    index = ind_annot.add((INDEX_TAG, PY9ML_NS))
-                    index.set(INDEX_KEY_ATTR, key)
-                    index.set(INDEX_NAME_ATTR, elem.name)
-                    index.set(INDEX_INDEX_ATTR, index)
-                ind_annot_xml = ind_annot.to_xml(E=E, **kwargs)
+                    index_annot = indices_annot.add((INDEX_TAG, PY9ML_NS))
+                    index_annot.set(INDEX_KEY_ATTR, key)
+                    index_annot.set(INDEX_NAME_ATTR, elem.name)
+                    index_annot.set(INDEX_INDEX_ATTR, index)
+                ind_annot_xml = indices_annot.to_xml(E=E, **kwargs)
                 if annot_xml is None:
                     annot_xml = ind_annot_xml
                 else:
@@ -116,6 +113,9 @@ class BaseAnnotations(BaseNineMLObject):
 
     def __iter__(self):
         return self._branches.keys()
+
+    def __contains__(self, key):
+        return self._parse_key(key) in self._branches
 
     def __getitem__(self, key):
         """
@@ -164,6 +164,23 @@ class BaseAnnotations(BaseNineMLObject):
             branch = key_branches[0]
             branch.add(*args)
         return branch
+
+    def pop(self, key):
+        """
+        Pops the list of sub-branches matching the given key
+
+        Parameters
+        ----------
+        key : str | (str, str)
+            A string containing the name of the branch to pop from the list or
+            a tuple containing the name and namespace of the branch. If the
+            namespace is not provided it is assumed to be the same as the
+            branch above
+        """
+        try:
+            return self._branches.pop(self._parse_key(key))
+        except KeyError:
+            return []
 
     def set(self, key, *args):
         """
@@ -232,6 +249,24 @@ class BaseAnnotations(BaseNineMLObject):
                     "No annotation at path '{}'".format("', '".join(args)))
         return val
 
+    @classmethod
+    def _extract_key(cls, child):
+        ns = extract_xmlns(child.tag)
+        if not ns:
+            raise NineMLXMLError(
+                "All annotations must have a namespace: {}".format(
+                    etree.tostring(child, pretty_print=True)))
+        ns = ns[1:-1]  # strip braces
+        name = strip_xmlns(child.tag)
+        return (name, ns)
+
+    def _sub_branches_to_xml(self, **kwargs):
+        members = []
+        for key_branches in self._branches.itervalues():
+            for branch in key_branches:
+                members.append(branch.to_xml(**kwargs))
+        return members
+
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
 
@@ -250,31 +285,25 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
         DocumentLevelObject.__init__(self, document)
 
     def __repr__(self):
-        return "Annotations:\n{}".format(
-            "\n".join(str(v) for v in self._namespaces.itervalues()))
+        rep = "Annotations:"
+        for key_branch in self._branches.itervalues():
+            for b in key_branch:
+                rep += '\n' + b._repr(indent='  ')
+        return rep
 
-    def to_xml(self, E=E, **kwargs):  # @UnusedVariable
-        members = []
-        for ns_branches in self._branches.itervalues():
-            for branch in ns_branches:
-                members.append(branch.to_xml(E=E, **kwargs))
-        return E(self.nineml_type, *members)
+    def to_xml(self, **kwargs):  # @UnusedVariable
+        return E(self.nineml_type, *self._sub_branches_to_xml(**kwargs))
 
     @classmethod
     def from_xml(cls, element, **kwargs):  # @UnusedVariable @IgnorePep8
         assert strip_xmlns(element.tag) == cls.nineml_type
         assert not element.attrib
-        assert not element.text.strip()
+        if element.text is not None:
+            assert not element.text.strip()
         annot = cls(**kwargs)
         for child in element.getchildren():
-            ns = extract_xmlns(child.tag)
-            if not ns:
-                raise NineMLXMLError(
-                    "All annotations must have a namespace: {}".format(
-                        etree.tostring(child, pretty_print=True)))
-            ns = ns[1:-1]  # strip braces
-            name = strip_xmlns(child.tag)
-            annot._branches[(name, ns)] = _AnnotationsBranch.from_xml(child)
+            annot._branches[cls._extract_key(child)].append(
+                _AnnotationsBranch.from_xml(child))
         return annot
 
     def _copy_to_clone(self, clone, memo, **kwargs):
@@ -335,15 +364,13 @@ class _AnnotationsBranch(BaseAnnotations):
                 self.is_ns == other.is_ns)
 
     def _repr(self, indent=''):
-        rep = "{}{}:".format(indent, self.name)
-        if self._attr:
-            rep += '\n' + '\n'.join('{}{}={}'.format(indent + '  ', *i)
-                                    for i in self._attr.iteritems())
-        if self._branches:
-            rep += '\n' + '\n'.join(
-                chain(*((b._repr(indent=indent + '  ') for b in key_branch)
-                        for key_branch in self._branches.itervalues())))
-        return repr
+        rep = "{}{{{}}}{}:".format(indent, self.ns, self.name)
+        for attr, val in self.attr_items():
+            rep += '\n{}{}={}'.format(indent + '  ', attr, val)
+        for key_branches in self._branches:
+            for branch in key_branches:
+                rep += '\n' + branch._repr(indent=indent + '  ')
+        return rep
 
     def attr_values(self):
         return self._attr.itervalues()
@@ -405,27 +432,22 @@ class _AnnotationsBranch(BaseAnnotations):
             super(_AnnotationsBranch, self).get(key, *args, **kwargs)
         return val
 
-    def to_xml(self, ns=None, E=E, **kwargs):  # @UnusedVariable
-        if ns is not None:
-            E = ElementMaker(namespace=ns, nsmap={None: ns})
-        args = []
+    def to_xml(self, **kwargs):  # @UnusedVariable
+        E = ElementMaker(namespace=self.ns)
+        members = self._sub_branches_to_xml(**kwargs)
         if self.text is not None:
-            args.append(self.text)
-        for key_branches in self._branches.itervalues():
-            args.extend(sb.to_xml(ns=ns, E=E, **kwargs)
-                        for sb in key_branches)
-        return E(self.name, *args, **self._attr)
+            members.append(self.text)
+        return E(self.name, *members, **self._attr)
 
     @classmethod
     def from_xml(cls, element, **kwargs):  # @UnusedVariable
-        name = strip_xmlns(element.tag)
+        name, ns = cls._extract_key(element)
         branches = defaultdict(list)
         for child in element.getchildren():
-            branches[strip_xmlns(child.tag)].append(
-                _AnnotationsBranch.from_xml(child))
+            branches[(name, ns)].append(_AnnotationsBranch.from_xml(child))
         attr = dict(element.attrib)
         text = element.text if element.text else None
-        return cls(name, attr, branches, text=text)
+        return cls(name, ns, attr=attr, branches=branches, text=text)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
@@ -444,111 +466,7 @@ class _AnnotationsBranch(BaseAnnotations):
         return key
 
 
-# class _AnnotationsNamespace(BaseNineMLObject):
-#     """
-#     Like a defaultdict, but initialises AnnotationsBranch with a name
-#     """
-#     nineml_type = '_AnnotationsNamespace'
-#     defining_attributes = ('_ns', '_branches')
-# 
-#     def __init__(self, ns):
-#         self._ns = ns
-#         self._branches = defaultdict(list)
-# 
-#     @property
-#     def ns(self):
-#         return self._ns
-# 
-#     @property
-#     def branches(self):
-#         return self._branches.itervalues()
-# 
-#     def __repr__(self):
-#         rep = '"{}":\n'.format(self.ns)
-#         rep += '\n'.join(v._repr('  ') for v in self.branches)
-#         return rep
-# 
-#     def __getitem__(self, key):
-#         return self._branches[key]
-# 
-#     def __setitem__(self, key, val):
-#         if not isinstance(val, _AnnotationsBranch):
-#             raise NineMLRuntimeError(
-#                 "Attempting to set directly to Annotations namespace '{}' "
-#                 "(key={}, val={})".format(self._ns, key, val))
-#         self._branches[key] = val
-# 
-#     def pop(self, key):
-#         self._branches.pop(key)
-# 
-#     def add(self, key, *args):
-#         """
-#         Adds a new branch for the given key. If the key exists already then
-#         then an additional branch is appended for that key.
-# 
-#         Parameters
-#         ----------
-#         key : str
-#             The name of the key to append a new branch for if no args provided
-#             otherwise the name of the branch to add a sub-branch to
-#         *args : list(str)
-#             A list of keys for the sub-branches ending in the key of the new
-#             sub-branch to add. Intermediate branches that are not present are
-#             added implicitly.
-#         """
-#         key_branches = self._get_branches(key)
-#         if not key_branches or not args:
-#             branch = _AnnotationsBranch(key)
-#             key_branches.append(branch)
-#         if args:
-#             if len(key_branches) > 1:
-#                 raise NineMLNameError(
-#                     "Multiple branches found for key '{}' in annoations branch"
-#                     " '{}', cannot use 'add' method to add a sub-branch"
-#                     .format(key, self.ns))
-#             branch = key_branches[0]
-#             branch.add(*args)
-#         return branch
-# 
-#     def set(self, key, *args):
-#         key_branches = self._get_branches(key)
-#         if len(key_branches) > 1:
-#             raise NineMLNameError(
-#                 "Multiple branches found for key '{}' in annoations branch"
-#                 " '{}', cannot use 'add' method to add a sub-branch"
-#                 .format(key, self.ns))
-#         key_branches[0].set(*args)
-# 
-#     def _get_branches(self, key):
-#         if key not in self:
-#             branch = self[key]
-#         except KeyError:
-#             
-#         return branch
-# 
-#     def get(self, key, *args, **kwargs):
-#         try:
-#             return self[key].get(*args, **kwargs)
-#         except KeyError:
-#             if 'default' in kwargs:
-#                 return kwargs['default']
-#             else:
-#                 raise NineMLNameError(
-#                     "No annotation at path '{}'".format("', '".join(args)))
-# 
-#     def equals(self, other, **kwargs):  # @UnusedVariable
-#         try:
-#             if self.nineml_type != other.nineml_type:
-#                 return False
-#         except AttributeError:
-#             return False
-#         return self._ns == other._ns and self._branches == other._branches
-
-
-
-
 # Python-9ML library specific annotations
-
 PY9ML_NS = 'http://github.com/INCF/lib9ml'
 
 # Annotation

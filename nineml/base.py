@@ -135,7 +135,10 @@ class BaseNineMLObject(object):
         return "{}(name='{}')".format(self.nineml_type, self._name)
 
     def __str__(self):
-        return repr(self)
+        try:
+            return repr(self)
+        except:
+            raise
 
     def __ne__(self, other):
         return not self == other
