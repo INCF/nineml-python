@@ -37,6 +37,16 @@ class Document(AnnotatedNineMLObject, dict):
     that is able to sit directly within <NineML>...</NineML> tags). All
     elements are stored initially but only converted to lib9ml objects on
     demand so it doesn't matter which order they appear in the NineML file.
+
+    Parameters
+    ----------
+    *args : list[DocumentLevelObject]
+        Document level objects to be added to the object (after being cloned)
+
+    Kwargs
+    ------
+    url : str
+        The url assigned to the document
     """
 
     defining_attributes = ('elements',)
@@ -59,20 +69,33 @@ class Document(AnnotatedNineMLObject, dict):
         AnnotatedNineMLObject.__init__(
             self, annotations=kwargs.pop('annotations', None))
         self._url = self._standardise_url(kwargs.pop('url', None))
-        clone = kwargs.pop('clone', False)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
         self._added_in_write = None
-        memo = {}
+        memo = kwargs.pop('memo', {})
         for element in elements:
-            self.add(element, clone=clone, memo=memo, **kwargs)
+            self.add(element, memo=memo, **kwargs)
 
     def __repr__(self):
         return "NineMLDocument(url='{}', {} elements)".format(
             str(self.url), len(self))
 
-    def add(self, element, clone=False, **kwargs):
+    def add(self, element, clone=True, **kwargs):
+        """
+        Adds a cloned version of the element to the document, setting the
+        document reference (and the corresponding url) of clones to the
+        document.
+
+        Parameters
+        ----------
+        element : DocumentLevelObject
+            A document level object to add to the document
+        clone : bool
+            Whether to clone the element before adding it to the document
+        kwargs : dict
+            Keyword arguments passed to the clone method
+        """
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
             raise NineMLRuntimeError(
                 "Could not add {} to document '{}' as it is not a 'document "
@@ -302,10 +325,10 @@ class Document(AnnotatedNineMLObject, dict):
     def to_xml(self, E=E, **kwargs):  # @UnusedVariable
         self.standardize_units()
         self._added_in_write = []  # Initialise added_in_write
-        elements = [e.to_xml(self, E=E, as_ref=False)
+        elements = [e.to_xml(self, E=E, as_ref=False, **kwargs)
                     for e in self.sorted_elements()]
         self.standardize_units()
-        elements.extend(e.to_xml(self, E=E, as_ref=False)
+        elements.extend(e.to_xml(self, E=E, as_ref=False, **kwargs)
                         for e in self._added_in_write)
         self._added_in_write = None
         return E(self.nineml_type, *elements)
@@ -415,8 +438,8 @@ class Document(AnnotatedNineMLObject, dict):
         try:
             clone = memo[clone_id(self)]
         except KeyError:
-            clone = Document(*(e.clone(memo, refs=refs, **kwargs)
-                               for e in self.itervalues()))
+            clone = Document(*self.values(), memo=memo, refs=refs,
+                             clone=True, **kwargs)
             memo[clone_id(self)] = clone
             # Updated any cloned references to point to cloned objects
             for ref in refs:
@@ -445,11 +468,19 @@ class Document(AnnotatedNineMLObject, dict):
         document has been previously loaded it is reused. To reload a document
         that has been changed on file, please delete any references to it first
 
-        xml -- the 'NineML' etree.Element to load the object model
-               from
-        url -- specifies the url that the xml should be considered
-               to have been read from in order to resolve relative
-               references
+        Parameters
+        ----------
+        xml : etree.Element
+            The 'NineML' etree.Element to load the object model from
+        url : str
+            Specifies the url that the xml should be considered
+            to have been read from in order to resolve relative
+            references
+        register_url : bool
+            Whether to cache this loaded xml in the class dictionary
+        force_reload : bool
+            Whether to ignore existing entry in cache and force a reload of the
+            xml from file
         """
         if isinstance(xml, basestring):
             xml = etree.fromstring(xml)
@@ -533,7 +564,8 @@ class Document(AnnotatedNineMLObject, dict):
                 if k not in other:
                     result = "{} is not present in other document".format(k)
                 elif s != other[k]:
-                    result += s.find_mismatch(other[k])
+                    result += ('\n    {}({}):'.format(type(s).__name__, k) +
+                               s.find_mismatch(other[k], '        '))
         return result
 
     def as_network(self, name):
@@ -593,9 +625,7 @@ def write(document, filename, **kwargs):
     """
     # Encapsulate the NineML element in a document if it is not already
     if not isinstance(document, Document):
-        element = document.clone()
-        element._document = None
-        document = Document(element)
+        document = Document(document, **kwargs)
     document.write(filename, **kwargs)
 
 

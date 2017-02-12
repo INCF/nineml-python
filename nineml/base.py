@@ -163,8 +163,10 @@ class BaseNineMLObject(object):
             result = ''
         try:
             if self.nineml_type != other.nineml_type:
-                result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
-                           .format(self.nineml_type, other.nineml_type))
+                result += ("mismatch in nineml_type, self:'{}' and other:'{}' "
+                           "({} and {})"
+                           .format(self.nineml_type, other.nineml_type,
+                                   self, other))
             else:
                 for attr_name in self.defining_attributes:
                     self_attr = getattr(self, attr_name)
@@ -176,8 +178,10 @@ class BaseNineMLObject(object):
                                                         indent + '  ')
         except AttributeError:
             if type(self) != type(other):
-                result += "mismatch in type self:{} and other:{}".format(
-                    type(self).__name__, type(other).__name__)
+                result += ("mismatch in type self:{} and other:{} "
+                           "({} and {})".format(type(self).__name__,
+                                                type(other).__name__, self,
+                                                other))
             elif self != other:
                 result += ("self:{} != other:{}"
                            .format(self, other))
@@ -222,8 +226,10 @@ class BaseNineMLObject(object):
                                                        indent + '  ')
         else:
             if type(s) != type(o):
-                result += "mismatch in type self:{} != other:{}".format(
-                    type(s).__name__, type(o).__name__)
+                result += ("mismatch in type self:{} != other:{} "
+                           "({} and {})".format(
+                               type(s).__name__, type(o).__name__,
+                               s, o))
             else:
                 result += "self:{} != other:{}".format(s, o)
         return result

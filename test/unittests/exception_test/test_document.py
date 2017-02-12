@@ -86,20 +86,20 @@ class TestDocumentExceptions(unittest.TestCase):
             doc1.add,
             element=dynB)
 
-    def test_add_ninemlruntimeerror2(self):
-        """
-        line #: 84
-        message: Attempting to add the same object '{}' {} to '{}'
-        document when it is already in '{}'. Please remove it from the original
-        document first
-        """
-
-        doc1 = instances_of_all_types[Document.nineml_type]['doc1']
-        doc2 = Document()
-        self.assertRaises(
-            NineMLRuntimeError,
-            doc2.add,
-            element=doc1['dynA'])
+#     def test_add_ninemlruntimeerror2(self):
+#         """
+#         line #: 84
+#         message: Attempting to add the same object '{}' {} to '{}'
+#         document when it is already in '{}'. Please remove it from the original
+#         document first
+#         """
+# 
+#         doc1 = instances_of_all_types[Document.nineml_type]['doc1']
+#         doc2 = Document()
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             doc2.add,
+#             element=doc1['dynA'])
 
     def test_remove_ninemlruntimeerror(self):
         """

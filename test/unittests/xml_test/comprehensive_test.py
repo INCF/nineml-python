@@ -27,5 +27,5 @@ class TestComprehensiveXML(TestCase):
                                    'test{}v{}.xml'.format(i, version))
                 nineml.write(doc, url, version=version)
                 reread_doc = nineml.read(url, force_reload=True)
-                self.assertEqual(doc, reread_doc,
-                                 doc.find_mismatch(reread_doc))
+                self.assertTrue(doc.equals(reread_doc),
+                                doc.find_mismatch(reread_doc))
