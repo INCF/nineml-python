@@ -95,7 +95,7 @@ class BaseAnnotations(BaseNineMLObject):
     def __init__(self, branches=None):
         self._branches = defaultdict(list)
         if branches is not None:
-            assert all(isinstance(b, list) for b in branches)
+            assert all(isinstance(b, list) for b in branches.itervalues())
             self._branches.update(branches)
 
     def __len__(self):
@@ -281,8 +281,8 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
     nineml_type = 'Annotations'
     defining_attributes = ('_branches',)
 
-    def __init__(self, document=None):
-        BaseAnnotations.__init__(self)
+    def __init__(self, branches=None, document=None):
+        BaseAnnotations.__init__(self, branches=branches)
         DocumentLevelObject.__init__(self, document)
 
     def __repr__(self):
