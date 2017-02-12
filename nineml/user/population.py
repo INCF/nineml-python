@@ -2,6 +2,7 @@ from itertools import chain
 from . import BaseULObject
 from .component import resolve_reference, write_reference
 from .dynamics import DynamicsProperties
+import nineml.user
 from nineml.base import DocumentLevelObject, DynamicPortsObject
 from nineml.xml import (
     E, unprocessed_xml, from_child_xml, get_xml_attr)
@@ -103,7 +104,9 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     @read_annotations
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):
-        cell = from_child_xml(element, DynamicsProperties, document,
+        cell = from_child_xml(element,
+                              (DynamicsProperties,
+                               nineml.user.MultiDynamicsProperties), document,
                               allow_reference=True, within='Cell', **kwargs)
         return cls(name=get_xml_attr(element, 'name', document, **kwargs),
                    size=get_xml_attr(element, 'Size', document, in_block=True,

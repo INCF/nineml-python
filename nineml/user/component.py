@@ -49,15 +49,6 @@ class Definition(BaseReference):
     def component_class(self):
         return self._referred_to
 
-#     def equals(self, other, ignore_none_urls=False, **kwargs):
-#         if ignore_none_urls and self.url is None:
-#             defining_attributes = [a for a in self.defining_attributes
-#                                    if a != '_url']
-#         else:
-#             defining_attributes = None
-#         super(Definition, self).equals(
-#             other, defining_attributes=defining_attributes, **kwargs)
-
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
         if self.url is None:
