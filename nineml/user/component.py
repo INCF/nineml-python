@@ -331,16 +331,21 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     def used_units(self):
         return set(p.units for p in self.properties.itervalues())
 
-    def write(self, fname):
+    def write(self, url, **kwargs):
         """
         Writes the top-level NineML object to file in XML.
+
+        Parameters
+        ----------
+        url : str
+            The URL to write the file to
         """
         to_write = [self]
         # Also write the component class definition to file if cannot be
         # referenced from a separate url
         if self.definition.url is None:
             to_write.append(self.component_class)
-        Document(*to_write).write(fname)
+        Document(*to_write).write(url, **kwargs)
 
     def get_random_distributions(self):
         return [p.value.distribution for p in self.properties

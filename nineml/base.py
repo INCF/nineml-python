@@ -301,6 +301,10 @@ def _clone_attr(attr, memo, **kwargs):
         clone = attr  # "primitive" type that doesn't need to be cloned
     elif hasattr(attr, 'clone'):
         clone = attr.clone(memo=memo, **kwargs)
+    elif isinstance(attr, defaultdict):
+        clone = defaultdict(attr.default_factory,
+                            ((k, _clone_attr(v, memo, **kwargs))
+                             for k, v in attr.iteritems()))
     elif isinstance(attr, dict):
         clone = dict((k, _clone_attr(v, memo, **kwargs))
                      for k, v in attr.iteritems())

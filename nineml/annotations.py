@@ -93,9 +93,10 @@ def annotate_xml(to_xml):
 class BaseAnnotations(BaseNineMLObject):
 
     def __init__(self, branches=None):
-        if branches is None:
-            branches = defaultdict(list)
-        self._branches = branches
+        self._branches = defaultdict(list)
+        if branches is not None:
+            assert all(isinstance(b, list) for b in branches)
+            self._branches.update(branches)
 
     def __len__(self):
         return len(self._branches)
@@ -300,11 +301,11 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
         assert not element.attrib
         if element.text is not None:
             assert not element.text.strip()
-        annot = cls(**kwargs)
+        branches = defaultdict(list)
         for child in element.getchildren():
-            annot._branches[cls._extract_key(child)].append(
+            branches[cls._extract_key(child)].append(
                 _AnnotationsBranch.from_xml(child))
-        return annot
+        return cls(branches, **kwargs)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
