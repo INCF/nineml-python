@@ -813,4 +813,124 @@ class SendPortBase(object):
     """
 
 
+class Visitor(object):
+    """
+    Generic visitor base class that visits a 9ML object and all children (and
+    children's children etc...) and calls 'action_<nineml-type>' and
+    'post_action_<nineml-type>'. These methods are not implemented in this
+    base class but can be overridden in derived classes that wish to perform
+    an action on specific element types.
+
+    For example to perform an action on all units (and nothing else) in the
+    object a derived class can be written as
+
+    class UnitVisitor(Visitor):
+
+        def __init__(default_action=None, default_post_action=None)
+
+        def action_unit(unit, **kwargs):
+            # Do action here
+
+        def default_action(self, obj, **kwargs):
+            pass
+
+        def default_post_action(self, obj, **kwargs):
+            pass
+    """
+
+    class Context(object):
+        "The context within which the current element is situated"
+
+        def __init__(self, parent, parent_result, attr_name=None, dct=None):
+            self._parent = parent
+            self._parent_result = parent_result
+            self._attr_name = attr_name
+            self._dct = dct
+
+        @property
+        def parent(self):
+            return self._parent
+
+        @property
+        def parent_result(self):
+            return self._parent_result
+
+        @property
+        def attr_name(self):
+            return self._attr_name
+
+        @property
+        def dct(self):
+            return self._dct
+
+    def __init__(self):
+        self.contexts = []
+        self.child_results = None
+        self.attr_results = None
+        self._method_name = None
+
+    def visit(self, obj, **kwargs):
+        # Run the 'action_<obj-nineml_type>' method on the visited object
+        result = getattr(self, 'action_' + obj.nineml_type.lower())(obj,
+                                                                    **kwargs)
+        # Visit all the attributes of the object that are 9ML objects
+        # themselves
+        self.attr_results = {}
+        for attr_name in obj.defining_attributes:
+            attr = getattr(obj, attr_name)
+            if isinstance(attr, BaseNineMLObject):
+                # Create the context around the visit of the attribute
+                self.contexts.append(self.Context(obj, result, attr_name))
+                self.attr_results[attr_name] = self.visit(attr, **kwargs)
+                self.contexts.pop()
+        # Visit children of the object
+        self.child_results = {}
+        if isinstance(obj, ContainerObject):
+            for child_type in obj.class_to_member:
+                self.child_results[child_type] = {}
+                dct = obj._member_dict(child_type, obj.class_to_member)
+                self.contexts.append(self.Context(obj, result, dct=dct))
+                for child in obj._members_iter(child_type,
+                                               obj.class_to_member):
+                    self.child_results[
+                        child_type][child.key] = self.visit(child, **kwargs)
+                self.contexts.pop()
+        # Peform "post-action" method that runs after the children/attributes
+        # have been visited
+        getattr(self, 'post_action_' + obj.nineml_type.lower())(obj, **kwargs)
+        self.child_results = None
+        self.attr_results = None
+
+    @property
+    def context(self):
+        if self._contexts:
+            context = self.contexts[-1]
+        else:
+            context = None
+        return context
+
+    def __getattr__(self, method_name):
+        self._method_name = method_name
+        if method_name.startswith('action_'):
+            method = self.default_action
+        elif method_name.startswith('post_action_'):
+            method = self.default_post_action
+        else:
+            raise AttributeError(method_name)
+        self._method_name = None
+        return method
+
+    def default_action(self, obj, **kwargs):  # @UnusedVariable
+        assert False, (
+            "'{}' method has not be implemented and a default action was not "
+            "supplied to '{}' visitor"
+            .format(self._method_name, type(self).__name__))
+
+    def default_post_action(self, obj, **kwargs):  # @UnusedVariable
+        assert False, (
+            "'{}' method has not be implemented and a default post action was "
+            "not supplied to '{}' visitor"
+            .format(self._method_name, type(self).__name__))
+
+
 import nineml  # @IgnorePep8
