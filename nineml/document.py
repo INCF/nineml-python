@@ -5,7 +5,7 @@ from urllib import urlopen
 import weakref
 from lxml import etree
 import collections
-from nineml.base import clone_id
+from nineml.base import clone_id, BaseNineMLVisitor
 from nineml.xml import (
     E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
 from nineml.annotations import Annotations
@@ -127,6 +127,7 @@ class Document(AnnotatedNineMLObject, dict):
             self[element.name] = element
         if self._added_in_write is not None:
             self._added_in_write.append(element)
+        return element
 
     def remove(self, element, ignore_missing=False):
         if not isinstance(element, DocumentLevelObject):
@@ -713,6 +714,37 @@ def get_component_type(comp_xml, doc_xml, relative_to):
             assert False, ("Unrecognised component class type '{}"
                            .format(cc_cls))
     return cls
+
+
+class AddNestedDocLevelObjsToDocVisitor(BaseNineMLVisitor):
+
+    def __init__(self, document):
+        super(AddNestedDocLevelObjsToDocVisitor, self).__init__()
+        self.document = document
+
+    def action(self, obj, **kwargs):  # @UnusedVariable
+        if isinstance(obj, DocumentLevelObject) and obj.document is None:
+            if obj.name in self.document:
+                doc_obj = self.document[obj.name]
+                # Set document of object to current document before checking
+                # for equality with document already in document
+                obj._document = self.document
+                if obj == doc_obj:
+                    if obj is not doc_obj:
+                        self.context.replace(obj, doc_obj)
+                        obj._document = None  # Reset to previous state
+                else:
+                    obj._document = None  # Reset to previous state
+                    raise NineMLRuntimeError(
+                        "Cannot automatically add nested {} '{}' to the "
+                        "document {} as it clashes with existing {}."
+                        .format(obj.nineml_type, obj.name, self.document.url,
+                                self.document[obj.name].nineml_type))
+            else:
+                self.document.add(obj, clone=False)
+
+    def post_action(self, obj, **kwargs):
+        pass
 
 
 import nineml  # @IgnorePep8

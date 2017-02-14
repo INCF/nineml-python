@@ -813,7 +813,7 @@ class SendPortBase(object):
     """
 
 
-class Visitor(object):
+class BaseNineMLVisitor(object):
     """
     Generic visitor base class that visits a 9ML object and all children (and
     children's children etc...) and calls 'action_<nineml-type>' and
@@ -844,6 +844,7 @@ class Visitor(object):
         def __init__(self, parent, parent_result, attr_name=None, dct=None):
             self._parent = parent
             self._parent_result = parent_result
+            assert attr_name is not None or dct is not None
             self._attr_name = attr_name
             self._dct = dct
 
@@ -863,6 +864,13 @@ class Visitor(object):
         def dct(self):
             return self._dct
 
+        def replace(self, old, new):
+            if self.attr_name is not None:
+                setattr(self.parent, self.attr_name, new)
+            elif self.dct is not None:
+                del self.dct[old.name]
+                self.dct[new.name] = new
+
     def __init__(self):
         self.contexts = []
         self.child_results = None
@@ -871,8 +879,7 @@ class Visitor(object):
 
     def visit(self, obj, **kwargs):
         # Run the 'action_<obj-nineml_type>' method on the visited object
-        result = getattr(self, 'action_' + obj.nineml_type.lower())(obj,
-                                                                    **kwargs)
+        result = self.action(obj, **kwargs)
         # Visit all the attributes of the object that are 9ML objects
         # themselves
         self.attr_results = {}
@@ -897,9 +904,16 @@ class Visitor(object):
                 self.contexts.pop()
         # Peform "post-action" method that runs after the children/attributes
         # have been visited
-        getattr(self, 'post_action_' + obj.nineml_type.lower())(obj, **kwargs)
+        self.post_action(obj, **kwargs)
         self.child_results = None
         self.attr_results = None
+
+    def action(self, obj, **kwargs):
+        return getattr(self, 'action_' + obj.nineml_type.lower())(obj,
+                                                                  **kwargs)
+
+    def post_action(self, obj, **kwargs):
+        getattr(self, 'post_action_' + obj.nineml_type.lower())(obj, **kwargs)
 
     @property
     def context(self):
