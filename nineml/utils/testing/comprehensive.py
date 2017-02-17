@@ -402,7 +402,7 @@ projB = Projection(
     pre=popD,
     post=popE,
     response=DynamicsProperties(
-        name="dynFProps",
+        name="dynFPropsA",
         definition=dynF,
         properties={'P1': 10.7 * un.ms, 'P2': 3.1 * un.nA}),
     connectivity=ConnectionRuleProperties(
@@ -437,7 +437,7 @@ projD = Projection(
     pre=popA,
     post=selB,
     response=DynamicsProperties(
-        name="dynFProps",
+        name="dynFPropsB",
         definition=dynF,
         properties={'P1': -1.72 * un.ms, 'P2': 88.0 * un.nA}),
     connectivity=conPropB,
@@ -586,3 +586,10 @@ _all_instance_names = set(instances_of_all_types.iterkeys())
 assert not (_all_class_names - _all_instance_names), (
     "Not all 9ML elements are in comprehensive example document, '{}',"
     .format("', '".join(_all_class_names - _all_instance_names)))
+
+if __name__ == '__main__':
+    r = multiDynA.regime('R1___R1')
+    t = list(r.transitions)[2]
+    print list(list(t.sub_transitions)[0].output_events)
+    print list(t.output_events)
+    print 'done'

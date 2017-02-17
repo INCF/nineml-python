@@ -871,10 +871,22 @@ class BaseNineMLVisitor(object):
                 del self.dct[old.name]
                 self.dct[new.name] = new
 
+    class Results(object):
+
+        def __init__(self):
+            self._attr = {}
+            self._children = defaultdict(dict)
+
+        @property
+        def attr(self):
+            return self._attr
+
+        @property
+        def children(self):
+            return self._children
+
     def __init__(self):
         self.contexts = []
-        self.child_results = None
-        self.attr_results = None
         self._method_name = None
 
     def visit(self, obj, **kwargs):
@@ -882,42 +894,39 @@ class BaseNineMLVisitor(object):
         result = self.action(obj, **kwargs)
         # Visit all the attributes of the object that are 9ML objects
         # themselves
-        self.attr_results = {}
+        results = self.Results()
         for attr_name in obj.defining_attributes:
             attr = getattr(obj, attr_name)
             if isinstance(attr, BaseNineMLObject):
                 # Create the context around the visit of the attribute
                 self.contexts.append(self.Context(obj, result, attr_name))
-                self.attr_results[attr_name] = self.visit(attr, **kwargs)
+                results.attr[attr_name] = self.visit(attr, **kwargs)
                 self.contexts.pop()
         # Visit children of the object
-        self.child_results = {}
         if isinstance(obj, ContainerObject):
             for child_type in obj.class_to_member:
-                self.child_results[child_type] = {}
-                dct = obj._member_dict(child_type, obj.class_to_member)
+                dct = obj._member_dict(child_type)
                 self.contexts.append(self.Context(obj, result, dct=dct))
                 for child in obj._members_iter(child_type,
                                                obj.class_to_member):
-                    self.child_results[
+                    results.children[
                         child_type][child.key] = self.visit(child, **kwargs)
                 self.contexts.pop()
         # Peform "post-action" method that runs after the children/attributes
         # have been visited
-        self.post_action(obj, **kwargs)
-        self.child_results = None
-        self.attr_results = None
+        self.post_action(obj, results, **kwargs)
 
     def action(self, obj, **kwargs):
         return getattr(self, 'action_' + obj.nineml_type.lower())(obj,
                                                                   **kwargs)
 
-    def post_action(self, obj, **kwargs):
-        getattr(self, 'post_action_' + obj.nineml_type.lower())(obj, **kwargs)
+    def post_action(self, obj, results, **kwargs):
+        getattr(self, 'post_action_' + obj.nineml_type.lower())(
+            obj, results, **kwargs)
 
     @property
     def context(self):
-        if self._contexts:
+        if self.contexts:
             context = self.contexts[-1]
         else:
             context = None

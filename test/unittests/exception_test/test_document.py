@@ -172,10 +172,9 @@ class TestDocumentExceptions(unittest.TestCase):
             properties={'number': (
                 1.0 * un.Unit(dimension=un.dimensionless, power=1,
                               name='U'))})
-        document = Document(a, b)
         self.assertRaises(
             NineMLRuntimeError,
-            document.standardize_units)
+            Document, a, b)
 
     def test_standardize_units_ninemlruntimeerror2(self):
         """
@@ -195,10 +194,9 @@ class TestDocumentExceptions(unittest.TestCase):
                 Parameter('P1', dimension=un.Dimension(name='D', l=1))],
             regime=Regime(name='default'),
             aliases=['A1 := P1 * 2'])
-        document = Document(a, b)
         self.assertRaises(
             NineMLRuntimeError,
-            document.standardize_units)
+            Document, a, b)
 
     def test_from_xml_ninemlxmlerror(self):
         """

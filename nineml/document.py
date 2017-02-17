@@ -106,10 +106,13 @@ class Document(AnnotatedNineMLObject, dict):
             # Ignore if the element is already added (this can happen
             # implictly when writing other elements that refer to this element)
             if element is not self[element.name]:
-                raise NineMLNameError(
-                    "Could not add element '{}' as an element with that name "
-                    "already exists in the document '{}'"
-                    .format(element.name, self.url))
+                if element == self[element.name]:
+                    element = self[element.name]
+                else:
+                    raise NineMLNameError(
+                        "Could not add element '{}' as an element with that "
+                        "name already exists in the document '{}'"
+                        .format(element.name, self.url))
         else:
             if not isinstance(element, self._Unloaded):
                 if clone:
@@ -124,6 +127,9 @@ class Document(AnnotatedNineMLObject, dict):
                         .format(element.name, element.nineml_type,
                                 self.url, element.document.url))
                 element._document = self  # Set its document to this one
+                # Add any "unbound" (sub-elements that don't already belong
+                # to another document
+                AddUnboundReferencesToDocumentVisitor(self).visit(element)
             self[element.name] = element
         if self._added_in_write is not None:
             self._added_in_write.append(element)
@@ -716,14 +722,39 @@ def get_component_type(comp_xml, doc_xml, relative_to):
     return cls
 
 
-class AddNestedDocLevelObjsToDocVisitor(BaseNineMLVisitor):
+class AddUnboundReferencesToDocumentVisitor(BaseNineMLVisitor):
+    """
+    Traverses any 9ML object and adds any "unbound" objects to the document (or
+    optionally clones of bound), i.e. objects that currently don't belong to
+    any other document
+
+    Parameters
+    ----------
+    document : Document
+        Document to add the unbound elements to
+    """
 
     def __init__(self, document):
-        super(AddNestedDocLevelObjsToDocVisitor, self).__init__()
+        super(AddUnboundReferencesToDocumentVisitor, self).__init__()
         self.document = document
 
-    def action(self, obj, **kwargs):  # @UnusedVariable
-        if isinstance(obj, DocumentLevelObject) and obj.document is None:
+    def action(self, obj, add_bound=False, **kwargs):  # @UnusedVariable
+        """
+        Adds the object to the document if is a DocumentLevelObject and it
+        doesn't already belong to a document (or regardless if 'add_bound' is
+        True)
+
+        Parameters
+        ----------
+        obj : BaseNineMLObject
+            The object to add the document if is DocumentLevelObject
+        add_bound : bool
+            Whether to add the object even if it belongs to another document
+            (but not this one). Useful for combining all referenced objects
+            into a single document.
+        """
+        if isinstance(obj, DocumentLevelObject) and (obj.document is None or
+                                                     add_bound):
             if obj.name in self.document:
                 doc_obj = self.document[obj.name]
                 # Set document of object to current document before checking
@@ -740,10 +771,12 @@ class AddNestedDocLevelObjsToDocVisitor(BaseNineMLVisitor):
                         "document {} as it clashes with existing {}."
                         .format(obj.nineml_type, obj.name, self.document.url,
                                 self.document[obj.name].nineml_type))
+                obj = doc_obj
             else:
-                self.document.add(obj, clone=False)
+                obj = self.document.add(obj, clone=False)
+        return obj
 
-    def post_action(self, obj, **kwargs):
+    def post_action(self, obj, results, **kwargs):
         pass
 
 
