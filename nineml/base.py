@@ -151,7 +151,7 @@ class BaseNineMLObject(object):
             "Derived class '{}' has not overriden accept_visitor method."
             .format(self.__class__.__name__))
 
-    def find_mismatch(self, other, indent='  '):
+    def find_mismatch(self, other, indent='    '):
         """
         A method for displaying where two NineML objects differ. Used in
         debugging and error messages.
@@ -191,7 +191,7 @@ class BaseNineMLObject(object):
     def _unwrap_mismatch(cls, s, o, indent):
         result = ''
         if isinstance(s, BaseNineMLObject):
-            result += s.find_mismatch(o, indent=indent + '  ')
+            result += s.find_mismatch(o, indent=indent + '    ')
         elif isinstance(s, dict):
             s_keys = set(s.keys())
             o_keys = set(o.keys())
@@ -211,7 +211,7 @@ class BaseNineMLObject(object):
             else:
                 for k in s:
                     if s[k] != o[k]:
-                        result += "\n{}Key '{}':".format(indent + '  ', k)
+                        result += "\n{}Key '{}':".format(indent + '    ', k)
                         result += cls._unwrap_mismatch(s[k], o[k],
                                                        indent + '  ')
         elif isinstance(s, list):
@@ -221,9 +221,9 @@ class BaseNineMLObject(object):
             else:
                 for i, (s_elem, o_elem) in enumerate(zip(s, o)):
                     if s_elem != o_elem:
-                        result += "\n{}Index {}:".format(indent + '  ', i)
+                        result += "\n{}Index {}:".format(indent + '    ', i)
                         result += cls._unwrap_mismatch(s_elem, o_elem,
-                                                       indent + '  ')
+                                                       indent + '    ')
         else:
             if type(s) != type(o):
                 result += ("mismatch in type self:{} != other:{} "

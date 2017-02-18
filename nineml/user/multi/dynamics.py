@@ -84,7 +84,8 @@ class MultiDynamicsProperties(DynamicsProperties):
         return Definition(MultiDynamics(
             self.name + '_Dynamics', sub_dynamics,
             port_exposures=port_exposures,
-            port_connections=port_connections))
+            port_connections=port_connections,
+            document=self.document))
 
     def flatten(self):
         return DynamicsProperties(
@@ -168,7 +169,8 @@ class MultiDynamicsProperties(DynamicsProperties):
         return cls(name=get_xml_attr(element, 'name', document, **kwargs),
                    sub_components=sub_component_properties,
                    port_exposures=port_exposures,
-                   port_connections=port_connections)
+                   port_connections=port_connections,
+                   document=document)
 
     @property
     def initial_values(self):

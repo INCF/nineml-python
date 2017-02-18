@@ -17,7 +17,7 @@ class TestFindMismatch(unittest.TestCase):
       other:'P2', 'P3', 'P4'
   Attribute '_aliases':
       Key 'A1':
-        Attribute '_rhs': mismatch in type self:Mul != other:Symbol
+        Attribute '_rhs': mismatch in type self:Mul != other:Symbol (P1*SV2 and SV2)
   Attribute '_analog_send_ports':
       Key 'A1':
         Attribute '_dimension':

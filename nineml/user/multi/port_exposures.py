@@ -2,7 +2,7 @@ from itertools import chain
 from .. import BaseULObject
 import sympy
 import operator
-from nineml.base import clone_id, BaseNineMLObject
+from nineml.base import clone_id, BaseNineMLObject, _clone_attr
 from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
@@ -21,9 +21,6 @@ class BasePortExposure(BaseULObject):
 
     def __init__(self, component, port, name=None):
         super(BasePortExposure, self).__init__()
-        if name is not None:
-            ensure_valid_identifier(name)
-        self._name = name
         if isinstance(component, basestring):
             self._sub_component_name = component
         else:
@@ -32,6 +29,11 @@ class BasePortExposure(BaseULObject):
             self._port_name = port
         else:
             self._port_name = port.name
+        if name is None:
+            name = append_namespace(self.port_name, self.sub_component_name)
+        else:
+            ensure_valid_identifier(name)
+        self._name = name
         self._parent = None
 
     def __hash__(self):
@@ -40,11 +42,7 @@ class BasePortExposure(BaseULObject):
 
     @property
     def name(self):
-        if self._name is not None:
-            name = self._name
-        else:
-            name = append_namespace(self.port_name, self.sub_component_name)
-        return name
+        return self._name
 
     @property
     def sub_component(self):
@@ -151,8 +149,7 @@ class BasePortExposure(BaseULObject):
     def _clone_defining_attr(self, clone, memo, **kwargs):
         super(BasePortExposure, self)._clone_defining_attr(clone, memo,
                                                            **kwargs)
-        clone._port_name = self._port_name
-        clone._sub_component_name = self._sub_component_name
+        clone._parent = _clone_attr(self._parent, memo, **kwargs)
 
 
 class _BaseAnalogPortExposure(BasePortExposure):
