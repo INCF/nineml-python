@@ -890,6 +890,10 @@ class BaseNineMLVisitor(object):
         self._method_name = None
 
     def visit(self, obj, **kwargs):
+        # Allow deriving classes to run a function when visiting the top most
+        # object in the hierarchy
+        if not self.contexts:
+            self.initial(obj, **kwargs)
         # Run the 'action_<obj-nineml_type>' method on the visited object
         result = self.action(obj, **kwargs)
         # Visit all the attributes of the object that are 9ML objects
@@ -915,6 +919,8 @@ class BaseNineMLVisitor(object):
         # Peform "post-action" method that runs after the children/attributes
         # have been visited
         self.post_action(obj, results, **kwargs)
+        if not self.contexts:
+            self.final(obj, **kwargs)
 
     def action(self, obj, **kwargs):
         return getattr(self, 'action_' + obj.nineml_type.lower())(obj,
@@ -923,6 +929,12 @@ class BaseNineMLVisitor(object):
     def post_action(self, obj, results, **kwargs):
         getattr(self, 'post_action_' + obj.nineml_type.lower())(
             obj, results, **kwargs)
+
+    def initial(self, obj, **kwargs):
+        pass
+
+    def final(self, obj, **kwargs):
+        pass
 
     @property
     def context(self):

@@ -293,6 +293,8 @@ multiDynPropA = MultiDynamicsProperties(
 
 multiDynA = multiDynPropA.component_class
 
+multiDynA.validate()
+
 multiDynPropB = MultiDynamicsProperties(
     name='multiDynPropB',
     sub_components={
@@ -480,11 +482,31 @@ netC = Network(
     populations=[popMultiA, popMultiB],
     projections=[projE])
 
+r = multiDynA.regime('R1___R1')
+esp1 = multiDynA.event_send_port('ESP1__e')
+print id(esp1.port)
+t = r.on_condition('SV1__e > P3__e')
+print t
+oe = list(list(t.sub_transitions)[0].output_events)[0]
+print oe
+print id(oe.port)
+
 doc1 = Document(
     dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, multiDynPropA,
     multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
     selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA,
     netB, *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))))
+
+
+r = multiDynA.regime('R1___R1')
+esp1 = multiDynA.event_send_port('ESP1__e')
+print id(esp1.port)
+t = r.on_condition('SV1__e > P3__e')
+print t
+oe = list(list(t.sub_transitions)[0].output_events)[0]
+print oe
+print id(oe.port)
+
 
 doc2 = Document(
     dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC,
@@ -588,8 +610,9 @@ assert not (_all_class_names - _all_instance_names), (
     .format("', '".join(_all_class_names - _all_instance_names)))
 
 if __name__ == '__main__':
-    r = multiDynA.regime('R1___R1')
-    t = list(r.transitions)[2]
-    print list(list(t.sub_transitions)[0].output_events)
-    print list(t.output_events)
+    multiDynA.validate()
+#     r = multiDynA.regime('R1___R1')
+#     t = list(r.transitions)[2]
+#     print list(list(t.sub_transitions)[0].output_events)
+#     print list(t.output_events)
     print 'done'

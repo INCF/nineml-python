@@ -127,9 +127,9 @@ class Document(AnnotatedNineMLObject, dict):
                         .format(element.name, element.nineml_type,
                                 self.url, element.document.url))
                 element._document = self  # Set its document to this one
-                # Add any "unbound" (sub-elements that don't already belong
+                # Add any nested objects that don't already belong
                 # to another document
-                AddUnboundReferencesToDocumentVisitor(self).visit(element)
+                AddNestedObjectsToDocumentVisitor(self).visit(element)
             self[element.name] = element
         if self._added_in_write is not None:
             self._added_in_write.append(element)
@@ -722,7 +722,7 @@ def get_component_type(comp_xml, doc_xml, relative_to):
     return cls
 
 
-class AddUnboundReferencesToDocumentVisitor(BaseNineMLVisitor):
+class AddNestedObjectsToDocumentVisitor(BaseNineMLVisitor):
     """
     Traverses any 9ML object and adds any "unbound" objects to the document (or
     optionally clones of bound), i.e. objects that currently don't belong to
@@ -735,8 +735,9 @@ class AddUnboundReferencesToDocumentVisitor(BaseNineMLVisitor):
     """
 
     def __init__(self, document):
-        super(AddUnboundReferencesToDocumentVisitor, self).__init__()
+        super(AddNestedObjectsToDocumentVisitor, self).__init__()
         self.document = document
+        self.ref_updator = UpdateCrossReferencesVisitor()
 
     def action(self, obj, add_bound=False, **kwargs):  # @UnusedVariable
         """
@@ -763,6 +764,7 @@ class AddUnboundReferencesToDocumentVisitor(BaseNineMLVisitor):
                 if obj == doc_obj:
                     if obj is not doc_obj:
                         self.context.replace(obj, doc_obj)
+                        self.ref_updator.add_ids(obj, doc_obj)
                         obj._document = None  # Reset to previous state
                 else:
                     obj._document = None  # Reset to previous state
@@ -776,8 +778,43 @@ class AddUnboundReferencesToDocumentVisitor(BaseNineMLVisitor):
                 obj = self.document.add(obj, clone=False)
         return obj
 
-    def post_action(self, obj, results, **kwargs):
+    def post_action(self, *args, **kwargs):
         pass
+
+    def final(self, obj, **kwargs):
+        self.ref_updator.visit(obj, **kwargs)
+
+
+class UpdateCrossReferencesVisitor(BaseNineMLVisitor):
+    """
+    This visitor updates all cross references within a object if a nested
+    component is replaced. This is used in particular for port exposures
+    which contain a (Python) reference to the port they are exposing. This
+    is probably bad design as it has led to having to do this. Probably all
+    Python (as distinct from the Reference 9ML object) references that cut
+    across the object hierarchy should be removed at some point in the future
+    and this visitor won't be necessary.
+    """
+
+    def __init__(self):
+        super(UpdateCrossReferencesVisitor, self).__init__()
+        self.id_map = {}
+
+    def action(self, obj, **kwargs):  # @UnusedVariable
+        for attr_name in obj.defining_attributes:
+            attr_id = id(getattr(obj, attr_name))
+            if attr_id in self.id_map:
+                setattr(obj, attr_name, self.id_map[attr_id])
+
+    def post_action(self, *args, **kwargs):
+        pass
+
+    def add_ids(self, old_obj, new_obj):
+        """
+        Updates the id_map with a mapping from the id of all 9ML objects in the
+        old object to the equivalent component of the new object
+        """
+        raise NotImplementedError
 
 
 import nineml  # @IgnorePep8
