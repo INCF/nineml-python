@@ -46,6 +46,10 @@ class NineMLImmutableError(NineMLRuntimeError):
     pass
 
 
+class NineMLTargetMissingError(NineMLRuntimeError):
+    pass
+
+
 class NineMLXMLError(NineMLRuntimeError):
     pass
 

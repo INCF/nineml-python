@@ -8,15 +8,16 @@ from nineml.abstraction import (
     EventReceivePort, Alias)
 from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import NineMLRuntimeError, NineMLImmutableError
+from nineml.exceptions import (
+    NineMLRuntimeError, NineMLImmutableError, NineMLTargetMissingError,
+    NineMLNameError)
 from .namespace import append_namespace
 from nineml.utils import ensure_valid_identifier
 
 
 class BasePortExposure(BaseULObject):
 
-    defining_attributes = ('_name', '_sub_component', '_port', '_port_name',
-                           '_sub_component_name')
+    defining_attributes = ('_name', '_port_name', '_sub_component_name')
 
     def __init__(self, component, port, name=None):
         super(BasePortExposure, self).__init__()
@@ -25,32 +26,16 @@ class BasePortExposure(BaseULObject):
         self._name = name
         if isinstance(component, basestring):
             self._sub_component_name = component
-            self._sub_component = None
         else:
-            self._sub_component_name = None
-            assert isinstance(component,
-                              nineml.user.multi.dynamics.SubDynamics)
-            self._sub_component = component
+            self._sub_component_name = component.name
         if isinstance(port, basestring):
             self._port_name = port
-            self._port = None
         else:
-            self._port = port
-            self._port_name = None
-
-    def equals(self, other, **kwargs):
-        if not isinstance(other, self.__class__):
-            return False
-        return (self.name == other.name and
-                self._sub_component == other._sub_component and
-                self._sub_component_name == other._sub_component_name and
-                self._port == other._port and
-                self._port_name == other._port_name and
-                self.annotations_equal(other, **kwargs))
+            self._port_name = port.name
+        self._parent = None
 
     def __hash__(self):
-        return (hash(self._name) ^ hash(self._sub_component) ^
-                hash(self._sub_component_name) ^ hash(self._port) ^
+        return (hash(self._name) ^ hash(self._sub_component_name) ^
                 hash(self._port_name))
 
     @property
@@ -63,31 +48,35 @@ class BasePortExposure(BaseULObject):
 
     @property
     def sub_component(self):
-        if self._sub_component is None:
+        if self._parent is None:
             raise NineMLRuntimeError(
                 "Port exposure is not bound")
-        return self._sub_component
+        try:
+            return self._parent[self.sub_component_name]
+        except NineMLNameError:
+            raise NineMLTargetMissingError(
+                "Did not find sub-component '{}' the target sub-component "
+                "may have been moved after the '{}' port-exposure was bound.")
 
     @property
     def port(self):
-        if self._port is None:
+        if self._parent is None:
             raise NineMLRuntimeError(
                 "Port exposure is not bound")
-        return self._port
+        try:
+            return self.sub_component.component_class.port(self.port_name)
+        except NineMLNameError:
+            raise NineMLTargetMissingError(
+                "Did not find port '{}' in sub-component '{}', target port "
+                "may have been moved after the '{}' port-exposure was bound.")
 
     @property
     def sub_component_name(self):
-        try:
-            return self.sub_component.name
-        except NineMLRuntimeError:
-            return self._sub_component_name
+        return self._sub_component_name
 
     @property
     def port_name(self):
-        try:
-            return self.port.name
-        except NineMLRuntimeError:
-            return self._port_name
+        return self._port_name
 
     @property
     def local_port_name(self):
@@ -147,10 +136,17 @@ class BasePortExposure(BaseULObject):
         return exposure
 
     def bind(self, container):
-        self._sub_component = container[self.sub_component_name]
-        self._port = self._sub_component.component_class.port(self.port_name)
-        self._sub_component_name = None
-        self._port_name = None
+        """
+        "Bind" the port exposure to a MultiDynamics object, checking to see
+        whether the sub-component/port-name pair refers to an existing port
+
+        Parameters
+        ----------
+        container : MultiDynamics
+            The MultiDynamics object the port exposure will belong to
+        """
+        self._parent = container
+        self.port  # This will check to see whether the path to the port exists
 
     def _clone_defining_attr(self, clone, memo, **kwargs):
         super(BasePortExposure, self)._clone_defining_attr(clone, memo,

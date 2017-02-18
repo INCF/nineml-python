@@ -923,17 +923,30 @@ class BaseNineMLVisitor(object):
             self.final(obj, **kwargs)
 
     def action(self, obj, **kwargs):
-        return getattr(self, 'action_' + obj.nineml_type.lower())(obj,
-                                                                  **kwargs)
+        try:
+            method = getattr(self, 'action_' + obj.nineml_type.lower())
+        except AttributeError:
+            method = self.default_action
+        return method(obj, **kwargs)
 
     def post_action(self, obj, results, **kwargs):
-        getattr(self, 'post_action_' + obj.nineml_type.lower())(
-            obj, results, **kwargs)
+        try:
+            method = getattr(self, 'post_action_' + obj.nineml_type.lower())
+        except AttributeError:
+            method = self.default_post_action
+        return method(obj, results, **kwargs)
 
     def initial(self, obj, **kwargs):
+        """
+        Ran after the object at the top of the hierarchy is visited
+        """
         pass
 
     def final(self, obj, **kwargs):
+        """
+        Ran after all the children and attributes the object at the top of the
+        hierarchy is visited
+        """
         pass
 
     @property
@@ -943,17 +956,6 @@ class BaseNineMLVisitor(object):
         else:
             context = None
         return context
-
-    def __getattr__(self, method_name):
-        self._method_name = method_name
-        if method_name.startswith('action_'):
-            method = self.default_action
-        elif method_name.startswith('post_action_'):
-            method = self.default_post_action
-        else:
-            raise AttributeError(method_name)
-        self._method_name = None
-        return method
 
     def default_action(self, obj, **kwargs):  # @UnusedVariable
         assert False, (
