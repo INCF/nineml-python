@@ -50,10 +50,7 @@ class TestCloners(unittest.TestCase):
                                  "Clone of {} does not match original:\n{}"
                                  .format(elem, elem.find_mismatch(clone)))
                 self.assertNotEqual(elem, prev_elem,
-                                    "{} matches previous elem {}:\n{}"
-                                    .format(elem, prev_elem,
-                                            elem.find_mismatch(prev_elem)))
-
+                                    "{} matches previous elem {} incorrectly")
                 prev_elem = elem
 
 

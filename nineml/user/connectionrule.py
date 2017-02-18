@@ -4,7 +4,7 @@ import math
 from abc import ABCMeta, abstractmethod
 from itertools import izip, repeat
 from random import Random, randint
-from nineml.base import clone_id
+from nineml.base import clone_id, BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError
 from nineml.user.component import Component
 
@@ -27,13 +27,14 @@ class ConnectionRuleProperties(Component):
         return self.component_class.lib_type
 
 
-class BaseConnectivity(object):
+class BaseConnectivity(BaseNineMLObject):
     """
     An abstract base classes for instances of connectivity
     (i.e. connection-rule + properties + random seed)
     """
 
     __metaclass__ = ABCMeta
+    defining_attributes = ('_rule_props', '_src_size', '_dest_size')
 
     def __init__(self, connection_rule_properties, source_size,
                  destination_size):
@@ -96,13 +97,15 @@ class BaseConnectivity(object):
         pass
 
 
-class InverseConnectivity(object):
+class InverseConnectivity(BaseNineMLObject):
     """
     Inverts the connectivity so that the source and destination are effectively
     flipped. Used when mapping a projection connectivity to a reverse
     connection to from the synapse or post-synaptic cell to the pre-synaptic
     cell
     """
+    nineml_type = '_InverseConnectivity'
+    defining_attributes = ('_connectivity',)
 
     def __init__(self, connectivity):  # @UnusedVariable
         self._connectivity = connectivity
@@ -148,6 +151,7 @@ class Connectivity(BaseConnectivity):
     """
     A reference implementation of the Connectivity class.
     """
+    nineml_type = '_Connectivity'
 
     def __init__(self, connection_rule_properties, source_size,
                  destination_size, random_seed=None, rng_cls=None):

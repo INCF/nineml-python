@@ -26,7 +26,6 @@ class TestComprehensiveXML(TestCase):
                 url = os.path.join(self._tmp_dir,
                                    'test{}v{}.xml'.format(i, version))
                 nineml.write(doc, url, version=version)
-                print url
                 reread_doc = nineml.read(url, force_reload=True)
                 self.assertTrue(doc.equals(reread_doc),
                                 doc.find_mismatch(reread_doc))

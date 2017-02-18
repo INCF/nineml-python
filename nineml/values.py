@@ -293,6 +293,8 @@ class ArrayValue(BaseValue):
                 return False
         except AttributeError:
             return False
+        if len(self._values) != len(other._values):
+            return False
         if not all(nearly_equal(s, o)
                    for s, o in izip(self._values, other._values)):
             return False
