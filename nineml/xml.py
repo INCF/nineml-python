@@ -121,11 +121,12 @@ def from_child_xml(element, child_classes, document, multiple=False,
                     tag_name = child_cls.nineml_type
             else:
                 tag_name = child_cls.nineml_type
-            for child_elem in parent.findall(xmlns + tag_name):
-                children.append(child_cls.from_xml(child_elem, document,
-                                                   **kwargs))
-                if unprocessed and not within:
-                    unprocessed[0].discard(child_elem)
+            if tag_name is not None:  # Can be if xmlns == v1 and not v1 object
+                for child_elem in parent.findall(xmlns + tag_name):
+                    children.append(child_cls.from_xml(child_elem, document,
+                                                       **kwargs))
+                    if unprocessed and not within:
+                        unprocessed[0].discard(child_elem)
     if allow_reference:
         for ref_elem in parent.findall(
                 xmlns + nineml.reference.Reference.nineml_type):

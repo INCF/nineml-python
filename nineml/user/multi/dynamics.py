@@ -47,6 +47,7 @@ _DummyNamespaceRegime = collections.namedtuple('_DummyNamespaceRegime',
 class MultiDynamicsProperties(DynamicsProperties):
 
     nineml_type = "MultiDynamicsProperties"
+    v1_nineml_type = None
     defining_attributes = ('_name', '_definition', '_sub_components')
     class_to_member = {'SubDynamicsProperties': 'sub_component'}
     write_order = ('Definition', 'SubDynamicsProperties')
