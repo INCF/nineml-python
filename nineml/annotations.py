@@ -76,7 +76,7 @@ def annotate_xml(to_xml):
                 for key, elem, index in obj.all_indices():
                     index_annot = indices_annot.add((INDEX_TAG, PY9ML_NS))
                     index_annot.set(INDEX_KEY_ATTR, key)
-                    index_annot.set(INDEX_NAME_ATTR, elem.name)
+                    index_annot.set(INDEX_NAME_ATTR, elem.key)
                     index_annot.set(INDEX_INDEX_ATTR, index)
                 ind_annot_xml = indices_annot.to_xml(E=E, **kwargs)
                 if annot_xml is None:
