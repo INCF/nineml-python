@@ -576,6 +576,9 @@ class ContainerObject(BaseNineMLObject):
                     "with an existing element with the same key"
                     .format(element.key, type(element).__name__))
             dct[element.key] = element
+            # Set parent if a property of the child element to add
+            if hasattr(element, 'parent'):
+                element._parent = self
 
     def remove(self, *elements):
         for element in elements:
@@ -587,6 +590,12 @@ class ContainerObject(BaseNineMLObject):
                     "Could not remove '{}' from container as it was not "
                     "found in member dictionary (use 'ignore_missing' option "
                     "to ignore)".format(element.key))
+            # Remove reference to parent if present
+            try:
+                if element.parent is self:
+                    element._parent = None
+            except AttributeError:
+                pass
 
     def _update_member_key(self, old_key, new_key):
         """
