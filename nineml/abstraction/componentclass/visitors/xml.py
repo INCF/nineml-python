@@ -10,7 +10,7 @@ from ...expressions import Alias, Constant
 from nineml.abstraction.componentclass.base import Parameter
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.xml import (
-    E, strip_xmlns, extract_xmlns, get_xml_attr, identify_element,
+    extract_xmlns, get_xml_attr, identify_element,
     unprocessed_xml, ALL_NINEML, NINEMLv1)
 from nineml.exceptions import NineMLXMLBlockError
 from nineml.abstraction.expressions import Expression
@@ -111,19 +111,19 @@ class ComponentClassXMLWriter(ComponentVisitor):
         return self.E._namespace
 
     @annotate_xml
-    def visit_parameter(self, parameter, **kwargs):
+    def visit_parameter(self, parameter, **kwargs):  # @UnusedVariable
         return self.E(Parameter.nineml_type,
                       name=parameter.name,
                       dimension=parameter.dimension.name)
 
     @annotate_xml
-    def visit_alias(self, alias, **kwargs):
+    def visit_alias(self, alias, **kwargs):  # @UnusedVariable
         return self.E(Alias.nineml_type,
                       self.E("MathInline", alias.rhs_xml),
                       name=alias.lhs)
 
     @annotate_xml
-    def visit_constant(self, constant, **kwargs):
+    def visit_constant(self, constant, **kwargs):  # @UnusedVariable
         if self.xmlns == NINEMLv1:
             xml = self.E(Constant.nineml_type,
                          repr(constant.value),

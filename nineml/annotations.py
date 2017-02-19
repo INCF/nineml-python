@@ -1,6 +1,6 @@
 from copy import copy
 from collections import defaultdict
-from nineml.xml import E, extract_xmlns, strip_xmlns
+from nineml.xml import E as defaultE, extract_xmlns, strip_xmlns
 from nineml.base import DocumentLevelObject, BaseNineMLObject, ContainerObject
 import re
 from nineml.xml import ElementMaker, etree
@@ -46,17 +46,19 @@ def read_annotations(from_xml):
 
 
 def annotate_xml(to_xml):
-    def annotate_to_xml(self, document_or_obj, E=E, **kwargs):
+    def annotate_to_xml(self, document_or_obj, **kwargs):
         """
         Parameters
         ----------
         save_indices : bool
             Whether to save the indices assigned to sub-elements or not
         """
+        E = kwargs.pop('E', defaultE)
         # If Abstraction Layer class
         if xml_visitor_module_re.match(type(self).__module__):
             obj = document_or_obj
             options = self.options
+            E = self.E
         # If User Layer class
         else:
             obj = self
@@ -330,7 +332,7 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
                 rep += '\n' + b._repr(indent='  ')
         return rep
 
-    def to_xml(self, E=E, **kwargs):  # @UnusedVariable
+    def to_xml(self, E=defaultE, **kwargs):  # @UnusedVariable
         return E(self.nineml_type, *self._sub_branches_to_xml(**kwargs))
 
     @classmethod
