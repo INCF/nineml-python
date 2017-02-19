@@ -1,10 +1,9 @@
 from copy import copy
 from collections import defaultdict
-from itertools import chain
 from nineml.xml import E, extract_xmlns, strip_xmlns
 from nineml.base import DocumentLevelObject, BaseNineMLObject, ContainerObject
 import re
-from nineml.xml import ElementMaker, nineml_ns, etree
+from nineml.xml import ElementMaker, etree
 from nineml.exceptions import (
     NineMLXMLError, NineMLRuntimeError, NineMLNameError)
 
@@ -67,6 +66,16 @@ def annotate_xml(to_xml):
         if not options.get('no_annotations', False):
             if obj.annotations:
                 annot_xml = obj.annotations.to_xml(E=E, **kwargs)
+                # Strip validate_dimensions annotation if True (to clean up
+                # written files) as this is the default so can be
+                # ignored and avoid cluttering the written file
+                try:
+                    if obj.annotations.get((VALIDATION, PY9ML_NS),
+                                           DIMENSIONALITY) == 'True':
+                        obj.annotations.delete((VALIDATION, PY9ML_NS),
+                                               DIMENSIONALITY)
+                except NineMLNameError:
+                    pass
             # Append sub-element indices if 'save_indices' is provided and true
             if (options.get('save_indices', False) and
                     isinstance(obj, ContainerObject)):
@@ -103,6 +112,9 @@ class BaseAnnotations(BaseNineMLObject):
 
     def __repr__(self):
         return self._repr()
+
+    def empty(self):
+        return not self._branches
 
     def equals(self, other, **kwargs):  # @UnusedVariable
         try:
@@ -250,6 +262,32 @@ class BaseAnnotations(BaseNineMLObject):
                     "No annotation at path '{}'".format("', '".join(args)))
         return val
 
+    def delete(self, key, *args, **kwargs):
+        """
+        Gets the attribute of an annotations "leaf"
+
+        Parameters
+        ----------
+        key : str
+            Name of the first branch in the annotations tree
+        *args : list(str) + (int|float|str)
+            A list of subsequent branches to the leaf node followed by the
+            attribute name to delete
+        """
+        key = self._parse_key(key)
+        if key in self._branches:
+            key_branches = self._branches[key]
+            if len(key_branches) == 1:
+                # Recurse into branches while there are remaining args
+                key_branches[0].delete(*args, **kwargs)
+                if key_branches[0].empty():
+                    del self._branches[key]
+            else:
+                raise NineMLNameError(
+                    "Multiple branches found for key '{}' in annoations "
+                    "branch '{}', cannot use 'delete' method".format(
+                        key, self._name))
+
     @classmethod
     def _extract_key(cls, child):
         ns = extract_xmlns(child.tag)
@@ -345,6 +383,9 @@ class _AnnotationsBranch(BaseAnnotations):
         self._attr = attr
         self._text = text
 
+    def empty(self):
+        return super(_AnnotationsBranch, self).empty() and not self.attr
+
     @property
     def name(self):
         return self._name
@@ -434,10 +475,37 @@ class _AnnotationsBranch(BaseAnnotations):
             if 'default' in kwargs:
                 val = self._attr.get(key, kwargs['default'])
             else:
-                val = self._attr[key]
+                try:
+                    val = self._attr[key]
+                except KeyError:
+                    raise NineMLNameError(
+                        "Annotations branch {{{}}}{} does not contain '{}' "
+                        "attribute".format(self.ns, self.name, key))
         else:
             val = super(_AnnotationsBranch, self).get(key, *args, **kwargs)
         return val
+
+    def delete(self, key, *args, **kwargs):
+        """
+        Gets the attribute of an annotations "leaf"
+
+        Parameters
+        ----------
+        key : str
+            Name of the first branch in the annotations tree
+        *args : list(str) + (int|float|str)
+            A list of subsequent branches to the leaf node followed by the
+            attribute name to delete
+        """
+        if not args:
+            try:
+                del self.attr[key]
+            except KeyError:
+                raise NineMLNameError(
+                    "Annotations branch {{{}}}{} does not contain '{}' "
+                    "attribute".format(self.ns, self.name, key))
+        else:
+            super(_AnnotationsBranch, self).delete(key, *args, **kwargs)
 
     def to_xml(self, **kwargs):  # @UnusedVariable
         E = ElementMaker(namespace=self.ns)

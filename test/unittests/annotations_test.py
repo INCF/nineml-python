@@ -10,7 +10,6 @@ from nineml.abstraction.dynamics.visitors.xml import (
     DynamicsXMLLoader, DynamicsXMLWriter)
 from nineml import Document
 from nineml.utils import xml_equal
-from nineml.exceptions import NineMLRuntimeError
 import nineml.units as un
 
 
@@ -115,6 +114,14 @@ class TestAnnotations(unittest.TestCase):
         self.assertEqual(sorted(branch.attr_items()), [('x', '4.0'),
                                                        ('y', '5.0'),
                                                        ('z', '6.0')])
+
+    def test_delete(self):
+        annot = Annotations()
+        annot.set(('a', 'ns'), 'b', 'c', 'd', 'e', 1)
+        self.assertFalse(annot.empty())
+        self.assertEqual(annot.get(('a', 'ns'), 'b', 'c', 'd', 'e'), '1')
+        annot.delete(('a', 'ns'), 'b', 'c', 'd', 'e')
+        self.assertTrue(annot.empty())
 
     def test_equals_with_annotations_ns(self):
         a = Dynamics(
