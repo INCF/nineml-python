@@ -252,6 +252,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         DynamicsValidator.validate_componentclass(self, validate_dimensions,
                                                   **kwargs)
 
+    def has_random_process(self):
+        return DynamicsHasRandomProcessQuerier().visit(self)
+
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
@@ -522,7 +525,8 @@ from .visitors.cloner import DynamicsCloner  # @IgnorePep8
 from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsRequiredDefinitions,
                                 DynamicsExpressionExtractor,
-                                DynamicsDimensionResolver)
+                                DynamicsDimensionResolver,
+                                DynamicsHasRandomProcessQuerier)
 from .visitors.modifiers import (  # @IgnorePep8
     DynamicsRenameSymbol, DynamicsAssignIndices,
     DynamicsExpandAliasDefinition)
