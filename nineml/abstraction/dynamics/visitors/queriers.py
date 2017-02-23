@@ -162,6 +162,8 @@ class DynamicsDimensionResolver(ComponentDimensionResolver,
 class DynamicsHasRandomProcessQuerier(DynamicsActionVisitor):
 
     def __init__(self):
+        super(DynamicsHasRandomProcessQuerier, self).__init__(
+            require_explicit_overrides=False)
         self._found = False
 
     def visit_componentclass(self, component_class):
@@ -170,5 +172,5 @@ class DynamicsHasRandomProcessQuerier(DynamicsActionVisitor):
         return self._found
 
     def action_stateassignment(self, stateassignment):
-        if stateassignment.rhs_random_distributions:
+        if list(stateassignment.rhs_random_distributions):
             self._found = True

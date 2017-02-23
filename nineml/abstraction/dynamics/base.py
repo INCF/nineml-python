@@ -6,7 +6,7 @@ components definitions of interface and dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from nineml.exceptions import NineMLRuntimeError, name_error, NineMLNameError
+from nineml.exceptions import NineMLRuntimeError, name_error
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
 from itertools import chain
 from nineml.abstraction.componentclass import (
@@ -16,19 +16,15 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      EventSendPort)
 from nineml.utils import (check_inferred_against_declared,
                           assert_no_duplicates)
-from nineml.xml import nineml_ns, E
+from nineml.xml import E
 from nineml.annotations import VALIDATION, DIMENSIONALITY, PY9ML_NS
 from nineml.base import DynamicPortsObject
 
 
 class Dynamics(ComponentClass, DynamicPortsObject):
 
-    """A Dynamics object represents a *component* in NineML.
-
-      .. todo::
-
-         For more information, see
-
+    """
+    A Dynamics object represents a *component* in NineML.
     """
     nineml_type = 'Dynamics'
     defining_attributes = (ComponentClass.defining_attributes +
@@ -61,7 +57,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
                  state_variables=None, constants=None,
                  validate_dimensions=True, document=None, strict_unused=True,
                  **kwargs):
-        """Constructs a Dynamics component class
+        """
+        Constructs a Dynamics component class
 
         Parameters
         ----------
@@ -252,7 +249,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         DynamicsValidator.validate_componentclass(self, validate_dimensions,
                                                   **kwargs)
 
-    def has_random_process(self):
+    def is_random(self):
         return DynamicsHasRandomProcessQuerier().visit(self)
 
     def accept_visitor(self, visitor, **kwargs):

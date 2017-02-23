@@ -85,13 +85,13 @@ dynB = Dynamics(
             transitions=[On('SV1 > P1', do=[OutputEvent('ESP1')]),
                          On('ERP1', do=[
                             OutputEvent('ESP1'),
-                            StateAssignment('SV1', 'P1')])],
+                            StateAssignment('SV1', 'P1 + random.uniform()')])],
             name='R1',
         ),
         Regime(name='R2', transitions=[
             On('SV1 > 1', to='R1'),
             On('SV3 < 0.001', to='R2',
-               do=[StateAssignment('SV3', 1)])])
+               do=[StateAssignment('SV3', '2 * random.normal()')])])
     ],
     constants=[Constant('C1', 10.0 * un.mA, un.nA)],
     analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
@@ -132,7 +132,9 @@ dynD = Dynamics(
         Regime(
             'dSV1/dt = -SV1 / P1 + ADP1 + ARP1 * P3',
             transitions=[On('SV1 > P2', do=[OutputEvent('ESP1')]),
-                         On('ERP1', do=[StateAssignment('SV1', 'P2')])],
+                         On('ERP1',
+                            do=[StateAssignment(
+                                'SV1', 'P2 * random.binomial(1,2)')])],
             name='R1'
         ),
     ],
@@ -211,7 +213,9 @@ dynH = Dynamics(
         Regime(
             name='R1',
             transitions=[On('ERP1',
-                            do=[StateAssignment('SV1', 'SV1 + P2')])])],
+                            do=[StateAssignment(
+                                'SV1',
+                                'SV1 + P2 * random.exponential(5)')])])],
     analog_ports=[AnalogSendPort('A1', un.dimensionless)])
 
 dynPropA = DynamicsProperties(

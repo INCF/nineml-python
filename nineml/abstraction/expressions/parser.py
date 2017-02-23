@@ -28,6 +28,10 @@ class Parser(object):
     _valid_identifier_re = re.compile(r'^[a-zA-Z_]\w*$')
     _escape_random_re = re.compile(r'(?<!\w)random\.(\w+)(?!\w)')
     _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_(?!\w)')
+    _escape_empty_parens_re = re.compile(
+        r'(?<!\w)random_(uniform|normal)_\(\)')
+    _unescape_empty_parens_re = re.compile(
+        r'(?<!\w)random_(uniform|normal)_\(0\)')
     _logic_relation_re = re.compile(r'(?:&|\||<|>|=)')
     # Matches logic and relational expressions, as well as parens and funcname(
     _tokenize_logic_re = re.compile(r'\s*(&{1,2}|\|{1,2}|<=?|>=?|==?|'
@@ -42,7 +46,8 @@ class Parser(object):
         'random_uniform_': sympy.Function('random_uniform_'),
         'random_binomial_': sympy.Function('random_binomial_'),
         'random_poisson_': sympy.Function('random_poisson_'),
-        'random_exponential_': sympy.Function('random_exponential_')}
+        'random_exponential_': sympy.Function('random_exponential_'),
+        'random_normal_': sympy.Function('random_normal_')}
 
     def __init__(self):
         self.escaped_names = None
@@ -202,10 +207,12 @@ class Parser(object):
 
     @classmethod
     def escape_random_namespace(cls, expr):
-        return cls._escape_random_re.sub(r'random_\1_', expr)
+        expr = cls._escape_random_re.sub(r'random_\1_', expr)
+        return cls._escape_empty_parens_re.sub(r'random_\1_(0)', expr)
 
     @classmethod
     def unescape_random_namespace(cls, expr):
+        expr = cls._unescape_empty_parens_re.sub('random_\1_()', expr)
         return cls._unescape_random_re.sub(r'random.\1', expr)
 
     @classmethod

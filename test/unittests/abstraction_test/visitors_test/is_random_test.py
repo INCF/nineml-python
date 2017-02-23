@@ -38,13 +38,13 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
                     name='R1',
                 ),
                 Regime(name='R2', transitions=On(
-                    'SV1 > 1', 'SV1 := SV1 * random.uniform()', to='R1'))
+                    'SV1 > 1', 'SV1 = SV1 * random.normal()', to='R1'))
             ],
             analog_ports=[AnalogReceivePort('ARP1'), AnalogReceivePort('ARP2'),
                           AnalogSendPort('A1'), AnalogSendPort('A2')],
             parameters=['P1', 'P2']
         )
 
-    def test_has_random_process(self):
-        self.assertFalse(self.a.has_random_process())
-        self.assertTrue(self.b.has_random_process())
+    def test_is_random(self):
+        self.assertFalse(self.a.is_random())
+        self.assertTrue(self.b.is_random())
