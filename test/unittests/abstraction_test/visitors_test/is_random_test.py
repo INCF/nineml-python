@@ -46,5 +46,5 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
         )
 
     def test_is_random(self):
-        self.assertFalse(self.a.is_random())
-        self.assertTrue(self.b.is_random())
+        self.assertFalse(self.a.is_random)
+        self.assertTrue(self.b.is_random)
