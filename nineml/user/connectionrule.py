@@ -37,7 +37,7 @@ class BaseConnectivity(BaseNineMLObject):
     defining_attributes = ('_rule_props', '_src_size', '_dest_size')
 
     def __init__(self, connection_rule_properties, source_size,
-                 destination_size):
+                 destination_size, **kwargs):  # @UnusedVariable
         if (connection_rule_properties.lib_type == 'OneToOne' and
                 source_size != destination_size):
             raise NineMLRuntimeError(
@@ -218,7 +218,7 @@ class Connectivity(BaseConnectivity):
             self._rule_props.property('destinationIndices').value.values)
 
     def _probabilistic_connectivity(self):  # @UnusedVariable
-        # Reinitialise the connectivity generator with the same RNG so that
+        # Reinitialize the connectivity generator with the same RNG so that
         # it selects the same numbers
         rng = self._rng_cls(self._seed)
         p = float(self._rule_props.property('probability').value)

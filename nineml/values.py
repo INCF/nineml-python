@@ -251,6 +251,22 @@ class SingleValue(BaseValue):
     def __abs__(self):
         return SingleValue(abs(self._value))
 
+    @parse_right_operand
+    def __lt__(self, other):
+        return self._value < other
+
+    @parse_right_operand
+    def __le__(self, other):
+        return self._value <= other
+
+    @parse_right_operand
+    def __ge__(self, other):
+        return self._value >= other
+
+    @parse_right_operand
+    def __gt__(self, other):
+        return self._value > other
+
 
 class ArrayValue(BaseValue):
 
@@ -492,6 +508,34 @@ class ArrayValue(BaseValue):
             return ArrayValue(self._values.__abs__())
         except AttributeError:
             return ArrayValue([abs(v) for v in self._values])
+
+    @parse_float_operand
+    def __lt__(self, other):
+        try:
+            return ArrayValue(self._values.__lt__(other))
+        except AttributeError:
+            return ArrayValue([v < other for v in self._values])
+
+    @parse_float_operand
+    def __le__(self, other):
+        try:
+            return ArrayValue(self._values.__le__(other))
+        except AttributeError:
+            return ArrayValue([v <= other for v in self._values])
+
+    @parse_float_operand
+    def __ge__(self, other):
+        try:
+            return ArrayValue(self._values.__ge__(other))
+        except AttributeError:
+            return ArrayValue([v >= other for v in self._values])
+
+    @parse_float_operand
+    def __gt__(self, other):
+        try:
+            return ArrayValue(self._values.__gt__(other))
+        except AttributeError:
+            return ArrayValue([v > other for v in self._values])
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         super(ArrayValue, self)._copy_to_clone(clone, memo, **kwargs)

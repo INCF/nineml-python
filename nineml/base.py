@@ -261,7 +261,7 @@ class BaseNineMLObject(object):
         """
         General purpose clone operation, which copies the attributes used
         to define equality between 9ML objects. Other attributes, such as
-        the document the 9ML object belongs to are re-initialised. Use this
+        the document the 9ML object belongs to are re-initialized. Use this
         in favour of Python's copy and deepcopy functions unless you know what
         you want (i.e. things are likely to break if you are not careful).
 

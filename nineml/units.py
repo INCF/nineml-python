@@ -592,6 +592,18 @@ class Quantity(AnnotatedNineMLObject):
     def __abs__(self):
         return Quantity(abs(self._value), self.units)
 
+    def __lt__(self, qty):
+        return self._value < self._scaled_value(qty)
+
+    def __le__(self, qty):
+        return self._value <= self._scaled_value(qty)
+
+    def __ge__(self, qty):
+        return self._value >= self._scaled_value(qty)
+
+    def __gt__(self, qty):
+        return self._value > self._scaled_value(qty)
+
     def _scaled_value(self, qty):
         try:
             if qty.units.dimension != self.units.dimension:

@@ -249,6 +249,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         DynamicsValidator.validate_componentclass(self, validate_dimensions,
                                                   **kwargs)
 
+    @property
     def is_random(self):
         return DynamicsHasRandomProcessQuerier().visit(self)
 

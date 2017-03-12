@@ -14,7 +14,7 @@ from .units import Unit, Dimension, Quantity
 from abstraction import (
     Dynamics, ConnectionRule, RandomDistribution)
 from .user import (
-    Selection, Population, Projection, Property, Definition,
+    Selection, Population, Projection, Property, Definition, Initial,
     DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
     Network, MultiDynamics, MultiDynamicsProperties, Concatenate,
     ComponentArray, EventConnectionGroup, AnalogConnectionGroup)
