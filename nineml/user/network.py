@@ -20,7 +20,7 @@ from nineml.xml import (
 from nineml.user.port_connections import EventPortConnection
 from nineml.user.dynamics import DynamicsProperties
 from nineml.user.connectionrule import ConnectionRuleProperties, Connectivity
-from nineml.units import Quantity, ms
+from nineml.units import Quantity
 from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
 from nineml.utils import ensure_valid_identifier
@@ -31,15 +31,16 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     """
     Container for populations and projections between those populations.
 
-    **Arguments**:
-        *name*
-            a name for the network.
-        *populations*
-            a dict containing the populations contained in the network.
-        *projections*
-            a dict containing the projections contained in the network.
-        *selections*
-            a dict containing the selections contained in the network.
+    Parameters
+    ----------
+    name : str
+        A name for the network.
+    populations : iterable(Population)
+        An iterable containing the populations contained in the network.
+    projections : iterable(Projection)
+        An iterable containing the projections contained in the network.
+    selections : iterable(Selection)
+        An iterable containing the selections contained in the network.
     """
     nineml_type = "Network"
     defining_attributes = ('_name', "_populations", "_projections",

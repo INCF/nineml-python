@@ -2,7 +2,8 @@
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error)
+    NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error,
+    NineMLValueError)
 from nineml.base import AnnotatedNineMLObject
 from nineml.reference import (
     BaseReference, write_reference, resolve_reference)
@@ -207,6 +208,9 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     def __getitem__(self, name):
         return self.property(name).quantity
+
+    def __setitem__(self, name, qty):
+        self.property(name).quantity = qty
 
     @property
     def component_class(self):
@@ -453,6 +457,15 @@ class Property(BaseULObject):
     @property
     def quantity(self):
         return self._quantity
+
+    @quantity.setter
+    def quantity(self, qty):
+        if qty.units.dimension != self.units.dimension:
+            raise NineMLValueError(
+                "Incompatible dimension trying to set '{}' property with {} "
+                "({}), needs to have dimension {}".format(
+                    self.name, qty, qty.units.dimension, self.units.dimension))
+        self._quantity = qty
 
     @property
     def value(self):

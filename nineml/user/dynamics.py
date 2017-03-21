@@ -78,13 +78,27 @@ class DynamicsProperties(Component, DynamicPortsObject):
         return (self.name, self.definition, self._properties,
                 self._initial_values, self._url)
 
+    def __getitem__(self, name):
+        try:
+            return self.initial_value(name).quantity
+        except NineMLNameError:
+            super(DynamicsProperties, self).__getitem__(name)
+
+    def __setitem__(self, name, qty):
+        try:
+            self.initial_value(name).quantity = qty
+        except NineMLNameError:
+            super(DynamicsProperties, self).__setitem__(name, qty)
+
     @property
     def initial_values(self):
         if isinstance(self.definition, Prototype):
+            comp = self.definition.component
             return (
-                (self._initial_values[p.name]
-                 if p.name in self._initial_values else p)
-                for p in self.definition.component.initial_values)
+                (self._initial_values[n]
+                 if n in self._initial_values else comp.initial_value(n))
+                for n in set(chain(self._initial_values,
+                                   comp.initial_value_names)))
         else:
             return self._initial_values.itervalues()
 

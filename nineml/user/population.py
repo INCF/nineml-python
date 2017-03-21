@@ -14,15 +14,16 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     """
     A collection of spiking neurons all of the same type.
 
-    **Arguments**:
-        *name*
-            a name for the population.
-        *size*
-            an integer, the size of neurons in the population
-        *cell*
-            a :class:`Component`, or :class:`Reference` to a component defining
-            the cell type (i.e. the mathematical model and its
-            parameterisation).
+    Parameters
+    ----------
+    name : str
+        a name for the population.
+    size : int
+        the size of neurons in the population
+    cell : DynamicsProperties | Reference->DynamicsProperties
+        a :class:`Component`, or :class:`Reference` to a component defining
+        the cell type (i.e. the mathematical model and its
+        parameterisation).
     """
     nineml_type = "Population"
     defining_attributes = ('_name', '_size', '_cell')
