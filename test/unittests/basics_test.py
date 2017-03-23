@@ -145,7 +145,10 @@ class TestAccessors(unittest.TestCase):
                         "send ports will be masked by state variables and "
                         "aliases".format(len(all_members), len(all_keys),
                                          elem.key, name))
-                    diff = set(all_members) - set(all_accessor_members)
+                    diff = []
+                    for memb in all_members:
+                        if memb not in all_accessor_members:
+                            diff.append(memb)
                     self.assertTrue(
                         all(isinstance(m, SendPortBase) for m in diff),
                         "Elements accessed through iterator ({}) do not "
