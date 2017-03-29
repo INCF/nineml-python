@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<NineML xmlns="http://nineml.net/9ML/1.0">
+  <Dimension name="current" i="1" k="0" j="0" m="0" l="0" n="0" t="0"/>
+  <ComponentClass name="BrunelIaF">
+    <AnalogSendPort dimension="time" name="t_rpend"/>
+    <AnalogSendPort dimension="voltage" name="V"/>
+    <AnalogReducePort operator="+" dimension="current" name="Isyn"/>
+    <EventSendPort name="spikeOutput"/>
+    <Parameter dimension="voltage" name="Vreset"/>
+    <Parameter dimension="time" name="tau"/>
+    <Parameter dimension="resistance" name="R"/>
+    <Parameter dimension="time" name="tau_rp"/>
+    <Parameter dimension="voltage" name="theta"/>
+    <Dynamics>
+      <Regime name="refractoryRegime">
+        <OnCondition target_regime="subthresholdRegime">
+          <Trigger>
+            <MathInline>t &gt; t_rpend</MathInline>
+          </Trigger>
+        </OnCondition>
+      </Regime>
+      <Regime name="subthresholdRegime">
+        <OnCondition target_regime="refractoryRegime">
+          <Trigger>
+            <MathInline>V &gt; theta</MathInline>
+          </Trigger>
+          <OutputEvent port="spikeOutput"/>
+          <StateAssignment variable="V">
+            <MathInline>Vreset</MathInline>
+          </StateAssignment>
+          <StateAssignment variable="t_rpend">
+            <MathInline>t + tau_rp</MathInline>
+          </StateAssignment>
+        </OnCondition>
+        <TimeDerivative variable="V">
+          <MathInline>(Isyn*R - V)/tau</MathInline>
+        </TimeDerivative>
+      </Regime>
+      <StateVariable dimension="time" name="t_rpend"/>
+      <StateVariable dimension="voltage" name="V"/>
+    </Dynamics>
+  </ComponentClass>
+  <Dimension name="voltage" i="-1" k="0" j="0" m="1" l="2" n="0" t="-3"/>
+  <Dimension name="resistance" i="-2" k="0" j="0" m="1" l="2" n="0" t="-3"/>
+  <Dimension name="time" i="0" k="0" j="0" m="0" l="0" n="0" t="1"/>
+</NineML>

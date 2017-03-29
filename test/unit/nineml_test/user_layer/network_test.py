@@ -25,8 +25,8 @@ class TestNetwork(unittest.TestCase):
     """
 
     tmp_xml_file = path.join(src_dir, 'network_tmp.xml')
-    xml_dir = path.normpath(path.join(src_dir, '..', '..', '..', '..',
-                                      'examples', '_old', 'Brunel2000'))
+    xml_dir = path.normpath(path.join(src_dir, '..', '..', '..', 'xml',
+                                      'Brunel2000'))
 
     def test_xml_roundtrip(self):
 

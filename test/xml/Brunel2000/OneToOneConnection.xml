@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<NineML xmlns="http://nineml.incf.org/9ML/0.3">
+  <ComponentClass name="OneToOne">
+    <ConnectionRule>
+      <CSA xmlns="http://software.incf.org/software/csa/1.0">
+	<bind>
+	  <closure/>
+	  <oneToOne/>
+	</bind>
+      </CSA>
+    </ConnectionRule>
+  </ComponentClass>
+</NineML>

@@ -7,7 +7,7 @@ setup(
     version="0.1.0",
     packages=find_packages(),
     # add your name here if you contribute to the code
-    author="Thomas G. Close, Andrew P. Davison, Mike Hull, Eilif Muller",
+    author="Andrew P. Davison, Thomas G. Close, Mike Hull, Eilif Muller",
     author_email="nineml-users@incf.org",
     description=(
         "A tool for reading, writing and generally working with 9ML files."),

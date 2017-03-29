@@ -1,5 +1,9 @@
 recursive-include doc/source *
-prune examples
+graft examples
 prune .deprecated
+prune .project
+prune .pydevproject
+prune .travis.yml
 recursive-exclude * .gitignore
 recursive-exclude * .DS_Store
+recursive-exclude * .settings

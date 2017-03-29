@@ -1,15 +1,12 @@
 
 
-.PHONY : test unittest functionaltest
+.PHONY : test unittest
 
 
-test: unittest functionaltest
+test: unittest
 
 unittest:
 	nosetests unit/nineml_test/
-
-functionaltest:
-	python functional/round_trip_xml_testing/test_components.py
 
 clean:
 	rm -rf coverage_htmlout/ .coverage output/ nineml_mechanisms/
