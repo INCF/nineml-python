@@ -14,6 +14,7 @@ June 2014
 from __future__ import division
 import nineml.user
 from nineml.units import ms, mV, nA, unitless, Hz, Mohm
+import ninemlcatalog
 
 
 def create_brunel(g, eta, name=None):
@@ -161,21 +162,3 @@ def create_brunel(g, eta, name=None):
     network.add(exc_cells, inh_cells, external, all_cells, input_prj, exc_prj,
                 inh_prj)
     return network
-
-
-if __name__ == "__main__":
-    import ninemlcatalog
-
-    cases = {
-        "SR": {"g": 3, "eta": 2},
-        "SR2": {"g": 2, "eta": 2},
-        "SR3": {"g": 0, "eta": 2},
-        "SIfast": {"g": 6, "eta": 4},
-        "AI": {"g": 5, "eta": 2},
-        "SIslow1": {"g": 4.5, "eta": 0.9},
-        "SIslow2": {"g": 4.5, "eta": 0.95}
-    }
-    for name, params in cases.iteritems():
-        network = create_brunel(**params)
-        ninemlcatalog.save(nineml.Document(*network.elements),
-                           'network/Brunel2000/' + name)
