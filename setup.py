@@ -3,20 +3,18 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="lib9ML",
-    version="1.0dev",
-    package_data={'nineml': ['examples/AL/demos/*.py',
-                             'examples/AL/sample_components/*.py']},
+    name="nineml",
+    version="0.1.0",
     packages=find_packages(),
-    author="Andrew P. Davison, Eilif Muller, Mike Hull, Thomas G. Close",
     # add your name here if you contribute to the code
+    author="Thomas G. Close, Andrew P. Davison, Mike Hull, Eilif Muller",
     author_email="nineml-users@incf.org",
     description=(
         "A tool for reading, writing and generally working with 9ML files."),
     long_description=open("README.rst").read(),
     license="BSD 3 License",
     keywords="computational neuroscience modeling interoperability XML",
-    url="http://nineml.incf.org",
+    url="http://nineml.net",
     classifiers=['Development Status :: 4 - Beta',
                  'Environment :: Console',
                  'Intended Audience :: Science/Research',
