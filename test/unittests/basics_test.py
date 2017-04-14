@@ -294,7 +294,7 @@ class TestRepr(unittest.TestCase):
             for elem in elems.itervalues():
                 if name == 'NineMLDocument':
                     self.assertTrue(repr(elem).startswith('Document'))
-                else:
+                elif not name == 'Quantity':
                     self.assertTrue(
                         repr(elem).startswith(name),
                         "__repr__ for {} instance does not start with '{}' "
