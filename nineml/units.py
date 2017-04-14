@@ -54,6 +54,9 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
                                for n, p in zip(self.dimension_symbols,
                                                self._dims))))
 
+    def __str__(self):
+        return self.name
+
     def __iter__(self):
         return iter(self._dims)
 
@@ -305,6 +308,9 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
                         (", offset='{}'".format(self.offset)
                          if self.offset else '')))
 
+    def __str__(self):
+        return self.name
+
     def to_SI_units_str(self):
         if self.offset != 0.0:
             raise Exception("Cannot convert to SI units string as offset is "
@@ -507,11 +513,9 @@ class Quantity(AnnotatedNineMLObject):
         return self.value * 10 ** (self.units.power - units.power)
 
     def __repr__(self):
-        units = self.units.name
-        if u"µ" in units:
-            units = units.replace(u"µ", "u")
-        return ("{}(value={}, units={})"
-                .format(self.nineml_type, self.value, units))
+        return '{} * {}'.format(
+            (self.value.value if isinstance(self.value, SingleValue)
+             else self.value), self.units)
 
     @annotate_xml
     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
