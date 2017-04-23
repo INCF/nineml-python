@@ -54,6 +54,10 @@ class NineMLXMLError(NineMLRuntimeError):
     pass
 
 
+class NineMLSerializationError(NineMLRuntimeError):
+    pass
+
+
 class NineMLXMLTagError(NineMLXMLError):
     pass
 
