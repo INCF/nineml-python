@@ -1,5 +1,6 @@
 import unittest
 from nineml.base import BaseNineMLObject
+from nineml.document import Document
 # from nineml.serialization.json import (
 #     Unserializer as Ujson, Serializer as Sjson)
 # from nineml.serialization.yaml import (
@@ -23,18 +24,18 @@ class Container(BaseNineMLObject):
         self.c = c
         self.d = d
 
-    def serialize(self, elem):
-        elem.child(self._a)
-        elem.children(self._bs)
-        elem.child(self._c, within='CTag')
-        elem.attr('d', self._d)
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.child(self._a)
+        node.children(self._bs)
+        node.child(self._c, within='CTag')
+        node.attr('d', self._d)
 
     @classmethod
-    def unserialize(cls, elem):
-        return cls(a=elem.child(A, n=1),
-                   bs=elem.children(B, n='*'),
-                   c=elem.child(C, n=1, within='CTag'),
-                   d=elem.attr('d'))
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        return cls(a=node.child(A, n=1),
+                   bs=node.children(B, n='*'),
+                   c=node.child(C, n=1, within='CTag'),
+                   d=node.attr('d'))
 
 
 class A(BaseNineMLObject):
@@ -46,13 +47,13 @@ class A(BaseNineMLObject):
         self.a1 = a1
         self.a2 = a2
 
-    def serialize(self, elem):  # @UnusedVariable
-        elem.attr('a1', self.a1)
-        elem.attr('a2', self.a2)
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.attr('a1', self.a1)
+        node.attr('a2', self.a2)
 
     @classmethod
-    def unserialize(cls, elem):  # @UnusedVariable
-        return cls(elem.attr('a1'), elem.attr('a2'))
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        return cls(node.attr('a1'), node.attr('a2'))
 
 
 class B(BaseNineMLObject):
@@ -63,12 +64,12 @@ class B(BaseNineMLObject):
     def __init__(self, b):
         self.b = b
 
-    def serialize(self, elem):  # @UnusedVariable
-        elem.attr('b', self.b)
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.attr('b', self.b)
 
     @classmethod
-    def unserialize(cls, elem):  # @UnusedVariable
-        return cls(elem.attr('b'))
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        return cls(node.attr('b'))
 
 
 class C(BaseNineMLObject):
@@ -80,29 +81,30 @@ class C(BaseNineMLObject):
         self._c1 = c1
         self._c2 = c2
 
-    def serialize(self, elem):  # @UnusedVariable
-        elem.attr('c1', self._c1)
-        elem.attr('c2', self._c2)
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.attr('c1', self._c1)
+        node.attr('c2', self._c2)
 
     @classmethod
-    def unserialize(cls, elem, U, **options):  # @UnusedVariable
-        return cls(elem.attr('c1'), elem.attr('c2'))
+    def unserialize(cls, node, U, **options):  # @UnusedVariable
+        return cls(node.attr('c1'), node.attr('c2'))
 
 
 class TestSerialization(unittest.TestCase):
 
-    def setUp(self):
-        self.container = Container(
-            a=A(1, 2), b=B('b'), c=C(1, 2), d='d')
-
     def test_rountrip(self):
-        for U, S in (
-            # (Ujson, Sjson),
-            # (Uyaml, Syaml),
-            # (Uhdf5, Shdf5),
-            # (Upkl, Spkl),
-                (Uxml, Sxml),):
-            elem = self.container.serialize(S)
-            new_container = Container.unserialize(elem, U)
-            self.assertEqual(self.container, new_container,
-                             self.container.find_mismatch(new_container))
+        container = Container(
+            a=A(1, 2), b=B('b'), c=C(1, 2), d='d')
+        for version in (1, 2):
+            for U, S in (
+                # (Ujson, Sjson),
+                # (Uyaml, Syaml),
+                # (Uhdf5, Shdf5),
+                # (Upkl, Spkl),
+                    (Uxml, Sxml),):
+                doc = Document()
+                elem = S(document=doc, version=version).visit(container)
+                new_container = U(document=doc, version=version).visit(
+                    elem, Container)
+                self.assertEqual(container, new_container,
+                                 container.find_mismatch(new_container))

@@ -1,15 +1,31 @@
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import NineMLSerializationError
 
+# The name of the attribute used to represent the "body" of the element.
+# NB: Body elements should be phased out in later 9ML versions to avoid this.
+BODY_ATTRIBUTE = '__body__'
+
+MATHML = "http://www.w3.org/1998/Math/MathML"
+UNCERTML = "http://www.uncertml.org/2.0"
+
 
 class BaseVisitor(object):
 
-    def __init__(self, nineml_version):
+    def __init__(self, document, nineml_version):
+        self._document = document
         self._version = nineml_version
 
     @property
     def version(self):
         return self._version
+
+    @property
+    def namespace(self):
+        return 'http://nineml.net/9ML/{}'.format(float(self.version))
+
+    @property
+    def document(self):
+        return self._document
 
     def node_name(self, nineml_cls):
         if (self.version == 1.0 and
@@ -25,22 +41,23 @@ class BaseSerializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
-    def visit(self, parent_elem, nineml_object, **options):  # @UnusedVariable
-        serial_elem = self._add_child_elem(parent_elem,
-                                           self.node_name(type(nineml_object)))
+    def visit(self, nineml_object, parent=None, **options):  # @UnusedVariable
+        serial_elem = self.create_elem(self.node_name(type(nineml_object)),
+                                       parent=parent, **options)
         node = NodeToSerialize(self, serial_elem)
         nineml_object.serialize(node)
+        return node.element
 
     @abstractmethod
-    def _add_child_elem(self, parent_elem, name):
+    def create_elem(self, name, parent=None, **options):
         pass
 
     @abstractmethod
-    def _add_child(self, serial_elem, name, child_elem, **options):
+    def set_attr(self, serial_elem, name, value, **options):
         pass
 
     @abstractmethod
-    def _set_attr(self, serial_elem, name, value, **options):
+    def set_body(self, serial_elem, value, **options):
         pass
 
 
@@ -60,15 +77,19 @@ class BaseUnserializer(BaseVisitor):
         return nineml_object
 
     @abstractmethod
-    def _get_children(self, serial_elem):
+    def get_children(self, serial_elem, **options):
         pass
 
     @abstractmethod
-    def _get_attr(self, serial_elem, name, **options):
+    def get_attr(self, serial_elem, name, **options):
         pass
 
     @abstractmethod
-    def _get_keys(self):
+    def get_body(self, serial_elem, **options):
+        pass
+
+    @abstractmethod
+    def get_keys(self, serial_elem, **options):
         pass
 
 
@@ -82,6 +103,10 @@ class BaseNode(object):
     def visitor(self):
         return self._visitor
 
+    @property
+    def serial_element(self):
+        return self._serial_elem
+
 
 class NodeToSerialize(BaseNode):
 
@@ -89,10 +114,7 @@ class NodeToSerialize(BaseNode):
         super(NodeToSerialize, self).__init__(*args, **kwargs)
         self.withins = set()
 
-    def nineml_cls(self):
-        return type(self._nineml_object)
-
-    def child(self, nineml_object, within=None, **options):
+    def child(self, nineml_object, within=None, reference=False, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -104,6 +126,8 @@ class NodeToSerialize(BaseNode):
             A type of the children to extract from the element
         within : str | NoneType
             The name of the sub-element to extract the child from
+        reference : bool
+            Whether the child should be written as a reference or not
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -113,16 +137,13 @@ class NodeToSerialize(BaseNode):
                 raise NineMLSerializationError(
                     "'{}' already added to serialization of {}"
                     .format(within, nineml_object))
-            serial_elem = self.visitor._add_child_elem(self._serial_elem,
-                                                       within)
+            serial_elem = self.visitor.create_elem(self._serial_elem, within)
             self.withins.append(within)
         else:
             serial_elem = self._serial_elem
-        self.visitor._add_child(
-            serial_elem,
-            self.visitor.visit(nineml_object, **options), **options)
+        self.visitor.visit(nineml_object, parent=serial_elem, **options)
 
-    def children(self, nineml_objects, **options):
+    def children(self, nineml_objects, reference=False, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -132,16 +153,15 @@ class NodeToSerialize(BaseNode):
         ----------
         nineml_objects : list(NineMLObject)
             A type of the children to extract from the element
-        within : str | NoneType
-            The name of the sub-element to extract the child from
+        reference : bool
+            Whether the child should be written as a reference or not
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
         """
         for nineml_object in nineml_objects:
-            self.visitor._add_child(
-                self._serial_elem,
-                self.visitor.visit(nineml_object, **options), **options)
+            self.visitor.visit(nineml_object, parent=self._serial_elem,
+                               **options)
 
     def attr(self, name, value, **options):
         """
@@ -156,7 +176,18 @@ class NodeToSerialize(BaseNode):
         value : (int | float | str)
             Attribute value
         """
-        self.visitor._set_attr(self._serial_elem, name, value, **options)
+        self.visitor.set_attr(self._serial_elem, name, value, **options)
+
+    def body(self, value, **options):
+        """
+        Set the body of the elem
+
+        Parameters
+        ----------
+        value : str | float | int
+            The value for the body of the element
+        """
+        self.visitor.set_body(self._serial_elem, value, **options)
 
 
 class NodeToUnserialize(BaseNode):
@@ -164,7 +195,9 @@ class NodeToUnserialize(BaseNode):
     def __init__(self, visitor, serial_elem, nineml_cls):
         super(NodeToUnserialize, self).__init__(visitor, serial_elem)
         self._nineml_cls = nineml_cls
-        self.unprocessed = set(self._getkeys())
+        self.unprocessed = set(self.visitor.get_keys())
+        if self.visitor.get_body(serial_elem):
+            self.unprocessed.add(BODY_ATTRIBUTE)
 
     @property
     def nineml_cls(self):
@@ -174,7 +207,7 @@ class NodeToUnserialize(BaseNode):
     def name(self):
         return self.visitor.node_name(self.nineml_cls)
 
-    def child(self, nineml_cls, within=None, **options):
+    def child(self, nineml_cls, within=None, reference=False, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -186,6 +219,8 @@ class NodeToUnserialize(BaseNode):
             A type of the children to extract from the element
         within : str | NoneType
             The name of the sub-element to extract the child from
+        reference : bool
+            Whether the child is expected to be a reference or not.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -202,7 +237,7 @@ class NodeToUnserialize(BaseNode):
         return self.visitor.visit(self._get_single_child(
             serial_elem, self.visitor.node_name(nineml_cls)), **options)
 
-    def children(self, nineml_cls, n, **options):
+    def children(self, nineml_cls, n='*', reference=False, **options):
         """
         Extract a child or children of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -215,8 +250,8 @@ class NodeToUnserialize(BaseNode):
         n : int | str
             Either a number, a tuple of allowable numbers or the wildcards
             '+' or '*'
-        within : str | NoneType
-            The name of the sub-element to extract the child from
+        reference : bool
+            Whether the child is expected to be a reference or not.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -227,7 +262,7 @@ class NodeToUnserialize(BaseNode):
             Child extracted from the element
         """
         children = []
-        for name, elem in self._get_children(self._serial_elem):
+        for name, elem in self.get_children(self._serial_elem):
             if name == self.name:
                 children.append(
                     self._visitor.visit(elem, nineml_cls, **options))
@@ -243,7 +278,7 @@ class NodeToUnserialize(BaseNode):
         self._unprocessed.remove(self.visitor.node_name(nineml_cls))
         return children
 
-    def attr(self, name, **options):
+    def attr(self, name, dtype=str, **options):
         """
         Extract an attribute from the serial element ``elem``.
 
@@ -251,6 +286,8 @@ class NodeToUnserialize(BaseNode):
         ----------
         name : str
             The name of the attribute to retrieve.
+        dtype : type
+            The type of the returned value
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -260,12 +297,30 @@ class NodeToUnserialize(BaseNode):
         attr : (int | str | float | bool)
             The attribute to retrieve
         """
-        value = self.visitor._get_attr(self._serial_elem, name, **options)
+        value = self.visitor.get_attr(self._serial_elem, name, **options)
         self._unprocessed.remove(name)
-        return value
+        return dtype(value)
+
+    def body(self, dtype=str, **options):
+        """
+        Returns the body of the serial element
+
+        Parameters
+        ----------
+        dtype : type
+            The type of the returned value
+
+        Returns
+        -------
+        body : int | float | str
+            The return type of the body
+        """
+        value = self.visitor.get_body(self._serial_elem, **options)
+        self._unprocessed.remove(BODY_ATTRIBUTE)
+        return dtype(value)
 
     def _get_single_child(self, elem, name):
-        child_elems = [e for n, e in self._get_children(elem)
+        child_elems = [e for n, e in self.get_children(elem)
                        if n == name]
         if len(child_elems) > 1:
             raise NineMLSerializationError(
