@@ -1,6 +1,7 @@
 import re
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import NineMLSerializationError
+from nineml.reference import Reference
 
 # The name of the attribute used to represent the "body" of the element.
 # NB: Body elements should be phased out in later 9ML versions to avoid this.
@@ -243,7 +244,7 @@ class NodeToUnserialize(BaseNode):
     def name(self):
         return self.visitor.node_name(self.nineml_cls)
 
-    def child(self, nineml_cls, within=None, reference=False, **options):
+    def child(self, nineml_classes, within=None, reference=False, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -251,8 +252,8 @@ class NodeToUnserialize(BaseNode):
 
         Parameters
         ----------
-        cls : type(NineMLObject)
-            A type of the children to extract from the element
+        nineml_classes : list(type(NineMLObject)) | type(NineMLObject)
+            The type(s) of the children to extract from the element
         within : str | NoneType
             The name of the sub-element to extract the child from
         reference : bool
@@ -266,19 +267,20 @@ class NodeToUnserialize(BaseNode):
         child : BaseNineMLObject
             Child extracted from the element
         """
+        name_map = self._get_name_map(nineml_classes, reference)
         if within is not None:
-            serial_elem = self._get_single_child(self._serial_elem, within)
-            processed_name = within
-            node_name = None
+            _, serial_elem = self._get_single_child(self._serial_elem, within)
+            self.unprocessed.remove(within)
         else:
             serial_elem = self._serial_elem
-            processed_name = node_name = self.visitor.node_name(nineml_cls)
-        child_elem = self._get_single_child(serial_elem, node_name, **options)
-        child = self.visitor.visit(child_elem, nineml_cls, **options)
-        self.unprocessed.remove(processed_name)
+        name, child_elem = self._get_single_child(serial_elem, name_map.keys(),
+                                                  **options)
+        if within is None:
+            self.unprocessed.remove(name)
+        child = self.visitor.visit(child_elem, name_map[name], **options)
         return child
 
-    def children(self, nineml_cls, n='*', reference=False, **options):
+    def children(self, nineml_classes, n='*', reference=False, **options):
         """
         Extract a child or children of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -286,8 +288,8 @@ class NodeToUnserialize(BaseNode):
 
         Parameters
         ----------
-        cls : type(NineMLObject)
-            A type of the children to extract from the element
+        nineml_classes : list(type(NineMLObject)) | type(NineMLObject)
+            The type(s) of the children to extract from the element
         n : int | str
             Either a number, a tuple of allowable numbers or the wildcards
             '+' or '*'
@@ -303,20 +305,21 @@ class NodeToUnserialize(BaseNode):
             Child extracted from the element
         """
         children = []
+        name_map = self._get_name_map(nineml_classes, reference)
         for name, elem in self.visitor.get_children(self._serial_elem):
-            if name == self.name:
+            if name in name_map:
                 children.append(
-                    self._visitor.visit(elem, nineml_cls, **options))
+                    self._visitor.visit(elem, name_map[name], **options))
+                self.unprocessed.remove(name)
         if n == '+':
             if not children:
                 raise NineMLSerializationError(
                     "Expected at least 1 child of type {} in {} element"
-                    .format(self.visitor.node_name(nineml_cls), self.name))
+                    .format("|".join(name_map), self.name))
         elif n != '*' and len(children) != n:
             raise NineMLSerializationError(
                 "Expected {} child of type {} in {} element"
-                .format(n, self.visitor.node_name(nineml_cls), self.name))
-        self.unprocessed.remove(self.visitor.node_name(nineml_cls))
+                .format(n, "|".join(name_map), self.name))
         return children
 
     def attr(self, name, dtype=str, **options):
@@ -360,15 +363,29 @@ class NodeToUnserialize(BaseNode):
         self.unprocessed.remove(BODY_ATTRIBUTE)
         return dtype(value)
 
-    def _get_single_child(self, elem, name=None, **options):
-        child_elems = [e for n, e in self.visitor.get_children(elem, **options)
-                       if name is None or n == name]
-        if len(child_elems) > 1:
+    def _get_single_child(self, elem, names, **options):
+        matches = [
+            (n, e) for n, e in self.visitor.get_children(elem, **options)
+            if n in names]
+        if len(matches) > 1:
             raise NineMLSerializationError(
-                "Multiple '{}' children found within {} elem"
-                .format(name, elem))
-        elif not child_elems:
+                "Multiple {} children found within {} elem"
+                .format('|'.join(names), elem))
+        elif not matches:
             raise NineMLSerializationError(
                 "No '{}' children found within {} elem"
-                .format(name, elem))
-        return child_elems[0]
+                .format('|'.join(names), elem))
+        return matches[0]
+
+    def _get_name_map(self, nineml_classes, reference):
+        try:
+            nineml_classes = list(nineml_classes)
+        except ValueError:
+            nineml_classes = [nineml_classes]
+        name_map = {}
+        if reference:
+            name_map[self.visitor.node_name(Reference)] = Reference
+        if reference != 'only':
+            name_map.update(
+                (self.visitor.node_name(c), c) for c in nineml_classes)
+        return name_map

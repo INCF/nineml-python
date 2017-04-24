@@ -35,8 +35,7 @@ def unserialize(cls, node, **options):  # @UnusedVariable @IgnorePep8
     return cls(branches, **kwargs)
 
 
-# ./document.py @classmethod
-def unserialize(cls, node, **options):
+# ./document.py from_xml(cls, element, url=None, **kwargs):
 @classmethod
 def unserialize(cls, node, **options):
     url = cls._standardise_url(url)
@@ -244,7 +243,6 @@ def unserialize(cls, node, **options):
                dynamics_properties)
 
 
-
 # ./user/multi/dynamics.py
 @classmethod
 def unserialize(cls, node, **options):
@@ -253,7 +251,6 @@ def unserialize(cls, node, **options):
         allow_reference=True, **kwargs)
     return cls(get_xml_attr(element, 'name', document, **kwargs),
                dynamics)
-
 
 
 # ./user/multi/dynamics.py
@@ -548,4 +545,3 @@ def unserialize(cls, node, **options):  # @UnusedVariable
         element, nineml.user.RandomDistributionProperties,
         document, allow_reference=True, **kwargs)
     return cls(distribution)
-

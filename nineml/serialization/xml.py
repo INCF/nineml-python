@@ -24,10 +24,10 @@ class Serializer(BaseSerializer):
         return elem
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        serial_elem.attrib[name] = str(value)
+        serial_elem.attrib[name] = repr(value)
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable
-        serial_elem.text = str(value)
+        serial_elem.text = repr(value)
 
     @property
     def E(self):

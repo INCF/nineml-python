@@ -1,11 +1,8 @@
 # parameter
 @classmethod
 def unserialize(cls, node, **options):  # @UnusedVariable
-    return Parameter(name=get_xml_attr(element, 'name', self.document,
-                                       **kwargs),
-                     dimension=self.document[
-                         get_xml_attr(element, 'dimension', self.document,
-                                      **kwargs)])
+    return Parameter(name=get_xml_attr(element, 'name', self.document, **kwargs),
+                     dimension=self.document[get_xml_attr(element, 'dimension', self.document, **kwargs)])
 
 
 # alias
