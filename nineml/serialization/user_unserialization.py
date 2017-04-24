@@ -1,25 +1,29 @@
 
 # ./abstraction/connectionrule/base.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return ConnectionRuleXMLLoader(document).load_connectionruleclass(
         element, **kwargs)
 
 
 
 # ./abstraction/dynamics/base.py
-def from_xml(cls, element, document, **kwargs):
+@classmethod
+def unserialize(cls, node, **options):
     return DynamicsXMLLoader(document).load_dynamics(
         element, **kwargs)
 
 
 # ./abstraction/randomdistribution/base.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return RandomDistributionXMLLoader(
         document).load_randomdistributionclass(element)
 
 
 # ./annotations.py
-def from_xml(cls, element, **kwargs):  # @UnusedVariable @IgnorePep8
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable @IgnorePep8
     assert strip_xmlns(element.tag) == cls.nineml_type
     assert not element.attrib
     if element.text is not None:
@@ -31,8 +35,10 @@ def from_xml(cls, element, **kwargs):  # @UnusedVariable @IgnorePep8
     return cls(branches, **kwargs)
 
 
-# ./document.py
-def from_xml(cls, element, url=None, **kwargs):
+# ./document.py @classmethod
+def unserialize(cls, node, **options):
+@classmethod
+def unserialize(cls, node, **options):
     url = cls._standardise_url(url)
     xmlns = extract_xmlns(element.tag)
     if xmlns not in ALL_NINEML:
@@ -89,7 +95,8 @@ def from_xml(cls, element, url=None, **kwargs):
 
 
 # ./reference.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     xmlns = extract_xmlns(element.tag)
     if xmlns == NINEMLv1:
         name = element.text
@@ -105,7 +112,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./units.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     name = get_xml_attr(element, 'name', document, **kwargs)
     # Get the attributes corresponding to the dimension symbols
     dim_args = dict((s, get_xml_attr(element, s, document, default=0,
@@ -116,7 +124,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./units.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     name = get_xml_attr(element, 'symbol', document, **kwargs)
     dimension = document[get_xml_attr(element, 'dimension', document,
                                       **kwargs)]
@@ -129,7 +138,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./units.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     value = BaseValue.from_parent_xml(element, document, **kwargs)
     try:
         units_str = get_xml_attr(element, 'units', document, **kwargs)
@@ -149,7 +159,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/component.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     """docstring missing"""
     name = get_xml_attr(element, "name", document, **kwargs)
     definition = from_child_xml(element, (Definition, Prototype), document,
@@ -165,7 +176,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/component.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     name = get_xml_attr(element, 'name', document, **kwargs)
     if extract_xmlns(element.tag) == NINEMLv1:
         value = from_child_xml(
@@ -183,7 +195,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/dynamics.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     """docstring missing"""
     name = get_xml_attr(element, "name", document, **kwargs)
     definition = from_child_xml(element, (Definition, Prototype), document,
@@ -199,7 +212,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/multi/dynamics.py
-def from_xml(cls, element, document, **kwargs):
+@classmethod
+def unserialize(cls, node, **options):
     sub_component_properties = from_child_xml(
         element, SubDynamicsProperties, document, multiple=True,
         **kwargs)
@@ -221,7 +235,8 @@ def from_xml(cls, element, document, **kwargs):
 
 
 # ./user/multi/dynamics.py
-def from_xml(cls, element, document, **kwargs):
+@classmethod
+def unserialize(cls, node, **options):
     dynamics_properties = from_child_xml(
         element, (DynamicsProperties, MultiDynamicsProperties), document,
         allow_reference=True, **kwargs)
@@ -231,7 +246,8 @@ def from_xml(cls, element, document, **kwargs):
 
 
 # ./user/multi/dynamics.py
-def from_xml(cls, element, document, **kwargs):
+@classmethod
+def unserialize(cls, node, **options):
     dynamics = from_child_xml(
         element, (Dynamics, MultiDynamics), document,
         allow_reference=True, **kwargs)
@@ -241,7 +257,8 @@ def from_xml(cls, element, document, **kwargs):
 
 
 # ./user/multi/dynamics.py
-def from_xml(cls, element, document, **kwargs):
+@classmethod
+def unserialize(cls, node, **options):
     sub_components = from_child_xml(
         element, SubDynamics, document, multiple=True,
         **kwargs)
@@ -262,7 +279,8 @@ def from_xml(cls, element, document, **kwargs):
 
 
 # ./user/multi/port_exposures.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return cls(name=get_xml_attr(element, 'name', document, **kwargs),
                component=get_xml_attr(element, 'sub_component', document,
                                       **kwargs),
@@ -270,7 +288,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/network.py
-def from_xml(cls, element, document, **kwargs):
+@classmethod
+def unserialize(cls, node, **options):
     populations = from_child_xml(element, Population, document,
                                  multiple=True, allow_reference='only',
                                  allow_none=True, **kwargs)
@@ -287,7 +306,8 @@ def from_xml(cls, element, document, **kwargs):
 
 
 # ./user/network.py
-def from_xml(cls, element, document, **kwargs):
+@classmethod
+def unserialize(cls, node, **options):
     dynamics_properties = from_child_xml(
         element, DynamicsProperties, document,
         allow_reference=True, **kwargs)
@@ -298,7 +318,8 @@ def from_xml(cls, element, document, **kwargs):
 
 
 # ./user/network.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     # Get Name
     name = get_xml_attr(element, 'name', document, **kwargs)
     connectivity = from_child_xml(
@@ -322,7 +343,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/population.py
-def from_xml(cls, element, document, **kwargs):
+@classmethod
+def unserialize(cls, node, **options):
     cell = from_child_xml(element,
                           (DynamicsProperties,
                            nineml.user.MultiDynamicsProperties), document,
@@ -334,7 +356,8 @@ def from_xml(cls, element, document, **kwargs):
 
 
 # ./user/port_connections.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return cls(send_port=get_xml_attr(element, 'send_port',
                                       document, **kwargs),
                receive_port=get_xml_attr(element, 'receive_port', document,
@@ -352,7 +375,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/projection.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     # Get Name
     name = get_xml_attr(element, 'name', document, **kwargs)
     xmlns = extract_xmlns(element.tag)
@@ -439,7 +463,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/selection.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     # The only supported op at this stage
     op = from_child_xml(
         element, Concatenate, document, **kwargs)
@@ -448,7 +473,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./user/selection.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     items = []
     # Load references and indices from xml
     for it_elem in element.findall(extract_xmlns(element.tag) + 'Item'):
@@ -476,12 +502,14 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./values.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return cls(float(element.text))
 
 
 # ./values.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     if element.tag == 'ExternalArrayValue':
         url = get_xml_attr(element, 'url', document, **kwargs)
         with contextlib.closing(urlopen(url)) as f:
@@ -514,7 +542,8 @@ def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
 
 
 # ./values.py
-def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     distribution = from_child_xml(
         element, nineml.user.RandomDistributionProperties,
         document, allow_reference=True, **kwargs)

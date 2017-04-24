@@ -1,6 +1,6 @@
-
-
-def load_parameter(self, element, **kwargs):  # @UnusedVariable
+# parameter
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return Parameter(name=get_xml_attr(element, 'name', self.document,
                                        **kwargs),
                      dimension=self.document[
@@ -8,13 +8,17 @@ def load_parameter(self, element, **kwargs):  # @UnusedVariable
                                       **kwargs)])
 
 
-def load_alias(self, element, **kwargs):  # @UnusedVariable
+# alias
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     name = get_xml_attr(element, 'name', self.document, **kwargs)
     rhs = self.load_expression(element, **kwargs)
     return Alias(lhs=name, rhs=rhs)
 
 
-def load_constant(self, element, **kwargs):  # @UnusedVariable
+# constant
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     xmlns = extract_xmlns(element.tag)
     if xmlns == NINEMLv1:
         value = float(element.text)
@@ -28,39 +32,16 @@ def load_constant(self, element, **kwargs):  # @UnusedVariable
             get_xml_attr(element, 'units', self.document, **kwargs)])
 
 
-def load_expression(self, element, **kwargs):
+# expression
+@classmethod
+def unserialize(cls, node, **options):
     return get_xml_attr(element, 'MathInline', self.document,
                         in_block=True, dtype=Expression, **kwargs)
 
 
-def _load_blocks(self, element, block_names, unprocessed=None,
-                 prev_block_names={}, ignore=[], **kwargs):  # @UnusedVariable @IgnorePep8
-    """
-    Creates a dictionary that maps class-types to instantiated objects
-    """
-    # Get the XML namespace (i.e. NineML version)
-    xmlns = extract_xmlns(element.tag)
-    assert xmlns in ALL_NINEML
-    # Initialise loaded objects with empty lists
-    loaded_objects = dict((block, []) for block in block_names)
-    for t in element.iterchildren(tag=etree.Element):
-        # Used in unprocessed_xml decorator
-        if unprocessed:
-            unprocessed[0].discard(t)
-        # Strip namespace
-        tag = (t.tag[len(xmlns):]
-               if t.tag.startswith(xmlns) else t.tag)
-        if (xmlns, tag) not in ignore:
-            if tag not in block_names:
-                raise NineMLXMLBlockError(
-                    "Unexpected block {} within {} in '{}', expected: {}"
-                    .format(tag, identify_element(element),
-                            self.document.url, ', '.join(block_names)))
-            loaded_objects[tag].append(self.tag_to_loader[tag](self, t))
-    return loaded_objects
-
-
-def load_dynamics(self, element, **kwargs):  # @UnusedVariable
+# dynamics
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     block_names = ('Parameter', 'AnalogSendPort', 'AnalogReceivePort',
                    'EventSendPort', 'EventReceivePort', 'AnalogReducePort',
                    'Regime', 'Alias', 'StateVariable', 'Constant')
@@ -98,31 +79,41 @@ def load_dynamics(self, element, **kwargs):  # @UnusedVariable
 
 
 
-def load_eventsendport(self, element, **kwargs):  # @UnusedVariable
+# eventsendport
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return EventSendPort(name=get_xml_attr(element, 'name', self.document,
                                            **kwargs))
 
 
-def load_eventreceiveport(self, element, **kwargs):  # @UnusedVariable
+# eventreceiveport
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return EventReceivePort(name=get_xml_attr(element, 'name',
                                               self.document, **kwargs))
 
 
-def load_analogsendport(self, element, **kwargs):  # @UnusedVariable
+# analogsendport
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return AnalogSendPort(
         name=get_xml_attr(element, 'name', self.document, **kwargs),
         dimension=self.document[get_xml_attr(element, 'dimension',
                                              self.document, **kwargs)])
 
 
-def load_analogreceiveport(self, element, **kwargs):  # @UnusedVariable
+# analogreceiveport
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return AnalogReceivePort(
         name=get_xml_attr(element, 'name', self.document, **kwargs),
         dimension=self.document[get_xml_attr(element, 'dimension',
                                              self.document, **kwargs)])
 
 
-def load_analogreduceport(self, element, **kwargs):  # @UnusedVariable
+# analogreduceport
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return AnalogReducePort(
         name=get_xml_attr(element, 'name', self.document, **kwargs),
         dimension=self.document[get_xml_attr(element, 'dimension',
@@ -131,7 +122,9 @@ def load_analogreduceport(self, element, **kwargs):  # @UnusedVariable
                               **kwargs))
 
 
-def load_regime(self, element, **kwargs):  # @UnusedVariable
+# regime
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     block_names = ('TimeDerivative', 'OnCondition', 'OnEvent',
                    'Alias')
     blocks = self._load_blocks(element, block_names=block_names, **kwargs)
@@ -143,21 +136,27 @@ def load_regime(self, element, **kwargs):  # @UnusedVariable
                   aliases=blocks['Alias'])
 
 
-def load_statevariable(self, element, **kwargs):  # @UnusedVariable
+# statevariable
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     name = get_xml_attr(element, 'name', self.document, **kwargs)
     dimension = self.document[get_xml_attr(element, 'dimension',
                                            self.document, **kwargs)]
     return StateVariable(name=name, dimension=dimension)
 
 
-def load_timederivative(self, element, **kwargs):  # @UnusedVariable
+# timederivative
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     variable = get_xml_attr(element, 'variable', self.document, **kwargs)
     expr = self.load_expression(element, **kwargs)
     return TimeDerivative(variable=variable,
                           rhs=expr)
 
 
-def load_oncondition(self, element, **kwargs):  # @UnusedVariable
+# oncondition
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     block_names = ('Trigger', 'StateAssignment', 'OutputEvent')
     blocks = self._load_blocks(element, block_names=block_names, **kwargs)
     target_regime = get_xml_attr(element, 'target_regime',
@@ -169,7 +168,9 @@ def load_oncondition(self, element, **kwargs):  # @UnusedVariable
                        target_regime=target_regime)
 
 
-def load_onevent(self, element, **kwargs):  # @UnusedVariable
+# onevent
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     block_names = ('StateAssignment', 'OutputEvent')
     blocks = self._load_blocks(element, block_names=block_names, **kwargs)
     target_regime = get_xml_attr(element, 'target_regime',
@@ -181,22 +182,30 @@ def load_onevent(self, element, **kwargs):  # @UnusedVariable
                    target_regime=target_regime)
 
 
-def load_trigger(self, element, **kwargs):  # @UnusedVariable
+# trigger
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     return Trigger(self.load_expression(element, **kwargs))
 
 
-def load_stateassignment(self, element, **kwargs):  # @UnusedVariable
+# stateassignment
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     lhs = get_xml_attr(element, 'variable', self.document, **kwargs)
     rhs = self.load_expression(element, **kwargs)
     return StateAssignment(lhs=lhs, rhs=rhs)
 
 
-def load_outputevent(self, element, **kwargs):  # @UnusedVariable
+# outputevent
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     port_name = get_xml_attr(element, 'port', self.document, **kwargs)
     return OutputEvent(port_name=port_name)
 
 
-def load_connectionruleclass(self, element, **kwargs):  # @UnusedVariable
+# connectionruleclass
+@classmethod
+def unserialize(cls, node, **options):  # @UnusedVariable
     xmlns = extract_xmlns(element.tag)
     if xmlns == NINEMLv1:
         lib_elem = expect_single(element.findall(NINEMLv1 +
@@ -219,7 +228,9 @@ def load_connectionruleclass(self, element, **kwargs):  # @UnusedVariable
         document=self.document)
 
 
-def load_randomdistributionclass(self, element, **kwargs):
+# randomdistributionclass
+@classmethod
+def unserialize(cls, node, **options):
     xmlns = extract_xmlns(element.tag)
     if xmlns == NINEMLv1:
         lib_elem = expect_single(element.findall(NINEMLv1 +
