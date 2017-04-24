@@ -22,6 +22,13 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 # ./annotations.py
 def serialize(self, node, **option):  # @UnusedVariable
+    # Strip validate_dimensions annotation if True (to clean up
+    # written files) as this is the default so can be
+    # ignored and avoid cluttering the written file
+    #                         if obj.annotations.get((VALIDATION, PY9ML_NS),
+    #                                            DIMENSIONALITY) == 'True':
+    #                         obj.annotations.delete((VALIDATION, PY9ML_NS),
+    #                                                DIMENSIONALITY)
     return E(self.nineml_type, *self._sub_branches_to_xml(**kwargs))
 
 
