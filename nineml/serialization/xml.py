@@ -24,7 +24,7 @@ class Serializer(BaseSerializer):
         return elem
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        serial_elem.attr[name] = str(value)
+        serial_elem.attrib[name] = str(value)
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable
         serial_elem.text = str(value)
@@ -42,11 +42,11 @@ class Unserializer(BaseUnserializer):
         return ((strip_xmlns(e.tag), e) for e in serial_elem.getchildren())
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
-        return serial_elem.attr[name]
+        return serial_elem.attrib[name]
 
     def get_body(self, serial_elem, **options):  # @UnusedVariable
         return serial_elem.text
 
     def get_keys(self, serial_elem, **options):  # @UnusedVariable
-        return serial_elem.attr.keys() + zip(
-            self.get_children(self.serial_elem))[0]
+        return serial_elem.attrib.keys() + [
+            strip_xmlns(e.tag) for e in serial_elem.getchildren()]

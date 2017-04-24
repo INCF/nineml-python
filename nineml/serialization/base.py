@@ -1,3 +1,4 @@
+import re
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import NineMLSerializationError
 
@@ -8,32 +9,60 @@ BODY_ATTRIBUTE = '__body__'
 MATHML = "http://www.w3.org/1998/Math/MathML"
 UNCERTML = "http://www.uncertml.org/2.0"
 
+is_int_re = re.compile(r'\d+(\.0)?')
+version_re = re.compile(r'(\d+)\.(\d+)')
+
 
 class BaseVisitor(object):
 
-    def __init__(self, document, nineml_version):
+    def __init__(self, document, version):
         self._document = document
-        self._version = nineml_version
+        self._version = self.standardize_version(version)
 
     @property
     def version(self):
-        return self._version
+        return '{}.{}'.format(*self._version)
 
     @property
     def namespace(self):
-        return 'http://nineml.net/9ML/{}'.format(float(self.version))
+        return 'http://nineml.net/9ML/{}'.format(self.version)
 
     @property
     def document(self):
         return self._document
 
     def node_name(self, nineml_cls):
-        if (self.version == 1.0 and
-                hasattr(nineml_cls, 'v1_nineml_type')):
+        if (self._version[0] == 1 and hasattr(nineml_cls, 'v1_nineml_type')):
             name = nineml_cls.v1_nineml_type
         else:
             name = nineml_cls.nineml_type
         return name
+
+    @classmethod
+    def standardize_version(cls, version):
+        if isinstance(version, int):
+            version = '{}.0'.format(version)
+        elif isinstance(version, float):
+            version = str(version)
+        if isinstance(version, str):
+            try:
+                version = tuple(int(i)
+                                for i in version_re.match(version).groups())
+            except AttributeError:
+                raise NineMLSerializationError(
+                    "Invalid NineML version string '{}'".format(version))
+        if not isinstance(version, (tuple, list)) and len(version) != 3:
+            raise NineMLSerializationError(
+                "Unrecognised version - {}".format(version))
+        return version
+
+    def later_version(self, version, equal=False):
+        for s, o in zip(self._version, self.standardize_version(version)):
+            if s > o:
+                return True
+            elif s < o:
+                return False
+        return equal
 
 
 class BaseSerializer(BaseVisitor):
@@ -46,7 +75,7 @@ class BaseSerializer(BaseVisitor):
                                        parent=parent, **options)
         node = NodeToSerialize(self, serial_elem)
         nineml_object.serialize(node)
-        return node.element
+        return node.serial_element
 
     @abstractmethod
     def create_elem(self, name, parent=None, **options):
@@ -107,6 +136,13 @@ class BaseNode(object):
     def serial_element(self):
         return self._serial_elem
 
+    @property
+    def version(self):
+        return self.visitor.version
+
+    def later_version(self, *args, **kwargs):
+        return self.visitor.later_version(*args, **kwargs)
+
 
 class NodeToSerialize(BaseNode):
 
@@ -137,8 +173,8 @@ class NodeToSerialize(BaseNode):
                 raise NineMLSerializationError(
                     "'{}' already added to serialization of {}"
                     .format(within, nineml_object))
-            serial_elem = self.visitor.create_elem(self._serial_elem, within)
-            self.withins.append(within)
+            serial_elem = self.visitor.create_elem(within, self._serial_elem)
+            self.withins.add(within)
         else:
             serial_elem = self._serial_elem
         self.visitor.visit(nineml_object, parent=serial_elem, **options)
@@ -195,7 +231,7 @@ class NodeToUnserialize(BaseNode):
     def __init__(self, visitor, serial_elem, nineml_cls):
         super(NodeToUnserialize, self).__init__(visitor, serial_elem)
         self._nineml_cls = nineml_cls
-        self.unprocessed = set(self.visitor.get_keys())
+        self.unprocessed = set(self.visitor.get_keys(serial_elem))
         if self.visitor.get_body(serial_elem):
             self.unprocessed.add(BODY_ATTRIBUTE)
 
@@ -232,10 +268,15 @@ class NodeToUnserialize(BaseNode):
         """
         if within is not None:
             serial_elem = self._get_single_child(self._serial_elem, within)
+            processed_name = within
+            node_name = None
         else:
             serial_elem = self._serial_elem
-        return self.visitor.visit(self._get_single_child(
-            serial_elem, self.visitor.node_name(nineml_cls)), **options)
+            processed_name = node_name = self.visitor.node_name(nineml_cls)
+        child_elem = self._get_single_child(serial_elem, node_name, **options)
+        child = self.visitor.visit(child_elem, nineml_cls, **options)
+        self.unprocessed.remove(processed_name)
+        return child
 
     def children(self, nineml_cls, n='*', reference=False, **options):
         """
@@ -262,7 +303,7 @@ class NodeToUnserialize(BaseNode):
             Child extracted from the element
         """
         children = []
-        for name, elem in self.get_children(self._serial_elem):
+        for name, elem in self.visitor.get_children(self._serial_elem):
             if name == self.name:
                 children.append(
                     self._visitor.visit(elem, nineml_cls, **options))
@@ -275,7 +316,7 @@ class NodeToUnserialize(BaseNode):
             raise NineMLSerializationError(
                 "Expected {} child of type {} in {} element"
                 .format(n, self.visitor.node_name(nineml_cls), self.name))
-        self._unprocessed.remove(self.visitor.node_name(nineml_cls))
+        self.unprocessed.remove(self.visitor.node_name(nineml_cls))
         return children
 
     def attr(self, name, dtype=str, **options):
@@ -298,7 +339,7 @@ class NodeToUnserialize(BaseNode):
             The attribute to retrieve
         """
         value = self.visitor.get_attr(self._serial_elem, name, **options)
-        self._unprocessed.remove(name)
+        self.unprocessed.remove(name)
         return dtype(value)
 
     def body(self, dtype=str, **options):
@@ -316,12 +357,12 @@ class NodeToUnserialize(BaseNode):
             The return type of the body
         """
         value = self.visitor.get_body(self._serial_elem, **options)
-        self._unprocessed.remove(BODY_ATTRIBUTE)
+        self.unprocessed.remove(BODY_ATTRIBUTE)
         return dtype(value)
 
-    def _get_single_child(self, elem, name):
-        child_elems = [e for n, e in self.get_children(elem)
-                       if n == name]
+    def _get_single_child(self, elem, name=None, **options):
+        child_elems = [e for n, e in self.visitor.get_children(elem, **options)
+                       if name is None or n == name]
         if len(child_elems) > 1:
             raise NineMLSerializationError(
                 "Multiple '{}' children found within {} elem"
