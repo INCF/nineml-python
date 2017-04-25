@@ -98,6 +98,24 @@ class BaseReference(AnnotatedNineMLObject):
         url = get_xml_attr(element, 'url', document, default=None, **kwargs)
         return cls(name=name, document=document, url=url)
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        name = self._referred_to.name
+        if node.later_version('2.0', equal=True):
+            node.attr('name', name)
+        else:
+            node.body(name)
+        if self.url is not None and self.url != node.document.url:
+            node.attr('url', self.url)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        if node.later_version('2.0', equal=True):
+            name = node.body()
+        else:
+            name = node.attr('name')
+        url = node.attr('url', default=None)
+        return cls(name=name, document=node.document, url=url)
+
 
 class Reference(BaseReference):
     """

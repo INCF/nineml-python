@@ -5,7 +5,7 @@ from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
     NineMLUnexpectedMultipleSerializationError, NineMLNameError)
 from nineml.reference import Reference
-from nineml.base import ContainerObject
+from nineml.base import ContainerObject, DocumentLevelObject
 from nineml.annotations import (
     Annotations, INDEX_TAG, INDEX_KEY_ATTR, INDEX_NAME_ATTR, INDEX_INDEX_ATTR,
     PY9ML_NS, VALIDATION, DIMENSIONALITY)
@@ -91,6 +91,10 @@ class BaseNode(object):
     def version(self):
         return self.visitor.version
 
+    @property
+    def document(self):
+        return self.visitor.document
+
     def later_version(self, *args, **kwargs):
         return self.visitor.later_version(*args, **kwargs)
 
@@ -105,17 +109,19 @@ class BaseSerializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
-    def visit(self, nineml_object, parent=None, as_reference=None, **options):
+    def visit(self, nineml_object, parent=None, reference=None, **options):
         if parent is None:
             parent = self.root_elem()
-        parent = self.write_reference(nineml_object, parent, as_reference,
-                                      **options)
+        if isinstance(nineml_object, DocumentLevelObject):
+            # Write reference if appropriate
+            parent = self.write_reference(nineml_object, parent, reference,
+                                          **options)
         if parent is None:
             return None  # If wrote reference and object already exists
         serial_elem = self.create_elem(self.node_name(type(nineml_object)),
                                        parent=parent, **options)
         node = NodeToSerialize(self, serial_elem)
-        nineml_object.serialize(node, **options)
+        nineml_object.serialize_node(node, **options)
         # Append annotations and indices to serialized elem if required
         save_annotations = (not options.get('no_annotations', False) and
                             nineml_object.annotations)
@@ -154,22 +160,22 @@ class BaseSerializer(BaseVisitor):
     def root_elem(self):
         pass
 
-    def write_reference(self, nineml_object, parent, as_reference=None,
-                        ref_strategy=None, absolute_refs=False, **options):
+    def write_reference(self, nineml_object, parent, reference=None,
+                        ref_style=None, absolute_refs=False, **options):
         """
         Determine whether to write the elemnt as a reference or not depending
-        on whether it needs to be, as determined by `as_ref`, e.g. in the
+        on whether it needs to be, as determined by ``reference``, e.g. in the
         case of populations referenced from projections, or whether the user
-        would prefer it to be, `prefer_refs`. If neither kwarg is set whether
-        the element is written as a reference is determined by whether it
-        has already been added to a document or not.
+        would prefer it to be, ``ref_style``. If neither kwarg is set
+        whether the element is written as a reference is determined by whether
+        it has already been added to a document or not.
 
         Parameters
         ----------
         reference : bool | None
             Whether the child should be written as a reference or not. If None
-            the ref_strategy option is used to determine whether it is or not.
-        ref_strategy : (None | 'prefer' | 'force' | 'inline')
+            the ref_style option is used to determine whether it is or not.
+        ref_style : (None | 'prefer' | 'force' | 'inline')
             The strategy used to write references if they are not explicitly
             required by the serialization (i.e. for Projections and Selections)
         absolute_refs : bool
@@ -182,70 +188,62 @@ class BaseSerializer(BaseVisitor):
             original parent, the document root or None if the object doesn't
             need to be written
         """
-        if as_reference is None:
-            if ref_strategy is None:
+        if reference is None:
+            if ref_style is None:
                 # No preference is supplied so the element will be written as
                 # a reference if it was loaded from a reference
-                as_ref = nineml_object.document is not None
-            elif ref_strategy == 'prefer':
+                write_ref = nineml_object.document is not None
+            elif ref_style == 'prefer':
                 # Write the element as a reference
-                as_ref = True
-            elif ref_strategy == 'inline':
+                write_ref = True
+            elif ref_style == 'inline':
                 # Write the element inline
-                as_ref = False
-            elif ref_strategy == 'local':
-                raise NotImplementedError
+                write_ref = False
+            elif ref_style == 'local':
+                write_ref = True
             else:
                 raise NineMLSerializationError(
-                    "Unrecognised ref_strategy '{}'".format(ref_strategy))
+                    "Unrecognised ref_style '{}'".format(ref_style))
         else:
-            as_ref = as_reference
+            write_ref = reference
         # If the element is to be written as a reference and it is not in the
         # current document add it
-        new_parent = None
-        if as_ref:
-            if nineml_object.document is None:
+        if write_ref:
+            new_parent = None
+            if nineml_object.document is None or ref_style == 'local':
+                url = None
+                # Check whether we need to add nineml_object to current doc
                 try:
                     obj = self.document[self.name]
-                    if obj != self:
-                        # Cannot write as a reference as an object of that name
-                        # already exists in the document
-                        if as_reference is None:
-                            # If reference was only a preference
-                            as_ref = False
-                        else:
-                            raise NineMLSerializationError(
-                                "Cannot add {} to the current document '{}' "
-                                "as it clashes with existing object {}"
-                                .format(nineml_object, self.document.url,
-                                        obj))
+                    if obj != nineml_object:
+                        raise NineMLSerializationError(
+                            "Cannot add {} to the current document '{}' "
+                            "as it clashes with existing object {}"
+                            .format(nineml_object, self.document.url,
+                                    obj))
                 except NineMLNameError:
                     # Add the object to the current document
                     new_parent = self.root_elem()
-                    url = None
             else:
-                url
-        if as_ref:
-            # If the object is already in the current document the url is None
-            if (nineml_object.document is None or
-                nineml_object.document is self.document or
-                    nineml_object.document.url == self.document.url):
-                url = None
-            # Use the full ref if the `absolute_refs` kwarg is provided
-            elif absolute_refs:
                 url = nineml_object.document.url
-            # Otherwise use the relative path, which is recommended as it makes
-            # directories of 9ML documents transportable
-            else:
-                url = os.path.relpath(nineml_object.document.url,
-                                      os.path.dirname(self.document.url))
-                # Ensure the relative path starts with the explicit
-                # current directory '.'
-                if not url.startswith('.'):
-                    url = './' + url
+            if url is not None:
+                if url == self.document.url:
+                    url = None
+                # Use the full ref if the `absolute_refs` kwarg is provided
+                elif absolute_refs:
+                    url = nineml_object.document.url
+                # Otherwise use the relative path, which is recommended as it
+                # makes directories of 9ML documents transportable
+                else:
+                    url = os.path.relpath(nineml_object.document.url,
+                                          os.path.dirname(self.document.url))
+                    # Ensure the relative path starts with the explicit
+                    # current directory '.'
+                    if not url.startswith('.'):
+                        url = './' + url
             # Write the element as a reference
-            self.visit(Reference(self.name, self.document, url=url),
-                                  parent=parent, **options)
+            self.visit(Reference(nineml_object.name, self.document, url=url),
+                       parent=parent, **options)
             parent = new_parent
         return parent
 
@@ -256,7 +254,7 @@ class NodeToSerialize(BaseNode):
         super(NodeToSerialize, self).__init__(*args, **kwargs)
         self.withins = set()
 
-    def child(self, nineml_object, within=None, as_reference=None, **options):
+    def child(self, nineml_object, within=None, allow_ref=None, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -268,9 +266,9 @@ class NodeToSerialize(BaseNode):
             A type of the children to extract from the element
         within : str | NoneType
             The name of the sub-element to extract the child from
-        as_reference : bool | None
-            Whether the child should be written as a reference or not. If None
-            the ref_strategy option is used to determine whether it is or not.
+        allow_ref : bool | None
+            Whether the child should be written as a allow_ref or not. If None
+            the ref_style option is used to determine whether it is or not.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -285,9 +283,9 @@ class NodeToSerialize(BaseNode):
         else:
             serial_elem = self._serial_elem
         self.visitor.visit(nineml_object, parent=serial_elem,
-                           as_reference=as_reference, **options)
+                           allow_ref=allow_ref, **options)
 
-    def children(self, nineml_objects, as_reference=None, **options):
+    def children(self, nineml_objects, allow_ref=None, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -297,16 +295,16 @@ class NodeToSerialize(BaseNode):
         ----------
         nineml_objects : list(NineMLObject)
             A type of the children to extract from the element
-        as_reference : bool | None
-            Whether the child should be written as a reference or not. If None
-            the ref_strategy option is used to determine whether it is or not.
+        allow_ref : bool | None
+            Whether the child should be written as a allow_ref or not. If None
+            the ref_style option is used to determine whether it is or not.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
         """
         for nineml_object in nineml_objects:
             self.visitor.visit(nineml_object, parent=self._serial_elem,
-                               as_reference=as_reference, **options)
+                               allow_ref=allow_ref, **options)
 
     def attr(self, name, value, **options):
         """
@@ -359,7 +357,7 @@ class BaseUnserializer(BaseVisitor):
         node = NodeToUnserialize(self, serial_elem, nineml_cls)
         # Call the unserialize method of the given class to unserialize the
         # object
-        nineml_object = nineml_cls.unserialize(node, **options)
+        nineml_object = nineml_cls.unserialize_node(node, **options)
         # Check for unprocessed children/attributes
         if node.unprocessed:
             raise NineMLSerializationError(
@@ -438,7 +436,7 @@ class NodeToUnserialize(BaseNode):
     def name(self):
         return self.visitor.node_name(self.nineml_cls)
 
-    def child(self, nineml_classes, within=None, reference=False, **options):
+    def child(self, nineml_classes, within=None, allow_ref=False, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -450,8 +448,9 @@ class NodeToUnserialize(BaseNode):
             The type(s) of the children to extract from the element
         within : str | NoneType
             The name of the sub-element to extract the child from
-        reference : bool
-            Whether the child is expected to be a reference or not.
+        allow_ref : bool | 'only'
+            Whether the child is can be a allow_ref or not. If 'only'
+            then only allow_refs will be found.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -461,7 +460,7 @@ class NodeToUnserialize(BaseNode):
         child : BaseNineMLObject
             Child extracted from the element
         """
-        name_map = self._get_name_map(nineml_classes, reference)
+        name_map = self._get_name_map(nineml_classes, allow_ref)
         if within is not None:
             _, serial_elem = self.visitor.get_single_child(self._serial_elem,
                                                            within, **options)
@@ -473,19 +472,19 @@ class NodeToUnserialize(BaseNode):
         if within is None:
             self.unprocessed.remove(name)
         child = self.visitor.visit(child_elem, name_map[name], **options)
-        # Dereference Reference if required
+        # Deallow_ref Reference if required
         if isinstance(child, Reference):
             if isinstance(child.user_object, nineml_classes):
                 child = child.user_object
             else:
                 raise NineMLSerializationError(
-                    "Found reference {} for unrecognised type {} (accepted {})"
+                    "Found allow_ref {} for unrecognised type {} (accepted {})"
                     .format(child, child.user_object,
                             ", ".join(self.visitor.node_name(c)
                                       for c in nineml_classes)))
         return child
 
-    def children(self, nineml_classes, n='*', reference=False, **options):
+    def children(self, nineml_classes, n='*', allow_ref=False, **options):
         """
         Extract a child or children of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -498,8 +497,8 @@ class NodeToUnserialize(BaseNode):
         n : int | str
             Either a number, a tuple of allowable numbers or the wildcards
             '+' or '*'
-        reference : bool
-            Whether the child is expected to be a reference or not.
+        allow_ref : bool
+            Whether the child is expected to be a allow_ref or not.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -510,11 +509,11 @@ class NodeToUnserialize(BaseNode):
             Child extracted from the element
         """
         children = []
-        name_map = self._get_name_map(nineml_classes, reference)
+        name_map = self._get_name_map(nineml_classes, allow_ref)
         for name, elem in self.visitor.get_children(self._serial_elem):
             if name in name_map:
                 child = self._visitor.visit(elem, name_map[name], **options)
-                # Dereference Reference if required
+                # Deallow_ref Reference if required
                 if (isinstance(child, Reference) and isinstance(
                         child.user_object, nineml_classes)):
                     child = child.user_object
@@ -550,11 +549,24 @@ class NodeToUnserialize(BaseNode):
         attr : (int | str | float | bool)
             The attribute to retrieve
         """
-        value = self.visitor.get_attr(self._serial_elem, name, **options)
+        try:
+            value = self.visitor.get_attr(self._serial_elem, name, **options)
+        except KeyError:
+            if 'default' in options:
+                value = options['default']
+            else:
+                raise NineMLSerializationError(
+                    "Node {} does not have required attribute '{}'"
+                    .format(self.name, name))
         self.unprocessed.remove(name)
-        return dtype(value)
+        try:
+            return dtype(value)
+        except ValueError:
+            raise NineMLSerializationError(
+                "Cannot convert '{}' attribute of {} node ({}) to {}"
+                .format(name, self.name, value, dtype))
 
-    def body(self, dtype=str, **options):
+    def body(self, dtype=str, allow_empty=False, **options):
         """
         Returns the body of the serial element
 
@@ -569,18 +581,26 @@ class NodeToUnserialize(BaseNode):
             The return type of the body
         """
         value = self.visitor.get_body(self._serial_elem, **options)
+        if value == '' and not allow_empty:
+            raise NineMLSerializationError(
+                "Missing required body of {} node".format(self.name))
         self.unprocessed.remove(BODY_ATTRIBUTE)
-        return dtype(value)
+        try:
+            return dtype(value)
+        except ValueError:
+            raise NineMLSerializationError(
+                "Cannot convert body of {} node ({}) to {}"
+                .format(self.name, value, dtype))
 
-    def _get_name_map(self, nineml_classes, reference):
+    def _get_name_map(self, nineml_classes, allow_ref):
         try:
             nineml_classes = list(nineml_classes)
         except ValueError:
             nineml_classes = [nineml_classes]
         name_map = {}
-        if reference:
+        if allow_ref:
             name_map[self.visitor.node_name(Reference)] = Reference
-        if reference != 'only':
+        if allow_ref != 'only':
             name_map.update(
                 (self.visitor.node_name(c), c) for c in nineml_classes)
         return name_map

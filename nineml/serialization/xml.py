@@ -17,6 +17,10 @@ def strip_xmlns(tag_name):
 class Serializer(BaseSerializer):
     "Serializer class for the XML format"
 
+    def __init__(self, document, version):
+        super(Serializer, self).__init__(document, version)
+        self._doc_root = self.E(document.nineml_type)
+
     def create_elem(self, name, parent=None, **options):  # @UnusedVariable
         elem = self.E(name)
         if parent is not None:
@@ -28,6 +32,9 @@ class Serializer(BaseSerializer):
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable
         serial_elem.text = repr(value)
+
+    def root_elem(self):
+        return self._doc_root
 
     @property
     def E(self):
