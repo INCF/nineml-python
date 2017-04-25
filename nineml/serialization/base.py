@@ -105,7 +105,13 @@ class BaseSerializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
-    def visit(self, nineml_object, parent=None, **options):  # @UnusedVariable
+    def visit(self, nineml_object, parent=None, as_reference=None, **options):
+        if parent is None:
+            parent = self.root_elem()
+        parent = self.write_reference(nineml_object, parent, as_reference,
+                                      **options)
+        if parent is None:
+            return None  # If wrote reference and object already exists
         serial_elem = self.create_elem(self.node_name(type(nineml_object)),
                                        parent=parent, **options)
         node = NodeToSerialize(self, serial_elem)
@@ -144,8 +150,12 @@ class BaseSerializer(BaseVisitor):
     def set_body(self, serial_elem, value, **options):
         pass
 
-    def write_reference(self, nineml_object, as_ref=None, absolute_refs=False,
-                         prefer_refs=None, **options):
+    @abstractmethod
+    def root_elem(self):
+        pass
+
+    def write_reference(self, nineml_object, parent, as_reference=None,
+                        ref_strategy=None, absolute_refs=False, **options):
         """
         Determine whether to write the elemnt as a reference or not depending
         on whether it needs to be, as determined by `as_ref`, e.g. in the
@@ -153,30 +163,68 @@ class BaseSerializer(BaseVisitor):
         would prefer it to be, `prefer_refs`. If neither kwarg is set whether
         the element is written as a reference is determined by whether it
         has already been added to a document or not.
+
+        Parameters
+        ----------
+        reference : bool | None
+            Whether the child should be written as a reference or not. If None
+            the ref_strategy option is used to determine whether it is or not.
+        ref_strategy : (None | 'prefer' | 'force' | 'inline')
+            The strategy used to write references if they are not explicitly
+            required by the serialization (i.e. for Projections and Selections)
+        absolute_refs : bool
+            Whether to write references using relative or absolute paths
+
+        Returns
+        -------
+        obj_parent : <serial-elem>
+            The parent for the nineml_object to be written to, either the
+            original parent, the document root or None if the object doesn't
+            need to be written
         """
-        if as_ref is None:
-            if prefer_refs is None:
+        if as_reference is None:
+            if ref_strategy is None:
                 # No preference is supplied so the element will be written as
                 # a reference if it was loaded from a reference
                 as_ref = nineml_object.document is not None
-            elif prefer_refs:
+            elif ref_strategy == 'prefer':
                 # Write the element as a reference
                 as_ref = True
-            else:
+            elif ref_strategy == 'inline':
                 # Write the element inline
                 as_ref = False
+            elif ref_strategy == 'local':
+                raise NotImplementedError
+            else:
+                raise NineMLSerializationError(
+                    "Unrecognised ref_strategy '{}'".format(ref_strategy))
+        else:
+            as_ref = as_reference
         # If the element is to be written as a reference and it is not in the
         # current document add it
-        if as_ref and nineml_object.document is None:
-            try:
-                obj = self.document[self.name]
-                if obj != self:
-                    # Cannot write as a reference as an object of that name
-                    # already exists in the document
-                    as_ref = False
-            except NineMLNameError:
-                # Add the object to the current document
-                self.document.add(nineml_object, **options)
+        new_parent = None
+        if as_ref:
+            if nineml_object.document is None:
+                try:
+                    obj = self.document[self.name]
+                    if obj != self:
+                        # Cannot write as a reference as an object of that name
+                        # already exists in the document
+                        if as_reference is None:
+                            # If reference was only a preference
+                            as_ref = False
+                        else:
+                            raise NineMLSerializationError(
+                                "Cannot add {} to the current document '{}' "
+                                "as it clashes with existing object {}"
+                                .format(nineml_object, self.document.url,
+                                        obj))
+                except NineMLNameError:
+                    # Add the object to the current document
+                    new_parent = self.root_elem()
+                    url = None
+            else:
+                url
         if as_ref:
             # If the object is already in the current document the url is None
             if (nineml_object.document is None or
@@ -191,14 +239,15 @@ class BaseSerializer(BaseVisitor):
             else:
                 url = os.path.relpath(nineml_object.document.url,
                                       os.path.dirname(self.document.url))
-                # Ensure the relative path starts with theh explicit
+                # Ensure the relative path starts with the explicit
                 # current directory '.'
                 if not url.startswith('.'):
                     url = './' + url
             # Write the element as a reference
-            xml = Reference(self.name, self.document, url=url).to_xml(
-                self.document, **options)
-        return xml
+            self.visit(Reference(self.name, self.document, url=url),
+                                  parent=parent, **options)
+            parent = new_parent
+        return parent
 
 
 class NodeToSerialize(BaseNode):
@@ -207,7 +256,7 @@ class NodeToSerialize(BaseNode):
         super(NodeToSerialize, self).__init__(*args, **kwargs)
         self.withins = set()
 
-    def child(self, nineml_object, within=None, reference=False, **options):
+    def child(self, nineml_object, within=None, as_reference=None, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -219,8 +268,9 @@ class NodeToSerialize(BaseNode):
             A type of the children to extract from the element
         within : str | NoneType
             The name of the sub-element to extract the child from
-        reference : bool
-            Whether the child should be written as a reference or not
+        as_reference : bool | None
+            Whether the child should be written as a reference or not. If None
+            the ref_strategy option is used to determine whether it is or not.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -234,9 +284,10 @@ class NodeToSerialize(BaseNode):
             self.withins.add(within)
         else:
             serial_elem = self._serial_elem
-        self.visitor.visit(nineml_object, parent=serial_elem, **options)
+        self.visitor.visit(nineml_object, parent=serial_elem,
+                           as_reference=as_reference, **options)
 
-    def children(self, nineml_objects, reference=False, **options):
+    def children(self, nineml_objects, as_reference=None, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -246,15 +297,16 @@ class NodeToSerialize(BaseNode):
         ----------
         nineml_objects : list(NineMLObject)
             A type of the children to extract from the element
-        reference : bool
-            Whether the child should be written as a reference or not
+        as_reference : bool | None
+            Whether the child should be written as a reference or not. If None
+            the ref_strategy option is used to determine whether it is or not.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
         """
         for nineml_object in nineml_objects:
             self.visitor.visit(nineml_object, parent=self._serial_elem,
-                               **options)
+                               as_reference=as_reference, **options)
 
     def attr(self, name, value, **options):
         """
