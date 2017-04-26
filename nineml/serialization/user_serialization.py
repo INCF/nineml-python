@@ -1,12 +1,12 @@
 # ./abstraction/connectionrule/base.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     self.standardize_unit_dimensions()
     self.validate()
     return ConnectionRuleXMLWriter(document, E, **kwargs).visit(self)
 
 
 # ./abstraction/dynamics/base.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     self.standardize_unit_dimensions()
     self.validate()
     return DynamicsXMLWriter(document=document, E=E, **kwargs).visit(self,
@@ -14,14 +14,14 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./abstraction/randomdistribution/base.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     self.standardize_unit_dimensions()
     self.validate()
     return RandomDistributionXMLWriter(document, E, **kwargs).visit(self)
 
 
 # ./annotations.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     # Strip validate_dimensions annotation if True (to clean up
     # written files) as this is the default so can be
     # ignored and avoid cluttering the written file
@@ -33,7 +33,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./annotations.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     E = ElementMaker(namespace=self.ns)
     members = self._sub_branches_to_xml(**kwargs)
     if self.text is not None:
@@ -42,7 +42,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./document.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     self.standardize_units()
     self._added_in_write = []  # Initialise added_in_write
     elements = [e.to_xml(self, E=E, as_ref=False, **kwargs)
@@ -55,7 +55,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./reference.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     name = self._referred_to.name
     if E._namespace == NINEMLv1:
         attrs = {}
@@ -70,7 +70,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./units.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     kwargs = {'name': self.name}
     kwargs.update(dict(
         (n, str(p))
@@ -79,7 +79,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./units.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     kwargs = {'symbol': self.name, 'dimension': self.dimension.name,
               'power': str(self.power)}
     if self.offset:
@@ -89,14 +89,14 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./units.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type,
              self._value.to_xml(document, E=E, **kwargs),
              units=self.units.name)
 
 
 # ./user/component.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     if self.url is None:
         # If definition was created in Python, add component class
         # reference to document argument before writing definition
@@ -114,7 +114,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/component.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     """
     docstring missing, although since the decorators don't
     preserve the docstring, it doesn't matter at the moment.
@@ -131,7 +131,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/component.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     if E._namespace == NINEMLv1:
         xml = E(self.nineml_type,
                 self.value.to_xml(document, E=E, **kwargs),
@@ -145,7 +145,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/multi/dynamics.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     members = [c.to_xml(document, E=E, **kwargs)
                for c in self.sub_components]
     members.extend(pe.to_xml(document, E=E, **kwargs)
@@ -156,21 +156,21 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/multi/dynamics.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type,
              self._component.to_xml(document, E=E, **kwargs),
              name=self.name)
 
 
 # ./user/multi/dynamics.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type,
              self._component_class.to_xml(document, E=E, **kwargs),
              name=self.name)
 
 
 # ./user/multi/dynamics.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     members = [c.to_xml(document, E=E, **kwargs)
                for c in self.sub_components]
     members.extend(pe.to_xml(document, E=E, **kwargs)
@@ -181,7 +181,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/multi/port_exposures.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type,
              name=self.name,
              sub_component=self.sub_component_name,
@@ -189,7 +189,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/network.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     member_elems = []
     for member in chain(self.populations, self.selections,
                         self.projections):
@@ -199,7 +199,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/network.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type,
              E.Size(str(self.size)),
              self.dynamics_properties.to_xml(document, E=E, **kwargs),
@@ -207,7 +207,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/network.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     members = [
         E.Source(self.source.to_xml(document, E=E, **kwargs),
                  port=self.source_port),
@@ -224,7 +224,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/population.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type,
              E.Size(str(self.size)),
              E.Cell(self.cell.to_xml(document, E=E, **kwargs)),
@@ -232,7 +232,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/port_connections.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     attribs = {}
     try:
         attribs['sender_role'] = self.sender_role
@@ -249,7 +249,7 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/projection.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     if E._namespace == NINEMLv1:
         pcs = defaultdict(list)
         for pc in self.port_connections:
@@ -273,14 +273,14 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./user/selection.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type,
              self.operation.to_xml(document, E=E, **kwargs),
              name=self.name)
 
 
 # ./user/selection.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     def item_to_xml(item):
         if isinstance(item, Reference):
             return item.to_xml(document, E=E, **kwargs)
@@ -294,17 +294,17 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./values.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     pass
 
 
 # ./values.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type, repr(self.value))
 
 
 # ./values.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     if self._datafile is None:
         return E.ArrayValue(
             *[E.ArrayValueRow(index=str(i), value=repr(v))
@@ -318,6 +318,6 @@ def serialize(self, node, **option):  # @UnusedVariable
 
 
 # ./values.py
-def serialize(self, node, **option):  # @UnusedVariable
+def serialize_node(self, node, **options):  # @UnusedVariable
     return E(self.nineml_type,
              self.distribution.to_xml(document, E=E, **kwargs))

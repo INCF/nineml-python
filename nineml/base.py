@@ -42,10 +42,6 @@ class BaseNineMLObject(object):
     """
     children = []
 
-    @property
-    def annotations(self):
-        return self._annotations
-
     def __eq__(self, other):
         return self.equals(other)
 
@@ -344,6 +340,10 @@ class AnnotatedNineMLObject(BaseNineMLObject):
     def equals(self, other, **kwargs):
         return (super(AnnotatedNineMLObject, self).equals(other, **kwargs) and
                 self.annotations_equal(other, **kwargs))
+
+    @property
+    def annotations(self):
+        return self._annotations
 
     def annotations_equal(self, other, annotations_ns=[], **kwargs):  # @UnusedVariable @IgnorePep8
         """

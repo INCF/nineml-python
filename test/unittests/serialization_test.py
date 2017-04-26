@@ -23,7 +23,7 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'Container'
     v1_nineml_type = 'Cunfaener'
-    defining_attributes = ('a', 'bs', 'c', 'd')
+    defining_attributes = ('name', 'a', 'bs', 'c', 'd')
 
     def __init__(self, name, a, bs, c, d):
         AnnotatedNineMLObject.__init__(self)
@@ -35,7 +35,7 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
         self.d = d
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self._name)
+        node.attr('name', self.name)
         node.child(self.a)
         node.children(self.bs)
         node.child(self.c, within='CTag')
@@ -53,17 +53,17 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
 class A(AnnotatedNineMLObject):
 
     nineml_type = 'A'
-    defining_attributes = ('a1', 'a2')
+    defining_attributes = ('name', 'a1', 'a2')
     default_a1 = 5
 
     def __init__(self, name, a1, a2):
         super(A, self).__init__()
-        self._name = name
+        self.name = name
         self.a1 = a1
         self.a2 = a2
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self._name)
+        node.attr('name', self.name)
         if node.later_version('2.0', equal=True):
             node.attr('a1', self.a1)
         node.attr('a2', self.a2)
@@ -82,15 +82,15 @@ class A(AnnotatedNineMLObject):
 class B(AnnotatedNineMLObject):
 
     nineml_type = 'B'
-    defining_attributes = ('b',)
+    defining_attributes = ('name', 'b',)
 
     def __init__(self, name, b):
         super(B, self).__init__()
-        self._name = name
+        self.name = name
         self.b = b
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self._name)
+        node.attr('name', self.name)
         node.attr('b', self.b)
 
     @classmethod
@@ -102,17 +102,17 @@ class B(AnnotatedNineMLObject):
 class C(AnnotatedNineMLObject):
 
     nineml_type = 'C'
-    defining_attributes = ('es', 'f')
+    defining_attributes = ('name', 'es', 'f')
 
     def __init__(self, name, es, f, g):
         super(C, self).__init__()
-        self._name = name
+        self.name = name
         self.es = es
         self.f = f
         self.g = g
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self._name)
+        node.attr('name', self.name)
         node.children(self.es, reference=True)
         node.child(self.f, reference=True)
         node.attr('g', self.g)
@@ -128,16 +128,16 @@ class C(AnnotatedNineMLObject):
 class E(AnnotatedNineMLObject):
 
     nineml_type = 'E'
-    defining_attributes = ('e1', 'e2')
+    defining_attributes = ('name', 'e1', 'e2')
 
     def __init__(self, name, e1, e2):
         super(E, self).__init__()
-        self._name = name
+        self.name = name
         self.e1 = e1
         self.e2 = e2
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self._name)
+        node.attr('name', self.name)
         node.attr('e1', self.e1)
         node.attr('e2', self.e2)
 
@@ -151,16 +151,16 @@ class E(AnnotatedNineMLObject):
 class F(AnnotatedNineMLObject):
 
     nineml_type = 'F'
-    defining_attributes = ('f1', 'f2')
+    defining_attributes = ('name', 'f1', 'f2')
 
     def __init__(self, name, f1, f2):
         super(F, self).__init__()
-        self._name = name
+        self.name = name
         self.f1 = f1
         self.f2 = f2
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self._name)
+        node.attr('name', self.name)
         node.attr('f1', self.f1)
         node.attr('f2', self.f2)
 

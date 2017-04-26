@@ -5,7 +5,8 @@ from nineml.base import DocumentLevelObject, BaseNineMLObject, ContainerObject
 import re
 from nineml.xml import ElementMaker, etree
 from nineml.exceptions import (
-    NineMLXMLError, NineMLRuntimeError, NineMLNameError)
+    NineMLXMLError, NineMLRuntimeError, NineMLNameError,
+    NineMLSerializationError)
 
 
 def read_annotations(from_xml):
@@ -347,6 +348,18 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
                 _AnnotationsBranch.from_xml(child))
         return cls(branches, **kwargs)
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        for key_branches in self._branches.itervalues():
+            node.children(key_branches, reference=False, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
+        branches = defaultdict(list)
+        for name, elem in node.visitor.get_children(node.serial_element):
+            branches[name].append(node.visitor.visit(elem, _AnnotationsBranch,
+                                                     **options))
+        return cls(branches)
+
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
         clone._document = None
@@ -374,16 +387,16 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
 class _AnnotationsBranch(BaseAnnotations):
 
     nineml_type = '_AnnotationsBranch'
-    defining_attributes = ('_branches', '_attr', '_name', '_ns', '_text')
+    defining_attributes = ('_branches', '_attr', '_name', '_ns', '_body')
 
-    def __init__(self, name, ns, attr=None, branches=None, text=None):
+    def __init__(self, name, ns, attr=None, branches=None, body=None):
         super(_AnnotationsBranch, self).__init__(branches)
         if attr is None:
             attr = {}
         self._name = name
         self._ns = ns
         self._attr = attr
-        self._text = text
+        self._body = body
 
     def empty(self):
         return super(_AnnotationsBranch, self).empty() and not self.attr
@@ -397,8 +410,8 @@ class _AnnotationsBranch(BaseAnnotations):
         return self._ns
 
     @property
-    def text(self):
-        return self._text
+    def body(self):
+        return self._body
 
     @property
     def attr(self):
@@ -408,7 +421,7 @@ class _AnnotationsBranch(BaseAnnotations):
         return (super(_AnnotationsBranch, self).equals(other) and
                 self.name == other.name and
                 self.attr == other.attr and
-                self.text == other.text and
+                self.body == other.body and
                 self.ns == other.ns)
 
     def _repr(self, indent=''):
@@ -418,8 +431,8 @@ class _AnnotationsBranch(BaseAnnotations):
         for key_branches in self._branches.itervalues():
             for branch in key_branches:
                 rep += '\n' + branch._repr(indent=indent + '  ')
-        if self.text is not None:
-            rep += '\n{}__text__={}'.format(indent + '  ', self.text)
+        if self.body is not None:
+            rep += '\n{}__body__={}'.format(indent + '  ', self.body)
         return rep
 
     def attr_values(self):
@@ -512,8 +525,8 @@ class _AnnotationsBranch(BaseAnnotations):
     def to_xml(self, **kwargs):  # @UnusedVariable
         E = ElementMaker(namespace=self.ns)
         members = self._sub_branches_to_xml(**kwargs)
-        if self.text is not None:
-            members.append(self.text)
+        if self.body is not None:
+            members.append(self.body)
         return E(self.name, *members, **self._attr)
 
     @classmethod
@@ -525,10 +538,31 @@ class _AnnotationsBranch(BaseAnnotations):
                 _AnnotationsBranch.from_xml(child))
         attr = dict(element.attrib)
         if element.text is not None and element.text.strip():
-            text = element.text.strip()
+            body = element.text.strip()
         else:
-            text = None
-        return cls(name, ns, attr=attr, branches=branches, text=text)
+            body = None
+        return cls(name, ns, attr=attr, branches=branches, body=body)
+
+    # ./annotations.py
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        for key_branches in self._branches.itervalues():
+            node.children(key_branches, reference=False, **options)
+        if self.body is not None:
+            node.body(self.body)
+        for key, val in self._attr.iteritems():
+            node.attr(key, val)
+
+    # ./annotations.py
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
+        branches = defaultdict(list)
+        for name, elem in node.visitor.get_children(node.serial_element):
+            branches[name].append(node.visitor.visit(elem, _AnnotationsBranch,
+                                                     **options))
+        attr = dict((k, node.attr(k))
+                    for k in node.visitor.get_attr_keys(node.serial_element))
+        return cls(node.name, node.ns, attr=attr, branches=branches,
+                   body=node.body(allow_empty=True))
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)

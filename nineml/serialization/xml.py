@@ -14,6 +14,11 @@ def strip_xmlns(tag_name):
     return xmlns_re.match(tag_name).group(2)
 
 
+def value_str(value):
+    # Ensure all decimal places are preserved for floats
+    return repr(value) if isinstance(value, float) else str(value)
+
+
 class Serializer(BaseSerializer):
     "Serializer class for the XML format"
 
@@ -28,10 +33,10 @@ class Serializer(BaseSerializer):
         return elem
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        serial_elem.attrib[name] = repr(value)
+        serial_elem.attrib[name] = value_str(value)
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable
-        serial_elem.text = repr(value)
+        serial_elem.text = value_str(value)
 
     def root_elem(self):
         return self._doc_root
@@ -52,8 +57,10 @@ class Unserializer(BaseUnserializer):
         return serial_elem.attrib[name]
 
     def get_body(self, serial_elem, **options):  # @UnusedVariable
-        return serial_elem.text
+        body = serial_elem.text
+        if body is not None and not body.strip():
+            body = None
+        return body
 
-    def get_keys(self, serial_elem, **options):  # @UnusedVariable
-        return serial_elem.attrib.keys() + [
-            strip_xmlns(e.tag) for e in serial_elem.getchildren()]
+    def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
+        return serial_elem.attrib.keys()
