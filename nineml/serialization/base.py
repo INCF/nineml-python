@@ -90,6 +90,7 @@ class BaseSerializer(BaseVisitor):
     def serialize(self, **options):
         for nineml_object in list(self.document):
             self.visit(nineml_object, **options)
+        return self.root_elem()
 
     def visit(self, nineml_object, parent=None, reference=None,
               multiple=False, **options):

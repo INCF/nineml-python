@@ -54,7 +54,7 @@ class TestAnnotations(unittest.TestCase):
         annot.set(('Woo', foreign_ns), 'Jar', 'c', 2)
         annot.add(('Foo', another_ns), 'Bar')
         annot[('Foo',
-               another_ns)][0]['Bar'][0]._text = 'annotations with text fields'
+               another_ns)][0]['Bar'][0]._body = 'annotations with text fields'
         annot.set(('Boo', PY9ML_NS), 'Mar', 'Wee', 'd', 3)
         annot.set(('Boo', PY9ML_NS), 'Mar', 'Wee', 'e', 4)
         annot.set(('Boo', PY9ML_NS), 'Mar', 'Waa', 'f', 5)
