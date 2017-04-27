@@ -1,9 +1,16 @@
 import re
+import os.path
+from lxml import etree
 from lxml.builder import ElementMaker
-from .base import BaseSerializer, BaseUnserializer
+from urllib import urlopen
+import contextlib
+from nineml.document import Document
+from nineml.exceptions import NineMLXMLError
+from .base import BaseSerializer, BaseUnserializer, NINEML_NS
 
 # Extracts the xmlns from an lxml element tag
 xmlns_re = re.compile(r'(\{.*\})(.*)')
+nineml_version_re = re.compile(r'{}/([\d\.]+)/?'.format(NINEML_NS))
 
 
 def extract_xmlns(tag_name):
@@ -52,6 +59,18 @@ class Serializer(BaseSerializer):
 class Unserializer(BaseUnserializer):
     "Unserializer class for the XML format"
 
+    def __init__(self, xml_doc, relative_to=None):
+        if isinstance(xml_doc, basestring):
+            xml_doc, self._url = self.read_xml(xml_doc,
+                                               relative_to=relative_to)
+        else:
+            self._url = None
+        self._xml_root = xml_doc.getroot()
+        self._nineml_root = self.get_single_child(self._xml_root)
+        namespace = extract_xmlns(self._nineml_root)
+        version = nineml_version_re.match(namespace).group(1)
+        super(Serializer, self).__init__(Document(), version)
+
     def get_children(self, serial_elem, **options):  # @UnusedVariable
         return ((strip_xmlns(e.tag), extract_xmlns(e.tag), e)
                 for e in serial_elem.getchildren())
@@ -67,3 +86,25 @@ class Unserializer(BaseUnserializer):
 
     def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
         return serial_elem.attrib.keys()
+
+    def root_elem(self):
+        return self._nineml_root
+
+    @classmethod
+    def read_xml(cls, url, relative_to):
+        if url.startswith('.') and relative_to:
+            url = os.path.abspath(os.path.join(relative_to, url))
+        try:
+            if not isinstance(url, file):
+                try:
+                    with contextlib.closing(urlopen(url)) as f:
+                        xml = etree.parse(f)
+                except IOError, e:
+                    raise NineMLXMLError("Could not read 9ML URL '{}': \n{}"
+                                         .format(url, e))
+            else:
+                xml = etree.parse(url)
+        except etree.LxmlError, e:
+            raise NineMLXMLError("Could not parse XML of 9ML file '{}': \n {}"
+                                 .format(url, e))
+        return xml, url

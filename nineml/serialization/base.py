@@ -15,14 +15,17 @@ from nineml.annotations import (
 BODY_ATTR = '@body'
 NS_ATTR = '@namespace'
 
-MATHML = "http://www.w3.org/1998/Math/MathML"
-UNCERTML = "http://www.uncertml.org/2.0"
+NINEML_NS = "http://nineml.net/9ML/"
+MATHML_NS = "http://www.w3.org/1998/Math/MathML"
+UNCERTML_NS = "http://www.uncertml.org/2.0"
 
 is_int_re = re.compile(r'\d+(\.0)?')
 version_re = re.compile(r'(\d+)\.(\d+)')
 
 
 class BaseVisitor(object):
+
+    __metaclass__ = ABCMeta
 
     def __init__(self, document, version):
         self._document = document
@@ -139,23 +142,6 @@ class BaseSerializer(BaseVisitor):
                 self.visit(annotations, parent=serial_elem, **options)
         return serial_elem
 
-    @abstractmethod
-    def create_elem(self, name, parent=None, multiple=False,
-                    namespace=None, **options):
-        pass
-
-    @abstractmethod
-    def set_attr(self, serial_elem, name, value, **options):
-        pass
-
-    @abstractmethod
-    def set_body(self, serial_elem, value, sole, **options):
-        pass
-
-    @abstractmethod
-    def root_elem(self):
-        pass
-
     def get_reference_url(self, nineml_object, reference=None,
                           ref_style=None, absolute_refs=False, **options):  # @UnusedVariable @IgnorePep8
         """
@@ -225,6 +211,23 @@ class BaseSerializer(BaseVisitor):
         else:
             url = False
         return url
+
+    @abstractmethod
+    def create_elem(self, name, parent=None, multiple=False,
+                    namespace=None, **options):
+        pass
+
+    @abstractmethod
+    def set_attr(self, serial_elem, name, value, **options):
+        pass
+
+    @abstractmethod
+    def set_body(self, serial_elem, value, sole, **options):
+        pass
+
+    @abstractmethod
+    def root_elem(self):
+        pass
 
 
 class BaseUnserializer(BaseVisitor):
@@ -307,22 +310,6 @@ class BaseUnserializer(BaseVisitor):
                 .format('|'.join(names), elem))
         return matches[0]
 
-    @abstractmethod
-    def get_children(self, serial_elem, **options):
-        pass
-
-    @abstractmethod
-    def get_attr(self, serial_elem, name, **options):
-        pass
-
-    @abstractmethod
-    def get_body(self, serial_elem, sole, **options):
-        pass
-
-    @abstractmethod
-    def get_attr_keys(self, serial_elem, **options):
-        pass
-
     def _set_load_options_from_annotations(self, options, annotations):
         options['validate_dims'] = annotations.get(
             (VALIDATION, PY9ML_NS), DIMENSIONALITY, default='True') == 'True'
@@ -339,6 +326,26 @@ class BaseUnserializer(BaseVisitor):
                 index = ind.get(INDEX_INDEX_ATTR)
                 nineml_object._indices[
                     key][getattr(nineml_object, key)(name)] = int(index)
+
+    @abstractmethod
+    def get_children(self, serial_elem, **options):
+        pass
+
+    @abstractmethod
+    def get_attr(self, serial_elem, name, **options):
+        pass
+
+    @abstractmethod
+    def get_body(self, serial_elem, sole, **options):
+        pass
+
+    @abstractmethod
+    def get_attr_keys(self, serial_elem, **options):
+        pass
+
+    @abstractmethod
+    def root_elem(self):
+        pass
 
 
 class BaseNode(object):
