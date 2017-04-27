@@ -74,32 +74,6 @@ class BaseVisitor(object):
         return equal
 
 
-class BaseNode(object):
-
-    def __init__(self, visitor, serial_elem):
-        self._visitor = visitor
-        self._serial_elem = serial_elem
-
-    @property
-    def visitor(self):
-        return self._visitor
-
-    @property
-    def serial_element(self):
-        return self._serial_elem
-
-    @property
-    def version(self):
-        return self.visitor.version
-
-    @property
-    def document(self):
-        return self.visitor.document
-
-    def later_version(self, *args, **kwargs):
-        return self.visitor.later_version(*args, **kwargs)
-
-
 # =============================================================================
 # Serialization
 # =============================================================================
@@ -253,102 +227,13 @@ class BaseSerializer(BaseVisitor):
         return url
 
 
-class NodeToSerialize(BaseNode):
-
-    def __init__(self, *args, **kwargs):
-        super(NodeToSerialize, self).__init__(*args, **kwargs)
-        self.withins = set()
-
-    def child(self, nineml_object, within=None, reference=None, **options):
-        """
-        Serialize a single nineml_object. optionally "within" a simple
-        containing tag.
-
-        Parameters
-        ----------
-        nineml_object : NineMLObject
-            A type of the children to extract from the element
-        within : str | NoneType
-            The name of the sub-element to extract the child from
-        reference : bool | None
-            Whether the child should be written as a allow_ref or not. If None
-            the ref_style option is used to determine whether it is or not.
-        options : dict
-            Options that can be passed to specific branches of the element
-            tree (unlikely to be used but included for completeness)
-        """
-        if within is not None:
-            if within in self.withins:
-                raise NineMLSerializationError(
-                    "'{}' already added to serialization of {}"
-                    .format(within, nineml_object))
-            serial_elem = self.visitor.create_elem(within, self._serial_elem)
-            self.withins.add(within)
-        else:
-            serial_elem = self._serial_elem
-        self.visitor.visit(nineml_object, parent=serial_elem,
-                           reference=reference, **options)
-
-    def children(self, nineml_objects, reference=None, **options):
-        """
-        Serialize an iterable (e.g. list or tuple) of nineml_objects of the
-        same type.
-
-        Parameters
-        ----------
-        nineml_objects : list(NineMLObject)
-            A type of the children to extract from the element
-        reference : bool | None
-            Whether the child should be written as a allow_ref or not. If None
-            the ref_style option is used to determine whether it is or not.
-        options : dict
-            Options that can be passed to specific branches of the element
-            tree (unlikely to be used but included for completeness)
-        """
-        for nineml_object in nineml_objects:
-            self.visitor.visit(nineml_object, parent=self._serial_elem,
-                               reference=reference, multiple=True, **options)
-
-    def attr(self, name, value, **options):
-        """
-        Extract a child of class ``cls`` from the serial
-        element ``elem``. The number of expected children is specifed by
-        ``n``.
-
-        Parameters
-        ----------
-        name : str
-            Name of the attribute
-        value : (int | float | str)
-            Attribute value
-        """
-        self.visitor.set_attr(self._serial_elem, name, value, **options)
-
-    def body(self, value, sole=True, **options):
-        """
-        Set the body of the elem
-
-        Parameters
-        ----------
-        value : str | float | int
-            The value for the body of the element
-        sole : bool
-            Whether the body attribute is the sole attribute/child of the
-            element (saving within an explicit @body attribute can be avoided
-            be in JSON, YAML, HDF5, etc. formats that don't have a notion
-            of body)
-        """
-        self.visitor.set_body(self._serial_elem, value, sole, **options)
-
-
-# =============================================================================
-# Unserialization
-# =============================================================================
-
 class BaseUnserializer(BaseVisitor):
     "Abstract base class for all unserializer classes"
 
     __metaclass__ = ABCMeta
+
+    def unserialize(self):
+        raise NotImplementedError
 
     def visit(self, serial_elem, nineml_cls, allow_ref=False, **options):  # @UnusedVariable @IgnorePep8
         # Extract annotations if present
@@ -454,6 +339,120 @@ class BaseUnserializer(BaseVisitor):
                 index = ind.get(INDEX_INDEX_ATTR)
                 nineml_object._indices[
                     key][getattr(nineml_object, key)(name)] = int(index)
+
+
+class BaseNode(object):
+
+    def __init__(self, visitor, serial_elem):
+        self._visitor = visitor
+        self._serial_elem = serial_elem
+
+    @property
+    def visitor(self):
+        return self._visitor
+
+    @property
+    def serial_element(self):
+        return self._serial_elem
+
+    @property
+    def version(self):
+        return self.visitor.version
+
+    @property
+    def document(self):
+        return self.visitor.document
+
+    def later_version(self, *args, **kwargs):
+        return self.visitor.later_version(*args, **kwargs)
+
+
+class NodeToSerialize(BaseNode):
+
+    def __init__(self, *args, **kwargs):
+        super(NodeToSerialize, self).__init__(*args, **kwargs)
+        self.withins = set()
+
+    def child(self, nineml_object, within=None, reference=None, **options):
+        """
+        Serialize a single nineml_object. optionally "within" a simple
+        containing tag.
+
+        Parameters
+        ----------
+        nineml_object : NineMLObject
+            A type of the children to extract from the element
+        within : str | NoneType
+            The name of the sub-element to extract the child from
+        reference : bool | None
+            Whether the child should be written as a allow_ref or not. If None
+            the ref_style option is used to determine whether it is or not.
+        options : dict
+            Options that can be passed to specific branches of the element
+            tree (unlikely to be used but included for completeness)
+        """
+        if within is not None:
+            if within in self.withins:
+                raise NineMLSerializationError(
+                    "'{}' already added to serialization of {}"
+                    .format(within, nineml_object))
+            serial_elem = self.visitor.create_elem(within, self._serial_elem)
+            self.withins.add(within)
+        else:
+            serial_elem = self._serial_elem
+        self.visitor.visit(nineml_object, parent=serial_elem,
+                           reference=reference, **options)
+
+    def children(self, nineml_objects, reference=None, **options):
+        """
+        Serialize an iterable (e.g. list or tuple) of nineml_objects of the
+        same type.
+
+        Parameters
+        ----------
+        nineml_objects : list(NineMLObject)
+            A type of the children to extract from the element
+        reference : bool | None
+            Whether the child should be written as a allow_ref or not. If None
+            the ref_style option is used to determine whether it is or not.
+        options : dict
+            Options that can be passed to specific branches of the element
+            tree (unlikely to be used but included for completeness)
+        """
+        for nineml_object in nineml_objects:
+            self.visitor.visit(nineml_object, parent=self._serial_elem,
+                               reference=reference, multiple=True, **options)
+
+    def attr(self, name, value, **options):
+        """
+        Extract a child of class ``cls`` from the serial
+        element ``elem``. The number of expected children is specifed by
+        ``n``.
+
+        Parameters
+        ----------
+        name : str
+            Name of the attribute
+        value : (int | float | str)
+            Attribute value
+        """
+        self.visitor.set_attr(self._serial_elem, name, value, **options)
+
+    def body(self, value, sole=True, **options):
+        """
+        Set the body of the elem
+
+        Parameters
+        ----------
+        value : str | float | int
+            The value for the body of the element
+        sole : bool
+            Whether the body attribute is the sole attribute/child of the
+            element (saving within an explicit @body attribute can be avoided
+            be in JSON, YAML, HDF5, etc. formats that don't have a notion
+            of body)
+        """
+        self.visitor.set_body(self._serial_elem, value, sole, **options)
 
 
 class NodeToUnserialize(BaseNode):
