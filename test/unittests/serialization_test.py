@@ -14,9 +14,9 @@ from nineml.serialization.xml import (
 from lxml import etree
 
 F_ANNOT_NS = 'http:/a.domain.org'
-F_ANNOT_TAG = 'F_ANNOT'
+F_ANNOT_TAG = 'FAnnotation'
 F_ANNOT_ATTR = 'f_annot'
-F_ANNOT_VAL = 'u'
+F_ANNOT_VAL = 'annot_f'
 
 
 class Container(AnnotatedNineMLObject, DocumentLevelObject):
@@ -25,9 +25,9 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
     v1_nineml_type = 'Cunfaener'
     defining_attributes = ('name', 'a', 'bs', 'c', 'd')
 
-    def __init__(self, name, a, bs, c, d):
+    def __init__(self, name, a, bs, c, d, document=None):
         AnnotatedNineMLObject.__init__(self)
-        DocumentLevelObject.__init__(self, None)
+        DocumentLevelObject.__init__(self, document)
         self.name = name
         self.a = a
         self.bs = bs
@@ -50,15 +50,16 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
                    d=node.attr('d'))
 
 
-class A(AnnotatedNineMLObject):
+class A(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'A'
     defining_attributes = ('name', 'a1', 'a2')
     default_a1 = 5
 
-    def __init__(self, name, a1, a2):
-        super(A, self).__init__()
+    def __init__(self, name, a1, a2, document=None):
+        AnnotatedNineMLObject.__init__(self)
         self.name = name
+        DocumentLevelObject.__init__(self, document)
         self.a1 = a1
         self.a2 = a2
 
@@ -185,9 +186,10 @@ class TestSerialization(unittest.TestCase):
                 f = F('f', 10, 20)
                 f.annotations.set((F_ANNOT_TAG, F_ANNOT_NS), F_ANNOT_ATTR,
                                   F_ANNOT_VAL)
+                a = A('a', A.default_a1, 2.5)
                 container = Container(
                     name='a_container',
-                    a=A('a', A.default_a1, 2.5),
+                    a=a,
                     bs=[
                         B('b', 'B'),
                         B('b', 'B')],
@@ -199,10 +201,12 @@ class TestSerialization(unittest.TestCase):
                         g=4.7),
                     d='d')
                 doc.add(container, clone=False)
-                elem = S(document=doc, version=version).visit(container)
-                print etree.tostring(elem, pretty_print=True)
+                doc.add(a, clone=False)
+                serializer = S(document=doc, version=version)
+                container_elem = serializer.visit(container)
+                print etree.tostring(serializer.root_elem(), pretty_print=True)
                 new_container = U(document=doc, version=version).visit(
-                    elem, Container)
+                    container_elem, Container)
                 self.assertTrue(container.equals(new_container,
                                                  annot_ns=[F_ANNOT_NS]),
                                 container.find_mismatch(new_container))

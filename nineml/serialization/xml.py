@@ -24,10 +24,11 @@ class Serializer(BaseSerializer):
 
     def __init__(self, document, version):
         super(Serializer, self).__init__(document, version)
-        self._doc_root = self.E(document.nineml_type)
+        self._doc_root = self.E()(document.nineml_type)
 
-    def create_elem(self, name, parent=None, **options):  # @UnusedVariable
-        elem = self.E(name)
+    def create_elem(self, name, parent=None, namespace=None,
+                    **options):  # @UnusedVariable
+        elem = self.E(namespace)(name)
         if parent is not None:
             parent.append(elem)
         return elem
@@ -41,17 +42,19 @@ class Serializer(BaseSerializer):
     def root_elem(self):
         return self._doc_root
 
-    @property
-    def E(self):
-        return ElementMaker(namespace=self.namespace,
-                            nsmap={None: self.namespace})
+    def E(self, namespace=None):
+        if namespace is None:
+            namespace = self.nineml_namespace
+        return ElementMaker(namespace=namespace,
+                            nsmap={None: self.nineml_namespace})
 
 
 class Unserializer(BaseUnserializer):
     "Unserializer class for the XML format"
 
     def get_children(self, serial_elem, **options):  # @UnusedVariable
-        return ((strip_xmlns(e.tag), e) for e in serial_elem.getchildren())
+        return ((strip_xmlns(e.tag), extract_xmlns(e.tag), e)
+                for e in serial_elem.getchildren())
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         return serial_elem.attrib[name]
