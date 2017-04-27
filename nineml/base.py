@@ -128,7 +128,7 @@ class BaseNineMLObject(object):
         return sorted(container)
 
     def __repr__(self):
-        return "{}(name='{}')".format(self.nineml_type, self._name)
+        return "{}(name='{}')".format(self.nineml_type, self.key)
 
     def __str__(self):
         try:

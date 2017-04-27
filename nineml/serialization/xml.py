@@ -36,7 +36,7 @@ class Serializer(BaseSerializer):
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
         serial_elem.attrib[name] = value_str(value)
 
-    def set_body(self, serial_elem, value, **options):  # @UnusedVariable
+    def set_body(self, serial_elem, value, sole, **options):  # @UnusedVariable
         serial_elem.text = value_str(value)
 
     def root_elem(self):
@@ -59,7 +59,7 @@ class Unserializer(BaseUnserializer):
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         return serial_elem.attrib[name]
 
-    def get_body(self, serial_elem, **options):  # @UnusedVariable
+    def get_body(self, serial_elem, sole, **options):  # @UnusedVariable
         body = serial_elem.text
         if body is not None and not body.strip():
             body = None

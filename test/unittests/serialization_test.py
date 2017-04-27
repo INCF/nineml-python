@@ -1,5 +1,6 @@
 import unittest
-from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
+from nineml.base import (
+    AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
 # from nineml.serialization.json import (
 #     Unserialize_noder as Ujson, Serializer as Sjson)
@@ -27,8 +28,8 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __init__(self, name, a, bs, c, d, document=None):
         AnnotatedNineMLObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
         self.name = name
+        DocumentLevelObject.__init__(self, document)
         self.a = a
         self.bs = bs
         self.c = c
@@ -36,7 +37,7 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
-        node.child(self.a)
+        node.child(self.a, reference=True)
         node.children(self.bs)
         node.child(self.c, within='CTag')
         node.attr('d', self.d)
@@ -44,7 +45,7 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(node.attr('name'),
-                   a=node.child(A, n=1),
+                   a=node.child(A, n=1, allow_ref=True),
                    bs=node.children(B, n='*'),
                    c=node.child(C, n=1, within='CTag'),
                    d=node.attr('d'))
@@ -100,17 +101,33 @@ class B(AnnotatedNineMLObject):
                    node.attr('b'))
 
 
-class C(AnnotatedNineMLObject):
+class C(AnnotatedNineMLObject, ContainerObject):
 
     nineml_type = 'C'
     defining_attributes = ('name', 'es', 'f')
+    class_to_member = {'E': 'e'}
 
     def __init__(self, name, es, f, g):
         super(C, self).__init__()
         self.name = name
-        self.es = es
+        self._es = dict((e.name, e) for e in es)
         self.f = f
         self.g = g
+
+    def e(self, name):
+        return self._es[name]
+
+    @property
+    def es(self):
+        return self._es.itervalues()
+
+    @property
+    def e_names(self):
+        return self._es.iterkeys()
+
+    @property
+    def num_es(self):
+        return len(self._es)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
@@ -126,13 +143,15 @@ class C(AnnotatedNineMLObject):
                    node.attr('g', dtype=float))
 
 
-class E(AnnotatedNineMLObject):
+class E(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'E'
     defining_attributes = ('name', 'e1', 'e2')
 
-    def __init__(self, name, e1, e2):
-        super(E, self).__init__()
+    def __init__(self, name, e1, e2, document=None):
+        AnnotatedNineMLObject.__init__(self)
+        self.name = name
+        DocumentLevelObject.__init__(self, document)
         self.name = name
         self.e1 = e1
         self.e2 = e2
@@ -149,13 +168,15 @@ class E(AnnotatedNineMLObject):
                    node.attr('e2', dtype=int))
 
 
-class F(AnnotatedNineMLObject):
+class F(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'F'
     defining_attributes = ('name', 'f1', 'f2')
 
-    def __init__(self, name, f1, f2):
-        super(F, self).__init__()
+    def __init__(self, name, f1, f2, document=None):
+        AnnotatedNineMLObject.__init__(self)
+        self.name = name
+        DocumentLevelObject.__init__(self, document)
         self.name = name
         self.f1 = f1
         self.f2 = f2
@@ -183,25 +204,24 @@ class TestSerialization(unittest.TestCase):
                 # (Upkl, Spkl),
                     (Uxml, Sxml),):
                 doc = Document()
-                f = F('f', 10, 20)
+                f = F('F', 10, 20)
                 f.annotations.set((F_ANNOT_TAG, F_ANNOT_NS), F_ANNOT_ATTR,
                                   F_ANNOT_VAL)
-                a = A('a', A.default_a1, 2.5)
+                a = A('A', A.default_a1, 2.5)
                 container = Container(
                     name='a_container',
                     a=a,
                     bs=[
-                        B('b', 'B'),
-                        B('b', 'B')],
-                    c=C(name='c',
-                        es=[E('e1', 1, 2),
-                            E('e2', 3, 4),
-                            E('e3', 5, 6)],
+                        B('B', 'x'),
+                        B('B', 'y')],
+                    c=C(name='C',
+                        es=[E('E1', 1, 2),
+                            E('E2', 3, 4),
+                            E('E3', 5, 6)],
                         f=f,
                         g=4.7),
                     d='d')
                 doc.add(container, clone=False)
-                doc.add(a, clone=False)
                 serializer = S(document=doc, version=version)
                 container_elem = serializer.visit(container)
                 print etree.tostring(serializer.root_elem(), pretty_print=True)

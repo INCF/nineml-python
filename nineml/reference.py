@@ -110,9 +110,9 @@ class BaseReference(AnnotatedNineMLObject):
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         if node.later_version('2.0', equal=True):
-            name = node.body()
-        else:
             name = node.attr('name')
+        else:
+            name = node.body()
         url = node.attr('url', default=None)
         return cls(name=name, document=node.document, url=url)
 

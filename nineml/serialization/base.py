@@ -3,7 +3,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
-    NineMLUnexpectedMultipleSerializationError, NineMLNameError)
+    NineMLUnexpectedMultipleSerializationError)
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
 from nineml.annotations import (
@@ -110,48 +110,60 @@ class BaseSerializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
+    def serialize(self, **options):
+        for nineml_object in list(self.document):
+            self.visit(nineml_object, **options)
+
     def visit(self, nineml_object, parent=None, reference=None,
               multiple=False, **options):
-        # Get default values
-        if parent is None:
-            parent = self.root_elem()
-        ref = None
-        # Write reference if appropriate
-        if isinstance(nineml_object, DocumentLevelObject):
-            ref, parent = self.write_reference(nineml_object, parent,
-                                               reference, **options)
-        if parent is None:
-            assert ref is not None
-            return ref  # If wrote reference and object already exists
-        serial_elem = self.create_elem(self.node_name(type(nineml_object)),
-                                       parent=parent, multiple=multiple,
-                                       **options)
-        node = NodeToSerialize(self, serial_elem)
-        nineml_object.serialize_node(node, **options)
-        # Append annotations and indices to serialized elem if required
-        try:
-            save_annotations = nineml_object.annotations and not options.get(
-                'no_annotations', False)
-        except AttributeError:
-            save_annotations = False
-        save_indices = (isinstance(nineml_object, ContainerObject) and
-                        options.get('save_indices', False))
-        if save_annotations:
-            # Make a clone of the annotations and add save_indices
-            annotations = nineml_object.annotations.clone()
-        else:
-            annotations = Annotations()
-        if save_indices:
-            # Copy all indices to annotations
-            for key, elem, index in nineml_object.all_indices():
-                index_annot = annotations.add((INDEX_TAG, PY9ML_NS))
-                index_annot.set(INDEX_KEY_ATTR, key)
-                index_annot.set(INDEX_NAME_ATTR, elem.key)
-                index_annot.set(INDEX_INDEX_ATTR, index)
-            save_annotations = True
-        if save_annotations:
-            self.visit(annotations, parent=serial_elem, **options)
-        return serial_elem if ref is None else ref
+        is_doc_level = isinstance(nineml_object, DocumentLevelObject)
+        if not is_doc_level:
+            assert reference is None, (
+                "'reference' kwarg can only be used with DocumentLevelObjects "
+                "not {} ({})".format(type(nineml_object), nineml_object))
+        serial_elem = None
+        # Write object as reference if appropriate
+        if parent is not None and is_doc_level:
+            url = self.get_reference_url(nineml_object, reference=reference,
+                                         **options)
+            if url is not False:
+                # Write the element as a reference
+                serial_elem = self.visit(
+                    Reference(nineml_object.name, self.document, url=url),
+                    parent=parent, **options)
+        if serial_elem is None:  # If not written as a reference
+            # Set parent to document root if not provided
+            if parent is None:
+                parent = self.root_elem()
+            serial_elem = self.create_elem(self.node_name(type(nineml_object)),
+                                           parent=parent, multiple=multiple,
+                                           **options)
+            node = NodeToSerialize(self, serial_elem)
+            nineml_object.serialize_node(node, **options)
+            # Append annotations and indices to serialized elem if required
+            try:
+                save_annotations = (nineml_object.annotations and
+                                    not options.get('no_annotations', False))
+            except AttributeError:
+                save_annotations = False
+            save_indices = (isinstance(nineml_object, ContainerObject) and
+                            options.get('save_indices', False))
+            if save_annotations:
+                # Make a clone of the annotations and add save_indices
+                annotations = nineml_object.annotations.clone()
+            else:
+                annotations = Annotations()
+            if save_indices:
+                # Copy all indices to annotations
+                for key, elem, index in nineml_object.all_indices():
+                    index_annot = annotations.add((INDEX_TAG, PY9ML_NS))
+                    index_annot.set(INDEX_KEY_ATTR, key)
+                    index_annot.set(INDEX_NAME_ATTR, elem.key)
+                    index_annot.set(INDEX_INDEX_ATTR, index)
+                save_annotations = True
+            if save_annotations:
+                self.visit(annotations, parent=serial_elem, **options)
+        return serial_elem
 
     @abstractmethod
     def create_elem(self, name, parent=None, multiple=False,
@@ -163,15 +175,15 @@ class BaseSerializer(BaseVisitor):
         pass
 
     @abstractmethod
-    def set_body(self, serial_elem, value, **options):
+    def set_body(self, serial_elem, value, sole, **options):
         pass
 
     @abstractmethod
     def root_elem(self):
         pass
 
-    def write_reference(self, nineml_object, parent, reference=None,
-                        ref_style=None, absolute_refs=False, **options):
+    def get_reference_url(self, nineml_object, reference=None,
+                          ref_style=None, absolute_refs=False, **options):  # @UnusedVariable @IgnorePep8
         """
         Determine whether to write the elemnt as a reference or not depending
         on whether it needs to be, as determined by ``reference``, e.g. in the
@@ -182,6 +194,8 @@ class BaseSerializer(BaseVisitor):
 
         Parameters
         ----------
+        nineml_object: BaseNineMLObject
+            The NineML object to write as a reference
         reference : bool | None
             Whether the child should be written as a reference or not. If None
             the ref_style option is used to determine whether it is or not.
@@ -193,14 +207,12 @@ class BaseSerializer(BaseVisitor):
 
         Returns
         -------
-        obj_parent : <serial-elem>
-            The parent for the nineml_object to be written to, either the
-            original parent, the document root or None if the object doesn't
-            need to be written
+        url : bool | None
+            The url used for the reference if required. If None, the local
+            document should be used, if False then the object shouldn't
+            be written as a reference
         """
-        if parent == self.root_elem():
-            write_ref = False
-        elif reference is None:
+        if reference is None:
             if ref_style is None:
                 # No preference is supplied so the element will be written as
                 # a reference if it was loaded from a reference
@@ -220,46 +232,25 @@ class BaseSerializer(BaseVisitor):
             write_ref = reference
         # If the element is to be written as a reference and it is not in the
         # current document add it
-        ref = None
         if write_ref:
-            new_parent = None
-            if nineml_object.document is None or ref_style == 'local':
+            if (nineml_object.document is None or
+                nineml_object.document.url == self.document.url or
+                    ref_style == 'local'):  # A local reference
                 url = None
-                # Check whether we need to add nineml_object to current doc
-                try:
-                    obj = self.document[self.name]
-                    if obj != nineml_object:
-                        raise NineMLSerializationError(
-                            "Cannot add {} to the current document '{}' "
-                            "as it clashes with existing object {}"
-                            .format(nineml_object, self.document.url,
-                                    obj))
-                except NineMLNameError:
-                    # Add the object to the current document
-                    new_parent = self.root_elem()
             else:
                 url = nineml_object.document.url
-            if url is not None:
-                if url == self.document.url:
-                    url = None
-                # Use the full ref if the `absolute_refs` kwarg is provided
-                elif absolute_refs:
-                    url = nineml_object.document.url
-                # Otherwise use the relative path, which is recommended as it
-                # makes directories of 9ML documents transportable
-                else:
-                    url = os.path.relpath(nineml_object.document.url,
-                                          os.path.dirname(self.document.url))
-                    # Ensure the relative path starts with the explicit
-                    # current directory '.'
-                    if not url.startswith('.'):
-                        url = './' + url
-            # Write the element as a reference
-            ref = self.visit(
-                Reference(nineml_object.name, self.document, url=url),
-                parent=parent, **options)
-            parent = new_parent
-        return ref, parent
+            # If absolute_refs is not provided (recommended) the relative path
+            # is used
+            if url is not None and not absolute_refs:
+                url = os.path.relpath(nineml_object.document.url,
+                                      os.path.dirname(self.document.url))
+                # Ensure the relative path starts with the explicit
+                # current directory '.'
+                if not url.startswith('.'):
+                    url = './' + url
+        else:
+            url = False
+        return url
 
 
 class NodeToSerialize(BaseNode):
@@ -268,7 +259,7 @@ class NodeToSerialize(BaseNode):
         super(NodeToSerialize, self).__init__(*args, **kwargs)
         self.withins = set()
 
-    def child(self, nineml_object, within=None, allow_ref=None, **options):
+    def child(self, nineml_object, within=None, reference=None, **options):
         """
         Serialize a single nineml_object. optionally "within" a simple
         containing tag.
@@ -279,7 +270,7 @@ class NodeToSerialize(BaseNode):
             A type of the children to extract from the element
         within : str | NoneType
             The name of the sub-element to extract the child from
-        allow_ref : bool | None
+        reference : bool | None
             Whether the child should be written as a allow_ref or not. If None
             the ref_style option is used to determine whether it is or not.
         options : dict
@@ -296,9 +287,9 @@ class NodeToSerialize(BaseNode):
         else:
             serial_elem = self._serial_elem
         self.visitor.visit(nineml_object, parent=serial_elem,
-                           allow_ref=allow_ref, **options)
+                           reference=reference, **options)
 
-    def children(self, nineml_objects, allow_ref=None, **options):
+    def children(self, nineml_objects, reference=None, **options):
         """
         Serialize an iterable (e.g. list or tuple) of nineml_objects of the
         same type.
@@ -307,7 +298,7 @@ class NodeToSerialize(BaseNode):
         ----------
         nineml_objects : list(NineMLObject)
             A type of the children to extract from the element
-        allow_ref : bool | None
+        reference : bool | None
             Whether the child should be written as a allow_ref or not. If None
             the ref_style option is used to determine whether it is or not.
         options : dict
@@ -316,7 +307,7 @@ class NodeToSerialize(BaseNode):
         """
         for nineml_object in nineml_objects:
             self.visitor.visit(nineml_object, parent=self._serial_elem,
-                               allow_ref=allow_ref, multiple=True, **options)
+                               reference=reference, multiple=True, **options)
 
     def attr(self, name, value, **options):
         """
@@ -333,7 +324,7 @@ class NodeToSerialize(BaseNode):
         """
         self.visitor.set_attr(self._serial_elem, name, value, **options)
 
-    def body(self, value, **options):
+    def body(self, value, sole=True, **options):
         """
         Set the body of the elem
 
@@ -341,8 +332,13 @@ class NodeToSerialize(BaseNode):
         ----------
         value : str | float | int
             The value for the body of the element
+        sole : bool
+            Whether the body attribute is the sole attribute/child of the
+            element (saving within an explicit @body attribute can be avoided
+            be in JSON, YAML, HDF5, etc. formats that don't have a notion
+            of body)
         """
-        self.visitor.set_body(self._serial_elem, value, **options)
+        self.visitor.set_body(self._serial_elem, value, sole, **options)
 
 
 # =============================================================================
@@ -367,7 +363,7 @@ class BaseUnserializer(BaseVisitor):
         self._set_load_options_from_annotations(options, annotations)
         # Create node to wrap around serial element for convenient access in
         # "unserialize" class methods
-        node = NodeToUnserialize(self, serial_elem, nineml_cls.nineml_type)
+        node = NodeToUnserialize(self, serial_elem, self.node_name(nineml_cls))
         # Call the unserialize method of the given class to unserialize the
         # object
         nineml_object = nineml_cls.unserialize_node(node, **options)
@@ -392,11 +388,30 @@ class BaseUnserializer(BaseVisitor):
         nineml_object._annotations = annotations
         return nineml_object
 
-    def get_single_child(self, elem, names=None, **options):
-        matches = [
+    def get_single_child(self, elem, names=None, allow_ref=False, **options):
+        child_elems = [
             (n, e) for n, _, e in self.get_children(elem, **options)
-            if n != self.node_name(Annotations) and (names is None or
-                                                     n in names)]
+            if n != self.node_name(Annotations)]
+        if allow_ref != 'only':
+            if names is not None:
+                matches = [(n, e) for n, e in child_elems if n in names]
+            else:
+                matches = child_elems
+        else:
+            matches = []
+        if allow_ref:
+            ref_name = self.node_name(Reference)
+            ref_elems = [e for n, e in child_elems if n == ref_name]
+            if names:
+                ref_matches = []
+                for ref_elem in ref_elems:
+                    node = NodeToUnserialize(self, ref_elem, ref_name)
+                    ref = Reference.unserialize_node(node, **options)
+                    if self.node_name(type(ref.user_object)) in names:
+                        ref_matches.append(ref_elem)
+            else:
+                ref_matches = ref_elems
+            matches += [(ref_name, e) for e in ref_matches]
         if len(matches) > 1:
             raise NineMLUnexpectedMultipleSerializationError(
                 "Multiple {} children found within {} elem"
@@ -416,7 +431,7 @@ class BaseUnserializer(BaseVisitor):
         pass
 
     @abstractmethod
-    def get_body(self, serial_elem, **options):
+    def get_body(self, serial_elem, sole, **options):
         pass
 
     @abstractmethod
@@ -451,7 +466,7 @@ class NodeToUnserialize(BaseNode):
         self.unprocessed_children = set(
             n for n, _, _ in self.visitor.get_children(serial_elem, **options))
         self.unprocessed_children.discard(self.visitor.node_name(Annotations))
-        self.unprocessed_body = (self.visitor.get_body(serial_elem,
+        self.unprocessed_body = (self.visitor.get_body(serial_elem, sole=False,
                                                        **options) is not None)
 
     @property
@@ -482,18 +497,19 @@ class NodeToUnserialize(BaseNode):
         child : BaseNineMLObject
             Child extracted from the element
         """
-        name_map = self._get_name_map(nineml_classes, allow_ref)
+        name_map = self._get_name_map(nineml_classes)
         if within is not None:
             _, serial_elem = self.visitor.get_single_child(
                 self._serial_elem, within, **options)
-            self.unprocessed_children.remove(within)
+            self.unprocessed_children.discard(within)
         else:
             serial_elem = self._serial_elem
         name, child_elem = self.visitor.get_single_child(
-            serial_elem, name_map.keys(), **options)
+            serial_elem, name_map.keys(), allow_ref, **options)
         if within is None:
-            self.unprocessed_children.remove(name)
-        child = self.visitor.visit(child_elem, name_map[name], **options)
+            self.unprocessed_children.discard(name)
+        child = self.visitor.visit(child_elem, name_map.get(name, Reference),
+                                   **options)
         # Deallow_ref Reference if required
         if isinstance(child, Reference):
             if isinstance(child.user_object, nineml_classes):
@@ -531,14 +547,16 @@ class NodeToUnserialize(BaseNode):
             Child extracted from the element
         """
         children = []
-        name_map = self._get_name_map(nineml_classes, allow_ref, **options)
+        name_map = self._get_name_map(nineml_classes, **options)
+        ref_node_name = self.visitor.node_name(Reference)
         for name, _, elem in self.visitor.get_children(self._serial_elem):
-            if name in name_map:
+            if name == ref_node_name and allow_ref:
+                ref = self._visitor.visit(elem, Reference, **options)
+                if self.visitor.node_name(type(ref.user_object)) in name_map:
+                    children.append(ref.user_object)
+                self.unprocessed_children.discard(ref_node_name)
+            elif name in name_map:
                 child = self._visitor.visit(elem, name_map[name], **options)
-                # Deallow_ref Reference if required
-                if (isinstance(child, Reference) and isinstance(
-                        child.user_object, nineml_classes)):
-                    child = child.user_object
                 children.append(child)
                 self.unprocessed_children.discard(name)
         if n == '+':
@@ -573,6 +591,13 @@ class NodeToUnserialize(BaseNode):
         """
         try:
             value = self.visitor.get_attr(self._serial_elem, name, **options)
+            self.unprocessed_attr.discard(name)
+            try:
+                return dtype(value)
+            except ValueError:
+                raise NineMLSerializationError(
+                    "Cannot convert '{}' attribute of {} node ({}) to {}"
+                    .format(name, self.name, value, dtype))
         except KeyError:
             if 'default' in options:
                 value = options['default']
@@ -580,15 +605,8 @@ class NodeToUnserialize(BaseNode):
                 raise NineMLSerializationError(
                     "Node {} does not have required attribute '{}'"
                     .format(self.name, name))
-        self.unprocessed_attr.remove(name)
-        try:
-            return dtype(value)
-        except ValueError:
-            raise NineMLSerializationError(
-                "Cannot convert '{}' attribute of {} node ({}) to {}"
-                .format(name, self.name, value, dtype))
 
-    def body(self, dtype=str, allow_empty=False, **options):
+    def body(self, dtype=str, allow_empty=False, sole=True, **options):
         """
         Returns the body of the serial element
 
@@ -596,13 +614,20 @@ class NodeToUnserialize(BaseNode):
         ----------
         dtype : type
             The type of the returned value
+        allow_empty : bool
+            Whether the body can be empty
+        sole : bool
+            Whether the body attribute is the sole attribute/child of the
+            element (saving within an explicit @body attribute can be avoided
+            be in JSON, YAML, HDF5, etc. formats that don't have a notion
+            of body)
 
         Returns
         -------
         body : int | float | str
             The return type of the body
         """
-        value = self.visitor.get_body(self._serial_elem, **options)
+        value = self.visitor.get_body(self._serial_elem, sole, **options)
         self.unprocessed_body = False
         if value is None:
             if allow_empty:
@@ -617,15 +642,9 @@ class NodeToUnserialize(BaseNode):
                 "Cannot convert body of {} node ({}) to {}"
                 .format(self.name, value, dtype))
 
-    def _get_name_map(self, nineml_classes, allow_ref):
+    def _get_name_map(self, nineml_classes):
         try:
             nineml_classes = list(nineml_classes)
         except TypeError:
             nineml_classes = [nineml_classes]
-        name_map = {}
-        if allow_ref:
-            name_map[self.visitor.node_name(Reference)] = Reference
-        if allow_ref != 'only':
-            name_map.update(
-                (self.visitor.node_name(c), c) for c in nineml_classes)
-        return name_map
+        return dict((self.visitor.node_name(c), c) for c in nineml_classes)
