@@ -3,7 +3,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
-    NineMLUnexpectedMultipleSerializationError)
+    NineMLUnexpectedMultipleSerializationError, NineMLNameError)
 import nineml
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
@@ -240,7 +240,8 @@ class BaseUnserializer(BaseVisitor):
     def __init__(self, version, url, class_map=None):
         if class_map is None:
             class_map = {}
-        super(BaseUnserializer, self).__init__(Document(), version)
+        super(BaseUnserializer, self).__init__(Document(unserializer=self),
+                                               version)
         self._url = url
         # Prepare all elements in document for lazy loading
         self._unloaded = {}
@@ -276,8 +277,19 @@ class BaseUnserializer(BaseVisitor):
                 elem_cls = self._get_nineml_class(nineml_type, elem)
             self._unloaded[name] = (elem, elem_cls)
 
+    @property
+    def url(self):
+        return self._url
+
     def load_element(self, name, **options):
-        nineml_object = self.visit(*self._unloaded[name], **options)
+        try:
+            nineml_object = self.visit(*self._unloaded[name], **options)
+        except KeyError:
+            raise NineMLNameError(
+                "'{}' was not found in the NineML document {} (elements in "
+                "the document were '{}').".format(
+                    name, self.url or '',
+                    "', '".join(self._unloaded.iterkeys())))
         self.document[name] = nineml_object
         return nineml_object
 
@@ -400,16 +412,15 @@ class BaseUnserializer(BaseVisitor):
         return nineml_cls
 
     def _get_v1_component_class_type(self, elem):
-        if elem.findall(NINEMLv1 + 'Dynamics'):
-            cls = nineml.Dynamics
-        elif elem.findall(NINEMLv1 + 'ConnectionRule'):
-            cls = nineml.ConnectionRule
-        elif elem.findall(NINEMLv1 + 'RandomDistribution'):
-            cls = nineml.RandomDistribution
-        else:
-            raise NineMLXMLError(
-                "No type defining block in ComponentClass")
-        return cls
+        try:
+            nineml_type = next(n for n, _, _ in self.get_children(elem)
+                               if n in ('Dynamics', 'ConnectionRule',
+                                        'RandomDistribution'))
+        except StopIteration:
+            raise NineMLSerializationError(
+                "No type defining block in ComponentClass ('{}')"
+                .format("', '".join(n for n, _, _ in self.get_children(elem))))
+        return getattr(nineml, nineml_type)
 
     def _get_v1_component_type(self, comp_xml, relative_to):
         definition = expect_single(chain(

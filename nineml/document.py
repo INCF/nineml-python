@@ -10,7 +10,8 @@ from nineml.xml import (
     E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
 from nineml.annotations import Annotations
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLXMLError, NineMLXMLTagError)
+    NineMLRuntimeError, NineMLNameError, NineMLXMLError, NineMLXMLTagError,
+    NineMLSerializationError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 import contextlib
 from nineml.utils import expect_single
@@ -69,6 +70,7 @@ class Document(AnnotatedNineMLObject, dict):
         AnnotatedNineMLObject.__init__(
             self, annotations=kwargs.pop('annotations', None))
         self._url = self._standardise_url(kwargs.pop('url', None))
+        self._unserializer = kwargs.pop('unserializer', None)
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
@@ -168,10 +170,13 @@ class Document(AnnotatedNineMLObject, dict):
         try:
             elem = super(Document, self).__getitem__(name)
         except KeyError:
-            raise NineMLNameError(
-                "'{}' was not found in the NineML document {} (elements in the"
-                " document were '{}')."
-                .format(name, self.url or '', "', '".join(self.iterkeys())))
+            if self._unserializer is not None:
+                elem = self._unserializer.load_element(name)
+            else:
+                raise NineMLNameError(
+                    "'{}' was not found in the NineML document {} (elements in"
+                    " the document were '{}').".format(
+                        name, self.url or '', "', '".join(self.iterkeys())))
         # Load (lazily) the element from the xml description
         if isinstance(elem, self._Unloaded):
             elem = self._load_elem_from_xml(elem)
