@@ -820,7 +820,10 @@ def accessor_name_from_type(class_map, element_type):
     element argument for a given container type
     """
     if not isinstance(element_type, basestring):
-        element_type = element_type.nineml_type
+        try:
+            element_type = element_type.nineml_type
+        except:
+            raise
     try:
         return class_map[element_type]
     except KeyError:

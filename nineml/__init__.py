@@ -5,13 +5,13 @@ A Python library for working with 9ML model descriptions.
 :license: BSD-3, see LICENSE for details.
 """
 
+from . import units
 from .document import read, write, Document
-# from . import abstraction
+from . import abstraction
 from . import user
 from . import exceptions
-from . import units
 from .units import Unit, Dimension, Quantity
-from abstraction import (
+from .abstraction import (
     Dynamics, ConnectionRule, RandomDistribution)
 from .user import (
     Selection, Population, Projection, Property, Definition, Initial,
@@ -20,4 +20,4 @@ from .user import (
     ComponentArray, EventConnectionGroup, AnalogConnectionGroup)
 from .values import SingleValue, ArrayValue, RandomValue
 
-__version__ = "0.1"
+__version__ = "0.2dev"

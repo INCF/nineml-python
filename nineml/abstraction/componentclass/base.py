@@ -90,6 +90,10 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
         DocumentLevelObject.__init__(self, document)
         ContainerObject.__init__(self)
 
+        self._parameters = {}
+        self._aliases = {}
+        self._constants = {}
+
         # Turn any strings in the parameter list into Parameters:
         if parameters is None:
             parameters = []
@@ -98,7 +102,6 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
             param_td = filter_discrete_types(parameters, param_types)
             params_from_strings = [Parameter(s) for s in param_td[basestring]]
             parameters = param_td[Parameter] + params_from_strings
-        self._parameters = dict((p.name, p) for p in parameters)
 
         aliases = normalise_parameter_as_list(aliases)
         constants = normalise_parameter_as_list(constants)
@@ -108,10 +111,9 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
         aliases_from_strs = [Alias.from_str(o) for o in alias_td[basestring]]
         aliases = alias_td[Alias] + aliases_from_strs
 
-        assert_no_duplicates(a.lhs for a in aliases)
-
-        self._aliases = dict((a.lhs, a) for a in aliases)
-        self._constants = dict((c.name, c) for c in constants)
+        self.add(*parameters)
+        self.add(*aliases)
+        self.add(*constants)
 
     @property
     def name(self):
