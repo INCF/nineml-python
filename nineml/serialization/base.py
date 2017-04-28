@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
     NineMLUnexpectedMultipleSerializationError)
+import nineml
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
 from nineml.annotations import (
@@ -15,7 +16,7 @@ from nineml.annotations import (
 BODY_ATTR = '@body'
 NS_ATTR = '@namespace'
 
-NINEML_NS = "http://nineml.net/9ML/"
+NINEML_BASE_NS = "http://nineml.net/9ML/"
 MATHML_NS = "http://www.w3.org/1998/Math/MathML"
 UNCERTML_NS = "http://www.uncertml.org/2.0"
 
@@ -88,7 +89,7 @@ class BaseSerializer(BaseVisitor):
     __metaclass__ = ABCMeta
 
     def serialize(self, **options):
-        for nineml_object in list(self.document):
+        for nineml_object in self.document.itervalues():
             self.visit(nineml_object, **options)
         return self.root_elem()
 
@@ -236,8 +237,54 @@ class BaseUnserializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
+    def __init__(self, version, url, class_map=None):
+        if class_map is None:
+            class_map = {}
+        super(BaseUnserializer, self).__init__(Document(), version)
+        self._url = url
+        # Prepare all elements in document for lazy loading
+        self._unloaded = {}
+        self._annotation_elem = None
+        for nineml_type, _, elem in self.get_children(self.root_elem()):
+            # Strip out document level annotations
+            if nineml_type == self.node_name(Annotations):
+                if self._annotation_elem is None:
+                    raise NineMLSerializationError(
+                        "Multiple annotations tags found in document")
+                    self._annotation_elem = elem
+                continue
+            # Units use 'symbol' as their unique identifier (from LEMS) all
+            # other elements use 'name'
+            try:
+                try:
+                    name = self.get_attr(elem, 'name')
+                except KeyError:
+                    name = self.get_attr(elem, 'symbol')
+            except KeyError:
+                raise NineMLSerializationError(
+                    "Missing 'name' (or 'symbol') attribute from document "
+                    "level object '{}'".format(elem))
+            # Check for duplicates
+            if name in self._unloaded:
+                raise NineMLSerializationError(
+                    "Duplicate elements for name '{}' found in document"
+                    .format(name))
+            # Get the 9ML class corresponding to the element name
+            try:
+                elem_cls = class_map[nineml_type]
+            except KeyError:
+                elem_cls = self._get_nineml_class(nineml_type, elem)
+            self._unloaded[name] = (elem, elem_cls)
+
+    def load_element(self, name, **options):
+        nineml_object = self.visit(*self._unloaded[name], **options)
+        self.document[name] = nineml_object
+        return nineml_object
+
     def unserialize(self):
-        raise NotImplementedError
+        for name in self._unloaded:
+            self.load_element(name)
+        return self.document
 
     def visit(self, serial_elem, nineml_cls, allow_ref=False, **options):  # @UnusedVariable @IgnorePep8
         # Extract annotations if present
@@ -327,6 +374,88 @@ class BaseUnserializer(BaseVisitor):
                 index = ind.get(INDEX_INDEX_ATTR)
                 nineml_object._indices[
                     key][getattr(nineml_object, key)(name)] = int(index)
+
+    def _get_nineml_class(self, nineml_type, elem):
+        # Note that all `DocumentLevelObjects` need to be imported
+        # into the root nineml package
+        try:
+            nineml_cls = getattr(nineml, nineml_type)
+            if issubclass(nineml_cls, DocumentLevelObject):
+                raise NineMLSerializationError(
+                    "'{}' element does not correspond to a recognised "
+                    "document-level object".format(nineml_cls.__name__))
+        except AttributeError:
+            nineml_cls = None
+            if self.version[0] == 1:
+                if nineml_type == 'ComponentClass':
+                    nineml_cls = self._get_v1_component_class_type(elem)
+                elif nineml_type == 'Component':
+                    relative_to = (os.path.dirname(self.url)
+                                   if self.url is not None else None)
+                    nineml_cls = self._get_v1_component_type(elem, relative_to)
+            if nineml_cls is None:
+                raise NineMLSerializationError(
+                    "Unrecognised element type '{}' found in document"
+                    .format(nineml_type))
+        return nineml_cls
+
+    def _get_v1_component_class_type(self, elem):
+        if elem.findall(NINEMLv1 + 'Dynamics'):
+            cls = nineml.Dynamics
+        elif elem.findall(NINEMLv1 + 'ConnectionRule'):
+            cls = nineml.ConnectionRule
+        elif elem.findall(NINEMLv1 + 'RandomDistribution'):
+            cls = nineml.RandomDistribution
+        else:
+            raise NineMLXMLError(
+                "No type defining block in ComponentClass")
+        return cls
+
+    def _get_v1_component_type(self, comp_xml, relative_to):
+        definition = expect_single(chain(
+            comp_xml.findall(NINEMLv1 + 'Definition'),
+            comp_xml.findall(NINEMLv1 + 'Prototype')))
+        name = definition.text
+        url = definition.get('url', None)
+        if url:
+            doc = read(url, relative_to)
+            cc_cls = doc[name].__class__
+        else:
+            cc_cls = None
+            for ref_elem in chain(doc_xml.findall(NINEMLv1 + 'ComponentClass'),
+                                  doc_xml.findall(NINEMLv1 + 'Component')):
+                if ref_elem.attrib['name'] == name:
+                    if ref_elem.tag == NINEMLv1 + 'ComponentClass':
+                        cc_cls = get_component_class_type(ref_elem)
+                        break
+                    elif ref_elem.tag == NINEMLv1 + 'Component':
+                        # Recurse through the prototype until we find the component
+                        # class at the bottom of it.
+                        return get_component_type(ref_elem, doc_xml, url)
+                    else:
+                        raise NineMLXMLError(
+                            "'{}' refers to a '{}' element not a ComponentClass or"
+                            " Component element".format(name, ref_elem.tag))
+            if cc_cls is None:
+                raise NineMLXMLError(
+                    "Did not find component or component class in '{}' tags"
+                    .format("', '".join(c.tag for c in doc_xml.getchildren())))
+        cls = None
+        while cls is None:
+            if cc_cls == nineml.Dynamics:
+                cls = nineml.user.dynamics.DynamicsProperties
+            elif cc_cls == nineml.ConnectionRule:
+                cls = (nineml.user.connectionrule.
+                       ConnectionRuleProperties)
+            elif cc_cls == nineml.RandomDistribution:
+                cls = (nineml.user.randomdistribution.
+                       RandomDistributionProperties)
+            elif issubclass(cc_cls, nineml.user.Component):
+                cls = cc_cls
+            else:
+                assert False, ("Unrecognised component class type '{}"
+                               .format(cc_cls))
+        return cls
 
     @abstractmethod
     def get_children(self, serial_elem, **options):
@@ -655,3 +784,6 @@ class NodeToUnserialize(BaseNode):
         except TypeError:
             nineml_classes = [nineml_classes]
         return dict((self.visitor.node_name(c), c) for c in nineml_classes)
+
+
+from nineml.document import Document  # @IgnorePep8

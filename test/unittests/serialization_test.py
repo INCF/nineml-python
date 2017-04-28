@@ -192,6 +192,9 @@ class F(AnnotatedNineMLObject, DocumentLevelObject):
                    node.attr('f1', dtype=int),
                    node.attr('f2', dtype=int))
 
+class_map = {'Container': Container,
+             'Cunfaener': Container, 'A': A, 'E': E, 'F': F}
+
 
 class TestSerialization(unittest.TestCase):
 
@@ -224,6 +227,6 @@ class TestSerialization(unittest.TestCase):
                 doc.add(container, clone=False)
                 serial_doc = S(document=doc, version=version).serialize()
                 print etree.tostring(serial_doc, pretty_print=True)
-                new_doc = U(serial_doc).unserialize()
+                new_doc = U(serial_doc, class_map=class_map).unserialize()
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),
                                 new_doc.find_mismatch(doc))

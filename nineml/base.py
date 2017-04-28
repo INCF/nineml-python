@@ -566,8 +566,10 @@ class ContainerObject(BaseNineMLObject):
 
     def __init__(self):
         self._indices = defaultdict(dict)
+        self._parent = None  # Used to link up the the containing document
 
     def add(self, *elements):
+        add_nested_visitor = AddNestedObjectsToDocumentVisitor(self.document)
         for element in elements:
             dct = self._member_dict(element)
             if element.key in dct:
@@ -579,6 +581,9 @@ class ContainerObject(BaseNineMLObject):
             # Set parent if a property of the child element to add
             if hasattr(element, 'parent'):
                 element._parent = self
+            # Add nested references to document
+            if self.document is not None:
+                add_nested_visitor.visit(element)
 
     def remove(self, *elements):
         for element in elements:
@@ -789,6 +794,23 @@ class ContainerObject(BaseNineMLObject):
         super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)
         clone._indices = defaultdict(dict)
 
+    @property
+    def parent(self):
+        return self._parent
+
+    @property
+    def document(self):
+        try:
+            # If a document level object return its document attribute
+            document = DocumentLevelObject(self).document
+        except TypeError:
+            # Otherwise return parent's document if set
+            if self.parent is not None:
+                document = self.parent.document
+            else:
+                document = None
+        return document
+
 
 def accessor_name_from_type(class_map, element_type):
     """
@@ -978,5 +1000,65 @@ class BaseNineMLVisitor(object):
             "not supplied to '{}' visitor"
             .format(self._method_name, type(self).__name__))
 
+
+class AddNestedObjectsToDocumentVisitor(BaseNineMLVisitor):
+    """
+    Traverses any 9ML object and adds any "unbound" objects to the document (or
+    optionally clones of bound), i.e. objects that currently don't belong to
+    any other document
+
+    Parameters
+    ----------
+    document : Document
+        Document to add the unbound elements to
+    """
+
+    def __init__(self, document):
+        super(AddNestedObjectsToDocumentVisitor, self).__init__()
+        self.document = document
+
+    def action(self, obj, add_bound=False, **kwargs):  # @UnusedVariable
+        """
+        Adds the object to the document if is a DocumentLevelObject and it
+        doesn't already belong to a document (or regardless if 'add_bound' is
+        True)
+
+        Parameters
+        ----------
+        obj : BaseNineMLObject
+            The object to add the document if is DocumentLevelObject
+        add_bound : bool
+            Whether to add the object even if it belongs to another document
+            (but not this one). Useful for combining all referenced objects
+            into a single document.
+        """
+        if isinstance(obj, DocumentLevelObject) and (obj.document is None or
+                                                     add_bound):
+            if obj.name in self.document:
+                doc_obj = self.document[obj.name]
+                # Set document of object to current document before checking
+                # for equality with document already in document
+                obj._document = self.document
+                if obj == doc_obj:
+                    if obj is not doc_obj:
+                        self.context.replace(obj, doc_obj)
+                        obj._document = None  # Reset to previous state
+                else:
+                    obj._document = None  # Reset to previous state
+                    raise NineMLRuntimeError(
+                        "Cannot automatically add nested {} '{}' to the "
+                        "document {} as it clashes with existing {}."
+                        .format(obj.nineml_type, obj.name, self.document.url,
+                                self.document[obj.name].nineml_type))
+                obj = doc_obj
+            else:
+                obj = self.document.add(obj, clone=False)
+        return obj
+
+    def post_action(self, *args, **kwargs):
+        pass
+
+    def final(self, obj, **kwargs):
+        pass
 
 import nineml  # @IgnorePep8

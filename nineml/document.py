@@ -5,7 +5,7 @@ from urllib import urlopen
 import weakref
 from lxml import etree
 import collections
-from nineml.base import clone_id, BaseNineMLVisitor
+from nineml.base import clone_id, AddNestedObjectsToDocumentVisitor
 from nineml.xml import (
     E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
 from nineml.annotations import Annotations
@@ -720,102 +720,6 @@ def get_component_type(comp_xml, doc_xml, relative_to):
             assert False, ("Unrecognised component class type '{}"
                            .format(cc_cls))
     return cls
-
-
-class AddNestedObjectsToDocumentVisitor(BaseNineMLVisitor):
-    """
-    Traverses any 9ML object and adds any "unbound" objects to the document (or
-    optionally clones of bound), i.e. objects that currently don't belong to
-    any other document
-
-    Parameters
-    ----------
-    document : Document
-        Document to add the unbound elements to
-    """
-
-    def __init__(self, document):
-        super(AddNestedObjectsToDocumentVisitor, self).__init__()
-        self.document = document
-#         self.ref_updator = UpdateCrossReferencesVisitor()
-
-    def action(self, obj, add_bound=False, **kwargs):  # @UnusedVariable
-        """
-        Adds the object to the document if is a DocumentLevelObject and it
-        doesn't already belong to a document (or regardless if 'add_bound' is
-        True)
-
-        Parameters
-        ----------
-        obj : BaseNineMLObject
-            The object to add the document if is DocumentLevelObject
-        add_bound : bool
-            Whether to add the object even if it belongs to another document
-            (but not this one). Useful for combining all referenced objects
-            into a single document.
-        """
-        if isinstance(obj, DocumentLevelObject) and (obj.document is None or
-                                                     add_bound):
-            if obj.name in self.document:
-                doc_obj = self.document[obj.name]
-                # Set document of object to current document before checking
-                # for equality with document already in document
-                obj._document = self.document
-                if obj == doc_obj:
-                    if obj is not doc_obj:
-                        self.context.replace(obj, doc_obj)
-#                         self.ref_updator.add_ids(obj, doc_obj)
-                        obj._document = None  # Reset to previous state
-                else:
-                    obj._document = None  # Reset to previous state
-                    raise NineMLRuntimeError(
-                        "Cannot automatically add nested {} '{}' to the "
-                        "document {} as it clashes with existing {}."
-                        .format(obj.nineml_type, obj.name, self.document.url,
-                                self.document[obj.name].nineml_type))
-                obj = doc_obj
-            else:
-                obj = self.document.add(obj, clone=False)
-        return obj
-
-    def post_action(self, *args, **kwargs):
-        pass
-
-    def final(self, obj, **kwargs):
-        pass
-#         self.ref_updator.visit(obj, **kwargs)
-
-
-# class UpdateCrossReferencesVisitor(BaseNineMLVisitor):
-#     """
-#     This visitor updates all cross references within a object if a nested
-#     component is replaced. This is used in particular for port exposures
-#     which contain a (Python) reference to the port they are exposing. This
-#     is probably bad design as it has led to having to do this. Probably all
-#     Python (as distinct from the Reference 9ML object) references that cut
-#     across the object hierarchy should be removed at some point in the future
-#     and this visitor won't be necessary.
-#     """
-# 
-#     def __init__(self):
-#         super(UpdateCrossReferencesVisitor, self).__init__()
-#         self.id_map = {}
-# 
-#     def action(self, obj, **kwargs):  # @UnusedVariable
-#         for attr_name in obj.defining_attributes:
-#             attr_id = id(getattr(obj, attr_name))
-#             if attr_id in self.id_map:
-#                 setattr(obj, attr_name, self.id_map[attr_id])
-# 
-#     def post_action(self, *args, **kwargs):
-#         pass
-# 
-#     def add_ids(self, old_obj, new_obj):
-#         """
-#         Updates the id_map with a mapping from the id of all 9ML objects in the
-#         old object to the equivalent component of the new object
-#         """
-#         raise NotImplementedError
 
 
 import nineml  # @IgnorePep8

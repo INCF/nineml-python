@@ -5,12 +5,12 @@ from lxml.builder import ElementMaker
 from urllib import urlopen
 import contextlib
 from nineml.document import Document
-from nineml.exceptions import NineMLXMLError
-from .base import BaseSerializer, BaseUnserializer, NINEML_NS
+from nineml.exceptions import NineMLXMLError, NineMLSerializationError
+from .base import BaseSerializer, BaseUnserializer, NINEML_BASE_NS
 
 # Extracts the xmlns from an lxml element tag
-xmlns_re = re.compile(r'(\{.*\})(.*)')
-nineml_version_re = re.compile(r'{}/([\d\.]+)/?'.format(NINEML_NS))
+xmlns_re = re.compile(r'\{(.*)\}(.*)')
+nineml_version_re = re.compile(r'{}([\d\.]+)/?'.format(NINEML_BASE_NS))
 
 
 def extract_xmlns(tag_name):
@@ -59,21 +59,33 @@ class Serializer(BaseSerializer):
 class Unserializer(BaseUnserializer):
     "Unserializer class for the XML format"
 
-    def __init__(self, xml_doc, relative_to=None):
+    def __init__(self, xml_doc, relative_to=None, **kwargs):
         if isinstance(xml_doc, basestring):
-            xml_doc, self._url = self.read_xml(xml_doc,
+            xml_doc, url = self.read_xml(xml_doc,
                                                relative_to=relative_to)
         else:
-            self._url = None
-        self._xml_root = xml_doc.getroot()
-        self._nineml_root = self.get_single_child(self._xml_root)
-        namespace = extract_xmlns(self._nineml_root)
-        version = nineml_version_re.match(namespace).group(1)
-        super(Serializer, self).__init__(Document(), version)
+            url = None
+        self._root_elem = xml_doc
+        namespace = extract_xmlns(self.root_elem().tag)
+        try:
+            version = nineml_version_re.match(namespace).group(1)
+        except AttributeError:
+            raise NineMLSerializationError(
+                "Provided XML document is not in a valid 9ML namespace {}"
+                .format(namespace))
+        super(Unserializer, self).__init__(version, url, **kwargs)
+        if strip_xmlns(self.root_elem().tag) != self.node_name(Document):
+            raise NineMLSerializationError(
+                "Provided XML document is not enclosed within a '{}' "
+                "element".format(self.node_name(Document)))
 
     def get_children(self, serial_elem, **options):  # @UnusedVariable
-        return ((strip_xmlns(e.tag), extract_xmlns(e.tag), e)
-                for e in serial_elem.getchildren())
+        try:
+            return ((strip_xmlns(e.tag), extract_xmlns(e.tag), e)
+                    for e in serial_elem.getchildren()
+                    if not isinstance(e, etree._Comment))
+        except:
+            raise
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         return serial_elem.attrib[name]
@@ -88,7 +100,7 @@ class Unserializer(BaseUnserializer):
         return serial_elem.attrib.keys()
 
     def root_elem(self):
-        return self._nineml_root
+        return self._root_elem
 
     @classmethod
     def read_xml(cls, url, relative_to):
