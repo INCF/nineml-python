@@ -226,7 +226,7 @@ class TestSerialization(unittest.TestCase):
                     d='d')
                 doc.add(container, clone=False)
                 serial_doc = S(document=doc, version=version).serialize()
-                print etree.tostring(serial_doc, pretty_print=True)
+#                 print etree.tostring(serial_doc, pretty_print=True)
                 new_doc = U(serial_doc, class_map=class_map).unserialize()
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),
                                 new_doc.find_mismatch(doc))
