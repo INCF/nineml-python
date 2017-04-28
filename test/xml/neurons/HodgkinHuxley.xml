@@ -139,11 +139,6 @@
         <SingleValue>-54.4</SingleValue>
       </Quantity>
     </Property>
-    <Property name="eLeak">
-      <Quantity units="mV">
-        <SingleValue>-54.4</SingleValue>
-      </Quantity>
-    </Property>
     <Property name="C">
       <Quantity units="uF_per_cm2">
         <SingleValue>1.0</SingleValue>

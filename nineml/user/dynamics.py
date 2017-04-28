@@ -37,11 +37,10 @@ class DynamicsProperties(Component, DynamicPortsObject):
             name=name, definition=definition, properties=properties,
             document=document)
         if isinstance(initial_values, dict):
-            self._initial_values = dict(
-                (name, Initial(name, qty))
-                for name, qty in initial_values.iteritems())
-        else:
-            self._initial_values = dict((iv.name, iv) for iv in initial_values)
+            initial_values = (Initial(name, qty)
+                              for name, qty in initial_values.iteritems())
+        self._initial_values = {}
+        self.add(*initial_values)
         if check_initial_values:
             self.check_initial_values()
         self.initial_regime = initial_regime

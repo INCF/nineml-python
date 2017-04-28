@@ -5,7 +5,6 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
-from copy import copy
 import sympy.solvers
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from nineml.base import _clone_attr
@@ -13,8 +12,7 @@ from nineml.utils import ensure_valid_identifier, filter_discrete_types
 from nineml.abstraction.componentclass import BaseALObject
 from nineml.abstraction.expressions import (
     Expression, ExpressionWithSimpleLHS, t)
-from nineml.exceptions import (NineMLRuntimeError,
-                               NineMLInvalidElementTypeException, name_error)
+from nineml.exceptions import NineMLRuntimeError, name_error
 from nineml.base import ContainerObject
 from nineml.utils import normalise_parameter_as_list
 from nineml.exceptions import NineMLNoSolutionException
@@ -183,12 +181,11 @@ class Transition(BaseALObject, ContainerObject):
         sa_type_dict = filter_discrete_types(state_assignments, sa_types)
         sa_from_str = [StateAssignment.from_str(o)
                        for o in sa_type_dict[basestring]]
-        self._state_assignments = dict(
-            (sa.lhs, sa) for sa in sa_type_dict[StateAssignment] + sa_from_str)
+        self._state_assignments = {}
+        self.add(*(sa_type_dict[StateAssignment] + sa_from_str))
 
-        self._output_events = dict(
-            (oe.port_name, oe)
-            for oe in normalise_parameter_as_list(output_events))
+        self._output_events = {}
+        self.add(*normalise_parameter_as_list(output_events))
 
         if isinstance(target_regime, basestring):
             self._target_regime = None
@@ -313,26 +310,26 @@ class Transition(BaseALObject, ContainerObject):
     @name_error
     def output_event(self, port):
         return self._output_events[port]
-
-    def add(self, element):
-        if isinstance(element, StateAssignment):
-            self._state_assignments[element.name] = element
-        elif isinstance(element, OutputEvent):
-            self._output_events[element.name] = element
-        else:
-            raise NineMLInvalidElementTypeException(
-                "Could not add element of type '{}' to {} class"
-                .format(element.__class__.__name__, self.__class__.__name__))
-
-    def remove(self, element):
-        if isinstance(element, StateAssignment):
-            self._state_assignments.pop(element.name)
-        elif isinstance(element, OutputEvent):
-            self._output_events.pop(element.name)
-        else:
-            raise NineMLInvalidElementTypeException(
-                "Could not remove element of type '{}' to {} class"
-                .format(element.__class__.__name__, self.__class__.__name__))
+# 
+#     def add(self, element):
+#         if isinstance(element, StateAssignment):
+#             self._state_assignments[element.name] = element
+#         elif isinstance(element, OutputEvent):
+#             self._output_events[element.name] = element
+#         else:
+#             raise NineMLInvalidElementTypeException(
+#                 "Could not add element of type '{}' to {} class"
+#                 .format(element.__class__.__name__, self.__class__.__name__))
+# 
+#     def remove(self, element):
+#         if isinstance(element, StateAssignment):
+#             self._state_assignments.pop(element.name)
+#         elif isinstance(element, OutputEvent):
+#             self._output_events.pop(element.name)
+#         else:
+#             raise NineMLInvalidElementTypeException(
+#                 "Could not remove element of type '{}' to {} class"
+#                 .format(element.__class__.__name__, self.__class__.__name__))
 
     def bind(self, component_class):
         for output_event in self.output_events:

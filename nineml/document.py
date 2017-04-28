@@ -191,22 +191,33 @@ class Document(AnnotatedNineMLObject, dict):
         return (e.name for e in self.elements)
 
     def itervalues(self):
-        for v in super(Document, self).itervalues():
-            if isinstance(v, self._Unloaded):
-                v = self._load_elem_from_xml(v)
-            yield v
+        self._load_all()
+        return dict.itervalues(self)
 
     def values(self):
         return list(self.itervalues())
 
     def iteritems(self):
-        for k, v in super(Document, self).iteritems():
-            if isinstance(v, self._Unloaded):
-                v = self._load_elem_from_xml(v)
-            yield k, v
+        self._load_all()
+        return dict.iteritems(self)
 
     def items(self):
         return list(self.iteritems())
+
+    def iterkeys(self):
+        self._load_all()
+        return dict.iterkeys(self)
+
+    def keys(self):
+        return list(self.iterkeys())
+
+    def _load_all(self):
+        """
+        Ensure all elements are loaded before iterating, as additional
+        elements may be added to the document during the load process
+        """
+        for name in dict.keys(self):
+            self[name]
 
     @property
     def components(self):

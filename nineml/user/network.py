@@ -59,9 +59,12 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self, document=document)
         ContainerObject.__init__(self)
-        self._populations = dict((p.name, p) for p in populations)
-        self._projections = dict((p.name, p) for p in projections)
-        self._selections = dict((s.name, s) for s in selections)
+        self._populations = {}
+        self._projections = {}
+        self._selections = {}
+        self.add(*populations)
+        self.add(*projections)
+        self.add(*selections)
 
     @property
     def name(self):

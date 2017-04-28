@@ -209,6 +209,12 @@ class Regime(BaseALObject, ContainerObject):
         else:
             self._name = name.strip()
             ensure_valid_identifier(self._name)
+
+        self._time_derivatives = {}
+        self._on_events = {}
+        self._on_conditions = {}
+        self._aliases = {}
+
         # Get Time derivatives from args or kwargs
         kw_tds = normalise_parameter_as_list(
             kwargs.get('time_derivatives', None))
@@ -229,39 +235,28 @@ class Regime(BaseALObject, ContainerObject):
                  "in regime '{}' (found '{}')".format(
                      self.name,
                      "', '".join(td.variable for td in time_derivatives))))
-        # Store as a dictionary
-        self._time_derivatives = dict((td.variable, td)
-                                      for td in time_derivatives)
+        self.add(*time_derivatives)
 
         # We support passing in 'transitions', which is a list of both OnEvents
         # and OnConditions. So, lets filter this by type and add them
         # appropriately:
-        transitions = normalise_parameter_as_list(kwargs.get('transitions',
-                                                             None))
-        f_dict = filter_discrete_types(transitions, (OnEvent, OnCondition))
-        self._on_events = {}
-        self._on_conditions = {}
-        # Add all the OnEvents and OnConditions:
-        for elem in chain(f_dict[OnEvent], f_dict[OnCondition]):
-            self.add(elem)
+        transitions = normalise_parameter_as_list(
+            kwargs.get('transitions', None))
+        self.add(*transitions)
 
-        self._aliases = {}
         # Add regime specific aliases
-        for alias in normalise_parameter_as_list(kwargs.get('aliases', None)):
-            if not isinstance(alias, Alias):
-                raise NineMLRuntimeError(
-                    "'{}' provided to Regime 'aliases' kwarg, 'Alias' expected"
-                    .format(alias))
-            self._aliases[alias.name] = alias
+        aliases = normalise_parameter_as_list(kwargs.get('aliases', None))
+        self.add(*aliases)
 
-    def add(self, elem):
+    def add(self, *elements):
         """Add an element to the regime
 
         If the element is a transistion resolve references to target regime
         """
-        if isinstance(elem, (OnEvent, OnCondition)):
-            elem.set_source_regime(self)
-        super(Regime, self).add(elem)
+        for elem in elements:
+            if isinstance(elem, (OnEvent, OnCondition)):
+                elem.set_source_regime(self)
+        super(Regime, self).add(*elements)
 
     def _find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)

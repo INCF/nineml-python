@@ -12,8 +12,9 @@ class TestBackwardsCompatibility(unittest.TestCase):
         self.v1_doc = Document.load(version1, url='./dummy.xml')
         self.v2_doc = Document.load(version2, url='./dummy.xml',
                                     register_url=False)
-#         list(self.v1.elements)
-#         list(self.v2.elements)
+        # Ensure all elements are loaded
+        list(self.v1_doc.elements)
+        list(self.v2_doc.elements)
 
     def test_backwards_compatibility(self):
         v1_names = list(self.v1_doc.nineml_types)
@@ -131,15 +132,7 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
     </Property>
     <Property name="weight" units="nA">
       <RandomValue>
-        <Component name="RDP">
-          <Definition>RD</Definition>
-          <Property name="maximum" units="unitless">
-            <SingleValue>1.0</SingleValue>
-          </Property>
-          <Property name="minimum" units="unitless">
-            <SingleValue>0.0</SingleValue>
-          </Property>
-        </Component>
+        <Reference>RDP</Reference>
       </RandomValue>
     </Property>
   </Component>
@@ -147,6 +140,15 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
     <Definition>CR</Definition>
     <Property name="probability" units="unitless">
       <SingleValue>0.5</SingleValue>
+    </Property>
+  </Component>
+  <Component name="RDP">
+    <Definition>RD</Definition>
+    <Property name="maximum" units="unitless">
+      <SingleValue>1.0</SingleValue>
+    </Property>
+    <Property name="minimum" units="unitless">
+      <SingleValue>0.0</SingleValue>
     </Property>
   </Component>
   <Population name="P1">
@@ -275,19 +277,7 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
     <Property name="weight">
       <Quantity units="nA">
         <RandomValue>
-          <RandomDistributionProperties name="RDP">
-            <Definition name="RD"/>
-            <Property name="maximum">
-              <Quantity units="unitless">
-                <SingleValue>1.0</SingleValue>
-              </Quantity>
-            </Property>
-            <Property name="minimum">
-              <Quantity units="unitless">
-                <SingleValue>0.0</SingleValue>
-              </Quantity>
-            </Property>
-          </RandomDistributionProperties>
+          <Reference name="RDP"/>
         </RandomValue>
       </Quantity>
     </Property>
@@ -300,6 +290,19 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
       </Quantity>
     </Property>
   </ConnectionRuleProperties>
+  <RandomDistributionProperties name="RDP">
+    <Definition name="RD"/>
+    <Property name="maximum">
+      <Quantity units="unitless">
+        <SingleValue>1.0</SingleValue>
+      </Quantity>
+    </Property>
+    <Property name="minimum">
+      <Quantity units="unitless">
+        <SingleValue>0.0</SingleValue>
+      </Quantity>
+    </Property>
+  </RandomDistributionProperties>
   <Population name="P1">
     <Size>10</Size>
     <Cell>

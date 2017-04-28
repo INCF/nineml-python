@@ -67,8 +67,8 @@ class MultiDynamicsProperties(DynamicsProperties):
             sub_components = [
                 SubDynamicsProperties(n, p)
                 for n, p in sub_components.iteritems()]
-        self._sub_components = dict(
-            (p.name, p) for p in sub_components)
+        self._sub_components = {}
+        self.add(*sub_components)
         self._definition = self._extract_definition(
             sub_components, port_exposures, port_connections)
         # Check for property/parameter matches
@@ -1025,11 +1025,13 @@ class _MultiRegime(Regime):
 
     def __init__(self, sub_regimes, parent):
         """
-        `sub_regimes_dict` -- a dictionary containing the sub_regimes and
-                              referenced by the names of the
-                              sub_components they respond to
-        `parent`           -- the MultiDynamics object that generates the
-                              MultiRegime
+        Parameters
+        ----------
+        sub_regimes :
+            The sub_regimes of the sub_components
+            they respond to
+        parent : MultiDynamics
+            The MultiDynamics object that generates the MultiRegime
         """
         BaseALObject.__init__(self)
         ContainerObject.__init__(self)
