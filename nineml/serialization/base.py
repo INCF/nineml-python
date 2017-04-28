@@ -422,51 +422,25 @@ class BaseUnserializer(BaseVisitor):
                 .format("', '".join(n for n, _, _ in self.get_children(elem))))
         return getattr(nineml, nineml_type)
 
-    def _get_v1_component_type(self, comp_xml, relative_to):
-        definition = expect_single(chain(
-            comp_xml.findall(NINEMLv1 + 'Definition'),
-            comp_xml.findall(NINEMLv1 + 'Prototype')))
-        name = definition.text
-        url = definition.get('url', None)
-        if url:
-            doc = read(url, relative_to)
-            cc_cls = doc[name].__class__
+    def _get_v1_component_type(self, elem):
+        defn_elem = self.get_single_child(elem,
+                                          names=('Definition', 'Prototype'))
+        name = self.get_body(defn_elem)
+        url = self.get_attr(defn_elem, 'url', default=None)
+        defn = Reference(name, self.document, url=url).user_object
+        if isinstance(defn_elem, (nineml.Dynamics, nineml.DynamicsProperties)):
+            nineml_cls = nineml.user.dynamics.DynamicsProperties
+        elif isinstance(defn_elem, (nineml.ConnectionRule,
+                                    nineml.ConnectionRuleProperties)):
+            nineml_cls = nineml.user.connectionrule.ConnectionRuleProperties
+        elif isinstance(defn_elem, (nineml.RandomDistribution,
+                                    nineml.RandomDistributionProperties)):
+            nineml_cls = (nineml.user.randomdistribution.
+                          RandomDistributionProperties)
         else:
-            cc_cls = None
-            for ref_elem in chain(doc_xml.findall(NINEMLv1 + 'ComponentClass'),
-                                  doc_xml.findall(NINEMLv1 + 'Component')):
-                if ref_elem.attrib['name'] == name:
-                    if ref_elem.tag == NINEMLv1 + 'ComponentClass':
-                        cc_cls = get_component_class_type(ref_elem)
-                        break
-                    elif ref_elem.tag == NINEMLv1 + 'Component':
-                        # Recurse through the prototype until we find the component
-                        # class at the bottom of it.
-                        return get_component_type(ref_elem, doc_xml, url)
-                    else:
-                        raise NineMLXMLError(
-                            "'{}' refers to a '{}' element not a ComponentClass or"
-                            " Component element".format(name, ref_elem.tag))
-            if cc_cls is None:
-                raise NineMLXMLError(
-                    "Did not find component or component class in '{}' tags"
-                    .format("', '".join(c.tag for c in doc_xml.getchildren())))
-        cls = None
-        while cls is None:
-            if cc_cls == nineml.Dynamics:
-                cls = nineml.user.dynamics.DynamicsProperties
-            elif cc_cls == nineml.ConnectionRule:
-                cls = (nineml.user.connectionrule.
-                       ConnectionRuleProperties)
-            elif cc_cls == nineml.RandomDistribution:
-                cls = (nineml.user.randomdistribution.
-                       RandomDistributionProperties)
-            elif issubclass(cc_cls, nineml.user.Component):
-                cls = cc_cls
-            else:
-                assert False, ("Unrecognised component class type '{}"
-                               .format(cc_cls))
-        return cls
+            raise NineMLSerializationError(
+                "Unrecognised component class type '{}".format(defn))
+        return nineml_cls
 
     @abstractmethod
     def get_children(self, serial_elem, **options):
