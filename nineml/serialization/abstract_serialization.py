@@ -1,188 +1,130 @@
 
 
 # parameter
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E(Parameter.nineml_type,
-                  name=parameter.name,
-                  dimension=parameter.dimension.name)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
+    node.attr('dimension', self.dimension.name, **options)
 
 
 # alias
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E(Alias.nineml_type,
-                  self.E("MathInline", alias.rhs_xml),
-                  name=alias.lhs)
+def serialize(self, node, **options):  # @UnusedVariable
+    self.E("MathInline", alias.rhs_xml)
+    node.attr('name', self.lhs, **options)
 
 
 # constant
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    if self.xmlns == NINEMLv1:
-        xml = self.E(Constant.nineml_type,
-                     repr(constant.value),
-                     name=constant.name,
-                     units=constant.units.name)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
+    node.attr('units', self.units.name, **options)
+    if node.later_version(2.0, equal=True):
+        node.attr('value', self.value, **options)
     else:
-        xml = self.E(Constant.nineml_type,
-                     name=constant.name,
-                     value=repr(constant.value),
-                     units=constant.units.name)
-    return xml
+        node.body(self.value, sole=False)
 
 
-# componentclass
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable @IgnorePep8
-    child_elems = [
-        e.accept_visitor(self)
-        for e in component_class.sorted_elements(
-            class_map=self.class_to_visit.class_to_member)]
-    if self.xmlns == NINEMLv1:
-        v1_elems = [e for e in child_elems
-                    if e.tag[len(NINEMLv1):] not in version1_main]
-        v1_elems.append(
-            self.E('Dynamics',
-                   *(e for e in child_elems
-                     if e.tag[len(NINEMLv1):] in version1_main)))
-        xml = self.E(component_class.v1_nineml_type,
-                     *v1_elems, name=component_class.name)
+# dynamics
+def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+    node.attr('name', self.name, **options)
+    if node.later_version(2.0, equal=True):
+        self.children(self.sorted_elements(class_map=class_to_member))
     else:
-        xml = self.E(component_class.nineml_type,
-                     *child_elems,
-                     name=component_class.name)
-    return xml
+        v1_elems = [e for e in child_elems if e.tag[len(NINEMLv1):] not in version1_main]
+        v1_elems.append(self.E('Dynamics',
+                   *(e for e in child_elems if e.tag[len(NINEMLv1):] in version1_main)))
 
 
 # regime
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('Regime', name=regime.name,
-                  *(e.accept_visitor(self)
-                    for e in regime.sorted_elements()))
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
+    node.children(self.sorted_elements())
 
 
 # statevariable
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('StateVariable',
-                  name=state_variable.name,
-                  dimension=state_variable.dimension.name)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
+    node.attr('dimension', self.dimension.name, **options)
 
 
 # outputevent
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('OutputEvent',
-                  port=event_out.port_name)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('port', self.port_name, **options)
 
 
 # analogreceiveport
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('AnalogReceivePort', name=port.name,
-                  dimension=port.dimension.name)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
+    node.attr('dimension', self.dimension.name, **options)
 
 
 # analogreduceport
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('AnalogReducePort', name=port.name,
-                  dimension=port.dimension.name, operator=port.operator)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
+    node.attr('dimension', self.dimension.name, **options)
+    node.attr('operator', self.operator, **options)
 
 
 # analogsendport
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('AnalogSendPort', name=port.name,
-                  dimension=port.dimension.name)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
+    node.attr('dimension', self.dimension.name, **options)
 
 
 # eventsendport
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('EventSendPort', name=port.name)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
 
 
 # eventreceiveport
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('EventReceivePort', name=port.name)
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('name', self.name, **options)
 
 
 # stateassignment
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('StateAssignment',
-                  self.E("MathInline", assignment.rhs_xml),
-                  variable=assignment.lhs)
+def serialize(self, node, **options):  # @UnusedVariable
+    self.E("MathInline", self.rhs_xml)
+    node.attr('variable', self.lhs, **options)
 
 
 # timederivative
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable @IgnorePep8
-    return self.E('TimeDerivative',
-                  self.E("MathInline", time_derivative.rhs_xml),
-                  variable=time_derivative.variable)
+def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+    self.E("MathInline", self.rhs_xml)
+    node.attr('variable', self.variable, **options)
 
 
 # oncondition
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('OnCondition', on_condition.trigger.accept_visitor(self),
-                  target_regime=on_condition._target_regime.name,
-                  *(e.accept_visitor(self)
-                    for e in on_condition.sorted_elements()))
+def serialize(self, node, **options):  # @UnusedVariable
+    node.child(self.trigger, **options)
+    node.attr('target_regime', self._target_regime.name, **options),
+    node.children(self.sorted_elements())
 
 
 # trigger
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('Trigger', self.E("MathInline", trigger.rhs_xml))
+def serialize(self, node, **options):  # @UnusedVariable
+    self.E("MathInline", trigger.rhs_xml)
 
 
 # onevent
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable
-    return self.E('OnEvent', port=on_event.src_port_name,
-                  target_regime=on_event.target_regime.name,
-                  *(e.accept_visitor(self)
-                    for e in on_event.sorted_elements()))
+def serialize(self, node, **options):  # @UnusedVariable
+    node.attr('port', self.src_port_name, **options)
+    node.attr('target_regime', self.target_regime.name, **options)
+    node.children(self.sorted_elements())
 
-# componentclass
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable @IgnorePep8
-    if self.xmlns == NINEMLv1:
-        elems = [e.accept_visitor(self)
-                    for e in component_class.sorted_elements()]
-        elems.append(
-            self.E('ConnectionRule',
-                   standard_library=component_class.standard_library))
-        xml = self.E('ComponentClass', *elems, name=component_class.name)
+# connection_rule
+def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+    node.children(self.sorted_elements())
+    node.attr('name', self.name, **options)
+    if node.later_version(2.0, equal=True):
+        node.attr('standard_library', self.standard_library, **options)
     else:
-        xml = self.E(component_class.nineml_type,
-                     *(e.accept_visitor(self)
-                       for e in component_class.sorted_elements()),
-                     name=component_class.name,
-                     standard_library=component_class.standard_library)
-    return xml
+        node.attr('standard_library', self.standard_library,
+                  within='ConnectionRule', **options)
 
-
-# componentclass
-@classmethod
-def serialize(cls, node, **options):  # @UnusedVariable @IgnorePep8
-    if self.xmlns == NINEMLv1:
-        elems = [e.accept_visitor(self)
-                    for e in component_class.sorted_elements()]
-        elems.append(
-            self.E('RandomDistribution',
-                   standard_library=component_class.standard_library))
-        xml = self.E('ComponentClass', *elems, name=component_class.name)
+# random_distribution
+def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+    node.children(self.sorted_elements())
+    node.attr('name', self.name, **options)
+    if node.later_version(2.0, equal=True):
+        node.attr('standard_library', self.standard_library, **options)
     else:
-        xml = self.E(component_class.nineml_type,
-                     *(e.accept_visitor(self)
-                       for e in component_class.sorted_elements()),
-                     standard_library=component_class.standard_library,
-                     name=component_class.name)
-    return xml
+        node.attr('standard_library', self.standard_library,
+                  within='RandomDistribution', **options)

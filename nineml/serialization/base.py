@@ -495,7 +495,8 @@ class NodeToSerialize(BaseNode):
         super(NodeToSerialize, self).__init__(*args, **kwargs)
         self.withins = set()
 
-    def child(self, nineml_object, within=None, reference=None, **options):
+    def child(self, nineml_object, within=None, reference=None,
+              within_attrs=None, **options):
         """
         Serialize a single nineml_object. optionally "within" a simple
         containing tag.
@@ -519,9 +520,13 @@ class NodeToSerialize(BaseNode):
                     "'{}' already added to serialization of {}"
                     .format(within, nineml_object))
             serial_elem = self.visitor.create_elem(within, self._serial_elem)
+            if within_attrs is not None:
+                for name, val in within_attrs.iteritems():
+                    self.visitor.set_attr(serial_elem, name, val, **options)
             self.withins.add(within)
         else:
             serial_elem = self._serial_elem
+            assert within_attrs is None
         self.visitor.visit(nineml_object, parent=serial_elem,
                            reference=reference, **options)
 
@@ -594,7 +599,8 @@ class NodeToUnserialize(BaseNode):
     def name(self):
         return self._name
 
-    def child(self, nineml_classes, within=None, allow_ref=False, **options):
+    def child(self, nineml_classes, within=None, allow_ref=False,
+              return_within_attrs=False, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -609,22 +615,31 @@ class NodeToUnserialize(BaseNode):
         allow_ref : bool | 'only'
             Whether the child is can be a allow_ref or not. If 'only'
             then only allow_refs will be found.
+        return_within_attrs : bool
+            Whether to return the attributes of the "within" tag
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
 
         Returns
         -------
-        child : BaseNineMLObject
-            Child extracted from the element
+        child : BaseNineMLObject | BaseNineMLObject, dict(str,str)
+            Child extracted from the element or a tuple with the child and
+            a dictionary containing the "within" attributes if
+            return_within_attrs is True
         """
         name_map = self._get_name_map(nineml_classes)
+        within_attrs = {}
         if within is not None:
             _, serial_elem = self.visitor.get_single_child(
                 self._serial_elem, within, **options)
+            for key in self.visitor.get_attr_keys():
+                within_attrs[key] = self.visitor.get_attr(serial_elem, key,
+                                                          **options)
             self.unprocessed_children.discard(within)
         else:
             serial_elem = self._serial_elem
+            assert not return_within_attrs
         name, child_elem = self.visitor.get_single_child(
             serial_elem, name_map.keys(), allow_ref, **options)
         if within is None:
@@ -641,7 +656,10 @@ class NodeToUnserialize(BaseNode):
                     .format(child, child.user_object,
                             ", ".join(self.visitor.node_name(c)
                                       for c in nineml_classes)))
-        return child
+        if return_within_attrs:
+            return child, within_attrs
+        else:
+            return child
 
     def children(self, nineml_classes, n='*', allow_ref=False, **options):
         """
