@@ -103,7 +103,7 @@ class BaseReference(AnnotatedNineMLObject):
         if node.later_version('2.0', equal=True):
             node.attr('name', name)
         else:
-            node.body(name)
+            node.body(name, sole=False)
         if self.url is not None and self.url != node.document.url:
             node.attr('url', self.url)
 
@@ -112,7 +112,7 @@ class BaseReference(AnnotatedNineMLObject):
         if node.later_version('2.0', equal=True):
             name = node.attr('name')
         else:
-            name = node.body()
+            name = node.body(sole=False)
         url = node.attr('url', default=None)
         return cls(name=name, document=node.document, url=url)
 
