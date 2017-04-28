@@ -8,7 +8,7 @@ def serialize(self, node, **options):  # @UnusedVariable
 
 # alias
 def serialize(self, node, **options):  # @UnusedVariable
-    self.E("MathInline", alias.rhs_xml)
+    node.attr('MathInline', self.rhs_xml, in_body=True, **options)
     node.attr('name', self.lhs, **options)
 
 
@@ -26,11 +26,13 @@ def serialize(self, node, **options):  # @UnusedVariable
 def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
     node.attr('name', self.name, **options)
     if node.later_version(2.0, equal=True):
-        self.children(self.sorted_elements(class_map=class_to_member))
+        within = None
     else:
-        v1_elems = [e for e in child_elems if e.tag[len(NINEMLv1):] not in version1_main]
-        v1_elems.append(self.E('Dynamics',
-                   *(e for e in child_elems if e.tag[len(NINEMLv1):] in version1_main)))
+        within = 'Dynamics'
+    node.children(self.parameters, **options)
+    node.children(self.ports, **options)
+    node.children(self.state_variables, within=within, **options)
+    node.children(self.regimes, within=within, **options)
 
 
 # regime
@@ -81,13 +83,13 @@ def serialize(self, node, **options):  # @UnusedVariable
 
 # stateassignment
 def serialize(self, node, **options):  # @UnusedVariable
-    self.E("MathInline", self.rhs_xml)
+    node.attr('MathInline', self.rhs_xml, in_body=True, **options)
     node.attr('variable', self.lhs, **options)
 
 
 # timederivative
 def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
-    self.E("MathInline", self.rhs_xml)
+    node.attr('MathInline', self.rhs_xml, in_body=True, **options)
     node.attr('variable', self.variable, **options)
 
 
@@ -100,7 +102,7 @@ def serialize(self, node, **options):  # @UnusedVariable
 
 # trigger
 def serialize(self, node, **options):  # @UnusedVariable
-    self.E("MathInline", trigger.rhs_xml)
+    node.attr('MathInline', self.rhs_xml, in_body=True, **options)
 
 
 # onevent
