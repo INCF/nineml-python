@@ -1,26 +1,4 @@
 
-# ./abstraction/connectionrule/base.py
-@classmethod
-def unserialize_node(cls, node, **options):  # @UnusedVariable
-    return ConnectionRuleXMLLoader(document).load_connectionruleclass(
-        element, **kwargs)
-
-
-
-# ./abstraction/dynamics/base.py
-@classmethod
-def unserialize_node(cls, node, **options):
-    return DynamicsXMLLoader(document).load_dynamics(
-        element, **kwargs)
-
-
-# ./abstraction/randomdistribution/base.py
-@classmethod
-def unserialize_node(cls, node, **options):  # @UnusedVariable
-    return RandomDistributionXMLLoader(
-        document).load_randomdistributionclass(element)
-
-
 # ./annotations.py
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
@@ -104,8 +82,8 @@ def unserialize_node(cls, node, **options):  # @UnusedVariable
                 "References require the element name provided in the XML "
                 "element text")
     else:
-        name = get_xml_attr(element, 'name', document, **kwargs)
-    url = get_xml_attr(element, 'url', document, default=None, **kwargs)
+        name = node.attr('name', **options)
+    url = node.attr('url', default=None, **options)
     return cls(name=name, document=document, url=url)
 
 
@@ -113,7 +91,7 @@ def unserialize_node(cls, node, **options):  # @UnusedVariable
 # ./units.py
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable
-    name = get_xml_attr(element, 'name', document, **kwargs)
+    name = node.attr('name', **options)
     # Get the attributes corresponding to the dimension symbols
     dim_args = dict((s, get_xml_attr(element, s, document, default=0,
                                      dtype=int, **kwargs))
@@ -125,9 +103,8 @@ def unserialize_node(cls, node, **options):  # @UnusedVariable
 # ./units.py
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable
-    name = get_xml_attr(element, 'symbol', document, **kwargs)
-    dimension = document[get_xml_attr(element, 'dimension', document,
-                                      **kwargs)]
+    name = node.attr('symbol', **options)
+    dimension = document[node.attr('dimension', **options)]
     power = get_xml_attr(element, 'power', document, dtype=int,
                          default=0, **kwargs)
     offset = get_xml_attr(element, 'offset', document, dtype=float,
@@ -141,7 +118,7 @@ def unserialize_node(cls, node, **options):  # @UnusedVariable
 def unserialize_node(cls, node, **options):  # @UnusedVariable
     value = BaseValue.from_parent_xml(element, document, **kwargs)
     try:
-        units_str = get_xml_attr(element, 'units', document, **kwargs)
+        units_str = node.attr('units', **options)
     except KeyError:
         raise NineMLRuntimeError(
             "{} element '{}' is missing 'units' attribute (found '{}')"
@@ -177,14 +154,14 @@ def unserialize_node(cls, node, **options):  # @UnusedVariable
 # ./user/component.py
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable
-    name = get_xml_attr(element, 'name', document, **kwargs)
+    name = node.attr('name', **options)
     if extract_xmlns(element.tag) == NINEMLv1:
         value = from_child_xml(
             element,
             (SingleValue, ArrayValue, RandomValue),
             document, **kwargs)
         units = document[
-            get_xml_attr(element, 'units', document, **kwargs)]
+            node.attr('units', **options)]
         quantity = Quantity(value, units)
     else:
         quantity = from_child_xml(
@@ -226,7 +203,7 @@ def unserialize_node(cls, node, **options):
         element,
         (AnalogPortConnection, EventPortConnection), document,
         multiple=True, allow_none=True, **kwargs)
-    return cls(name=get_xml_attr(element, 'name', document, **kwargs),
+    return cls(name=node.attr('name', **options),
                sub_components=sub_component_properties,
                port_exposures=port_exposures,
                port_connections=port_connections,
@@ -239,7 +216,7 @@ def unserialize_node(cls, node, **options):
     dynamics_properties = from_child_xml(
         element, (DynamicsProperties, MultiDynamicsProperties), document,
         allow_reference=True, **kwargs)
-    return cls(get_xml_attr(element, 'name', document, **kwargs),
+    return cls(node.attr('name', **options),
                dynamics_properties)
 
 
@@ -249,7 +226,7 @@ def unserialize_node(cls, node, **options):
     dynamics = from_child_xml(
         element, (Dynamics, MultiDynamics), document,
         allow_reference=True, **kwargs)
-    return cls(get_xml_attr(element, 'name', document, **kwargs),
+    return cls(node.attr('name', **options),
                dynamics)
 
 
@@ -269,7 +246,7 @@ def unserialize_node(cls, node, **options):
         element,
         (AnalogPortConnection, EventPortConnection), document,
         multiple=True, allow_none=True, **kwargs)
-    return cls(name=get_xml_attr(element, 'name', document, **kwargs),
+    return cls(name=node.attr('name', **options),
                sub_components=sub_components,
                port_exposures=port_exposures,
                port_connections=port_connections)
@@ -278,10 +255,9 @@ def unserialize_node(cls, node, **options):
 # ./user/multi/port_exposures.py
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable
-    return cls(name=get_xml_attr(element, 'name', document, **kwargs),
-               component=get_xml_attr(element, 'sub_component', document,
-                                      **kwargs),
-               port=get_xml_attr(element, 'port', document, **kwargs))
+    return cls(name=node.attr('name', **options),
+               component=node.attr('sub_component', **options),
+               port=node.attr('port', **options))
 
 
 # ./user/network.py
@@ -296,7 +272,7 @@ def unserialize_node(cls, node, **options):
     selections = from_child_xml(element, Selection, document,
                                 multiple=True, allow_reference='only',
                                 allow_none=True, **kwargs)
-    network = cls(name=get_xml_attr(element, 'name', document, **kwargs),
+    network = cls(name=node.attr('name', **options),
                   populations=populations, projections=projections,
                   selections=selections, document=document)
     return network
@@ -308,7 +284,7 @@ def unserialize_node(cls, node, **options):
     dynamics_properties = from_child_xml(
         element, DynamicsProperties, document,
         allow_reference=True, **kwargs)
-    return cls(name=get_xml_attr(element, 'name', document, **kwargs),
+    return cls(name=node.attr('name', **options),
                size=get_xml_attr(element, 'Size', document, in_block=True,
                                  dtype=int, **kwargs),
                dynamics_properties=dynamics_properties, document=document)
@@ -318,7 +294,7 @@ def unserialize_node(cls, node, **options):
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable
     # Get Name
-    name = get_xml_attr(element, 'name', document, **kwargs)
+    name = node.attr('name', **options)
     connectivity = from_child_xml(
         element, ConnectionRuleProperties, document, within='Connectivity',
         allow_reference=True, **kwargs)
@@ -346,7 +322,7 @@ def unserialize_node(cls, node, **options):
                           (DynamicsProperties,
                            nineml.user.MultiDynamicsProperties), document,
                           allow_reference=True, within='Cell', **kwargs)
-    return cls(name=get_xml_attr(element, 'name', document, **kwargs),
+    return cls(name=node.attr('name', **options),
                size=get_xml_attr(element, 'Size', document, in_block=True,
                                  dtype=int, **kwargs),
                cell=cell, document=document)
@@ -355,27 +331,19 @@ def unserialize_node(cls, node, **options):
 # ./user/port_connections.py
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable
-    return cls(send_port=get_xml_attr(element, 'send_port',
-                                      document, **kwargs),
-               receive_port=get_xml_attr(element, 'receive_port', document,
-                                         **kwargs),
-               sender_role=get_xml_attr(element, 'sender_role', document,
-                                        default=None, **kwargs),
-               receiver_role=get_xml_attr(element, 'receiver_role',
-                                          document, default=None,
-                                          **kwargs),
-               sender_name=get_xml_attr(element, 'sender_name', document,
-                                        default=None, **kwargs),
-               receiver_name=get_xml_attr(element, 'receiver_name',
-                                          document, default=None,
-                                          **kwargs))
+    return cls(send_port=node.attr('send_port', **options),
+               receive_port=node.attr('receive_port', **options),
+               sender_role=node.attr('sender_role', default=None, **options),
+               receiver_role=node.attr('receiver_role', default=None, **options),
+               sender_name=node.attr('sender_name', default=None, **options),
+               receiver_name=node.attr('receiver_name', default=None, **options))
 
 
 # ./user/projection.py
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable
     # Get Name
-    name = get_xml_attr(element, 'name', document, **kwargs)
+    name = node.attr('name', **options)
     xmlns = extract_xmlns(element.tag)
     if xmlns == NINEMLv1:
         pre_within = 'Source'
@@ -465,7 +433,7 @@ def unserialize_node(cls, node, **options):  # @UnusedVariable
     # The only supported op at this stage
     op = from_child_xml(
         element, Concatenate, document, **kwargs)
-    return cls(get_xml_attr(element, 'name', document, **kwargs), op,
+    return cls(node.attr('name', **options), op,
                document=document)
 
 
@@ -476,7 +444,7 @@ def unserialize_node(cls, node, **options):  # @UnusedVariable
     # Load references and indices from xml
     for it_elem in element.findall(extract_xmlns(element.tag) + 'Item'):
         items.append((
-            get_xml_attr(it_elem, 'index', document, dtype=int, **kwargs),
+            node.attr('index', dtype=int, **options),
             from_child_xml(it_elem, Population, document,
                            allow_reference='only', **kwargs)))
         try:
@@ -508,19 +476,16 @@ def unserialize_node(cls, node, **options):  # @UnusedVariable
 @classmethod
 def unserialize_node(cls, node, **options):  # @UnusedVariable
     if element.tag == 'ExternalArrayValue':
-        url = get_xml_attr(element, 'url', document, **kwargs)
+        url = node.attr('url', **options)
         with contextlib.closing(urlopen(url)) as f:
             # FIXME: Should use a non-numpy version of this load function
             values = numpy.loadtxt(f)
-        return cls(values, (get_xml_attr(element, 'url', document,
-                                         **kwargs),
-                            get_xml_attr(element, 'mimetype', document,
-                                         **kwargs),
-                            get_xml_attr(element, 'columnName', document,
-                                         **kwargs)))
+        return cls(values, (node.attr('url', **options),
+                            node.attr('mimetype', **options),
+                            node.attr('columnName', **options)))
     else:
-        rows = [(get_xml_attr(e, 'index', document, dtype=int, **kwargs),
-                 get_xml_attr(e, 'value', document, dtype=float, **kwargs))
+        rows = [(node.attr('index', dtype=int, **options),
+                 node.attr('value', dtype=float, **options))
                 for e in get_subblocks(element, 'ArrayValueRow', **kwargs)]
         sorted_rows = sorted(rows, key=itemgetter(0))
         indices, values = zip(*sorted_rows)
