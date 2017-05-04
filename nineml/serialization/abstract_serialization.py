@@ -113,7 +113,6 @@ def serialize(self, node, **options):  # @UnusedVariable
 
 # connection_rule
 def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
-    node.children(self.sorted_elements())
     node.attr('name', self.name, **options)
     if node.later_version(2.0, equal=True):
         node.attr('standard_library', self.standard_library, **options)
@@ -123,7 +122,6 @@ def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
 
 # random_distribution
 def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
-    node.children(self.sorted_elements())
     node.attr('name', self.name, **options)
     if node.later_version(2.0, equal=True):
         node.attr('standard_library', self.standard_library, **options)

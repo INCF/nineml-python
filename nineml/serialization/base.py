@@ -496,7 +496,7 @@ class NodeToSerialize(BaseNode):
         self.withins = set()
 
     def child(self, nineml_object, within=None, reference=None,
-              within_attrs=None, **options):
+              within_attrs=None, multiple=False, **options):
         """
         Serialize a single nineml_object. optionally "within" a simple
         containing tag.
@@ -513,6 +513,11 @@ class NodeToSerialize(BaseNode):
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
+
+        Returns
+        -------
+        child_elem : <serial-elem>
+            The serialized child element or the 'within' element
         """
         if within is not None:
             if within in self.withins:
@@ -527,13 +532,16 @@ class NodeToSerialize(BaseNode):
         else:
             serial_elem = self._serial_elem
             assert within_attrs is None
-        self.visitor.visit(nineml_object, parent=serial_elem,
-                           reference=reference, **options)
+        child_elem = self.visitor.visit(nineml_object, parent=serial_elem,
+                                        reference=reference, multiple=multiple,
+                                        **options)
+        return child_elem if within is None else serial_elem
 
     def children(self, nineml_objects, reference=None, **options):
         """
         Serialize an iterable (e.g. list or tuple) of nineml_objects of the
-        same type.
+        same type. Should be used instead of calling the 'child' method over
+        all objects in the iterable.
 
         Parameters
         ----------
@@ -546,7 +554,7 @@ class NodeToSerialize(BaseNode):
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
         """
-        for nineml_object in nineml_objects:
+        for nineml_object in sorted(nineml_objects, key=lambda o: o.key):
             self.visitor.visit(nineml_object, parent=self._serial_elem,
                                reference=reference, multiple=True, **options)
 

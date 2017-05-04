@@ -19,7 +19,7 @@ def serialize_node(self, node, **options):  # @UnusedVariable
 
 # ./units.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    self._value.to_xml(document, E=E, **kwargs)
+    node.child(self._value, **options)
     node.attr('units', self.units.name, **options)
 
 # 
@@ -43,12 +43,8 @@ def serialize_node(self, node, **options):  # @UnusedVariable
 
 # ./user/component.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    """
-    docstring missing, although since the decorators don't
-    preserve the docstring, it doesn't matter at the moment.
-    """
-    self._definition.to_xml(document, E=E, **kwargs)
-    (p.to_xml(document, E=E, **kwargs) for p in self.sorted_elements(local=True))
+    node.child(self._definition, **options)
+    node.children(self.properties, **options)
     node.attr('name', self.name, **options)
 
 
@@ -56,36 +52,36 @@ def serialize_node(self, node, **options):  # @UnusedVariable
 def serialize_node(self, node, **options):  # @UnusedVariable
     node.attr('name', self.name, **options)
     if node.later_version(2.0, equal=True):
-        self._quantity.to_xml(document, E=E, **kwargs)
+        node.child(self._quantity, **options)
     else:
-        self.value.to_xml(document, E=E, **kwargs)
+        node.child(self.value, **options)
         node.attr('units', self.units.name, **options)
 
 # ./user/multi/dynamics.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    (c.to_xml(document, E=E, **kwargs) for c in self.sub_components)
-    (pe.to_xml(document, E=E, **kwargs) for pe in self.port_exposures)
-    (pc.to_xml(document, E=E, **kwargs) for pc in self.port_connections)
+    node.children(self.sub_components, **options)
+    node.children(self.port_exposures, **options)
+    node.children(self.port_connections, **options)
     node.attr('name', self.name, **options)
 
 
 # ./user/multi/dynamics.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    self._component.to_xml(document, E=E, **kwargs)
+    node.child(self._component, **options)
     node.attr('name', self.name, **options)
 
 
 # ./user/multi/dynamics.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    self._component_class.to_xml(document, E=E, **kwargs)
+    node.child(self._component_class, **options)
     node.attr('name', self.name, **options)
 
 
 # ./user/multi/dynamics.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    (c.to_xml(document, E=E, **kwargs) for c in self.sub_components)
-    (pe.to_xml(document, E=E, **kwargs) for pe in self.port_exposures)
-    (pc.to_xml(document, E=E, **kwargs) for pc in self.port_connections)
+    node.children(self.sub_components, **options)
+    node.children(self.port_exposures, **options)
+    node.children(self.port_connections, **options)
     node.attr('name', self.name, **options)
 
 
@@ -107,7 +103,7 @@ def serialize_node(self, node, **options):  # @UnusedVariable
 # component array
 def serialize_node(self, node, **options):  # @UnusedVariable
     node.attr('Size', self.size, in_body=True, **options)
-    self.dynamics_properties.to_xml(document, E=E, **kwargs)
+    node.child(self.dynamics_properties, **options)
     node.attr('name', self.name, **options)
 
 
@@ -147,65 +143,74 @@ def serialize_node(self, node, **options):  # @UnusedVariable
 # ./user/projection.py
 def serialize_node(self, node, **options):  # @UnusedVariable
     if node.later_version(2.0, equal=True):
-        for pop, tag_name in ((self.pre, 'Pre'), (self.post, 'Post')):
-            node.child(pop, reference=True, within=tag_name, **options)
-        E.Response(self.response.to_xml(document, E=E, **kwargs)),
-        E.Connectivity(self.connectivity.rule_properties.to_xml( document, E=E, **kwargs)),
-        E.Delay(self.delay.to_xml(document, E=E, **kwargs))])
+        node.child(self.pre, reference=True, within='Pre', **options)
+        node.child(self.post, reference=True, within='Post', **options)
+        node.child(self.connectivity.rule_properties, within='Connectivity',
+                   **options)
+        node.child(self.response, within='Response', **options),
         if self.plasticity is not None:
-            E.Plasticity(self.plasticity.to_xml(document, E=E, **kwargs))
-        members.extend([pc.to_xml(document, E=E, **kwargs) for pc in self.port_connections])
+            node.child(self.plasticity, within='Plasticity', **options)
+        node.child(self.delay, within='Delay', **options)
+        node.children(self.port_connections, **options)
     else:
-        pcs = defaultdict(dict)
-        for pc in self.port_connections:
-            pcs[pc.receiver_role].append(E('From' + self.v2tov1[pc.sender_role], send_port=pc.send_port_name, receive_port=pc.receive_port_name))
-        E.Source(self.pre.to_xml(document, E=E, as_ref=True, **kwargs), *pcs['pre'])
-        E.Destination(self.post.to_xml(document, E=E, as_ref=True, **kwargs), *pcs['post'])
-        node.child(self.response, within='Response') *pcs['response'])
-        E.Connectivity(self.connectivity.rule_properties.to_xml(document, E=E, **kwargs))
+        endpoints = {}
+        endpoints['source'] = node.child(
+            self.pre, within='Source', reference=True, **options)
+        endpoints['destination'] = node.child(
+            self.post, within='Destination', reference=True, **options)
+        node.child(self.connectivity.rule_properties, within='Connectivity',
+                   **options)
+        endpoints['response'] = node.child(self.response, within='Response',
+                                           **options)
         if self.plasticity:
-            E.Plasticity(self.plasticity.to_xml(document, E=E, **kwargs), *pcs['plasticity'])
-        E.Delay(self.delay._value.to_xml(document, E=E, **kwargs), units=self.delay.units.name)
+            endpoints['plasticity'] = node.child(
+                self.plasticity, within='Plasticity', **options)
+        for pc in self.port_connections:
+            pc_elem = node.visitor.create_elem(
+                'From' + self.v2tov1[pc.sender_role],
+                parent=endpoints[pc.receiver_role], multiple=True)
+            node.visitor.set_attr(pc_elem, 'send_port', pc.send_port_name,
+                                  **options)
+            node.visitor.set_attr(pc_elem, 'receive_port',
+                                  pc.receive_port_name, **options)
+        delay_elem = node.child(self.delay._value, within='Delay', **options)
+        node.visitor.set_attr(delay_elem, 'units', self.delay.units.name,
+                              **options)
 
 
 # ./user/selection.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-     self.operation.to_xml(document, E=E, **kwargs)
-     node.attr('name', self.name, **options)
+    node.child(self.operation, **options)
+    node.attr('name', self.name, **options)
 
 
 # ./user/selection.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    def item_to_xml(item):
-        if isinstance(item, Reference):
-            return item.to_xml(document, E=E, **kwargs)
-        elif E._namespace == NINEMLv1:
-            return E.Reference(item.name)
-        else:
-            return E.Reference(name=item.name)
-     *[E.Item(item_to_xml(item), index=str(i)) for i, item in enumerate(self.items)])
+    for i, item in enumerate(self.items):
+        item_elem = node.child(item, within='Item', multiple=True, **options)
+        node.visitor.set_attr(item_elem, 'index', i)
 
 
 # ./values.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    pass
-
-
-# ./values.py
-def serialize_node(self, node, **options):  # @UnusedVariable
-    return E(self.nineml_type, repr(self.value))
+    node.body(repr(self.value), **options)
 
 
 # ./values.py
 def serialize_node(self, node, **options):  # @UnusedVariable
     if self._datafile is None:
-        E.ArrayValue(*[E.ArrayValueRow(index=str(i), value=repr(v)) for i, v in enumerate(self._values)])
+        for i, value in enumerate(self._values):
+            row_elem = node.visitor.create_elem(
+                'ArrayValueRow', parent=node.serial_element, multiple=True,
+                **options)
+            node.visitor.set_attr(row_elem, 'index', i)
+            node.visitor.set_attr(row_elem, 'value', value)
     else:
-        E.ExternalArrayValue
-        node.attr('url', self.url, **options), node.attr('mimetype', self.mimetype, **options)
+        node.attr('url', self.url, **options)
+        node.attr('mimetype', self.mimetype, **options)
         node.attr('columnName', self.columnName, **options)
 
 
 # ./values.py
 def serialize_node(self, node, **options):  # @UnusedVariable
-    self.distribution.to_xml(document, E=E, **kwargs))
+    node.child(self.distribution, **options)
