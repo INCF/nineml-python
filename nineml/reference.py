@@ -101,19 +101,19 @@ class BaseReference(AnnotatedNineMLObject):
     def serialize_node(self, node, **options):  # @UnusedVariable
         name = self._referred_to.name
         if node.later_version('2.0', equal=True):
-            node.attr('name', name)
+            node.attr('name', name, **options)
         else:
-            node.body(name, sole=False)
+            node.body(name, sole=False, **options)
         if self.url is not None and self.url != node.document.url:
-            node.attr('url', self.url)
+            node.attr('url', self.url, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         if node.later_version('2.0', equal=True):
-            name = node.attr('name')
+            name = node.attr('name', **options)
         else:
-            name = node.body(sole=False)
-        url = node.attr('url', default=None)
+            name = node.body(sole=False, **options)
+        url = node.attr('url', default=None, **options)
         return cls(name=name, document=node.document, url=url)
 
 

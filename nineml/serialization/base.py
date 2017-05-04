@@ -570,6 +570,12 @@ class NodeToSerialize(BaseNode):
             Name of the attribute
         value : (int | float | str)
             Attribute value
+        in_body : bool
+            Whether the attribute is within the body of a sub-element (for
+            serializations that support body elements, e.g. XML)
+        options : dict
+            Options that can be passed to specific branches of the element
+            tree (unlikely to be used but included for completeness)
         """
         if in_body:
             attr_elem = self.visitor.create_elem(
@@ -591,6 +597,9 @@ class NodeToSerialize(BaseNode):
             element (saving within an explicit @body attribute can be avoided
             be in JSON, YAML, HDF5, etc. formats that don't have a notion
             of body)
+        options : dict
+            Options that can be passed to specific branches of the element
+            tree (unlikely to be used but included for completeness)
         """
         self.visitor.set_body(self._serial_elem, value, sole, **options)
 
@@ -722,7 +731,7 @@ class NodeToUnserialize(BaseNode):
                 .format(n, "|".join(name_map), self.name))
         return children
 
-    def attr(self, name, dtype=str, **options):
+    def attr(self, name, dtype=str, in_body=False, **options):
         """
         Extract an attribute from the serial element ``elem``.
 
@@ -732,6 +741,9 @@ class NodeToUnserialize(BaseNode):
             The name of the attribute to retrieve.
         dtype : type
             The type of the returned value
+        in_body : bool
+            Whether the attribute is within the body of a sub-element (for
+            serializations that support body elements, e.g. XML)
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -742,7 +754,13 @@ class NodeToUnserialize(BaseNode):
             The attribute to retrieve
         """
         try:
-            value = self.visitor.get_attr(self._serial_elem, name, **options)
+            if in_body:
+                attr_elem = self.visitor.get_single_child(
+                    self._serial_elem, names=[name], **options)
+                value = self.visitor.get_body(attr_elem, **options)
+            else:
+                value = self.visitor.get_attr(self._serial_elem, name,
+                                              **options)
             self.unprocessed_attr.discard(name)
             try:
                 return dtype(value)
