@@ -558,7 +558,7 @@ class NodeToSerialize(BaseNode):
             self.visitor.visit(nineml_object, parent=self._serial_elem,
                                reference=reference, multiple=True, **options)
 
-    def attr(self, name, value, **options):
+    def attr(self, name, value, in_body=False, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -571,7 +571,12 @@ class NodeToSerialize(BaseNode):
         value : (int | float | str)
             Attribute value
         """
-        self.visitor.set_attr(self._serial_elem, name, value, **options)
+        if in_body:
+            attr_elem = self.visitor.create_elem(
+                name, parent=self._serial_elem, multiple=False, **options)
+            self.visitor.set_body(attr_elem, value, **options)
+        else:
+            self.visitor.set_attr(self._serial_elem, name, value, **options)
 
     def body(self, value, sole=True, **options):
         """
