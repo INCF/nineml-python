@@ -14,7 +14,7 @@ docstring goes here
 """
 from ..componentclass import ComponentClass, Parameter
 from nineml.xml import E
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
 import nineml.units as un
 
 
@@ -96,6 +96,34 @@ class ConnectionRule(ComponentClass):
         return ConnectionRuleXMLLoader(document).load_connectionruleclass(
             element, **kwargs)
 
+    # connection_rule
+    def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+        node.attr('name', self.name, **options)
+        if node.later_version(2.0, equal=True):
+            node.attr('standard_library', self.standard_library, **options)
+        else:
+            node.attr('standard_library', self.standard_library,
+                      within='ConnectionRule', **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        if node.later_version(2.0, equal=True):
+            standard_library = node.attr('standard_library', **options)
+        else:
+            cr_elem = node.visitor.get_single_child(node.serial_element,
+                                                    'RandomDistribution',
+                                                    **options)
+            if node.visitor.get_children(cr_elem):
+                raise NineMLSerializationError(
+                    "Not expecting {} blocks within 'RandomDistribution' block"
+                    .format(', '.join(node.visitor.get_children(cr_elem))))
+            standard_library = node.visitor.get_attr(cr_elem, 'standard_library',
+                                                     **options)
+        return cls(
+            name=node.attr('name', **options),
+            standard_library=standard_library,
+            parameters=node.children(Parameter, **options),
+            document=node.visitor.document)
     @property
     def lib_type(self):
         return self.standard_library[self._base_len:]

@@ -173,6 +173,28 @@ class MultiDynamicsProperties(DynamicsProperties):
                    port_connections=port_connections,
                    document=document)
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.children(self.sub_components, **options)
+        node.children(self.port_exposures, **options)
+        node.children(self.port_connections, **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        sub_component_properties = node.children(SubDynamicsProperties,
+                                                 **options)
+        port_exposures = node.children(
+            (AnalogSendPortExposure, AnalogReceivePortExposure,
+             AnalogReducePortExposure, EventSendPortExposure,
+             EventReceivePortExposure), **options)
+        port_connections = node.children(
+            (AnalogPortConnection, EventPortConnection), **options)
+        return cls(name=node.attr('name', **options),
+                   sub_components=sub_component_properties,
+                   port_exposures=port_exposures,
+                   port_connections=port_connections,
+                   document=node.document)
+
     @property
     def initial_values(self):
         return chain(*(sc.initial_values for sc in self.sub_components))
@@ -328,6 +350,17 @@ class SubDynamicsProperties(BaseULObject):
             element, (DynamicsProperties, MultiDynamicsProperties), document,
             allow_reference=True, **kwargs)
         return cls(get_xml_attr(element, 'name', document, **kwargs),
+                   dynamics_properties)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self._component, **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        dynamics_properties = node.child(
+            (DynamicsProperties, MultiDynamicsProperties), **options)
+        return cls(node.attr('name', **options),
                    dynamics_properties)
 
 
@@ -544,6 +577,16 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
             element, (Dynamics, MultiDynamics), document,
             allow_reference=True, **kwargs)
         return cls(get_xml_attr(element, 'name', document, **kwargs),
+                   dynamics)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self._component_class, **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        dynamics = node.child((Dynamics, MultiDynamics), **options)
+        return cls(node.attr('name', **options),
                    dynamics)
 
 
@@ -1011,6 +1054,26 @@ class MultiDynamics(Dynamics):
             (AnalogPortConnection, EventPortConnection), document,
             multiple=True, allow_none=True, **kwargs)
         return cls(name=get_xml_attr(element, 'name', document, **kwargs),
+                   sub_components=sub_components,
+                   port_exposures=port_exposures,
+                   port_connections=port_connections)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.children(self.sub_components, **options)
+        node.children(self.port_exposures, **options)
+        node.children(self.port_connections, **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        sub_components = node.children(SubDynamics, **options)
+        port_exposures = node.children(
+            (AnalogSendPortExposure, AnalogReceivePortExposure,
+             AnalogReducePortExposure, EventSendPortExposure,
+             EventReceivePortExposure), **options)
+        port_connections = node.children(
+            (AnalogPortConnection, EventPortConnection), **options)
+        return cls(name=node.attr('name', **options),
                    sub_components=sub_components,
                    port_exposures=port_exposures,
                    port_connections=port_connections)

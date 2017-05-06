@@ -29,25 +29,7 @@ def unserialize(cls, node, **options):  # @UnusedVariable
 
 
 # dynamics
-@classmethod
-def unserialize(cls, node, **options):  # @UnusedVariable
-    if node.later_version(2.0, equal=True):
-        dyn_within = None
-    else:
-        dyn_within = 'Dynamics'
-    return cls(
-        name=node.attr('name', **options),
-        parameters=node.children(Parameter, **options),
-        analog_ports=node.children([AnalogSendPort, AnalogReceivePort,
-                                    AnalogReducePort], **options),
-        event_ports=node.children([EventSendPort, EventReceivePort],
-                                  **options),
-        regimes=node.children(Regime, within=dyn_within, **options),
-        aliases=node.children(Alias, within=dyn_within, **options),
-        state_variables=node.children(StateVariable, within=dyn_within,
-                                      **options),
-        constants=node.children(Constant, within=dyn_within, **options),
-        document=node.visitor.document)
+
 
 
 # eventsendport
@@ -158,44 +140,8 @@ def unserialize(cls, node, **options):  # @UnusedVariable
 
 
 # connectionruleclass
-@classmethod
-def unserialize(cls, node, **options):  # @UnusedVariable
-    if node.later_version(2.0, equal=True):
-        standard_library = node.attr('standard_library', **options)
-    else:
-        cr_elem = node.visitor.get_single_child(node.serial_element,
-                                                'RandomDistribution',
-                                                **options)
-        if node.visitor.get_children(cr_elem):
-            raise NineMLSerializationError(
-                "Not expecting {} blocks within 'RandomDistribution' block"
-                .format(', '.join(node.visitor.get_children(cr_elem))))
-        standard_library = node.visitor.get_attr(cr_elem, 'standard_library',
-                                                 **options)
-    return cls(
-        name=node.attr('name', **options),
-        standard_library=standard_library,
-        parameters=node.children(Parameter, **options),
-        document=node.visitor.document)
+
 
 
 # randomdistributionclass
-@classmethod
-def unserialize(cls, node, **options):
-    if node.later_version(2.0, equal=True):
-        standard_library = node.attr('standard_library', **options)
-    else:
-        rd_elem = node.visitor.get_single_child(node.serial_element,
-                                                'RandomDistribution',
-                                                **options)
-        if node.visitor.get_children(rd_elem):
-            raise NineMLSerializationError(
-                "Not expecting {} blocks within 'RandomDistribution' block"
-                .format(', '.join(node.visitor.get_children(rd_elem))))
-        standard_library = node.visitor.get_attr(rd_elem, 'standard_library',
-                                                 **options)
-    return cls(
-        name=node.attr('name', **options),
-        standard_library=standard_library,
-        parameters=node.children(Parameter, **options),
-        document=node.visitor.document)
+

@@ -19,6 +19,9 @@ from nineml.utils import (check_inferred_against_declared,
 from nineml.xml import E
 from nineml.annotations import VALIDATION, DIMENSIONALITY, PY9ML_NS
 from nineml.base import DynamicPortsObject
+from .regimes import Regime
+from ..componentclass.base import Alias
+from ..expressions import Constant
 
 
 class Dynamics(ComponentClass, DynamicPortsObject):
@@ -514,6 +517,37 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def from_xml(cls, element, document, **kwargs):
         return DynamicsXMLLoader(document).load_dynamics(
             element, **kwargs)
+
+    def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+        node.attr('name', self.name, **options)
+        if node.later_version(2.0, equal=True):
+            within = None
+        else:
+            within = 'Dynamics'
+        node.children(self.parameters, **options)
+        node.children(self.ports, **options)
+        node.children(self.state_variables, within=within, **options)
+        node.children(self.regimes, within=within, **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        if node.later_version(2.0, equal=True):
+            dyn_within = None
+        else:
+            dyn_within = 'Dynamics'
+        return cls(
+            name=node.attr('name', **options),
+            parameters=node.children(Parameter, **options),
+            analog_ports=node.children([AnalogSendPort, AnalogReceivePort,
+                                        AnalogReducePort], **options),
+            event_ports=node.children([EventSendPort, EventReceivePort],
+                                      **options),
+            regimes=node.children(Regime, within=dyn_within, **options),
+            aliases=node.children(Alias, within=dyn_within, **options),
+            state_variables=node.children(StateVariable, within=dyn_within,
+                                          **options),
+            constants=node.children(Constant, within=dyn_within, **options),
+            document=node.visitor.document)
 
 # Import visitor modules and those which import visitor modules
 from .regimes import StateVariable  # @IgnorePep8

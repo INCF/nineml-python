@@ -57,39 +57,8 @@ def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self.value, **options)
         node.attr('units', self.units.name, **options)
 
-# ./user/multi/dynamics.py
-def serialize_node(self, node, **options):  # @UnusedVariable
-    node.children(self.sub_components, **options)
-    node.children(self.port_exposures, **options)
-    node.children(self.port_connections, **options)
-    node.attr('name', self.name, **options)
-
-
-# ./user/multi/dynamics.py
-def serialize_node(self, node, **options):  # @UnusedVariable
-    node.child(self._component, **options)
-    node.attr('name', self.name, **options)
-
-
-# ./user/multi/dynamics.py
-def serialize_node(self, node, **options):  # @UnusedVariable
-    node.child(self._component_class, **options)
-    node.attr('name', self.name, **options)
-
-
-# ./user/multi/dynamics.py
-def serialize_node(self, node, **options):  # @UnusedVariable
-    node.children(self.sub_components, **options)
-    node.children(self.port_exposures, **options)
-    node.children(self.port_connections, **options)
-    node.attr('name', self.name, **options)
-
 
 # ./user/multi/port_exposures.py
-def serialize_node(self, node, **options):  # @UnusedVariable
-    node.attr('name', self.name, **options)
-    node.attr('sub_component', self.sub_component_name, **options)
-    node.attr('port', self.port_name, **options)
 
 
 # ./user/network.py

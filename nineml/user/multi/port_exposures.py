@@ -100,6 +100,17 @@ class BasePortExposure(BaseULObject):
                                           **kwargs),
                    port=get_xml_attr(element, 'port', document, **kwargs))
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.attr('sub_component', self.sub_component_name, **options)
+        node.attr('port', self.port_name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(name=node.attr('name', **options),
+                   component=node.attr('sub_component', **options),
+                   port=node.attr('port', **options))
+
     @classmethod
     def from_tuple(cls, tple, container):
         component_name, port_name = tple[:2]

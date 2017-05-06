@@ -1,6 +1,7 @@
 from ..componentclass import ComponentClass
 from nineml.xml import E
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
+from .. import Parameter
 
 
 class RandomDistribution(ComponentClass):
@@ -83,6 +84,34 @@ class RandomDistribution(ComponentClass):
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return RandomDistributionXMLLoader(
             document).load_randomdistributionclass(element)
+
+    def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+        node.attr('name', self.name, **options)
+        if node.later_version(2.0, equal=True):
+            node.attr('standard_library', self.standard_library, **options)
+        else:
+            node.attr('standard_library', self.standard_library,
+                      within='RandomDistribution', **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):
+        if node.later_version(2.0, equal=True):
+            standard_library = node.attr('standard_library', **options)
+        else:
+            rd_elem = node.visitor.get_single_child(node.serial_element,
+                                                    'RandomDistribution',
+                                                    **options)
+            if node.visitor.get_children(rd_elem):
+                raise NineMLSerializationError(
+                    "Not expecting {} blocks within 'RandomDistribution' block"
+                    .format(', '.join(node.visitor.get_children(rd_elem))))
+            standard_library = node.visitor.get_attr(
+                rd_elem, 'standard_library', **options)
+        return cls(
+            name=node.attr('name', **options),
+            standard_library=standard_library,
+            parameters=node.children(Parameter, **options),
+            document=node.visitor.document)
 
 from .visitors.modifiers import(  # @IgnorePep8
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)

@@ -104,35 +104,14 @@ def unserialize_node(cls, node, **options):
 
 
 # ./user/multi/dynamics.py
-@classmethod
-def unserialize_node(cls, node, **options):
-    dynamics = node.child((Dynamics, MultiDynamics), **options)
-    return cls(node.attr('name', **options),
-               dynamics)
+
 
 
 # ./user/multi/dynamics.py
-@classmethod
-def unserialize_node(cls, node, **options):
-    sub_components = node.children(SubDynamics, **options)
-    port_exposures = node.children(
-        (AnalogSendPortExposure, AnalogReceivePortExposure,
-         AnalogReducePortExposure, EventSendPortExposure,
-         EventReceivePortExposure), **options)
-    port_connections = node.children(
-        (AnalogPortConnection, EventPortConnection), **options)
-    return cls(name=node.attr('name', **options),
-               sub_components=sub_components,
-               port_exposures=port_exposures,
-               port_connections=port_connections)
+
 
 
 # ./user/multi/port_exposures.py
-@classmethod
-def unserialize_node(cls, node, **options):  # @UnusedVariable
-    return cls(name=node.attr('name', **options),
-               component=node.attr('sub_component', **options),
-               port=node.attr('port', **options))
 
 
 # ./user/network.py

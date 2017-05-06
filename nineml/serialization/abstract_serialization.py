@@ -22,17 +22,6 @@ def serialize(self, node, **options):  # @UnusedVariable
         node.body(self.value, sole=False)
 
 
-# dynamics
-def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
-    node.attr('name', self.name, **options)
-    if node.later_version(2.0, equal=True):
-        within = None
-    else:
-        within = 'Dynamics'
-    node.children(self.parameters, **options)
-    node.children(self.ports, **options)
-    node.children(self.state_variables, within=within, **options)
-    node.children(self.regimes, within=within, **options)
 
 
 # regime
@@ -111,20 +100,4 @@ def serialize(self, node, **options):  # @UnusedVariable
     node.attr('target_regime', self.target_regime.name, **options)
     node.children(self.sorted_elements())
 
-# connection_rule
-def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
-    node.attr('name', self.name, **options)
-    if node.later_version(2.0, equal=True):
-        node.attr('standard_library', self.standard_library, **options)
-    else:
-        node.attr('standard_library', self.standard_library,
-                  within='ConnectionRule', **options)
-
 # random_distribution
-def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
-    node.attr('name', self.name, **options)
-    if node.later_version(2.0, equal=True):
-        node.attr('standard_library', self.standard_library, **options)
-    else:
-        node.attr('standard_library', self.standard_library,
-                  within='RandomDistribution', **options)
