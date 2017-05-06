@@ -161,7 +161,7 @@ def unserialize(cls, node, **options):  # @UnusedVariable
 @classmethod
 def unserialize(cls, node, **options):  # @UnusedVariable
     if node.later_version(2.0, equal=True):
-        lib_elem = element
+        standard_library = node.attr('standard_library', **options)
     else:
         cr_elem = node.visitor.get_single_child(node.serial_element,
                                                 'RandomDistribution',
@@ -182,7 +182,6 @@ def unserialize(cls, node, **options):  # @UnusedVariable
 # randomdistributionclass
 @classmethod
 def unserialize(cls, node, **options):
-    xmlns = extract_xmlns(element.tag)
     if node.later_version(2.0, equal=True):
         standard_library = node.attr('standard_library', **options)
     else:
