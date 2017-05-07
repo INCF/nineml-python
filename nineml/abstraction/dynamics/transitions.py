@@ -66,12 +66,12 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         lhs, rhs = state_assignment_string.split('=')
         return StateAssignment(lhs=lhs, rhs=rhs)
 
-    def serialize(self, node, **options):  # @UnusedVariable
+    def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('MathInline', self.rhs_xml, in_body=True, **options)
         node.attr('variable', self.lhs, **options)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         lhs = node.attr('variable', **options)
         rhs = node.attr('MathInline', in_body=True, dtype=Expression,
                         **options)
@@ -149,11 +149,11 @@ class OutputEvent(BaseALObject):
             clone._port = None
         clone._port_name = self._port_name
 
-    def serialize(self, node, **options):  # @UnusedVariable
+    def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('port', self.port_name, **options)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         port_name = node.attr('port', **options)
         return cls(port_name=port_name)
 
@@ -429,13 +429,13 @@ class OnEvent(Transition):
         clone._port = (self._port.clone(memo, **kwargs)
                        if self._port is not None else None)
 
-    def serialize(self, node, **options):  # @UnusedVariable
+    def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('port', self.src_port_name, **options)
         node.attr('target_regime', self.target_regime.name, **options)
         node.children(self.sorted_elements())
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         target_regime = node.attr('target_regime', **options)
         return cls(src_port_name=node.attr('port', **options),
                        state_assignments=node.children(StateAssignment,
@@ -493,13 +493,13 @@ class OnCondition(Transition):
         super(OnCondition, self)._clone_defining_attr(clone, memo, **kwargs)
         clone._trigger = self._trigger
 
-    def serialize(self, node, **options):  # @UnusedVariable
+    def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self.trigger, **options)
         node.attr('target_regime', self._target_regime.name, **options),
         node.children(self.sorted_elements())
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         target_regime = node.attr('target_regime', **options)
         trigger = node.child(Trigger, **options)
         return cls(trigger=trigger,
@@ -598,11 +598,11 @@ class Trigger(BaseALObject, Expression):
             expr = expr.__class__(*(cls._make_strict(a) for a in expr.args))
         return expr
 
-    def serialize(self, node, **options):  # @UnusedVariable
+    def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('MathInline', self.rhs_xml, in_body=True, **options)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(node.attr('MathInline', in_body=True, dtype=Expression,
                              **options))
 

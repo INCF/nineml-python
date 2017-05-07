@@ -35,7 +35,10 @@ class Serializer(BaseSerializer):
 
     def create_elem(self, name, parent=None, namespace=None,
                     **options):  # @UnusedVariable
-        elem = self.E(namespace)(name)
+        try:
+            elem = self.E(namespace)(name)
+        except:
+            raise
         if parent is not None:
             parent.append(elem)
         return elem
@@ -43,7 +46,7 @@ class Serializer(BaseSerializer):
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
         serial_elem.attrib[name] = value_str(value)
 
-    def set_body(self, serial_elem, value, sole, **options):  # @UnusedVariable
+    def set_body(self, serial_elem, value, sole=False, **options):  # @UnusedVariable @IgnorePep8
         serial_elem.text = value_str(value)
 
     def root_elem(self):

@@ -93,12 +93,12 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         """ Returns True if the string could be an alias"""
         return ':=' in alias_str
 
-    def serialize(self, node, **options):  # @UnusedVariable
+    def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('MathInline', self.rhs_xml, in_body=True, **options)
         node.attr('name', self.lhs, **options)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         name = node.attr('name', **options)
         rhs = node.attr('MathInline', in_body=True, dtype=Expression,
                         **options)
@@ -165,7 +165,7 @@ class Constant(BaseALObject, ExpressionSymbol):
             "Renaming units with ones that do not match"
         self._units = units
 
-    def serialize(self, node, **options):  # @UnusedVariable
+    def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
         node.attr('units', self.units.name, **options)
         if node.later_version(2.0, equal=True):
@@ -174,7 +174,7 @@ class Constant(BaseALObject, ExpressionSymbol):
             node.body(self.value, sole=False)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         if node.later_version(2.0, equal=True):
             value = node.attr('value', dtype=float, **options)
         else:

@@ -97,7 +97,7 @@ class ConnectionRule(ComponentClass):
             element, **kwargs)
 
     # connection_rule
-    def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+    def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('name', self.name, **options)
         if node.later_version(2.0, equal=True):
             node.attr('standard_library', self.standard_library, **options)
@@ -106,7 +106,7 @@ class ConnectionRule(ComponentClass):
                       within='ConnectionRule', **options)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         if node.later_version(2.0, equal=True):
             standard_library = node.attr('standard_library', **options)
         else:
@@ -124,6 +124,7 @@ class ConnectionRule(ComponentClass):
             standard_library=standard_library,
             parameters=node.children(Parameter, **options),
             document=node.visitor.document)
+
     @property
     def lib_type(self):
         return self.standard_library[self._base_len:]

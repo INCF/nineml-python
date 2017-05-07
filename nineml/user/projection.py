@@ -324,9 +324,9 @@ class Projection(BaseULObject, DocumentLevelObject):
             node.children(self.port_connections, **options)
         else:
             endpoints = {}
-            endpoints['source'] = node.child(
+            endpoints['pre'] = node.child(
                 self.pre, within='Source', reference=True, **options)
-            endpoints['destination'] = node.child(
+            endpoints['post'] = node.child(
                 self.post, within='Destination', reference=True, **options)
             node.child(self.connectivity.rule_properties,
                        within='Connectivity', **options)

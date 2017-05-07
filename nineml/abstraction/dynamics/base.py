@@ -19,7 +19,6 @@ from nineml.utils import (check_inferred_against_declared,
 from nineml.xml import E
 from nineml.annotations import VALIDATION, DIMENSIONALITY, PY9ML_NS
 from nineml.base import DynamicPortsObject
-from .regimes import Regime
 from ..componentclass.base import Alias
 from ..expressions import Constant
 
@@ -518,7 +517,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return DynamicsXMLLoader(document).load_dynamics(
             element, **kwargs)
 
-    def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+    def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('name', self.name, **options)
         if node.later_version(2.0, equal=True):
             within = None
@@ -530,7 +529,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         node.children(self.regimes, within=within, **options)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         if node.later_version(2.0, equal=True):
             dyn_within = None
         else:
@@ -550,7 +549,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             document=node.visitor.document)
 
 # Import visitor modules and those which import visitor modules
-from .regimes import StateVariable  # @IgnorePep8
+from .regimes import StateVariable, Regime  # @IgnorePep8
 from .visitors.validators import DynamicsValidator  # @IgnorePep8
 from .visitors import DynamicsInterfaceInferer  # @IgnorePep8
 from .visitors.cloner import DynamicsCloner  # @IgnorePep8

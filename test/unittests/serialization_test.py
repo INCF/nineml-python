@@ -2,6 +2,8 @@ import unittest
 from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
+from nineml.utils.testing.comprehensive import doc1, doc2
+from nineml.utils import xml_equal
 # from nineml.serialization.json import (
 #     Unserialize_noder as Ujson, Serializer as Sjson)
 # from nineml.serialization.yaml import (
@@ -12,7 +14,6 @@ from nineml.document import Document
 #     Unserialize_noder as Upkl, Serializer as Spkl)
 from nineml.serialization.xml import (
     Unserializer as Uxml, Serializer as Sxml)
-from lxml import etree
 
 F_ANNOT_NS = 'http:/a.domain.org'
 F_ANNOT_TAG = 'FAnnotation'
@@ -225,8 +226,20 @@ class TestSerialization(unittest.TestCase):
                         g=4.7),
                     d='d')
                 doc.add(container, clone=False)
-                serial_doc = S(document=doc, version=version).serialize()
+                serial_doc = S(document=doc, version=version).serialize_node()
 #                 print etree.tostring(serial_doc, pretty_print=True)
-                new_doc = U(serial_doc, class_map=class_map).unserialize()
+                new_doc = U(serial_doc, class_map=class_map).unserialize_node()
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),
                                 new_doc.find_mismatch(doc))
+
+
+class TestXMLComparison(unittest.TestCase):
+
+    def test_xml_comparision(self):
+        for version in (1, 2):
+            for doc in (doc1, doc2):
+                new_xml = Sxml(document=doc, version=version).serialize()
+                orig_xml = doc.to_xml(doc)
+                self.assertTrue(xml_equal(new_xml, orig_xml))
+                new_doc = Uxml(new_xml).unserialize()
+                self.assertEqual(new_doc, doc, new_doc.find_mismatch(doc))

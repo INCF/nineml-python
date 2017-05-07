@@ -85,7 +85,7 @@ class RandomDistribution(ComponentClass):
         return RandomDistributionXMLLoader(
             document).load_randomdistributionclass(element)
 
-    def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+    def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('name', self.name, **options)
         if node.later_version(2.0, equal=True):
             node.attr('standard_library', self.standard_library, **options)
@@ -94,7 +94,7 @@ class RandomDistribution(ComponentClass):
                       within='RandomDistribution', **options)
 
     @classmethod
-    def unserialize(cls, node, **options):
+    def unserialize_node(cls, node, **options):
         if node.later_version(2.0, equal=True):
             standard_library = node.attr('standard_library', **options)
         else:

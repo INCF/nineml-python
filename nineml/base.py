@@ -41,6 +41,7 @@ class BaseNineMLObject(object):
     Base class for user layer classes
     """
     children = []
+    v1_nineml_type = None
 
     def __eq__(self, other):
         return self.equals(other)

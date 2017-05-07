@@ -45,7 +45,7 @@ class BaseVisitor(object):
         return self._document
 
     def node_name(self, nineml_cls):
-        if (self._version[0] == 1 and hasattr(nineml_cls, 'v1_nineml_type')):
+        if (self._version[0] == 1 and nineml_cls.v1_nineml_type is not None):
             name = nineml_cls.v1_nineml_type
         else:
             name = nineml_cls.nineml_type
@@ -224,7 +224,7 @@ class BaseSerializer(BaseVisitor):
         pass
 
     @abstractmethod
-    def set_body(self, serial_elem, value, sole, **options):
+    def set_body(self, serial_elem, value, sole=False, **options):
         pass
 
     @abstractmethod
@@ -554,7 +554,7 @@ class NodeToSerialize(BaseNode):
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
         """
-        for nineml_object in sorted(nineml_objects, key=lambda o: o.key):
+        for nineml_object in sorted(nineml_objects, key=lambda o: str(o.key)):
             self.visitor.visit(nineml_object, parent=self._serial_elem,
                                reference=reference, multiple=True, **options)
 

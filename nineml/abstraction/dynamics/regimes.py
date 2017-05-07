@@ -64,12 +64,12 @@ class StateVariable(BaseALObject):
     def _sympy_(self):
         return sympy.Symbol(self.name)
 
-    def serialize(self, node, **options):  # @UnusedVariable
+    def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
         node.attr('dimension', self.dimension.name, **options)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         name = node.attr('name', **options)
         dimension = node.visitor.document[node.attr('dimension', **options)]
         return cls(name=name, dimension=dimension)
@@ -155,12 +155,12 @@ class TimeDerivative(ODE, BaseALObject):
         rhs = match.groupdict()['rhs']
         return TimeDerivative(variable=variable, rhs=rhs)
 
-    def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+    def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('MathInline', self.rhs_xml, in_body=True, **options)
         node.attr('variable', self.variable, **options)
 
     @classmethod
-    def unserialize(cls, node, **options):  # @UnusedVariable
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         variable = node.attr('variable', **options)
         expr = node.attr('MathInline', in_body=True, dtype=Expression,
                          **options)
@@ -408,12 +408,12 @@ class Regime(BaseALObject, ContainerObject):
         return (sv for sv in state_variables
                 if sv.name not in self.time_derivative_variables)
 
-    def serialize(self, node, **options):
+    def serialize_node(self, node, **options):
         node.attr('name', self.name, **options)
         node.children(self.sorted_elements())
 
     @classmethod
-    def unserialize(cls, node, **options):
+    def unserialize_node(cls, node, **options):
         return cls(name=node.attr('name', **options),
                       time_derivatives=node.children(TimeDerivative,
                                                      **options),
