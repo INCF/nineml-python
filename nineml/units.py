@@ -10,7 +10,7 @@ from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLDimensionError,
-    NineMLValueError)
+    NineMLValueError, NineMLSerializationError)
 from nineml.values import (
     BaseValue, SingleValue, ArrayValue, RandomValue)
 from nineml.utils import ensure_valid_identifier
@@ -158,6 +158,20 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
                                          dtype=int, **kwargs))
                          for s in cls.dimension_symbols)
         return cls(name, document=document, **dim_args)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name)
+        for n, p in zip(self.dimension_symbols, self._dims):
+            if abs(p) > 0:
+                node.attr(n, p)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        # Get the attributes corresponding to the dimension symbols
+        dim_args = dict((s, node.attr(s, default=0, dtype=int, **options))
+                         for s in cls.dimension_symbols)
+        return cls(name, document=node.document, **dim_args)
 
     def __mul__(self, other):
         "self * other"
@@ -369,6 +383,22 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
                               default=0.0, **kwargs)
         return cls(name, dimension, power, offset=offset, document=document)
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('symbol', self.name)
+        node.attr('dimension', self.dimension.name)
+        node.attr('power', self.power)
+        if self.offset:
+            node.attr('offset', self.offset)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        name = node.attr('symbol', **options)
+        dimension = node.document[node.attr('dimension', **options)]
+        power = node.attr('power', dtype=int, default=0, **options)
+        offset = node.attr('offset', dtype=float, default=0.0, **options)
+        return cls(name, dimension, power, offset=offset,
+                   document=node.document)
+
     def __mul__(self, other):
         "self * other"
         try:
@@ -539,6 +569,23 @@ class Quantity(AnnotatedNineMLObject):
             units = document[units_str]
         except KeyError:
             raise NineMLNameError(
+                "Did not find definition of '{}' units in the current "
+                "document.".format(units_str))
+        return cls(value=value, units=units)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self._value, **options)
+        node.attr('units', self.units.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        value = node.child((SingleValue, ArrayValue, RandomValue),
+                           allow_ref=True, **options)
+        units_str = node.attr('units', **options)
+        try:
+            units = node.document[units_str]
+        except KeyError:
+            raise NineMLSerializationError(
                 "Did not find definition of '{}' units in the current "
                 "document.".format(units_str))
         return cls(value=value, units=units)

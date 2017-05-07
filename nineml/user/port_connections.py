@@ -322,6 +322,31 @@ class BasePortConnection(BaseULObject):
                                               document, default=None,
                                               **kwargs))
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        try:
+            node.attr('sender_role', self.sender_role)
+        except NineMLRuntimeError:
+            node.attr('sender_name', self.sender_name)
+        try:
+            node.attr('receiver_role', self.receiver_role)
+        except NineMLRuntimeError:
+            node.attr('receiver_name', self.receiver_name)
+        node.attr('send_port', self.send_port_name, **options)
+        node.attr('receive_port', self.receive_port_name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(send_port=node.attr('send_port', **options),
+                   receive_port=node.attr('receive_port', **options),
+                   sender_role=node.attr('sender_role', default=None,
+                                         **options),
+                   receiver_role=node.attr('receiver_role', default=None,
+                                           **options),
+                   sender_name=node.attr('sender_name', default=None,
+                                         **options),
+                   receiver_name=node.attr('receiver_name', default=None,
+                                           **options))
+
     @abstractmethod
     def _check_ports(self):
         pass

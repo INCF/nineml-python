@@ -54,6 +54,13 @@ class Port(BaseALObject):
         classstring = self.__class__.__name__
         return "{}('{}')".format(classstring, self.name)
 
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        return cls(name=node.attr('name', **options))
+
 
 class DimensionedPort(Port, ExpressionSymbol):
     """DimensionedPort
@@ -88,6 +95,16 @@ class DimensionedPort(Port, ExpressionSymbol):
             dim_name = '<unknown>'
         return "{}('{}', dimension='{}')".format(classstring, self.name,
                                                  dim_name)
+
+    def serialize(self, node, **options):  # @UnusedVariable
+        super(DimensionedPort, self).serialize(node, **options)
+        node.attr('dimension', self.dimension.name, **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        return cls(
+            name=node.attr('name', **options),
+            dimension=node.visitor.document[node.attr('dimension', **options)])
 
 
 class SendPort(SendPortBase):
@@ -246,3 +263,14 @@ class AnalogReducePort(AnalogPort, ReceivePort):
         return ("{}('{}', dimension='{}', op='{}')"
                 .format(classstring, self.name, self.dimension,
                         self.operator))
+
+    def serialize(self, node, **options):  # @UnusedVariable
+        super(AnalogReducePort, self).serialize(node, **options)
+        node.attr('operator', self.operator, **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        return cls(
+            name=node.attr('name', **options),
+            dimension=node.visitor.document[node.attr('dimension', **options)],
+            operator=node.attr('operator', **options))

@@ -13,7 +13,7 @@ from operator import itemgetter
 import numpy
 import nineml
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLValueError)
+    NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
 from nineml.utils import nearly_equal
 from nineml.xml import from_child_xml, unprocessed_xml, get_subblocks
 
@@ -167,6 +167,13 @@ class SingleValue(BaseValue):
     @unprocessed_xml
     def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
         return cls(float(element.text))
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.body(repr(self.value), **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(node.body(dtype=int))
 
     # =========================================================================
     # Magic methods to allow the SingleValue to be treated like a
@@ -385,6 +392,51 @@ class ArrayValue(BaseValue):
                 raise NineMLRuntimeError(
                     "Indices greater or equal to the number of array rows")
             return cls(values)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        if self._datafile is None:
+            for i, value in enumerate(self._values):
+                row_elem = node.visitor.create_elem(
+                    'ArrayValueRow', parent=node.serial_element, multiple=True,
+                    **options)
+                node.visitor.set_attr(row_elem, 'index', i)
+                node.visitor.set_attr(row_elem, 'value', value)
+        else:
+            node.attr('url', self.url, **options)
+            node.attr('mimetype', self.mimetype, **options)
+            node.attr('columnName', self.columnName, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        if node.name == 'ExternalArrayValue':
+            url = node.attr('url', **options)
+            with contextlib.closing(urlopen(url)) as f:
+                # FIXME: Should use a non-numpy version of this load function
+                values = numpy.loadtxt(f)
+            return cls(values, (node.attr('url', **options),
+                                node.attr('mimetype', **options),
+                                node.attr('columnName', **options)))
+        else:
+            rows = []
+            for elem in node.visitor.get_children(node.serial_element,
+                                                  **options):
+                rows.append((node.visitor.get_attr(elem, 'index', **options),
+                             node.visitor.get_attr(elem, 'value', **options)))
+            sorted_rows = sorted(rows, key=itemgetter(0))
+            indices, values = zip(*sorted_rows)
+            if indices[0] < 0:
+                raise NineMLSerializationError(
+                    "Negative indices found in array rows")
+            if len(list(itertools.groupby(indices))) != len(indices):
+                groups = [list(g) for g in itertools.groupby(indices)]
+                raise NineMLSerializationError(
+                    "Duplicate indices ({}) found in array rows".format(
+                        ', '.join(str(g[0]) for g in groups if len(g) > 1)))
+            if indices[-1] >= len(indices):
+                raise NineMLSerializationError(
+                    "Indices greater or equal to the number of array rows")
+            return cls(values)
+
 
     # =========================================================================
     # Magic methods to allow the SingleValue to be treated like a
@@ -617,6 +669,15 @@ class RandomValue(BaseValue):
         distribution = from_child_xml(
             element, nineml.user.RandomDistributionProperties,
             document, allow_reference=True, **kwargs)
+        return cls(distribution)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self.distribution, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        distribution = node.child(nineml.user.RandomDistributionProperties,
+                                  **options)
         return cls(distribution)
 
     def _copy_to_clone(self, clone, memo, **kwargs):

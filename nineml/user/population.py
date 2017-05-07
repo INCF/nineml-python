@@ -114,6 +114,20 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
                                      dtype=int, **kwargs),
                    cell=cell, document=document)
 
+    def serialize_node(self, node, **options):
+        node.attr('Size', self.size, in_body=True, **options)
+        node.child(self.cell, within='Cell', **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        cell = node.child(
+            (DynamicsProperties, nineml.user.MultiDynamicsProperties),
+            within='Cell', **options)
+        return cls(name=node.attr('name', **options),
+                   size=node.attr('Size', in_body=True, dtype=int, **options),
+                   cell=cell, document=node.document)
+
     def analog_receive_port(self, name):
         return self.cell.analog_receive_port(name)
 

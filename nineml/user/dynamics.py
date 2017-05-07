@@ -198,6 +198,19 @@ class DynamicsProperties(Component, DynamicPortsObject):
         return cls(name, definition, properties=properties,
                    initial_values=initial_values, document=document)
 
+    def serialize_node(self, node, **options):
+        super(DynamicsProperties, self).serialize_node(node)
+        node.children(self.initial_values, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        name = node.attr('name', **options)
+        definition = node.child((Definition, Prototype), **options)
+        properties = node.children(Property, **options)
+        initial_values = node.children(Initial, **options)
+        return cls(name, definition, properties=properties,
+                   initial_values=initial_values, document=node.document)
+
     def analog_receive_port(self, name):
         return self.component_class.analog_receive_port(name)
 

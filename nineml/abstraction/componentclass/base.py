@@ -71,6 +71,16 @@ class Parameter(BaseALObject):
     def _sympy_(self):
         return sympy.Symbol(self.name)
 
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.attr('dimension', self.dimension.name, **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        return cls(name=node.attr('name', **options),
+                         dimension=node.visitor.document[
+                             node.attr('dimension', **options)])
+
 
 class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     """Base class for ComponentClasses in different 9ML modules."""

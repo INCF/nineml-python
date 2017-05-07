@@ -1,10 +1,9 @@
 # import math_namespace
 from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
-from .base import ExpressionWithSimpleLHS, ExpressionSymbol
+from .base import ExpressionWithSimpleLHS, ExpressionSymbol, Expression
 from nineml.units import unitless, Unit, Quantity
 from nineml.exceptions import NineMLDimensionError
-from nineml.values import BaseValue
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -94,6 +93,17 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         """ Returns True if the string could be an alias"""
         return ':=' in alias_str
 
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
+        node.attr('name', self.lhs, **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        rhs = node.attr('MathInline', in_body=True, dtype=Expression,
+                        **options)
+        return cls(lhs=name, rhs=rhs)
+
 
 class Constant(BaseALObject, ExpressionSymbol):
 
@@ -154,3 +164,23 @@ class Constant(BaseALObject, ExpressionSymbol):
         assert self.units == units, \
             "Renaming units with ones that do not match"
         self._units = units
+
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.attr('units', self.units.name, **options)
+        if node.later_version(2.0, equal=True):
+            node.attr('value', self.value, **options)
+        else:
+            node.body(self.value, sole=False)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        if node.later_version(2.0, equal=True):
+            value = node.attr('value', dtype=float, **options)
+        else:
+            value = node.body(dtype=float, **options)
+        return cls(
+            name=node.attr('name', **options),
+            value=value,
+            units=node.visitor.document[
+                node.attr('units', **options)])

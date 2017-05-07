@@ -64,6 +64,16 @@ class StateVariable(BaseALObject):
     def _sympy_(self):
         return sympy.Symbol(self.name)
 
+    def serialize(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.attr('dimension', self.dimension.name, **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        dimension = node.visitor.document[node.attr('dimension', **options)]
+        return cls(name=name, dimension=dimension)
+
 
 class TimeDerivative(ODE, BaseALObject):
 
@@ -144,6 +154,17 @@ class TimeDerivative(ODE, BaseALObject):
         variable = match.groupdict()['dependent_var']
         rhs = match.groupdict()['rhs']
         return TimeDerivative(variable=variable, rhs=rhs)
+
+    def serialize(self, node, **options):  # @UnusedVariable @IgnorePep8
+        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
+        node.attr('variable', self.variable, **options)
+
+    @classmethod
+    def unserialize(cls, node, **options):  # @UnusedVariable
+        variable = node.attr('variable', **options)
+        expr = node.attr('MathInline', in_body=True, dtype=Expression,
+                         **options)
+        return cls(variable=variable, rhs=expr)
 
 
 class Regime(BaseALObject, ContainerObject):
@@ -386,3 +407,16 @@ class Regime(BaseALObject, ContainerObject):
         """
         return (sv for sv in state_variables
                 if sv.name not in self.time_derivative_variables)
+
+    def serialize(self, node, **options):
+        node.attr('name', self.name, **options)
+        node.children(self.sorted_elements())
+
+    @classmethod
+    def unserialize(cls, node, **options):
+        return cls(name=node.attr('name', **options),
+                      time_derivatives=node.children(TimeDerivative,
+                                                     **options),
+                      transitions=(node.children(OnEvent, **options) +
+                                   node.children(OnCondition, **options)),
+                      aliases=node.children(Alias, **options))

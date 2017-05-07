@@ -188,6 +188,22 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                       selections=selections, document=document)
         return network
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.children(self.populations, **options)
+        node.children(self.selections, **options)
+        node.children(self.projections, **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        populations = node.children(Population, allow_ref=True, **options)
+        projections = node.children(Projection, allow_ref=True, **options)
+        selections = node.children(Selection, allow_ref=True, **options)
+        network = cls(name=node.attr('name', **options),
+                      populations=populations, projections=projections,
+                      selections=selections, document=node.document)
+        return network
+
     @classmethod
     def from_document(cls, document):
         name = os.path.splitext(os.path.basename(document.url))[0]
@@ -318,6 +334,19 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
                    size=get_xml_attr(element, 'Size', document, in_block=True,
                                      dtype=int, **kwargs),
                    dynamics_properties=dynamics_properties, document=document)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('Size', self.size, in_body=True, **options)
+        node.child(self.dynamics_properties, **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        dynamics_properties = node.child(DynamicsProperties, **options)
+        return cls(name=node.attr('name', **options),
+                   size=node.attr('Size', in_body=True, dtype=int, **options),
+                   dynamics_properties=dynamics_properties,
+                   document=node.document)
 
 
 class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
@@ -480,6 +509,34 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                                         within='Destination', **kwargs)
         delay = from_child_xml(element, Quantity, document, within='Delay',
                                allow_none=True, **kwargs)
+        return cls(name=name, source=source, destination=destination,
+                   source_port=source_port, destination_port=destination_port,
+                   connectivity=connectivity, delay=delay, document=None)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self.source, within='Source',
+                   within_attrs={'port': self.source_port})
+        node.child(self.destination, within='Destination',
+                   within_attrs={'port': self.destination_port})
+        node.child(self.connectivity.rule_properties, within='Connectivity')
+        if self.delay is not None:
+            node.child(self.delay, within='Delay')
+        node.attr('name', self.name)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        # Get Name
+        name = node.attr('name', **options)
+        connectivity = node.child(ConnectionRuleProperties,
+                                  within='Connectivity', **options)
+        source = node.child(ComponentArray, within='Source',
+                            allowed_attrib=['port'], **options)
+        destination = node.child(ComponentArray, within='Destination',
+                                 allowed_attrib=['port'], **options)
+        source_port = node.attr('port', within='Source', **options)
+        destination_port = node.attr('port', within='Destination', **options)
+        delay = node.child(Quantity, within='Delay', allow_none=True,
+                           **options)
         return cls(name=name, source=source, destination=destination,
                    source_port=source_port, destination_port=destination_port,
                    connectivity=connectivity, delay=delay, document=None)

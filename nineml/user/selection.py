@@ -6,7 +6,7 @@ from nineml.xml import (
     extract_xmlns, E, from_child_xml, unprocessed_xml, get_xml_attr, NINEMLv1)
 from nineml.base import DocumentLevelObject, DynamicPortsObject
 from .population import Population
-from nineml.exceptions import NineMLNameError
+from nineml.exceptions import NineMLNameError, NineMLSerializationError
 from nineml.utils import ensure_valid_identifier
 
 
@@ -87,6 +87,17 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
             element, Concatenate, document, **kwargs)
         return cls(get_xml_attr(element, 'name', document, **kwargs), op,
                    document=document)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self.operation, **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        # The only supported op at this stage
+        op = node.child(Concatenate, **options)
+        return cls(node.attr('name', **options), op,
+                   document=node.document)
 
     def evaluate(self):
         assert isinstance(self.operation, Concatenate), \
@@ -243,6 +254,36 @@ class Concatenate(BaseULObject):
                              "must be contiguous.".format(indices))
         return cls(*items)  # Strip off indices used to sort elements
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        for i, item in enumerate(self.items):
+            item_elem = node.child(item, within='Item', multiple=True,
+                                   **options)
+            node.visitor.set_attr(item_elem, 'index', i)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        items = []
+        for name, elem in node.visitor.get_children(node.serial_element):
+            if name != 'Item':
+                raise NineMLSerializationError(
+                    "Unrecognised element '{}' within Selection object"
+                    .format(name))
+            items.append((node.attr('index', dtype=int, **options),
+                          node.visitor.visit(elem, Population, allow_ref=True,
+                                             **options)))
+        # Sort by 'index' attribute
+        indices, items = zip(*sorted(items, key=itemgetter(0)))
+        indices = [int(i) for i in indices]
+        if len(indices) != len(set(indices)):
+            raise ValueError("Duplicate indices found in Concatenate list ({})"
+                             .format(indices))
+        if indices[0] != 0:
+            raise ValueError("Indices of Concatenate items must start from 0 "
+                             "({})".format(indices))
+        if indices[-1] != len(indices) - 1:
+            raise ValueError("Missing indices in Concatenate items ({}), list "
+                             "must be contiguous.".format(indices))
+        return cls(*items)  # Strip off indices used to sort elements
 
 # TGC 11/11/ This old implementation of Set (now called Selection) was copied
 #            from nineml.user.populations.py probably some of it is worth

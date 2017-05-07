@@ -331,6 +331,22 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             doc = None
         return cls(name, definition, properties=properties, document=doc)
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self._definition, **options)
+        node.children(self.properties, **options)
+        node.attr('name', self.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        definition = node.child((Definition, Prototype), **options)
+        properties = node.children(Property, **options)
+        if name in node.document:
+            doc = node.document
+        else:
+            doc = None
+        return cls(name, definition, properties=properties, document=doc)
+
     @property
     def used_units(self):
         return set(p.units for p in self.properties.itervalues())
@@ -514,6 +530,26 @@ class Property(BaseULObject):
         else:
             quantity = from_child_xml(
                 element, Quantity, document, **kwargs)
+        return cls(name=name, quantity=quantity)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        if node.later_version(2.0, equal=True):
+            node.child(self._quantity, **options)
+        else:
+            node.child(self.value, **options)
+            node.attr('units', self.units.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        if node.later_version(2.0, equal=True):
+            quantity = node.child(Quantity, **options)
+        else:
+            value = node.child((SingleValue, ArrayValue, RandomValue),
+                               **options)
+            units = node.document[node.attr('units', **options)]
+            quantity = Quantity(value, units)
         return cls(name=name, quantity=quantity)
 
     def set_units(self, units):
