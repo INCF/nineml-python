@@ -432,7 +432,8 @@ class OnEvent(Transition):
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('port', self.src_port_name, **options)
         node.attr('target_regime', self.target_regime.name, **options)
-        node.children(self.sorted_elements())
+        node.children(self.state_assignments)
+        node.children(self.output_events)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable

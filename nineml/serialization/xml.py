@@ -93,7 +93,7 @@ class Unserializer(BaseUnserializer):
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         return serial_elem.attrib[name]
 
-    def get_body(self, serial_elem, sole, **options):  # @UnusedVariable
+    def get_body(self, serial_elem, sole=True, **options):  # @UnusedVariable
         body = serial_elem.text
         if body is not None and not body.strip():
             body = None

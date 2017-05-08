@@ -388,8 +388,8 @@ conB = ConnectionRule(
     standard_library=(nineml_v1_ns + '/connectionrules/OneToOne'))
 
 
-conPropB = ConnectionRuleProperties(
-    name="conPropB",
+conPropB1 = ConnectionRuleProperties(
+    name="conPropBA",
     definition=conB)
 
 projA = Projection(
@@ -412,7 +412,7 @@ projB = Projection(
         definition=dynF,
         properties={'P1': 10.7 * un.ms, 'P2': 3.1 * un.nA}),
     connectivity=ConnectionRuleProperties(
-        name="ConnectionRuleProps",
+        name="conPropB2",
         definition=conB),
     delay=1 * un.ms,
     port_connections=[
@@ -446,7 +446,7 @@ projD = Projection(
         name="dynFPropsB",
         definition=dynF,
         properties={'P1': -1.72 * un.ms, 'P2': 88.0 * un.nA}),
-    connectivity=conPropB,
+    connectivity=conPropB1,
     delay=1 * un.ms,
     port_connections=[
         EventPortConnection(
@@ -466,7 +466,7 @@ projE = Projection(
     post=popMultiB,
     response=dynPropH,
     delay=0.5 * un.s,
-    connectivity=conPropB,
+    connectivity=conPropB1,
     port_connections=[
         ('pre', 'ESP1__e', 'response', 'ERP1'),
         ('response', 'A1', 'post', 'ARP1')])

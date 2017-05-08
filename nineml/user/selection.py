@@ -8,6 +8,7 @@ from nineml.base import DocumentLevelObject, DynamicPortsObject
 from .population import Population
 from nineml.exceptions import NineMLNameError, NineMLSerializationError
 from nineml.utils import ensure_valid_identifier
+from nineml.serialization.base import NodeToUnserialize
 
 
 def combined_port_accessor(population_accessor):
@@ -263,14 +264,16 @@ class Concatenate(BaseULObject):
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         items = []
-        for name, elem in node.visitor.get_children(node.serial_element):
+        for name, _, elem in node.visitor.get_children(node.serial_element):
             if name != 'Item':
                 raise NineMLSerializationError(
                     "Unrecognised element '{}' within Selection object"
                     .format(name))
-            items.append((node.attr('index', dtype=int, **options),
-                          node.visitor.visit(elem, Population, allow_ref=True,
-                                             **options)))
+            item_node = NodeToUnserialize(node.visitor, elem, name)
+            items.append(
+                (item_node.attr('index', dtype=int, **options),
+                 item_node.child(Population, allow_ref='only', **options)))
+            node.unprocessed_children.discard('Item')
         # Sort by 'index' attribute
         indices, items = zip(*sorted(items, key=itemgetter(0)))
         indices = [int(i) for i in indices]

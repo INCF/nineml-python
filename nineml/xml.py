@@ -117,6 +117,8 @@ def from_child_xml(element, child_classes, document, multiple=False,
             if xmlns == NINEMLv1:
                 try:
                     tag_name = child_cls.v1_nineml_type
+                    if tag_name is None:
+                        tag_name = child_cls.nineml_type
                 except AttributeError:
                     tag_name = child_cls.nineml_type
             else:
@@ -255,6 +257,8 @@ def unprocessed_xml(from_xml):
             if xmlns == NINEMLv1:
                 try:
                     nineml_type = cls.v1_nineml_type
+                    if nineml_type is None:
+                        nineml_type = cls.nineml_type
                 except AttributeError:
                     nineml_type = cls.nineml_type
             else:

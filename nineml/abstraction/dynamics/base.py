@@ -519,21 +519,30 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
     def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('name', self.name, **options)
-        if node.later_version(2.0, equal=True):
-            within = None
-        else:
-            within = 'Dynamics'
         node.children(self.parameters, **options)
-        node.children(self.ports, **options)
-        node.children(self.state_variables, within=within, **options)
-        node.children(self.regimes, within=within, **options)
+        node.children(self.event_receive_ports, **options)
+        node.children(self.analog_receive_ports, **options)
+        node.children(self.analog_reduce_ports, **options)
+        node.children(self.event_send_ports, **options)
+        node.children(self.analog_send_ports, **options)
+        if node.later_version(2.0, equal=True):
+            dyn_elem = node.serial_element
+        else:
+            dyn_elem = node.visitor.create_elem('Dynamics',
+                                                parent=node.serial_element)
+        node.children(self.regimes, parent_elem=dyn_elem, **options)
+        node.children(self.state_variables, parent_elem=dyn_elem, **options)
+        node.children(self.aliases, parent_elem=dyn_elem, **options)
+        node.children(self.constants, parent_elem=dyn_elem, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         if node.later_version(2.0, equal=True):
-            dyn_within = None
+            dyn_elem = node.serial_element
         else:
-            dyn_within = 'Dynamics'
+            _, dyn_elem = node.visitor.get_single_child(node.serial_element,
+                                                        'Dynamics')
+            node.unprocessed_children.remove('Dynamics')
         return cls(
             name=node.attr('name', **options),
             parameters=node.children(Parameter, **options),
@@ -541,12 +550,12 @@ class Dynamics(ComponentClass, DynamicPortsObject):
                                         AnalogReducePort], **options),
             event_ports=node.children([EventSendPort, EventReceivePort],
                                       **options),
-            regimes=node.children(Regime, within=dyn_within, **options),
-            aliases=node.children(Alias, within=dyn_within, **options),
-            state_variables=node.children(StateVariable, within=dyn_within,
+            regimes=node.children(Regime, parent_elem=dyn_elem, **options),
+            aliases=node.children(Alias, parent_elem=dyn_elem, **options),
+            state_variables=node.children(StateVariable, parent_elem=dyn_elem,
                                           **options),
-            constants=node.children(Constant, within=dyn_within, **options),
-            document=node.visitor.document)
+            constants=node.children(Constant, parent_elem=dyn_elem, **options),
+            document=node.document)
 
 # Import visitor modules and those which import visitor modules
 from .regimes import StateVariable, Regime  # @IgnorePep8

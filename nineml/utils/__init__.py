@@ -17,6 +17,11 @@ import collections
 from ..exceptions import internal_error
 from ..exceptions import NineMLRuntimeError
 from nineml.base import ContainerObject
+from logging import getLogger
+from nineml.xml import strip_xmlns
+
+
+logger = getLogger('lib9ml')
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
@@ -540,25 +545,43 @@ def nearly_equal(float1, float2, places=15):
             exp1 == exp2)
 
 
-def xml_equal(xml1, xml2):
+def xml_equal(xml1, xml2, indent=''):
     if xml1.tag != xml2.tag:
+        logger.error("{}Tag '{}' doesn't equal '{}'"
+                     .format(indent, xml1.tag, xml2.tag))
         return False
     if xml1.attrib != xml2.attrib:
+        logger.error("{}Attributes '{}' doesn't equal '{}'"
+                     .format(indent, xml1.attrib, xml2.attrib))
         return False
     text1 = xml1.text if xml1.text is not None else ''
     text2 = xml2.text if xml1.text is not None else ''
     if text1.strip() != text2.strip():
+        logger.error("{}Body '{}' doesn't equal '{}'"
+                     .format(indent, text1, text2))
         return False
     tail1 = xml1.tail if xml1.tail is not None else ''
     tail2 = xml2.tail if xml1.tail is not None else ''
     if tail1.strip() != tail2.strip():
+        if text1.strip() != text2.strip():
+            logger.error("{}Body '{}' doesn't equal '{}'"
+                         .format(indent, tail1, tail2))
         return False
     children1 = [c for c in xml1.getchildren()
                  if not c.tag.endswith('Annotations')]
     children2 = [c for c in xml2.getchildren()
                  if not c.tag.endswith('Annotations')]
     if len(children1) != len(children2):
+        logger.error("{}Number of children {} doesn't equal {}:\n{}\n{}"
+                     .format(indent, len(children1), len(children2),
+                             ', '.join(
+                                 '{}:{}'.format(strip_xmlns(c.tag),
+                                                c.attrib.get('name', None))
+                                 for c in children1),
+                             ', '.join(
+                                 '{}:{}'.format(strip_xmlns(c.tag),
+                                                c.attrib.get('name', None))
+                                 for c in children2)))
         return False
-    return all(xml_equal(c1, c2)
+    return all(xml_equal(c1, c2, indent=indent + '    ')
                for c1, c2 in itertools.izip(children1, children2))
-

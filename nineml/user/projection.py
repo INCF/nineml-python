@@ -312,6 +312,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                    document=document)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
         if node.later_version(2.0, equal=True):
             node.child(self.pre, reference=True, within='Pre', **options)
             node.child(self.post, reference=True, within='Post', **options)
@@ -355,14 +356,14 @@ class Projection(BaseULObject, DocumentLevelObject):
         if node.later_version(2.0, equal=True):
             pre_within = 'Pre'
             post_within = 'Post'
-            multiple_within = False
             delay = node.child(Quantity, within='Delay', **options)
         else:
             pre_within = 'Source'
             post_within = 'Destination'
-            multiple_within = True
             # Get Delay
-            delay_elem = node.visitor.get_single_child('Delay')
+            _, delay_elem = node.visitor.get_single_child(node.serial_element,
+                                                          'Delay')
+            node.unprocessed_children.remove('Delay')
             units = node.document[
                 node.visitor.get_attr(delay_elem, 'units', **options)]
             nineml_type, value_elem = node.visitor.get_single_child(
@@ -370,7 +371,8 @@ class Projection(BaseULObject, DocumentLevelObject):
                 **options)
             value = node.visitor.visit(
                 value_elem,
-                node.visitor._get_nineml_class(nineml_type, value_elem),
+                node.visitor.get_nineml_class(nineml_type, value_elem,
+                                              assert_doc_level=False),
                 **options)
             delay = Quantity(value, units)
         # Get Pre
@@ -380,12 +382,14 @@ class Projection(BaseULObject, DocumentLevelObject):
         post = node.child(
             (Population, Selection), allow_ref='only', within=post_within,
             **options)
-        response = node.child(DynamicsProperties, within='Response', **options)
+        response = node.child(DynamicsProperties, within='Response',
+                              allow_ref=True, **options)
         plasticity = node.child(
             DynamicsProperties, allow_ref=True, within='Plasticity',
             allow_none=True, **options)
         connection_rule_props = node.child(
-            ConnectionRuleProperties, within='Connectivity', **options)
+            ConnectionRuleProperties, within='Connectivity',
+            allow_ref=True, **options)
         if node.later_version(2.0, equal=True):
             port_connections = node.children(
                 (AnalogPortConnection, EventPortConnection), **options)
@@ -393,7 +397,7 @@ class Projection(BaseULObject, DocumentLevelObject):
             port_connections = []
             for receive_name in cls.version1_nodes:
                 try:
-                    receive_elem = node.visitor.get_single_child(
+                    _, receive_elem = node.visitor.get_single_child(
                         node.serial_element, receive_name, **options)
                 except NineMLMissingSerializationError:
                     if receive_name == 'Plasticity':
@@ -401,17 +405,17 @@ class Projection(BaseULObject, DocumentLevelObject):
                     else:
                         raise
                 receiver = eval(cls.v1tov2[receive_name])
-                for name, send_elem in node.visitor.get_children(receive_elem,
-                                                                 **options):
-                    if not name.startswith('From'):
+                for elem_name, _, send_elem in node.visitor.get_children(
+                        receive_elem, **options):
+                    if elem_name in ('Component', 'Reference'):
+                        continue
+                    elif (not elem_name.startswith('From') or
+                          elem_name[4:] not in cls.version1_nodes):
                         raise NineMLSerializationError(
-                            "Unrecognised element '{}' in projection"
-                            .format(name))
-                    send_name = name[4:]
-                    if send_name not in cls.version1_nodes:
-                        raise NineMLSerializationError(
-                            "Unrecognised element '{}' in projection"
-                            .format(name))
+                            "Unrecognised element '{}' in {} element of "
+                            "'{}' projection"
+                            .format(elem_name, receive_name, name))
+                    send_name = elem_name[4:]
                     send_port_name = node.visitor.get_attr(
                         send_elem, 'send_port', **options)
                     receive_port_name = node.visitor.get_attr(

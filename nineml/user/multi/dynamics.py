@@ -359,7 +359,8 @@ class SubDynamicsProperties(BaseULObject):
     @classmethod
     def unserialize_node(cls, node, **options):
         dynamics_properties = node.child(
-            (DynamicsProperties, MultiDynamicsProperties), **options)
+            (DynamicsProperties, MultiDynamicsProperties), allow_ref=True,
+            **options)
         return cls(node.attr('name', **options),
                    dynamics_properties)
 
@@ -585,14 +586,15 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
 
     @classmethod
     def unserialize_node(cls, node, **options):
-        dynamics = node.child((Dynamics, MultiDynamics), **options)
-        return cls(node.attr('name', **options),
-                   dynamics)
+        dynamics = node.child((Dynamics, MultiDynamics), allow_ref=True,
+                              **options)
+        return cls(node.attr('name', **options), dynamics)
 
 
 class MultiDynamics(Dynamics):
 
     nineml_type = 'MultiDynamics'
+    v1_nineml_type = None
     defining_attributes = (
         '_name', '_sub_components', '_analog_port_connections',
         '_event_port_connections', '_analog_send_ports',
@@ -1060,8 +1062,13 @@ class MultiDynamics(Dynamics):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.children(self.sub_components, **options)
-        node.children(self.port_exposures, **options)
-        node.children(self.port_connections, **options)
+        node.children(self.analog_port_connections, **options)
+        node.children(self.event_port_connections, **options)
+        node.children(self.analog_send_ports, **options)
+        node.children(self.analog_receive_ports, **options)
+        node.children(self.analog_reduce_ports, **options)
+        node.children(self.event_send_ports, **options)
+        node.children(self.event_receive_ports, **options)
         node.attr('name', self.name, **options)
 
     @classmethod

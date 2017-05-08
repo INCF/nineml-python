@@ -87,21 +87,24 @@ class RandomDistribution(ComponentClass):
 
     def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('name', self.name, **options)
+        node.children(self.parameters, **options)
         if node.later_version(2.0, equal=True):
             node.attr('standard_library', self.standard_library, **options)
         else:
-            node.attr('standard_library', self.standard_library,
-                      within='RandomDistribution', **options)
+            cr_elem = node.visitor.create_elem(
+                'RandomDistribution', parent=node.serial_element, **options)
+            node.visitor.set_attr(cr_elem, 'standard_library',
+                                  self.standard_library, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):
         if node.later_version(2.0, equal=True):
             standard_library = node.attr('standard_library', **options)
         else:
-            rd_elem = node.visitor.get_single_child(node.serial_element,
-                                                    'RandomDistribution',
-                                                    **options)
-            if node.visitor.get_children(rd_elem):
+            _, rd_elem = node.visitor.get_single_child(
+                node.serial_element, 'RandomDistribution', **options)
+            node.unprocessed_children.remove('RandomDistribution')
+            if list(node.visitor.get_children(rd_elem)):
                 raise NineMLSerializationError(
                     "Not expecting {} blocks within 'RandomDistribution' block"
                     .format(', '.join(node.visitor.get_children(rd_elem))))

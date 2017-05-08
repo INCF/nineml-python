@@ -1017,13 +1017,18 @@ class AddNestedObjectsToDocumentVisitor(BaseNineMLVisitor):
     ----------
     document : Document
         Document to add the unbound elements to
+    add_bound : bool
+        Whether to add the object even if it belongs to another document
+        (but not this one). Useful for combining all referenced objects
+        into a single document.
     """
 
-    def __init__(self, document):
+    def __init__(self, document, add_bound=False):
         super(AddNestedObjectsToDocumentVisitor, self).__init__()
         self.document = document
+        self.add_bound = add_bound
 
-    def action(self, obj, add_bound=False, **kwargs):  # @UnusedVariable
+    def action(self, obj, **kwargs):  # @UnusedVariable
         """
         Adds the object to the document if is a DocumentLevelObject and it
         doesn't already belong to a document (or regardless if 'add_bound' is
@@ -1033,13 +1038,9 @@ class AddNestedObjectsToDocumentVisitor(BaseNineMLVisitor):
         ----------
         obj : BaseNineMLObject
             The object to add the document if is DocumentLevelObject
-        add_bound : bool
-            Whether to add the object even if it belongs to another document
-            (but not this one). Useful for combining all referenced objects
-            into a single document.
         """
-        if isinstance(obj, DocumentLevelObject) and (obj.document is None or
-                                                     add_bound):
+        if (isinstance(obj, DocumentLevelObject) and (obj.document is None or
+                                                      self.add_bound)):
             if obj.name in self.document:
                 doc_obj = self.document[obj.name]
                 # Set document of object to current document before checking

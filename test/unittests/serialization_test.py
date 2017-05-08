@@ -1,4 +1,7 @@
 import unittest
+import logging
+import sys
+from lxml import etree
 from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
@@ -19,6 +22,14 @@ F_ANNOT_NS = 'http:/a.domain.org'
 F_ANNOT_TAG = 'FAnnotation'
 F_ANNOT_ATTR = 'f_annot'
 F_ANNOT_VAL = 'annot_f'
+
+
+logger = logging.getLogger('lib9ml')
+logger.setLevel(logging.ERROR)
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 class Container(AnnotatedNineMLObject, DocumentLevelObject):
@@ -237,9 +248,31 @@ class TestXMLComparison(unittest.TestCase):
 
     def test_xml_comparision(self):
         for version in (1, 2):
-            for doc in (doc1, doc2):
+            for i, doc in enumerate((doc2, doc1)):
                 new_xml = Sxml(document=doc, version=version).serialize()
-                orig_xml = doc.to_xml(doc)
-                self.assertTrue(xml_equal(new_xml, orig_xml))
+                orig_xml = doc.to_xml()
+                print '-------------'
+                print '    Doc{} v{}    '.format(i + 1, version)
+                print '-------------'
+                print 'New:'
+                print etree.tostring(new_xml, pretty_print=True)
+                print ('\n\nvs\n\n')
+                print 'Old:'
+                print etree.tostring(orig_xml, pretty_print=True)
+                if version == 2:
+                    self.assertTrue(xml_equal(new_xml, orig_xml))
                 new_doc = Uxml(new_xml).unserialize()
                 self.assertEqual(new_doc, doc, new_doc.find_mismatch(doc))
+                switch_doc1 = Uxml(orig_xml).unserialize()
+                switch_doc2 = Document.load(new_xml)
+                self.assertEqual(new_doc, switch_doc2,
+                                 new_doc.find_mismatch(switch_doc2))
+                self.assertEqual(new_doc, switch_doc1,
+                                 new_doc.find_mismatch(switch_doc1))
+
+
+if __name__ == '__main__':
+    from nineml.utils.testing.comprehensive import dynA
+    doc1 = Document(dynA)
+    print dynA.document
+    print dynA.analog_receive_port('ARP2').dimension.document

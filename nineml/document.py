@@ -230,33 +230,93 @@ class Document(AnnotatedNineMLObject, dict):
                 if isinstance(o, nineml.abstraction.ComponentClass))  # @UndefinedVariable @IgnorePep8
 
     @property
+    def networks(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.Network))  # @UndefinedVariable @IgnorePep8
+
+    @property
     def populations(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user.Population))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.Population))  # @UndefinedVariable @IgnorePep8
 
     @property
     def projections(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user.Projection))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.Projection))  # @UndefinedVariable @IgnorePep8
 
     @property
     def selections(self):
         return (o for o in self.itervalues()
-                if isinstance(o, nineml.user.Selection))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.Selection))  # @UndefinedVariable @IgnorePep8
 
     @property
     def network_structures(self):
         return chain(self.populations, self.projections, self.selections)
 
     @property
+    def component_arrays(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.ComponentArray))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def event_connection_groups(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.EventConnectionGroup))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def analog_connection_groups(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.AnalogConnectionGroup))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def dynamicses(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.Dynamics))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def multi_dynamicses(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.MultiDynamics))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def connection_rules(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.ConnectionRule))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def random_distributions(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.RandomDistribution))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def dynamics_propertieses(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.DynamicsProperties))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def multi_dynamics_propertieses(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.MultiDynamicsProperties))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def connection_rule_propertieses(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.ConnectionRuleProperties))  # @UndefinedVariable @IgnorePep8
+
+    @property
+    def random_distribution_propertieses(self):
+        return (o for o in self.itervalues()
+                if isinstance(o, nineml.RandomDistributionProperties))  # @UndefinedVariable @IgnorePep8
+
+    @property
     def units(self):
         return (o for o in self.itervalues()
-                if isinstance(nineml.units.Unit))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.Unit))  # @UndefinedVariable @IgnorePep8
 
     @property
     def dimensions(self):
         return (o for o in self.itervalues()
-                if isinstance(nineml.units.Dimension))  # @UndefinedVariable @IgnorePep8
+                if isinstance(o, nineml.Dimension))  # @UndefinedVariable @IgnorePep8
 
     def _load_elem_from_xml(self, unloaded):
         """
@@ -620,6 +680,26 @@ class Document(AnnotatedNineMLObject, dict):
                     "{} is not a valid URL (it is not even a string)"
                     .format(url))
         return url
+
+    def serialize_node(self, node, **options):
+        node.children(self.networks, reference=False, **options)
+        node.children(self.populations, reference=False, **options)
+        node.children(self.projections, reference=False, **options)
+        node.children(self.selections, reference=False, **options)
+        node.children(self.component_arrays, reference=False, **options)
+        node.children(self.event_connection_groups, reference=False, **options)
+        node.children(self.analog_connection_groups, reference=False,
+                      **options)
+        node.children(self.dynamicses, reference=False, **options)
+        node.children(self.connection_rules, reference=False, **options)
+        node.children(self.random_distributions, reference=False, **options)
+        node.children(self.dynamics_propertieses, reference=False, **options)
+        node.children(self.connection_rule_propertieses, reference=False,
+                      **options)
+        node.children(self.random_distribution_propertieses, reference=False,
+                      **options)
+        node.children(self.dimensions, reference=False, **options)
+        node.children(self.units, reference=False, **options)
 
 
 def read(url, relative_to=None, name=None, **kwargs):

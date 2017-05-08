@@ -79,10 +79,13 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
         Create a sympy expression by multiplying symbols representing each of
         the dimensions together
         """
-        return reduce(
-            operator.mul,
-            (Symbol(n) ** p
-             for n, p in zip(self.dimension_symbols, self._dims)))
+        try:
+            return reduce(
+                operator.mul,
+                (Symbol(n) ** p
+                 for n, p in zip(self.dimension_symbols, self._dims)))
+        except:
+            raise
 
     @property
     def m(self):

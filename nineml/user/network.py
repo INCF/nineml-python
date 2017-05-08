@@ -18,7 +18,7 @@ from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.xml import (
     E, from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.user.port_connections import EventPortConnection
-from nineml.user.dynamics import DynamicsProperties
+from nineml.user import DynamicsProperties, MultiDynamicsProperties
 from nineml.user.connectionrule import ConnectionRuleProperties, Connectivity
 from nineml.units import Quantity
 from nineml.abstraction.ports import (
@@ -189,10 +189,10 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         return network
 
     def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
         node.children(self.populations, **options)
         node.children(self.selections, **options)
         node.children(self.projections, **options)
-        node.attr('name', self.name, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):
@@ -342,7 +342,9 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
 
     @classmethod
     def unserialize_node(cls, node, **options):
-        dynamics_properties = node.child(DynamicsProperties, **options)
+        dynamics_properties = node.child(
+            (DynamicsProperties, MultiDynamicsProperties), allow_ref=True,
+            **options)
         return cls(name=node.attr('name', **options),
                    size=node.attr('Size', in_body=True, dtype=int, **options),
                    dynamics_properties=dynamics_properties,
@@ -514,10 +516,12 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                    connectivity=connectivity, delay=delay, document=None)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.child(self.source, within='Source',
-                   within_attrs={'port': self.source_port})
-        node.child(self.destination, within='Destination',
-                   within_attrs={'port': self.destination_port})
+        source_elem = node.child(self.source, within='Source', **options)
+        node.visitor.set_attr(source_elem, 'port', self.source_port,
+                              **options)
+        dest_elem = node.child(self.destination, within='Destination',
+                               **options)
+        node.visitor.set_attr(dest_elem, 'port', self.destination_port)
         node.child(self.connectivity.rule_properties, within='Connectivity')
         if self.delay is not None:
             node.child(self.delay, within='Delay')
@@ -527,14 +531,19 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         # Get Name
         name = node.attr('name', **options)
-        connectivity = node.child(ConnectionRuleProperties,
-                                  within='Connectivity', **options)
+        connectivity = node.child(
+            ConnectionRuleProperties, within='Connectivity', allow_ref=True,
+            **options)
         source = node.child(ComponentArray, within='Source',
-                            allowed_attrib=['port'], **options)
+                            allow_ref='only', **options)
         destination = node.child(ComponentArray, within='Destination',
-                                 allowed_attrib=['port'], **options)
-        source_port = node.attr('port', within='Source', **options)
-        destination_port = node.attr('port', within='Destination', **options)
+                                 allow_ref='only', **options)
+        _, source_elem = node.visitor.get_single_child(
+            node.serial_element, 'Source', **options)
+        source_port = node.visitor.get_attr(source_elem, 'port', **options)
+        _, dest_elem = node.visitor.get_single_child(
+            node.serial_element, 'Destination', **options)
+        destination_port = node.visitor.get_attr(dest_elem, 'port', **options)
         delay = node.child(Quantity, within='Delay', allow_none=True,
                            **options)
         return cls(name=name, source=source, destination=destination,

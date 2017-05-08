@@ -76,40 +76,35 @@ class StateVariable(BaseALObject):
 
 
 class TimeDerivative(ODE, BaseALObject):
-
-    """Represents a first-order, ordinary differential equation with respect to
+    """
+    Represents a first-order, ordinary differential equation with respect to
     time.
 
+    .. math::
+
+        \\frac{dg}{dt} = \\frac{g}{gtau}
+
+    Then this would be constructed as::
+
+        TimeDerivative( variable='g', rhs='g/gtau' )
+
+    Note that although initially the time variable
+    (independent_variable) is ``t``, this can be changed using the
+    methods: ``td.lhs_name_transform_inplace({'t':'T'} )`` for example.
+
+    Parameters
+    ----------
+    variable : str
+         The name of the variable.
+    rhs : str | Expression | sympy.Basic
+        The right-hand-side of the equation.
+
+    For example, if our time derivative was:
     """
 
     nineml_type = 'TimeDerivative'
 
     def __init__(self, variable, rhs):
-        """Time Derivative Constructor
-
-            :param variable: A `string` containing a single symbol,
-                which is the variable.
-            :param rhs: A `string` containing the right-hand-side of the
-                equation.
-
-
-            For example, if our time derivative was:
-
-            .. math::
-
-                \\frac{dg}{dt} = \\frac{g}{gtau}
-
-            Then this would be constructed as::
-
-                TimeDerivative( variable='g', rhs='g/gtau' )
-
-            Note that although initially the time variable
-            (independent_variable) is ``t``, this can be changed using the
-            methods: ``td.lhs_name_transform_inplace({'t':'T'} )`` for example.
-
-
-
-            """
         ODE.__init__(self,
                      dependent_variable=variable,
                      independent_variable='t',
@@ -410,7 +405,10 @@ class Regime(BaseALObject, ContainerObject):
 
     def serialize_node(self, node, **options):
         node.attr('name', self.name, **options)
-        node.children(self.sorted_elements())
+        node.children(self.time_derivatives)
+        node.children(self.on_events)
+        node.children(self.on_conditions)
+        node.children(self.aliases)
 
     @classmethod
     def unserialize_node(cls, node, **options):

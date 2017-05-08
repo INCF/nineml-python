@@ -333,7 +333,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self._definition, **options)
-        node.children(self.properties, **options)
+        node.children(self._properties.itervalues(), **options)
         node.attr('name', self.name, **options)
 
     @classmethod

@@ -123,7 +123,7 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     def unserialize_node(cls, node, **options):
         cell = node.child(
             (DynamicsProperties, nineml.user.MultiDynamicsProperties),
-            within='Cell', **options)
+            within='Cell', allow_ref=True, **options)
         return cls(name=node.attr('name', **options),
                    size=node.attr('Size', in_body=True, dtype=int, **options),
                    cell=cell, document=node.document)

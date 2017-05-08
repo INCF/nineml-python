@@ -173,7 +173,7 @@ class SingleValue(BaseValue):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        return cls(node.body(dtype=int))
+        return cls(node.body(dtype=float))
 
     # =========================================================================
     # Magic methods to allow the SingleValue to be treated like a
@@ -418,10 +418,16 @@ class ArrayValue(BaseValue):
                                 node.attr('columnName', **options)))
         else:
             rows = []
-            for elem in node.visitor.get_children(node.serial_element,
-                                                  **options):
-                rows.append((node.visitor.get_attr(elem, 'index', **options),
-                             node.visitor.get_attr(elem, 'value', **options)))
+            for name, _, elem in node.visitor.get_children(node.serial_element,
+                                                           **options):
+                if name != 'ArrayValueRow':
+                    raise NineMLSerializationError(
+                        "Unrecognised element {} found in ArrayValue"
+                        .format(name))
+                rows.append((
+                    int(node.visitor.get_attr(elem, 'index', **options)),
+                    float(node.visitor.get_attr(elem, 'value', **options))))
+                node.unprocessed_children.discard('ArrayValueRow')
             sorted_rows = sorted(rows, key=itemgetter(0))
             indices, values = zip(*sorted_rows)
             if indices[0] < 0:
@@ -436,7 +442,6 @@ class ArrayValue(BaseValue):
                 raise NineMLSerializationError(
                     "Indices greater or equal to the number of array rows")
             return cls(values)
-
 
     # =========================================================================
     # Magic methods to allow the SingleValue to be treated like a
@@ -677,7 +682,7 @@ class RandomValue(BaseValue):
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         distribution = node.child(nineml.user.RandomDistributionProperties,
-                                  **options)
+                                  allow_ref=True, **options)
         return cls(distribution)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
