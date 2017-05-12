@@ -77,13 +77,16 @@ class Document(AnnotatedNineMLObject, dict):
         self._added_in_write = None
         memo = kwargs.pop('memo', {})
         for element in elements:
-            self.add(element, memo=memo, **kwargs)
+            self.add(
+                element, memo=memo,
+                clone_definitions=kwargs.pop('clone_definitions', 'local'),
+                **kwargs)
 
     def __repr__(self):
         return "NineMLDocument(url='{}', {} elements)".format(
             str(self.url), len(self))
 
-    def add(self, element, clone=True, **kwargs):
+    def add(self, element, clone=True, clone_definitions='local', **kwargs):
         """
         Adds a cloned version of the element to the document, setting the
         document reference (and the corresponding url) of clones to the
@@ -118,7 +121,8 @@ class Document(AnnotatedNineMLObject, dict):
         else:
             if not isinstance(element, self._Unloaded):
                 if clone:
-                    element = element.clone(**kwargs)
+                    element = element.clone(
+                        clone_definitions=clone_definitions, **kwargs)
                 elif element.document is not None:
                     raise NineMLRuntimeError(
                         "Attempting to add the same object '{}' {} to document"
@@ -131,7 +135,8 @@ class Document(AnnotatedNineMLObject, dict):
                 element._document = self  # Set its document to this one
                 # Add any nested objects that don't already belong
                 # to another document
-                AddNestedObjectsToDocumentVisitor(self).visit(element)
+                AddNestedObjectsToDocumentVisitor(self).visit(element,
+                                                              **kwargs)
             self[element.name] = element
         if self._added_in_write is not None:
             self._added_in_write.append(element)

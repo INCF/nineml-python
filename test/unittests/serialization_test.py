@@ -250,7 +250,7 @@ class TestXMLComparison(unittest.TestCase):
         for version in (1, 2):
             for i, doc in enumerate((doc2, doc1)):
                 new_xml = Sxml(document=doc, version=version).serialize()
-                orig_xml = doc.to_xml()
+                orig_xml = doc.to_xml(version=version)
                 print '-------------'
                 print '    Doc{} v{}    '.format(i + 1, version)
                 print '-------------'
@@ -272,10 +272,7 @@ class TestXMLComparison(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    from nineml.utils.testing.comprehensive import dynA
-    print id(dynA.analog_receive_port('ARP2'))
+    from nineml.utils.testing.comprehensive import dynA, doc1
+    dim = dynA.analog_receive_port('ARP2').dimension
+    dim.document
     doc = Document(dynA)
-    print dynA.document
-    print id(dynA.analog_receive_port('ARP2'))
-    print id(doc['dynA'].analog_receive_port('ARP2'))
-    print dynA.analog_receive_port('ARP2').dimension.document

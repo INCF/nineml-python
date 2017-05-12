@@ -67,7 +67,7 @@ class Definition(BaseReference):
                 document.add(self._referred_to, **kwargs)
         return super(Definition, self).to_xml(document, E=E, **kwargs)
 
-    def clone(self, memo=None, clone_definitions=False, refs=None, **kwargs):
+    def clone(self, memo=None, clone_definitions=None, refs=None, **kwargs):
         """
         Since the document they belong to is reset for clones simply return
         the clone of the referenced object
@@ -77,7 +77,7 @@ class Definition(BaseReference):
         memo : dict[int, BaseNinemlObject]
             A dictionary containing already cloned nineml objects to avoid
             circular references.
-        clone_definitions : bool
+        clone_definitions : 'local' | 'all' | None
             Flat to specify whether to clone component class referenced by the
             definition or just the definition itself
         refs : list[BaseReference]
@@ -86,7 +86,8 @@ class Definition(BaseReference):
         """
         if memo is None:
             memo = {}
-        if clone_definitions:
+        if clone_definitions == 'all' or (clone_definitions == 'local' and
+                                          self._referred_to.document is None):
             referred_to = self._referred_to.clone(
                 clone_definitions=clone_definitions, memo=memo, **kwargs)
         else:

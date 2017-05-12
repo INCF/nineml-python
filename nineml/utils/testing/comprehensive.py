@@ -486,11 +486,13 @@ netC = Network(
     populations=[popMultiA, popMultiB],
     projections=[projE])
 
+arp = dynA.port('ARP2')
 doc1 = Document(
     dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, multiDynPropA,
     multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
     selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA,
-    netB, *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))))
+    netB, *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))),
+    arp=arp)
 
 doc2 = Document(
     dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC,
