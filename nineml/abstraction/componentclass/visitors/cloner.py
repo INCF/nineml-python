@@ -58,7 +58,7 @@ class ComponentCloner(ComponentVisitor):
     def visit_parameter(self, parameter, **kwargs):
         return Parameter(
             name=self.prefix_variable(parameter.name, **kwargs),
-            dimension=parameter.dimension)
+            dimension=parameter.dimension.clone(self.memo, **kwargs))
 
     @lookup_memo
     def visit_alias(self, alias, **kwargs):

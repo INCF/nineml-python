@@ -60,25 +60,25 @@ class DynamicsCloner(ComponentCloner):
     def visit_statevariable(self, state_variable, **kwargs):
         return StateVariable(
             name=self.prefix_variable(state_variable.name, **kwargs),
-            dimension=state_variable.dimension)
+            dimension=state_variable.dimension.clone(self.memo, **kwargs))
 
     @lookup_memo
     def visit_analogreceiveport(self, port, **kwargs):
         return AnalogReceivePort(
             name=self.prefix_variable(port.name, **kwargs),
-            dimension=port.dimension)
+            dimension=port.dimension.clone(self.memo, **kwargs))
 
     @lookup_memo
     def visit_analogreduceport(self, port, **kwargs):
         return AnalogReducePort(
             name=self.prefix_variable(port.name, **kwargs),
-            dimension=port.dimension)
+            dimension=port.dimension.clone(self.memo, **kwargs))
 
     @lookup_memo
     def visit_analogsendport(self, port, **kwargs):
         return AnalogSendPort(
             name=self.prefix_variable(port.name, **kwargs),
-            dimension=port.dimension)
+            dimension=port.dimension.clone(self.memo, **kwargs))
 
     @lookup_memo
     def visit_eventsendport(self, port, **kwargs):

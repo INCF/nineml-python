@@ -273,6 +273,9 @@ class TestXMLComparison(unittest.TestCase):
 
 if __name__ == '__main__':
     from nineml.utils.testing.comprehensive import dynA
-    doc1 = Document(dynA)
+    print id(dynA.analog_receive_port('ARP2'))
+    doc = Document(dynA)
     print dynA.document
+    print id(dynA.analog_receive_port('ARP2'))
+    print id(doc['dynA'].analog_receive_port('ARP2'))
     print dynA.analog_receive_port('ARP2').dimension.document
