@@ -2,7 +2,7 @@ import unittest
 import tempfile
 from nineml.document import (Document, read_xml, get_component_class_type)
 from nineml.utils.testing.comprehensive import (
-    instances_of_all_types, doc1, conPropB)
+    instances_of_all_types, doc1, conPropB1)
 from nineml.exceptions import (NineMLXMLError, NineMLNameError,
                                NineMLRuntimeError)
 from tempfile import mkdtemp
@@ -117,7 +117,7 @@ class TestDocumentExceptions(unittest.TestCase):
         line #: 103
         message: Could not find '{}' element to remove from document '{}'
         """
-        conPropZZ = ConnectionRuleProperties(name='ZZ', definition=conPropB)
+        conPropZZ = ConnectionRuleProperties(name='ZZ', definition=conPropB1)
         self.assertRaises(
             NineMLNameError,
             doc1.remove,

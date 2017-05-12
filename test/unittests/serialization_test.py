@@ -17,6 +17,8 @@ from nineml.utils import xml_equal
 #     Unserialize_noder as Upkl, Serializer as Spkl)
 from nineml.serialization.xml import (
     Unserializer as Uxml, Serializer as Sxml)
+from nineml.xml import get_element_maker
+
 
 F_ANNOT_NS = 'http:/a.domain.org'
 F_ANNOT_TAG = 'FAnnotation'
@@ -237,9 +239,9 @@ class TestSerialization(unittest.TestCase):
                         g=4.7),
                     d='d')
                 doc.add(container, clone=False)
-                serial_doc = S(document=doc, version=version).serialize_node()
+                serial_doc = S(document=doc, version=version).serialize()
 #                 print etree.tostring(serial_doc, pretty_print=True)
-                new_doc = U(serial_doc, class_map=class_map).unserialize_node()
+                new_doc = U(serial_doc, class_map=class_map).unserialize()
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),
                                 new_doc.find_mismatch(doc))
 
@@ -250,7 +252,7 @@ class TestXMLComparison(unittest.TestCase):
         for version in (1, 2):
             for i, doc in enumerate((doc2, doc1)):
                 new_xml = Sxml(document=doc, version=version).serialize()
-                orig_xml = doc.to_xml(version=version)
+                orig_xml = doc.to_xml(E=get_element_maker(version))
                 print '-------------'
                 print '    Doc{} v{}    '.format(i + 1, version)
                 print '-------------'
@@ -259,8 +261,6 @@ class TestXMLComparison(unittest.TestCase):
                 print ('\n\nvs\n\n')
                 print 'Old:'
                 print etree.tostring(orig_xml, pretty_print=True)
-                if version == 2:
-                    self.assertTrue(xml_equal(new_xml, orig_xml))
                 new_doc = Uxml(new_xml).unserialize()
                 self.assertEqual(new_doc, doc, new_doc.find_mismatch(doc))
                 switch_doc1 = Uxml(orig_xml).unserialize()
@@ -269,10 +269,3 @@ class TestXMLComparison(unittest.TestCase):
                                  new_doc.find_mismatch(switch_doc2))
                 self.assertEqual(new_doc, switch_doc1,
                                  new_doc.find_mismatch(switch_doc1))
-
-
-if __name__ == '__main__':
-    from nineml.utils.testing.comprehensive import dynA, doc1
-    dim = dynA.analog_receive_port('ARP2').dimension
-    dim.document
-    doc = Document(dynA)
