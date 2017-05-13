@@ -127,8 +127,8 @@ class BaseSerializer(BaseVisitor):
                                            parent=parent, multiple=multiple,
                                            **options)
             node = NodeToSerialize(self, serial_elem)
-            if self.version[0] == 1 and hasattr(nineml_object,
-                                                'serialize_node_v1'):
+            if self._version[0] == 1 and hasattr(nineml_object,
+                                                 'serialize_node_v1'):
                 nineml_object.serialize_node_v1(node, **options)
             else:
                 nineml_object.serialize_node(node, **options)
@@ -332,7 +332,8 @@ class BaseUnserializer(BaseVisitor):
         node = NodeToUnserialize(self, serial_elem, self.node_name(nineml_cls))
         # Call the unserialize method of the given class to unserialize the
         # object
-        if self.version[0] == 1 and hasattr(nineml_cls, 'unserialize_node_v1'):
+        if self._version[0] == 1 and hasattr(nineml_cls,
+                                             'unserialize_node_v1'):
             nineml_object = nineml_cls.unserialize_node_v1(node, **options)
         else:
             nineml_object = nineml_cls.unserialize_node(node, **options)
@@ -378,7 +379,10 @@ class BaseUnserializer(BaseVisitor):
                 ref_matches = []
                 for ref_elem in ref_elems:
                     node = NodeToUnserialize(self, ref_elem, ref_name)
-                    ref = Reference.unserialize_node(node, **options)
+                    if self._version[0] == 1:
+                        ref = Reference.unserialize_node_v1(node, **options)
+                    else:
+                        ref = Reference.unserialize_node(node, **options)
                     if self.node_name(type(ref.user_object)) in names:
                         ref_matches.append(ref_elem)
             else:

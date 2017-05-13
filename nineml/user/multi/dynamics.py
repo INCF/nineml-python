@@ -195,6 +195,13 @@ class MultiDynamicsProperties(DynamicsProperties):
                    port_connections=port_connections,
                    document=node.document)
 
+    def serialize_node_v1(self, node, **options):
+        self.serialize_node(node, **options)
+
+    @classmethod
+    def unserialize_node_v1(self, node, **options):
+        return self.unserialize_node(node, **options)
+
     @property
     def initial_values(self):
         return chain(*(sc.initial_values for sc in self.sub_components))
@@ -1085,6 +1092,12 @@ class MultiDynamics(Dynamics):
                    port_exposures=port_exposures,
                    port_connections=port_connections)
 
+    def serialize_node_v1(self, node, **options):
+        self.serialize_node(node, **options)
+
+    @classmethod
+    def unserialize_node_v1(self, node, **options):
+        return self.unserialize_node(node, **options)
 # =============================================================================
 # _Namespace wrapper objects, which append namespaces to their names and
 # expressions

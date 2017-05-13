@@ -496,7 +496,10 @@ class OnCondition(Transition):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self.trigger, **options)
-        node.attr('target_regime', self._target_regime.name, **options),
+        try:
+            node.attr('target_regime', self._target_regime.name, **options),
+        except:
+            raise
         node.children(self.sorted_elements())
 
     @classmethod

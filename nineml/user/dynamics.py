@@ -211,6 +211,13 @@ class DynamicsProperties(Component, DynamicPortsObject):
         return cls(name, definition, properties=properties,
                    initial_values=initial_values, document=node.document)
 
+    def serialize_node_v1(self, node, **options):
+        self.serialize_node(node, **options)
+
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):
+        return cls.unserialize_node(node, **options)
+
     def analog_receive_port(self, name):
         return self.component_class.analog_receive_port(name)
 
