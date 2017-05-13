@@ -109,8 +109,9 @@ class BaseSerializer(BaseVisitor):
                 "'reference' kwarg can only be used with DocumentLevelObjects "
                 "not {} ({})".format(type(nineml_object), nineml_object))
         serial_elem = None
+        ref_style = options.get('ref_style', None)
         # Write object as reference if appropriate
-        if parent is not None and is_doc_level:
+        if parent is not None and is_doc_level and ref_style != 'inline':
             url = self.get_reference_url(nineml_object, reference=reference,
                                          **options)
             if url is not False:
@@ -126,7 +127,11 @@ class BaseSerializer(BaseVisitor):
                                            parent=parent, multiple=multiple,
                                            **options)
             node = NodeToSerialize(self, serial_elem)
-            nineml_object.serialize_node(node, **options)
+            if self.version[0] == 1 and hasattr(nineml_object,
+                                                'serialize_node_v1'):
+                nineml_object.serialize_node_v1(node, **options)
+            else:
+                nineml_object.serialize_node(node, **options)
             # Append annotations and indices to serialized elem if required
             try:
                 save_annotations = (nineml_object.annotations and
@@ -327,7 +332,10 @@ class BaseUnserializer(BaseVisitor):
         node = NodeToUnserialize(self, serial_elem, self.node_name(nineml_cls))
         # Call the unserialize method of the given class to unserialize the
         # object
-        nineml_object = nineml_cls.unserialize_node(node, **options)
+        if self.version[0] == 1 and hasattr(nineml_cls, 'unserialize_node_v1'):
+            nineml_object = nineml_cls.unserialize_node_v1(node, **options)
+        else:
+            nineml_object = nineml_cls.unserialize_node(node, **options)
         # Check for unprocessed children/attributes
         if node.unprocessed_children:
             raise NineMLSerializationError(

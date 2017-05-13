@@ -535,22 +535,26 @@ class Property(BaseULObject):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
-        if node.later_version(2.0, equal=True):
-            node.child(self._quantity, **options)
-        else:
-            node.child(self.value, **options)
-            node.attr('units', self.units.name, **options)
+        node.child(self._quantity, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         name = node.attr('name', **options)
-        if node.later_version(2.0, equal=True):
-            quantity = node.child(Quantity, **options)
-        else:
-            value = node.child((SingleValue, ArrayValue, RandomValue),
-                               **options)
-            units = node.document[node.attr('units', **options)]
-            quantity = Quantity(value, units)
+        quantity = node.child(Quantity, **options)
+        return cls(name=name, quantity=quantity)
+
+    def serialize_node_v1(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.child(self.value, **options)
+        node.attr('units', self.units.name, **options)
+
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        value = node.child((SingleValue, ArrayValue, RandomValue),
+                           **options)
+        units = node.document[node.attr('units', **options)]
+        quantity = Quantity(value, units)
         return cls(name=name, quantity=quantity)
 
     def set_units(self, units):

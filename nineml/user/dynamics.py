@@ -199,7 +199,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
                    initial_values=initial_values, document=document)
 
     def serialize_node(self, node, **options):
-        super(DynamicsProperties, self).serialize_node(node)
+        super(DynamicsProperties, self).serialize_node(node, **options)
         node.children(self._initial_values.itervalues(), **options)
 
     @classmethod

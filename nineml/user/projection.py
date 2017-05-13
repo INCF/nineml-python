@@ -313,68 +313,23 @@ class Projection(BaseULObject, DocumentLevelObject):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
-        if node.later_version(2.0, equal=True):
-            node.child(self.pre, reference=True, within='Pre', **options)
-            node.child(self.post, reference=True, within='Post', **options)
-            node.child(self.connectivity.rule_properties,
-                       within='Connectivity', **options)
-            node.child(self.response, within='Response', **options),
-            if self.plasticity is not None:
-                node.child(self.plasticity, within='Plasticity', **options)
-            node.child(self.delay, within='Delay', **options)
-            node.children(self.port_connections, **options)
-        else:
-            endpoints = {}
-            endpoints['pre'] = node.child(
-                self.pre, within='Source', reference=True, **options)
-            endpoints['post'] = node.child(
-                self.post, within='Destination', reference=True, **options)
-            node.child(self.connectivity.rule_properties,
-                       within='Connectivity', **options)
-            endpoints['response'] = node.child(
-                self.response, within='Response', **options)
-            if self.plasticity:
-                endpoints['plasticity'] = node.child(
-                    self.plasticity, within='Plasticity', **options)
-            for pc in self.port_connections:
-                pc_elem = node.visitor.create_elem(
-                    'From' + self.v2tov1[pc.sender_role],
-                    parent=endpoints[pc.receiver_role], multiple=True)
-                node.visitor.set_attr(pc_elem, 'send_port', pc.send_port_name,
-                                      **options)
-                node.visitor.set_attr(pc_elem, 'receive_port',
-                                      pc.receive_port_name, **options)
-            delay_elem = node.child(self.delay._value, within='Delay',
-                                    **options)
-            node.visitor.set_attr(delay_elem, 'units', self.delay.units.name,
-                                  **options)
+        node.child(self.pre, reference=True, within='Pre', **options)
+        node.child(self.post, reference=True, within='Post', **options)
+        node.child(self.connectivity.rule_properties,
+                   within='Connectivity', **options)
+        node.child(self.response, within='Response', **options),
+        if self.plasticity is not None:
+            node.child(self.plasticity, within='Plasticity', **options)
+        node.child(self.delay, within='Delay', **options)
+        node.children(self.port_connections, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         # Get Name
         name = node.attr('name', **options)
-        if node.later_version(2.0, equal=True):
-            pre_within = 'Pre'
-            post_within = 'Post'
-            delay = node.child(Quantity, within='Delay', **options)
-        else:
-            pre_within = 'Source'
-            post_within = 'Destination'
-            # Get Delay
-            _, delay_elem = node.visitor.get_single_child(node.serial_element,
-                                                          'Delay')
-            node.unprocessed_children.remove('Delay')
-            units = node.document[
-                node.visitor.get_attr(delay_elem, 'units', **options)]
-            nineml_type, value_elem = node.visitor.get_single_child(
-                delay_elem, ('SingleValue', 'ArrayValue', 'RandomValue'),
-                **options)
-            value = node.visitor.visit(
-                value_elem,
-                node.visitor.get_nineml_class(nineml_type, value_elem,
-                                              assert_doc_level=False),
-                **options)
-            delay = Quantity(value, units)
+        pre_within = 'Pre'
+        post_within = 'Post'
+        delay = node.child(Quantity, within='Delay', **options)
         # Get Pre
         pre = node.child(
             (Population, Selection), allow_ref='only', within=pre_within,
@@ -390,46 +345,117 @@ class Projection(BaseULObject, DocumentLevelObject):
         connection_rule_props = node.child(
             ConnectionRuleProperties, within='Connectivity',
             allow_ref=True, **options)
-        if node.later_version(2.0, equal=True):
-            port_connections = node.children(
-                (AnalogPortConnection, EventPortConnection), **options)
-        else:
-            port_connections = []
-            for receive_name in cls.version1_nodes:
-                try:
-                    _, receive_elem = node.visitor.get_single_child(
-                        node.serial_element, receive_name, **options)
-                except NineMLMissingSerializationError:
-                    if receive_name == 'Plasticity':
-                        continue  # Plasticity is optional
-                    else:
-                        raise
-                receiver = eval(cls.v1tov2[receive_name])
-                for elem_name, _, send_elem in node.visitor.get_children(
-                        receive_elem, **options):
-                    if elem_name in ('Component', 'Reference'):
-                        continue
-                    elif (not elem_name.startswith('From') or
-                          elem_name[4:] not in cls.version1_nodes):
-                        raise NineMLSerializationError(
-                            "Unrecognised element '{}' in {} element of "
-                            "'{}' projection"
-                            .format(elem_name, receive_name, name))
-                    send_name = elem_name[4:]
-                    send_port_name = node.visitor.get_attr(
-                        send_elem, 'send_port', **options)
-                    receive_port_name = node.visitor.get_attr(
-                        send_elem, 'receive_port', **options)
-                    receive_port = receiver.port(receive_port_name)
-                    if isinstance(receive_port, EventReceivePort):
-                        pc_cls = EventPortConnection
-                    else:
-                        pc_cls = AnalogPortConnection
-                    port_connections.append(pc_cls(
-                        receiver_role=cls.v1tov2[receive_name],
-                        sender_role=cls.v1tov2[send_name],
-                        send_port=send_port_name,
-                        receive_port=receive_port_name))
+        port_connections = node.children(
+            (AnalogPortConnection, EventPortConnection), **options)
+        return cls(name=name,
+                   pre=pre,
+                   post=post,
+                   response=response,
+                   plasticity=plasticity,
+                   connectivity=connection_rule_props,
+                   delay=delay,
+                   port_connections=port_connections,
+                   document=node.document)
+
+    def serialize_node_v1(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        endpoints = {}
+        endpoints['pre'] = node.child(
+            self.pre, within='Source', reference=True, **options)
+        endpoints['post'] = node.child(
+            self.post, within='Destination', reference=True, **options)
+        node.child(self.connectivity.rule_properties,
+                   within='Connectivity', **options)
+        endpoints['response'] = node.child(
+            self.response, within='Response', **options)
+        if self.plasticity:
+            endpoints['plasticity'] = node.child(
+                self.plasticity, within='Plasticity', **options)
+        for pc in self.port_connections:
+            pc_elem = node.visitor.create_elem(
+                'From' + self.v2tov1[pc.sender_role],
+                parent=endpoints[pc.receiver_role], multiple=True)
+            node.visitor.set_attr(pc_elem, 'send_port', pc.send_port_name,
+                                  **options)
+            node.visitor.set_attr(pc_elem, 'receive_port',
+                                  pc.receive_port_name, **options)
+        delay_elem = node.child(self.delay._value, within='Delay',
+                                **options)
+        node.visitor.set_attr(delay_elem, 'units', self.delay.units.name,
+                              **options)
+
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
+        # Get Name
+        name = node.attr('name', **options)
+        pre_within = 'Source'
+        post_within = 'Destination'
+        # Get Delay
+        _, delay_elem = node.visitor.get_single_child(node.serial_element,
+                                                      'Delay')
+        node.unprocessed_children.remove('Delay')
+        units = node.document[
+            node.visitor.get_attr(delay_elem, 'units', **options)]
+        nineml_type, value_elem = node.visitor.get_single_child(
+            delay_elem, ('SingleValue', 'ArrayValue', 'RandomValue'),
+            **options)
+        value = node.visitor.visit(
+            value_elem,
+            node.visitor.get_nineml_class(nineml_type, value_elem,
+                                          assert_doc_level=False),
+            **options)
+        delay = Quantity(value, units)
+        # Get Pre
+        pre = node.child(
+            (Population, Selection), allow_ref='only', within=pre_within,
+            **options)
+        post = node.child(
+            (Population, Selection), allow_ref='only', within=post_within,
+            **options)
+        response = node.child(DynamicsProperties, within='Response',
+                              allow_ref=True, **options)
+        plasticity = node.child(
+            DynamicsProperties, allow_ref=True, within='Plasticity',
+            allow_none=True, **options)
+        connection_rule_props = node.child(
+            ConnectionRuleProperties, within='Connectivity',
+            allow_ref=True, **options)
+        port_connections = []
+        for receive_name in cls.version1_nodes:
+            try:
+                _, receive_elem = node.visitor.get_single_child(
+                    node.serial_element, receive_name, **options)
+            except NineMLMissingSerializationError:
+                if receive_name == 'Plasticity':
+                    continue  # Plasticity is optional
+                else:
+                    raise
+            receiver = eval(cls.v1tov2[receive_name])
+            for elem_name, _, send_elem in node.visitor.get_children(
+                    receive_elem, **options):
+                if elem_name in ('Component', 'Reference'):
+                    continue
+                elif (not elem_name.startswith('From') or
+                      elem_name[4:] not in cls.version1_nodes):
+                    raise NineMLSerializationError(
+                        "Unrecognised element '{}' in {} element of "
+                        "'{}' projection"
+                        .format(elem_name, receive_name, name))
+                send_name = elem_name[4:]
+                send_port_name = node.visitor.get_attr(
+                    send_elem, 'send_port', **options)
+                receive_port_name = node.visitor.get_attr(
+                    send_elem, 'receive_port', **options)
+                receive_port = receiver.port(receive_port_name)
+                if isinstance(receive_port, EventReceivePort):
+                    pc_cls = EventPortConnection
+                else:
+                    pc_cls = AnalogPortConnection
+                port_connections.append(pc_cls(
+                    receiver_role=cls.v1tov2[receive_name],
+                    sender_role=cls.v1tov2[send_name],
+                    send_port=send_port_name,
+                    receive_port=receive_port_name))
         return cls(name=name,
                    pre=pre,
                    post=post,

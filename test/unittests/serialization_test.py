@@ -80,16 +80,23 @@ class A(AnnotatedNineMLObject, DocumentLevelObject):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
-        if node.later_version('2.0', equal=True):
-            node.attr('a1', self.a1)
+        node.attr('a1', self.a1)
         node.attr('a2', self.a2)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        if node.later_version(2.0, equal=True):
-            a1 = node.attr('a1', dtype=int)
-        else:
-            a1 = cls.default_a1
+        a1 = node.attr('a1', dtype=int)
+        return cls(node.attr('name'),
+                   a1,
+                   node.attr('a2', dtype=float))
+
+    def serialize_node_v1(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name)
+        node.attr('a2', self.a2)
+
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
+        a1 = cls.default_a1
         return cls(node.attr('name'),
                    a1,
                    node.attr('a2', dtype=float))
@@ -253,14 +260,14 @@ class TestXMLComparison(unittest.TestCase):
             for i, doc in enumerate((doc2, doc1)):
                 new_xml = Sxml(document=doc, version=version).serialize()
                 orig_xml = doc.to_xml(E=get_element_maker(version))
-                print '-------------'
-                print '    Doc{} v{}    '.format(i + 1, version)
-                print '-------------'
-                print 'New:'
-                print etree.tostring(new_xml, pretty_print=True)
-                print ('\n\nvs\n\n')
-                print 'Old:'
-                print etree.tostring(orig_xml, pretty_print=True)
+#                 print '-------------'
+#                 print '    Doc{} v{}    '.format(i + 1, version)
+#                 print '-------------'
+#                 print 'New:'
+#                 print etree.tostring(new_xml, pretty_print=True)
+#                 print ('\n\nvs\n\n')
+#                 print 'Old:'
+#                 print etree.tostring(orig_xml, pretty_print=True)
                 new_doc = Uxml(new_xml).unserialize()
                 self.assertEqual(new_doc, doc, new_doc.find_mismatch(doc))
                 switch_doc1 = Uxml(orig_xml).unserialize()

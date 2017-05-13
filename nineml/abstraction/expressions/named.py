@@ -168,17 +168,25 @@ class Constant(BaseALObject, ExpressionSymbol):
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
         node.attr('units', self.units.name, **options)
-        if node.later_version(2.0, equal=True):
-            node.attr('value', self.value, **options)
-        else:
-            node.body(self.value, sole=False)
+        node.attr('value', self.value, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        if node.later_version(2.0, equal=True):
-            value = node.attr('value', dtype=float, **options)
-        else:
-            value = node.body(dtype=float, **options)
+        value = node.attr('value', dtype=float, **options)
+        return cls(
+            name=node.attr('name', **options),
+            value=value,
+            units=node.visitor.document[
+                node.attr('units', **options)])
+
+    def serialize_node_v1(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.attr('units', self.units.name, **options)
+        node.body(self.value, sole=False)
+
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
+        value = node.body(dtype=float, **options)
         return cls(
             name=node.attr('name', **options),
             value=value,
