@@ -4,6 +4,7 @@ from nineml.xml import etree, get_element_maker
 from nineml.utils import xml_equal
 from nineml.serialization.xml import (
     Unserializer as Uxml, Serializer as Sxml)
+import nineml
 
 
 class TestBackwardsCompatibility(unittest.TestCase):
@@ -30,10 +31,8 @@ class TestBackwardsCompatibility(unittest.TestCase):
                                      E=get_element_maker(1.0),
                                      no_annotations=True)
         elif method == 'new':
-            v1_to_v2_xml = Sxml(v2_doc, version=2.0).visit(v1,
-                                                           ref_style='inline')
-            v2_to_v1_xml = Sxml(v1_doc, version=1.0).visit(v2,
-                                                           ref_style='inline')
+            v1_to_v2_xml = Sxml(v2_doc, version=2.0).visit(v1)
+            v2_to_v1_xml = Sxml(v1_doc, version=1.0).visit(v2)
         return v1_to_v2_xml, v2_to_v1_xml
 
     def test_backwards_compatibility(self):
@@ -346,12 +345,45 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
     <Post>
       <Reference name="P2"/>
     </Post>
-    <Response>
-      <Reference name="D_psrP"/>
-    </Response>
     <Connectivity>
-      <Reference name="CRP"/>
+      <ConnectionRuleProperties name="CRP">
+        <Definition name="CR"/>
+        <Property name="probability">
+          <Quantity units="unitless">
+            <SingleValue>0.5</SingleValue>
+          </Quantity>
+        </Property>
+      </ConnectionRuleProperties>
     </Connectivity>
+    <Response>
+      <DynamicsProperties name="D_psrP">
+        <Definition name="D_psr"/>
+        <Property name="tau">
+          <Quantity units="ms">
+            <SingleValue>1.0</SingleValue>
+          </Quantity>
+        </Property>
+        <Property name="weight">
+          <Quantity units="nA">
+            <RandomValue>
+              <RandomDistributionProperties name="RDP">
+                <Definition name="RD"/>
+                <Property name="maximum">
+                  <Quantity units="unitless">
+                    <SingleValue>1.0</SingleValue>
+                  </Quantity>
+                </Property>
+                <Property name="minimum">
+                  <Quantity units="unitless">
+                    <SingleValue>0.0</SingleValue>
+                  </Quantity>
+                </Property>
+              </RandomDistributionProperties>
+            </RandomValue>
+          </Quantity>
+        </Property>
+      </DynamicsProperties>
+    </Response>
     <Delay>
       <Quantity units="ms">
         <SingleValue>1.0</SingleValue>

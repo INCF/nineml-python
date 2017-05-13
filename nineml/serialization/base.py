@@ -111,7 +111,7 @@ class BaseSerializer(BaseVisitor):
         serial_elem = None
         ref_style = options.get('ref_style', None)
         # Write object as reference if appropriate
-        if parent is not None and is_doc_level and ref_style != 'inline':
+        if parent is not None and is_doc_level and ref_style != 'force_inline':
             url = self.get_reference_url(nineml_object, reference=reference,
                                          **options)
             if url is not False:
