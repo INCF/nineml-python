@@ -258,7 +258,7 @@ class Concatenate(BaseULObject):
     def serialize_node(self, node, **options):  # @UnusedVariable
         for i, item in enumerate(self.items):
             item_elem = node.child(item, within='Item', multiple=True,
-                                   **options)
+                                   reference=True, **options)
             node.visitor.set_attr(item_elem, 'index', i)
 
     @classmethod

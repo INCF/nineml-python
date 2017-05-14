@@ -321,7 +321,8 @@ class Projection(BaseULObject, DocumentLevelObject):
         if self.plasticity is not None:
             node.child(self.plasticity, within='Plasticity', **options)
         node.child(self.delay, within='Delay', **options)
-        node.children(self.port_connections, **options)
+        node.children(self.event_port_connections, **options)
+        node.children(self.analog_port_connections, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable

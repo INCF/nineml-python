@@ -109,9 +109,13 @@ class BaseSerializer(BaseVisitor):
                 "'reference' kwarg can only be used with DocumentLevelObjects "
                 "not {} ({})".format(type(nineml_object), nineml_object))
         serial_elem = None
-        ref_style = options.get('ref_style', None)
         # Write object as reference if appropriate
-        if parent is not None and is_doc_level and ref_style != 'force_inline':
+        if parent is not None and is_doc_level:
+            ref_style = options.get('ref_style', None)
+            if ref_style == 'force_reference':
+                reference = True
+            if ref_style == 'force_inline':
+                reference = False
             url = self.get_reference_url(nineml_object, reference=reference,
                                          **options)
             if url is not False:

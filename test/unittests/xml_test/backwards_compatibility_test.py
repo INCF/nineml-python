@@ -5,6 +5,7 @@ from nineml.utils import xml_equal
 from nineml.serialization.xml import (
     Unserializer as Uxml, Serializer as Sxml)
 import nineml
+import difflib
 
 
 class TestBackwardsCompatibility(unittest.TestCase):
@@ -31,46 +32,49 @@ class TestBackwardsCompatibility(unittest.TestCase):
                                      E=get_element_maker(1.0),
                                      no_annotations=True)
         elif method == 'new':
-            v1_to_v2_xml = Sxml(v2_doc, version=2.0).visit(v1)
-            v2_to_v1_xml = Sxml(v1_doc, version=1.0).visit(v2)
+            v1_to_v2_xml = Sxml(v2_doc, version=2.0).visit(
+                v1, ref_style='force_reference')
+            v2_to_v1_xml = Sxml(v1_doc, version=1.0).visit(
+                v2, ref_style='force_reference')
         return v1_to_v2_xml, v2_to_v1_xml
 
     def test_backwards_compatibility(self):
-        v1_xml = etree.fromstring(version1)
-        v2_xml = etree.fromstring(version2)
-        for method in ('new', 'old'):
-            v1_doc, v2_doc = self._load(method)
-            # Ensure all elements are loaded
-            list(v1_doc.elements)
-            list(v2_doc.elements)
-            self._load
-            v1_names = list(v1_doc.nineml_types)
-            v2_names = list(v1_doc.nineml_types)
-            self.assertEqual(v1_names, v2_names)
-            for name in v1_names:
-                v1 = v1_doc[name]
-                v2 = v2_doc[name]
-                # Test loaded python objects are equivalent between versions
-                self.assertEqual(
-                    v1, v2,
-                    "Loaded version 1 didn't match loaded version 2:\n{}"
-                    .format(v1.find_mismatch(v2)))
-                v1_to_v2_xml, v2_to_v1_xml = self._serialize(
-                    v1, v2, v1_doc, v2_doc, method)
-                v1_xml = self._get_xml_element(v1_xml, name)
-                v2_xml = self._get_xml_element(v2_xml, name)
-    #             if not xml_equal(v1_to_v2_xml, v2_xml):
-    #                 v1.to_xml(v2_doc, E=get_element_maker(2.0))
-                # Test the version 1 converted to version 2
-                self.assert_(
-                    xml_equal(v1_to_v2_xml, v2_xml),
-                    "v2 produced from v1 doesn't match loaded:\n{}\n\nand\n\n"
-                    "{}".format(xml_to_str(v1_to_v2_xml), xml_to_str(v2_xml)))
-                # Test the version 2 converted to version 1
-                self.assert_(
-                    xml_equal(v2_to_v1_xml, v1_xml),
-                    "v1 produced from v2 doesn't match loaded:\n{}\n\nand\n\n"
-                    "{}".format(xml_to_str(v2_to_v1_xml), xml_to_str(v1_xml)))
+        full_v1_xml = etree.fromstring(version1)
+        full_v2_xml = etree.fromstring(version2)
+        v1_doc, v2_doc = self._load('new')
+        # Ensure all elements are loaded
+        list(v1_doc.elements)
+        list(v2_doc.elements)
+        self._load
+        v1_names = list(v1_doc.nineml_types)
+        v2_names = list(v1_doc.nineml_types)
+        self.assertEqual(v1_names, v2_names)
+        for name in v1_names:
+            v1 = v1_doc[name]
+            v2 = v2_doc[name]
+            # Test loaded python objects are equivalent between versions
+            self.assertEqual(
+                v1, v2,
+                "Loaded version 1 didn't match loaded version 2:\n{}"
+                .format(v1.find_mismatch(v2)))
+            v1_to_v2_xml, v2_to_v1_xml = self._serialize(
+                v1, v2, v1_doc, v2_doc, 'new')
+            v1_xml = self._get_xml_element(full_v1_xml, name)
+            v2_xml = self._get_xml_element(full_v2_xml, name)
+#             if not xml_equal(v1_to_v2_xml, v2_xml):
+#                 v1.to_xml(v2_doc, E=get_element_maker(2.0))
+            # Test the version 1 converted to version 2
+            self.assert_(
+                xml_equal(v1_to_v2_xml, v2_xml),
+                "v2 produced from v1 doesn't match loaded:\n{}\n\nand"
+                "\n\n{}".format(xml_to_str(v1_to_v2_xml, pp=True),
+                                xml_to_str(v2_xml, pp=True)))
+            # Test the version 2 converted to version 1
+            self.assert_(
+                xml_equal(v2_to_v1_xml, v1_xml),
+                "v1 produced from v2 doesn't match loaded:\n{}\n\nand\n\n"
+                "{}".format(xml_to_str(v2_to_v1_xml, pp=True),
+                            xml_to_str(v1_xml, pp=True)))
 
     def _get_xml_element(self, xml, name):
         for child in xml.getchildren():
@@ -80,8 +84,8 @@ class TestBackwardsCompatibility(unittest.TestCase):
                        .format(name, xml_to_str(xml)))
 
 
-def xml_to_str(xml):
-    return etree.tostring(xml, encoding="UTF-8", pretty_print=True,
+def xml_to_str(xml, pp=False):
+    return etree.tostring(xml, encoding="UTF-8", pretty_print=pp,
                           xml_declaration=True)
 
 
@@ -194,13 +198,13 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
       <Reference>P2</Reference>
       <FromResponse send_port="a" receive_port="i_ext"/>
     </Destination>
+    <Connectivity>
+      <Reference>CRP</Reference>
+    </Connectivity>
     <Response>
       <Reference>D_psrP</Reference>
       <FromSource send_port="spike" receive_port="spike"/>
     </Response>
-    <Connectivity>
-      <Reference>CRP</Reference>
-    </Connectivity>
     <Delay units="ms">
       <SingleValue>1.0</SingleValue>
     </Delay>
@@ -346,51 +350,18 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
       <Reference name="P2"/>
     </Post>
     <Connectivity>
-      <ConnectionRuleProperties name="CRP">
-        <Definition name="CR"/>
-        <Property name="probability">
-          <Quantity units="unitless">
-            <SingleValue>0.5</SingleValue>
-          </Quantity>
-        </Property>
-      </ConnectionRuleProperties>
+      <Reference name="CRP"/>
     </Connectivity>
     <Response>
-      <DynamicsProperties name="D_psrP">
-        <Definition name="D_psr"/>
-        <Property name="tau">
-          <Quantity units="ms">
-            <SingleValue>1.0</SingleValue>
-          </Quantity>
-        </Property>
-        <Property name="weight">
-          <Quantity units="nA">
-            <RandomValue>
-              <RandomDistributionProperties name="RDP">
-                <Definition name="RD"/>
-                <Property name="maximum">
-                  <Quantity units="unitless">
-                    <SingleValue>1.0</SingleValue>
-                  </Quantity>
-                </Property>
-                <Property name="minimum">
-                  <Quantity units="unitless">
-                    <SingleValue>0.0</SingleValue>
-                  </Quantity>
-                </Property>
-              </RandomDistributionProperties>
-            </RandomValue>
-          </Quantity>
-        </Property>
-      </DynamicsProperties>
+      <Reference name="D_psrP"/>
     </Response>
     <Delay>
       <Quantity units="ms">
         <SingleValue>1.0</SingleValue>
       </Quantity>
     </Delay>
-    <AnalogPortConnection sender_role="response" receiver_role="post" send_port="a" receive_port="i_ext"/>
     <EventPortConnection sender_role="pre" receiver_role="response" send_port="spike" receive_port="spike"/>
+    <AnalogPortConnection sender_role="response" receiver_role="post" send_port="a" receive_port="i_ext"/>
   </Projection>
   <Selection name="selection">
     <Concatenate>

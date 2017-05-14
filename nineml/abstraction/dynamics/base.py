@@ -525,8 +525,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         node.children(self.analog_reduce_ports, **options)
         node.children(self.event_send_ports, **options)
         node.children(self.analog_send_ports, **options)
-        node.children(self.regimes, **options)
         node.children(self.state_variables, **options)
+        node.children(self.regimes, **options)
         node.children(self.aliases, **options)
         node.children(self.constants, **options)
 
@@ -555,8 +555,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         node.children(self.analog_send_ports, **options)
         dyn_elem = node.visitor.create_elem('Dynamics',
                                             parent=node.serial_element)
-        node.children(self.regimes, parent_elem=dyn_elem, **options)
         node.children(self.state_variables, parent_elem=dyn_elem, **options)
+        node.children(self.regimes, parent_elem=dyn_elem, **options)
         node.children(self.aliases, parent_elem=dyn_elem, **options)
         node.children(self.constants, parent_elem=dyn_elem, **options)
 
