@@ -4,48 +4,20 @@ from nineml.xml import etree, get_element_maker
 from nineml.utils import xml_equal
 from nineml.serialization.xml import (
     Unserializer as Uxml, Serializer as Sxml)
-import nineml
-import difflib
 
 
 class TestBackwardsCompatibility(unittest.TestCase):
 
-    def _load(self, method):
-        if method == 'old':
-
-            v1_doc = Document.load(version1, url='./dummy.xml')
-            v2_doc = Document.load(version2, url='./dummy.xml',
-                                   register_url=False)
-        elif method == 'new':
-            v1_doc = Uxml(etree.fromstring(version1)).unserialize()
-            v2_doc = Uxml(etree.fromstring(version2)).unserialize()
-            v1_doc._url = './dummy.xml'
-            v2_doc._url = './dummy.xml'
-        return v1_doc, v2_doc
-
-    def _serialize(self, v1, v2, v1_doc, v2_doc, method):
-        if method == 'old':
-            v1_to_v2_xml = v1.to_xml(v2_doc, as_ref=False,
-                                     E=get_element_maker(2.0),
-                                     no_annotations=True)
-            v2_to_v1_xml = v2.to_xml(v1_doc, as_ref=False,
-                                     E=get_element_maker(1.0),
-                                     no_annotations=True)
-        elif method == 'new':
-            v1_to_v2_xml = Sxml(v2_doc, version=2.0).visit(
-                v1, ref_style='force_reference')
-            v2_to_v1_xml = Sxml(v1_doc, version=1.0).visit(
-                v2, ref_style='force_reference')
-        return v1_to_v2_xml, v2_to_v1_xml
-
     def test_backwards_compatibility(self):
         full_v1_xml = etree.fromstring(version1)
         full_v2_xml = etree.fromstring(version2)
-        v1_doc, v2_doc = self._load('new')
+        v1_doc = Uxml(etree.fromstring(version1)).unserialize()
+        v2_doc = Uxml(etree.fromstring(version2)).unserialize()
+        v1_doc._url = './dummy.xml'
+        v2_doc._url = './dummy.xml'
         # Ensure all elements are loaded
         list(v1_doc.elements)
         list(v2_doc.elements)
-        self._load
         v1_names = list(v1_doc.nineml_types)
         v2_names = list(v1_doc.nineml_types)
         self.assertEqual(v1_names, v2_names)
@@ -57,12 +29,12 @@ class TestBackwardsCompatibility(unittest.TestCase):
                 v1, v2,
                 "Loaded version 1 didn't match loaded version 2:\n{}"
                 .format(v1.find_mismatch(v2)))
-            v1_to_v2_xml, v2_to_v1_xml = self._serialize(
-                v1, v2, v1_doc, v2_doc, 'new')
+            v1_to_v2_xml = Sxml(v2_doc, version=2.0).visit(
+                v1, ref_style='force_reference')
+            v2_to_v1_xml = Sxml(v1_doc, version=1.0).visit(
+                v2, ref_style='force_reference')
             v1_xml = self._get_xml_element(full_v1_xml, name)
             v2_xml = self._get_xml_element(full_v2_xml, name)
-#             if not xml_equal(v1_to_v2_xml, v2_xml):
-#                 v1.to_xml(v2_doc, E=get_element_maker(2.0))
             # Test the version 1 converted to version 2
             self.assert_(
                 xml_equal(v1_to_v2_xml, v2_xml),
