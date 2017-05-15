@@ -8,8 +8,6 @@ class RandomDistribution(ComponentClass):
 
     nineml_type = 'RandomDistribution'
     defining_attributes = ('_name', '_parameters')
-    # Maintains order of elements between writes
-    write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 
     standard_library_basepath = 'http://www.uncertml.org/distributions/'
     _base_len = len(standard_library_basepath)

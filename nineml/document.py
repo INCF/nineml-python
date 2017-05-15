@@ -6,12 +6,8 @@ import weakref
 from lxml import etree
 import collections
 from nineml.base import clone_id, AddNestedObjectsToDocumentVisitor
-from nineml.xml import (
-    E, ALL_NINEML, extract_xmlns, NINEMLv1, get_element_maker, XML_VERSION)
-from nineml.annotations import Annotations
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLXMLError, NineMLXMLTagError,
-    NineMLSerializationError)
+    NineMLRuntimeError, NineMLNameError, NineMLXMLError, NineMLXMLTagError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 import contextlib
 from nineml.utils import expect_single
@@ -52,14 +48,6 @@ class Document(AnnotatedNineMLObject, dict):
 
     defining_attributes = ('elements',)
     nineml_type = 'NineML'
-    write_order = ['Network', 'Population', 'Projection', 'Selection',
-                   'ComponentArray', 'EventConnectionGroup',
-                   'AnalogConnectionGroup', 'Dynamics', 'MultiDynamics',
-                   'ConnectionRule', 'RandomDistribution', 'ComponentClass',
-                   'Component', 'DynamicsProperties',
-                   'MultiDynamicsProperties', 'MultiCompartment',
-                   'ConnectionRuleProperties',
-                   'RandomDistributionProperties', 'Dimension', 'Unit']
 
     # A tuple to hold the unresolved elements
     _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls kwargs')
@@ -104,9 +92,8 @@ class Document(AnnotatedNineMLObject, dict):
         if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
             raise NineMLRuntimeError(
                 "Could not add {} to document '{}' as it is not a 'document "
-                "level NineML object' ('{}')"
-                .format(element.nineml_type, self.url,
-                        "', '".join(self.write_order)))
+                "level NineML object'"
+                .format(element.nineml_type, self.url))
         if element.name in self:
             # Ignore if the element is already added (this can happen
             # implictly when writing other elements that refer to this element)
@@ -596,12 +583,6 @@ class Document(AnnotatedNineMLObject, dict):
         return nineml.user.Network(
             name, populations=self.populations, projections=self.projections,
             selections=self.selections, document=self)
-
-    def sorted_elements(self):
-        """Sorts elements into a consistent order before write"""
-        return sorted(
-            self.elements,
-            key=lambda e: (self.write_order.index(e.nineml_type), e.name))
 
     @classmethod
     def _standardise_url(cls, url):

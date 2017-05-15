@@ -48,7 +48,6 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     class_to_member = {'Population': 'population',
                        'Projection': 'projection',
                        'Selection': 'selection'}
-    write_order = ('Population', 'Selection', 'Projection')
 
     def __init__(self, name, populations=[], projections=[],
                  selections=[], document=None):

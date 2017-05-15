@@ -784,13 +784,6 @@ class ContainerObject(BaseNineMLObject):
         acc_name = accessor_name_from_type(self.class_to_member, element_type)
         return getattr(self, '_' + pluralise(acc_name))
 
-    def sorted_elements(self, **kwargs):
-        """Sorts the element into a consistent, logical order before write"""
-        return sorted(
-            self.elements(**kwargs),
-            key=lambda e: (self.write_order.index(e.nineml_type),
-                           str(e.key)))
-
     def _copy_to_clone(self, clone, memo, **kwargs):
         super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)
         clone._indices = defaultdict(dict)

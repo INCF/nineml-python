@@ -22,8 +22,6 @@ class ConnectionRule(ComponentClass):
 
     nineml_type = 'ConnectionRule'
     defining_attributes = ('_name', '_parameters', '_standard_library')
-    # Maintains order of elements between writes
-    write_order = ('Parameter', 'Alias', 'Constant', 'Annotations')
 
     standard_library_basepath = 'http://nineml.net/9ML/1.0/connectionrules/'
     _base_len = len(standard_library_basepath)

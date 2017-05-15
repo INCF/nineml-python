@@ -164,7 +164,6 @@ class Transition(BaseALObject, ContainerObject):
                            'target_regime_name')
     class_to_member = {'StateAssignment': 'state_assignment',
                        'OutputEvent': 'output_event'}
-    write_order = ('Trigger', 'StateAssignment', 'OutputEvent')
 
     def __init__(self, state_assignments=None, output_events=None,
                  target_regime=None):
@@ -365,6 +364,11 @@ class Transition(BaseALObject, ContainerObject):
         clone._source_regime = (self._source_regime.clone(memo, **kwargs)
                                 if self._source_regime is not None else None)
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('target_regime', self.target_regime.name, **options)
+        node.children(self.state_assignments)
+        node.children(self.output_events)
+
 
 class OnEvent(Transition):
 
@@ -431,9 +435,7 @@ class OnEvent(Transition):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('port', self.src_port_name, **options)
-        node.attr('target_regime', self.target_regime.name, **options)
-        node.children(self.state_assignments)
-        node.children(self.output_events)
+        super(OnEvent, self).serialize_node(node, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
@@ -496,11 +498,7 @@ class OnCondition(Transition):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self.trigger, **options)
-        try:
-            node.attr('target_regime', self._target_regime.name, **options),
-        except:
-            raise
-        node.children(self.sorted_elements())
+        super(OnCondition, self).serialize_node(node, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable

@@ -50,7 +50,6 @@ class MultiDynamicsProperties(DynamicsProperties):
     v1_nineml_type = None
     defining_attributes = ('_name', '_definition', '_sub_components')
     class_to_member = {'SubDynamicsProperties': 'sub_component'}
-    write_order = ('Definition', 'SubDynamicsProperties')
 
     def __init__(self, name, sub_components, port_connections=[],
                  port_exposures=[], document=None, check_initial_values=False):
@@ -547,10 +546,6 @@ class MultiDynamics(Dynamics):
         'AnalogReducePortExposure': 'analog_reduce_port',
         'EventSendPortExposure': 'event_send_port',
         'EventReceivePortExposure': 'event_receive_port'}
-    write_order = ('SubDynamics', 'AnalogPortConnection',
-                   'EventPortConnection', 'AnalogSendPortExposure',
-                   'AnalogReceivePortExposure', 'AnalogReducePortExposure',
-                   'EventSendPortExposure', 'EventReceivePortExposure')
     core_type = Dynamics
 
     def __init__(self, name, sub_components, port_connections=[],

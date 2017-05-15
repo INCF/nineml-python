@@ -44,12 +44,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
          ('Regime', 'regime'),
          ('StateVariable', 'state_variable')))
 
-    # Maintains order of elements between writes
-    write_order = ('Parameter', 'EventReceivePort', 'AnalogReceivePort',
-                   'AnalogReducePort', 'EventSendPort', 'AnalogSendPort',
-                   'StateVariable', 'Regime', 'Alias', 'Constant',
-                   'Annotations')
-
     send_port_dicts = ('_analog_send_ports', '_event_send_ports')
     receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',
                           '_event_send_ports')

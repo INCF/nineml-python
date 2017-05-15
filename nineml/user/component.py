@@ -125,7 +125,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     v1_nineml_type = 'Component'
     defining_attributes = ('_name', '_definition', '_properties')
     children = ("Property", "Definition", 'Prototype')
-    write_order = ('Property',)
 
     class_to_member = {'Property': 'property'}
 

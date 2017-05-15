@@ -28,7 +28,6 @@ class DynamicsProperties(Component, DynamicPortsObject):
     class_to_member = dict(
         tuple(Component.class_to_member.iteritems()) +
         (('Initial', 'initial_value'),))
-    write_order = ('Property', 'Initial')
 
     def __init__(self, name, definition, properties={}, initial_values={},
                  initial_regime=None, document=None,
