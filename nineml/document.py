@@ -55,7 +55,6 @@ class Document(AnnotatedNineMLObject, dict):
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
-        self._added_in_write = None
         memo = kwargs.pop('memo', {})
         for element in elements:
             self.add(
@@ -117,8 +116,6 @@ class Document(AnnotatedNineMLObject, dict):
             AddNestedObjectsToDocumentVisitor(self).visit(element,
                                                           **kwargs)
             self[element.name] = element
-        if self._added_in_write is not None:
-            self._added_in_write.append(element)
         return element
 
     def remove(self, element, ignore_missing=False):
@@ -299,70 +296,6 @@ class Document(AnnotatedNineMLObject, dict):
     def dimensions(self):
         return (o for o in self.itervalues()
                 if isinstance(o, nineml.Dimension))  # @UndefinedVariable @IgnorePep8
-
-    def standardize_units(self):
-        """
-        Standardized the units into a single set (no duplicates). Used to avoid
-        naming conflicts when writing to file.
-        """
-        # Get the set of all units and dimensions that are used in the document
-        # Note that Dimension & Unit objects are equal even if they have
-        # different names so when this set is traversed the dimension/unit will
-        # be substituted for the first equivalent dimension/unit.
-        all_units = set(chain(*[o.all_units for o in self.itervalues()]))
-        all_dimensions = set(chain(
-            [u.dimension for u in all_units],
-            *[o.all_dimensions for o in self.itervalues()]))
-        # Delete unused units from the document
-        for k, o in self.items():
-            if ((isinstance(o, nineml.Unit) and o not in all_units) or
-                (isinstance(o, nineml.Dimension) and
-                 o not in all_dimensions)):
-                del self[k]
-        # Add missing units and dimensions to the document
-        for unit in all_units:
-            if unit.name in self:
-                if unit != self[unit.name]:
-                    raise NineMLRuntimeError(
-                        "Name of unit '{}' conflicts with existing object of "
-                        "differring value or type '{}' and '{}'"
-                        .format(unit.name, unit, self[unit.name]))
-            else:
-                self[unit.name] = unit
-                if self._added_in_write is not None:
-                    self._added_in_write.append(unit)
-        for dimension in all_dimensions:
-            if dimension.name in self:
-                if dimension != self[dimension.name]:
-                    raise NineMLRuntimeError(
-                        "Name of dimension '{}' conflicts with existing object"
-                        " of differring value or type '{}' and '{}'"
-                        .format(dimension.name, dimension,
-                                self[dimension.name]))
-            else:
-                self[dimension.name] = dimension
-                if self._added_in_write is not None:
-                    self._added_in_write.append(dimension)
-        # Replace units and dimensions with those in the superset
-        for obj in self.itervalues():
-            for a in obj.attributes_with_dimension:
-                try:
-                    std_dim = next(d for d in all_dimensions
-                                   if d == a.dimension)
-                except StopIteration:
-                    assert False, \
-                        ("Did not find matching dimension in supposed superset"
-                         " of dimensions")
-                a.set_dimension(std_dim)
-            for a in obj.attributes_with_units:
-                try:
-                    std_units = next(u for u in all_units
-                                     if u == a.units)
-                except StopIteration:
-                    assert False, \
-                        ("Did not find matching unit in supposed superset"
-                         " of units")
-                a.set_units(std_units)
 
     def clone(self, memo=None, refs=None, **kwargs):
         """
