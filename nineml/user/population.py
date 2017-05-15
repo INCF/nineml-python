@@ -92,28 +92,6 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     def attributes_with_units(self):
         return chain(*[c.attributes_with_units for c in self.get_components()])
 
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):
-        return E(self.nineml_type,
-                 E.Size(str(self.size)),
-                 E.Cell(self.cell.to_xml(document, E=E, **kwargs)),
-                 name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):
-        cell = from_child_xml(element,
-                              (DynamicsProperties,
-                               nineml.user.MultiDynamicsProperties), document,
-                              allow_reference=True, within='Cell', **kwargs)
-        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
-                   size=get_xml_attr(element, 'Size', document, in_block=True,
-                                     dtype=int, **kwargs),
-                   cell=cell, document=document)
-
     def serialize_node(self, node, **options):
         node.attr('Size', self.size, in_body=True, **options)
         node.child(self.cell, within='Cell', **options)

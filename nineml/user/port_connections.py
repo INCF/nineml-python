@@ -287,41 +287,6 @@ class BasePortConnection(BaseULObject):
             bound = True
         return bound
 
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        attribs = {}
-        try:
-            attribs['sender_role'] = self.sender_role
-        except NineMLRuntimeError:
-            attribs['sender_name'] = self.sender_name
-        try:
-            attribs['receiver_role'] = self.receiver_role
-        except NineMLRuntimeError:
-            attribs['receiver_name'] = self.receiver_name
-        return E(
-            self.nineml_type,
-            send_port=self.send_port_name, receive_port=self.receive_port_name,
-            **attribs)
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        return cls(send_port=get_xml_attr(element, 'send_port',
-                                          document, **kwargs),
-                   receive_port=get_xml_attr(element, 'receive_port', document,
-                                             **kwargs),
-                   sender_role=get_xml_attr(element, 'sender_role', document,
-                                            default=None, **kwargs),
-                   receiver_role=get_xml_attr(element, 'receiver_role',
-                                              document, default=None,
-                                              **kwargs),
-                   sender_name=get_xml_attr(element, 'sender_name', document,
-                                            default=None, **kwargs),
-                   receiver_name=get_xml_attr(element, 'receiver_name',
-                                              document, default=None,
-                                              **kwargs))
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         try:
             node.attr('sender_role', self.sender_role)

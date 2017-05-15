@@ -75,10 +75,6 @@ class BaseValue(AnnotatedNineMLObject):
 
     __metaclass__ = ABCMeta
 
-    @abstractmethod
-    def to_xml(self, document, E=E, **kwargs):
-        pass
-
     @classmethod
     @read_annotations
     def from_parent_xml(cls, element, document, **kwargs):  # @UnusedVariable
@@ -157,16 +153,6 @@ class SingleValue(BaseValue):
 
     def inverse(self):
         return SingleValue(1.0 / self._value)
-
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type, repr(self.value))
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        return cls(float(element.text))
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.body(repr(self.value), **options)
@@ -345,53 +331,6 @@ class ArrayValue(BaseValue):
             return ArrayValue(1.0 / self._values)
         except AttributeError:
             return ArrayValue(1.0 / v for v in self._values)
-
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        if self._datafile is None:
-            return E.ArrayValue(
-                *[E.ArrayValueRow(index=str(i), value=repr(v))
-                  for i, v in enumerate(self._values)])
-        else:
-            raise NotImplementedError(
-                "TODO: Need to implement code to save data to external file")
-            return E.ExternalArrayValue(
-                url=self.url, mimetype=self.mimetype,
-                columnName=self.columnName)
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        if element.tag == 'ExternalArrayValue':
-            url = get_xml_attr(element, 'url', document, **kwargs)
-            with contextlib.closing(urlopen(url)) as f:
-                # FIXME: Should use a non-numpy version of this load function
-                values = numpy.loadtxt(f)
-            return cls(values, (get_xml_attr(element, 'url', document,
-                                             **kwargs),
-                                get_xml_attr(element, 'mimetype', document,
-                                             **kwargs),
-                                get_xml_attr(element, 'columnName', document,
-                                             **kwargs)))
-        else:
-            rows = [(get_xml_attr(e, 'index', document, dtype=int, **kwargs),
-                     get_xml_attr(e, 'value', document, dtype=float, **kwargs))
-                    for e in get_subblocks(element, 'ArrayValueRow', **kwargs)]
-            sorted_rows = sorted(rows, key=itemgetter(0))
-            indices, values = zip(*sorted_rows)
-            if indices[0] < 0:
-                raise NineMLRuntimeError(
-                    "Negative indices found in array rows")
-            if len(list(itertools.groupby(indices))) != len(indices):
-                groups = [list(g) for g in itertools.groupby(indices)]
-                raise NineMLRuntimeError(
-                    "Duplicate indices ({}) found in array rows".format(
-                        ', '.join(str(g[0]) for g in groups if len(g) > 1)))
-            if indices[-1] >= len(indices):
-                raise NineMLRuntimeError(
-                    "Indices greater or equal to the number of array rows")
-            return cls(values)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         if self._datafile is None:
@@ -659,22 +598,8 @@ class RandomValue(BaseValue):
     def __repr__(self):
         return ("RandomValue({})".format(self.distribution.name))
 
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 self.distribution.to_xml(document, E=E, **kwargs))
-
     def inverse(self):
         raise NotImplementedError
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        distribution = from_child_xml(
-            element, nineml.user.RandomDistributionProperties,
-            document, allow_reference=True, **kwargs)
-        return cls(distribution)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self.distribution, **options)

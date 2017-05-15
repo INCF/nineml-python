@@ -69,35 +69,6 @@ class BaseReference(AnnotatedNineMLObject):
                     .format(self.__class__.__name__, self._referred_to.name,
                             ' in "{}"'.format(self.url) if self.url else ''))
 
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        name = self._referred_to.name
-        if E._namespace == NINEMLv1:
-            attrs = {}
-            body = [name]
-        else:
-            attrs = {'name': name}
-            body = []
-        if self.url is not None and self.url != document.url:
-            attrs['url'] = self.url
-        element = E(self.nineml_type, *body, **attrs)
-        return element
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        xmlns = extract_xmlns(element.tag)
-        if xmlns == NINEMLv1:
-            name = element.text
-            if name is None:
-                raise NineMLXMLAttributeError(
-                    "References require the element name provided in the XML "
-                    "element text")
-        else:
-            name = get_xml_attr(element, 'name', document, **kwargs)
-        url = get_xml_attr(element, 'url', document, default=None, **kwargs)
-        return cls(name=name, document=document, url=url)
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         name = self._referred_to.name
         node.attr('name', name, **options)

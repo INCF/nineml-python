@@ -143,25 +143,6 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
     def current(self):
         return self.i
 
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        kwargs = {'name': self.name}
-        kwargs.update(dict(
-            (n, str(p))
-            for n, p in zip(self.dimension_symbols, self._dims) if abs(p) > 0))
-        return E(self.nineml_type, **kwargs)
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        name = get_xml_attr(element, 'name', document, **kwargs)
-        # Get the attributes corresponding to the dimension symbols
-        dim_args = dict((s, get_xml_attr(element, s, document, default=0,
-                                         dtype=int, **kwargs))
-                         for s in cls.dimension_symbols)
-        return cls(name, document=document, **dim_args)
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
         for n, p in zip(self.dimension_symbols, self._dims):
@@ -364,28 +345,6 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     def symbol(self):
         return self.name
 
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        kwargs = {'symbol': self.name, 'dimension': self.dimension.name,
-                  'power': str(self.power)}
-        if self.offset:
-            kwargs['offset'] = str(self.offset)
-        return E(self.nineml_type,
-                 **kwargs)
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        name = get_xml_attr(element, 'symbol', document, **kwargs)
-        dimension = document[get_xml_attr(element, 'dimension', document,
-                                          **kwargs)]
-        power = get_xml_attr(element, 'power', document, dtype=int,
-                             default=0, **kwargs)
-        offset = get_xml_attr(element, 'offset', document, dtype=float,
-                              default=0.0, **kwargs)
-        return cls(name, dimension, power, offset=offset, document=document)
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('symbol', self.name)
         node.attr('dimension', self.dimension.name)
@@ -549,32 +508,6 @@ class Quantity(AnnotatedNineMLObject):
         return '{} * {}'.format(
             (self.value.value if isinstance(self.value, SingleValue)
              else self.value), self.units)
-
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 self._value.to_xml(document, E=E, **kwargs),
-                 units=self.units.name)
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        value = BaseValue.from_parent_xml(element, document, **kwargs)
-        try:
-            units_str = get_xml_attr(element, 'units', document, **kwargs)
-        except KeyError:
-            raise NineMLRuntimeError(
-                "{} element '{}' is missing 'units' attribute (found '{}')"
-                .format(element.tag, element.get('name', ''),
-                        "', '".join(element.attrib.iterkeys())))
-        try:
-            units = document[units_str]
-        except KeyError:
-            raise NineMLNameError(
-                "Did not find definition of '{}' units in the current "
-                "document.".format(units_str))
-        return cls(value=value, units=units)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self._value, **options)

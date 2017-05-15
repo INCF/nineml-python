@@ -159,35 +159,6 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                     min_delay = delay
         return {'min_delay': min_delay, 'max_delay': max_delay}
 
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        member_elems = []
-        for member in chain(self.populations, self.selections,
-                            self.projections):
-            member_elems.append(member.to_xml(
-                document, E=E, as_ref=True, **kwargs))
-        return E(self.nineml_type, name=self.name, *member_elems)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):
-        populations = from_child_xml(element, Population, document,
-                                     multiple=True, allow_reference='only',
-                                     allow_none=True, **kwargs)
-        projections = from_child_xml(element, Projection, document,
-                                     multiple=True, allow_reference='only',
-                                     allow_none=True, **kwargs)
-        selections = from_child_xml(element, Selection, document,
-                                    multiple=True, allow_reference='only',
-                                    allow_none=True, **kwargs)
-        network = cls(name=get_xml_attr(element, 'name', document, **kwargs),
-                      populations=populations, projections=projections,
-                      selections=selections, document=document)
-        return network
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
         node.children(self.populations, **options)
@@ -313,27 +284,6 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
     @property
     def component_class(self):
         return self.dynamics_properties.component_class
-
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 E.Size(str(self.size)),
-                 self.dynamics_properties.to_xml(document, E=E, **kwargs),
-                 name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):
-        dynamics_properties = from_child_xml(
-            element, DynamicsProperties, document,
-            allow_reference=True, **kwargs)
-        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
-                   size=get_xml_attr(element, 'Size', document, in_block=True,
-                                     dtype=int, **kwargs),
-                   dynamics_properties=dynamics_properties, document=document)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('Size', self.size, in_body=True, **options)
@@ -471,49 +421,6 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
     def _check_ports(self, source_port, destination_port):
         assert isinstance(source_port, SendPort)
         assert isinstance(destination_port, ReceivePort)
-
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        members = [
-            E.Source(self.source.to_xml(document, E=E, **kwargs),
-                     port=self.source_port),
-            E.Destination(self.destination.to_xml(document, E=E, **kwargs),
-                          port=self.destination_port),
-            E.Connectivity(self.connectivity.rule_properties.to_xml(
-                document, E=E, **kwargs))]
-        if self.delay is not None:
-            members.append(E.Delay(self.delay.to_xml(document, E=E, **kwargs)))
-        xml = E(self.nineml_type,
-                *members,
-                name=self.name)
-        return xml
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        # Get Name
-        name = get_xml_attr(element, 'name', document, **kwargs)
-        connectivity = from_child_xml(
-            element, ConnectionRuleProperties, document, within='Connectivity',
-            allow_reference=True, **kwargs)
-        source = from_child_xml(
-            element, ComponentArray, document, within='Source',
-            allow_reference=True, allowed_attrib=['port'], **kwargs)
-        destination = from_child_xml(
-            element, ComponentArray, document, within='Destination',
-            allow_reference=True, allowed_attrib=['port'], **kwargs)
-        source_port = get_xml_attr(element, 'port', document,
-                                   within='Source', **kwargs)
-        destination_port = get_xml_attr(element, 'port', document,
-                                        within='Destination', **kwargs)
-        delay = from_child_xml(element, Quantity, document, within='Delay',
-                               allow_none=True, **kwargs)
-        return cls(name=name, source=source, destination=destination,
-                   source_port=source_port, destination_port=destination_port,
-                   connectivity=connectivity, delay=delay, document=None)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         source_elem = node.child(self.source, within='Source', **options)

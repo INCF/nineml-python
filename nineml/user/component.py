@@ -50,23 +50,6 @@ class Definition(BaseReference):
     def component_class(self):
         return self._referred_to
 
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        if self.url is None:
-            # If definition was created in Python, add component class
-            # reference to document argument before writing definition
-            try:
-                doc_obj = document[self._referred_to.name]
-                if doc_obj != self._referred_to:
-                    raise NineMLRuntimeError(
-                        "Cannot create reference for '{}' {} in the provided "
-                        "document due to name clash with existing {} object"
-                        .format(self._referred_to.name,
-                                type(self._referred_to), type(doc_obj)))
-            except NineMLNameError:
-                document.add(self._referred_to, **kwargs)
-        return super(Definition, self).to_xml(document, E=E, **kwargs)
-
     def clone(self, memo=None, clone_definitions=None, refs=None, **kwargs):
         """
         Since the document they belong to is reset for clones simply return
@@ -298,40 +281,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                     .format(param.name, prop_dimension, self.name,
                             self.component_class.name, param_dimension))
 
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        """
-        docstring missing, although since the decorators don't
-        preserve the docstring, it doesn't matter at the moment.
-        """
-        if E._namespace == NINEMLv1:
-            tag = self.v1_nineml_type
-        else:
-            tag = self.nineml_type
-        element = E(tag, self._definition.to_xml(document, E=E, **kwargs),
-                    *(p.to_xml(document, E=E, **kwargs)
-                      for p in self.sorted_elements(local=True)),
-                      name=self.name)
-        return element
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        """docstring missing"""
-        name = get_xml_attr(element, "name", document, **kwargs)
-        definition = from_child_xml(element, (Definition, Prototype), document,
-                                    **kwargs)
-        properties = from_child_xml(element, Property, document, multiple=True,
-                                    allow_none=True, **kwargs)
-        if name in document:
-            doc = document
-        else:
-            doc = None
-        return cls(name, definition, properties=properties, document=doc)
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self._definition, **options)
         node.children(self._properties.itervalues(), **options)
@@ -501,37 +450,6 @@ class Property(BaseULObject):
             units = units.replace(u"µ", "u")
         return ("{}(name={}, value={}, units={})"
                 .format(self.nineml_type, self.name, self.value, units))
-
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        if E._namespace == NINEMLv1:
-            xml = E(self.nineml_type,
-                    self.value.to_xml(document, E=E, **kwargs),
-                    name=self.name,
-                    units=self.units.name)
-        else:
-            xml = E(self.nineml_type,
-                    self._quantity.to_xml(document, E=E, **kwargs),
-                    name=self.name)
-        return xml
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        name = get_xml_attr(element, 'name', document, **kwargs)
-        if extract_xmlns(element.tag) == NINEMLv1:
-            value = from_child_xml(
-                element,
-                (SingleValue, ArrayValue, RandomValue),
-                document, **kwargs)
-            units = document[
-                get_xml_attr(element, 'units', document, **kwargs)]
-            quantity = Quantity(value, units)
-        else:
-            quantity = from_child_xml(
-                element, Quantity, document, **kwargs)
-        return cls(name=name, quantity=quantity)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)

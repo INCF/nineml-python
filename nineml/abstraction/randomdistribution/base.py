@@ -75,16 +75,6 @@ class RandomDistribution(ComponentClass):
         extractor.visit(self)
         return extractor.expressions
 
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        self.standardize_unit_dimensions()
-        self.validate()
-        return RandomDistributionXMLWriter(document, E, **kwargs).visit(self)
-
-    @classmethod
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        return RandomDistributionXMLLoader(
-            document).load_randomdistributionclass(element)
-
     def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('name', self.name, **options)
         node.children(self.parameters, **options)

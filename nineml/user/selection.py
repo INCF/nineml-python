@@ -71,24 +71,6 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     def operation(self):
         return self._operation
 
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 self.operation.to_xml(document, E=E, **kwargs),
-                 name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        # The only supported op at this stage
-        op = from_child_xml(
-            element, Concatenate, document, **kwargs)
-        return cls(get_xml_attr(element, 'name', document, **kwargs), op,
-                   document=document)
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self.operation, **options)
         node.attr('name', self.name, **options)
@@ -213,48 +195,6 @@ class Concatenate(BaseULObject):
         # method?
         return iter(self._items)
 
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        def item_to_xml(item):
-            if isinstance(item, Reference):
-                return item.to_xml(document, E=E, **kwargs)
-            elif E._namespace == NINEMLv1:
-                return E.Reference(item.name)
-            else:
-                return E.Reference(name=item.name)
-        return E(self.nineml_type,
-                 *[E.Item(item_to_xml(item), index=str(i))
-                   for i, item in enumerate(self.items)])
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        items = []
-        # Load references and indices from xml
-        for it_elem in element.findall(extract_xmlns(element.tag) + 'Item'):
-            items.append((
-                get_xml_attr(it_elem, 'index', document, dtype=int, **kwargs),
-                from_child_xml(it_elem, Population, document,
-                               allow_reference='only', **kwargs)))
-            try:
-                kwargs['unprocessed'][0].discard(it_elem)
-            except KeyError:
-                pass
-        # Sort by 'index' attribute
-        indices, items = zip(*sorted(items, key=itemgetter(0)))
-        indices = [int(i) for i in indices]
-        if len(indices) != len(set(indices)):
-            raise ValueError("Duplicate indices found in Concatenate list ({})"
-                             .format(indices))
-        if indices[0] != 0:
-            raise ValueError("Indices of Concatenate items must start from 0 "
-                             "({})".format(indices))
-        if indices[-1] != len(indices) - 1:
-            raise ValueError("Missing indices in Concatenate items ({}), list "
-                             "must be contiguous.".format(indices))
-        return cls(*items)  # Strip off indices used to sort elements
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         for i, item in enumerate(self.items):
             item_elem = node.child(item, within='Item', multiple=True,
@@ -311,18 +251,6 @@ class Concatenate(BaseULObject):
 #         self.condition = condition
 #         self.populations = []
 #         self.evaluated = False
-#
-#     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-#         return E(self.nineml_type,
-#                  E.select(self.condition.to_xml(document, E=E, **kwargs)),
-#                  name=self.name)
-#
-#     @classmethod
-#     def from_xml(cls, element, components):
-#         select_element = element.find(NINEML + 'select')
-#         assert len(select_element) == 1
-#         return cls(get_xml_attr(element, 'name', document, **kwargs),
-#                    Operator.from_xml(select_element.getchildren()[0]))
 #
 #     def evaluate(self, group):
 #         if not self.evaluated:
@@ -409,39 +337,4 @@ class Concatenate(BaseULObject):
 #
 #     def __init__(self, *operands):
 #         self.operands = operands
-#
-#     def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-#         operand_elements = []
-#         for c in self.operands:
-#             if isinstance(c, (basestring, float, int)):
-#                 operand_elements.append(E(StringValue.nineml_type, str(c)))
-#             else:
-#                 operand_elements.append(c.to_xml(document, E=E, **kwargs))
-#         return E(self.nineml_type,
-#                  *operand_elements)
-#
-#     @classmethod
-#     def from_xml(cls, element):
-#         if hasattr(cls, "nineml_type") and element.tag == (NINEML +
-#                                                            cls.nineml_type):
-#             dispatch = {
-#                 NINEML + StringValue.nineml_type: StringValue.from_xml,
-#                 NINEML + Eq.nineml_type: Eq.from_xml,
-#                 NINEML + Any.nineml_type: Any.from_xml,
-#                 NINEML + All.nineml_type: All.from_xml,
-#                 NINEML + Not.nineml_type: Not.from_xml,
-#                 NINEML + In.nineml_type: In.from_xml,
-#             }
-#             operands = []
-#             for child in element.iterchildren():
-#                 operands.append(dispatch[element.tag](child))
-#             return cls(*operands)
-#         else:
-#             return {
-#                 NINEML + Eq.nineml_type: Eq,
-#                 NINEML + Any.nineml_type: Any,
-#                 NINEML + All.nineml_type: All,
-#                 NINEML + Not.nineml_type: Not,
-#                 NINEML + StringValue.nineml_type: StringValue,
-#                 NINEML + In.nineml_type: In,
-#             }[element.tag].from_xml(element)
+

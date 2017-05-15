@@ -84,22 +84,6 @@ class BasePortExposure(BaseULObject):
     def attributes_with_units(self):
         return chain(*[c.attributes_with_units for c in self.sub_component])
 
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 name=self.name,
-                 sub_component=self.sub_component_name,
-                 port=self.port_name)
-
-    @classmethod
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
-                   component=get_xml_attr(element, 'sub_component', document,
-                                          **kwargs),
-                   port=get_xml_attr(element, 'port', document, **kwargs))
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
         node.attr('sub_component', self.sub_component_name, **options)

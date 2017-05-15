@@ -138,41 +138,6 @@ class MultiDynamicsProperties(DynamicsProperties):
     def num_sub_components(self):
         return len(self._sub_components)
 
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):
-        members = [c.to_xml(document, E=E, **kwargs)
-                   for c in self.sub_components]
-        members.extend(pe.to_xml(document, E=E, **kwargs)
-                        for pe in self.port_exposures)
-        members.extend(pc.to_xml(document, E=E, **kwargs)
-                       for pc in self.port_connections)
-        return E(self.nineml_type, *members, name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):
-        sub_component_properties = from_child_xml(
-            element, SubDynamicsProperties, document, multiple=True,
-            **kwargs)
-        port_exposures = from_child_xml(
-            element,
-            (AnalogSendPortExposure, AnalogReceivePortExposure,
-             AnalogReducePortExposure, EventSendPortExposure,
-             EventReceivePortExposure), document, multiple=True,
-            allow_none=True, **kwargs)
-        port_connections = from_child_xml(
-            element,
-            (AnalogPortConnection, EventPortConnection), document,
-            multiple=True, allow_none=True, **kwargs)
-        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
-                   sub_components=sub_component_properties,
-                   port_exposures=port_exposures,
-                   port_connections=port_connections,
-                   document=document)
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.children(self.sub_components, **options)
         node.children(self.port_exposures, **options)
@@ -341,23 +306,6 @@ class SubDynamicsProperties(BaseULObject):
                 "SubDynamicsProperties as it does not include the sub "
                 "component name '{}'".format(name, self.name, self.name))
         return _NamespaceProperty(self, self._component.property(local_name))
-
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 self._component.to_xml(document, E=E, **kwargs),
-                 name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):
-        dynamics_properties = from_child_xml(
-            element, (DynamicsProperties, MultiDynamicsProperties), document,
-            allow_reference=True, **kwargs)
-        return cls(get_xml_attr(element, 'name', document, **kwargs),
-                   dynamics_properties)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self._component, **options)
@@ -569,23 +517,6 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
     @property
     def num_event_send_ports(self):
         return self.component_class.num_event_send_ports
-
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type,
-                 self._component_class.to_xml(document, E=E, **kwargs),
-                 name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):
-        dynamics = from_child_xml(
-            element, (Dynamics, MultiDynamics), document,
-            allow_reference=True, **kwargs)
-        return cls(get_xml_attr(element, 'name', document, **kwargs),
-                   dynamics)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self._component_class, **options)
@@ -1032,40 +963,6 @@ class MultiDynamics(Dynamics):
         # Avoid "Cloner" visitor method that Dynamics uses to clone and use
         # the method defined in BaseNineMLObject instead
         return ComponentClass.clone(self, **kwargs)
-
-    @write_reference
-    @annotate_xml
-    def to_xml(self, document, E=E, **kwargs):
-        members = [c.to_xml(document, E=E, **kwargs)
-                   for c in self.sub_components]
-        members.extend(pe.to_xml(document, E=E, **kwargs)
-                        for pe in self.port_exposures)
-        members.extend(pc.to_xml(document, E=E, **kwargs)
-                       for pc in self.port_connections)
-        return E(self.nineml_type, *members, name=self.name)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):
-        sub_components = from_child_xml(
-            element, SubDynamics, document, multiple=True,
-            **kwargs)
-        port_exposures = from_child_xml(
-            element,
-            (AnalogSendPortExposure, AnalogReceivePortExposure,
-             AnalogReducePortExposure, EventSendPortExposure,
-             EventReceivePortExposure), document, multiple=True,
-            allow_none=True, **kwargs)
-        port_connections = from_child_xml(
-            element,
-            (AnalogPortConnection, EventPortConnection), document,
-            multiple=True, allow_none=True, **kwargs)
-        return cls(name=get_xml_attr(element, 'name', document, **kwargs),
-                   sub_components=sub_components,
-                   port_exposures=port_exposures,
-                   port_connections=port_connections)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.children(self.sub_components, **options)

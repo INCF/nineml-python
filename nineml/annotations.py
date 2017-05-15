@@ -341,21 +341,6 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
                 rep += '\n' + b._repr(indent='  ')
         return rep
 
-    def to_xml(self, E=defaultE, **kwargs):  # @UnusedVariable
-        return E(self.nineml_type, *self._sub_branches_to_xml(**kwargs))
-
-    @classmethod
-    def from_xml(cls, element, **kwargs):  # @UnusedVariable @IgnorePep8
-        assert strip_xmlns(element.tag) == cls.nineml_type
-        assert not element.attrib
-        if element.text is not None:
-            assert not element.text.strip()
-        branches = defaultdict(list)
-        for child in element.getchildren():
-            branches[cls._extract_key(child)].append(
-                _AnnotationsBranch.from_xml(child))
-        return cls(branches, **kwargs)
-
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
         branches = defaultdict(list)
@@ -526,27 +511,6 @@ class _AnnotationsBranch(BaseAnnotations):
                     "attribute".format(self.ns, self.name, key))
         else:
             super(_AnnotationsBranch, self).delete(key, *args, **kwargs)
-
-    def to_xml(self, **kwargs):  # @UnusedVariable
-        E = ElementMaker(namespace=self.ns)
-        members = self._sub_branches_to_xml(**kwargs)
-        if self.body is not None:
-            members.append(self.body)
-        return E(self.name, *members, **self._attr)
-
-    @classmethod
-    def from_xml(cls, element, **kwargs):  # @UnusedVariable
-        name, ns = cls._extract_key(element)
-        branches = defaultdict(list)
-        for child in element.getchildren():
-            branches[cls._extract_key(child)].append(
-                _AnnotationsBranch.from_xml(child))
-        attr = dict(element.attrib)
-        if element.text is not None and element.text.strip():
-            body = element.text.strip()
-        else:
-            body = None
-        return cls(name, ns, attr=attr, branches=branches, body=body)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         super(_AnnotationsBranch, self).serialize_node(node, **options)
