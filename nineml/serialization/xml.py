@@ -123,3 +123,29 @@ class Unserializer(BaseUnserializer):
             raise NineMLXMLError("Could not parse XML of 9ML file '{}': \n {}"
                                  .format(url, e))
         return xml, url
+
+
+# def read_xml(url, relative_to):
+#     if url.startswith('.') and relative_to:
+#         url = os.path.abspath(os.path.join(relative_to, url))
+#     try:
+#         if not isinstance(url, file):
+#             try:
+#                 with contextlib.closing(urlopen(url)) as f:
+#                     xml = etree.parse(f)
+#             except IOError, e:
+#                 raise NineMLXMLError("Could not read 9ML URL '{}': \n{}"
+#                                      .format(url, e))
+#         else:
+#             xml = etree.parse(url)
+#     except etree.LxmlError, e:
+#         raise NineMLXMLError("Could not parse XML of 9ML file '{}': \n {}"
+#                              .format(url, e))
+#     return xml, url
+#
+#
+# def write_xml(xml, filename):
+#     with open(filename, 'w') as f:
+#         etree.ElementTree(xml).write(f, encoding="UTF-8",
+#                                      pretty_print=True,
+#                                      xml_declaration=True)

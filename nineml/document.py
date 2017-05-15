@@ -1,16 +1,12 @@
 import os.path
 import re
 from itertools import chain
-from urllib import urlopen
 import weakref
 from lxml import etree
-import collections
 from nineml.base import clone_id, AddNestedObjectsToDocumentVisitor
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLXMLError, NineMLXMLTagError)
+    NineMLRuntimeError, NineMLNameError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
-import contextlib
-from nineml.utils import expect_single
 from logging import getLogger
 
 
@@ -48,9 +44,6 @@ class Document(AnnotatedNineMLObject, dict):
 
     defining_attributes = ('elements',)
     nineml_type = 'NineML'
-
-    # A tuple to hold the unresolved elements
-    _Unloaded = collections.namedtuple('_Unloaded', 'name xml cls kwargs')
 
     _loaded_docs = {}
 
@@ -106,24 +99,23 @@ class Document(AnnotatedNineMLObject, dict):
                         "name already exists in the document '{}'"
                         .format(element.name, self.url))
         else:
-            if not isinstance(element, self._Unloaded):
-                if clone:
-                    element = element.clone(
-                        clone_definitions=clone_definitions, **kwargs)
-                elif element.document is not None:
-                    raise NineMLRuntimeError(
-                        "Attempting to add the same object '{}' {} to document"
-                        " '{}' document when it is already in another "
-                        "document, '{}'. Please remove it from the original "
-                        "document first or use the 'clone' keyword to add a "
-                        "clone of the element instead"
-                        .format(element.name, element.nineml_type,
-                                self.url, element.document.url))
-                element._document = self  # Set its document to this one
-                # Add any nested objects that don't already belong
-                # to another document
-                AddNestedObjectsToDocumentVisitor(self).visit(element,
-                                                              **kwargs)
+            if clone:
+                element = element.clone(
+                    clone_definitions=clone_definitions, **kwargs)
+            elif element.document is not None:
+                raise NineMLRuntimeError(
+                    "Attempting to add the same object '{}' {} to document"
+                    " '{}' document when it is already in another "
+                    "document, '{}'. Please remove it from the original "
+                    "document first or use the 'clone' keyword to add a "
+                    "clone of the element instead"
+                    .format(element.name, element.nineml_type,
+                            self.url, element.document.url))
+            element._document = self  # Set its document to this one
+            # Add any nested objects that don't already belong
+            # to another document
+            AddNestedObjectsToDocumentVisitor(self).visit(element,
+                                                          **kwargs)
             self[element.name] = element
         if self._added_in_write is not None:
             self._added_in_write.append(element)
@@ -155,6 +147,7 @@ class Document(AnnotatedNineMLObject, dict):
         Returns the element referenced by the given name
         """
         if name is None:
+            # FIXME: This is a hack that should be removed
             # This simplifies code in a few places where an optional
             # attribute refers to a name of an object which
             # should be resolved if present but be set to None if not.
@@ -169,9 +162,6 @@ class Document(AnnotatedNineMLObject, dict):
                     "'{}' was not found in the NineML document {} (elements in"
                     " the document were '{}').".format(
                         name, self.url or '', "', '".join(self.iterkeys())))
-        # Load (lazily) the element from the xml description
-        if isinstance(elem, self._Unloaded):
-            elem = self._load_elem_from_xml(elem)
         return elem
 
     @property
@@ -310,29 +300,6 @@ class Document(AnnotatedNineMLObject, dict):
         return (o for o in self.itervalues()
                 if isinstance(o, nineml.Dimension))  # @UndefinedVariable @IgnorePep8
 
-    def _load_elem_from_xml(self, unloaded):
-        """
-        Resolve an element from its XML description and store back in the
-        element dictionary
-        """
-        if unloaded in self._loading:
-            raise NineMLRuntimeError(
-                "Circular reference detected in '{}(name={})' element. "
-                "Resolution stack was:\n{}"
-                .format(unloaded.cls.__name__, unloaded.name,
-                        "\n".join('{}(name={})'.format(u.cls.__name__, u.name)
-                                  for u in self._loading)))
-        # Keep track of the document-level elements that are in the process of
-        # being loaded to catch circular references
-        self._loading.append(unloaded)
-        elem = unloaded.cls.from_xml(unloaded.xml, self, **unloaded.kwargs)
-        # Remove current element from "loading" stack as it has been loaded
-        assert self._loading[-1] is unloaded
-        self._loading.pop()
-        assert isinstance(unloaded.name, basestring)
-        self[unloaded.name] = elem
-        return elem
-
     def standardize_units(self):
         """
         Standardized the units into a single set (no duplicates). Used to avoid
@@ -397,37 +364,6 @@ class Document(AnnotatedNineMLObject, dict):
                          " of units")
                 a.set_units(std_units)
 
-    @classmethod
-    def _get_class_from_type(cls, nineml_type):
-        # Note that all `DocumentLevelObjects` need to be imported
-        # into the root nineml package
-        try:
-            child_cls = getattr(nineml, nineml_type)
-            if (not issubclass(child_cls, DocumentLevelObject) or
-                    not hasattr(child_cls, 'from_xml')):
-                raise NineMLRuntimeError(
-                    "'{}' element does not correspond to a recognised "
-                    "document-level object".format(child_cls.__name__))
-        except AttributeError:
-            raise NineMLXMLTagError
-        return child_cls
-
-    @classmethod
-    def _get_class_from_v1(cls, nineml_type, xmlns, child, element, url):
-        # Check for v1 document-level objects
-        if (xmlns, nineml_type) == (NINEMLv1, 'ComponentClass'):
-            child_cls = get_component_class_type(child)
-        elif (xmlns, nineml_type) == (NINEMLv1, 'Component'):
-            relative_to = (os.path.dirname(url)
-                           if url is not None else None)
-            child_cls = get_component_type(child, element,
-                                           relative_to)
-        else:
-            raise NineMLXMLTagError(
-                "Did not find matching NineML class for '{}' " "element"
-                .format(nineml_type))
-        return child_cls
-
     def clone(self, memo=None, refs=None, **kwargs):
         """
         Creates a duplicate of the current document with its url set to None to
@@ -457,7 +393,7 @@ class Document(AnnotatedNineMLObject, dict):
 
     def write(self, url, version=XML_VERSION, **kwargs):
         if self.url is None:
-            self.url = url  # Required so relative urls can be generated
+            self.url = None  # Required so relative urls can be generated
         elif self.url != url:
             raise NineMLRuntimeError(
                 "Cannot write the same Document object to two different "
@@ -619,122 +555,6 @@ class Document(AnnotatedNineMLObject, dict):
                       **options)
         node.children(self.dimensions, reference=False, **options)
         node.children(self.units, reference=False, **options)
-
-
-def read(url, relative_to=None, name=None, **kwargs):
-    """
-    Read a NineML file and parse its child elements
-
-    If the URL does not have a scheme identifier, it is taken to refer to a
-    local file.
-    """
-    if '#' in url:
-        url, name = url.split('#')
-    xml, url = read_xml(url, relative_to=relative_to)
-    root = xml.getroot()
-    doc = Document.load(root, url, **kwargs)
-    if name is None:
-        model = doc
-    else:
-        model = doc[name]
-    return model
-
-
-def write(document, filename, **kwargs):
-    """
-    Provided for symmetry with read method, takes a nineml.document.Document
-    object and writes it to the specified file
-    """
-    # Encapsulate the NineML element in a document if it is not already
-    if not isinstance(document, Document):
-        document = Document(document, **kwargs)
-    document.write(filename, **kwargs)
-
-
-def read_xml(url, relative_to):
-    if url.startswith('.') and relative_to:
-        url = os.path.abspath(os.path.join(relative_to, url))
-    try:
-        if not isinstance(url, file):
-            try:
-                with contextlib.closing(urlopen(url)) as f:
-                    xml = etree.parse(f)
-            except IOError, e:
-                raise NineMLXMLError("Could not read 9ML URL '{}': \n{}"
-                                     .format(url, e))
-        else:
-            xml = etree.parse(url)
-    except etree.LxmlError, e:
-        raise NineMLXMLError("Could not parse XML of 9ML file '{}': \n {}"
-                             .format(url, e))
-    return xml, url
-
-
-def write_xml(xml, filename):
-    with open(filename, 'w') as f:
-        etree.ElementTree(xml).write(f, encoding="UTF-8",
-                                     pretty_print=True,
-                                     xml_declaration=True)
-
-
-def get_component_class_type(elem):
-    if elem.findall(NINEMLv1 + 'Dynamics'):
-        cls = nineml.Dynamics
-    elif elem.findall(NINEMLv1 + 'ConnectionRule'):
-        cls = nineml.ConnectionRule
-    elif elem.findall(NINEMLv1 + 'RandomDistribution'):
-        cls = nineml.RandomDistribution
-    else:
-        raise NineMLXMLError(
-            "No type defining block in ComponentClass")
-    return cls
-
-
-def get_component_type(comp_xml, doc_xml, relative_to):
-    definition = expect_single(chain(
-        comp_xml.findall(NINEMLv1 + 'Definition'),
-        comp_xml.findall(NINEMLv1 + 'Prototype')))
-    name = definition.text
-    url = definition.get('url', None)
-    if url:
-        doc = read(url, relative_to)
-        cc_cls = doc[name].__class__
-    else:
-        cc_cls = None
-        for ref_elem in chain(doc_xml.findall(NINEMLv1 + 'ComponentClass'),
-                              doc_xml.findall(NINEMLv1 + 'Component')):
-            if ref_elem.attrib['name'] == name:
-                if ref_elem.tag == NINEMLv1 + 'ComponentClass':
-                    cc_cls = get_component_class_type(ref_elem)
-                    break
-                elif ref_elem.tag == NINEMLv1 + 'Component':
-                    # Recurse through the prototype until we find the component
-                    # class at the bottom of it.
-                    return get_component_type(ref_elem, doc_xml, url)
-                else:
-                    raise NineMLXMLError(
-                        "'{}' refers to a '{}' element not a ComponentClass or"
-                        " Component element".format(name, ref_elem.tag))
-        if cc_cls is None:
-            raise NineMLXMLError(
-                "Did not find component or component class in '{}' tags"
-                .format("', '".join(c.tag for c in doc_xml.getchildren())))
-    cls = None
-    while cls is None:
-        if cc_cls == nineml.Dynamics:
-            cls = nineml.user.dynamics.DynamicsProperties
-        elif cc_cls == nineml.ConnectionRule:
-            cls = (nineml.user.connectionrule.
-                   ConnectionRuleProperties)
-        elif cc_cls == nineml.RandomDistribution:
-            cls = (nineml.user.randomdistribution.
-                   RandomDistributionProperties)
-        elif issubclass(cc_cls, nineml.user.Component):
-            cls = cc_cls
-        else:
-            assert False, ("Unrecognised component class type '{}"
-                           .format(cc_cls))
-    return cls
 
 
 import nineml  # @IgnorePep8
