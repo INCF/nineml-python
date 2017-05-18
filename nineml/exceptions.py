@@ -82,6 +82,14 @@ class NineMLNoSolutionException(NineMLException):
     pass
 
 
+class NineMLIOError(NineMLRuntimeError):
+    pass
+
+
+class NineMLUpdatedFileException(NineMLException):
+    pass
+
+
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 

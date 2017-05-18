@@ -379,22 +379,6 @@ class Document(AnnotatedNineMLObject, dict):
             name, populations=self.populations, projections=self.projections,
             selections=self.selections, document=self)
 
-    @classmethod
-    def _standardise_url(cls, url):
-        if url is not None:
-            if isinstance(url, basestring):
-                if file_path_re.match(url) is not None:
-                    if url.startswith('.'):
-                        url = os.path.abspath(url)
-                elif url_re.match(url) is None:
-                    raise NineMLRuntimeError(
-                        "{} is not a valid URL or file path")
-            else:
-                raise NineMLRuntimeError(
-                    "{} is not a valid URL (it is not even a string)"
-                    .format(url))
-        return url
-
     def serialize_node(self, node, **options):
         node.children(self.networks, reference=False, **options)
         node.children(self.populations, reference=False, **options)

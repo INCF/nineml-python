@@ -1,12 +1,117 @@
-import nineml
 import os.path
-from nineml.exceptions import NineMLSerializationError
+import time
+import nineml
+import re
+from urllib import urlopen
+import weakref
+import contextlib
+from nineml.exceptions import (
+    NineMLSerializationError, NineMLIOError, NineMLUpdatedFileException)
 try:
     from .xml import (
         Serializer as XMLSerializer, Unserializer as XMLUnserializer)
 except:
-    XMLSerializer = None
-    XMLUnserializer = None
+    XMLUnserializer = XMLSerializer = None
+
+
+url_re = re.compile(
+    r'^(?:http|ftp)s?://'  # http:// or https://
+    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|'
+    '[A-Z0-9-]{2,}\.?)|'  # domain...
+    r'localhost|'  # localhost...
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+    r'(?::\d+)?'  # optional port
+    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+file_path_re = re.compile(r'^(\.){0,2}\/+([\w\._\-]\/+)*[\w\._\-]')
+
+
+# Holds loaded documents to avoid reloading each time
+document_registry = {}
+
+
+def load(url, relative_to=None, reload=False):  # @ReservedAssignment
+    if isinstance(url, basestring):
+        if file_path_re.match(url) is not None:
+            if url.startswith('.'):
+                if relative_to is None:
+                    raise NineMLIOError(
+                        "'relative_to' kwarg must be provided when using "
+                        "relative paths (i.e. paths starting with '.'), "
+                        "'{}'".format(url))
+                url = os.path.abspath(os.path.join(relative_to, url))
+                fle = open(url)
+                mtime = time.ctime(os.path.getmtime(url))
+        elif url_re.match(url) is not None:
+            mtime = None  # Cannot load mtime of a general URL
+            fle = urlopen
+        else:
+            raise NineMLIOError(
+                "{} is not a valid URL or file path")
+    else:
+        raise NineMLIOError(
+            "{} is not a valid URL (it is not even a string)"
+            .format(url))
+    if reload:
+        document_registry.pop(url, None)
+    try:
+        doc, loaded_mtime = document_registry[url]
+        if loaded_mtime != mtime:
+            raise NineMLUpdatedFileException()
+    except (KeyError, NineMLUpdatedFileException):
+        doc = get_unserializer_cls(url)(fle).document
+        doc._url = url
+        document_registry[url] = doc, mtime
+
+url = self._standardise_url(url)
+try:
+    doc_ref = self._loaded_docs[url]
+    if doc_ref():
+        raise NineMLRuntimeError(
+            "Cannot set url of document to '{}' as there is "
+            "already a document loaded in memory with that url. "
+            "Please remove all references to it first (see "
+            "https://docs.python.org/2/c-api/intro.html"
+            "#objects-types-and-reference-counts)"
+            .format(url))
+except KeyError:
+    pass
+# Register the url with the Document class to avoid reloading
+
+# Update the url
+self._url = url
+
+
+def read_url(url, relative_to=None):
+    if isinstance(url, basestring):
+        if file_path_re.match(url) is not None:
+            if url.startswith('.'):
+                if relative_to is None:
+                    raise NineMLIOError(
+                        "'relative_to' kwarg must be provided when using "
+                        "relative paths (i.e. paths starting with '.'), '{}'"
+                        .format(url))
+                url = os.path.abspath(os.path.join(relative_to, url))
+            fle = open(url)
+        elif url_re.match(url) is not None:
+            fle = urlopen(url)
+        else:
+            raise NineMLIOError(
+                "{} is not a valid URL or file path")
+    elif isinstance(url, file):
+        fle = url
+        url = fle.name
+    else:
+        raise NineMLIOError(
+            "{} is not a valid URL or file handle".format(url))
+    return fle, url
+
+
+def write_xml(xml, filename):
+    with open(filename, 'w') as f:
+        etree.ElementTree(xml).write(f, encoding="UTF-8",
+                                     pretty_print=True,
+                                     xml_declaration=True)
 
 
 def read(url, relative_to=None, name=None, **kwargs):
@@ -17,6 +122,10 @@ def read(url, relative_to=None, name=None, **kwargs):
     local file.
     """
     if '#' in url:
+        if name is not None:
+            raise NineMLSerializationError(
+                "Name specified both in url string ('{}') and in "
+                "kwarg ('{}')".format(url, name))
         url, name = url.split('#')
     xml, url = read_xml(url, relative_to=relative_to)
     root = xml.getroot()
@@ -40,24 +149,24 @@ def write(nineml_object, url, **kwargs):
     serializer.write(url, **kwargs)
 
 
-def get_serializer(document, url):
+def get_serializer_cls(url):
     _, ext = os.path.splitext(url)
     Serializer = ext_to_serializer[ext[1:]]
     if Serializer is None:
         raise NineMLSerializationError(
             "Was not able to import '{}' serializer, please install "
             "relevant package".format(ext[1:]))
-    return Serializer(document, url=url)
+    return Serializer
 
 
-def get_unserializer(url):
+def get_unserializer_cls(url):
     _, ext = os.path.splitext(url)
     Unserializer = ext_to_unserializer[ext[1:]]
     if Unserializer is None:
         raise NineMLSerializationError(
             "Was not able to import '{}' unserializer, please install "
             "relevant package".format(ext[1:]))
-    return Unserializer(url=url)
+    return Unserializer
 
 
 ext_to_serializer = {
