@@ -1,11 +1,7 @@
 from itertools import chain
-from nineml.reference import resolve_reference
 from nineml.user.component import Property, Component, Prototype, Definition
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, name_error, NineMLUnitMismatchError)
-from nineml.annotations import read_annotations
-from nineml.xml import (
-    from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.base import (
     ContainerObject, DynamicPortsObject)
 
@@ -179,23 +175,6 @@ class DynamicsProperties(Component, DynamicPortsObject):
                          self._initial_values.itervalues())
         else:
             return ContainerObject.elements(self)
-
-    @classmethod
-    @resolve_reference
-    @read_annotations
-    @unprocessed_xml
-    def from_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        """docstring missing"""
-        name = get_xml_attr(element, "name", document, **kwargs)
-        definition = from_child_xml(element, (Definition, Prototype), document,
-                                    **kwargs)
-        properties = from_child_xml(element, Property, document, multiple=True,
-                                    allow_none=True, **kwargs)
-        initial_values = from_child_xml(element, Initial, document,
-                                        multiple=True, allow_none=True,
-                                        **kwargs)
-        return cls(name, definition, properties=properties,
-                   initial_values=initial_values, document=document)
 
     def serialize_node(self, node, **options):
         super(DynamicsProperties, self).serialize_node(node, **options)

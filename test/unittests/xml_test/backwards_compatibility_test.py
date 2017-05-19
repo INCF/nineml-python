@@ -1,6 +1,5 @@
 import unittest
-from nineml import Document
-from nineml.xml import etree, get_element_maker
+from lxml import etree
 from nineml.utils import xml_equal
 from nineml.serialization.xml import (
     Unserializer as Uxml, Serializer as Sxml)

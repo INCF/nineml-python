@@ -4,7 +4,6 @@ from nineml import read, Document
 from nineml.exceptions import NineMLRuntimeError
 from nineml.user import Property
 from nineml import Unit, Dimension
-from nineml.xml import E
 
 
 voltage = Dimension('voltage', m=1, l=2, t=-3, i=-1)

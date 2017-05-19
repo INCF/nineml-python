@@ -1,15 +1,11 @@
-
 import unittest
-from nineml.xml import E
-from nineml.abstraction import (Expression, Alias, StateAssignment,
-                                TimeDerivative, Constant, AnalogReducePort,
-                                AnalogReceivePort)
+from nineml.abstraction import (
+    Expression, Alias, StateAssignment, TimeDerivative, AnalogReducePort,
+    AnalogReceivePort)
 from nineml import units as un
 from nineml.abstraction.expressions import (
-    ExpressionWithSimpleLHS, Constant)
+    ExpressionWithSimpleLHS)
 from nineml.units import coulomb
-from nineml.abstraction.componentclass.visitors.xml import (
-    ComponentClassXMLWriter as XMLWriter, ComponentClassXMLLoader as XMLLoader)
 from nineml import Document
 import sympy
 from nineml.abstraction.expressions.utils import (

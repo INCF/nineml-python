@@ -1,8 +1,7 @@
 import unittest
-from nineml.values import (ArrayValue, RandomValue)
+from nineml.values import ArrayValue
 from nineml.utils.testing.comprehensive import instances_of_all_types
 from nineml.exceptions import (NineMLValueError, NineMLRuntimeError)
-from nineml.xml import E
 from nineml.document import Document
 
 

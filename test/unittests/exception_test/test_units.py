@@ -4,9 +4,8 @@ from nineml.utils.testing.comprehensive import instances_of_all_types
 from nineml.exceptions import (NineMLDimensionError, NineMLNameError,
                                NineMLRuntimeError)
 import nineml.units as un
-from nineml.document import Document
-from nineml.values import SingleValue
-from nineml.xml import E
+# from nineml.document import Document
+# from nineml.values import SingleValue
 
 
 class TestDimensionExceptions(unittest.TestCase):
@@ -120,20 +119,20 @@ class TestQuantityExceptions(unittest.TestCase):
             NineMLDimensionError,
             qty.in_units,
             units=un.mV)
-
-    def test_from_xml_ninemlnameerror(self):
-        """
-        line #: 532
-        message: Did not find definition of '{}' units in the current document.
-        """
-        element = E(Quantity.nineml_type,
-                    E(SingleValue.nineml_type, '1.0'),
-                    units='blah')
-        self.assertRaises(
-            NineMLNameError,
-            Quantity.from_xml,
-            element=element,
-            document=Document())
+# 
+#     def test_from_xml_ninemlnameerror(self):
+#         """
+#         line #: 532
+#         message: Did not find definition of '{}' units in the current document.
+#         """
+#         element = E(Quantity.nineml_type,
+#                     E(SingleValue.nineml_type, '1.0'),
+#                     units='blah')
+#         self.assertRaises(
+#             NineMLNameError,
+#             Quantity.from_xml,
+#             element=element,
+#             document=Document())
 
     def test__scaled_value_ninemldimensionerror(self):
         """

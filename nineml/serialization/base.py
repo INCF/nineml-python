@@ -11,14 +11,11 @@ from nineml.annotations import (
     Annotations, INDEX_TAG, INDEX_KEY_ATTR, INDEX_NAME_ATTR, INDEX_INDEX_ATTR,
     PY9ML_NS, VALIDATION, DIMENSIONALITY)
 
+
 # The name of the attribute used to represent the "body" of the element.
 # NB: Body elements should be phased out in later 9ML versions to avoid this.
 BODY_ATTR = '@body'
 NS_ATTR = '@namespace'
-
-NINEML_BASE_NS = "http://nineml.net/9ML/"
-MATHML_NS = "http://www.w3.org/1998/Math/MathML"
-UNCERTML_NS = "http://www.uncertml.org/2.0"
 
 is_int_re = re.compile(r'\d+(\.0)?')
 version_re = re.compile(r'(\d+)\.(\d+)')

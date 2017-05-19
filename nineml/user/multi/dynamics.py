@@ -6,11 +6,8 @@ import sympy
 import operator
 from nineml.base import clone_id
 from itertools import product, groupby, izip, repeat
-from nineml.reference import resolve_reference, write_reference
-from nineml.xml import (
-    E, from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.user import DynamicsProperties, Definition
-from nineml.annotations import annotate_xml, read_annotations, PY9ML_NS
+from nineml.annotations import PY9ML_NS
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, name_error)

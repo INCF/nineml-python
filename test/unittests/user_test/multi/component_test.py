@@ -4,17 +4,13 @@ import sympy
 from nineml import units as un
 from nineml import Document
 from nineml.user.multi.dynamics import (
-    MultiDynamicsProperties, SubDynamicsProperties, MultiDynamics,
-    AnalogReceivePortExposure)
+    MultiDynamicsProperties, MultiDynamics)
 from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, AnalogReducePort, OutputEvent,
     AnalogSendPort, On, StateAssignment, Constant)
-from nineml.user.port_connections import AnalogPortConnection
 from nineml.user.dynamics import DynamicsProperties
-from nineml.exceptions import NineMLRuntimeError
 from nineml.user.multi.port_exposures import (
     _LocalAnalogPortConnections, _ReceivePortExposureAlias)
-from nineml.xml import etree, Ev2
 
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
@@ -88,7 +84,7 @@ class MultiDynamicsXML_test(unittest.TestCase):
             port_connections=[('a', 'A1', 'b', 'ARP1'),
                               ('b', 'A1', 'a', 'ARP1'),
                               ('b', 'A3', 'a', 'ARP2')])
-        xml = Document(comp1, self.a, self.b).to_xml(E=Ev2)
+        xml = Document(comp1, self.a, self.b).to_xml(version=2)
         comp2 = Document.load(xml)['test']
         if comp1 != comp2:
             print comp2.find_mismatch(comp1)

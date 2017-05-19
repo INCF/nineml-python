@@ -1,9 +1,5 @@
 from operator import itemgetter, and_
 from . import BaseULObject
-from nineml.reference import resolve_reference, write_reference, Reference
-from nineml.annotations import annotate_xml, read_annotations
-from nineml.xml import (
-    extract_xmlns, E, from_child_xml, unprocessed_xml, get_xml_attr, NINEMLv1)
 from nineml.base import DocumentLevelObject, DynamicPortsObject
 from .population import Population
 from nineml.exceptions import NineMLNameError, NineMLSerializationError

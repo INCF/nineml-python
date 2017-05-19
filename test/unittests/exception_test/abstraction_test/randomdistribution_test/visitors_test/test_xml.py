@@ -1,5 +1,4 @@
 import unittest
-from nineml.abstraction.randomdistribution.visitors.xml import (RandomDistributionXMLLoader)
 from nineml.utils.testing.comprehensive import instances_of_all_types
 from nineml.exceptions import (NineMLXMLBlockError)
 

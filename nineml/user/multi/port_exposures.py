@@ -6,8 +6,6 @@ from nineml.base import clone_id, BaseNineMLObject, _clone_attr
 from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
-from nineml.xml import E, unprocessed_xml, get_xml_attr
-from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLImmutableError, NineMLTargetMissingError,
     NineMLNameError)

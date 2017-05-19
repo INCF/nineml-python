@@ -1,11 +1,20 @@
 import os.path
-import nineml
 import re
+import time
 from urllib import urlopen
 import weakref
 import contextlib
 from nineml.exceptions import (
     NineMLSerializationError, NineMLIOError, NineMLUpdatedFileException)
+
+NINEML_BASE_NS = "http://nineml.net/9ML/"
+NINEML_V1_NS = NINEML_BASE_NS + '1.0'
+NINEML_V2_NS = NINEML_BASE_NS + '2.0'
+NINEML_NS = NINEML_V1_NS
+MATHML_NS = "http://www.w3.org/1998/Math/MathML"
+UNCERTML_NS = "http://www.uncertml.org/2.0"
+
+import nineml  # @IgnorePep8
 try:
     from .xml import (
         Serializer as XMLSerializer, Unserializer as XMLUnserializer)
@@ -43,9 +52,14 @@ def write(nineml_object, url, **kwargs):
     # Encapsulate the NineML element in a document if it is not already
     if not isinstance(nineml_object, nineml.Document):
         document = nineml.Document(nineml_object, **kwargs)
+    elif document.url is not None and document.url != url:
+        document = document.clone()
     Serializer = ext_to_serializer[ext_from_url(url)]
     with open(url) as f:
         Serializer(document, url, **kwargs).write(f, **kwargs)
+    document._url = url
+    nineml.Document.registry[url] = (weakref.ref(document),
+                                     time.ctime(os.path.getmtime(url)))
 
 
 def ext_from_url(url):

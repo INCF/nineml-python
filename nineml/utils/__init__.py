@@ -18,7 +18,7 @@ from ..exceptions import internal_error
 from ..exceptions import NineMLRuntimeError
 from nineml.base import ContainerObject
 from logging import getLogger
-from nineml.xml import strip_xmlns
+from nineml.serialization.xml import strip_xmlns
 
 
 logger = getLogger('lib9ml')

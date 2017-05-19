@@ -5,14 +5,12 @@ import operator
 from sympy import Symbol
 import sympy
 import math
-from nineml.xml import E, unprocessed_xml, get_xml_attr
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
-from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLDimensionError,
-    NineMLValueError, NineMLSerializationError)
+    NineMLRuntimeError, NineMLDimensionError, NineMLValueError,
+    NineMLSerializationError)
 from nineml.values import (
-    BaseValue, SingleValue, ArrayValue, RandomValue)
+    SingleValue, ArrayValue, RandomValue)
 from nineml.utils import ensure_valid_identifier
 
 

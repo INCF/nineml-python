@@ -22,8 +22,3 @@ from .ports import (AnalogSendPort, AnalogReceivePort,
                     EventReceivePort, AnalogPort, EventPort, Port)
 from .connectionrule import ConnectionRule
 from .randomdistribution import RandomDistribution
-from .dynamics import DynamicsXMLLoader, DynamicsXMLWriter
-from .randomdistribution import (
-    RandomDistributionXMLLoader, RandomDistributionXMLWriter)
-from .connectionrule import (ConnectionRuleXMLLoader,
-                             ConnectionRuleXMLWriter)

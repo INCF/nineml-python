@@ -13,7 +13,6 @@ docstring goes here
 :license: BSD-3, see LICENSE for details.
 """
 from ..componentclass import ComponentClass, Parameter
-from nineml.xml import E
 from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
 import nineml.units as un
 
@@ -141,8 +140,6 @@ from .visitors.queriers import (  # @IgnorePep8
     ConnectionRuleExpressionExtractor, ConnectionRuleDimensionResolver)
 from .visitors.validators import ConnectionRuleValidator  # @IgnorePep8
 from .visitors.cloner import ConnectionRuleCloner  # @IgnorePep8
-from .visitors.xml import (  # @IgnorePep8
-    ConnectionRuleXMLLoader, ConnectionRuleXMLWriter)
 
 
 one_to_one_connection_rule = ConnectionRule(

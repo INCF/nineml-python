@@ -6,7 +6,8 @@ from urllib import urlopen
 import contextlib
 from nineml.document import Document
 from nineml.exceptions import NineMLXMLError, NineMLSerializationError
-from .base import BaseSerializer, BaseUnserializer, NINEML_BASE_NS
+from .base import BaseSerializer, BaseUnserializer
+from . import NINEML_BASE_NS
 
 # Extracts the xmlns from an lxml element tag
 xmlns_re = re.compile(r'\{(.*)\}(.*)')

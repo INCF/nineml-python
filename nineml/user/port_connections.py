@@ -1,7 +1,5 @@
 from . import BaseULObject
 from abc import ABCMeta, abstractmethod
-from nineml.xml import E, unprocessed_xml, get_xml_attr
-from nineml.annotations import read_annotations, annotate_xml
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLDimensionError)
 from nineml.abstraction.ports import (

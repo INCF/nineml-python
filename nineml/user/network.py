@@ -9,14 +9,10 @@ from .population import Population
 from .projection import Projection
 from .selection import Selection
 from . import BaseULObject
-from .component import write_reference, resolve_reference
 from nineml.abstraction.connectionrule import (
     explicit_connection_rule, one_to_one_connection_rule)
-from nineml.annotations import annotate_xml, read_annotations
 from nineml.exceptions import name_error
 from nineml.base import DocumentLevelObject, ContainerObject
-from nineml.xml import (
-    E, from_child_xml, unprocessed_xml, get_xml_attr)
 from nineml.user.port_connections import EventPortConnection
 from nineml.user import DynamicsProperties, MultiDynamicsProperties
 from nineml.user.connectionrule import ConnectionRuleProperties, Connectivity

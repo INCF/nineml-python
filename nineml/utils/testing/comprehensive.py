@@ -27,9 +27,9 @@ from nineml.user import (
 from nineml.user.multi import (
     EventSendPortExposure, EventReceivePortExposure, AnalogSendPortExposure,
     AnalogReceivePortExposure, AnalogReducePortExposure)
-from nineml.xml import nineml_v1_ns
 import sympy
 from nineml.user.projection import Connectivity
+from nineml.serialization import NINEML_V1_NS
 
 
 ranDistrA = RandomDistribution(
@@ -375,7 +375,7 @@ selB = Selection(
 
 conA = ConnectionRule(
     name="conA",
-    standard_library=nineml_v1_ns + '/connectionrules/RandomFanIn',
+    standard_library=NINEML_V1_NS + '/connectionrules/RandomFanIn',
     parameters=[Parameter('number', dimension=un.dimensionless)])
 
 conPropA = ConnectionRuleProperties(
@@ -385,7 +385,7 @@ conPropA = ConnectionRuleProperties(
 
 conB = ConnectionRule(
     name="conB",
-    standard_library=(nineml_v1_ns + '/connectionrules/OneToOne'))
+    standard_library=(NINEML_V1_NS + '/connectionrules/OneToOne'))
 
 
 conPropB1 = ConnectionRuleProperties(

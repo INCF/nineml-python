@@ -53,7 +53,7 @@ class Document(AnnotatedNineMLObject, dict):
     def __init__(self, *elements, **kwargs):
         AnnotatedNineMLObject.__init__(
             self, annotations=kwargs.pop('annotations', None))
-        self._url = self._standardise_url(kwargs.pop('url', None))
+        self._url = kwargs.pop('url', None)
         self._unserializer = kwargs.pop('unserializer', None)
         # Stores the list of elements that are being loaded to check for
         # circular references
@@ -84,11 +84,6 @@ class Document(AnnotatedNineMLObject, dict):
         kwargs : dict
             Keyword arguments passed to the clone method
         """
-        if not isinstance(element, (DocumentLevelObject, self._Unloaded)):
-            raise NineMLRuntimeError(
-                "Could not add {} to document '{}' as it is not a 'document "
-                "level NineML object'"
-                .format(element.nineml_type, self.url))
         if element.name in self:
             # Ignore if the element is already added (this can happen
             # implictly when writing other elements that refer to this element)
@@ -327,36 +322,6 @@ class Document(AnnotatedNineMLObject, dict):
                     ref._referred_to = memo[id(ref._referred_to)]
         return clone
 
-    @property
-    def url(self):
-        return self._url
-
-    @url.setter
-    def url(self, url):
-        if url != self.url:
-            if url is None:
-                raise NineMLRuntimeError(
-                    "Cannot reset a documents url to None once it has been set"
-                    "('{}') please duplicate the document instead"
-                    .format(self.url))
-            url = self._standardise_url(url)
-            try:
-                doc_ref = self._loaded_docs[url]
-                if doc_ref():
-                    raise NineMLRuntimeError(
-                        "Cannot set url of document to '{}' as there is "
-                        "already a document loaded in memory with that url. "
-                        "Please remove all references to it first (see "
-                        "https://docs.python.org/2/c-api/intro.html"
-                        "#objects-types-and-reference-counts)"
-                        .format(url))
-            except KeyError:
-                pass
-            # Register the url with the Document class to avoid reloading
-            self._loaded_docs[url] = weakref.ref(self)
-            # Update the url
-            self._url = url
-
     def find_mismatch(self, other):
         """
         A function used to display where two documents differ (typically used
@@ -401,6 +366,39 @@ class Document(AnnotatedNineMLObject, dict):
         node.children(self.dimensions, reference=False, **options)
         node.children(self.units, reference=False, **options)
 
+    @property
+    def url(self):
+        return self._url
+
+#     @url.setter
+#     def url(self, url):
+#         if not hasattr(self, '_url'):  # For __init__ method
+#             self._url = None
+#         if url != self.url:
+#             if url is None:
+#                 raise NineMLRuntimeError(
+#                     "Cannot reset a documents url to None once it has been set"
+#                     "('{}') please clone the document instead"
+#                     .format(self.url))
+#             if file_path_re.match(url) is not None:
+#                 url = os.path.abspath(url)
+#             try:
+#                 doc_ref = self.registry[url][0]
+#                 if doc_ref():
+#                     raise NineMLRuntimeError(
+#                         "Cannot set url of document to '{}' as there is "
+#                         "already a document loaded in memory with that url. "
+#                         "Please remove all references to it first (see "
+#                         "https://docs.python.org/2/c-api/intro.html"
+#                         "#objects-types-and-reference-counts)"
+#                         .format(url))
+#             except KeyError:
+#                 pass
+#             # Register the url with the Document class to avoid reloading
+#             self.registry[url] = weakref.ref(self)
+#             # Update the url
+#             self._url = url
+
     @classmethod
     def load(cls, url, relative_to=None, reload=False):  # @ReservedAssignment
         if not isinstance(url, basestring):
@@ -420,13 +418,14 @@ class Document(AnnotatedNineMLObject, dict):
             mtime = None  # Cannot load mtime of a general URL
         else:
             raise NineMLIOError(
-                "{} is not a valid URL or file path")
+                "{} is not a valid URL or file path".format(url))
         if reload:
             cls.registry.pop(url, None)
         try:
-            doc, loaded_mtime = cls.registry[url]
-            if loaded_mtime != mtime:
+            doc_ref, loaded_mtime = cls.registry[url]
+            if loaded_mtime != mtime or doc_ref() is None:
                 raise NineMLUpdatedFileException()
+            doc = doc_ref()
         except (KeyError, NineMLUpdatedFileException):
             doc = read(url)
             cls.registry[url] = doc, mtime

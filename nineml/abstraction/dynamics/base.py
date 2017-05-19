@@ -16,7 +16,6 @@ from ..ports import (AnalogReceivePort, AnalogSendPort,
                      EventSendPort)
 from nineml.utils import (check_inferred_against_declared,
                           assert_no_duplicates)
-from nineml.xml import E
 from nineml.annotations import VALIDATION, DIMENSIONALITY, PY9ML_NS
 from nineml.base import DynamicPortsObject
 from ..componentclass.base import Alias
@@ -575,4 +574,3 @@ from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
 from .visitors.modifiers import (  # @IgnorePep8
     DynamicsRenameSymbol, DynamicsAssignIndices,
     DynamicsExpandAliasDefinition)
-from .visitors.xml import DynamicsXMLLoader, DynamicsXMLWriter  # @IgnorePep8

@@ -1,15 +1,13 @@
 import unittest
 import tempfile
-from nineml.document import (Document, read_xml, get_component_class_type)
+from nineml.document import Document
 from nineml.utils.testing.comprehensive import (
     instances_of_all_types, doc1, conPropB1)
-from nineml.exceptions import (NineMLXMLError, NineMLNameError,
-                               NineMLRuntimeError)
-from tempfile import mkdtemp
+from nineml.exceptions import (NineMLNameError, NineMLRuntimeError)
+# from tempfile import mkdtemp
 import os.path
-from nineml.xml import Ev1, Ev2, ElementMaker
 from nineml.abstraction.dynamics import Trigger
-import shutil
+
 import nineml.units as un
 from nineml.user import (
     DynamicsProperties, ConnectionRuleProperties, Definition)
@@ -19,48 +17,48 @@ from nineml.abstraction.connectionrule import random_fan_in_connection_rule
 
 class TestDocumentExceptions(unittest.TestCase):
 
-    def setUp(self):
-        self._temp_dir = mkdtemp()
-
-    def tearDown(self):
-        shutil.rmtree(self._temp_dir)
-
-    def test_read_xml_ninemlruntimeerror(self):
-        """
-        line #: 582
-        message: Could not read 9ML URL '{}': {}
-        """
-
-        self.assertRaises(
-            NineMLRuntimeError,
-            read_xml,
-            url='http://this_is_a_bad_url.html',
-            relative_to='/a_file.xml')
-
-    def test_read_xml_ninemlruntimeerror2(self):
-        """
-        line #: 587
-        message: Could not parse XML of 9ML file '{}': {}
-        """
-        bad_xml_path = os.path.join(self._temp_dir, 'bad_xml.xml')
-        with open(bad_xml_path, 'w') as f:
-            f.write("this file doesn't contain xml")
-        self.assertRaises(
-            NineMLRuntimeError,
-            read_xml,
-            url=bad_xml_path,
-            relative_to='/a_file.xml')
-
-    def test_get_component_class_type_ninemlxmlerror(self):
-        """
-        line #: 607
-        message: No type defining block in ComponentClass
-        """
-        elem = Ev1.ComponentClass(name="a")
-        self.assertRaises(
-            NineMLXMLError,
-            get_component_class_type,
-            elem=elem)
+#     def setUp(self):
+#         self._temp_dir = mkdtemp()
+# 
+#     def tearDown(self):
+#         shutil.rmtree(self._temp_dir)
+# 
+#     def test_read_xml_ninemlruntimeerror(self):
+#         """
+#         line #: 582
+#         message: Could not read 9ML URL '{}': {}
+#         """
+# 
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             read_xml,
+#             url='http://this_is_a_bad_url.html',
+#             relative_to='/a_file.xml')
+# 
+#     def test_read_xml_ninemlruntimeerror2(self):
+#         """
+#         line #: 587
+#         message: Could not parse XML of 9ML file '{}': {}
+#         """
+#         bad_xml_path = os.path.join(self._temp_dir, 'bad_xml.xml')
+#         with open(bad_xml_path, 'w') as f:
+#             f.write("this file doesn't contain xml")
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             read_xml,
+#             url=bad_xml_path,
+#             relative_to='/a_file.xml')
+# 
+#     def test_get_component_class_type_ninemlxmlerror(self):
+#         """
+#         line #: 607
+#         message: No type defining block in ComponentClass
+#         """
+#         elem = Ev1.ComponentClass(name="a")
+#         self.assertRaises(
+#             NineMLXMLError,
+#             get_component_class_type,
+#             elem=elem)
 
     def test_add_ninemlruntimeerror(self):
         """
@@ -134,25 +132,25 @@ class TestDocumentExceptions(unittest.TestCase):
             NineMLNameError,
             doc1.__getitem__,
             name='ZZ')
-
-    def test__load_elem_from_xml_ninemlruntimeerror(self):
-        """
-        line #: 217
-        message: Circular reference detected in '{}(name={})' element.
-        Resolution stack was:
-        """
-        xml = Ev2(Document.nineml_type,
-                  Ev2(DynamicsProperties.nineml_type,
-                      Ev2(Definition.nineml_type, name="B"),
-                      name="A"),
-                  Ev2(DynamicsProperties.nineml_type,
-                      Ev2(Definition.nineml_type, name="A"),
-                      name="B"))
-        document = Document.load(xml)
-        self.assertRaises(
-            NineMLRuntimeError,
-            document._load_elem_from_xml,
-            unloaded=super(Document, document).__getitem__('A'))
+# 
+#     def test__load_elem_from_xml_ninemlruntimeerror(self):
+#         """
+#         line #: 217
+#         message: Circular reference detected in '{}(name={})' element.
+#         Resolution stack was:
+#         """
+#         xml = Ev2(Document.nineml_type,
+#                   Ev2(DynamicsProperties.nineml_type,
+#                       Ev2(Definition.nineml_type, name="B"),
+#                       name="A"),
+#                   Ev2(DynamicsProperties.nineml_type,
+#                       Ev2(Definition.nineml_type, name="A"),
+#                       name="B"))
+#         document = Document.load(xml)
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             document._load_elem_from_xml,
+#             unloaded=super(Document, document).__getitem__('A'))
 
     def test_standardize_units_ninemlruntimeerror(self):
         """
@@ -197,89 +195,89 @@ class TestDocumentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             Document, a, b)
-
-    def test_from_xml_ninemlxmlerror(self):
-        """
-        line #: 312
-        message: Unrecognised XML namespace '{}', can be one of '{}'
-        """
-        bad_E = ElementMaker(namespace='http://bad_namespace.net')
-        self.assertRaises(
-            NineMLXMLError,
-            Document.from_xml,
-            element=bad_E.AnElement())
-
-    def test_from_xml_ninemlxmlerror2(self):
-        """
-        line #: 317
-        message: '{}' document does not have a NineML root ('{}')
-        """
-        self.assertRaises(
-            NineMLXMLError,
-            Document.from_xml,
-            element=Ev2.BadRoot())
-
-    def test_from_xml_ninemlruntimeerror(self):
-        """
-        line #: 340
-        message: '{}' element does not correspond to a recognised
-        document-level object
-        """
-        self.assertRaises(
-            NineMLRuntimeError,
-            Document.from_xml,
-            element=Ev2(Trigger.nineml_type, 'a > b'))
-
-    def test_from_xml_ninemlxmlerror3(self):
-        """
-        line #: 350
-        message: Did not find matching NineML class for '{}' element
-        """
-        self.assertRaises(
-            NineMLXMLError,
-            Document.from_xml,
-            element=Ev2.BadElement())
-
-    def test_from_xml_notimplementederror(self):
-        """
-        line #: 358
-        message: Cannot load '{}' element (extensions not implemented)
-        """
-        unrecogised_E = ElementMaker(namespace='http://unrecognised.net')
-        element = Ev2(Document.nineml_type,
-                      unrecogised_E.UnrecognisedExtension())
-        self.assertRaises(
-            NotImplementedError,
-            Document.from_xml,
-            element=element)
-
-    def test_from_xml_ninemlxmlerror5(self):
-        """
-        line #: 369
-        message: Missing 'name' (or 'symbol') attribute from document level
-        object '{}'
-        """
-        elem = Ev2(Document.nineml_type,
-                   Ev2(Dynamics.nineml_type))
-        self.assertRaises(
-            NineMLXMLError,
-            Document.from_xml,
-            element=elem)
-
-    def test_from_xml_ninemlxmlerror6(self):
-        """
-        line #: 373
-        message: Duplicate identifier '{ob1}:{name}'in NineML file '{url}'
-        """
-        xml = Ev2(Document.nineml_type,
-                  Ev2(Dynamics.nineml_type,
-                      name='A'),
-                  Ev2(Dynamics.nineml_type,
-                      name='A'))
-        self.assertRaises(
-            NineMLXMLError,
-            Document.from_xml,
-            element=xml)
+# 
+#     def test_from_xml_ninemlxmlerror(self):
+#         """
+#         line #: 312
+#         message: Unrecognised XML namespace '{}', can be one of '{}'
+#         """
+#         bad_E = ElementMaker(namespace='http://bad_namespace.net')
+#         self.assertRaises(
+#             NineMLXMLError,
+#             Document.from_xml,
+#             element=bad_E.AnElement())
+# 
+#     def test_from_xml_ninemlxmlerror2(self):
+#         """
+#         line #: 317
+#         message: '{}' document does not have a NineML root ('{}')
+#         """
+#         self.assertRaises(
+#             NineMLXMLError,
+#             Document.from_xml,
+#             element=Ev2.BadRoot())
+# 
+#     def test_from_xml_ninemlruntimeerror(self):
+#         """
+#         line #: 340
+#         message: '{}' element does not correspond to a recognised
+#         document-level object
+#         """
+#         self.assertRaises(
+#             NineMLRuntimeError,
+#             Document.from_xml,
+#             element=Ev2(Trigger.nineml_type, 'a > b'))
+# 
+#     def test_from_xml_ninemlxmlerror3(self):
+#         """
+#         line #: 350
+#         message: Did not find matching NineML class for '{}' element
+#         """
+#         self.assertRaises(
+#             NineMLXMLError,
+#             Document.from_xml,
+#             element=Ev2.BadElement())
+# 
+#     def test_from_xml_notimplementederror(self):
+#         """
+#         line #: 358
+#         message: Cannot load '{}' element (extensions not implemented)
+#         """
+#         unrecogised_E = ElementMaker(namespace='http://unrecognised.net')
+#         element = Ev2(Document.nineml_type,
+#                       unrecogised_E.UnrecognisedExtension())
+#         self.assertRaises(
+#             NotImplementedError,
+#             Document.from_xml,
+#             element=element)
+# 
+#     def test_from_xml_ninemlxmlerror5(self):
+#         """
+#         line #: 369
+#         message: Missing 'name' (or 'symbol') attribute from document level
+#         object '{}'
+#         """
+#         elem = Ev2(Document.nineml_type,
+#                    Ev2(Dynamics.nineml_type))
+#         self.assertRaises(
+#             NineMLXMLError,
+#             Document.from_xml,
+#             element=elem)
+# 
+#     def test_from_xml_ninemlxmlerror6(self):
+#         """
+#         line #: 373
+#         message: Duplicate identifier '{ob1}:{name}'in NineML file '{url}'
+#         """
+#         xml = Ev2(Document.nineml_type,
+#                   Ev2(Dynamics.nineml_type,
+#                       name='A'),
+#                   Ev2(Dynamics.nineml_type,
+#                       name='A'))
+#         self.assertRaises(
+#             NineMLXMLError,
+#             Document.from_xml,
+#             element=xml)
 
     def test_write_ninemlruntimeerror(self):
         """

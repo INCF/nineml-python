@@ -17,7 +17,6 @@ from nineml.utils import xml_equal
 #     Unserialize_noder as Upkl, Serializer as Spkl)
 from nineml.serialization.xml import (
     Unserializer as Uxml, Serializer as Sxml)
-from nineml.xml import get_element_maker
 
 
 F_ANNOT_NS = 'http:/a.domain.org'
@@ -259,7 +258,7 @@ class TestXMLComparison(unittest.TestCase):
         for version in (1, 2):
             for i, doc in enumerate((doc2, doc1)):
                 new_xml = Sxml(document=doc, version=version).serialize()
-                orig_xml = doc.to_xml(E=get_element_maker(version))
+                orig_xml = doc.to_xml(version=version)
 #                 print '-------------'
 #                 print '    Doc{} v{}    '.format(i + 1, version)
 #                 print '-------------'

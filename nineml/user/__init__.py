@@ -4,7 +4,7 @@ from .population import Population
 from .selection import Selection, Concatenate
 from .projection import Projection
 from .component import (Property, Component, Definition,
-                        Prototype, resolve_reference, write_reference)
+                        Prototype)
 from .dynamics import Initial, DynamicsProperties
 from .connectionrule import (
     ConnectionRuleProperties, Connectivity, InverseConnectivity)

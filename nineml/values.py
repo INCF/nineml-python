@@ -1,8 +1,6 @@
 from __future__ import division
 from .base import AnnotatedNineMLObject
-from nineml.xml import E, get_xml_attr
-from abc import ABCMeta, abstractmethod
-from nineml.annotations import read_annotations, annotate_xml
+from abc import ABCMeta
 from urllib import urlopen
 import contextlib
 import collections
@@ -15,7 +13,6 @@ import nineml
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
 from nineml.utils import nearly_equal
-from nineml.xml import from_child_xml, unprocessed_xml, get_subblocks
 
 
 # =============================================================================
@@ -75,12 +72,12 @@ class BaseValue(AnnotatedNineMLObject):
 
     __metaclass__ = ABCMeta
 
-    @classmethod
-    @read_annotations
-    def from_parent_xml(cls, element, document, **kwargs):  # @UnusedVariable
-        return from_child_xml(
-            element, (SingleValue, ArrayValue, RandomValue),
-            document, allow_reference=True, **kwargs)
+#     @classmethod
+#     @read_annotations
+#     def from_parent_xml(cls, element, document, **kwargs):  # @UnusedVariable
+#         return from_child_xml(
+#             element, (SingleValue, ArrayValue, RandomValue),
+#             document, allow_reference=True, **kwargs)
 
     def is_array(self):
         return False

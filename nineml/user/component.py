@@ -5,12 +5,8 @@ from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error,
     NineMLValueError)
 from nineml.base import AnnotatedNineMLObject
-from nineml.reference import (
-    BaseReference, write_reference, resolve_reference)
-from nineml.annotations import read_annotations, annotate_xml
+from nineml.reference import BaseReference
 from nineml.utils import ensure_valid_identifier
-from nineml.xml import (
-    from_child_xml, unprocessed_xml, get_xml_attr, E, extract_xmlns, NINEMLv1)
 from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject

@@ -1,5 +1,4 @@
 from ..componentclass import ComponentClass
-from nineml.xml import E
 from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
 from .. import Parameter
 
@@ -119,5 +118,3 @@ from .visitors.queriers import (RandomDistributionRequiredDefinitions,  # @Ignor
                                 RandomDistributionDimensionResolver)
 from .visitors.validators import RandomDistributionValidator  # @IgnorePep8
 from .visitors.cloner import RandomDistributionCloner  # @IgnorePep8
-from .visitors.xml import (  # @IgnorePep8
-    RandomDistributionXMLLoader, RandomDistributionXMLWriter)
