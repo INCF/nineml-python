@@ -1,27 +1,12 @@
-import os.path
-import re
 from itertools import chain
-import time
 from nineml.base import clone_id, AddNestedObjectsToDocumentVisitor
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLIOError,
-    NineMLUpdatedFileException)
+    NineMLRuntimeError, NineMLNameError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from logging import getLogger
 
 
 logger = getLogger('lib9ml')
-
-url_re = re.compile(
-    r'^(?:http|ftp)s?://'  # http:// or https://
-    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|'
-    '[A-Z0-9-]{2,}\.?)|'  # domain...
-    r'localhost|'  # localhost...
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-    r'(?::\d+)?'  # optional port
-    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-
-file_path_re = re.compile(r'^(\.){0,2}\/+([\w\._\-]\/+)*[\w\._\-]')
 
 
 class Document(AnnotatedNineMLObject, dict):
@@ -40,6 +25,8 @@ class Document(AnnotatedNineMLObject, dict):
     ------
     url : str
         The url assigned to the document
+    annotations : 
+        Annotations to add to the document
     """
 
     defining_attributes = ('elements',)
@@ -82,6 +69,10 @@ class Document(AnnotatedNineMLObject, dict):
         kwargs : dict
             Keyword arguments passed to the clone method
         """
+        if not isinstance(element, DocumentLevelObject):
+            raise NineMLRuntimeError(
+                "Cannot add {} element to document as it is not a \"document"
+                "-level\" object".format(element))
         if element.name in self:
             # Ignore if the element is already added (this can happen
             # implictly when writing other elements that refer to this element)
@@ -368,65 +359,5 @@ class Document(AnnotatedNineMLObject, dict):
     def url(self):
         return self._url
 
-#     @url.setter
-#     def url(self, url):
-#         if not hasattr(self, '_url'):  # For __init__ method
-#             self._url = None
-#         if url != self.url:
-#             if url is None:
-#                 raise NineMLRuntimeError(
-#                     "Cannot reset a documents url to None once it has been set"
-#                     "('{}') please clone the document instead"
-#                     .format(self.url))
-#             if file_path_re.match(url) is not None:
-#                 url = os.path.abspath(url)
-#             try:
-#                 doc_ref = self.registry[url][0]
-#                 if doc_ref():
-#                     raise NineMLRuntimeError(
-#                         "Cannot set url of document to '{}' as there is "
-#                         "already a document loaded in memory with that url. "
-#                         "Please remove all references to it first (see "
-#                         "https://docs.python.org/2/c-api/intro.html"
-#                         "#objects-types-and-reference-counts)"
-#                         .format(url))
-#             except KeyError:
-#                 pass
-#             # Register the url with the Document class to avoid reloading
-#             self.registry[url] = weakref.ref(self)
-#             # Update the url
-#             self._url = url
-
-    @classmethod
-    def load(cls, url, relative_to=None, reload=False):  # @ReservedAssignment
-        if not isinstance(url, basestring):
-            raise NineMLIOError(
-                "{} is not a valid URL (it is not even a string)"
-                .format(url))
-        if file_path_re.match(url) is not None:
-            if url.startswith('.'):
-                if relative_to is None:
-                    raise NineMLIOError(
-                        "'relative_to' kwarg must be provided when using "
-                        "relative paths (i.e. paths starting with '.'), "
-                        "'{}'".format(url))
-                url = os.path.abspath(os.path.join(relative_to, url))
-                mtime = time.ctime(os.path.getmtime(url))
-        elif url_re.match(url) is not None:
-            mtime = None  # Cannot load mtime of a general URL
-        else:
-            raise NineMLIOError(
-                "{} is not a valid URL or file path".format(url))
-        if reload:
-            cls.registry.pop(url, None)
-        try:
-            doc_ref, loaded_mtime = cls.registry[url]
-            if loaded_mtime != mtime or doc_ref() is None:
-                raise NineMLUpdatedFileException()
-            doc = doc_ref()
-        except (KeyError, NineMLUpdatedFileException):
-            doc = nineml.read(url)
-            cls.registry[url] = doc, mtime
-        return doc
 
 import nineml  # @IgnorePep8

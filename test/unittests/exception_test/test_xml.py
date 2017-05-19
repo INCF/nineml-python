@@ -225,11 +225,11 @@ from nineml.reference import Reference
 #         in '{url}'
 #         """
 #         elem = Ev2(DynamicsProperties.nineml_type,
-#                    dynPropA.to_xml(doc1),
+#                    dynPropA.serialize(format='xml', version=1, document=doc1),
 #                    Ev2('BadBlock'),
 #                    *list(chain(
-#                        (p.to_xml(doc1) for p in dynPropA.properties),
-#                        (v.to_xml(doc1) for v in dynPropA.initial_values))),
+#                        (p.serialize(format='xml', version=1, document=doc1) for p in dynPropA.properties),
+#                        (v.serialize(format='xml', version=1, document=doc1) for v in dynPropA.initial_values))),
 #                    name='dynPropA2')
 #         self.assertRaises(
 #             NineMLXMLBlockError,
@@ -244,10 +244,10 @@ from nineml.reference import Reference
 #         {elem_name} in '{url}'
 #         """
 #         elem = Ev2(DynamicsProperties.nineml_type,
-#                    dynPropA.to_xml(doc1),
+#                    dynPropA.serialize(format='xml', version=1, document=doc1),
 #                    *list(chain(
-#                        (p.to_xml(doc1) for p in dynPropA.properties),
-#                        (v.to_xml(doc1) for v in dynPropA.initial_values))),
+#                        (p.serialize(format='xml', version=1, document=doc1) for p in dynPropA.properties),
+#                        (v.serialize(format='xml', version=1, document=doc1) for v in dynPropA.initial_values))),
 #                    name='dynPropA2',
 #                    bad_attr='bad')
 #         self.assertRaises(

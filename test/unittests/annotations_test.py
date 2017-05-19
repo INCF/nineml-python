@@ -84,7 +84,7 @@ class TestAnnotations(unittest.TestCase):
 #                                                  self.annot))
 #         writer = DynamicsXMLWriter(doc, E)
 #         re_param_xml = writer.visit_parameter(parameter)
-#         re_dim_xml = dimension.to_xml(doc)
+#         re_dim_xml = dimension.serialize(format='xml', version=1, document=doc)
 #         self.assertTrue(xml_equal(param_xml, re_param_xml))
 #         self.assertTrue(xml_equal(dim_xml, re_dim_xml))
 

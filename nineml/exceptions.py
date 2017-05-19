@@ -86,7 +86,7 @@ class NineMLIOError(NineMLRuntimeError):
     pass
 
 
-class NineMLUpdatedFileException(NineMLException):
+class NineMLReloadDocumentException(NineMLException):
     pass
 
 

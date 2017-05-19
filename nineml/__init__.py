@@ -4,6 +4,11 @@ A Python library for working with 9ML model descriptions.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+
+__version__ = "0.2dev"
+DEFAULT_VERSION = 1
+DEFAULT_FORMAT = 'xml'  # see nineml.serialization format_to_serializer.keys()
+
 from . import units  # @IgnorePep8
 from .document import Document  # @IgnorePep8
 from . import abstraction  # @IgnorePep8
@@ -18,7 +23,4 @@ from .user import (  # @IgnorePep8
     Network, MultiDynamics, MultiDynamicsProperties, Concatenate,
     ComponentArray, EventConnectionGroup, AnalogConnectionGroup)
 from .values import SingleValue, ArrayValue, RandomValue  # @IgnorePep8
-from .serialization import read, write  # @IgnorePep8
-
-
-__version__ = "0.2dev"
+from .serialization import read, write, serialize, unserialize  # @IgnorePep8

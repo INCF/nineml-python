@@ -51,8 +51,9 @@ class TestDefinitionExceptions(unittest.TestCase):
             parameters=[Parameter('P1', dimension=un.time)])
         self.assertRaises(
             NineMLRuntimeError,
-            Definition(dynA).to_xml,
-            doc1)
+            Definition(dynA).serialize,
+            format='xml',
+            document=doc1)
 
 
 class TestDynamicsPropertiesExceptions(unittest.TestCase):

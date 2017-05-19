@@ -5,7 +5,7 @@ from urllib import urlopen
 import weakref
 import contextlib
 from nineml.exceptions import (
-    NineMLSerializationError, NineMLIOError, NineMLUpdatedFileException)
+    NineMLSerializationError, NineMLIOError, NineMLReloadDocumentException)
 
 NINEML_BASE_NS = "http://nineml.net/9ML/"
 NINEML_V1_NS = NINEML_BASE_NS + '1.0'
@@ -23,59 +23,117 @@ from .xml import (
 #     XMLUnserializer = XMLSerializer = None
 
 
-ext_to_serializer = {
+format_to_serializer = {
     'xml': XMLSerializer}
 
 
-ext_to_unserializer = {
+format_to_unserializer = {
     'xml': XMLUnserializer}
 
 
-def read(url, **kwargs):
+def read(url, relative_to=None, reload=False, register=True,  **kwargs):  # @ReservedAssignment @IgnorePep8
+    if not isinstance(url, basestring):
+        raise NineMLIOError(
+            "{} is not a valid URL (it is not even a string)"
+            .format(url))
     if file_path_re.match(url) is not None:
-        handle = open(url)
+        if url.startswith('.'):
+            if relative_to is None:
+                raise NineMLIOError(
+                    "'relative_to' kwarg must be provided when using "
+                    "relative paths (i.e. paths starting with '.'), "
+                    "'{}'".format(url))
+            url = os.path.abspath(os.path.join(relative_to, url))
+            mtime = time.ctime(os.path.getmtime(url))
     elif url_re.match(url) is not None:
-        handle = urlopen(url)
+        mtime = None  # Cannot load mtime of a general URL
     else:
         raise NineMLIOError(
-            "Unrecognised url '{}'".format(url))
-    # Get the unserializer based on the url extension
-    ext = ext_from_url(url)
-    Unserializer = ext_to_unserializer[ext]
-    if Unserializer is None:
-        raise NineMLSerializationError(
-            "Cannot write to '{}' as {} serializer cannot be "
-            "imported. Please check the required dependencies are correctly "
-            "installed".format(url, ext))
-    with contextlib.closing(handle):
-        return Unserializer(handle, url=url).unserialize(**kwargs)
+            "{} is not a valid URL or file path".format(url))
+    if reload:
+        nineml.Document.registry.pop(url, None)
+    try:  # Try to use cached document in registry
+        doc_ref, loaded_mtime = nineml.Document.registry[url]
+        if loaded_mtime != mtime or doc_ref() is None or not register:
+            raise NineMLReloadDocumentException()
+        doc = doc_ref()
+    except (KeyError, NineMLReloadDocumentException):  # Reload from file
+        if file_path_re.match(url) is not None:
+            handle = open(url)
+        elif url_re.match(url) is not None:
+            handle = urlopen(url)
+        else:
+            raise NineMLIOError(
+                "Unrecognised url '{}'".format(url))
+        # Get the unserializer based on the url extension
+        frmat = format_from_url(url)
+        try:
+            Unserializer = format_to_unserializer[frmat]
+        except KeyError:
+            raise NineMLSerializationError(
+                "Unrecognised format '{}' in url '{}', can be one of '{}'"
+                .format(frmat, url,
+                        "', '".join(format_to_unserializer.keys())))
+        if Unserializer is None:
+            raise NineMLSerializationError(
+                "Cannot write to '{}' as {} serializer cannot be imported. "
+                "Please check the required dependencies are correctly "
+                "installed".format(url, frmat))
+        with contextlib.closing(handle):
+            doc = Unserializer(handle, url=url).unserialize(**kwargs)
+        if register:
+            nineml.Document.registry[url] = doc, mtime
+    return doc
 
 
-def write(nineml_object, url, **kwargs):
+def write(url, *nineml_objects, **kwargs):
     """
     Provided for symmetry with read method, takes a nineml.document.Document
     object and writes it to the specified file
     """
+    register = kwargs.pop('register', True)
     # Encapsulate the NineML element in a document if it is not already
-    if not isinstance(nineml_object, nineml.Document):
-        document = nineml.Document(nineml_object, **kwargs)
-    elif document.url is not None and document.url != url:
-        document = document.clone()
-    ext = ext_from_url(url)
-    Serializer = ext_to_serializer[ext]
+    if len(nineml_objects) == 1 and isinstance(nineml_objects[0],
+                                               nineml.Document):
+        document = nineml_objects[0]
+        if document.url is not None and document.url != url:
+            document = document.clone()
+    else:
+        document = nineml.Document(*nineml_objects, **kwargs)
+    frmat = format_from_url(url)
+    try:
+        Serializer = format_to_serializer[frmat]
+    except KeyError:
+        raise NineMLSerializationError(
+            "Unrecognised format '{}' in url '{}', can be one of '{}'"
+            .format(frmat, url, "', '".join(format_to_serializer.keys())))
     if Serializer is None:
         raise NineMLSerializationError(
             "Cannot write to '{}' as {} serializer cannot be "
             "imported. Please check the required dependencies are correctly "
-            "installed".format(url, ext))
+            "installed".format(url, frmat))
     with open(url) as f:
         Serializer(document, url, **kwargs).write(f, **kwargs)
-    document._url = url
-    nineml.Document.registry[url] = (weakref.ref(document),
-                                     time.ctime(os.path.getmtime(url)))
+    if register:
+        document._url = url
+        nineml.Document.registry[url] = (weakref.ref(document),
+                                         time.ctime(os.path.getmtime(url)))
 
 
-def ext_from_url(url):
+def serialize(nineml_object, format, version, document=None, **kwargs):  # @ReservedAssignment @IgnorePep8
+    Serializer = format_to_serializer[format]
+    serializer = Serializer(version=version, document=document)
+    return serializer.visit(nineml_object, **kwargs)
+
+
+def unserialize(serial_elem, nineml_cls, format, version, document=None,  # @ReservedAssignment @IgnorePep8
+                **kwargs):
+    Unserializer = format_to_unserializer[format]
+    unserializer = Unserializer(version=version, document=document)
+    return unserializer.visit(serial_elem, nineml_cls, **kwargs)
+
+
+def format_from_url(url):
     if '#' in url:
         url = url.split('#')[0]
     return os.path.splitext(url)[-1][1:]

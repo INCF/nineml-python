@@ -471,7 +471,7 @@ class ComponentClass_test(unittest.TestCase):
                                       to='r1'),
                        aliases=[Alias('A', '8 / t')])])
         document = Document()
-        a_xml = a.to_xml(document)
+        a_xml = a.serialize(format='xml', version=1, document=document)
         b = Dynamics.from_xml(a_xml, Document(un.dimensionless.clone()))
         self.assertEqual(a, b,
                          "Dynamics with regime-specific alias failed xml "

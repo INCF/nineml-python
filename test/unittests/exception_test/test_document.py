@@ -323,71 +323,71 @@ class TestDocumentExceptions(unittest.TestCase):
             url=url,
             register_url=True)
 
-    def test_url_ninemlruntimeerror(self):
-        """
-        line #: 464
-        message: Cannot reset a documents url to None once it has been
-        set('{}') please duplicate the document instead
-        """
-        doc = Document(
-            Dynamics(
-                name='A',
-                parameters=[
-                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
-                regime=Regime(name='default'),
-                aliases=['A1 := P1 * 2']))
-        tmp_dir = tempfile.mkdtemp()
-        url = os.path.join(tmp_dir, 'a_url.xml')
-        doc.url = url
-        with self.assertRaises(NineMLRuntimeError):
-            doc.url = None
-
-    def test_url_ninemlruntimeerror2(self):
-        """
-        line #: 472
-        message: Cannot set url of document to '{}' as there is already a
-        document loaded in memory with that url. Please remove all references
-        to it first
-        (see https://docs.python.org/2/c-api/intro.html#objects-types-and-
-        reference-counts)
-        """
-        a = Document(
-            Dynamics(
-                name='A',
-                parameters=[
-                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
-                regime=Regime(name='default'),
-                aliases=['A1 := P1 * 2']))
-        b = Document(
-            Dynamics(
-                name='A',
-                parameters=[
-                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
-                regime=Regime(name='default'),
-                aliases=['A1 := P1 * 2']))
-        tmp_dir = tempfile.mkdtemp()
-        url = os.path.join(tmp_dir, 'a_url.xml')
-        a.url = url
-        with self.assertRaises(NineMLRuntimeError):
-            b.url = url
-
-    def test_url_ninemlruntimeerror3(self):
-        """
-        line #: 488
-        message: {} is not a valid URL
-        """
-        doc = Document(
-            Dynamics(
-                name='A',
-                parameters=[
-                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
-                regime=Regime(name='default'),
-                aliases=['A1 := P1 * 2']))
-        with self.assertRaises(NineMLRuntimeError):
-            doc.url = 1
-        with self.assertRaises(NineMLRuntimeError):
-            doc.url = '*;l22f23'
-        with self.assertRaises(NineMLRuntimeError):
-            doc.url = 'a_file.xml'  # Not relative file path
-        with self.assertRaises(NineMLRuntimeError):
-            doc.url = '.../a_file.xml'  # Not relative file path
+#     def test_url_ninemlruntimeerror(self):
+#         """
+#         line #: 464
+#         message: Cannot reset a documents url to None once it has been
+#         set('{}') please duplicate the document instead
+#         """
+#         doc = Document(
+#             Dynamics(
+#                 name='A',
+#                 parameters=[
+#                     Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+#                 regime=Regime(name='default'),
+#                 aliases=['A1 := P1 * 2']))
+#         tmp_dir = tempfile.mkdtemp()
+#         url = os.path.join(tmp_dir, 'a_url.xml')
+#         doc._url = url
+#         with self.assertRaises(NineMLRuntimeError):
+#             doc.url = None
+# 
+#     def test_url_ninemlruntimeerror2(self):
+#         """
+#         line #: 472
+#         message: Cannot set url of document to '{}' as there is already a
+#         document loaded in memory with that url. Please remove all references
+#         to it first
+#         (see https://docs.python.org/2/c-api/intro.html#objects-types-and-
+#         reference-counts)
+#         """
+#         a = Document(
+#             Dynamics(
+#                 name='A',
+#                 parameters=[
+#                     Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+#                 regime=Regime(name='default'),
+#                 aliases=['A1 := P1 * 2']))
+#         b = Document(
+#             Dynamics(
+#                 name='A',
+#                 parameters=[
+#                     Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+#                 regime=Regime(name='default'),
+#                 aliases=['A1 := P1 * 2']))
+#         tmp_dir = tempfile.mkdtemp()
+#         url = os.path.join(tmp_dir, 'a_url.xml')
+#         a._url = url
+#         with self.assertRaises(NineMLRuntimeError):
+#             b.url = url
+# 
+#     def test_url_ninemlruntimeerror3(self):
+#         """
+#         line #: 488
+#         message: {} is not a valid URL
+#         """
+#         doc = Document(
+#             Dynamics(
+#                 name='A',
+#                 parameters=[
+#                     Parameter('P1', dimension=un.Dimension(name='D', t=1))],
+#                 regime=Regime(name='default'),
+#                 aliases=['A1 := P1 * 2']))
+#         with self.assertRaises(NineMLRuntimeError):
+#             doc.url = 1
+#         with self.assertRaises(NineMLRuntimeError):
+#             doc.url = '*;l22f23'
+#         with self.assertRaises(NineMLRuntimeError):
+#             doc.url = 'a_file.xml'  # Not relative file path
+#         with self.assertRaises(NineMLRuntimeError):
+#             doc.url = '.../a_file.xml'  # Not relative file path

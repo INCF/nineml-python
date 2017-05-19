@@ -5,6 +5,7 @@ from collections import defaultdict, Iterator, Iterable
 import sympy
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException)
+from . import DEFAULT_VERSION, DEFAULT_FORMAT
 
 
 def sort_key(elem):
@@ -295,6 +296,20 @@ class BaseNineMLObject(object):
         for attr_name in self.defining_attributes:
             setattr(clone, attr_name,
                     _clone_attr(getattr(self, attr_name), memo, **kwargs))
+
+    def write(self, url, **kwargs):
+        nineml.write(self, url, **kwargs)
+
+    def serialize(self, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # @ReservedAssignment @IgnorePep8
+                  document=None, **kwargs):
+        return nineml.serialize(self, format=format, version=version,
+                                document=document, **kwargs)
+
+    @classmethod
+    def unserialize(cls, serial_elem, format, version, document=None,  # @ReservedAssignment @IgnorePep8
+                    **kwargs):
+        return nineml.unserialize(serial_elem, cls, format=format,
+                                  version=version, document=document, **kwargs)
 
 
 def _clone_attr(attr, memo, **kwargs):

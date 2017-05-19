@@ -30,8 +30,8 @@ def value_str(value):
 class Serializer(BaseSerializer):
     "Serializer class for the XML format"
 
-    def __init__(self, document, version):
-        super(Serializer, self).__init__(document, version)
+    def __init__(self, version, document=None):
+        super(Serializer, self).__init__(version=version, document=document)
         self._doc_root = self.E()(document.nineml_type)
 
     def create_elem(self, name, parent=None, namespace=None,
@@ -63,7 +63,7 @@ class Serializer(BaseSerializer):
 class Unserializer(BaseUnserializer):
     "Unserializer class for the XML format"
 
-    def __init__(self, xml_doc, relative_to=None, **kwargs):
+    def __init__(self, xml_doc, relative_to=None, document=None, **kwargs):
         if isinstance(xml_doc, basestring):
             xml_doc, url = self.read_xml(xml_doc,
                                                relative_to=relative_to)
@@ -77,7 +77,8 @@ class Unserializer(BaseUnserializer):
             raise NineMLSerializationError(
                 "Provided XML document is not in a valid 9ML namespace {}"
                 .format(namespace))
-        super(Unserializer, self).__init__(version, url, **kwargs)
+        super(Unserializer, self).__init__(version, url, document=document,
+                                           **kwargs)
         if strip_xmlns(self.root_elem().tag) != self.node_name(Document):
             raise NineMLSerializationError(
                 "Provided XML document is not enclosed within a '{}' "

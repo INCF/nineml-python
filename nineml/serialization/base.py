@@ -25,9 +25,9 @@ class BaseVisitor(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, document, version):
-        self._document = document
+    def __init__(self, version, document):
         self._version = self.standardize_version(version)
+        self._document = document
 
     @property
     def version(self):
@@ -92,6 +92,11 @@ class BaseSerializer(BaseVisitor):
     "Abstract base class for all serializer classes"
 
     __metaclass__ = ABCMeta
+
+    def __init__(self, version, document=None):
+        if document is None:
+            document = nineml.Document()
+        super(BaseSerializer, self).__init__(version, document)
 
     def serialize(self, **options):
         self.document.serialize_node(
@@ -251,11 +256,12 @@ class BaseUnserializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, version, url, class_map=None):
+    def __init__(self, version, url, class_map=None, document=None):
         if class_map is None:
             class_map = {}
-        super(BaseUnserializer, self).__init__(Document(unserializer=self),
-                                               version)
+        if document is None:
+            document = Document(unserializer=self)
+        super(BaseUnserializer, self).__init__(version, document=document)
         self._url = url
         # Prepare all elements in document for lazy loading
         self._unloaded = {}
