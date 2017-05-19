@@ -2,11 +2,14 @@ import os.path
 import re
 from itertools import chain
 import weakref
+import time
 from nineml.base import clone_id, AddNestedObjectsToDocumentVisitor
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError)
+    NineMLRuntimeError, NineMLNameError, NineMLIOError,
+    NineMLUpdatedFileException)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from logging import getLogger
+from nineml.serialization import read
 
 
 logger = getLogger('lib9ml')
@@ -44,7 +47,8 @@ class Document(AnnotatedNineMLObject, dict):
     defining_attributes = ('elements',)
     nineml_type = 'NineML'
 
-    _loaded_docs = {}
+    # Holds loaded documents to avoid reloading each time
+    registry = {}
 
     def __init__(self, *elements, **kwargs):
         AnnotatedNineMLObject.__init__(
@@ -372,8 +376,6 @@ class Document(AnnotatedNineMLObject, dict):
         return result
 
     def as_network(self, name):
-        # Ensure that all elements are loaded
-        loaded_elems = self.values()  # @UnusedVariable
         # Return Document as a Network object
         return nineml.user.Network(
             name, populations=self.populations, projections=self.projections,
@@ -399,5 +401,35 @@ class Document(AnnotatedNineMLObject, dict):
         node.children(self.dimensions, reference=False, **options)
         node.children(self.units, reference=False, **options)
 
+    @classmethod
+    def load(cls, url, relative_to=None, reload=False):  # @ReservedAssignment
+        if not isinstance(url, basestring):
+            raise NineMLIOError(
+                "{} is not a valid URL (it is not even a string)"
+                .format(url))
+        if file_path_re.match(url) is not None:
+            if url.startswith('.'):
+                if relative_to is None:
+                    raise NineMLIOError(
+                        "'relative_to' kwarg must be provided when using "
+                        "relative paths (i.e. paths starting with '.'), "
+                        "'{}'".format(url))
+                url = os.path.abspath(os.path.join(relative_to, url))
+                mtime = time.ctime(os.path.getmtime(url))
+        elif url_re.match(url) is not None:
+            mtime = None  # Cannot load mtime of a general URL
+        else:
+            raise NineMLIOError(
+                "{} is not a valid URL or file path")
+        if reload:
+            cls.registry.pop(url, None)
+        try:
+            doc, loaded_mtime = cls.registry[url]
+            if loaded_mtime != mtime:
+                raise NineMLUpdatedFileException()
+        except (KeyError, NineMLUpdatedFileException):
+            doc = read(url)
+            cls.registry[url] = doc, mtime
+        return doc
 
 import nineml  # @IgnorePep8
