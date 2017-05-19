@@ -1,7 +1,6 @@
 import os.path
 import re
 from itertools import chain
-import weakref
 import time
 from nineml.base import clone_id, AddNestedObjectsToDocumentVisitor
 from nineml.exceptions import (
@@ -9,7 +8,6 @@ from nineml.exceptions import (
     NineMLUpdatedFileException)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from logging import getLogger
-from nineml.serialization import read
 
 
 logger = getLogger('lib9ml')
@@ -427,7 +425,7 @@ class Document(AnnotatedNineMLObject, dict):
                 raise NineMLUpdatedFileException()
             doc = doc_ref()
         except (KeyError, NineMLUpdatedFileException):
-            doc = read(url)
+            doc = nineml.read(url)
             cls.registry[url] = doc, mtime
         return doc
 

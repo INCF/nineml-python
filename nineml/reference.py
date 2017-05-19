@@ -3,6 +3,7 @@ from copy import copy
 from .base import AnnotatedNineMLObject
 from nineml.exceptions import NineMLRuntimeError
 from nineml.exceptions import NineMLNameError
+from nineml.serialization import ALL_NINEML_NS
 
 
 class BaseReference(AnnotatedNineMLObject):
@@ -27,7 +28,7 @@ class BaseReference(AnnotatedNineMLObject):
                 relative_to = os.path.dirname(document.url)
             else:
                 relative_to = None
-            remote_doc = read(url, relative_to=relative_to)
+            remote_doc = nineml.read(url, relative_to=relative_to)
         else:
             remote_doc = document
         self._referred_to = remote_doc[name]
@@ -195,6 +196,3 @@ def write_reference(to_xml):
                          prefer_refs=prefer_refs, **kwargs)
         return xml
     return unresolving_to_xml
-
-
-from .document import read  # @IgnorePep8

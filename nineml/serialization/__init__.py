@@ -11,15 +11,16 @@ NINEML_BASE_NS = "http://nineml.net/9ML/"
 NINEML_V1_NS = NINEML_BASE_NS + '1.0'
 NINEML_V2_NS = NINEML_BASE_NS + '2.0'
 NINEML_NS = NINEML_V1_NS
+ALL_NINEML_NS = [NINEML_V1_NS, NINEML_V2_NS]
 MATHML_NS = "http://www.w3.org/1998/Math/MathML"
 UNCERTML_NS = "http://www.uncertml.org/2.0"
 
 import nineml  # @IgnorePep8
-try:
-    from .xml import (
-        Serializer as XMLSerializer, Unserializer as XMLUnserializer)
-except:
-    XMLUnserializer = XMLSerializer = None
+# try:
+from .xml import (
+    Serializer as XMLSerializer, Unserializer as XMLUnserializer)
+# except:
+#     XMLUnserializer = XMLSerializer = None
 
 
 ext_to_serializer = {
@@ -39,7 +40,13 @@ def read(url, **kwargs):
         raise NineMLIOError(
             "Unrecognised url '{}'".format(url))
     # Get the unserializer based on the url extension
-    Unserializer = ext_to_unserializer[ext_from_url(url)]
+    ext = ext_from_url(url)
+    Unserializer = ext_to_unserializer[ext]
+    if Unserializer is None:
+        raise NineMLSerializationError(
+            "Cannot write to '{}' as {} serializer cannot be "
+            "imported. Please check the required dependencies are correctly "
+            "installed".format(url, ext))
     with contextlib.closing(handle):
         return Unserializer(handle, url=url).unserialize(**kwargs)
 
@@ -54,7 +61,13 @@ def write(nineml_object, url, **kwargs):
         document = nineml.Document(nineml_object, **kwargs)
     elif document.url is not None and document.url != url:
         document = document.clone()
-    Serializer = ext_to_serializer[ext_from_url(url)]
+    ext = ext_from_url(url)
+    Serializer = ext_to_serializer[ext]
+    if Serializer is None:
+        raise NineMLSerializationError(
+            "Cannot write to '{}' as {} serializer cannot be "
+            "imported. Please check the required dependencies are correctly "
+            "installed".format(url, ext))
     with open(url) as f:
         Serializer(document, url, **kwargs).write(f, **kwargs)
     document._url = url
