@@ -72,7 +72,7 @@ class TestAnnotations(unittest.TestCase):
 #         dim_xml = E(Dimension.nineml_type,
 #                      deepcopy(annot_xml), name='dimensionless')
 #         doc = Document()
-#         dimension = Dimension.from_xml(dim_xml, doc)
+#         dimension = Dimension.unserialize(dim_xml, format='xml', version=2, document=doc)
 #         doc.add(dimension)
 #         loader = DynamicsXMLLoader(doc)
 #         parameter = loader.load_parameter(param_xml)
@@ -181,9 +181,9 @@ class TestAnnotations(unittest.TestCase):
         a.index_of(a.event_send_port('ESP2'))
         a.index_of(a.event_send_port('ESP1'))
         doc = Document(un.dimensionless)
-        serialised = a.to_xml(doc, save_indices=True)
+        serialised = a.serialize(document=doc, save_indices=True)
 #         print etree.tostring(serialised, pretty_print=True)
-        re_a = Dynamics.from_xml(serialised, doc)
+        re_a = Dynamics.unserialize(serialised, format='xml', version=2, document=doc)
         self.assertEqual(re_a.index_of(re_a.parameter('P1')),
                          a.index_of(a.parameter('P1')))
         self.assertEqual(re_a.index_of(re_a.parameter('P2')),

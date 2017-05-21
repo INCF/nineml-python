@@ -10,7 +10,7 @@ class TestUnitsDimensions(unittest.TestCase):
 
     def test_xml_540degree_roundtrip(self):
         document1 = Document.load(units_xml_str)
-        xml = document1.to_xml()
+        xml = document1.serialize()
         document2 = Document.load(xml)
         self.assertEquals(document1, document2)
 

@@ -258,7 +258,7 @@ class TestXMLComparison(unittest.TestCase):
         for version in (1, 2):
             for i, doc in enumerate((doc2, doc1)):
                 new_xml = Sxml(document=doc, version=version).serialize()
-                orig_xml = doc.to_xml(version=version)
+                orig_xml = doc.serialize(version=version)
 #                 print '-------------'
 #                 print '    Doc{} v{}    '.format(i + 1, version)
 #                 print '-------------'

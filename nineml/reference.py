@@ -124,7 +124,7 @@ class Reference(BaseReference):
 # def resolve_reference(from_xml):
 #     def resolving_from_xml(cls, element, document, **kwargs):  # @UnusedVariable @IgnorePep8
 #         if element.tag in (ns + Reference.nineml_type for ns in ALL_NINEML):
-#             reference = Reference.from_xml(element, document)
+#             reference = Reference.unserialize(element, format='xml', version=2, document=document)
 #             obj = reference.user_object
 #         else:
 #             obj = from_xml(cls, element, document)
@@ -132,8 +132,8 @@ class Reference(BaseReference):
 #     return resolving_from_xml
 # 
 # 
-# def write_reference(to_xml):
-#     def unresolving_to_xml(self, document, as_ref=None, absolute_refs=False,
+# def write_reference(serialize):
+#     def unresolving_serialize(self, document, as_ref=None, absolute_refs=False,
 #                            prefer_refs=None, **kwargs):
 #         # Determine whether to write the elemnt as a reference or not depending
 #         # on whether it needs to be, as determined by `as_ref`, e.g. in the
@@ -183,17 +183,17 @@ class Reference(BaseReference):
 #                 if not url.startswith('.'):
 #                     url = './' + url
 #             # Write the element as a reference
-#             xml = Reference(self.name, document, url=url).to_xml(
+#             xml = Reference(self.name, document, url=url).serialize(
 #                 document, **kwargs)
 #         else:
 #             # Write the element inline. NB: This will effectively duplicate the
 #             # object in the saved xml if it is referred to in multiple places.
 #             # To avoid this from happening it is safer to avoid inline
 #             # definitions by setting the `prefer_refs` kwarg.
-#             xml = to_xml(self, document, absolute_refs=absolute_refs,
+#             xml = serialize(self, document, absolute_refs=absolute_refs,
 #                          prefer_refs=prefer_refs, **kwargs)
 #         return xml
-#     return unresolving_to_xml
+#     return unresolving_serialize
 
 
 import nineml  # @IgnorePep8

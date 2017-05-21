@@ -84,7 +84,7 @@ class MultiDynamicsXML_test(unittest.TestCase):
             port_connections=[('a', 'A1', 'b', 'ARP1'),
                               ('b', 'A1', 'a', 'ARP1'),
                               ('b', 'A3', 'a', 'ARP2')])
-        xml = Document(comp1, self.a, self.b).to_xml(version=2)
+        xml = Document(comp1, self.a, self.b).serialize(version=2)
         comp2 = Document.load(xml)['test']
         if comp1 != comp2:
             print comp2.find_mismatch(comp1)

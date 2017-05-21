@@ -312,7 +312,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 parameters=[
                     Parameter('P1', dimension=un.Dimension(name='D', t=1))],
                 regime=Regime(name='default'),
-                aliases=['A1 := P1 * 2'])).to_xml()
+                aliases=['A1 := P1 * 2'])).serialize()
         tmp_dir = tempfile.mkdtemp()
         url = os.path.join(tmp_dir, 'a_url.xml')
         doc1.write(url)

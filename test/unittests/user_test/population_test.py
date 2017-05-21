@@ -10,7 +10,7 @@ class TestPopulation(unittest.TestCase):
 
     def test_xml_540degree_roundtrip(self):
         document1 = read(self.test_file)
-        xml = document1.to_xml()
+        xml = document1.serialize()
         document2 = Document.load(xml, url=self.test_file,
                                   register_url=False)
         self.assertEquals(document1, document2,

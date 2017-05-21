@@ -37,7 +37,7 @@ class TestDefinitionExceptions(unittest.TestCase):
             dynA,
             dynB)
 
-    def test_to_xml_ninemlruntimeerror(self):
+    def test_serialize_ninemlruntimeerror(self):
         """
         line #: 61
         message: Cannot create reference for '{}' {} in the provided document

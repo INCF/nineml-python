@@ -42,8 +42,8 @@ from nineml.exceptions import (
 #     return annotate_from_xml
 # 
 # 
-# def annotate_xml(to_xml):
-#     def annotate_to_xml(self, document_or_obj, **kwargs):
+# def annotate_xml(serialize):
+#     def annotate_serialize(self, document_or_obj, **kwargs):
 #         """
 #         Parameters
 #         ----------
@@ -60,11 +60,11 @@ from nineml.exceptions import (
 #         else:
 #             obj = self
 #             options = kwargs
-#         xml = to_xml(self, document_or_obj, E=E, **kwargs)
+#         xml = serialize(self, document_or_obj, E=E, **kwargs)
 #         annot_xml = None
 #         if not options.get('no_annotations', False):
 #             if obj.annotations:
-#                 annot_xml = obj.annotations.to_xml(E=E, **kwargs)
+#                 annot_xml = obj.annotations.serialize(E=E, **kwargs)
 #                 # Strip validate_dimensions annotation if True (to clean up
 #                 # written files) as this is the default so can be
 #                 # ignored and avoid cluttering the written file
@@ -86,7 +86,7 @@ from nineml.exceptions import (
 #                     index_annot.set(INDEX_KEY_ATTR, key)
 #                     index_annot.set(INDEX_NAME_ATTR, elem.key)
 #                     index_annot.set(INDEX_INDEX_ATTR, index)
-#                 ind_annot_xml = indices_annot.to_xml(E=E, **kwargs)
+#                 ind_annot_xml = indices_annot.serialize(E=E, **kwargs)
 #                 if annot_xml is None:
 #                     annot_xml = ind_annot_xml
 #                 else:
@@ -95,7 +95,7 @@ from nineml.exceptions import (
 #         if annot_xml is not None:
 #             xml.append(annot_xml)
 #         return xml
-#     return annotate_to_xml
+#     return annotate_serialize
 
 
 class BaseAnnotations(BaseNineMLObject):
@@ -298,11 +298,11 @@ class BaseAnnotations(BaseNineMLObject):
 #         name = strip_xmlns(child.tag)
 #         return (name, ns)
 
-    def _sub_branches_to_xml(self, **kwargs):
+    def _sub_branches_serialize(self, **kwargs):
         members = []
         for key_branches in self._branches.itervalues():
             for branch in key_branches:
-                members.append(branch.to_xml(**kwargs))
+                members.append(branch.serialize(**kwargs))
         return members
 
     def serialize_node(self, node, **options):  # @UnusedVariable
