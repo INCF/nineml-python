@@ -1,8 +1,8 @@
 import os.path
 import unittest
 import sympy
-from nineml import units as un
-from nineml import Document
+from nineml import units as un, Document
+from nineml.serialization.xml import Unserializer as Uxml
 from nineml.user.multi.dynamics import (
     MultiDynamicsProperties, MultiDynamics)
 from nineml.abstraction import (
@@ -85,7 +85,7 @@ class MultiDynamicsXML_test(unittest.TestCase):
                               ('b', 'A1', 'a', 'ARP1'),
                               ('b', 'A3', 'a', 'ARP2')])
         xml = Document(comp1, self.a, self.b).serialize(version=2)
-        comp2 = Document.load(xml)['test']
+        comp2 = Uxml(root=xml).unserialize()['test']
         if comp1 != comp2:
             print comp2.find_mismatch(comp1)
         self.assertEquals(comp1, comp2)

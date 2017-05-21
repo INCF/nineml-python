@@ -2,6 +2,7 @@ import os.path
 import re
 import time
 import weakref
+from urllib import urlopen
 import contextlib
 from nineml.exceptions import (
     NineMLSerializationError, NineMLIOError, NineMLReloadDocumentException)
@@ -49,7 +50,7 @@ def read(url, relative_to=None, reload=False, register=True,  **kwargs):  # @Res
                     "relative paths (i.e. paths starting with '.'), "
                     "'{}'".format(url))
             url = os.path.abspath(os.path.join(relative_to, url))
-            mtime = time.ctime(os.path.getmtime(url))
+        mtime = time.ctime(os.path.getmtime(url))
     elif url_re.match(url) is not None:
         mtime = None  # Cannot load mtime of a general URL
     else:
@@ -77,10 +78,17 @@ def read(url, relative_to=None, reload=False, register=True,  **kwargs):  # @Res
                 "Cannot write to '{}' as {} serializer cannot be imported. "
                 "Please check the required dependencies are correctly "
                 "installed".format(url, format))
-
+        if file_path_re.match(url) is not None:
+            file = open(url)  # @ReservedAssignment
+        elif url_re.match(url) is not None:
+            file = urlopen(url)  # @ReservedAssignment
+        else:
+            raise NineMLIOError(
+                "Unrecognised url '{}'".format(url))
+        with contextlib.closing(file):
             doc = Unserializer(file, url=url).unserialize(**kwargs)
         if register:
-            nineml.Document.registry[url] = doc, mtime
+            nineml.Document.registry[url] = weakref.ref(doc), mtime
     return doc
 
 
@@ -110,23 +118,32 @@ def write(url, *nineml_objects, **kwargs):
             "Cannot write to '{}' as {} serializer cannot be "
             "imported. Please check the required dependencies are correctly "
             "installed".format(url, frmat))
-    Serializer(document, url, **kwargs).write(url, **kwargs)
+    with open(url, 'w') as f:
+        Serializer(document=document, **kwargs).write_to_file(f, **kwargs)
     if register:
         document._url = url
         nineml.Document.registry[url] = (weakref.ref(document),
                                          time.ctime(os.path.getmtime(url)))
 
 
-def serialize(nineml_object, format, version, document=None, **kwargs):  # @ReservedAssignment @IgnorePep8
+def serialize(nineml_object, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # @ReservedAssignment @IgnorePep8
+              document=None, **kwargs):
+    if isinstance(nineml_object, nineml.Document):
+        if document is not None and document is not nineml_object:
+            raise NineMLSerializationError(
+                "Supplied 'document' kwarg ({}) is not the same as document to"
+                " serialize ({})".format(document, nineml_object))
+        document = nineml_object
     Serializer = format_to_serializer[format]
     serializer = Serializer(version=version, document=document)
     return serializer.visit(nineml_object, **kwargs)
 
 
 def unserialize(serial_elem, nineml_cls, format, version, document=None,  # @ReservedAssignment @IgnorePep8
-                **kwargs):
+                root=None, url=None, **kwargs):
     Unserializer = format_to_unserializer[format]
-    unserializer = Unserializer(version=version, document=document)
+    unserializer = Unserializer(version=version, root=root,
+                                url=url, document=document)
     return unserializer.visit(serial_elem, nineml_cls, **kwargs)
 
 

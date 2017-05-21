@@ -7,7 +7,7 @@ from nineml.exceptions import (NineMLNameError, NineMLRuntimeError)
 # from tempfile import mkdtemp
 import os.path
 from nineml.abstraction.dynamics import Trigger
-
+import nineml
 import nineml.units as un
 from nineml.user import (
     DynamicsProperties, ConnectionRuleProperties, Definition)
@@ -146,7 +146,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #                   Ev2(DynamicsProperties.nineml_type,
 #                       Ev2(Definition.nineml_type, name="A"),
 #                       name="B"))
-#         document = Document.load(xml)
+#         document = Uxml(root=xml).unserialize()
 #         self.assertRaises(
 #             NineMLRuntimeError,
 #             document._load_elem_from_xml,
@@ -318,7 +318,7 @@ class TestDocumentExceptions(unittest.TestCase):
         doc1.write(url)
         self.assertRaises(
             NineMLRuntimeError,
-            Document.load,
+            nineml.read,
             xml=xml,
             url=url,
             register_url=True)

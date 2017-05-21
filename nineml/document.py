@@ -148,6 +148,14 @@ class Document(AnnotatedNineMLObject, dict):
                         name, self.url or '', "', '".join(self.iterkeys())))
         return elem
 
+    def __contains__(self, name):
+        if super(Document, self).__contains__(name):
+            return True
+        elif self._unserializer is None:
+            return False
+        else:
+            return name in self._unserializer._unloaded
+
     @property
     def elements(self):
         return self.itervalues()

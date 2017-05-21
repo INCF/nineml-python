@@ -1,18 +1,16 @@
 import os.path
 import re
 from abc import ABCMeta, abstractmethod
-from urllib import urlopen
-import contextlib
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
-    NineMLUnexpectedMultipleSerializationError, NineMLNameError, NineMLIOError)
+    NineMLUnexpectedMultipleSerializationError, NineMLNameError)
 import nineml
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
 from nineml.annotations import (
     Annotations, INDEX_TAG, INDEX_KEY_ATTR, INDEX_NAME_ATTR, INDEX_INDEX_ATTR,
     PY9ML_NS, VALIDATION, DIMENSIONALITY)
-from . import DEFAULT_VERSION, file_path_re, url_re
+from . import DEFAULT_VERSION
 
 
 # The name of the attribute used to represent the "body" of the element.
@@ -100,11 +98,12 @@ class BaseSerializer(BaseVisitor):
         if document is None:
             document = nineml.Document()
         super(BaseSerializer, self).__init__(version, document)
+        self._root = self.create_root()
 
     def serialize(self, **options):
         self.document.serialize_node(
-            NodeToSerialize(self, self.root_elem()), **options)
-        return self.root_elem()
+            NodeToSerialize(self, self.root), **options)
+        return self.root
 
     def visit(self, nineml_object, parent=None, reference=None,
               multiple=False, **options):
@@ -131,7 +130,7 @@ class BaseSerializer(BaseVisitor):
         if serial_elem is None:  # If not written as a reference
             # Set parent to document root if not provided
             if parent is None:
-                parent = self.root_elem()
+                parent = self.root
             serial_elem = self.create_elem(self.node_name(type(nineml_object)),
                                            parent=parent, multiple=multiple,
                                            **options)
@@ -236,6 +235,10 @@ class BaseSerializer(BaseVisitor):
             url = False
         return url
 
+    @property
+    def root(self):
+        return self._root
+
     @abstractmethod
     def create_elem(self, name, parent=None, multiple=False,
                     namespace=None, **options):
@@ -250,7 +253,7 @@ class BaseSerializer(BaseVisitor):
         pass
 
     @abstractmethod
-    def root_elem(self):
+    def create_root(self):
         pass
 
     @abstractmethod
@@ -263,36 +266,60 @@ class BaseUnserializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, version, url, class_map=None, document=None):
+    def __init__(self, root, version=None, url=None, class_map=None, # @ReservedAssignment @IgnorePep8
+                 document=None):
         if class_map is None:
             class_map = {}
         if document is None:
-            document = Document(unserializer=self)
-        super(BaseUnserializer, self).__init__(version, document=document)
+            document = Document(unserializer=self, url=url)
         self._url = url
-        # Prepare all elements in document for lazy loading
-        self._unloaded = {}
-        self._annotation_elem = None
-        for nineml_type, _, elem in self.get_children(self.root_elem()):
-            # Strip out document level annotations
-            if nineml_type == self.node_name(Annotations):
-                if self._annotation_elem is None:
-                    raise NineMLSerializationError(
-                        "Multiple annotations tags found in document")
-                    self._annotation_elem = elem
-                continue
-            name = self.get_elem_name(elem)
-            # Check for duplicates
-            if name in self._unloaded:
+        # Get root elem either from kwarg or file handle
+        if isinstance(root, file):
+            self._root = self.parse_file(root)
+        elif isinstance(root, basestring):
+            self._root = self.parse_string(root)
+        elif root is None:
+            self._root = None
+        else:  # If serial element
+            self._root = self.parse_elem(root)
+        # Get the version from the root element
+        if self.root is not None:
+            extracted_version = self.extract_version()
+            if version is not None and extracted_version != version:
                 raise NineMLSerializationError(
-                    "Duplicate elements for name '{}' found in document"
-                    .format(name))
-            # Get the 9ML class corresponding to the element name
-            try:
-                elem_cls = class_map[nineml_type]
-            except KeyError:
-                elem_cls = self.get_nineml_class(nineml_type, elem)
-            self._unloaded[name] = (elem, elem_cls)
+                    "Explicit version {} does not match that of loaded "
+                    "root {}".format(extracted_version, version))
+            version = extracted_version
+        else:
+            if version is None:
+                raise NineMLSerializationError(
+                    "Version needs to be provided if root or file is not")
+            version = self.standardize_version(version)
+        super(BaseUnserializer, self).__init__(version, document=document)
+        # Prepare elements in document for lazy loading
+        self._unloaded = {}
+        if self.root is not None:
+            self._annotation_elem = None
+            for nineml_type, _, elem in self.get_children(self.root):
+                # Strip out document level annotations
+                if nineml_type == self.node_name(Annotations):
+                    if self._annotation_elem is not None:
+                        raise NineMLSerializationError(
+                            "Multiple annotations tags found in document")
+                        self._annotation_elem = elem
+                    continue
+                name = self.get_elem_name(elem)
+                # Check for duplicates
+                if name in self._unloaded:
+                    raise NineMLSerializationError(
+                        "Duplicate elements for name '{}' found in document"
+                        .format(name))
+                # Get the 9ML class corresponding to the element name
+                try:
+                    elem_cls = class_map[nineml_type]
+                except KeyError:
+                    elem_cls = self.get_nineml_class(nineml_type, elem)
+                self._unloaded[name] = (elem, elem_cls)
 
     def get_elem_name(self, elem):
         # Units use 'symbol' as their unique identifier (from LEMS) all
@@ -305,7 +332,8 @@ class BaseUnserializer(BaseVisitor):
         except KeyError:
             raise NineMLSerializationError(
                 "Missing 'name' (or 'symbol') attribute from document "
-                "level object '{}'".format(elem))
+                "level object '{}' ('{}')".format(
+                    elem, "', '".join(elem.attrib.keys())))
         return name
 
     def unserialize(self):
@@ -331,14 +359,7 @@ class BaseUnserializer(BaseVisitor):
         return nineml_object
 
     def visit(self, serial_elem, nineml_cls, allow_ref=False, **options):  # @UnusedVariable @IgnorePep8
-        # Extract annotations if present
-        try:
-            _, annot_elem = self.get_single_child(
-                serial_elem, [self.node_name(Annotations)])
-            annot_node = NodeToUnserialize(self, annot_elem, 'Annotations')
-            Annotations.unserialize_node(annot_node, **options)
-        except NineMLMissingSerializationError:
-            annotations = Annotations()  # No annotations found
+        annotations = self.extract_annotations(serial_elem, **options)
         # Set any loading options that are saved as annotations
         self._set_load_options_from_annotations(options, annotations)
         # Create node to wrap around serial element for convenient access in
@@ -377,8 +398,11 @@ class BaseUnserializer(BaseVisitor):
         if isinstance(names, basestring):
             names = [names]
         child_elems = [
-            (n, e) for n, _, e in self.get_children(elem, **options)
-            if n != self.node_name(Annotations)]
+            (n, e) for n, _, e in self.get_children(elem, **options)]
+        # If not searching for Annotaitons, ignore them
+        annot_name = self.node_name(Annotations)
+        if annot_name not in names:
+            child_elems = [(n, e) for n, e in child_elems if n != annot_name]
         if allow_ref != 'only':
             if names is not None:
                 matches = [(n, e) for n, e in child_elems if n in names]
@@ -417,6 +441,17 @@ class BaseUnserializer(BaseVisitor):
                                   for k in self.get_attr_keys(elem)),
                         ', '.join(c[0] for c in self.get_children(elem))))
         return matches[0]
+
+    def extract_annotations(self, serial_elem, **options):
+        # Extract annotations if present
+        try:
+            _, annot_elem = self.get_single_child(
+                serial_elem, [self.node_name(Annotations)])
+            annot_node = NodeToUnserialize(self, annot_elem, 'Annotations')
+            annotations = Annotations.unserialize_node(annot_node, **options)
+        except NineMLMissingSerializationError:
+            annotations = Annotations()  # No annotations found
+        return annotations
 
     def _set_load_options_from_annotations(self, options, annotations):
         options['validate_dims'] = annotations.get(
@@ -483,7 +518,7 @@ class BaseUnserializer(BaseVisitor):
         else:
             try:
                 elem_type, doc_elem = next(
-                    (t, e) for t, _, e in self.get_children(self.root_elem())
+                    (t, e) for t, _, e in self.get_children(self.root)
                     if self.get_elem_name(e) == name)
             except StopIteration:
                 raise NineMLSerializationError(
@@ -498,7 +533,9 @@ class BaseUnserializer(BaseVisitor):
                     "Referenced object '{}' in {} is not component or "
                     "component class it is a {}".format(
                         name, self.document.url, elem_type))
-        if defn_cls == nineml.Dynamics:
+        if issubclass(defn_cls, nineml.user.component.Component):
+            cls = defn_cls
+        elif defn_cls == nineml.Dynamics:
             cls = nineml.DynamicsProperties
         elif defn_cls == nineml.ConnectionRule:
             cls = nineml.ConnectionRuleProperties
@@ -507,6 +544,10 @@ class BaseUnserializer(BaseVisitor):
         else:
             assert False
         return cls
+
+    @property
+    def root(self):
+        return self._root
 
     @abstractmethod
     def get_children(self, serial_elem, **options):
@@ -525,27 +566,20 @@ class BaseUnserializer(BaseVisitor):
         pass
 
     @abstractmethod
-    def root_elem(self):
+    def extract_version(self, root):
         pass
 
-    # Abstract class method
-    def read_from_file(self, file):  # @ReservedAssignment
+    @abstractmethod
+    def parse_file(self, file):  # @ReservedAssignment
         pass
 
-    @classmethod
-    def read(cls, url, **kwargs):
-        if file_path_re.match(url) is not None:
-            file = open(url)  # @ReservedAssignment
-        elif url_re.match(url) is not None:
-            file = urlopen(url)  # @ReservedAssignment
-        else:
-            raise NineMLIOError(
-                "Unrecognised url '{}'".format(url))
-        with contextlib.closing(file):
-            serial_elem = cls.read_from_file(url)
-        version = cls._extract_version(serial_elem)
-        return cls(serial_elem, version=version,
-                   document=None, url=url, **kwargs).document
+    @abstractmethod
+    def parse_string(self, string):
+        pass
+
+    @abstractmethod
+    def parse_elem(self, elem):
+        pass
 
 
 class BaseNode(object):

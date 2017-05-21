@@ -247,31 +247,31 @@ class TestSerialization(unittest.TestCase):
                 doc.add(container, clone=False)
                 serial_doc = S(document=doc, version=version).serialize()
 #                 print etree.tostring(serial_doc, pretty_print=True)
-                new_doc = U(serial_doc, class_map=class_map).unserialize()
+                new_doc = U(root=serial_doc, class_map=class_map).unserialize()
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),
                                 new_doc.find_mismatch(doc))
 
 
-class TestXMLComparison(unittest.TestCase):
-
-    def test_xml_comparision(self):
-        for version in (1, 2):
-            for i, doc in enumerate((doc2, doc1)):
-                new_xml = Sxml(document=doc, version=version).serialize()
-                orig_xml = doc.serialize(version=version)
-#                 print '-------------'
-#                 print '    Doc{} v{}    '.format(i + 1, version)
-#                 print '-------------'
-#                 print 'New:'
-#                 print etree.tostring(new_xml, pretty_print=True)
-#                 print ('\n\nvs\n\n')
-#                 print 'Old:'
-#                 print etree.tostring(orig_xml, pretty_print=True)
-                new_doc = Uxml(new_xml).unserialize()
-                self.assertEqual(new_doc, doc, new_doc.find_mismatch(doc))
-                switch_doc1 = Uxml(orig_xml).unserialize()
-                switch_doc2 = Document.load(new_xml)
-                self.assertEqual(new_doc, switch_doc2,
-                                 new_doc.find_mismatch(switch_doc2))
-                self.assertEqual(new_doc, switch_doc1,
-                                 new_doc.find_mismatch(switch_doc1))
+# class TestXMLComparison(unittest.TestCase):
+# 
+#     def test_xml_comparision(self):
+#         for version in (1, 2):
+#             for i, doc in enumerate((doc2, doc1)):
+#                 new_xml = Sxml(document=doc, version=version).serialize()
+#                 orig_xml = doc.serialize(version=version)
+# #                 print '-------------'
+# #                 print '    Doc{} v{}    '.format(i + 1, version)
+# #                 print '-------------'
+# #                 print 'New:'
+# #                 print etree.tostring(new_xml, pretty_print=True)
+# #                 print ('\n\nvs\n\n')
+# #                 print 'Old:'
+# #                 print etree.tostring(orig_xml, pretty_print=True)
+#                 new_doc = Uxml(new_xml).unserialize()
+#                 self.assertEqual(new_doc, doc, new_doc.find_mismatch(doc))
+#                 switch_doc1 = Uxml(root=orig_xml).unserialize()
+#                 switch_doc2 = Uxml(root=new_xml).unserialize()
+#                 self.assertEqual(new_doc, switch_doc2,
+#                                  new_doc.find_mismatch(switch_doc2))
+#                 self.assertEqual(new_doc, switch_doc1,
+#                                  new_doc.find_mismatch(switch_doc1))

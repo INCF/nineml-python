@@ -18,6 +18,7 @@ from nineml.user import (
 from nineml import Document
 from nineml.units import ms, mV, nA, Hz, Mohm
 from os import path
+from nineml.serialization.xml import Unserializer as Uxml
 
 src_dir = os.path.dirname(__file__)
 
@@ -98,7 +99,7 @@ class TestNetwork(unittest.TestCase):
         doc = Document(model, static_exc, static_inh, exc_prj,
                        inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
         xml = doc.serialize()
-        loaded_doc = Document.load(xml)
+        loaded_doc = Uxml(root=xml).unserialize()
         if loaded_doc != doc:
             mismatch = loaded_doc.find_mismatch(doc)
         else:

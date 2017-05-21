@@ -5,6 +5,7 @@ from .population import Population
 from nineml.exceptions import NineMLNameError, NineMLSerializationError
 from nineml.utils import ensure_valid_identifier
 from nineml.serialization.base import NodeToUnserialize
+from nineml.annotations import Annotations
 
 
 def combined_port_accessor(population_accessor):
@@ -49,10 +50,10 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     nineml_type = "Selection"
     defining_attributes = ('_name', '_operation')
 
-    def __init__(self, name, operation, document=None):
+    def __init__(self, name, operation, document=None, **kwargs):
         ensure_valid_identifier(name)
         self._name = name
-        BaseULObject.__init__(self)
+        BaseULObject.__init__(self, **kwargs)
         DocumentLevelObject.__init__(self, document)
         self._operation = operation
 
@@ -172,8 +173,8 @@ class Concatenate(BaseULObject):
     nineml_type = 'Concatenate'
     defining_attributes = ('_items',)
 
-    def __init__(self, *items):
-        super(Concatenate, self).__init__()
+    def __init__(self, *items, **kwargs):
+        super(Concatenate, self).__init__(**kwargs)
         self._items = list(items)
 
     def __repr__(self):
@@ -200,8 +201,12 @@ class Concatenate(BaseULObject):
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         items = []
+        annotations = node.visitor.extract_annotations(node.serial_element,
+                                                       **options)
         for name, _, elem in node.visitor.get_children(node.serial_element):
-            if name != 'Item':
+            if name == node.visitor.node_name(Annotations):
+                continue
+            elif name != 'Item':
                 raise NineMLSerializationError(
                     "Unrecognised element '{}' within Selection object"
                     .format(name))
@@ -222,7 +227,8 @@ class Concatenate(BaseULObject):
         if indices[-1] != len(indices) - 1:
             raise ValueError("Missing indices in Concatenate items ({}), list "
                              "must be contiguous.".format(indices))
-        return cls(*items)  # Strip off indices used to sort elements
+        # Strip off indices used to sort elements
+        return cls(*items, annotations=annotations)
 
 # TGC 11/11/ This old implementation of Set (now called Selection) was copied
 #            from nineml.user.populations.py probably some of it is worth

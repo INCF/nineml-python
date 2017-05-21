@@ -214,11 +214,11 @@ class BaseAnnotations(BaseNineMLObject):
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         for (name, ns), key_branches in self._branches.iteritems():
-            branch_elem = node.visitor.create_elem(
-                name, parent=node.serial_element, multiple=True,
-                namespce=ns, **options)
-            branch_node = type(node)(node.visitor, branch_elem)
             for branch in key_branches:
+                branch_elem = node.visitor.create_elem(
+                    name, parent=node.serial_element, multiple=True,
+                    namespce=ns, **options)
+                branch_node = type(node)(node.visitor, branch_elem)
                 branch.serialize_node(branch_node, **options)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
@@ -249,9 +249,9 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
     def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
         branches = defaultdict(list)
         for name, ns, elem in node.visitor.get_children(node.serial_element):
-            child_node = type(node)(self, elem, name)
-            branches[(name, ns)] = _AnnotationsBranch.unserialize_node(
-                child_node, name, ns, **options)
+            child_node = type(node)(node.visitor, elem, name, **options)
+            branches[(name, ns)].append(_AnnotationsBranch.unserialize_node(
+                child_node, name, ns, **options))
         return cls(branches)
 
     def _copy_to_clone(self, clone, memo, **kwargs):

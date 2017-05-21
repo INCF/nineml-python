@@ -1,6 +1,7 @@
 import os.path
 import unittest
 from nineml import read, Document
+from nineml.serialization.xml import Unserializer as Uxml
 from nineml.exceptions import NineMLRuntimeError
 from nineml.user import Property
 from nineml import Unit, Dimension
@@ -19,8 +20,7 @@ class TestComponent(unittest.TestCase):
         test_file = os.path.join(examples_dir, 'HodgkinHuxley.xml')
         document1 = read(test_file)
         xml = document1.serialize()
-        document2 = Document.load(xml, url=test_file,
-                                  register_url=False)
+        document2 = Uxml(xml, url=test_file).unserialize()
         if document1 != document2:
             mismatch = document1.find_mismatch(document2)
         else:
@@ -31,8 +31,7 @@ class TestComponent(unittest.TestCase):
         test_file = os.path.join(examples_dir, 'HodgkinHuxleyModified.xml')
         document1 = read(test_file)
         xml = document1.serialize()
-        document2 = Document.load(xml, url=test_file,
-                                  register_url=False)
+        document2 = Uxml(xml, url=test_file).unserialize()
         if document1 != document2:
             mismatch = document1.find_mismatch(document2)
         else:
@@ -40,10 +39,8 @@ class TestComponent(unittest.TestCase):
         self.assertEquals(document1, document2, mismatch)
 
     def test_mismatch_dimension(self):
-        document = read(os.path.join(examples_dir,
-                                     'HodgkinHuxleyBadUnits.xml'))
         with self.assertRaises(NineMLRuntimeError):
-            document['HodgkinHuxleyBadUnits']
+            read(os.path.join(examples_dir, 'HodgkinHuxleyBadUnits.xml'))
 
 
 class PropertyTest(unittest.TestCase):

@@ -3,6 +3,12 @@ from nineml.values import ArrayValue
 from nineml.utils.testing.comprehensive import instances_of_all_types
 from nineml.exceptions import (NineMLValueError, NineMLRuntimeError)
 from nineml.document import Document
+from lxml.builder import ElementMaker
+from nineml.serialization import NINEML_NS
+
+
+E = ElementMaker(namespace=NINEML_NS,
+                 nsmap={None: NINEML_NS})
 
 
 class TestArrayValueExceptions(unittest.TestCase):
@@ -28,8 +34,10 @@ class TestArrayValueExceptions(unittest.TestCase):
                     E('ArrayValueRow', '1.0', index='-1'))
         self.assertRaises(
             NineMLRuntimeError,
-            ArrayValue.from_xml,
-            element=element,
+            ArrayValue.unserialize,
+            serial_elem=element,
+            format='xml',
+            version=1,
             document=Document())
 
     def test_from_xml_ninemlruntimeerror2(self):
@@ -42,8 +50,10 @@ class TestArrayValueExceptions(unittest.TestCase):
                     E('ArrayValueRow', '2.0', index='0'))
         self.assertRaises(
             NineMLRuntimeError,
-            ArrayValue.from_xml,
-            element=element,
+            ArrayValue.unserialize,
+            serial_elem=element,
+            format='xml',
+            version=1,
             document=Document())
 
     def test_from_xml_ninemlruntimeerror3(self):
@@ -55,8 +65,10 @@ class TestArrayValueExceptions(unittest.TestCase):
                     E('ArrayValueRow', '1.0', index='2'))
         self.assertRaises(
             NineMLRuntimeError,
-            ArrayValue.from_xml,
-            element=element,
+            ArrayValue.unserialize,
+            serial_elem=element,
+            format='xml',
+            version=1,
             document=Document())
 
     def test___float___typeerror(self):

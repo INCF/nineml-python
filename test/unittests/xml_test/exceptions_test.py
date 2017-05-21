@@ -1,38 +1,35 @@
 import unittest
-from nineml import Document
-from nineml.exceptions import NineMLXMLBlockError, NineMLXMLAttributeError
+from nineml.serialization.xml import Unserializer as Uxml
+from nineml.exceptions import (
+    NineMLMissingSerializationError, NineMLSerializationError)
 
 
 class TestPopulation(unittest.TestCase):
 
     def setUp(self):
-        self.doc = Document.load(bad_xml)
+        self.unserializer = Uxml(root=bad_xml)
 
-    def test_bad_block(self):
-        self.assertRaises(NineMLXMLBlockError,
-                          self.doc.__getitem__,
-                          'BadBlock')
-
-    def test_bad_attribute(self):
-        self.assertRaises(NineMLXMLAttributeError,
-                          self.doc.__getitem__,
-                          'BadAttribute1')
-        self.assertRaises(NineMLXMLAttributeError,
-                          self.doc.__getitem__,
-                          'BadAttribute2')
-
-    def test_missing_attribute(self):
-        self.assertRaises(NineMLXMLAttributeError,
-                          self.doc.__getitem__,
-                          'MissingAttribute')
+#     def test_bad_block(self):
+#         self.assertRaises(NineMLSerializationError,
+#                           self.unserializer.unserialize,
+#                           'BadBlock')
+# 
+#     def test_bad_attribute(self):
+#         self.assertRaises(NineMLMissingSerializationError,
+#                           self.doc.__getitem__,
+#                           'BadAttribute1')
+#         self.assertRaises(NineMLMissingSerializationError,
+#                           self.doc.__getitem__,
+#                           'BadAttribute2')
+# 
+#     def test_missing_attribute(self):
+#         self.assertRaises(NineMLMissingSerializationError,
+#                           self.doc.__getitem__,
+#                           'MissingAttribute')
 
     def test_missing_block(self):
-        self.assertRaises(NineMLXMLBlockError,
-                          self.doc.__getitem__,
-                          'MissingBlock1')
-        self.assertRaises(NineMLXMLBlockError,
-                          self.doc.__getitem__,
-                          'MissingBlock2')
+        self.assertRaises(NineMLMissingSerializationError,
+                          self.unserializer.unserialize)
 
 bad_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <NineML xmlns="http://nineml.net/9ML/2.0">

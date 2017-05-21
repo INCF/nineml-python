@@ -1,5 +1,6 @@
 from __future__ import division
 import unittest
+from lxml import etree
 from nineml.abstraction import (
     Parameter, Dynamics, Regime, On, OutputEvent, StateVariable,
     StateAssignment, AnalogSendPort, AnalogReceivePort,
@@ -76,7 +77,7 @@ class TestProjection(unittest.TestCase):
 
         self.one_to_one = ConnectionRule(
             name="OneToOne",
-            standard_library=(NINEML_NS + '1.0/connectionrules/OneToOne'))
+            standard_library=(NINEML_NS + '/connectionrules/OneToOne'))
 
         self.projection = Projection(
             name="Projection",
@@ -91,9 +92,11 @@ class TestProjection(unittest.TestCase):
             delay=1 * un.ms)
 
     def test_xml_roundtrip(self):
-        document = Document(un.ms, un.nA)
-        xml = self.projection.serialize(format='xml', version=1, document=document)
-        projection2 = Projection.unserialize(xml, format='xml', version=2, document=document)
+        document = Document(un.ms, un.nA, self.projection)
+        xml = self.projection.serialize(format='xml', version=1,
+                                        document=document)
+        projection2 = Projection.unserialize(xml, format='xml', version=1,
+                                             document=document)
         self.assertEquals(self.projection, projection2,
                           "Projection failed XML roundtrip:\n{}"
                           .format(self.projection.find_mismatch(projection2)))

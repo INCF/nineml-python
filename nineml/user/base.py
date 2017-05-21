@@ -11,8 +11,8 @@ class BaseULObject(AnnotatedNineMLObject):
 
     layer = 'user'
 
-    def __init__(self):
-        AnnotatedNineMLObject.__init__(self)
+    def __init__(self, **kwargs):
+        AnnotatedNineMLObject.__init__(self, **kwargs)
 
 #     def set_local_reference(self, document, overwrite=False):
 #         """

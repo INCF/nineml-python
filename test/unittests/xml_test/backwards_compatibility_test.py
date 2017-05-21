@@ -10,8 +10,8 @@ class TestBackwardsCompatibility(unittest.TestCase):
     def test_backwards_compatibility(self):
         full_v1_xml = etree.fromstring(version1)
         full_v2_xml = etree.fromstring(version2)
-        v1_doc = Uxml(etree.fromstring(version1)).unserialize()
-        v2_doc = Uxml(etree.fromstring(version2)).unserialize()
+        v1_doc = Uxml(root=etree.fromstring(version1)).unserialize()
+        v2_doc = Uxml(root=etree.fromstring(version2)).unserialize()
         v1_doc._url = './dummy.xml'
         v2_doc._url = './dummy.xml'
         # Ensure all elements are loaded
@@ -28,9 +28,9 @@ class TestBackwardsCompatibility(unittest.TestCase):
                 v1, v2,
                 "Loaded version 1 didn't match loaded version 2:\n{}"
                 .format(v1.find_mismatch(v2)))
-            v1_to_v2_xml = Sxml(v2_doc, version=2.0).visit(
+            v1_to_v2_xml = Sxml(document=v2_doc, version=2.0).visit(
                 v1, ref_style='force_reference')
-            v2_to_v1_xml = Sxml(v1_doc, version=1.0).visit(
+            v2_to_v1_xml = Sxml(document=v1_doc, version=1.0).visit(
                 v2, ref_style='force_reference')
             v1_xml = self._get_xml_element(full_v1_xml, name)
             v2_xml = self._get_xml_element(full_v2_xml, name)

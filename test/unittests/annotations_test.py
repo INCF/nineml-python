@@ -8,6 +8,7 @@ from nineml.units import Dimension
 from nineml import Document
 from nineml.utils import xml_equal
 import nineml.units as un
+from lxml import etree
 
 
 foreign_ns = "http://some.other.namespace.org"
@@ -87,6 +88,8 @@ class TestAnnotations(unittest.TestCase):
 #         re_dim_xml = dimension.serialize(format='xml', version=1, document=doc)
 #         self.assertTrue(xml_equal(param_xml, re_param_xml))
 #         self.assertTrue(xml_equal(dim_xml, re_dim_xml))
+
+    version = 1
 
     def test_get_set(self):
         annot = Annotations()
@@ -181,9 +184,11 @@ class TestAnnotations(unittest.TestCase):
         a.index_of(a.event_send_port('ESP2'))
         a.index_of(a.event_send_port('ESP1'))
         doc = Document(un.dimensionless)
-        serialised = a.serialize(document=doc, save_indices=True)
-#         print etree.tostring(serialised, pretty_print=True)
-        re_a = Dynamics.unserialize(serialised, format='xml', version=2, document=doc)
+        serialised = a.serialize(document=doc, save_indices=True,
+                                 version=self.version)
+        print etree.tostring(serialised, pretty_print=True)
+        re_a = Dynamics.unserialize(serialised, format='xml',
+                                    version=self.version, document=doc)
         self.assertEqual(re_a.index_of(re_a.parameter('P1')),
                          a.index_of(a.parameter('P1')))
         self.assertEqual(re_a.index_of(re_a.parameter('P2')),
