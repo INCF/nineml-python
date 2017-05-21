@@ -4,7 +4,7 @@ from lxml.builder import ElementMaker
 from nineml.document import Document
 from nineml.exceptions import NineMLSerializationError
 from .base import BaseSerializer, BaseUnserializer
-from . import NINEML_BASE_NS
+from . import NINEML_BASE_NS, DEFAULT_VERSION
 
 # Extracts the xmlns from an lxml element tag
 xmlns_re = re.compile(r'\{(.*)\}(.*)')
@@ -27,16 +27,13 @@ def value_str(value):
 class Serializer(BaseSerializer):
     "Serializer class for the XML format"
 
-    def __init__(self, version, document=None):
+    def __init__(self, version=DEFAULT_VERSION, document=None):
         super(Serializer, self).__init__(version=version, document=document)
-        self._doc_root = self.E()(document.nineml_type)
+        self._root_elem = self.E()(Document.nineml_type)
 
     def create_elem(self, name, parent=None, namespace=None,
                     **options):  # @UnusedVariable
-        try:
-            elem = self.E(namespace)(name)
-        except:
-            raise
+        elem = self.E(namespace)(name)
         if parent is not None:
             parent.append(elem)
         return elem
@@ -48,7 +45,7 @@ class Serializer(BaseSerializer):
         serial_elem.text = value_str(value)
 
     def root_elem(self):
-        return self._doc_root
+        return self._root_elem
 
     def E(self, namespace=None):
         if namespace is None:
@@ -56,28 +53,20 @@ class Serializer(BaseSerializer):
         return ElementMaker(namespace=namespace,
                             nsmap={None: self.nineml_namespace})
 
+    def write(self, file_, xml=None, pretty_print=True,
+              xml_declaration=True, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8
+        if xml is None:
+            xml = self.root_elem()
+        etree.ElementTree(xml).write(file_, encoding=encoding,
+                                     pretty_print=pretty_print,
+                                     xml_declaration=xml_declaration)
+
 
 class Unserializer(BaseUnserializer):
     "Unserializer class for the XML format"
 
-    def __init__(self, file_, document=None, url=None, **kwargs):
-        if isinstance(file_, etree._Element):
-            xml = file_  # If already parsed
-        else:
-            try:
-                xml = etree.parse(file_)
-            except (etree.LxmlError, IOError) as e:
-                raise NineMLSerializationError(
-                    "Could not read URL or file path '{}': \n{}"
-                    .format(file_, e))
-            if isinstance(file_, basestring):
-                url = file_
-            else:
-                try:
-                    url = file_.url
-                except AttributeError:
-                    url = file_.name
-        self._root_elem = xml
+    def __init__(self, file=None, document=None, url=None, **kwargs):  # @ReservedAssignment @IgnorePep8
+        self._root_elem = self.read(file)
         namespace = extract_xmlns(self.root_elem().tag)
         try:
             version = nineml_version_re.match(namespace).group(1)
@@ -115,10 +104,11 @@ class Unserializer(BaseUnserializer):
     def root_elem(self):
         return self._root_elem
 
-    def write(self, file_, xml=None, pretty_print=True,
-              xml_declaration=True, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8
-        if xml is None:
-            xml = self.root_elem()
-        etree.ElementTree(xml).write(file_, encoding=encoding,
-                                     pretty_print=pretty_print,
-                                     xml_declaration=xml_declaration)
+    def read(self, file):  # @ReservedAssignment
+        try:
+            xml = etree.parse(file)
+        except (etree.LxmlError, IOError) as e:
+            raise NineMLSerializationError(
+                "Could not read URL or file path '{}': \n{}"
+                .format(file, e))
+        return xml

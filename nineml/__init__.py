@@ -6,8 +6,6 @@ A Python library for working with 9ML model descriptions.
 """
 
 __version__ = "0.2dev"
-DEFAULT_VERSION = 1
-DEFAULT_FORMAT = 'xml'  # see nineml.serialization format_to_serializer.keys()
 
 from . import units  # @IgnorePep8
 from .document import Document  # @IgnorePep8

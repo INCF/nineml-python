@@ -1,15 +1,18 @@
 import os.path
 import re
 from abc import ABCMeta, abstractmethod
+from urllib import urlopen
+import contextlib
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
-    NineMLUnexpectedMultipleSerializationError, NineMLNameError)
+    NineMLUnexpectedMultipleSerializationError, NineMLNameError, NineMLIOError)
 import nineml
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
 from nineml.annotations import (
     Annotations, INDEX_TAG, INDEX_KEY_ATTR, INDEX_NAME_ATTR, INDEX_INDEX_ATTR,
     PY9ML_NS, VALIDATION, DIMENSIONALITY)
+from . import DEFAULT_VERSION, file_path_re, url_re
 
 
 # The name of the attribute used to represent the "body" of the element.
@@ -93,7 +96,7 @@ class BaseSerializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, version, document=None):
+    def __init__(self, version=DEFAULT_VERSION, document=None):
         if document is None:
             document = nineml.Document()
         super(BaseSerializer, self).__init__(version, document)
@@ -248,6 +251,10 @@ class BaseSerializer(BaseVisitor):
 
     @abstractmethod
     def root_elem(self):
+        pass
+
+    @abstractmethod
+    def write_to_file(self, file):  # @ReservedAssignment
         pass
 
 
@@ -520,6 +527,25 @@ class BaseUnserializer(BaseVisitor):
     @abstractmethod
     def root_elem(self):
         pass
+
+    # Abstract class method
+    def read_from_file(self, file):  # @ReservedAssignment
+        pass
+
+    @classmethod
+    def read(cls, url, **kwargs):
+        if file_path_re.match(url) is not None:
+            file = open(url)  # @ReservedAssignment
+        elif url_re.match(url) is not None:
+            file = urlopen(url)  # @ReservedAssignment
+        else:
+            raise NineMLIOError(
+                "Unrecognised url '{}'".format(url))
+        with contextlib.closing(file):
+            serial_elem = cls.read_from_file(url)
+        version = cls._extract_version(serial_elem)
+        return cls(serial_elem, version=version,
+                   document=None, url=url, **kwargs).document
 
 
 class BaseNode(object):

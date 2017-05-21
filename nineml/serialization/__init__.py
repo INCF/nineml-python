@@ -1,16 +1,21 @@
 import os.path
 import re
 import time
-from urllib import urlopen
 import weakref
 import contextlib
 from nineml.exceptions import (
     NineMLSerializationError, NineMLIOError, NineMLReloadDocumentException)
 
+DEFAULT_VERSION = 1
+DEFAULT_FORMAT = 'xml'  # see nineml.serialization format_to_serializer.keys()
+
 NINEML_BASE_NS = "http://nineml.net/9ML/"
 NINEML_V1_NS = NINEML_BASE_NS + '1.0'
 NINEML_V2_NS = NINEML_BASE_NS + '2.0'
-NINEML_NS = NINEML_V1_NS
+if DEFAULT_VERSION == 1:
+    NINEML_NS = NINEML_V1_NS
+else:
+    NINEML_NS = NINEML_V2_NS
 ALL_NINEML_NS = [NINEML_V1_NS, NINEML_V2_NS]
 MATHML_NS = "http://www.w3.org/1998/Math/MathML"
 UNCERTML_NS = "http://www.uncertml.org/2.0"
@@ -58,29 +63,22 @@ def read(url, relative_to=None, reload=False, register=True,  **kwargs):  # @Res
             raise NineMLReloadDocumentException()
         doc = doc_ref()
     except (KeyError, NineMLReloadDocumentException):  # Reload from file
-        if file_path_re.match(url) is not None:
-            handle = open(url)
-        elif url_re.match(url) is not None:
-            handle = urlopen(url)
-        else:
-            raise NineMLIOError(
-                "Unrecognised url '{}'".format(url))
         # Get the unserializer based on the url extension
-        frmat = format_from_url(url)
+        format = format_from_url(url)  # @ReservedAssignment
         try:
-            Unserializer = format_to_unserializer[frmat]
+            Unserializer = format_to_unserializer[format]
         except KeyError:
             raise NineMLSerializationError(
                 "Unrecognised format '{}' in url '{}', can be one of '{}'"
-                .format(frmat, url,
+                .format(format, url,
                         "', '".join(format_to_unserializer.keys())))
         if Unserializer is None:
             raise NineMLSerializationError(
                 "Cannot write to '{}' as {} serializer cannot be imported. "
                 "Please check the required dependencies are correctly "
-                "installed".format(url, frmat))
-        with contextlib.closing(handle):
-            doc = Unserializer(handle, url=url).unserialize(**kwargs)
+                "installed".format(url, format))
+
+            doc = Unserializer(file, url=url).unserialize(**kwargs)
         if register:
             nineml.Document.registry[url] = doc, mtime
     return doc
@@ -112,8 +110,7 @@ def write(url, *nineml_objects, **kwargs):
             "Cannot write to '{}' as {} serializer cannot be "
             "imported. Please check the required dependencies are correctly "
             "installed".format(url, frmat))
-    with open(url) as f:
-        Serializer(document, url, **kwargs).write(f, **kwargs)
+    Serializer(document, url, **kwargs).write(url, **kwargs)
     if register:
         document._url = url
         nineml.Document.registry[url] = (weakref.ref(document),
