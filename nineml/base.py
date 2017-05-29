@@ -434,7 +434,7 @@ class DocumentLevelObject(BaseNineMLObject):
         """
         Writes the top-level NineML object to file in XML.
         """
-        nineml.write(self, fname, **kwargs)
+        nineml.write(fname, self, **kwargs)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         super(DocumentLevelObject, self)._copy_to_clone(clone, memo, **kwargs)

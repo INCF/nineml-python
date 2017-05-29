@@ -194,17 +194,6 @@ class BaseAnnotations(BaseNineMLObject):
                     "branch '{}', cannot use 'delete' method".format(
                         key, self._name))
 
-#     @classmethod
-#     def _extract_key(cls, child):
-#         ns = extract_xmlns(child.tag)
-#         if not ns:
-#             raise NineMLXMLError(
-#                 "All annotations must have a namespace: {}".format(
-#                     etree.tostring(child, pretty_print=True)))
-#         ns = ns[1:-1]  # strip braces
-#         name = strip_xmlns(child.tag)
-#         return (name, ns)
-
     def _sub_branches_serialize(self, **kwargs):
         members = []
         for key_branches in self._branches.itervalues():

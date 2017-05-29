@@ -37,24 +37,6 @@ class TestDefinitionExceptions(unittest.TestCase):
             dynA,
             dynB)
 
-    def test_serialize_ninemlruntimeerror(self):
-        """
-        line #: 61
-        message: Cannot create reference for '{}' {} in the provided document
-        due to name clash with existing {} object
-        """
-        dynA = Dynamics(
-            name='dynA',
-            state_variables=[
-                StateVariable('SV1', dimension=un.dimensionless)],
-            regimes=[Regime('dSV1/dt = -SV1 / P1', name='R1')],
-            parameters=[Parameter('P1', dimension=un.time)])
-        self.assertRaises(
-            NineMLRuntimeError,
-            Definition(dynA).serialize,
-            format='xml',
-            document=doc1)
-
 
 class TestDynamicsPropertiesExceptions(unittest.TestCase):
 

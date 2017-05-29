@@ -60,9 +60,11 @@ class BaseVisitor(object):
 
     @classmethod
     def standardize_version(cls, version):
-        if isinstance(version, int):
-            version = '{}.0'.format(version)
-        elif isinstance(version, float):
+        try:
+            version = float(version)
+        except:
+            pass
+        if isinstance(version, float):
             version = str(version)
         if isinstance(version, str):
             try:
@@ -95,7 +97,7 @@ class BaseSerializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, version=DEFAULT_VERSION, document=None):
+    def __init__(self, version=DEFAULT_VERSION, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
         if document is None:
             document = nineml.Document()
         super(BaseSerializer, self).__init__(version, document)
@@ -115,7 +117,8 @@ class BaseSerializer(BaseVisitor):
                 "not {} ({})".format(type(nineml_object), nineml_object))
         serial_elem = None
         # Write object as reference if appropriate
-        if parent is not None and is_doc_level:
+        if parent is not None and is_doc_level and not isinstance(
+                nineml_object, Annotations):
             ref_style = options.get('ref_style', None)
             if ref_style == 'force_reference':
                 reference = True
@@ -358,7 +361,7 @@ class BaseUnserializer(BaseVisitor):
                     name, self.url or '',
                     "', '".join(self._unloaded.iterkeys())))
         nineml_object = self.visit(serial_elem, nineml_cls, **options)
-        self.document[name] = nineml_object
+        self.document._add(nineml_object, **options)
         return nineml_object
 
     def visit(self, serial_elem, nineml_cls, allow_ref=False, **options):  # @UnusedVariable @IgnorePep8

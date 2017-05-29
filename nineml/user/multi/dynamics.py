@@ -208,14 +208,6 @@ class MultiDynamicsProperties(DynamicsProperties):
         _, comp_name = split_namespace(name)
         return self.sub_component(comp_name).property(name)
 
-#     def _copy_to_clone(self, clone, memo, **kwargs):
-#         kwargs = copy(kwargs)  # Not sure whether this is necessary
-#         # Since the MultiDynamics definition object object
-#         kwargs['clone_definitions'] = True
-#         super(MultiDynamicsProperties, self)._copy_to_clone(clone, memo,
-#                                                             **kwargs)
-
-
 class SubDynamicsProperties(BaseULObject):
 
     nineml_type = 'SubDynamicsProperties'

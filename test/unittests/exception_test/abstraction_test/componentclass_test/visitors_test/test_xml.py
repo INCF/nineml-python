@@ -1,5 +1,4 @@
 import unittest
-from nineml.abstraction.componentclass.visitors.xml import (ComponentClassXMLLoader)
 from nineml.utils.testing.comprehensive import instances_of_all_types
 from nineml.exceptions import (NineMLXMLBlockError)
 

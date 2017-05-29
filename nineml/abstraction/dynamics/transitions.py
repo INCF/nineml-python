@@ -328,26 +328,6 @@ class Transition(BaseALObject, ContainerObject):
     @name_error
     def output_event(self, port):
         return self._output_events[port]
-# 
-#     def add(self, element):
-#         if isinstance(element, StateAssignment):
-#             self._state_assignments[element.name] = element
-#         elif isinstance(element, OutputEvent):
-#             self._output_events[element.name] = element
-#         else:
-#             raise NineMLInvalidElementTypeException(
-#                 "Could not add element of type '{}' to {} class"
-#                 .format(element.__class__.__name__, self.__class__.__name__))
-# 
-#     def remove(self, element):
-#         if isinstance(element, StateAssignment):
-#             self._state_assignments.pop(element.name)
-#         elif isinstance(element, OutputEvent):
-#             self._output_events.pop(element.name)
-#         else:
-#             raise NineMLInvalidElementTypeException(
-#                 "Could not remove element of type '{}' to {} class"
-#                 .format(element.__class__.__name__, self.__class__.__name__))
 
     def bind(self, component_class):
         for output_event in self.output_events:

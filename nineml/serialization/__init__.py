@@ -22,11 +22,11 @@ MATHML_NS = "http://www.w3.org/1998/Math/MathML"
 UNCERTML_NS = "http://www.uncertml.org/2.0"
 
 import nineml  # @IgnorePep8
-# try:
-from .xml import (
-    Serializer as XMLSerializer, Unserializer as XMLUnserializer)
-# except:
-#     XMLUnserializer = XMLSerializer = None
+try:
+    from .xml import (
+        Serializer as XMLSerializer, Unserializer as XMLUnserializer)
+except:
+    XMLUnserializer = XMLSerializer = None
 
 
 format_to_serializer = {
@@ -37,11 +37,15 @@ format_to_unserializer = {
     'xml': XMLUnserializer}
 
 
-def read(url, relative_to=None, reload=False, register=True,  **kwargs):  # @ReservedAssignment @IgnorePep8
+def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @ReservedAssignment @IgnorePep8
     if not isinstance(url, basestring):
         raise NineMLIOError(
             "{} is not a valid URL (it is not even a string)"
             .format(url))
+    if '#' in url:
+        url, name = url.split('#')
+    else:
+        name = None
     if file_path_re.match(url) is not None:
         if url.startswith('.'):
             if relative_to is None:
@@ -86,10 +90,14 @@ def read(url, relative_to=None, reload=False, register=True,  **kwargs):  # @Res
             raise NineMLIOError(
                 "Unrecognised url '{}'".format(url))
         with contextlib.closing(file):
-            doc = Unserializer(file, url=url).unserialize(**kwargs)
+            doc = Unserializer(file, url=url, **kwargs).unserialize()
         if register:
             nineml.Document.registry[url] = weakref.ref(doc), mtime
-    return doc
+    if name is not None:
+        nineml_obj = doc[name]
+    else:
+        nineml_obj = doc
+    return nineml_obj
 
 
 def write(url, *nineml_objects, **kwargs):

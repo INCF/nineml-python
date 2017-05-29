@@ -31,7 +31,7 @@ def value_str(value):
 class Serializer(BaseSerializer):
     "Serializer class for the XML format"
 
-    def __init__(self, version=DEFAULT_VERSION, document=None):
+    def __init__(self, version=DEFAULT_VERSION, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
         super(Serializer, self).__init__(version=version, document=document)
 
     def create_elem(self, name, parent=None, namespace=None,

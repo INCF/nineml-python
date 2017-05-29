@@ -72,13 +72,6 @@ class BaseValue(AnnotatedNineMLObject):
 
     __metaclass__ = ABCMeta
 
-#     @classmethod
-#     @read_annotations
-#     def from_parent_xml(cls, element, document, **kwargs):  # @UnusedVariable
-#         return from_child_xml(
-#             element, (SingleValue, ArrayValue, RandomValue),
-#             document, allow_reference=True, **kwargs)
-
     def is_array(self):
         return False
 

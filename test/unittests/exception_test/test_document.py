@@ -69,7 +69,7 @@ class TestDocumentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             doc1.add,
-            element=Trigger('a > b'))
+            nineml_obj=Trigger('a > b'))
 
     def test_add_ninemlnameerror(self):
         """
@@ -82,7 +82,7 @@ class TestDocumentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLNameError,
             doc1.add,
-            element=dynB)
+            nineml_obj=dynB)
 
 #     def test_add_ninemlruntimeerror2(self):
 #         """
@@ -108,7 +108,7 @@ class TestDocumentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             doc1.remove,
-            element=Trigger('a > b'))
+            nineml_obj=Trigger('a > b'))
 
     def test_remove_ninemlnameerror(self):
         """
@@ -119,7 +119,7 @@ class TestDocumentExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLNameError,
             doc1.remove,
-            element=conPropZZ,
+            nineml_obj=conPropZZ,
             ignore_missing=False)
 
     def test___getitem___ninemlnameerror(self):
@@ -279,50 +279,6 @@ class TestDocumentExceptions(unittest.TestCase):
 #             Document.from_xml,
 #             element=xml)
 
-    def test_write_ninemlruntimeerror(self):
-        """
-        line #: 395
-        message: Cannot write the same Document object to two different
-        locations '{}' and '{}'. Please either explicitly change its `url`
-        property or create a duplicate using the `duplicate` method before
-        attempting to write it to the new location
-        """
-        doc = Document(
-            Dynamics(
-                name='A',
-                parameters=[
-                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
-                regime=Regime(name='default'),
-                aliases=['A1 := P1 * 2']))
-        tmp_dir = tempfile.mkdtemp()
-        doc.write(os.path.join(tmp_dir, 'a_url.xml'))
-        self.assertRaises(
-            NineMLRuntimeError,
-            doc.write,
-            url='./another_url.xml')
-
-    def test_load_ninemlruntimeerror(self):
-        """
-        line #: 439
-        message: Cannot reuse the '{}' url for two different XML strings
-        """
-        xml = Document(
-            Dynamics(
-                name='A',
-                parameters=[
-                    Parameter('P1', dimension=un.Dimension(name='D', t=1))],
-                regime=Regime(name='default'),
-                aliases=['A1 := P1 * 2'])).serialize()
-        tmp_dir = tempfile.mkdtemp()
-        url = os.path.join(tmp_dir, 'a_url.xml')
-        doc1.write(url)
-        self.assertRaises(
-            NineMLRuntimeError,
-            nineml.read,
-            xml=xml,
-            url=url,
-            register_url=True)
-
 #     def test_url_ninemlruntimeerror(self):
 #         """
 #         line #: 464
@@ -341,7 +297,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #         doc._url = url
 #         with self.assertRaises(NineMLRuntimeError):
 #             doc.url = None
-# 
+
 #     def test_url_ninemlruntimeerror2(self):
 #         """
 #         line #: 472
@@ -370,7 +326,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #         a._url = url
 #         with self.assertRaises(NineMLRuntimeError):
 #             b.url = url
-# 
+
 #     def test_url_ninemlruntimeerror3(self):
 #         """
 #         line #: 488
