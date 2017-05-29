@@ -142,14 +142,18 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         Returns the minimum delay and the maximum delay of projections in the
         network in ms
         """
-        min_delay = float('inf') * un.ms
-        max_delay = 0.0 * un.ms
-        for proj in self.projections:
-            delay = proj.delay
-            if delay > max_delay:
-                max_delay = delay
-            if delay < min_delay:
-                min_delay = delay
+        if not self.num_projections:
+            min_delay = 0.0 * un.ms
+            max_delay = 0.0 * un.ms
+        else:
+            min_delay = float('inf') * un.ms
+            max_delay = 0.0 * un.ms
+            for proj in self.projections:
+                delay = proj.delay
+                if delay > max_delay:
+                    max_delay = delay
+                if delay < min_delay:
+                    min_delay = delay
         return {'min_delay': min_delay, 'max_delay': max_delay}
 
     @write_reference
