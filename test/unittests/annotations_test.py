@@ -186,7 +186,6 @@ class TestAnnotations(unittest.TestCase):
         doc = Document(un.dimensionless)
         serialised = a.serialize(document=doc, save_indices=True,
                                  version=self.version)
-        print etree.tostring(serialised, pretty_print=True)
         re_a = Dynamics.unserialize(serialised, format='xml',
                                     version=self.version, document=doc)
         self.assertEqual(re_a.index_of(re_a.parameter('P1')),

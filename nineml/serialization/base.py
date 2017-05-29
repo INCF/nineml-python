@@ -7,6 +7,7 @@ from nineml.exceptions import (
 import nineml
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
+from nineml.serialization import NINEML_NS
 from nineml.annotations import (
     Annotations, INDEX_TAG, INDEX_KEY_ATTR, INDEX_NAME_ATTR, INDEX_INDEX_ATTR,
     PY9ML_NS, VALIDATION, DIMENSIONALITY)
@@ -284,8 +285,10 @@ class BaseUnserializer(BaseVisitor):
             self._root = self.parse_elem(root)
         # Get the version from the root element
         if self.root is not None:
-            extracted_version = self.extract_version()
-            if version is not None and extracted_version != version:
+            extracted_version = self.standardize_version(
+                self.extract_version())
+            if (version is not None and
+                  extracted_version != self.standardize_version(version)):
                 raise NineMLSerializationError(
                     "Explicit version {} does not match that of loaded "
                     "root {}".format(extracted_version, version))
@@ -462,8 +465,8 @@ class BaseUnserializer(BaseVisitor):
         Extract saved indices from annotations and save them in container
         object.
         """
-        if (INDEX_TAG, PY9ML_NS) in annotations:
-            for ind in annotations.pop((INDEX_TAG, PY9ML_NS)):
+        if (INDEX_TAG, NINEML_NS) in annotations:
+            for ind in annotations.pop((INDEX_TAG, NINEML_NS)):
                 key = ind.get(INDEX_KEY_ATTR)
                 name = ind.get(INDEX_NAME_ATTR)
                 index = ind.get(INDEX_INDEX_ATTR)
