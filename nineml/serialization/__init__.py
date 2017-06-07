@@ -126,8 +126,10 @@ def write(url, *nineml_objects, **kwargs):
             "Cannot write to '{}' as {} serializer cannot be "
             "imported. Please check the required dependencies are correctly "
             "installed".format(url, frmat))
+    serializer = Serializer(document=document, **kwargs)
+    serializer.serialize()
     with open(url, 'w') as f:
-        Serializer(document=document, **kwargs).write_to_file(f, **kwargs)
+        serializer.write_to_file(f, **kwargs)
     if register:
         document._url = url
         nineml.Document.registry[url] = (weakref.ref(document),
