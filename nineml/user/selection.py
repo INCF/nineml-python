@@ -1,11 +1,13 @@
 from operator import and_
+from collections import OrderedDict
 from . import BaseULObject
 from nineml.base import (
     DocumentLevelObject, ContainerObject, DynamicPortsObject)
 from .population import Population
-from nineml.exceptions import NineMLNameError
+from nineml.exceptions import NineMLNameError, NineMLRuntimeError
 from nineml.utils import ensure_valid_identifier
-from nineml.user.network import ComponentArray
+from .component_array import ComponentArray
+from nineml.exceptions import name_error
 
 
 def combined_port_accessor(population_accessor):
@@ -86,7 +88,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
 
     @property
     def populations(self):
-        return self.operation.items
+        return self.operation.populations
 
     @property
     def component_classes(self):
@@ -175,8 +177,24 @@ class Concatenate(BaseULObject, ContainerObject):
     class_to_member = {'Item': 'item'}
 
     def __init__(self, *items, **kwargs):
-        super(Concatenate, self).__init__(**kwargs)
-        self._items = dict((i.index, i.population) for i in items)
+        BaseULObject.__init__(self, **kwargs)
+        ContainerObject.__init__(self, **kwargs)
+        if all(isinstance(it, Item) for it in items):
+            indices = [it.index for it in items]
+            if min(indices) < 0 or max(indices) > len(indices):
+                raise NineMLRuntimeError(
+                    "Indices are not contiguous, have duplicates, or don't "
+                    "start from 0 ({})"
+                    .format(', '.join(str(i) for i in indices)))
+            self._items = OrderedDict((it.key, it) for it in items)
+        elif any(isinstance(it, Item) for it in items):
+            raise NineMLRuntimeError(
+                "Cannot mix Items and Populations/Selections in Concatenate "
+                "__init__ method ({})".format(', '.join(str(it)
+                                                        for it in items)))
+        else:
+            self._items = OrderedDict((str(i), Item(i, p))
+                                      for i, p in enumerate(items))
 
     def __repr__(self):
         return "Concatenate({})".format(
@@ -184,7 +202,11 @@ class Concatenate(BaseULObject, ContainerObject):
 
     @property
     def key(self):
-        return '_'.join(i.key for i in self._items[:10])
+        return '_'.join(p.name for p in self.populations)
+
+    @name_error
+    def item(self, index):
+        return self._items[index]
 
     @property
     def item_keys(self):
@@ -198,7 +220,11 @@ class Concatenate(BaseULObject, ContainerObject):
 
     @property
     def populations(self):
-        return (i.population for i in self.items)
+        """
+        Returns and iterator over the populations (or selections or component
+        arrays) in the concatenate statement
+        """
+        return (it.population for it in self.items)
 
     @property
     def num_items(self):
@@ -210,16 +236,17 @@ class Concatenate(BaseULObject, ContainerObject):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        return cls(node.children(Item, **options))
+        return cls(*node.children(Item, **options))
 
 
 class Item(BaseULObject):
 
     nineml_type = 'Item'
-    defining_attributes = ('index', 'population')
+    defining_attributes = ('_index', '_population')
 
     def __init__(self, index, population):
-        self._index = index
+        BaseULObject.__init__(self)
+        self._index = int(index)
         self._population = population
 
     @property
@@ -227,18 +254,26 @@ class Item(BaseULObject):
         return self._index
 
     @property
+    def key(self):
+        return str(self.index)
+
+    @property
     def population(self):
+        """
+        Returns the population/selection/component-array referenced in the
+        Item
+        """
         return self._population
 
     def serialize_node(self, node, **options):
         node.attr('index', self.index, **options)
-        node.child('population', self.population, as_ref='only', **options)
+        node.child(self.population, reference=True, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):
-        return cls(node.attr('index', **options),
+        return cls(node.attr('index', dtype=int, **options),
                    node.child((Population, Selection, ComponentArray),
-                              reference=True, **options))
+                              allow_ref='only', **options))
 
 
 # TGC 11/11/ This old implementation of Set (now called Selection) was copied

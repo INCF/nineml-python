@@ -123,13 +123,18 @@ class Document(AnnotatedNineMLObject, dict):
                 "clone of the element instead"
                 .format(nineml_obj.name, nineml_obj.nineml_type,
                         self.url, nineml_obj.document.url))
-        nineml_obj._document = self  # Set its document to this one
+#         nineml_obj._document = self  # Set its document to this one
         # Add any nested objects that don't already belong
         # to another document
         AddNestedObjectsToDocumentVisitor(self).visit(
             nineml_obj, clone=clone, clone_definitions=clone_definitions,
             **kwargs)
-        dict.__setitem__(self, nineml_obj.name, nineml_obj)
+#         if dict.__contains__(self, nineml_obj.name):
+#             raise NineMLRuntimeError(
+#                 "Cannot add {} to document as its name clashes with that of "
+#                 "nested object {}".format(
+#                     nineml_obj, dict.__getitem__(self, nineml_obj.name)))
+#         dict.__setitem__(self, nineml_obj.name, nineml_obj)
         return nineml_obj
 
     def remove(self, nineml_obj, ignore_missing=False):

@@ -1,10 +1,10 @@
 # encoding: utf-8
+from itertools import chain
 from . import BaseULObject
 from nineml.exceptions import (
     NineMLMissingSerializationError, NineMLSerializationError)
 from .connectionrule import ConnectionRuleProperties, Connectivity
 from .dynamics import DynamicsProperties
-from itertools import chain
 from .population import Population
 from .selection import Selection
 from .component import Quantity

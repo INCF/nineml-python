@@ -1046,25 +1046,30 @@ class AddNestedObjectsToDocumentVisitor(BaseNineMLVisitor):
         """
         if (isinstance(obj, DocumentLevelObject) and (obj.document is None or
                                                       self.add_bound)):
-            if obj.name in self.document:
+            if obj.name in self.document.keys():
                 doc_obj = self.document[obj.name]
-                # Set document of object to current document before checking
-                # for equality with document already in document
-                obj._document = self.document
-                if obj == doc_obj:
-                    if obj is not doc_obj:
-                        self.context.replace(obj, doc_obj)
-                        obj._document = None  # Reset to previous state
-                else:
-                    obj._document = None  # Reset to previous state
-                    raise NineMLRuntimeError(
-                        "Cannot automatically add nested {} '{}' to the "
-                        "document {} as it clashes with existing {}."
-                        .format(obj.nineml_type, obj.name, self.document.url,
-                                self.document[obj.name].nineml_type))
+                orig_doc = obj._document
+                try:
+                    # Set document of object to current document before
+                    # checking for equality with document already in document
+                    obj._document = self.document
+                    if obj == doc_obj:
+                        if obj is not doc_obj and self.context is not None:
+                            self.context.replace(obj, doc_obj)
+                    else:
+                        raise NineMLRuntimeError(
+                            "Cannot add {} '{}' to the document {} as it "
+                            "clashes with existing (potentially nested) {}."
+                            .format(obj.nineml_type, obj.name,
+                                    self.document.url,
+                                    self.document[obj.name].nineml_type))
+                finally:
+                    obj._document = orig_doc  # Reset to previous state
                 obj = doc_obj
             else:
-                obj = self.document.add(obj, clone=False)
+                dict.__setitem__(self.document, obj.name, obj)
+                obj._document = self.document
+#                 obj = self.document.add(obj, clone=False)
         return obj
 
     def post_action(self, *args, **kwargs):

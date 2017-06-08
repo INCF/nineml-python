@@ -91,7 +91,7 @@ class TestAccessors(unittest.TestCase):
                         self.assertTrue(
                             all(isinstance(n, basestring) for n in names),
                             "Not all names of {} in '{} {} were strings "
-                            "('{}')".format(member, elem.key, name,
+                            "({})".format(member, elem.key, name,
                                             names))
                         self.assertEqual(
                             len(names), len(set(names)),
