@@ -1,12 +1,10 @@
-from operator import itemgetter, and_
+from operator import and_
 from . import BaseULObject
 from nineml.base import (
     DocumentLevelObject, ContainerObject, DynamicPortsObject)
 from .population import Population
-from nineml.exceptions import NineMLNameError, NineMLSerializationError
+from nineml.exceptions import NineMLNameError
 from nineml.utils import ensure_valid_identifier
-from nineml.serialization.base import NodeToUnserialize
-from nineml.annotations import Annotations
 from nineml.user.network import ComponentArray
 
 
