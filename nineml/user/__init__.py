@@ -12,5 +12,6 @@ from .randomdistribution import RandomDistributionProperties
 from .multi import MultiDynamics, MultiDynamicsProperties, append_namespace
 from .port_connections import (
     AnalogPortConnection, EventPortConnection)
-from .network import (
-    Network, ComponentArray, AnalogConnectionGroup, EventConnectionGroup)
+from .network import Network
+from .component_array import ComponentArray
+from .connection_group import AnalogConnectionGroup, EventConnectionGroup

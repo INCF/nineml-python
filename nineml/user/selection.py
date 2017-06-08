@@ -1,11 +1,13 @@
 from operator import itemgetter, and_
 from . import BaseULObject
-from nineml.base import DocumentLevelObject, DynamicPortsObject
+from nineml.base import (
+    DocumentLevelObject, ContainerObject, DynamicPortsObject)
 from .population import Population
 from nineml.exceptions import NineMLNameError, NineMLSerializationError
 from nineml.utils import ensure_valid_identifier
 from nineml.serialization.base import NodeToUnserialize
 from nineml.annotations import Annotations
+from nineml.user.network import ComponentArray
 
 
 def combined_port_accessor(population_accessor):
@@ -164,7 +166,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
         return len(list(self.event_receive_ports))
 
 
-class Concatenate(BaseULObject):
+class Concatenate(BaseULObject, ContainerObject):
     """
     Concatenates multiple :class:`Population`\s or :class:`Selection`\s
     together into a larger :class:`Selection`.
@@ -172,63 +174,74 @@ class Concatenate(BaseULObject):
 
     nineml_type = 'Concatenate'
     defining_attributes = ('_items',)
+    class_to_member = {'Item': 'item'}
 
     def __init__(self, *items, **kwargs):
         super(Concatenate, self).__init__(**kwargs)
-        self._items = list(items)
+        self._items = dict((i.index, i.population) for i in items)
 
     def __repr__(self):
-        return "Concatenate(%s)" % ", ".join(repr(item) for item in self.items)
+        return "Concatenate({})".format(
+            ", ".join(repr(item) for item in self.items))
 
     @property
     def key(self):
         return '_'.join(i.key for i in self._items[:10])
 
     @property
+    def item_keys(self):
+        """Return a list of the items in the concatenation."""
+        return self._items.iterkeys()
+
+    @property
     def items(self):
         """Return a list of the items in the concatenation."""
-        # should this perhaps flatten to a list of Populations, where the
-        # concatenation includes other Selections? or should that be a separate
-        # method?
-        return iter(self._items)
+        return self._items.itervalues()
+
+    @property
+    def populations(self):
+        return (i.population for i in self.items)
+
+    @property
+    def num_items(self):
+        """Return a list of the items in the concatenation."""
+        return len(self._items)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        for i, item in enumerate(self.items):
-            item_elem = node.child(item, within='Item', multiple=True,
-                                   reference=True, **options)
-            node.visitor.set_attr(item_elem, 'index', i)
+        node.children(self.items, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        items = []
-        annotations = node.visitor.extract_annotations(node.serial_element,
-                                                       **options)
-        for name, _, elem in node.visitor.get_children(node.serial_element):
-            if name == node.visitor.node_name(Annotations):
-                continue
-            elif name != 'Item':
-                raise NineMLSerializationError(
-                    "Unrecognised element '{}' within Selection object"
-                    .format(name))
-            item_node = NodeToUnserialize(node.visitor, elem, name)
-            items.append(
-                (item_node.attr('index', dtype=int, **options),
-                 item_node.child(Population, allow_ref='only', **options)))
-            node.unprocessed_children.discard('Item')
-        # Sort by 'index' attribute
-        indices, items = zip(*sorted(items, key=itemgetter(0)))
-        indices = [int(i) for i in indices]
-        if len(indices) != len(set(indices)):
-            raise ValueError("Duplicate indices found in Concatenate list ({})"
-                             .format(indices))
-        if indices[0] != 0:
-            raise ValueError("Indices of Concatenate items must start from 0 "
-                             "({})".format(indices))
-        if indices[-1] != len(indices) - 1:
-            raise ValueError("Missing indices in Concatenate items ({}), list "
-                             "must be contiguous.".format(indices))
-        # Strip off indices used to sort elements
-        return cls(*items, annotations=annotations)
+        return cls(node.children(Item, **options))
+
+
+class Item(BaseULObject):
+
+    nineml_type = 'Item'
+    defining_attributes = ('index', 'population')
+
+    def __init__(self, index, population):
+        self._index = index
+        self._population = population
+
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def population(self):
+        return self._population
+
+    def serialize_node(self, node, **options):
+        node.attr('index', self.index, **options)
+        node.child('population', self.population, as_ref='only', **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        return cls(node.attr('index', **options),
+                   node.child((Population, Selection, ComponentArray),
+                              reference=True, **options))
+
 
 # TGC 11/11/ This old implementation of Set (now called Selection) was copied
 #            from nineml.user.populations.py probably some of it is worth
