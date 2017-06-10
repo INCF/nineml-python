@@ -53,8 +53,9 @@ class Serializer(BaseSerializer):
     def E(self, namespace=None):
         if namespace is None:
             namespace = self.nineml_namespace
+        nsmap = {None: namespace}
         return ElementMaker(namespace=namespace,
-                            nsmap={None: self.nineml_namespace})
+                            nsmap=nsmap)
 
     def write_to_file(self, file, serial_elem=None, pretty_print=True,  # @ReservedAssignment @IgnorePep8
               xml_declaration=True, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8

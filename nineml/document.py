@@ -444,7 +444,7 @@ class AddToDocumentVisitor(BaseNineMLVisitor):
         """
         if (isinstance(obj, DocumentLevelObject) and (obj.document is None or
                                                       self.add_bound)):
-            if obj.name in self.document.keys():
+            if obj.name in dict.iterkeys(self.document):
                 doc_obj = self.document[obj.name]
                 orig_doc = obj._document
                 try:

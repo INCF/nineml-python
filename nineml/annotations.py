@@ -1,14 +1,21 @@
-from collections import defaultdict
+from collections import OrderedDict
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
 from nineml.exceptions import (
     NineMLXMLError, NineMLRuntimeError, NineMLNameError)
 
 
+class OrderedDefaultListDict(OrderedDict):
+
+    def __missing__(self, key):
+        self[key] = value = []
+        return value
+
+
 class BaseAnnotations(BaseNineMLObject):
 
     def __init__(self, branches=None):
-        self._branches = defaultdict(list)
+        self._branches = OrderedDefaultListDict()
         if branches is not None:
             assert all(isinstance(b, list) for b in branches.itervalues())
             self._branches.update(branches)
@@ -206,7 +213,7 @@ class BaseAnnotations(BaseNineMLObject):
             for branch in key_branches:
                 branch_elem = node.visitor.create_elem(
                     name, parent=node.serial_element, multiple=True,
-                    namespce=ns, **options)
+                    namespace=ns, **options)
                 branch_node = type(node)(node.visitor, branch_elem)
                 branch.serialize_node(branch_node, **options)
 
@@ -236,7 +243,7 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
-        branches = defaultdict(list)
+        branches = OrderedDefaultListDict()
         for name, ns, elem in node.visitor.get_children(node.serial_element):
             child_node = type(node)(node.visitor, elem, name, **options)
             branches[(name, ns)].append(_AnnotationsBranch.unserialize_node(
@@ -265,6 +272,14 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
     @property
     def _name(self):
         return 'Root'
+
+    @classmethod
+    def unserialize(cls, serial_elem, format, version,  # @ReservedAssignment @IgnorePep8
+                    **kwargs):
+        kwargs.pop('check_unprocessed', False)
+        return nineml.unserialize(serial_elem, cls, format=format,
+                                  version=version, check_unprocessed=False,
+                                  **kwargs)
 
 
 class _AnnotationsBranch(BaseAnnotations):
@@ -414,11 +429,14 @@ class _AnnotationsBranch(BaseAnnotations):
 
     @classmethod
     def unserialize_node(cls, node, name, ns, **options):  # @UnusedVariable @IgnorePep8
-        branches = defaultdict(list)
-        for name, ns, elem in node.visitor.get_children(node.serial_element):
-            child_node = type(node)(self, elem, name)
-            branches[(name, ns)].append(
-                cls.unserialize_node(child_node, name, ns, **options))
+        branches = OrderedDefaultListDict()
+        for child_name, child_ns, child_elem in node.visitor.get_children(
+                node.serial_element):
+            child_node = type(node)(node.visitor, child_elem, child_name,
+                                    check_unprocessed=False)
+            branches[(child_name, child_ns)].append(
+                cls.unserialize_node(child_node, child_name, child_ns,
+                                     **options))
         attr = dict((k, node.attr(k))
                     for k in node.visitor.get_attr_keys(node.serial_element))
         return cls(name, ns, attr=attr, branches=branches,
@@ -457,3 +475,5 @@ DIMENSIONALITY = 'dimensionality'
 
 
 xml_visitor_module_re = re.compile(r'nineml\.abstraction\.\w+\.visitors\.xml')
+
+import nineml  # @IgnorePep8

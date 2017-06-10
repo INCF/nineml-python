@@ -7,7 +7,6 @@ from nineml.exceptions import (
 import nineml
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
-from nineml.serialization import NINEML_NS
 from nineml.annotations import (
     Annotations, INDEX_TAG, INDEX_KEY_ATTR, INDEX_NAME_ATTR, INDEX_INDEX_ATTR,
     PY9ML_NS, VALIDATION, DIMENSIONALITY)
@@ -361,9 +360,8 @@ class BaseUnserializer(BaseVisitor):
                     name, self.url or '',
                     "', '".join(self._unloaded.iterkeys())))
         nineml_object = self.visit(serial_elem, nineml_cls, **options)
-        AddToDocumentVisitor(
-            self.document, **options).visit(nineml_object, **options)
-#         self.document._add(nineml_object, **options)
+        AddToDocumentVisitor(self.document, **options).visit(nineml_object,
+                                                             **options)
         return nineml_object
 
     def visit(self, serial_elem, nineml_cls, allow_ref=False, **options):  # @UnusedVariable @IgnorePep8
@@ -372,7 +370,8 @@ class BaseUnserializer(BaseVisitor):
         self._set_load_options_from_annotations(options, annotations)
         # Create node to wrap around serial element for convenient access in
         # "unserialize" class methods
-        node = NodeToUnserialize(self, serial_elem, self.node_name(nineml_cls))
+        node = NodeToUnserialize(self, serial_elem, self.node_name(nineml_cls),
+                                 **options)
         # Call the unserialize method of the given class to unserialize the
         # object
         if self._version[0] == 1 and hasattr(nineml_cls,
@@ -455,7 +454,8 @@ class BaseUnserializer(BaseVisitor):
         try:
             _, annot_elem = self.get_single_child(
                 serial_elem, [self.node_name(Annotations)])
-            annot_node = NodeToUnserialize(self, annot_elem, 'Annotations')
+            annot_node = NodeToUnserialize(self, annot_elem, 'Annotations',
+                                           check_unprocessed=False)
             annotations = Annotations.unserialize_node(annot_node, **options)
         except NineMLMissingSerializationError:
             annotations = Annotations()  # No annotations found
@@ -470,8 +470,8 @@ class BaseUnserializer(BaseVisitor):
         Extract saved indices from annotations and save them in container
         object.
         """
-        if (INDEX_TAG, NINEML_NS) in annotations:
-            for ind in annotations.pop((INDEX_TAG, NINEML_NS)):
+        if (INDEX_TAG, PY9ML_NS) in annotations:
+            for ind in annotations.pop((INDEX_TAG, PY9ML_NS)):
                 key = ind.get(INDEX_KEY_ATTR)
                 name = ind.get(INDEX_NAME_ATTR)
                 index = ind.get(INDEX_INDEX_ATTR)
@@ -742,16 +742,25 @@ class NodeToSerialize(BaseNode):
 
 class NodeToUnserialize(BaseNode):
 
-    def __init__(self, visitor, serial_elem, name, **options):
+    def __init__(self, visitor, serial_elem, name, check_unprocessed=True,
+                 **options):
         super(NodeToUnserialize, self).__init__(visitor, serial_elem)
         self._name = name
-        self.unprocessed_attr = set(self.visitor.get_attr_keys(serial_elem,
-                                                               **options))
-        self.unprocessed_children = set(
-            n for n, _, _ in self.visitor.get_children(serial_elem, **options))
-        self.unprocessed_children.discard(self.visitor.node_name(Annotations))
-        self.unprocessed_body = (self.visitor.get_body(serial_elem, sole=False,
-                                                       **options) is not None)
+        if check_unprocessed:
+            self.unprocessed_attr = set(self.visitor.get_attr_keys(serial_elem,
+                                                                   **options))
+            self.unprocessed_children = set(
+                n for n, _, _ in self.visitor.get_children(
+                    serial_elem, **options))
+            self.unprocessed_children.discard(
+                self.visitor.node_name(Annotations))
+            self.unprocessed_body = (
+                self.visitor.get_body(serial_elem, sole=False,
+                                      **options) is not None)
+        else:
+            self.unprocessed_attr = set([])
+            self.unprocessed_children = set([])
+            self.unprocessed_body = False
 
     @property
     def name(self):

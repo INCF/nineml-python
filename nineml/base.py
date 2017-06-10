@@ -317,12 +317,12 @@ def _clone_attr(attr, memo, **kwargs):
     elif hasattr(attr, 'clone'):
         clone = attr.clone(memo=memo, **kwargs)
     elif isinstance(attr, defaultdict):
-        clone = defaultdict(attr.default_factory,
+        clone = type(attr)(attr.default_factory,
                             ((k, _clone_attr(v, memo, **kwargs))
                              for k, v in attr.iteritems()))
     elif isinstance(attr, dict):
-        clone = dict((k, _clone_attr(v, memo, **kwargs))
-                     for k, v in attr.iteritems())
+        clone = type(attr)((k, _clone_attr(v, memo, **kwargs))
+                           for k, v in attr.iteritems())
     elif isinstance(attr, Iterable):
         assert not isinstance(attr, Iterator)
         clone = attr.__class__(_clone_attr(a, memo, **kwargs)
@@ -388,19 +388,19 @@ class AnnotatedNineMLObject(BaseNineMLObject):
 
 class DocumentLevelObject(BaseNineMLObject):
 
-    def __init__(self, document):
+    def __init__(self):
         # Document level objects can be nested inside other document-level
         # objects, in which case they shouldn't belong to the document
         # directly
         # FIXME: Once network is its own element in the 9ML spec then the
         #        check for the nineml_type == 'Network' will no longer be
         #        necessary
-        if (document is not None and
-            self.nineml_type != 'Annotations' and
-                (self.nineml_type == 'Network' or self.name in document)):
-            self._document = document
-        else:
-            self._document = None
+#         if (document is not None and
+#             self.nineml_type != 'Annotations' and
+#                 (self.nineml_type == 'Network' or self.name in document)):
+#             self._document = document
+#         else:
+        self._document = None
 
     @property
     def document(self):

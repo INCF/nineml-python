@@ -545,7 +545,7 @@ def nearly_equal(float1, float2, places=15):
             exp1 == exp2)
 
 
-def xml_equal(xml1, xml2, indent=''):
+def xml_equal(xml1, xml2, indent='', annotations=False):
     if xml1.tag != xml2.tag:
         logger.error("{}Tag '{}' doesn't equal '{}'"
                      .format(indent, xml1.tag, xml2.tag))
@@ -555,22 +555,22 @@ def xml_equal(xml1, xml2, indent=''):
                      .format(indent, xml1.attrib, xml2.attrib))
         return False
     text1 = xml1.text if xml1.text is not None else ''
-    text2 = xml2.text if xml1.text is not None else ''
+    text2 = xml2.text if xml2.text is not None else ''
     if text1.strip() != text2.strip():
         logger.error("{}Body '{}' doesn't equal '{}'"
                      .format(indent, text1, text2))
         return False
     tail1 = xml1.tail if xml1.tail is not None else ''
-    tail2 = xml2.tail if xml1.tail is not None else ''
+    tail2 = xml2.tail if xml2.tail is not None else ''
     if tail1.strip() != tail2.strip():
         if text1.strip() != text2.strip():
             logger.error("{}Body '{}' doesn't equal '{}'"
                          .format(indent, tail1, tail2))
         return False
     children1 = [c for c in xml1.getchildren()
-                 if not c.tag.endswith('Annotations')]
+                 if not c.tag.endswith('Annotations') or annotations]
     children2 = [c for c in xml2.getchildren()
-                 if not c.tag.endswith('Annotations')]
+                 if not c.tag.endswith('Annotations') or annotations]
     if len(children1) != len(children2):
         logger.error("{}Number of children {} doesn't equal {}:\n{}\n{}"
                      .format(indent, len(children1), len(children2),
