@@ -213,8 +213,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                    plasticity=plasticity,
                    connectivity=connection_rule_props,
                    delay=delay,
-                   port_connections=port_connections,
-                   document=node.document)
+                   port_connections=port_connections)
 
     def serialize_node_v1(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
@@ -322,8 +321,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                    plasticity=plasticity,
                    connectivity=connection_rule_props,
                    delay=delay,
-                   port_connections=port_connections,
-                   document=node.document)
+                   port_connections=port_connections)
 
     version1_nodes = ('Source', 'Destination', 'Response', 'Plasticity')
     v1tov2 = {'Source': 'pre', 'Destination': 'post',

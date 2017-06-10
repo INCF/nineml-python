@@ -524,8 +524,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             regimes=node.children(Regime, **options),
             aliases=node.children(Alias, **options),
             state_variables=node.children(StateVariable, **options),
-            constants=node.children(Constant, **options),
-            document=node.document)
+            constants=node.children(Constant, **options))
 
     def serialize_node_v1(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('name', self.name, **options)
@@ -558,8 +557,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             aliases=node.children(Alias, parent_elem=dyn_elem, **options),
             state_variables=node.children(StateVariable, parent_elem=dyn_elem,
                                           **options),
-            constants=node.children(Constant, parent_elem=dyn_elem, **options),
-            document=node.document)
+            constants=node.children(Constant, parent_elem=dyn_elem, **options))
 
 # Import visitor modules and those which import visitor modules
 from .regimes import StateVariable, Regime  # @IgnorePep8

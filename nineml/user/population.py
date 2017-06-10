@@ -100,7 +100,7 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
             within='Cell', allow_ref=True, **options)
         return cls(name=node.attr('name', **options),
                    size=node.attr('Size', in_body=True, dtype=int, **options),
-                   cell=cell, document=node.document)
+                   cell=cell)
 
     def analog_receive_port(self, name):
         return self.cell.analog_receive_port(name)

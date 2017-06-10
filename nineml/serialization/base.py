@@ -556,6 +556,12 @@ class BaseUnserializer(BaseVisitor):
             assert False
         return cls
 
+    def iterkeys(self):
+        return self._unloaded.iterkeys()
+
+    def keys(self):
+        return list(self.iterkeys())
+
     @property
     def root(self):
         return self._root

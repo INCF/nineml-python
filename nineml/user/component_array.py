@@ -49,6 +49,5 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
             **options)
         return cls(name=node.attr('name', **options),
                    size=node.attr('Size', in_body=True, dtype=int, **options),
-                   dynamics_properties=dynamics_properties,
-                   document=node.document)
+                   dynamics_properties=dynamics_properties)
 

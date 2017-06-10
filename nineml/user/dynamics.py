@@ -187,7 +187,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
         properties = node.children(Property, **options)
         initial_values = node.children(Initial, **options)
         return cls(name, definition, properties=properties,
-                   initial_values=initial_values, document=node.document)
+                   initial_values=initial_values)
 
     def serialize_node_v1(self, node, **options):
         self.serialize_node(node, **options)

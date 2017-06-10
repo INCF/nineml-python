@@ -78,8 +78,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         # The only supported op at this stage
         op = node.child(Concatenate, **options)
-        return cls(node.attr('name', **options), op,
-                   document=node.document)
+        return cls(node.attr('name', **options), op)
 
     def evaluate(self):
         assert isinstance(self.operation, Concatenate), \

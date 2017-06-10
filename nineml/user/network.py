@@ -160,7 +160,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         selections = node.children(Selection, allow_ref=True, **options)
         network = cls(name=node.attr('name', **options),
                       populations=populations, projections=projections,
-                      selections=selections, document=node.document)
+                      selections=selections)
         return network
 
     @classmethod

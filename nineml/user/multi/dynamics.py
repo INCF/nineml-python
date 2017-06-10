@@ -153,8 +153,7 @@ class MultiDynamicsProperties(DynamicsProperties):
         return cls(name=node.attr('name', **options),
                    sub_components=sub_component_properties,
                    port_exposures=port_exposures,
-                   port_connections=port_connections,
-                   document=node.document)
+                   port_connections=port_connections)
 
     def serialize_node_v1(self, node, **options):
         self.serialize_node(node, **options)

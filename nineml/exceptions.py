@@ -103,7 +103,12 @@ def name_error(accessor):
             # strict naming convention of the accessors
             type_name = ''.join(p.capitalize()
                                 for p in accessor.__name__.split('_'))
+            try:
+                available = getattr(self, accessor.__name__ + '_names')
+            except AttributeError:
+                available = []
             raise NineMLNameError(
-                "'{}' {} does not have {} named '{}'"
-                .format(self.key, self.nineml_type, type_name, name))
+                "'{}' {} does not have {} named '{}' ('{}')"
+                .format(self.key, self.nineml_type, type_name, name,
+                        "', '".join(available)))
     return accessor_with_handling

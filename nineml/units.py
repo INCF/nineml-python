@@ -153,7 +153,7 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
         # Get the attributes corresponding to the dimension symbols
         dim_args = dict((s, node.attr(s, default=0, dtype=int, **options))
                          for s in cls.dimension_symbols)
-        return cls(name, document=node.document, **dim_args)
+        return cls(name, **dim_args)
 
     def __mul__(self, other):
         "self * other"
@@ -356,8 +356,7 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
         dimension = node.document[node.attr('dimension', **options)]
         power = node.attr('power', dtype=int, default=0, **options)
         offset = node.attr('offset', dtype=float, default=0.0, **options)
-        return cls(name, dimension, power, offset=offset,
-                   document=node.document)
+        return cls(name, dimension, power, offset=offset)
 
     def __mul__(self, other):
         "self * other"

@@ -220,8 +220,9 @@ class Document(AnnotatedNineMLObject, dict):
         return list(self.iteritems())
 
     def iterkeys(self):
-        self._load_all()
-        return dict.iterkeys(self)
+        return (self._unserializer.iterkeys()
+                if self._unserializer is not None else
+                super(Document, self).iterkeys())
 
     def keys(self):
         return list(self.iterkeys())
