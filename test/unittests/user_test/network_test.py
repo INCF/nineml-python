@@ -96,8 +96,7 @@ class TestNetwork(unittest.TestCase):
         model.add(p2)
         model.add(exc_prj)
         model.add(inh_prj)
-        doc = Document(model, static_exc, static_inh, exc_prj,
-                       inh_prj, ext_stim, psr, p1, p2, inpt, celltype)
+        doc = Document(model)  # , static_exc, static_inh, exc_prj, inh_prj, ext_stim, psr, p1, p2, inpt, celltype) @IgnorePep8
         xml = doc.serialize()
         loaded_doc = Uxml(root=xml).unserialize()
         if loaded_doc != doc:

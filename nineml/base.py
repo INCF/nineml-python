@@ -408,7 +408,7 @@ class DocumentLevelObject(BaseNineMLObject):
 
     @property
     def url(self):
-        if self.document:
+        if self.document is not None:
             url = self.document.url
         else:
             url = None
@@ -582,7 +582,8 @@ class ContainerObject(BaseNineMLObject):
         self._parent = None  # Used to link up the the containing document
 
     def add(self, *elements):
-        add_nested_visitor = AddNestedObjectsToDocumentVisitor(self.document)
+        add_to_doc_visitor = nineml.document.AddToDocumentVisitor(
+            self.document)
         for element in elements:
             dct = self._member_dict(element)
             if element.key in dct:
@@ -596,7 +597,7 @@ class ContainerObject(BaseNineMLObject):
                 element._parent = self
             # Add nested references to document
             if self.document is not None:
-                add_nested_visitor.visit(element)
+                add_to_doc_visitor.visit(element)
 
     def remove(self, *elements):
         for element in elements:
@@ -1011,71 +1012,5 @@ class BaseNineMLVisitor(object):
             "not supplied to '{}' visitor"
             .format(self._method_name, type(self).__name__))
 
-
-class AddNestedObjectsToDocumentVisitor(BaseNineMLVisitor):
-    """
-    Traverses any 9ML object and adds any "unbound" objects to the document (or
-    optionally clones of bound), i.e. objects that currently don't belong to
-    any other document
-
-    Parameters
-    ----------
-    document : Document
-        Document to add the unbound elements to
-    add_bound : bool
-        Whether to add the object even if it belongs to another document
-        (but not this one). Useful for combining all referenced objects
-        into a single document.
-    """
-
-    def __init__(self, document, add_bound=False):
-        super(AddNestedObjectsToDocumentVisitor, self).__init__()
-        self.document = document
-        self.add_bound = add_bound
-
-    def action(self, obj, **kwargs):  # @UnusedVariable
-        """
-        Adds the object to the document if is a DocumentLevelObject and it
-        doesn't already belong to a document (or regardless if 'add_bound' is
-        True)
-
-        Parameters
-        ----------
-        obj : BaseNineMLObject
-            The object to add the document if is DocumentLevelObject
-        """
-        if (isinstance(obj, DocumentLevelObject) and (obj.document is None or
-                                                      self.add_bound)):
-            if obj.name in self.document.keys():
-                doc_obj = self.document[obj.name]
-                orig_doc = obj._document
-                try:
-                    # Set document of object to current document before
-                    # checking for equality with document already in document
-                    obj._document = self.document
-                    if obj == doc_obj:
-                        if obj is not doc_obj and self.context is not None:
-                            self.context.replace(obj, doc_obj)
-                    else:
-                        raise NineMLRuntimeError(
-                            "Cannot add {} '{}' to the document {} as it "
-                            "clashes with existing (potentially nested) {}."
-                            .format(obj.nineml_type, obj.name,
-                                    self.document.url,
-                                    self.document[obj.name].nineml_type))
-                finally:
-                    obj._document = orig_doc  # Reset to previous state
-                obj = doc_obj
-            else:
-                dict.__setitem__(self.document, obj.name, obj)
-                obj._document = self.document
-#                 obj = self.document.add(obj, clone=False)
-        return obj
-
-    def post_action(self, *args, **kwargs):
-        pass
-
-    def final(self, obj, **kwargs):
-        pass
 
 import nineml  # @IgnorePep8

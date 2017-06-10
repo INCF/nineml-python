@@ -1,5 +1,5 @@
 from itertools import chain
-from nineml.base import clone_id, AddNestedObjectsToDocumentVisitor
+from nineml.base import clone_id, BaseNineMLVisitor
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
@@ -54,7 +54,7 @@ class Document(AnnotatedNineMLObject, dict):
         return "NineMLDocument(url='{}', {} elements)".format(
             str(self.url), len(self))
 
-    def add(self, nineml_obj, **kwargs):
+    def add(self, nineml_obj, clone=True, clone_definitions='local', **kwargs):
         """
         Adds a cloned version of the element to the document, setting the
         document reference (and the corresponding url) of clones to the
@@ -83,59 +83,61 @@ class Document(AnnotatedNineMLObject, dict):
                     nineml_obj = self[nineml_obj.name]
                 else:
                     raise NineMLNameError(
-                        "Could not add element '{}' as an element with that "
+                        "Could not add '{}' as a different object with that "
                         "name already exists in the document '{}'"
                         .format(nineml_obj.name, self.url))
-        else:
-            nineml_obj = self._add(nineml_obj, **kwargs)
-        return nineml_obj
-
-    def _add(self, nineml_obj, clone=True, clone_definitions='local',
-             **kwargs):
-        """
-        Adds a cloned version of the element to the document, setting the
-        document reference (and the corresponding url) of clones to the
-        document. Differs from 'add' in that it doesn't check whether the
-        nineml object already exists in the document (to avoid infinite loops
-        when unserializing, the only time it should really be called outside of
-        'add')
-
-        Parameters
-        ----------
-        nineml_obj : DocumentLevelObject
-            A document level object to add to the document
-        clone : bool
-            Whether to clone the element before adding it to the document
-        clone_definitions : str
-            Whether to clone definitions of user layer objects
-        kwargs : dict
-            Keyword arguments passed to the clone method
-        """
-        if clone:
-            nineml_obj = nineml_obj.clone(
-                clone_definitions=clone_definitions, **kwargs)
-        elif nineml_obj.document is not None:
+        elif nineml_obj.document is not None and not clone:
             raise NineMLRuntimeError(
                 "Attempting to add the same object '{}' {} to document"
                 " '{}' document when it is already in another "
-                "document, '{}'. Please remove it from the original "
-                "document first or use the 'clone' keyword to add a "
-                "clone of the element instead"
+                "document, '{}' and 'clone' kwarg is False"
                 .format(nineml_obj.name, nineml_obj.nineml_type,
                         self.url, nineml_obj.document.url))
-#         nineml_obj._document = self  # Set its document to this one
-        # Add any nested objects that don't already belong
-        # to another document
-        AddNestedObjectsToDocumentVisitor(self).visit(
-            nineml_obj, clone=clone, clone_definitions=clone_definitions,
-            **kwargs)
-#         if dict.__contains__(self, nineml_obj.name):
-#             raise NineMLRuntimeError(
-#                 "Cannot add {} to document as its name clashes with that of "
-#                 "nested object {}".format(
-#                     nineml_obj, dict.__getitem__(self, nineml_obj.name)))
-#         dict.__setitem__(self, nineml_obj.name, nineml_obj)
+        else:
+            if clone:
+                nineml_obj = nineml_obj.clone(
+                    clone_definitions=clone_definitions, **kwargs)
+            AddToDocumentVisitor(self).visit(nineml_obj, **kwargs)
         return nineml_obj
+
+#     def _add(self, nineml_obj, **kwargs):
+#         """
+#         Adds a cloned version of the element to the document, setting the
+#         document reference (and the corresponding url) of clones to the
+#         document. Differs from 'add' in that it doesn't check whether the
+#         nineml object already exists in the document (to avoid infinite loops
+#         when unserializing, the only time it should really be called outside of
+#         'add')
+# 
+#         Parameters
+#         ----------
+#         nineml_obj : DocumentLevelObject
+#             A document level object to add to the document
+#         clone : bool
+#             Whether to clone the element before adding it to the document
+#         clone_definitions : str
+#             Whether to clone definitions of user layer objects
+#         kwargs : dict
+#             Keyword arguments passed to the clone method
+#         """
+#         if clone:
+#             nineml_obj = nineml_obj.clone(
+#                 clone_definitions=clone_definitions, **kwargs)
+#         elif nineml_obj.document is not None:
+#             raise NineMLRuntimeError(
+#                 "Attempting to add the same object '{}' {} to document"
+#                 " '{}' document when it is already in another "
+#                 "document, '{}'. Please remove it from the original "
+#                 "document first or use the 'clone' keyword to add a "
+#                 "clone of the element instead"
+#                 .format(nineml_obj.name, nineml_obj.nineml_type,
+#                         self.url, nineml_obj.document.url))
+# #         nineml_obj._document = self  # Set its document to this one
+#         # Add any  objects that don't already belong
+#         # to another document
+#         AddNestedObjectsToDocumentVisitor(self).visit(
+#             
+#         return nineml_obj
 
     def remove(self, nineml_obj, ignore_missing=False):
         if not isinstance(nineml_obj, DocumentLevelObject):
@@ -406,5 +408,70 @@ class Document(AnnotatedNineMLObject, dict):
     def url(self):
         return self._url
 
+
+class AddToDocumentVisitor(BaseNineMLVisitor):
+    """
+    Traverses any 9ML object and adds any "unbound" objects to the document (or
+    optionally clones of bound), i.e. objects that currently don't belong to
+    any other document
+
+    Parameters
+    ----------
+    document : Document
+        Document to add the unbound elements to
+    add_bound : bool
+        Whether to add the object even if it belongs to another document
+        (but not this one). Useful for combining all referenced objects
+        into a single document.
+    """
+
+    def __init__(self, document, add_bound=False, **kwargs):  # @UnusedVariable
+        super(AddToDocumentVisitor, self).__init__()
+        self.document = document
+        self.add_bound = add_bound
+
+    def action(self, obj, **kwargs):  # @UnusedVariable
+        """
+        Adds the object to the document if is a DocumentLevelObject and it
+        doesn't already belong to a document (or regardless if 'add_bound' is
+        True)
+
+        Parameters
+        ----------
+        obj : BaseNineMLObject
+            The object to add the document if is DocumentLevelObject
+        """
+        if (isinstance(obj, DocumentLevelObject) and (obj.document is None or
+                                                      self.add_bound)):
+            if obj.name in self.document.keys():
+                doc_obj = self.document[obj.name]
+                orig_doc = obj._document
+                try:
+                    # Set document of object to current document before
+                    # checking for equality with document already in document
+                    obj._document = self.document
+                    if obj == doc_obj:
+                        if obj is not doc_obj and self.context is not None:
+                            self.context.replace(obj, doc_obj)
+                    else:
+                        raise NineMLRuntimeError(
+                            "Cannot add {} '{}' to the document {} as it "
+                            "clashes with existing (potentially nested) {}."
+                            .format(obj.nineml_type, obj.name,
+                                    self.document.url,
+                                    self.document[obj.name].nineml_type))
+                finally:
+                    obj._document = orig_doc  # Reset doc to previous state
+                obj = doc_obj
+            else:
+                dict.__setitem__(self.document, obj.name, obj)
+                obj._document = self.document
+        return obj
+
+    def post_action(self, *args, **kwargs):
+        pass
+
+    def final(self, obj, **kwargs):
+        pass
 
 import nineml  # @IgnorePep8

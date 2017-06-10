@@ -361,7 +361,9 @@ class BaseUnserializer(BaseVisitor):
                     name, self.url or '',
                     "', '".join(self._unloaded.iterkeys())))
         nineml_object = self.visit(serial_elem, nineml_cls, **options)
-        self.document._add(nineml_object, **options)
+        AddToDocumentVisitor(
+            self.document, **options).visit(nineml_object, **options)
+#         self.document._add(nineml_object, **options)
         return nineml_object
 
     def visit(self, serial_elem, nineml_cls, allow_ref=False, **options):  # @UnusedVariable @IgnorePep8
@@ -529,7 +531,10 @@ class BaseUnserializer(BaseVisitor):
             except StopIteration:
                 raise NineMLSerializationError(
                     "Referenced '{}' component or component class is missing "
-                    "from document {}".format(name, self.document.url))
+                    "from document {} ({})"
+                    .format(name, self.document.url, "', '".join(
+                        self.get_elem_name(e)
+                        for _, _, e in self.get_children(self.root))))
             if elem_type == 'ComponentClass':
                 defn_cls = self._get_v1_component_class_type(doc_elem)
             elif elem_type == 'Component':
@@ -957,4 +962,4 @@ class NodeToUnserialize(BaseNode):
         return dict((self.visitor.node_name(c), c) for c in nineml_classes)
 
 
-from nineml.document import Document  # @IgnorePep8
+from nineml.document import Document, AddToDocumentVisitor  # @IgnorePep8
