@@ -149,8 +149,8 @@ def serialize(nineml_object, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # 
     return serializer.visit(nineml_object, **kwargs)
 
 
-def unserialize(serial_elem, nineml_cls, format, version, document=None,  # @ReservedAssignment @IgnorePep8
-                root=None, url=None, **kwargs):
+def unserialize(serial_elem, nineml_cls, format, version,  # @ReservedAssignment @IgnorePep8
+                root=None, url=None, document=None, **kwargs):
     Unserializer = format_to_unserializer[format]
     unserializer = Unserializer(version=version, root=root,
                                 url=url, document=document)

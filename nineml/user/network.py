@@ -39,13 +39,13 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                        'Selection': 'selection'}
 
     def __init__(self, name, populations=[], projections=[],
-                 selections=[], document=None):
+                 selections=[]):
         # better would be *items, then sort by type, taking the name from the
         # item
         ensure_valid_identifier(name)
         self._name = name
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, document=document)
+        DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
         self._populations = {}
         self._projections = {}

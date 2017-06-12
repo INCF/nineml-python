@@ -37,12 +37,12 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
         context:
         --------
     def __init__(self, name, sub_components, port_connections=[],
-                 port_exposures=[], document=None, validate_dimensions=True,
+                 port_exposures=[], validate_dimensions=True,
                  **kwargs):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
         # =====================================================================
         # Create the structures unique to MultiDynamics

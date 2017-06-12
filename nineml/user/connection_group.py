@@ -19,11 +19,11 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                            '_destination_port', '_connectivity', '_delay')
 
     def __init__(self, name, source, destination, source_port,
-                 destination_port, connectivity, delay, document=None,
+                 destination_port, connectivity, delay,
                  connectivity_class=Connectivity):
         self._name = name
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         self._source = source
         self._destination = destination
         self._source_port = source_port
@@ -165,7 +165,7 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                            **options)
         return cls(name=name, source=source, destination=destination,
                    source_port=source_port, destination_port=destination_port,
-                   connectivity=connectivity, delay=delay, document=None)
+                   connectivity=connectivity, delay=delay)
 
 
 class AnalogConnectionGroup(BaseConnectionGroup):

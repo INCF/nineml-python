@@ -10,10 +10,10 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
     suffix = {'pre': '__cell', 'post': '__cell', 'response': '__psr',
               'plasticity': '__pls'}
 
-    def __init__(self, name, size, dynamics_properties, document=None):
+    def __init__(self, name, size, dynamics_properties):
         self._name = name
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         self.size = size
         self._dynamics_properties = dynamics_properties
 

@@ -31,7 +31,7 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
         ensure_valid_identifier(name)
         self._name = name
         AnnotatedNineMLObject.__init__(self)
-        DocumentLevelObject.__init__(self, kwargs.pop('document', None))
+        DocumentLevelObject.__init__(self)
         if dimensions is not None:
             assert len(dimensions) == 7, "Incorrect dimension length"
             self._dims = tuple(dimensions)
@@ -282,11 +282,11 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     nineml_type = 'Unit'
     defining_attributes = ('_dimension', '_power', '_offset')
 
-    def __init__(self, name, dimension, power, offset=0.0, document=None):
+    def __init__(self, name, dimension, power, offset=0.0):
         ensure_valid_identifier(name)
         self._name = name
         AnnotatedNineMLObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         assert isinstance(dimension, Dimension)
         self._dimension = dimension
         self._power = power

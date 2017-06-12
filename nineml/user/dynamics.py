@@ -26,11 +26,10 @@ class DynamicsProperties(Component, DynamicPortsObject):
         (('Initial', 'initial_value'),))
 
     def __init__(self, name, definition, properties={}, initial_values={},
-                 initial_regime=None, document=None,
+                 initial_regime=None,
                  check_initial_values=False):
         super(DynamicsProperties, self).__init__(
-            name=name, definition=definition, properties=properties,
-            document=document)
+            name=name, definition=definition, properties=properties)
         if isinstance(initial_values, dict):
             initial_values = (Initial(name, qty)
                               for name, qty in initial_values.iteritems())

@@ -53,7 +53,7 @@ class Projection(BaseULObject, DocumentLevelObject):
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
     def __init__(self, name, pre, post, response, connectivity,
-                 delay, plasticity=None, port_connections=[], document=None,
+                 delay, plasticity=None, port_connections=[],
                  connectivity_class=Connectivity, **kwargs):
         """
         Create a new projection.
@@ -61,7 +61,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         ensure_valid_identifier(name)
         self._name = name
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         assert isinstance(name, basestring)
         assert isinstance(delay, Quantity)
         assert isinstance(pre, (Population, Selection))

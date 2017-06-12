@@ -49,12 +49,12 @@ class MultiDynamicsProperties(DynamicsProperties):
     class_to_member = {'SubDynamicsProperties': 'sub_component'}
 
     def __init__(self, name, sub_components, port_connections=[],
-                 port_exposures=[], document=None, check_initial_values=False):
+                 port_exposures=[], check_initial_values=False):
         ensure_valid_identifier(name)
         self._name = name
         # Initiate inherited base classes
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
         # Extract abstraction layer component of sub-dynamics object (won't be
         # necessary from v2) and convert dict of name: DynamicsProperties pairs
@@ -537,12 +537,12 @@ class MultiDynamics(Dynamics):
     core_type = Dynamics
 
     def __init__(self, name, sub_components, port_connections=[],
-                 port_exposures=[], document=None, validate_dimensions=True,
+                 port_exposures=[], validate_dimensions=True,
                  **kwargs):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
         # =====================================================================
         # Create the structures unique to MultiDynamics

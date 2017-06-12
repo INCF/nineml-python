@@ -50,7 +50,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def __init__(self, name, parameters=None, analog_ports=[],
                  event_ports=[], regimes=None, aliases=None,
                  state_variables=None, constants=None,
-                 validate_dimensions=True, document=None, strict_unused=True,
+                 validate_dimensions=True, strict_unused=True,
                  **kwargs):
         """
         Constructs a Dynamics component class
@@ -103,8 +103,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
         """
         ComponentClass.__init__(self, name=name, parameters=parameters,
-                                aliases=aliases, constants=constants,
-                                document=document)
+                                aliases=aliases, constants=constants)
         regimes = normalise_parameter_as_list(regimes)
         state_variables = normalise_parameter_as_list(state_variables)
 

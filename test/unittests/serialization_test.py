@@ -39,10 +39,10 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
     v1_nineml_type = 'Cunfaener'
     defining_attributes = ('name', 'a', 'bs', 'c', 'd')
 
-    def __init__(self, name, a, bs, c, d, document=None):
+    def __init__(self, name, a, bs, c, d):
         AnnotatedNineMLObject.__init__(self)
         self.name = name
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         self.a = a
         self.bs = bs
         self.c = c
@@ -70,10 +70,10 @@ class A(AnnotatedNineMLObject, DocumentLevelObject):
     defining_attributes = ('name', 'a1', 'a2')
     default_a1 = 5
 
-    def __init__(self, name, a1, a2, document=None):
+    def __init__(self, name, a1, a2):
         AnnotatedNineMLObject.__init__(self)
         self.name = name
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         self.a1 = a1
         self.a2 = a2
 
@@ -168,10 +168,10 @@ class E(AnnotatedNineMLObject, DocumentLevelObject):
     nineml_type = 'E'
     defining_attributes = ('name', 'e1', 'e2')
 
-    def __init__(self, name, e1, e2, document=None):
+    def __init__(self, name, e1, e2):
         AnnotatedNineMLObject.__init__(self)
         self.name = name
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         self.name = name
         self.e1 = e1
         self.e2 = e2
@@ -193,10 +193,10 @@ class F(AnnotatedNineMLObject, DocumentLevelObject):
     nineml_type = 'F'
     defining_attributes = ('name', 'f1', 'f2')
 
-    def __init__(self, name, f1, f2, document=None):
+    def __init__(self, name, f1, f2):
         AnnotatedNineMLObject.__init__(self)
         self.name = name
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         self.name = name
         self.f1 = f1
         self.f2 = f2

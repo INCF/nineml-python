@@ -230,9 +230,9 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
     nineml_type = 'Annotations'
     defining_attributes = ('_branches',)
 
-    def __init__(self, branches=None, document=None):
+    def __init__(self, branches=None):
         BaseAnnotations.__init__(self, branches=branches)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
 
     def __repr__(self):
         rep = "Annotations:"

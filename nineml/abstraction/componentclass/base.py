@@ -33,7 +33,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
 
         self._parameters = {}

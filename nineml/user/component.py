@@ -126,7 +126,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
-    def __init__(self, name, definition, properties={}, document=None):
+    def __init__(self, name, definition, properties={}):
         """
         Create a new component_class with the given name, definition and
         properties, or create a prototype to another component_class that will
@@ -135,7 +135,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         ensure_valid_identifier(name)
         self._name = name
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
         if isinstance(definition, basestring):
             if "#" in definition:
@@ -145,7 +145,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                     definition).replace(".xml", "")
             definition = Definition(
                 name=name,
-                document=document,
+                document=None,
                 url=defn_url)
         elif (isinstance(definition, ComponentClass) or
               definition.nineml_type in ('Dynamics', 'MultiDynamics')):
@@ -286,11 +286,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         name = node.attr('name', **options)
         definition = node.child((Definition, Prototype), **options)
         properties = node.children(Property, **options)
-        if name in node.document:
-            doc = node.document
-        else:
-            doc = None
-        return cls(name, definition, properties=properties, document=doc)
+        return cls(name, definition, properties=properties)
 
     @property
     def used_units(self):

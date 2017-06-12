@@ -69,8 +69,8 @@ class Serializer(BaseSerializer):
 class Unserializer(BaseUnserializer):
     "Unserializer class for the XML format"
 
-    def __init__(self, root, document=None, version=None,  # @ReservedAssignment @IgnorePep8
-                 url=None, **kwargs):
+    def __init__(self, root, version=None,  # @ReservedAssignment @IgnorePep8
+                 url=None, document=None, **kwargs):
         super(Unserializer, self).__init__(
             root, version=version, url=url, document=document, **kwargs)
         if self.root is not None:

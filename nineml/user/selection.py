@@ -52,11 +52,11 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     nineml_type = "Selection"
     defining_attributes = ('_name', '_operation')
 
-    def __init__(self, name, operation, document=None, **kwargs):
+    def __init__(self, name, operation, **kwargs):
         ensure_valid_identifier(name)
         self._name = name
         BaseULObject.__init__(self, **kwargs)
-        DocumentLevelObject.__init__(self, document)
+        DocumentLevelObject.__init__(self)
         self._operation = operation
 
     def __repr__(self):
