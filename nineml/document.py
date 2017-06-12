@@ -383,7 +383,7 @@ class Document(AnnotatedNineMLObject, dict):
         # Return Document as a Network object
         return nineml.user.Network(
             name, populations=self.populations, projections=self.projections,
-            selections=self.selections, document=self)
+            selections=self.selections)
 
     def serialize_node(self, node, **options):
         node.children(self.networks, reference=False, **options)
