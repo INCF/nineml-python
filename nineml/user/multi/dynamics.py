@@ -79,7 +79,7 @@ class MultiDynamicsProperties(DynamicsProperties):
             for sc in sub_components]
         # Construct component class definition
         return Definition(MultiDynamics(
-            self.name + '_Dynamics', sub_dynamics,
+            self.name + '_dynamics', sub_dynamics,
             port_exposures=port_exposures,
             port_connections=port_connections,
             document=self.document))

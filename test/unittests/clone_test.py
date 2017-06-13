@@ -57,7 +57,7 @@ class TestCloners(unittest.TestCase):
 if __name__ == '__main__':
 
     # Original
-    multi_dyn = instances_of_all_types['MultiDynamics']['multiDynPropB_Dynamics'].sub_component('multiA').component_class
+    multi_dyn = instances_of_all_types['MultiDynamics']['multiDynPropB_dynamics'].sub_component('multiA').component_class
     oc = multi_dyn.regime('R1___R1').on_condition(
         'SV1__e > P3__e')
     e = multi_dyn.sub_component('e').component_class
