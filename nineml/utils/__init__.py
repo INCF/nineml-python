@@ -115,64 +115,6 @@ def expect_single(lst, error_func=None):
     _dispatch_error_func(error_func, NineMLRuntimeError(errmsg))
 
 
-def expect_none_or_single(lst, error_func=None):
-    """Retrieve a single element from an iterable.
-
-    This function tests whether an iterable contains just a single element and
-    if so returns that element. Otherwise it raises an Exception.
-
-    :param lst: An iterable
-
-    :param error_func: An exception object or a callable. ``error_func`` will
-        be raised or called in case there is not exactly one element in
-        ``lst``. If ``error_func`` is ``None``, a ``NineMLRuntimeError``
-        exception will be raised.
-
-    :rtype: the element in the list, ``lst[0]``, provided ``len(lst)==1``
-
-    >>> expect_single( ['hello'] )
-    'hello'
-
-    >>> expect_single( [1] )
-    1
-
-    >>> expect_single( [] ) #doctest: +SKIP
-    NineMLRuntimeError: expect_single() recieved an iterable of length: 0
-
-    >>> expect_single( [None,None] ) #doctest: +SKIP
-    NineMLRuntimeError: expect_single() recieved an iterable of length: 2
-
-    >>> expect_single( [], lambda: raise_exception( RuntimeError('Aggh') ) #doctest: +SKIP
-    RuntimeError: Aggh
-
-    >>> #Slightly more tersly:
-    >>> expect_single( [], RuntimeError('Aggh') ) #doctest: +SKIP
-    RuntimeError: Aggh
-
-    """
-
-    if not _is_iterable(lst):
-        raise NineMLRuntimeError('Object not iterable')
-    if issubclass(lst.__class__, (dict)):
-        err = "Dictionary passed to expect_single. This could be ambiguous"
-        err += "\nIf this is what you intended, please explicity pass '.keys' "
-        raise NineMLRuntimeError(err)
-
-    lst = list(lst)
-
-    # Good case:
-    if len(lst) == 1:
-        return lst[0]
-    elif len(lst) == 0:
-        return None
-    else:
-        # Bad case: our list doesn't contain just one element
-        errmsg = ('expect_none_or_single() recieved an iterable of length: %d'
-                  % len(lst))
-        errmsg += '\n  - List Contents:' + str(lst) + '\n'
-        _dispatch_error_func(error_func, NineMLRuntimeError(errmsg))
-
-
 def _filter(lst, func=None):
     """Filter a list according to a predicate.
 
@@ -378,39 +320,6 @@ def safe_dictionary_merge(dictionaries):
 # TODO: DOCUMENT THESE:
 def join_norm(*args):
     return normpath(join(*args))
-
-
-class LocationMgr(object):
-    std_append_to_path_called = False
-    import tempfile
-    temp_dir = str(tempfile.gettempdir())
-
-    @classmethod
-    def getRootDir(cls):
-        localDir = realpath(dirname(__file__))
-        rootDir = join_norm(localDir, "../../../")
-        return rootDir
-
-    @classmethod
-    def getPythonPackageRootDir(cls):
-        return realpath(dirname(__file__))
-
-    @classmethod
-    def getComponentDir(cls):
-        # localDir = realpath ( dirname( __file__ ) )
-        return join_norm(cls.getPythonPackageRootDir(), '..', 'test',
-                         'sample_components')
-
-    @classmethod
-    def getTmpDir(cls):
-        if not exists(cls.temp_dir):
-            raise NineMLRuntimeError("tmp_dir does not exist:%s" % cls.tmp_dir)
-        return cls.temp_dir + '/'
-
-    # For developers:
-    @classmethod
-    def getCatalogDir(cls):
-        return join_norm(cls.getRootDir(), "catalog/")
 
 
 class Settings(object):
