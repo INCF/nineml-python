@@ -16,8 +16,7 @@ class JSONSerializer(BaseSerializer):
     Is used as the base class for the Pickle, JSON and YAML serializers
     """
 
-    def create_elem(self, name, parent=None, namespace=None,
-                    **options):  # @UnusedVariable
+    def create_elem(self, name, parent, namespace=None, **options):  # @UnusedVariable @IgnorePep8
         pass
 
     def create_root(self, **options):  # @UnusedVariable

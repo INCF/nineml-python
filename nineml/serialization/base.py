@@ -233,8 +233,8 @@ class BaseSerializer(BaseVisitor):
         """
 
     @abstractmethod
-    def create_elem(self, name, parent=None, multiple=False,
-                    namespace=None, **options):
+    def create_elem(self, name, parent, multiple=False, namespace=None,
+                    **options):
         """
         Creates a serial element within the parent element (in the root element
         if parent is None).
@@ -286,6 +286,8 @@ class BaseSerializer(BaseVisitor):
             The serial element (dependent on the serialization type)
         value : float | int | str
             The value of the attribute
+        sole : bool
+            
         options : dict(str, object)
             Serialization format-specific options for the method
         """
@@ -987,7 +989,8 @@ class NodeToSerialize(BaseNode):
             if within in self.withins and not multiple:
                 raise NineMLSerializationError(
                     "'{}' already added to serialization".format(within))
-            serial_elem = self.visitor.create_elem(within, self._serial_elem)
+            serial_elem = self.visitor.create_elem(within,
+                                                   parent=self._serial_elem)
             self.withins.add(within)
         else:
             serial_elem = self._serial_elem

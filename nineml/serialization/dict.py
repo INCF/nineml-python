@@ -1,7 +1,7 @@
 from nineml.document import Document
 from nineml.exceptions import (NineMLSerializationError,
                                NineMLSerializationNotSupportedError)
-from .base import BaseSerializer, BaseUnserializer
+from .base import BaseSerializer, BaseUnserializer, BODY_ATTR
 from nineml.exceptions import NineMLNameError
 
 
@@ -16,18 +16,17 @@ class DictSerializer(BaseSerializer):
     Is used as the base class for the Pickle, JSON and YAML serializers
     """
 
-    def create_elem(self, name, parent=None, namespace=None,
-                    **options):  # @UnusedVariable
-        pass
+    def create_elem(self, name, parent, namespace=None, **options):  # @UnusedVariable @IgnorePep8
+        parent[name] = {}
 
     def create_root(self, **options):  # @UnusedVariable
-        pass
+        return {}
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        pass
+        serial_elem[name] = value
 
-    def set_body(self, serial_elem, value, sole=False, **options):  # @UnusedVariable @IgnorePep8
-        pass
+    def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
+        serial_elem[BODY_ATTR] = value
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
         raise NineMLSerializationNotSupportedError(
@@ -46,7 +45,7 @@ class DictUnserializer(BaseUnserializer):
     """
 
     def get_children(self, serial_elem, **options):  # @UnusedVariable
-        pass
+        return serial_elem.iteritems()
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         pass

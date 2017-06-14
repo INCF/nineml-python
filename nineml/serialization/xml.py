@@ -33,11 +33,9 @@ class XMLSerializer(BaseSerializer):
     def __init__(self, version=DEFAULT_VERSION, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
         super(XMLSerializer, self).__init__(version=version, document=document)
 
-    def create_elem(self, name, parent=None, namespace=None,
-                    **options):  # @UnusedVariable
+    def create_elem(self, name, parent, namespace=None, **options):  # @UnusedVariable @IgnorePep8
         elem = self.E(namespace)(name)
-        if parent is not None:
-            parent.append(elem)
+        parent.append(elem)
         return elem
 
     def create_root(self):
