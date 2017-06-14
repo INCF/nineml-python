@@ -1,9 +1,7 @@
 import unittest
 from sympy import sympify
 from nineml import units as un
-from lxml import etree
-from nineml.serialization.xml import (
-    Unserializer as Uxml)
+from nineml.serialization.xml import XMLUnserializer
 
 
 all_dims = [getattr(un, d) for d in dir(un)
@@ -13,9 +11,9 @@ all_dims = [getattr(un, d) for d in dir(un)
 class TestUnitsDimensions(unittest.TestCase):
 
     def test_xml_540degree_roundtrip(self):
-        document1 = Uxml(root=etree.fromstring(units_xml_str)).unserialize()
+        document1 = XMLUnserializer(root=units_xml_str).unserialize()
         xml = document1.serialize()
-        document2 = Uxml(xml).unserialize()
+        document2 = XMLUnserializer(xml).unserialize()
         self.assertEquals(document1, document2)
 
     def test_sympy(self):

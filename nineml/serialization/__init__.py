@@ -23,8 +23,7 @@ UNCERTML_NS = "http://www.uncertml.org/2.0"
 
 import nineml  # @IgnorePep8
 try:
-    from .xml import (
-        Serializer as XMLSerializer, Unserializer as XMLUnserializer)
+    from .xml import XMLSerializer, XMLUnserializer
 except:
     XMLUnserializer = XMLSerializer = None
 

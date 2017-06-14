@@ -1130,6 +1130,11 @@ class NodeToUnserialize(BaseNode):
                     **options)
                 # If the within element is found it cannot be empty
                 allow_none = False
+                if self.visitor.get_attr_keys(serial_elem):
+                    raise NineMLSerializationError(
+                        "'{}' elements can not have attributes ('{}')"
+                        .format(within, "', '".join(
+                            self.visitor.get_attr_keys(serial_elem))))
             except NineMLMissingSerializationError:
                 if allow_none:
                     return None
@@ -1257,7 +1262,7 @@ class NodeToUnserialize(BaseNode):
             try:
                 return options['default']
             except KeyError:
-                raise NineMLSerializationError(
+                raise NineMLMissingSerializationError(
                     "Node {} does not have required attribute '{}'"
                     .format(self.name, name))
 

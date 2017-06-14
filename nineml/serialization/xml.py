@@ -27,11 +27,11 @@ def value_str(value):
     return repr(value) if isinstance(value, float) else str(value)
 
 
-class Serializer(BaseSerializer):
+class XMLSerializer(BaseSerializer):
     "Serializer class for the XML format"
 
     def __init__(self, version=DEFAULT_VERSION, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
-        super(Serializer, self).__init__(version=version, document=document)
+        super(XMLSerializer, self).__init__(version=version, document=document)
 
     def create_elem(self, name, parent=None, namespace=None,
                     **options):  # @UnusedVariable
@@ -69,12 +69,12 @@ class Serializer(BaseSerializer):
             xml_declaration=xml_declaration)
 
 
-class Unserializer(BaseUnserializer):
+class XMLUnserializer(BaseUnserializer):
     "Unserializer class for the XML format"
 
     def __init__(self, root, version=None,  # @ReservedAssignment @IgnorePep8
                  url=None, document=None, **kwargs):
-        super(Unserializer, self).__init__(
+        super(XMLUnserializer, self).__init__(
             root, version=version, url=url, document=document, **kwargs)
         if self.root is not None:
             if strip_xmlns(self.root.tag) != self.node_name(Document):

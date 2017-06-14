@@ -15,8 +15,7 @@ from nineml.utils import xml_equal
 #     Unserialize_noder as Uhdf5, Serializer as Shdf5)
 # from nineml.serialization.pickle import (
 #     Unserialize_noder as Upkl, Serializer as Spkl)
-from nineml.serialization.xml import (
-    Unserializer as Uxml, Serializer as Sxml)
+from nineml.serialization.xml import XMLUnserializer, XMLSerializer
 
 
 F_ANNOT_NS = 'http:/a.domain.org'
@@ -220,12 +219,12 @@ class TestSerialization(unittest.TestCase):
 
     def test_rountrip(self):
         for version in (1, 2):
-            for U, S in (
+            for S, U in (
                 # (Ujson, Sjson),
                 # (Uyaml, Syaml),
                 # (Uhdf5, Shdf5),
                 # (Upkl, Spkl),
-                    (Uxml, Sxml),):
+                    (XMLSerializer, XMLUnserializer),):
                 doc = Document()
                 f = F('F', 10, 20)
                 f.annotations.set((F_ANNOT_TAG, F_ANNOT_NS), F_ANNOT_ATTR,
