@@ -1,21 +1,11 @@
 import unittest
 import logging
 import sys
-from lxml import etree
 from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
-from nineml.utils.testing.comprehensive import doc1, doc2
-from nineml.utils import xml_equal
-# from nineml.serialization.json import (
-#     Unserialize_noder as Ujson, Serializer as Sjson)
-# from nineml.serialization.yaml import (
-#     Unserialize_noder as Uyaml, Serializer as Syaml)
-# from nineml.serialization.hdf5 import (
-#     Unserialize_noder as Uhdf5, Serializer as Shdf5)
-# from nineml.serialization.pickle import (
-#     Unserialize_noder as Upkl, Serializer as Spkl)
-from nineml.serialization.xml import XMLUnserializer, XMLSerializer
+from nineml.serialization import format_to_serializer, format_to_unserializer
+from lxml import etree
 
 
 F_ANNOT_NS = 'http:/a.domain.org'
@@ -219,12 +209,9 @@ class TestSerialization(unittest.TestCase):
 
     def test_rountrip(self):
         for version in (1, 2):
-            for S, U in (
-                # (Ujson, Sjson),
-                # (Uyaml, Syaml),
-                # (Uhdf5, Shdf5),
-                # (Upkl, Spkl),
-                    (XMLSerializer, XMLUnserializer),):
+            for format in ('xml',):  # format_to_serializer:  # @ReservedAssignment @IgnorePep8
+                S = format_to_serializer[format]
+                U = format_to_unserializer[format]
                 doc = Document()
                 f = F('F', 10, 20)
                 f.annotations.set((F_ANNOT_TAG, F_ANNOT_NS), F_ANNOT_ATTR,
@@ -245,32 +232,8 @@ class TestSerialization(unittest.TestCase):
                     d='d')
                 doc.add(container, clone=False)
                 serial_doc = S(document=doc, version=version).serialize()
+                new_doc = U(root=serial_doc, version=version,
+                            class_map=class_map).unserialize()
 #                 print etree.tostring(serial_doc, pretty_print=True)
-                new_doc = U(root=serial_doc, class_map=class_map).unserialize()
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),
                                 new_doc.find_mismatch(doc))
-
-
-# class TestXMLComparison(unittest.TestCase):
-# 
-#     def test_xml_comparision(self):
-#         for version in (1, 2):
-#             for i, doc in enumerate((doc2, doc1)):
-#                 new_xml = Sxml(document=doc, version=version).serialize()
-#                 orig_xml = doc.serialize(version=version)
-# #                 print '-------------'
-# #                 print '    Doc{} v{}    '.format(i + 1, version)
-# #                 print '-------------'
-# #                 print 'New:'
-# #                 print etree.tostring(new_xml, pretty_print=True)
-# #                 print ('\n\nvs\n\n')
-# #                 print 'Old:'
-# #                 print etree.tostring(orig_xml, pretty_print=True)
-#                 new_doc = Uxml(new_xml).unserialize()
-#                 self.assertEqual(new_doc, doc, new_doc.find_mismatch(doc))
-#                 switch_doc1 = Uxml(root=orig_xml).unserialize()
-#                 switch_doc2 = Uxml(root=new_xml).unserialize()
-#                 self.assertEqual(new_doc, switch_doc2,
-#                                  new_doc.find_mismatch(switch_doc2))
-#                 self.assertEqual(new_doc, switch_doc1,
-#                                  new_doc.find_mismatch(switch_doc1))

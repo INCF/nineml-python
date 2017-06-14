@@ -1,4 +1,5 @@
 from nineml.exceptions import NineMLSerializationNotSupportedError
+from . import NINEML_BASE_NS
 from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
 from nineml.exceptions import NineMLNameError
 
@@ -42,6 +43,9 @@ class DictUnserializer(BaseUnserializer):
     serializers
     """
 
+    def __init__(self, root, version, **kwargs):
+        super(DictUnserializer, self).__init__(root, version, **kwargs)
+
     def get_children(self, serial_elem, **options):  # @UnusedVariable
         return ((n, e) for n, e in serial_elem.iteritems()
                 if self._is_child(e))
@@ -67,7 +71,10 @@ class DictUnserializer(BaseUnserializer):
                 if not self._is_child(e))
 
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable
-        self.get_attr(serial_elem, NS_ATTR, **options)
+        try:
+            self.get_attr(serial_elem, NS_ATTR, **options)
+        except NineMLNameError:
+            return NINEML_BASE_NS + self.version
 
     def from_file(self, file, **options):  # @ReservedAssignment
         raise NineMLSerializationNotSupportedError(

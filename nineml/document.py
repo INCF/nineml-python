@@ -9,6 +9,14 @@ from logging import getLogger
 logger = getLogger('lib9ml')
 
 
+def write_order_key(nineml_obj):
+    try:
+        index = Document.write_order.index(nineml_obj.nineml_type)
+    except ValueError:
+        index = 100000
+    return index, nineml_obj.name
+
+
 class Document(AnnotatedNineMLObject, dict):
     """
     Loads and stores all top-level elements in a NineML file (i.e. any element
@@ -31,6 +39,13 @@ class Document(AnnotatedNineMLObject, dict):
 
     defining_attributes = ('elements',)
     nineml_type = 'NineML'
+
+    write_order = ('Network', 'Population', 'Projection', 'Selection',
+                   'ComponentArray', 'EventConnectionGroup',
+                   'AnalogConnectionGroup', 'Dynamics', 'ConnectionRule',
+                   'RandomDistribution', 'DynamicsProperties',
+                   'ConnectionRuleProperties', 'RandomDistributionProperties',
+                   'Dimension', 'Unit')
 
     # Holds loaded documents to avoid reloading each time
     registry = {}
@@ -392,24 +407,9 @@ class Document(AnnotatedNineMLObject, dict):
             selections=self.selections)
 
     def serialize_node(self, node, **options):
-        node.children(self.networks, reference=False, **options)
-        node.children(self.populations, reference=False, **options)
-        node.children(self.projections, reference=False, **options)
-        node.children(self.selections, reference=False, **options)
-        node.children(self.component_arrays, reference=False, **options)
-        node.children(self.event_connection_groups, reference=False, **options)
-        node.children(self.analog_connection_groups, reference=False,
-                      **options)
-        node.children(self.dynamicses, reference=False, **options)
-        node.children(self.connection_rules, reference=False, **options)
-        node.children(self.random_distributions, reference=False, **options)
-        node.children(self.dynamics_propertieses, reference=False, **options)
-        node.children(self.connection_rule_propertieses, reference=False,
-                      **options)
-        node.children(self.random_distribution_propertieses, reference=False,
-                      **options)
-        node.children(self.dimensions, reference=False, **options)
-        node.children(self.units, reference=False, **options)
+        node.children(
+            sorted(self.elements, key=write_order_key), reference=False,
+            **options)
 
     @property
     def url(self):

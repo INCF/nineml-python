@@ -286,8 +286,6 @@ class BaseSerializer(BaseVisitor):
             The serial element (dependent on the serialization type)
         value : float | int | str
             The value of the attribute
-        sole : bool
-            
         options : dict(str, object)
             Serialization format-specific options for the method
         """
@@ -431,7 +429,12 @@ class BaseUnserializer(BaseVisitor):
         else:
             self._root = root
         # Get the version from the root element
-        if self.root is not None:
+        if version is not None:
+            version = self.standardize_version(version)
+        else:
+            if self.root is None:
+                raise NineMLSerializationError(
+                    "Version needs to be provided if root or file is not")
             extracted_version = self.standardize_version(
                 self.extract_version())
             if (version is not None and
@@ -440,11 +443,6 @@ class BaseUnserializer(BaseVisitor):
                     "Explicit version {} does not match that of loaded "
                     "root {}".format(extracted_version, version))
             version = extracted_version
-        else:
-            if version is None:
-                raise NineMLSerializationError(
-                    "Version needs to be provided if root or file is not")
-            version = self.standardize_version(version)
         super(BaseUnserializer, self).__init__(version, document=document)
         # Prepare elements in document for lazy loading
         self._unloaded = {}
