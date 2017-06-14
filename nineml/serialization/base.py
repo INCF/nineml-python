@@ -10,19 +10,28 @@ from nineml.base import ContainerObject, DocumentLevelObject
 from nineml.annotations import (
     Annotations, INDEX_TAG, INDEX_KEY_ATTR, INDEX_NAME_ATTR, INDEX_INDEX_ATTR,
     PY9ML_NS, VALIDATION, DIMENSIONALITY)
-from . import DEFAULT_VERSION
+from . import DEFAULT_VERSION, NINEML_BASE_NS
 
 
-# The name of the attribute used to represent the "body" of the element.
-# NB: Body elements should be phased out in later 9ML versions to avoid this.
-BODY_ATTR = '@body'
+# The name of the attribute used to represent the "namespace" of the element in
+# formats that don't support namespaces explicitly.
 NS_ATTR = '@namespace'
 
+# The name of the attribute used to represent the "body" of the element in
+# formats that don't support element bodies.
+# NB: Body elements should be phased out in later 9ML versions to avoid this.
+BODY_ATTR = '@body'
+
+# Regex's used in 9ML version string parsing
 is_int_re = re.compile(r'\d+(\.0)?')
 version_re = re.compile(r'(\d+)\.(\d+)')
+nineml_version_re = re.compile(r'{}([\d\.]+)/?'.format(NINEML_BASE_NS))
 
 
 class BaseVisitor(object):
+    """
+    Base class for BaseSerializer and BaseUnserializer
+    """
 
     __metaclass__ = ABCMeta
 
@@ -92,7 +101,17 @@ class BaseVisitor(object):
 
 
 class BaseSerializer(BaseVisitor):
-    "Abstract base class for all serializer classes"
+    """
+    Abstract base class for all serializer classes
+
+    Parameters
+    ----------
+    version : str | int | float
+        9ML version to write to
+    document : nineml.Document
+        Document to serialize or use as a reference when serializing members
+        of it
+    """
 
     __metaclass__ = ABCMeta
 
@@ -103,12 +122,42 @@ class BaseSerializer(BaseVisitor):
         self._root = self.create_root()
 
     def serialize(self, **options):
+        """
+        Serializes the document provided to the __init__ method
+
+        Parameters
+        ----------
+        options : dict(str, object)
+            Serialization-specific options for the method
+        """
         self.document.serialize_node(
             NodeToSerialize(self, self.root), **options)
         return self.root
 
     def visit(self, nineml_object, parent=None, reference=None,
               multiple=False, **options):
+        """
+        Visits a nineml object and calls its 'serialize_node' method to
+        serialize it into the format of the Serializer.
+
+        Parameters
+        ----------
+        nineml_object : BaseNineMLObject
+            The 9ML object to serialize
+        parent : <serial-element>
+            The serial element within which to create the serialized version
+            of the object. If None, the root element is used
+        reference : bool | None
+            Whether to write the nineml object as a reference (see Reference).
+            If None then it is determined by the 'ref_style' kwarg
+        ref_style : str | None
+            Can be one of 'force_reference' or 'force_inline' or None.
+        multiple : bool
+            Whether to allow for multiple elements of the same type (important
+            for formats such as JSON and YAML which save them in lists)
+        options : dict(str, object)
+            Serialization-specific options for the method
+        """
         is_doc_level = isinstance(nineml_object, DocumentLevelObject)
         if not is_doc_level:
             assert reference is None, (
@@ -123,8 +172,8 @@ class BaseSerializer(BaseVisitor):
                 reference = True
             if ref_style == 'force_inline':
                 reference = False
-            url = self.get_reference_url(nineml_object, reference=reference,
-                                         **options)
+            url = self._get_reference_url(nineml_object, reference=reference,
+                                          **options)
             if url is not False:
                 # Write the element as a reference
                 serial_elem = self.visit(
@@ -168,8 +217,93 @@ class BaseSerializer(BaseVisitor):
                 self.visit(annotations, parent=serial_elem, **options)
         return serial_elem
 
-    def get_reference_url(self, nineml_object, reference=None,
-                          ref_style=None, absolute_refs=False, **options):  # @UnusedVariable @IgnorePep8
+    @property
+    def root(self):
+        return self._root
+
+    @abstractmethod
+    def create_elem(self, name, parent=None, multiple=False,
+                    namespace=None, **options):
+        """
+        Creates a serial element within the parent element (in the root element
+        if parent is None).
+
+        Parameters
+        ----------
+        name : str
+            The name of the element
+        parent : <serial-element>
+            The element in which to create the new element
+        multiple : bool
+            Whether to allow for multiple elements of the same type (important
+            for formats such as JSON and YAML which save them in lists)
+        namespace : str
+            The namespace of the element. For formats that don't support
+            namespaces (e.g. JSON, YAML, HDF5) this is stored in a special
+            attribute name.
+        options : dict(str, object)
+            Serialization-specific options for the method
+        """
+
+    @abstractmethod
+    def set_attr(self, serial_elem, name, value, **options):
+        """
+        Set the attribute of a serial element
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            The serial element (dependent on the serialization type)
+        name : str
+            The name of the attribute
+        value : float | int | str
+            The value of the attribute
+        options : dict(str, object)
+            Serialization-specific options for the method
+        """
+
+    @abstractmethod
+    def set_body(self, serial_elem, value, sole=False, **options):
+        """
+        Set the body of a serial element. For formats that don't support body
+        values (e.g. JSON and YAML), the value is stored in an attribute named
+        '@body'.
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            The serial element (dependent on the serialization type)
+        value : float | int | str
+            The value of the attribute
+        options : dict(str, object)
+            Serialization-specific options for the method
+        """
+
+    @abstractmethod
+    def create_root(self):
+        """
+        Creates a root serial element i.e. document within a file
+        """
+
+    @abstractmethod
+    def write_to_file(self, file):  # @ReservedAssignment
+        """
+        Set the attribute of a serial element
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            The serial element (dependent on the serialization type)
+        name : str
+            The name of the attribute
+        value : float | int | str
+            The value of the attribute
+        options : dict(str, object)
+            Serialization-specific options for the method
+        """
+
+    def _get_reference_url(self, nineml_object, reference=None,
+                           ref_style=None, absolute_refs=False, **options):  # @UnusedVariable @IgnorePep8
         """
         Determine whether to write the elemnt as a reference or not depending
         on whether it needs to be, as determined by ``reference``, e.g. in the
@@ -238,34 +372,29 @@ class BaseSerializer(BaseVisitor):
             url = False
         return url
 
-    @property
-    def root(self):
-        return self._root
-
-    @abstractmethod
-    def create_elem(self, name, parent=None, multiple=False,
-                    namespace=None, **options):
-        pass
-
-    @abstractmethod
-    def set_attr(self, serial_elem, name, value, **options):
-        pass
-
-    @abstractmethod
-    def set_body(self, serial_elem, value, sole=False, **options):
-        pass
-
-    @abstractmethod
-    def create_root(self):
-        pass
-
-    @abstractmethod
-    def write_to_file(self, file):  # @ReservedAssignment
-        pass
-
 
 class BaseUnserializer(BaseVisitor):
-    "Abstract base class for all unserializer classes"
+    """
+    Abstract base class for all unserializer classes
+
+    Parameters
+    ----------
+    root : file | str | <serial-element>
+        The root of the document to unserialize, as either a file handle,
+        string or preparsed serial element.
+    version : str | int | float | None
+        The assumed 9ML version of the document, if not provided and root is
+        not None then it is extracted from the namespace of the root element.
+    url : str
+        The url of the document to be unserialized. Used to resolve relative
+        reference urls
+    class_map : dict(str, type)
+        Maps element tags to class types. Used to map element names to
+        extension objects.
+    document : nineml.Document
+        Document to serialize or use as a reference when unserializing elements
+        of it
+    """
 
     __metaclass__ = ABCMeta
 
@@ -313,7 +442,7 @@ class BaseUnserializer(BaseVisitor):
                             "Multiple annotations tags found in document")
                         self._annotation_elem = elem
                     continue
-                name = self.get_elem_name(elem)
+                name = self._get_elem_name(elem)
                 # Check for duplicates
                 if name in self._unloaded:
                     raise NineMLSerializationError(
@@ -323,34 +452,27 @@ class BaseUnserializer(BaseVisitor):
                 try:
                     elem_cls = class_map[nineml_type]
                 except KeyError:
-                    elem_cls = self.get_nineml_class(nineml_type, elem)
+                    elem_cls = self._get_nineml_class(nineml_type, elem)
                 self._unloaded[name] = (elem, elem_cls)
 
-    def get_elem_name(self, elem):
-        # Units use 'symbol' as their unique identifier (from LEMS) all
-        # other elements use 'name'
-        try:
-            try:
-                name = self.get_attr(elem, 'name')
-            except KeyError:
-                name = self.get_attr(elem, 'symbol')
-        except KeyError:
-            raise NineMLSerializationError(
-                "Missing 'name' (or 'symbol') attribute from document "
-                "level object '{}' ('{}')".format(
-                    elem, "', '".join(elem.attrib.keys())))
-        return name
-
     def unserialize(self):
+        """
+        Unserializes the root element and all elements underneath it
+        """
         for name in self._unloaded:
             self.load_element(name)
         return self.document
 
-    @property
-    def url(self):
-        return self._url
-
     def load_element(self, name, **options):
+        """
+        Lazily loads the document-level object named and all elements it
+        references
+
+        Parameter
+        ---------
+        name : str
+            Name of the document level object to load
+        """
         try:
             serial_elem, nineml_cls = self._unloaded[name]
         except KeyError:
@@ -365,7 +487,25 @@ class BaseUnserializer(BaseVisitor):
         return nineml_object
 
     def visit(self, serial_elem, nineml_cls, allow_ref=False, **options):  # @UnusedVariable @IgnorePep8
-        annotations = self.extract_annotations(serial_elem, **options)
+        """
+        Visits a serial element, unserializes it and returns the resultant
+        9ML object
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            The serial element to unserialize
+        nineml_cls : type
+            The class of the 9ML object to unserialize the serial element to.
+            Will call the 'unserialize_node' method of this class on the
+            serial element
+        allow_ref : bool
+            Whether to attempt to load the serial element as a 9ML reference
+            (depends on the context it is in)
+        options : dict(str, object)
+            Serialization-specific options for the method
+        """
+        annotations = self._extract_annotations(serial_elem, **options)
         # Set any loading options that are saved as annotations
         self._set_load_options_from_annotations(options, annotations)
         # Create node to wrap around serial element for convenient access in
@@ -401,7 +541,196 @@ class BaseUnserializer(BaseVisitor):
         nineml_object._annotations = annotations
         return nineml_object
 
-    def get_single_child(self, elem, names=None, allow_ref=False, **options):
+    @property
+    def url(self):
+        return self._url
+
+    def iterkeys(self):
+        return self._unloaded.iterkeys()
+
+    def keys(self):
+        return list(self.iterkeys())
+
+    @property
+    def root(self):
+        return self._root
+
+    @abstractmethod
+    def get_children(self, serial_elem, **options):
+        """
+        Iterates over all child elements of the serial element, yielding a
+        tuple consisting of the nineml-type, namespace, element
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            A serial element
+        options : dict(str, object)
+            Serialization-specific options for the method
+
+        Returns
+        -------
+        children : iterator(tuple(str, str, <serial-element>))
+            The nineml-type, namespace and element for each child in the
+            serial element
+        """
+
+    @abstractmethod
+    def get_attr(self, serial_elem, name, **options):
+        """
+        Extracts an attribute from the serial element
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            A serial element
+        options : dict(str, object)
+            Serialization-specific options for the method
+
+        Returns
+        -------
+        attr : str | float | int
+            The attribute named
+        """
+
+    @abstractmethod
+    def get_body(self, serial_elem, sole=True, **options):
+        """
+        Extracts the body of the serial element. For formats in which elements
+        don't have a body, this is extracted from an attribute named '@body'
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            A serial element
+        options : dict(str, object)
+            Serialization-specific options for the method
+
+        Returns
+        -------
+        body : str | float | int
+            The body of the serial element
+        """
+
+    @abstractmethod
+    def get_attr_keys(self, serial_elem, **options):
+        """
+        Extracts all attribute names of the serial element
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            A serial element
+        options : dict(str, object)
+            Serialization-specific options for the method
+
+        Returns
+        -------
+        attr : iterable(str)
+            An iterator over all attribute names in the element
+        """
+
+    @abstractmethod
+    def get_namespace(self, serial_elem, **options):
+        """
+        Extracts the namespace of the serial element. For formats in which
+        elements don't have a body, this is extracted from an attribute named
+        '@namepace'
+
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            A serial element
+        options : dict(str, object)
+            Serialization-specific options for the method
+
+        Returns
+        -------
+        namespace : str
+            The namespace of the serial element
+        """
+
+    @abstractmethod
+    def parse_file(self, file):  # @ReservedAssignment
+        """
+        Parses the file and returns the root element
+
+        Parameters
+        ----------
+        file : file handle
+            A handle to a file containing the serialized document to
+            unserialize
+
+        Returns
+        -------
+        root : <serial-element>
+            The root element of the document
+        """
+
+    @abstractmethod
+    def parse_string(self, string):
+        """
+        Parses the string and returns the root element
+
+        Parameters
+        ----------
+        string : str
+            A string containing the serialized document to unserialize
+
+        Returns
+        -------
+        root : <serial-element>
+            The root element of the document
+        """
+
+    @abstractmethod
+    def parse_elem(self, elem):
+        """
+        Checks to see if the element is a valid type for the given serializer
+
+        Parameters
+        ----------
+        elem : <serial-element>
+            The serial element
+
+        Returns
+        -------
+        root : <serial-element>
+            The root element of the document
+        """
+
+    def extract_version(self):
+        namespace = self.get_namespace(self.root.tag)
+        try:
+            version = nineml_version_re.match(namespace).group(1)
+        except AttributeError:
+            raise NineMLSerializationError(
+                "Provided document '{}' is not in a valid 9ML namespace {}"
+                .format(self.url, namespace))
+        return version
+
+    def _get_elem_name(self, elem):
+        """
+        Returns the name of an element. NB Units use 'symbol' as their unique
+        identifier (from LEMS) all other elements use 'name'
+        """
+        try:
+            try:
+                name = self.get_attr(elem, 'name')
+            except KeyError:
+                name = self.get_attr(elem, 'symbol')
+        except KeyError:
+            raise NineMLSerializationError(
+                "Missing 'name' (or 'symbol') attribute from document "
+                "level object '{}' ('{}')".format(
+                    elem, "', '".join(elem.attrib.keys())))
+        return name
+
+    def _get_single_child(self, elem, names=None, allow_ref=False, **options):
+        """
+        Returns a single child element matching names
+        """
         if isinstance(names, basestring):
             names = [names]
         child_elems = [
@@ -449,10 +778,12 @@ class BaseUnserializer(BaseVisitor):
                         ', '.join(c[0] for c in self.get_children(elem))))
         return matches[0]
 
-    def extract_annotations(self, serial_elem, **options):
-        # Extract annotations if present
+    def _extract_annotations(self, serial_elem, **options):
+        """
+        Extract annotations from serial element if present
+        """
         try:
-            _, annot_elem = self.get_single_child(
+            _, annot_elem = self._get_single_child(
                 serial_elem, [self.node_name(Annotations)])
             annot_node = NodeToUnserialize(self, annot_elem, 'Annotations',
                                            check_unprocessed=False)
@@ -462,6 +793,9 @@ class BaseUnserializer(BaseVisitor):
         return annotations
 
     def _set_load_options_from_annotations(self, options, annotations):
+        """
+        Set's load options for classes from annotations
+        """
         options['validate_dims'] = annotations.get(
             (VALIDATION, PY9ML_NS), DIMENSIONALITY, default='True') == 'True'
 
@@ -478,9 +812,11 @@ class BaseUnserializer(BaseVisitor):
                 nineml_object._indices[
                     key][getattr(nineml_object, key)(name)] = int(index)
 
-    def get_nineml_class(self, nineml_type, elem, assert_doc_level=True):
-        # Note that all `DocumentLevelObjects` need to be imported
-        # into the root nineml package
+    def _get_nineml_class(self, nineml_type, elem, assert_doc_level=True):
+        """
+        Loads a nineml class from the nineml package. NB that all
+        `DocumentLevelObjects` need to be imported into the root nineml package
+        """
         try:
             nineml_cls = getattr(nineml, nineml_type)
             if assert_doc_level and not issubclass(nineml_cls,
@@ -502,6 +838,12 @@ class BaseUnserializer(BaseVisitor):
         return nineml_cls
 
     def _get_v1_component_class_type(self, elem):
+        """
+        Gets the appropriate component-class class for a 9MLv1 component-class.
+        NB in 9ML v1 Dynamics, ConnectionRule and RandomDistribution are all
+        stored in 'ComponentClass' elements and can only be differentiated by
+        the nested 'Dynamics'|'ConnectionRule'|'RandomDistribution' element.
+        """
         try:
             nineml_type = next(n for n, _, _ in self.get_children(elem)
                                if n in ('Dynamics', 'ConnectionRule',
@@ -513,8 +855,15 @@ class BaseUnserializer(BaseVisitor):
         return getattr(nineml, nineml_type)
 
     def _get_v1_component_type(self, elem):
-        _, defn_elem = self.get_single_child(elem,
-                                             names=('Definition', 'Prototype'))
+        """
+        Gets the appropriate component class for a 9MLv1 component.
+        NB in 9ML v1 DynamicProperties, ConnectionRuleProperties and
+        RandomDistributionProperties are all stored in 'Component' elements and
+        can only be differentiated by the component class they reference in the
+        'Definition' element.
+        """
+        _, defn_elem = self._get_single_child(
+            elem, names=('Definition', 'Prototype'))
         name = self.get_body(defn_elem)
         try:
             url = self.get_attr(defn_elem, 'url')
@@ -527,13 +876,13 @@ class BaseUnserializer(BaseVisitor):
             try:
                 elem_type, doc_elem = next(
                     (t, e) for t, _, e in self.get_children(self.root)
-                    if self.get_elem_name(e) == name)
+                    if self._get_elem_name(e) == name)
             except StopIteration:
                 raise NineMLSerializationError(
                     "Referenced '{}' component or component class is missing "
                     "from document {} ({})"
                     .format(name, self.document.url, "', '".join(
-                        self.get_elem_name(e)
+                        self._get_elem_name(e)
                         for _, _, e in self.get_children(self.root))))
             if elem_type == 'ComponentClass':
                 defn_cls = self._get_v1_component_class_type(doc_elem)
@@ -555,48 +904,6 @@ class BaseUnserializer(BaseVisitor):
         else:
             assert False
         return cls
-
-    def iterkeys(self):
-        return self._unloaded.iterkeys()
-
-    def keys(self):
-        return list(self.iterkeys())
-
-    @property
-    def root(self):
-        return self._root
-
-    @abstractmethod
-    def get_children(self, serial_elem, **options):
-        pass
-
-    @abstractmethod
-    def get_attr(self, serial_elem, name, **options):
-        pass
-
-    @abstractmethod
-    def get_body(self, serial_elem, sole=True, **options):
-        pass
-
-    @abstractmethod
-    def get_attr_keys(self, serial_elem, **options):
-        pass
-
-    @abstractmethod
-    def extract_version(self, root):
-        pass
-
-    @abstractmethod
-    def parse_file(self, file):  # @ReservedAssignment
-        pass
-
-    @abstractmethod
-    def parse_string(self, string):
-        pass
-
-    @abstractmethod
-    def parse_elem(self, elem):
-        pass
 
 
 class BaseNode(object):
@@ -797,7 +1104,7 @@ class NodeToUnserialize(BaseNode):
         name_map = self._get_name_map(nineml_classes)
         if within is not None:
             try:
-                _, serial_elem = self.visitor.get_single_child(
+                _, serial_elem = self.visitor._get_single_child(
                     self._serial_elem, within, allow_none=allow_none,
                     **options)
                 # If the within element is found it cannot be empty
@@ -811,7 +1118,7 @@ class NodeToUnserialize(BaseNode):
         else:
             serial_elem = self._serial_elem
         try:
-            name, child_elem = self.visitor.get_single_child(
+            name, child_elem = self.visitor._get_single_child(
                 serial_elem, name_map.keys(), allow_ref, **options)
         except NineMLMissingSerializationError:
             if allow_none:
@@ -911,7 +1218,7 @@ class NodeToUnserialize(BaseNode):
         """
         try:
             if in_body:
-                _, attr_elem = self.visitor.get_single_child(
+                _, attr_elem = self.visitor._get_single_child(
                     self._serial_elem, names=name, **options)
                 self.unprocessed_children.remove(name)
                 value = self.visitor.get_body(attr_elem, **options)

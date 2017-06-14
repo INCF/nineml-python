@@ -1,9 +1,8 @@
 import unittest
 from nineml.utils.__init__ import (
-    LocationMgr, _dispatch_error_func, expect_single,
+    _dispatch_error_func, expect_single,
     invert_dictionary, flatten_first_level, safe_dict, ensure_iterable,
     ensure_valid_identifier)
-from nineml.utils.testing.comprehensive import instances_of_all_types
 from nineml.exceptions import NineMLRuntimeError
 
 

@@ -5,11 +5,10 @@ from nineml.document import Document
 from nineml.exceptions import NineMLSerializationError
 from .base import BaseSerializer, BaseUnserializer
 from nineml.exceptions import NineMLNameError
-from . import NINEML_BASE_NS, DEFAULT_VERSION
+from . import DEFAULT_VERSION
 
 # Extracts the xmlns from an lxml element tag
 xmlns_re = re.compile(r'\{(.*)\}(.*)')
-nineml_version_re = re.compile(r'{}([\d\.]+)/?'.format(NINEML_BASE_NS))
 
 
 def extract_xmlns(tag_name):
@@ -101,15 +100,8 @@ class Unserializer(BaseUnserializer):
     def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
         return serial_elem.attrib.keys()
 
-    def extract_version(self):
-        namespace = extract_xmlns(self.root.tag)
-        try:
-            version = nineml_version_re.match(namespace).group(1)
-        except AttributeError:
-            raise NineMLSerializationError(
-                "Provided XML document is not in a valid 9ML namespace {}"
-                .format(namespace))
-        return version
+    def get_namespace(self, serial_elem, **options):  # @UnusedVariable
+        return extract_xmlns(serial_elem)
 
     def parse_file(self, file):  # @ReservedAssignment
         try:
