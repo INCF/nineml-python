@@ -178,7 +178,7 @@ class BaseSerializer(BaseVisitor):
                 # Write the element as a reference
                 serial_elem = self.visit(
                     Reference(nineml_object.name, self.document, url=url),
-                    parent=parent, **options)
+                    parent=parent, multiple=multiple, **options)
         if serial_elem is None:  # If not written as a reference
             # Set parent to document root if not provided
             if parent is None:
@@ -1129,7 +1129,7 @@ class NodeToUnserialize(BaseNode):
                     **options)
                 # If the within element is found it cannot be empty
                 allow_none = False
-                if self.visitor.get_attr_keys(serial_elem):
+                if list(self.visitor.get_attr_keys(serial_elem)):
                     raise NineMLSerializationError(
                         "'{}' elements can not have attributes ('{}')"
                         .format(within, "', '".join(

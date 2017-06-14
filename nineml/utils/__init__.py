@@ -18,10 +18,16 @@ from ..exceptions import internal_error
 from ..exceptions import NineMLRuntimeError
 from nineml.base import ContainerObject
 from logging import getLogger
-from nineml.serialization.xml import strip_xmlns
 
 
 logger = getLogger('lib9ml')
+
+
+class OrderedDefaultListDict(collections.OrderedDict):
+
+    def __missing__(self, key):
+        self[key] = value = []
+        return value
 
 
 def _dispatch_error_func(error_func, default_error=NineMLRuntimeError()):
@@ -452,6 +458,13 @@ def nearly_equal(float1, float2, places=15):
     mantissa2, exp2 = math.frexp(float2)
     return (round(mantissa1, places) == round(mantissa2, places) and
             exp1 == exp2)
+
+# Extracts the xmlns from an lxml element tag
+xmlns_re = re.compile(r'\{(.*)\}(.*)')
+
+
+def strip_xmlns(tag_name):
+    return xmlns_re.match(tag_name).group(2)
 
 
 def xml_equal(xml1, xml2, indent='', annotations=False):

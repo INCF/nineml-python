@@ -28,6 +28,12 @@ try:
 except:
     XMLUnserializer = XMLSerializer = None
 
+ext_to_format = {
+    'xml': 'xml',
+    'yml': 'yaml',
+    'h5': 'hdf5',
+    'json': 'json',
+    'pkl': 'pickle'}
 
 format_to_serializer = {
     'xml': XMLSerializer,

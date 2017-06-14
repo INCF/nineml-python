@@ -7,6 +7,7 @@ A Python library for working with 9ML model descriptions.
 
 __version__ = "0.2dev"
 
+from . import annotations  # @IgnorePep8
 from . import units  # @IgnorePep8
 from .document import Document  # @IgnorePep8
 from . import abstraction  # @IgnorePep8

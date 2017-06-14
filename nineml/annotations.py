@@ -1,15 +1,8 @@
-from collections import OrderedDict
+from nineml.utils import OrderedDefaultListDict
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
 from nineml.exceptions import (
     NineMLXMLError, NineMLRuntimeError, NineMLNameError)
-
-
-class OrderedDefaultListDict(OrderedDict):
-
-    def __missing__(self, key):
-        self[key] = value = []
-        return value
 
 
 class BaseAnnotations(BaseNineMLObject):

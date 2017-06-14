@@ -170,6 +170,10 @@ class BaseNineMLObject(object):
                 for attr_name in self.defining_attributes:
                     self_attr = getattr(self, attr_name)
                     other_attr = getattr(other, attr_name)
+                    if isinstance(self_attr, Iterator):
+                        assert isinstance(other_attr, Iterator)
+                        self_attr = sorted(self_attr, key=sort_key)
+                        other_attr = sorted(other_attr, key=sort_key)
                     if self_attr != other_attr:
                         result += "\n{}Attribute '{}': ".format(indent,
                                                                 attr_name)

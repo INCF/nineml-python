@@ -32,6 +32,10 @@ class BaseReference(AnnotatedNineMLObject):
         self._referred_to = remote_doc[name]
 
     @property
+    def name(self):
+        return self._referred_to.name
+
+    @property
     def url(self):
         return self._referred_to.url
 

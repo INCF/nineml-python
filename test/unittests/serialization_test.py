@@ -5,13 +5,12 @@ from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
 from nineml.serialization import format_to_serializer, format_to_unserializer
-from lxml import etree
 
 
 F_ANNOT_NS = 'http:/a.domain.org'
-F_ANNOT_TAG = 'FAnnotation'
-F_ANNOT_ATTR = 'f_annot'
-F_ANNOT_VAL = 'annot_f'
+F_ANNOT_TAG = 'AnAnnotationTag'
+F_ANNOT_ATTR = 'an_annotation_attr_name'
+F_ANNOT_VAL = 'an_annotation_value'
 
 
 logger = logging.getLogger('lib9ml')
@@ -56,58 +55,58 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
 class A(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'A'
-    defining_attributes = ('name', 'a1', 'a2')
-    default_a1 = 5
+    defining_attributes = ('name', 'x', 'y')
+    default_x = 5
 
-    def __init__(self, name, a1, a2):
+    def __init__(self, name, x, y):
         AnnotatedNineMLObject.__init__(self)
         self.name = name
         DocumentLevelObject.__init__(self)
-        self.a1 = a1
-        self.a2 = a2
+        self.x = x
+        self.y = y
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
-        node.attr('a1', self.a1)
-        node.attr('a2', self.a2)
+        node.attr('x', self.x)
+        node.attr('y', self.y)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        a1 = node.attr('a1', dtype=int)
+        x = node.attr('x', dtype=int)
         return cls(node.attr('name'),
-                   a1,
-                   node.attr('a2', dtype=float))
+                   x,
+                   node.attr('y', dtype=float))
 
     def serialize_node_v1(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
-        node.attr('a2', self.a2)
+        node.attr('y', self.y)
 
     @classmethod
     def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
-        a1 = cls.default_a1
+        x = cls.default_x
         return cls(node.attr('name'),
-                   a1,
-                   node.attr('a2', dtype=float))
+                   x,
+                   node.attr('y', dtype=float))
 
 
 class B(AnnotatedNineMLObject):
 
     nineml_type = 'B'
-    defining_attributes = ('name', 'b',)
+    defining_attributes = ('name', 'z',)
 
-    def __init__(self, name, b):
+    def __init__(self, name, z):
         super(B, self).__init__()
         self.name = name
-        self.b = b
+        self.z = z
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
-        node.attr('b', self.b)
+        node.attr('z', self.z)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(node.attr('name'),
-                   node.attr('b'))
+                   node.attr('z'))
 
 
 class C(AnnotatedNineMLObject, ContainerObject):
@@ -155,51 +154,51 @@ class C(AnnotatedNineMLObject, ContainerObject):
 class E(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'E'
-    defining_attributes = ('name', 'e1', 'e2')
+    defining_attributes = ('name', 'u', 'v')
 
-    def __init__(self, name, e1, e2):
+    def __init__(self, name, u, v):
         AnnotatedNineMLObject.__init__(self)
         self.name = name
         DocumentLevelObject.__init__(self)
         self.name = name
-        self.e1 = e1
-        self.e2 = e2
+        self.u = u
+        self.v = v
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
-        node.attr('e1', self.e1)
-        node.attr('e2', self.e2)
+        node.attr('u', self.u)
+        node.attr('v', self.v)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(node.attr('name'),
-                   node.attr('e1', dtype=int),
-                   node.attr('e2', dtype=int))
+                   node.attr('u', dtype=int),
+                   node.attr('v', dtype=int))
 
 
 class F(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'F'
-    defining_attributes = ('name', 'f1', 'f2')
+    defining_attributes = ('name', 'w', 'r')
 
-    def __init__(self, name, f1, f2):
+    def __init__(self, name, w, r):
         AnnotatedNineMLObject.__init__(self)
         self.name = name
         DocumentLevelObject.__init__(self)
         self.name = name
-        self.f1 = f1
-        self.f2 = f2
+        self.w = w
+        self.r = r
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
-        node.attr('f1', self.f1)
-        node.attr('f2', self.f2)
+        node.attr('w', self.w)
+        node.attr('r', self.r)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(node.attr('name'),
-                   node.attr('f1', dtype=int),
-                   node.attr('f2', dtype=int))
+                   node.attr('w', dtype=int),
+                   node.attr('r', dtype=int))
 
 class_map = {'Container': Container,
              'Cunfaener': Container, 'A': A, 'E': E, 'F': F}
@@ -208,32 +207,31 @@ class_map = {'Container': Container,
 class TestSerialization(unittest.TestCase):
 
     def test_rountrip(self):
-        for version in (1, 2):
-            for format in ('xml',):  # format_to_serializer:  # @ReservedAssignment @IgnorePep8
+        for version in (2, 1):
+            for format in format_to_serializer:  # @ReservedAssignment @IgnorePep8
                 S = format_to_serializer[format]
                 U = format_to_unserializer[format]
                 doc = Document()
-                f = F('F', 10, 20)
+                f = F('an_F', 10, 20)
                 f.annotations.set((F_ANNOT_TAG, F_ANNOT_NS), F_ANNOT_ATTR,
                                   F_ANNOT_VAL)
-                a = A('A', A.default_a1, 2.5)
+                a = A('an_A', A.default_x, 2.5)
                 container = Container(
                     name='a_container',
                     a=a,
                     bs=[
-                        B('B', 'x'),
-                        B('B', 'y')],
-                    c=C(name='C',
-                        es=[E('E1', 1, 2),
-                            E('E2', 3, 4),
-                            E('E3', 5, 6)],
+                        B('a_B', 'foo'),
+                        B('another_B', 'bar')],
+                    c=C(name='a_C',
+                        es=[E('an_E', 1, 2),
+                            E('another_E', 3, 4),
+                            E('yet_another_E', 5, 6)],
                         f=f,
                         g=4.7),
-                    d='d')
+                    d='wee')
                 doc.add(container, clone=False)
                 serial_doc = S(document=doc, version=version).serialize()
                 new_doc = U(root=serial_doc, version=version,
                             class_map=class_map).unserialize()
-#                 print etree.tostring(serial_doc, pretty_print=True)
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),
                                 new_doc.find_mismatch(doc))

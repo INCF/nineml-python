@@ -16,10 +16,7 @@ def extract_xmlns(tag_name):
 
 
 def strip_xmlns(tag_name):
-    try:
-        return xmlns_re.match(tag_name).group(2)
-    except:
-        raise
+    return xmlns_re.match(tag_name).group(2)
 
 
 def value_str(value):
