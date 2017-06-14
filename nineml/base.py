@@ -110,6 +110,8 @@ class BaseNineMLObject(object):
                         if v != other_elem[k]:
                             return False
             elif isinstance(self_elem, list):
+                if len(self_elem) != len(other_elem):
+                    return False
                 try:
                     if not all(s.equals(o, **kwargs)
                                for s, o in izip(self_elem, other_elem)):

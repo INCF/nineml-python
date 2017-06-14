@@ -373,10 +373,16 @@ class Document(AnnotatedNineMLObject, dict):
         else:
             for k, s in self.iteritems():
                 if k not in other:
-                    result = "{} is not present in other document".format(k)
+                    result += ("\n    {}(name='{}') is not present in second "
+                               "document".format(type(s).__name__, k))
                 elif s != other[k]:
-                    result += ('\n    {}({}):'.format(type(s).__name__, k) +
+                    result += ("\n    {}(name='{}'):".format(type(s).__name__,
+                                                             k) +
                                s.find_mismatch(other[k], '        '))
+            for k, o in other.iteritems():
+                if k not in self:
+                    result += ("\n    {}(name='{}') is not present in first "
+                               "document".format(type(o).__name__, k))
         return result
 
     def as_network(self, name):
