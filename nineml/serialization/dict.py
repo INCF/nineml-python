@@ -1,7 +1,5 @@
-from nineml.document import Document
-from nineml.exceptions import (NineMLSerializationError,
-                               NineMLSerializationNotSupportedError)
-from .base import BaseSerializer, BaseUnserializer, BODY_ATTR
+from nineml.exceptions import NineMLSerializationNotSupportedError
+from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
 from nineml.exceptions import NineMLNameError
 
 
@@ -26,7 +24,7 @@ class DictSerializer(BaseSerializer):
         serial_elem[name] = value
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
-        serial_elem[BODY_ATTR] = value
+        self.setattr(serial_elem, BODY_ATTR, value, **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
         raise NineMLSerializationNotSupportedError(
@@ -45,19 +43,31 @@ class DictUnserializer(BaseUnserializer):
     """
 
     def get_children(self, serial_elem, **options):  # @UnusedVariable
-        return serial_elem.iteritems()
+        return ((n, e) for n, e in serial_elem.iteritems()
+                if self._is_child(e))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
-        pass
+        try:
+            value = serial_elem[name]
+        except KeyError:
+            raise NineMLNameError(
+                "Element {} doesn't contain an '{}' attribute"
+                .format(serial_elem, name))
+        if self._is_child(value):
+            raise NineMLNameError(
+                "Element {} contains a '{}' child ({}) not an attribute"
+                .format(serial_elem, name, value))
+        return value
 
-    def get_body(self, serial_elem, sole=True, **options):  # @UnusedVariable
-        pass
+    def get_body(self, serial_elem, **options):  # @UnusedVariable
+        self.get_attr(serial_elem, BODY_ATTR)
 
     def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
-        pass
+        return (n for n, e in serial_elem.iteritems()
+                if not self._is_child(e))
 
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable
-        pass
+        self.get_attr(serial_elem, NS_ATTR, **options)
 
     def from_file(self, file, **options):  # @ReservedAssignment
         raise NineMLSerializationNotSupportedError(
@@ -66,3 +76,7 @@ class DictUnserializer(BaseUnserializer):
     def from_str(self, string, **options):
         raise NineMLSerializationNotSupportedError(
             "'dict' format cannot be written to file")
+
+    @classmethod
+    def _is_child(cls, elem):
+        return isinstance(elem, (dict, list))
