@@ -450,7 +450,7 @@ class BaseUnserializer(BaseVisitor):
         self._unloaded = {}
         if self.root is not None:
             self._annotation_elem = None
-            for nineml_type, _, elem in self.get_children(self.root):
+            for nineml_type, elem in self.get_children(self.root):
                 # Strip out document level annotations
                 if nineml_type == self.node_name(Annotations):
                     if self._annotation_elem is not None:
@@ -586,9 +586,8 @@ class BaseUnserializer(BaseVisitor):
 
         Returns
         -------
-        children : iterator(tuple(str, str, <serial-element>))
-            The nineml-type, namespace and element for each child in the
-            serial element
+        children : iterator(tuple(str, <serial-element>))
+            The nineml-type and element for each child in the serial element
         """
 
     @abstractmethod
@@ -701,7 +700,7 @@ class BaseUnserializer(BaseVisitor):
         """
 
     def extract_version(self):
-        namespace = self.get_namespace(self.root.tag)
+        namespace = self.get_namespace(self.root)
         try:
             version = nineml_version_re.match(namespace).group(1)
         except AttributeError:
@@ -745,8 +744,7 @@ class BaseUnserializer(BaseVisitor):
         """
         if isinstance(names, basestring):
             names = [names]
-        child_elems = [
-            (n, e) for n, _, e in self.get_children(elem, **options)]
+        child_elems = list(self.get_children(elem, **options))
         # If not searching for Annotaitons, ignore them
         annot_name = self.node_name(Annotations)
         if annot_name not in names:
@@ -868,13 +866,13 @@ class BaseUnserializer(BaseVisitor):
         the nested 'Dynamics'|'ConnectionRule'|'RandomDistribution' element.
         """
         try:
-            nineml_type = next(n for n, _, _ in self.get_children(elem)
+            nineml_type = next(n for n, _ in self.get_children(elem)
                                if n in ('Dynamics', 'ConnectionRule',
                                         'RandomDistribution'))
         except StopIteration:
             raise NineMLSerializationError(
                 "No type defining block in ComponentClass ('{}')"
-                .format("', '".join(n for n, _, _ in self.get_children(elem))))
+                .format("', '".join(n for n, _ in self.get_children(elem))))
         return getattr(nineml, nineml_type)
 
     def _get_v1_component_type(self, elem):
@@ -898,7 +896,7 @@ class BaseUnserializer(BaseVisitor):
         else:
             try:
                 elem_type, doc_elem = next(
-                    (t, e) for t, _, e in self.get_children(self.root)
+                    (t, e) for t, e in self.get_children(self.root)
                     if self._get_elem_name(e) == name)
             except StopIteration:
                 raise NineMLSerializationError(
@@ -906,7 +904,7 @@ class BaseUnserializer(BaseVisitor):
                     "from document {} ({})"
                     .format(name, self.document.url, "', '".join(
                         self._get_elem_name(e)
-                        for _, _, e in self.get_children(self.root))))
+                        for _, e in self.get_children(self.root))))
             if elem_type == 'ComponentClass':
                 defn_cls = self._get_v1_component_class_type(doc_elem)
             elif elem_type == 'Component':
@@ -1081,7 +1079,7 @@ class NodeToUnserialize(BaseNode):
             self.unprocessed_attr = set(self.visitor.get_attr_keys(serial_elem,
                                                                    **options))
             self.unprocessed_children = set(
-                n for n, _, _ in self.visitor.get_children(
+                n for n, _ in self.visitor.get_children(
                     serial_elem, **options))
             self.unprocessed_children.discard(
                 self.visitor.node_name(Annotations))
@@ -1202,7 +1200,7 @@ class NodeToUnserialize(BaseNode):
         ref_node_name = self.visitor.node_name(Reference)
         if parent_elem is None:
             parent_elem = self._serial_elem
-        for name, _, elem in self.visitor.get_children(parent_elem):
+        for name, elem in self.visitor.get_children(parent_elem):
             if name == ref_node_name and allow_ref:
                 ref = self._visitor.visit(elem, Reference, **options)
                 if self.visitor.node_name(type(ref.user_object)) in name_map:

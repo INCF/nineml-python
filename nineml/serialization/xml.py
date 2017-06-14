@@ -81,8 +81,7 @@ class XMLUnserializer(BaseUnserializer):
                     "element".format(self.node_name(Document)))
 
     def get_children(self, serial_elem, **options):  # @UnusedVariable
-        return ((strip_xmlns(e.tag), extract_xmlns(e.tag), e)
-                for e in serial_elem.getchildren()
+        return ((strip_xmlns(e.tag), e) for e in serial_elem.getchildren()
                 if not isinstance(e, etree._Comment))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
@@ -103,7 +102,7 @@ class XMLUnserializer(BaseUnserializer):
         return serial_elem.attrib.keys()
 
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable
-        return extract_xmlns(serial_elem)
+        return extract_xmlns(serial_elem.tag)
 
     def from_file(self, file):  # @ReservedAssignment
         try:

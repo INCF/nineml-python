@@ -289,7 +289,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                 else:
                     raise
             receiver = eval(cls.v1tov2[receive_name])
-            for elem_name, _, send_elem in node.visitor.get_children(
+            for elem_name, send_elem in node.visitor.get_children(
                     receive_elem, **options):
                 if elem_name in ('Component', 'Reference'):
                     continue
