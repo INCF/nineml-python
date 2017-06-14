@@ -10,7 +10,7 @@ def value_str(value):
     return repr(value) if isinstance(value, float) else str(value)
 
 
-class HDF5Serializer(BaseSerializer):
+class DictSerializer(BaseSerializer):
     """
     A Serializer class that serializes to a dictionary of lists and attributes.
     Is used as the base class for the Pickle, JSON and YAML serializers
@@ -38,7 +38,7 @@ class HDF5Serializer(BaseSerializer):
             "'dict' format cannot be converted to a string")
 
 
-class HDF5Unserializer(BaseUnserializer):
+class DictUnserializer(BaseUnserializer):
     """
     A Unserializer class that serializes to a dictionary of lists and
     attributes. Is used as the base class for the Pickle, JSON and YAML

@@ -22,6 +22,7 @@ MATHML_NS = "http://www.w3.org/1998/Math/MathML"
 UNCERTML_NS = "http://www.uncertml.org/2.0"
 
 import nineml  # @IgnorePep8
+from .dict import DictSerializer, DictUnserializer  # @IgnorePep8
 try:
     from .xml import XMLSerializer, XMLUnserializer
 except:
@@ -29,11 +30,13 @@ except:
 
 
 format_to_serializer = {
-    'xml': XMLSerializer}
+    'xml': XMLSerializer,
+    'dict': DictSerializer}
 
 
 format_to_unserializer = {
-    'xml': XMLUnserializer}
+    'xml': XMLUnserializer,
+    'dict': DictUnserializer}
 
 
 def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @ReservedAssignment @IgnorePep8

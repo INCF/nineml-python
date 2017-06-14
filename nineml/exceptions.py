@@ -62,6 +62,10 @@ class NineMLMissingSerializationError(NineMLSerializationError):
     pass
 
 
+class NineMLSerializationNotSupportedError(NineMLRuntimeError):
+    pass
+
+
 class NineMLUnexpectedMultipleSerializationError(NineMLSerializationError):
     pass
 
