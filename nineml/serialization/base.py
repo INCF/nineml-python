@@ -128,7 +128,7 @@ class BaseSerializer(BaseVisitor):
         Parameters
         ----------
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
         """
         self.document.serialize_node(
             NodeToSerialize(self, self.root), **options)
@@ -156,7 +156,7 @@ class BaseSerializer(BaseVisitor):
             Whether to allow for multiple elements of the same type (important
             for formats such as JSON and YAML which save them in lists)
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
         """
         is_doc_level = isinstance(nineml_object, DocumentLevelObject)
         if not is_doc_level:
@@ -242,7 +242,7 @@ class BaseSerializer(BaseVisitor):
             namespaces (e.g. JSON, YAML, HDF5) this is stored in a special
             attribute name.
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
         """
 
     @abstractmethod
@@ -259,7 +259,7 @@ class BaseSerializer(BaseVisitor):
         value : float | int | str
             The value of the attribute
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
         """
 
     @abstractmethod
@@ -276,7 +276,7 @@ class BaseSerializer(BaseVisitor):
         value : float | int | str
             The value of the attribute
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
         """
 
     @abstractmethod
@@ -299,7 +299,7 @@ class BaseSerializer(BaseVisitor):
         value : float | int | str
             The value of the attribute
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
         """
 
     def _get_reference_url(self, nineml_object, reference=None,
@@ -452,7 +452,7 @@ class BaseUnserializer(BaseVisitor):
                 try:
                     elem_cls = class_map[nineml_type]
                 except KeyError:
-                    elem_cls = self._get_nineml_class(nineml_type, elem)
+                    elem_cls = self.get_nineml_class(nineml_type, elem)
                 self._unloaded[name] = (elem, elem_cls)
 
     def unserialize(self):
@@ -503,7 +503,7 @@ class BaseUnserializer(BaseVisitor):
             Whether to attempt to load the serial element as a 9ML reference
             (depends on the context it is in)
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
         """
         annotations = self._extract_annotations(serial_elem, **options)
         # Set any loading options that are saved as annotations
@@ -566,7 +566,7 @@ class BaseUnserializer(BaseVisitor):
         serial_elem : <serial-element>
             A serial element
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
 
         Returns
         -------
@@ -585,7 +585,7 @@ class BaseUnserializer(BaseVisitor):
         serial_elem : <serial-element>
             A serial element
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
 
         Returns
         -------
@@ -604,7 +604,7 @@ class BaseUnserializer(BaseVisitor):
         serial_elem : <serial-element>
             A serial element
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
 
         Returns
         -------
@@ -622,7 +622,7 @@ class BaseUnserializer(BaseVisitor):
         serial_elem : <serial-element>
             A serial element
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
 
         Returns
         -------
@@ -643,7 +643,7 @@ class BaseUnserializer(BaseVisitor):
         serial_elem : <serial-element>
             A serial element
         options : dict(str, object)
-            Serialization-specific options for the method
+            Serialization format-specific options for the method
 
         Returns
         -------
@@ -727,9 +727,21 @@ class BaseUnserializer(BaseVisitor):
                     elem, "', '".join(elem.attrib.keys())))
         return name
 
-    def _get_single_child(self, elem, names=None, allow_ref=False, **options):
+    def get_single_child(self, elem, names=None, allow_ref=False, **options):
         """
         Returns a single child element matching names
+
+        Parameter
+        ---------
+        elem : <serial-element>
+            The parent serial element
+        names : str | iterable(str)
+            A name or iterable of nineml_type names to return if found
+        allow_ref : bool
+            Whether to allow the child to be a reference to an object of the
+            given types
+        options : dict(str, object)
+            Serialization format-specific options for the method
         """
         if isinstance(names, basestring):
             names = [names]
@@ -778,12 +790,48 @@ class BaseUnserializer(BaseVisitor):
                         ', '.join(c[0] for c in self.get_children(elem))))
         return matches[0]
 
+    def get_nineml_class(self, nineml_type, elem, assert_doc_level=True):
+        """
+        Loads a nineml class from the nineml package. NB that all
+        `DocumentLevelObjects` need to be imported into the root nineml package
+
+        Parameters
+        ----------
+        nineml_type : str
+            The name of the nineml class to return
+        elem : <serial-element>
+            The serial element of which to find the class. Only used for
+            component and component-class type objects when using 9MLv1 format.
+        assert_doc_level : bool
+            Whether to check whether the given nineml_type is a document-level
+            object or not.
+        """
+        try:
+            nineml_cls = getattr(nineml, nineml_type)
+            if assert_doc_level and not issubclass(nineml_cls,
+                                                   DocumentLevelObject):
+                raise NineMLSerializationError(
+                    "'{}' element does not correspond to a recognised "
+                    "document-level object".format(nineml_cls.__name__))
+        except AttributeError:
+            nineml_cls = None
+            if self.major_version == 1:
+                if nineml_type == 'ComponentClass':
+                    nineml_cls = self._get_v1_component_class_type(elem)
+                elif nineml_type == 'Component':
+                    nineml_cls = self._get_v1_component_type(elem)
+            if nineml_cls is None:
+                raise NineMLSerializationError(
+                    "Unrecognised element type '{}' found in document"
+                    .format(nineml_type))
+        return nineml_cls
+
     def _extract_annotations(self, serial_elem, **options):
         """
         Extract annotations from serial element if present
         """
         try:
-            _, annot_elem = self._get_single_child(
+            _, annot_elem = self.get_single_child(
                 serial_elem, [self.node_name(Annotations)])
             annot_node = NodeToUnserialize(self, annot_elem, 'Annotations',
                                            check_unprocessed=False)
@@ -812,31 +860,6 @@ class BaseUnserializer(BaseVisitor):
                 nineml_object._indices[
                     key][getattr(nineml_object, key)(name)] = int(index)
 
-    def _get_nineml_class(self, nineml_type, elem, assert_doc_level=True):
-        """
-        Loads a nineml class from the nineml package. NB that all
-        `DocumentLevelObjects` need to be imported into the root nineml package
-        """
-        try:
-            nineml_cls = getattr(nineml, nineml_type)
-            if assert_doc_level and not issubclass(nineml_cls,
-                                                   DocumentLevelObject):
-                raise NineMLSerializationError(
-                    "'{}' element does not correspond to a recognised "
-                    "document-level object".format(nineml_cls.__name__))
-        except AttributeError:
-            nineml_cls = None
-            if self.major_version == 1:
-                if nineml_type == 'ComponentClass':
-                    nineml_cls = self._get_v1_component_class_type(elem)
-                elif nineml_type == 'Component':
-                    nineml_cls = self._get_v1_component_type(elem)
-            if nineml_cls is None:
-                raise NineMLSerializationError(
-                    "Unrecognised element type '{}' found in document"
-                    .format(nineml_type))
-        return nineml_cls
-
     def _get_v1_component_class_type(self, elem):
         """
         Gets the appropriate component-class class for a 9MLv1 component-class.
@@ -862,7 +885,7 @@ class BaseUnserializer(BaseVisitor):
         can only be differentiated by the component class they reference in the
         'Definition' element.
         """
-        _, defn_elem = self._get_single_child(
+        _, defn_elem = self.get_single_child(
             elem, names=('Definition', 'Prototype'))
         name = self.get_body(defn_elem)
         try:
@@ -1104,7 +1127,7 @@ class NodeToUnserialize(BaseNode):
         name_map = self._get_name_map(nineml_classes)
         if within is not None:
             try:
-                _, serial_elem = self.visitor._get_single_child(
+                _, serial_elem = self.visitor.get_single_child(
                     self._serial_elem, within, allow_none=allow_none,
                     **options)
                 # If the within element is found it cannot be empty
@@ -1118,7 +1141,7 @@ class NodeToUnserialize(BaseNode):
         else:
             serial_elem = self._serial_elem
         try:
-            name, child_elem = self.visitor._get_single_child(
+            name, child_elem = self.visitor.get_single_child(
                 serial_elem, name_map.keys(), allow_ref, **options)
         except NineMLMissingSerializationError:
             if allow_none:
@@ -1218,7 +1241,7 @@ class NodeToUnserialize(BaseNode):
         """
         try:
             if in_body:
-                _, attr_elem = self.visitor._get_single_child(
+                _, attr_elem = self.visitor.get_single_child(
                     self._serial_elem, names=name, **options)
                 self.unprocessed_children.remove(name)
                 value = self.visitor.get_body(attr_elem, **options)
