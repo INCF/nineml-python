@@ -56,13 +56,17 @@ class Serializer(BaseSerializer):
         return ElementMaker(namespace=namespace,
                             nsmap=nsmap)
 
-    def write_to_file(self, file, serial_elem=None, pretty_print=True,  # @ReservedAssignment @IgnorePep8
-              xml_declaration=True, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8
-        if serial_elem is None:
-            serial_elem = self.root
+    def to_file(self, serial_elem, file, pretty_print=True,  # @ReservedAssignment @IgnorePep8
+                xml_declaration=True, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8
         etree.ElementTree(serial_elem).write(file, encoding=encoding,
                                              pretty_print=pretty_print,
                                              xml_declaration=xml_declaration)
+
+    def to_str(self, serial_elem, pretty_print=True,  # @ReservedAssignment @IgnorePep8
+               xml_declaration=True, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8
+        return etree.ElementTree(serial_elem).tostring(
+            encoding=encoding, pretty_print=pretty_print,
+            xml_declaration=xml_declaration)
 
 
 class Unserializer(BaseUnserializer):
@@ -103,7 +107,7 @@ class Unserializer(BaseUnserializer):
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable
         return extract_xmlns(serial_elem)
 
-    def parse_file(self, file):  # @ReservedAssignment
+    def from_file(self, file):  # @ReservedAssignment
         try:
             xml = etree.parse(file)
         except (etree.LxmlError, IOError) as e:
@@ -112,15 +116,9 @@ class Unserializer(BaseUnserializer):
                 .format(file, e))
         return xml.getroot()
 
-    def parse_string(self, string):
+    def from_str(self, string):
         try:
             return etree.fromstring(string)
         except etree.LxmlError as e:
             raise NineMLSerializationError(
                 "Could not parse XML string '{}': \n{}".format(file, e))
-
-    def parse_elem(self, elem):
-        if not isinstance(elem, etree._Element):
-            raise NineMLSerializationError(
-                "{} is not a valid XML element".format(elem))
-        return elem

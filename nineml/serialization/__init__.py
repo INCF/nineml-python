@@ -90,7 +90,7 @@ def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @Rese
             raise NineMLIOError(
                 "Unrecognised url '{}'".format(url))
         with contextlib.closing(file):
-            doc = Unserializer(file, url=url, **kwargs).unserialize()
+            doc = Unserializer(root=file, url=url, **kwargs).unserialize()
         if register:
             nineml.Document.registry[url] = weakref.ref(doc), mtime
     if name is not None:
@@ -114,22 +114,24 @@ def write(url, *nineml_objects, **kwargs):
             document = document.clone()
     else:
         document = nineml.Document(*nineml_objects, **kwargs)
-    frmat = format_from_url(url)
+    format = format_from_url(url)  # @ReservedAssignment
     try:
-        Serializer = format_to_serializer[frmat]
+        Serializer = format_to_serializer[format]
     except KeyError:
         raise NineMLSerializationError(
             "Unrecognised format '{}' in url '{}', can be one of '{}'"
-            .format(frmat, url, "', '".join(format_to_serializer.keys())))
+            .format(format, url, "', '".join(format_to_serializer.keys())))
     if Serializer is None:
         raise NineMLSerializationError(
             "Cannot write to '{}' as {} serializer cannot be "
             "imported. Please check the required dependencies are correctly "
-            "installed".format(url, frmat))
-    serializer = Serializer(document=document, **kwargs)
-    serializer.serialize()
-    with open(url, 'w') as f:
-        serializer.write_to_file(f, **kwargs)
+            "installed".format(url, format))
+    with open(url, 'w') as file:  # @ReservedAssignment
+        # file is passed to the serializer for serializations that store
+        # elements dynamically, such as HDF5
+        serializer = Serializer(document=document, file=file, **kwargs)
+        serializer.serialize()
+        serializer.to_file(serializer.root, file, **kwargs)
     if register:
         document._url = url
         nineml.Document.registry[url] = (weakref.ref(document),

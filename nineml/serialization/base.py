@@ -222,6 +222,17 @@ class BaseSerializer(BaseVisitor):
         return self._root
 
     @abstractmethod
+    def create_root(self, **options):
+        """
+        Creates a root serial element
+
+        Parameters
+        ----------
+        options : dict(str, object)
+            Serialization format-specific options for the method
+        """
+
+    @abstractmethod
     def create_elem(self, name, parent=None, multiple=False,
                     namespace=None, **options):
         """
@@ -280,24 +291,29 @@ class BaseSerializer(BaseVisitor):
         """
 
     @abstractmethod
-    def create_root(self):
-        """
-        Creates a root serial element i.e. document within a file
-        """
-
-    @abstractmethod
-    def write_to_file(self, file):  # @ReservedAssignment
+    def to_file(self, serial_elem, file, **options):  # @ReservedAssignment
         """
         Set the attribute of a serial element
 
         Parameters
         ----------
-        serial_elem : <serial-element>
-            The serial element (dependent on the serialization type)
-        name : str
-            The name of the attribute
-        value : float | int | str
-            The value of the attribute
+        serial_elem : <serial_element>
+            Serial element to write to file
+        file : file-handle
+            File handle in which to write serialized elements
+        options : dict(str, object)
+            Serialization format-specific options for the method
+        """
+
+    @abstractmethod
+    def to_str(self, serial_elem, **options):  # @ReservedAssignment
+        """
+        Set the attribute of a serial element
+
+        Parameters
+        ----------
+        serial_elem : <serial_element>
+            Serial element to write to file
         options : dict(str, object)
             Serialization format-specific options for the method
         """
@@ -407,13 +423,11 @@ class BaseUnserializer(BaseVisitor):
         self._url = url
         # Get root elem either from kwarg or file handle
         if isinstance(root, file):
-            self._root = self.parse_file(root)
+            self._root = self.from_file(root)
         elif isinstance(root, basestring):
-            self._root = self.parse_string(root)
-        elif root is None:
-            self._root = None
-        else:  # If serial element
-            self._root = self.parse_elem(root)
+            self._root = self.from_str(root)
+        else:
+            self._root = root
         # Get the version from the root element
         if self.root is not None:
             extracted_version = self.standardize_version(
@@ -652,7 +666,7 @@ class BaseUnserializer(BaseVisitor):
         """
 
     @abstractmethod
-    def parse_file(self, file):  # @ReservedAssignment
+    def from_file(self, file):  # @ReservedAssignment
         """
         Parses the file and returns the root element
 
@@ -669,7 +683,7 @@ class BaseUnserializer(BaseVisitor):
         """
 
     @abstractmethod
-    def parse_string(self, string):
+    def from_str(self, string):
         """
         Parses the string and returns the root element
 
@@ -677,22 +691,6 @@ class BaseUnserializer(BaseVisitor):
         ----------
         string : str
             A string containing the serialized document to unserialize
-
-        Returns
-        -------
-        root : <serial-element>
-            The root element of the document
-        """
-
-    @abstractmethod
-    def parse_elem(self, elem):
-        """
-        Checks to see if the element is a valid type for the given serializer
-
-        Parameters
-        ----------
-        elem : <serial-element>
-            The serial element
 
         Returns
         -------
