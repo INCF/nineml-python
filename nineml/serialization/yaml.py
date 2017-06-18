@@ -1,68 +1,44 @@
-from nineml.document import Document
-from nineml.exceptions import (NineMLSerializationError,
-                               NineMLSerializationNotSupportedError)
-from .base import BaseSerializer, BaseUnserializer
-from nineml.exceptions import NineMLNameError
+from __future__ import absolute_import
+from .dict import DictSerializer, DictUnserializer
+from collections import OrderedDict
+import yaml
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper  # @UnusedImport
+_mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
 
 
-def value_str(value):
-    # Ensure all decimal places are preserved for floats
-    return repr(value) if isinstance(value, float) else str(value)
+def dict_representer(dumper, data):
+    return dumper.represent_dict(data.iteritems())
 
 
-class YAMLSerializer(BaseSerializer):
+def dict_constructor(loader, node):
+    return OrderedDict(loader.construct_pairs(node))
+
+Dumper.add_representer(OrderedDict, dict_representer)
+Loader.add_constructor(_mapping_tag, dict_constructor)
+
+
+class YAMLSerializer(DictSerializer):
     """
-    A Serializer class that serializes to a dictionary of lists and attributes.
-    Is used as the base class for the Pickle, JSON and YAML serializers
+    A Serializer class that serializes to YAML
     """
-
-    def create_elem(self, name, parent, namespace=None, **options):  # @UnusedVariable @IgnorePep8
-        pass
-
-    def create_root(self, **options):  # @UnusedVariable
-        pass
-
-    def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        pass
-
-    def set_body(self, serial_elem, value, sole=False, **options):  # @UnusedVariable @IgnorePep8
-        pass
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
-        raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
+        yaml.dump(serial_elem, stream=file, Dumper=Dumper)
 
     def to_str(self, serial_elem, **options):  # @UnusedVariable  @IgnorePep8
-        raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be converted to a string")
+        return yaml.dump(serial_elem, Dumper=Dumper)
 
 
-class YAMLUnserializer(BaseUnserializer):
+class YAMLUnserializer(DictUnserializer):
     """
-    A Unserializer class that serializes to a dictionary of lists and
-    attributes. Is used as the base class for the Pickle, JSON and YAML
-    serializers
+    A Unserializer class that unserializes YAML
     """
 
-    def get_children(self, serial_elem, **options):  # @UnusedVariable
-        pass
+    def from_file(self, file, **options):  # @ReservedAssignment @UnusedVariable @IgnorePep8
+        return yaml.load(file, Loader=Loader)
 
-    def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
-        pass
-
-    def get_body(self, serial_elem, sole=True, **options):  # @UnusedVariable
-        pass
-
-    def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
-        pass
-
-    def get_namespace(self, serial_elem, **options):  # @UnusedVariable
-        pass
-
-    def from_file(self, file, **options):  # @ReservedAssignment
-        raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
-
-    def from_str(self, string, **options):
-        raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
+    def from_str(self, string, **options):  # @UnusedVariable
+        return yaml.load(string, Loader=Loader)

@@ -1,68 +1,42 @@
-from nineml.document import Document
-from nineml.exceptions import (NineMLSerializationError,
-                               NineMLSerializationNotSupportedError)
-from .base import BaseSerializer, BaseUnserializer
-from nineml.exceptions import NineMLNameError
+from __future__ import absolute_import
+import json
+from .dict import DictSerializer, DictUnserializer
 
 
-def value_str(value):
-    # Ensure all decimal places are preserved for floats
-    return repr(value) if isinstance(value, float) else str(value)
-
-
-class JSONSerializer(BaseSerializer):
+class JSONSerializer(DictSerializer):
     """
-    A Serializer class that serializes to a dictionary of lists and attributes.
-    Is used as the base class for the Pickle, JSON and YAML serializers
+    A Serializer class that serializes to JSON
     """
 
-    def create_elem(self, name, parent, namespace=None, **options):  # @UnusedVariable @IgnorePep8
-        pass
+    def to_file(self, serial_elem, file, skipkeys=False, ensure_ascii=True, #   @IgnorePep8 @ReservedAssignment
+                check_circular=True, allow_nan=True, cls=None, indent=None,
+                separators=None, encoding='utf-8', default=None,
+                sort_keys=False, **options):  # @UnusedVariable
+        json.dump(serial_elem, file, skipkeys=skipkeys,
+                  ensure_ascii=ensure_ascii, check_circular=check_circular,
+                  allow_nan=allow_nan, cls=cls, indent=indent,
+                  separators=separators, encoding=encoding, default=default,
+                  sort_keys=sort_keys)
 
-    def create_root(self, **options):  # @UnusedVariable
-        pass
-
-    def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        pass
-
-    def set_body(self, serial_elem, value, sole=False, **options):  # @UnusedVariable @IgnorePep8
-        pass
-
-    def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
-        raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
-
-    def to_str(self, serial_elem, **options):  # @UnusedVariable  @IgnorePep8
-        raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be converted to a string")
+    def to_str(self, serial_elem, skipkeys=False, ensure_ascii=True,
+                check_circular=True, allow_nan=True, cls=None, indent=None,
+                separators=None, encoding='utf-8', default=None,
+                sort_keys=False, **options):  # @UnusedVariable  @IgnorePep8
+        return json.dumps(serial_elem, skipkeys=skipkeys,
+                          ensure_ascii=ensure_ascii,
+                          check_circular=check_circular, allow_nan=allow_nan,
+                          cls=cls, indent=indent, separators=separators,
+                          encoding=encoding, default=default,
+                          sort_keys=sort_keys)
 
 
-class JSONUnserializer(BaseUnserializer):
+class JSONUnserializer(DictUnserializer):
     """
-    A Unserializer class that serializes to a dictionary of lists and
-    attributes. Is used as the base class for the Pickle, JSON and YAML
-    serializers
+    A Unserializer class that unserializes JSON
     """
 
-    def get_children(self, serial_elem, **options):  # @UnusedVariable
-        pass
+    def from_file(self, file, encoding=None, **options):  # @ReservedAssignment @UnusedVariable @IgnorePep8
+        return json.load(file, encoding=encoding)
 
-    def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
-        pass
-
-    def get_body(self, serial_elem, sole=True, **options):  # @UnusedVariable
-        pass
-
-    def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
-        pass
-
-    def get_namespace(self, serial_elem, **options):  # @UnusedVariable
-        pass
-
-    def from_file(self, file, **options):  # @ReservedAssignment
-        raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
-
-    def from_str(self, string, **options):
-        raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
+    def from_str(self, string, encoding=None, **options):  # @UnusedVariable
+        return json.loads(string, encoding=encoding)

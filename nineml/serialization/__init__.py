@@ -23,26 +23,39 @@ UNCERTML_NS = "http://www.uncertml.org/2.0"
 
 import nineml  # @IgnorePep8
 from .dict import DictSerializer, DictUnserializer  # @IgnorePep8
+from .json import JSONSerializer, JSONUnserializer  # @IgnorePep8
+from .pickle import PickleSerializer, PickleUnserializer  # @IgnorePep8
 try:
     from .xml import XMLSerializer, XMLUnserializer
 except:
     XMLUnserializer = XMLSerializer = None
+try:
+    from .yaml import YAMLSerializer, YAMLUnserializer
+except:
+    YAMLUnserializer = YAMLSerializer = None
+
 
 ext_to_format = {
-    'xml': 'xml',
-    'yml': 'yaml',
-    'h5': 'hdf5',
-    'json': 'json',
-    'pkl': 'pickle'}
+    '.xml': 'xml',
+    '.yml': 'yaml',
+    '.h5': 'hdf5',
+    '.json': 'json',
+    '.pkl': 'pickle'}
 
 format_to_serializer = {
     'xml': XMLSerializer,
-    'dict': DictSerializer}
+    'dict': DictSerializer,
+    'yaml': YAMLSerializer,
+    'json': JSONSerializer,
+    'pickle': PickleSerializer}
 
 
 format_to_unserializer = {
     'xml': XMLUnserializer,
-    'dict': DictUnserializer}
+    'dict': DictUnserializer,
+    'yaml': YAMLUnserializer,
+    'json': JSONUnserializer,
+    'pickle': PickleUnserializer}
 
 
 def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @ReservedAssignment @IgnorePep8
@@ -170,7 +183,7 @@ def unserialize(serial_elem, nineml_cls, format, version,  # @ReservedAssignment
 def format_from_url(url):
     if '#' in url:
         url = url.split('#')[0]
-    return os.path.splitext(url)[-1][1:]
+    return ext_to_format[os.path.splitext(url)[-1]]
 
 
 url_re = re.compile(

@@ -35,6 +35,10 @@ class TestComprehensiveXML(TestCase):
                     url = os.path.join(
                         self._tmp_dir, 'test{}v{}.{}'.format(i, version, ext))
                     nineml.write(url, doc, format=format, version=version)
+                    if format in ('yaml', 'json'):
+                        with open(url) as f:
+                            d = f.read()
+                        print d
                     reread_doc = nineml.read(url, force_reload=True)
                     self.assertTrue(doc.equals(reread_doc),
                                     doc.find_mismatch(reread_doc))

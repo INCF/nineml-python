@@ -59,9 +59,9 @@ class DictSerializer(BaseSerializer):
 
 class DictUnserializer(BaseUnserializer):
     """
-    A Unserializer class that serializes to a dictionary of lists and
+    A Unserializer class that unserializes from a dictionary of lists and
     attributes. Is used as the base class for the Pickle, JSON and YAML
-    serializers
+    unserializers
     """
 
     def __init__(self, root, version, **kwargs):
