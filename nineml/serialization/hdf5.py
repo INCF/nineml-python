@@ -1,14 +1,10 @@
 import h5py
 from . import NINEML_BASE_NS
+import nineml
 from nineml.exceptions import (NineMLSerializationError,
                                NineMLSerializationNotSupportedError)
 from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
 from nineml.exceptions import NineMLNameError
-
-
-def value_str(value):
-    # Ensure all decimal places are preserved for floats
-    return repr(value) if isinstance(value, float) else str(value)
 
 
 class HDF5Serializer(BaseSerializer):
@@ -27,7 +23,7 @@ class HDF5Serializer(BaseSerializer):
             self.set_attr(elem, NS_ATTR, namespace, **options)
 
     def create_root(self, **options):  # @UnusedVariable
-        return self._file.create_group('NineML')
+        return self._file.create_group(nineml.Document.nineml_type)
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
         serial_elem.attrs[name] = value
@@ -73,7 +69,7 @@ class HDF5Unserializer(BaseUnserializer):
         return ns
 
     def from_file(self, fname, **options):  # @UnusedVariable
-        return h5py.File(fname)
+        return h5py.File(fname)[nineml.Document.nineml_type]
 
     def from_str(self, string, **options):
         raise NineMLSerializationNotSupportedError(
