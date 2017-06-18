@@ -6,11 +6,6 @@ from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
 from nineml.exceptions import NineMLNameError, NineMLSerializationError
 
 
-def value_str(value):
-    # Ensure all decimal places are preserved for floats
-    return repr(value) if isinstance(value, float) else str(value)
-
-
 class DictSerializer(BaseSerializer):
     """
     A Serializer class that serializes to a dictionary of lists and attributes.
@@ -37,6 +32,8 @@ class DictSerializer(BaseSerializer):
                         "singleton element".format(name, parent))
             else:
                 parent[name] = elem
+        if namespace is not None:
+            self.set_attr(elem, NS_ATTR, namespace, **options)
         return elem
 
     def create_root(self, **options):  # @UnusedVariable
