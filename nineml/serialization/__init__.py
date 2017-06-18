@@ -27,12 +27,16 @@ from .json import JSONSerializer, JSONUnserializer  # @IgnorePep8
 from .pickle import PickleSerializer, PickleUnserializer  # @IgnorePep8
 try:
     from .xml import XMLSerializer, XMLUnserializer
-except:
-    XMLUnserializer = XMLSerializer = None
+except ImportError:
+    XMLSerializer = XMLUnserializer = None
 try:
     from .yaml import YAMLSerializer, YAMLUnserializer
-except:
-    YAMLUnserializer = YAMLSerializer = None
+except ImportError:
+    YAMLSerializer = YAMLUnserializer = None
+try:
+    from .hdf5 import HDF5Serializer, HDF5Unserializer
+except ImportError:
+    HDF5Serializer = HDF5Unserializer = None
 
 
 ext_to_format = {
