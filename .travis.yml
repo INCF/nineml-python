@@ -4,7 +4,7 @@ python:
   - "2.7"
 # command to install dependencies
 install:
-  - apt-get install libhdf5-serial-dev
+  - apt-get install libhdf5-dev
   - pip install -r requirements.txt
   - pip install coveralls
   - pip install numpy
