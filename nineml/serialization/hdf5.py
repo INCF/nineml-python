@@ -68,12 +68,11 @@ class HDF5Unserializer(BaseUnserializer):
     A Unserializer class unserializes the HDF5 format.
     """
 
-    def get_children(self, serial_elem, **options):  # @UnusedVariable
-        return chain(
-            ((n, e) for n, e in serial_elem.iteritems()
-             if isinstance(e, dict)),
-            *(izip(repeat(n), e) for n, e in serial_elem.iteritems()
-              if isinstance(e, list)))
+    def get_child(self, parent, nineml_type, **options):  # @UnusedVariable
+        return parent[nineml_type]
+
+    def get_children(self, parent, nineml_type, **options):  # @UnusedVariable
+        return parent[nineml_type].itervalues()
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         return serial_elem.attrs[name]

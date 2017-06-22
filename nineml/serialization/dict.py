@@ -1,9 +1,9 @@
 from nineml.exceptions import NineMLSerializationNotSupportedError
 from . import NINEML_BASE_NS
-from itertools import chain, repeat, izip
 from collections import OrderedDict
 from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
-from nineml.exceptions import NineMLNameError, NineMLSerializationError
+from nineml.exceptions import (
+    NineMLMissingSerializationError, NineMLNameError, NineMLSerializationError)
 
 
 class DictSerializer(BaseSerializer):
@@ -59,12 +59,27 @@ class DictUnserializer(BaseUnserializer):
     def __init__(self, root, version, **kwargs):
         super(DictUnserializer, self).__init__(root, version, **kwargs)
 
-    def get_children(self, serial_elem, **options):  # @UnusedVariable
-        return chain(
-            ((n, e) for n, e in serial_elem.iteritems()
-             if isinstance(e, dict)),
-            *(izip(repeat(n), e) for n, e in serial_elem.iteritems()
-              if isinstance(e, list)))
+    def get_child(self, parent, nineml_type, **options):  # @UnusedVariable
+        try:
+            child = parent[nineml_type]
+        except KeyError:
+            raise NineMLMissingSerializationError(
+                "Missing '{}' in parent {}".format(nineml_type, parent))
+        if not isinstance(child, dict):
+            raise NineMLSerializationError(
+                "Muliple children of type '{}' found in {}"
+                .format(nineml_type, parent))
+
+    def get_children(self, parent, nineml_type, **options):  # @UnusedVariable
+        try:
+            children = parent[nineml_type]
+        except KeyError:
+            children = []
+        if not isinstance(children, list):
+            raise NineMLSerializationError(
+                "Single child of type '{}' found in {}"
+                .format(nineml_type, parent))
+        return iter(children)
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         try:

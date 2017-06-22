@@ -77,9 +77,17 @@ class XMLUnserializer(BaseUnserializer):
                     "Provided XML document is not enclosed within a '{}' "
                     "element".format(self.node_name(Document)))
 
-    def get_children(self, serial_elem, **options):  # @UnusedVariable
-        return ((strip_xmlns(e.tag), e) for e in serial_elem.getchildren()
-                if not isinstance(e, etree._Comment))
+    def get_child(self, parent, nineml_type, **options):
+        children = list(self.get_children(parent, nineml_type, **options))
+        if len(children) != 1:
+            raise NineMLSerializationError(
+                "Expected 1 {} in {} but found {}"
+                .format(nineml_type, parent, len(children)))
+        return children[0]
+
+    def get_children(self, serial_elem, nineml_type, **options):  # @UnusedVariable @IgnorePep8
+        return (e for e in serial_elem.getchildren()
+                if strip_xmlns(e.tag) == nineml_type)
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         try:

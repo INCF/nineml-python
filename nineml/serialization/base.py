@@ -572,22 +572,44 @@ class BaseUnserializer(BaseVisitor):
         return self._root
 
     @abstractmethod
-    def get_children(self, serial_elem, **options):
+    def get_child(self, parent, nineml_type, **options):
         """
-        Iterates over all child elements of the serial element, yielding a
-        tuple consisting of the nineml-type, namespace, element
+        Returns a single child of nineml_type from the parent serial element
 
         Parameters
         ----------
-        serial_elem : <serial-element>
-            A serial element
+        parent : <serial-element>
+            A serial element to get the children of
+        nineml_type : str
+            Name of the children to return
         options : dict(str, object)
             Serialization format-specific options for the method
 
         Returns
         -------
-        children : iterator(tuple(str, <serial-element>))
-            The nineml-type and element for each child in the serial element
+        child : <serial-element>
+            A serial element child in the parent serial element
+        """
+
+    @abstractmethod
+    def get_children(self, parent, nineml_type, **options):
+        """
+        Iterates over all child elements of the given type in the parent
+        element
+
+        Parameters
+        ----------
+        parent : <serial-element>
+            A serial element to get the children of
+        nineml_type : str
+            Name of the children to return
+        options : dict(str, object)
+            Serialization format-specific options for the method
+
+        Returns
+        -------
+        children : iterator(<serial-element>)
+            An iterator over the children named in the parent serial element
         """
 
     @abstractmethod
@@ -744,68 +766,68 @@ class BaseUnserializer(BaseVisitor):
                 "level object '{}' ('{}')".format(
                     elem, "', '".join(elem.attrib.keys())))
         return name
-
-    def get_single_child(self, elem, names=None, allow_ref=False, **options):
-        """
-        Returns a single child element matching names
-
-        Parameter
-        ---------
-        elem : <serial-element>
-            The parent serial element
-        names : str | iterable(str)
-            A name or iterable of nineml_type names to return if found
-        allow_ref : bool
-            Whether to allow the child to be a reference to an object of the
-            given types
-        options : dict(str, object)
-            Serialization format-specific options for the method
-        """
-        if isinstance(names, basestring):
-            names = [names]
-        child_elems = list(self.get_children(elem, **options))
-        # If not searching for Annotaitons, ignore them
-        annot_name = self.node_name(Annotations)
-        if annot_name not in names:
-            child_elems = [(n, e) for n, e in child_elems if n != annot_name]
-        if allow_ref != 'only':
-            if names is not None:
-                matches = [(n, e) for n, e in child_elems if n in names]
-            else:
-                matches = child_elems
-        else:
-            matches = []
-        if allow_ref:
-            ref_name = self.node_name(Reference)
-            ref_elems = [e for n, e in child_elems if n == ref_name]
-            if names:
-                ref_matches = []
-                for ref_elem in ref_elems:
-                    node = NodeToUnserialize(self, ref_elem, ref_name)
-                    if self._version[0] == 1:
-                        ref = Reference.unserialize_node_v1(node, **options)
-                    else:
-                        ref = Reference.unserialize_node(node, **options)
-                    if self.node_name(type(ref.user_object)) in names:
-                        ref_matches.append(ref_elem)
-            else:
-                ref_matches = ref_elems
-            matches += [(ref_name, e) for e in ref_matches]
-        if len(matches) > 1:
-            raise NineMLUnexpectedMultipleSerializationError(
-                "Multiple {} children found within {} ({}) (found {})"
-                .format('|'.join(names), elem,
-                        ', '.join('{}:{}'.format(k, self.get_attr(elem, k))
-                                  for k in self.get_attr_keys(elem)),
-                        ', '.join(c[0] for c in self.get_children(elem))))
-        elif not matches:
-            raise NineMLMissingSerializationError(
-                "No '{}' child found within {} ({}) (found {})"
-                .format('|'.join(names), elem,
-                        ', '.join('{}:{}'.format(k, self.get_attr(elem, k))
-                                  for k in self.get_attr_keys(elem)),
-                        ', '.join(c[0] for c in self.get_children(elem))))
-        return matches[0]
+# 
+#     def get_single_child(self, elem, names=None, allow_ref=False, **options):
+#         """
+#         Returns a single child element matching names
+# 
+#         Parameter
+#         ---------
+#         elem : <serial-element>
+#             The parent serial element
+#         names : str | iterable(str)
+#             A name or iterable of nineml_type names to return if found
+#         allow_ref : bool
+#             Whether to allow the child to be a reference to an object of the
+#             given types
+#         options : dict(str, object)
+#             Serialization format-specific options for the method
+#         """
+#         if isinstance(names, basestring):
+#             names = [names]
+#         child_elems = list(self.get_children(elem, **options))
+#         # If not searching for Annotaitons, ignore them
+#         annot_name = self.node_name(Annotations)
+#         if annot_name not in names:
+#             child_elems = [(n, e) for n, e in child_elems if n != annot_name]
+#         if allow_ref != 'only':
+#             if names is not None:
+#                 matches = [(n, e) for n, e in child_elems if n in names]
+#             else:
+#                 matches = child_elems
+#         else:
+#             matches = []
+#         if allow_ref:
+#             ref_name = self.node_name(Reference)
+#             ref_elems = [e for n, e in child_elems if n == ref_name]
+#             if names:
+#                 ref_matches = []
+#                 for ref_elem in ref_elems:
+#                     node = NodeToUnserialize(self, ref_elem, ref_name)
+#                     if self._version[0] == 1:
+#                         ref = Reference.unserialize_node_v1(node, **options)
+#                     else:
+#                         ref = Reference.unserialize_node(node, **options)
+#                     if self.node_name(type(ref.user_object)) in names:
+#                         ref_matches.append(ref_elem)
+#             else:
+#                 ref_matches = ref_elems
+#             matches += [(ref_name, e) for e in ref_matches]
+#         if len(matches) > 1:
+#             raise NineMLUnexpectedMultipleSerializationError(
+#                 "Multiple {} children found within {} ({}) (found {})"
+#                 .format('|'.join(names), elem,
+#                         ', '.join('{}:{}'.format(k, self.get_attr(elem, k))
+#                                   for k in self.get_attr_keys(elem)),
+#                         ', '.join(c[0] for c in self.get_children(elem))))
+#         elif not matches:
+#             raise NineMLMissingSerializationError(
+#                 "No '{}' child found within {} ({}) (found {})"
+#                 .format('|'.join(names), elem,
+#                         ', '.join('{}:{}'.format(k, self.get_attr(elem, k))
+#                                   for k in self.get_attr_keys(elem)),
+#                         ', '.join(c[0] for c in self.get_children(elem))))
+#         return matches[0]
 
     def get_nineml_class(self, nineml_type, elem, assert_doc_level=True):
         """
@@ -1135,7 +1157,9 @@ class NodeToUnserialize(BaseNode):
             The name of the sub-element to extract the child from
         allow_ref : bool | 'only'
             Whether the child is can be a allow_ref or not. If 'only'
-            then only allow_refs will be found.
+            then only allow_refs will be found. Note if there are more than
+            one type references possible in a given container then the
+            'children' method with n=1 should be used instead.
         allow_none : bool
             Whether the child is allowed to be missing, in which case None
             will be returned
@@ -1151,9 +1175,8 @@ class NodeToUnserialize(BaseNode):
         name_map = self._get_name_map(nineml_classes)
         if within is not None:
             try:
-                _, serial_elem = self.visitor.get_single_child(
-                    self._serial_elem, within, allow_none=allow_none,
-                    **options)
+                serial_elem = self.visitor.get_child(self._serial_elem, within,
+                                                     **options)
                 # If the within element is found it cannot be empty
                 allow_none = False
                 if list(self.visitor.get_attr_keys(serial_elem)):
@@ -1169,36 +1192,47 @@ class NodeToUnserialize(BaseNode):
             self.unprocessed_children.discard(within)
         else:
             serial_elem = self._serial_elem
-        try:
-            name, child_elem = self.visitor.get_single_child(
-                serial_elem, name_map.keys(), allow_ref, **options)
-        except NineMLMissingSerializationError:
-            if allow_none:
-                return None
-            else:
-                raise
-        if within is None:
-            self.unprocessed_children.discard(name)
-        child = self.visitor.visit(child_elem, name_map.get(name, Reference),
-                                   **options)
-        # Deallow_ref Reference if required
-        if isinstance(child, Reference):
-            if isinstance(child.user_object, nineml_classes):
-                child = child.user_object
-            else:
-                raise NineMLSerializationError(
-                    "Found allow_ref {} for unrecognised type {} (accepted {})"
-                    .format(child, child.user_object,
-                            ", ".join(self.visitor.node_name(c)
-                                      for c in nineml_classes)))
+        child = None
+        if allow_ref:
+            try:
+                ref_elem = self.visitor.get_child(serial_elem,
+                                                  Reference.nineml_type)
+                ref = self.visitor.visit(ref_elem, Reference, **options)
+                if any(isinstance(ref.user_object, c) for c in nineml_classes):
+                    child = ref.user_object
+            except NineMLMissingSerializationError:
+                pass
+        if child is None:
+            if allow_ref == 'only':
+                raise NineMLMissingSerializationError(
+                    "Missing reference to '{}' type elements in {}"
+                    .format("', '".join(name_map), self.name))
+            child_elems = []
+            for nineml_type, cls in name_map:
+                try:
+                    child_elems.append(
+                        (cls,
+                         self.visitor.get_child(serial_elem, nineml_type)))
+                except NineMLMissingSerializationError:
+                    pass
+            if len(child_elems) > 1:
+                raise NineMLUnexpectedMultipleSerializationError(
+                    "Multiple {} children found within {} (found {})"
+                    .format('|'.join(name_map), self.name,
+                            ', '.join(child_elems)))
+            elif not child_elems:
+                raise NineMLMissingSerializationError(
+                    "No '{}' child found within {}"
+                    .format('|'.join(name_map), self.name))
+            child_cls, child_elem = child_elems[0]
+            child = self.visitor.visit(child_elem, child_cls, **options)
         return child
 
     def children(self, nineml_classes, n='*', allow_ref=False,
                  parent_elem=None, **options):
         """
-        Extract a child or children of class ``cls`` from the serial
-        element ``elem``. The number of expected children is specifed by
-        ``n``.
+        Extract a child or children of class 'cls' from the serial
+        element 'elem'. The number of expected children is specifed by 'n'.
 
         Parameters
         ----------
@@ -1225,16 +1259,18 @@ class NodeToUnserialize(BaseNode):
         ref_node_name = self.visitor.node_name(Reference)
         if parent_elem is None:
             parent_elem = self._serial_elem
-        for name, elem in self.visitor.get_children(parent_elem):
-            if name == ref_node_name and allow_ref:
-                ref = self._visitor.visit(elem, Reference, **options)
+        if allow_ref:
+            for ref_elem in self.visitor.get_children(parent_elem, **options):
+                ref = self.visitor.visit(ref_elem, Reference, **options)
                 if self.visitor.node_name(type(ref.user_object)) in name_map:
                     children.append(ref.user_object)
-                self.unprocessed_children.discard(ref_node_name)
-            elif name in name_map:
-                child = self._visitor.visit(elem, name_map[name], **options)
-                children.append(child)
-                self.unprocessed_children.discard(name)
+                    self.unprocessed_children.discard(ref_node_name)
+        for nineml_type, nineml_cls in name_map.iteritems():
+            for child_elem in self.visitor.get_children(
+                    parent_elem, nineml_type, **options):
+                children.append(self.visitor.visit(child_elem, nineml_cls,
+                                                   **options))
+                self.unprocessed_children.discard(nineml_type)
         if n == '+':
             if not children:
                 raise NineMLSerializationError(
