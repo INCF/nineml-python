@@ -2,9 +2,12 @@ language: python
 sudo: false
 python:
   - "2.7"
+addons:
+  apt:
+    packages:
+    - libhdf5-serial-dev 
 # command to install dependencies
 install:
-  - sudo apt-get install libhdf5-dev
   - pip install -r requirements.txt
   - pip install coveralls
   - pip install numpy
