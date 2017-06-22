@@ -994,6 +994,9 @@ class NodeToSerialize(BaseNode):
         reference : bool | None
             Whether the child should be written as a allow_ref or not. If None
             the ref_style option is used to determine whether it is or not.
+            Note that if reference is not False and there is another member
+            of the container that can be written as a reference then the
+            'children' method with n=1 should be used instead.
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
