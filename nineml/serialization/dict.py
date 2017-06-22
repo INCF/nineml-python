@@ -47,11 +47,13 @@ class DictSerializer(BaseSerializer):
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
         raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
+            "'dict' format cannot be written to file"
+            "(use JSON or Pickle)")
 
     def to_str(self, serial_elem, **options):  # @UnusedVariable  @IgnorePep8
         raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be converted to a string")
+            "'dict' format cannot be converted to a string "
+            "(use JSON or Pickle)")
 
 
 class DictUnserializer(BaseUnserializer):
@@ -106,11 +108,13 @@ class DictUnserializer(BaseUnserializer):
 
     def from_file(self, file, **options):  # @ReservedAssignment
         raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
+            "'dict' format cannot be read from a file"
+            "(use JSON or Pickle)")
 
     def from_str(self, string, **options):
         raise NineMLSerializationNotSupportedError(
-            "'dict' format cannot be written to file")
+            "'dict' format cannot be read from a string "
+            "(use JSON or Pickle)")
 
     @classmethod
     def _is_child(cls, elem):

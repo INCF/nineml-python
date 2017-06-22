@@ -3,7 +3,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
-    NineMLUnexpectedMultipleSerializationError, NineMLNameError)
+    NineMLUnexpectedMultipleSerializationError, NineMLNameError, NineMLIOError)
 import nineml
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
@@ -422,6 +422,8 @@ class BaseUnserializer(BaseVisitor):
             document = Document(unserializer=self, url=url)
         self._url = url
         # Get root elem either from kwarg or file handle
+        if hasattr(root, 'url'):
+            self._root = self.from_urlfile(root)
         if isinstance(root, file):
             self._root = self.from_file(root)
         elif isinstance(root, basestring):
@@ -671,7 +673,7 @@ class BaseUnserializer(BaseVisitor):
 
         Parameters
         ----------
-        file : file handle
+        file_ : file handle
             A handle to a file containing the serialized document to
             unserialize
 
@@ -680,6 +682,25 @@ class BaseUnserializer(BaseVisitor):
         root : <serial-element>
             The root element of the document
         """
+
+    def from_urlfile(self, urlfile):  # @ReservedAssignment
+        """
+        Parses the URL file object and returns the root element. Typically this
+        is the same as the from_file method, with the exception of the HDF5
+        unserializer.
+
+        Parameters
+        ----------
+        urlfile : URL file handle
+            A handle to a URL containing the serialized document to
+            unserialize
+
+        Returns
+        -------
+        root : <serial-element>
+            The root element of the document
+        """
+        return self.from_file(urlfile)
 
     @abstractmethod
     def from_str(self, string):

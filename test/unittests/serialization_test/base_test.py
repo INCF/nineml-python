@@ -1,6 +1,7 @@
 import unittest
 import logging
 import sys
+from tempfile import mkstemp
 from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
@@ -230,7 +231,11 @@ class TestSerialization(unittest.TestCase):
                         g=4.7),
                     d='wee')
                 doc.add(container, clone=False)
-                serial_doc = S(document=doc, version=version).serialize()
+                # Make temp file for serializers that write directly to file
+                # (e.g. HDF5)
+                _, fname = mkstemp()
+                serial_doc = S(document=doc, version=version,
+                               fname=fname).serialize()
                 new_doc = U(root=serial_doc, version=version,
                             class_map=class_map).unserialize()
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),

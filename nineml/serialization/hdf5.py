@@ -1,5 +1,7 @@
 import h5py
 from . import NINEML_BASE_NS
+from tempfile import mkstemp
+import contextlib
 import nineml
 from nineml.exceptions import (NineMLSerializationError,
                                NineMLSerializationNotSupportedError)
@@ -13,9 +15,13 @@ class HDF5Serializer(BaseSerializer):
     """
 
     def __init__(self, fname, **kwargs):  # @UnusedVariable @IgnorePep8 @ReservedAssignment
-        super(HDF5Serializer, self).__init__(**kwargs)
+        if isinstance(fname, file):
+            # Close the file and reopen with the h5py File object
+            file_ = fname
+            fname = file_.name
+            file_.close()
         self._file = h5py.File(fname, 'w')
-        self._root = self.create_root()
+        super(HDF5Serializer, self).__init__(**kwargs)
 
     def create_elem(self, name, parent, namespace=None, **options):  # @UnusedVariable @IgnorePep8
         elem = parent.create_group(name)
@@ -32,12 +38,11 @@ class HDF5Serializer(BaseSerializer):
         self.set_attr(serial_elem, BODY_ATTR, value, **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
-        if file is not self._file:
+        if file.name != self._file.name:
             raise NineMLSerializationError(
-                "Can only write elem to file that is named in the __init__ "
-                "method.")
-        # Don't do anything as elements are written to file as they are
-        # serialized
+                "Can only write elems to the file that is named in the "
+                "__init__ method as the file is written to as the elements "
+                "are serialized.")
 
     def to_str(self, serial_elem, **options):  # @UnusedVariable  @IgnorePep8
         raise NineMLSerializationNotSupportedError(
@@ -68,7 +73,17 @@ class HDF5Unserializer(BaseUnserializer):
             ns = NINEML_BASE_NS + self.version
         return ns
 
-    def from_file(self, fname, **options):  # @UnusedVariable
+    def from_file(self, file, **options):  # @UnusedVariable @ReservedAssignment @IgnorePep8
+        # Close the file and reopen in h5py File object
+        fname = file.name
+        file.close()
+        return h5py.File(fname)[nineml.Document.nineml_type]
+
+    def from_urlfile(self, urlfile, **options):  # @UnusedVariable
+        # Cache URL to temporary file and open in h5py File object
+        f, fname = mkstemp()
+        with contextlib.closing(f):
+            f.write(urlfile.read())
         return h5py.File(fname)[nineml.Document.nineml_type]
 
     def from_str(self, string, **options):

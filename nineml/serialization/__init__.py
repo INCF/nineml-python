@@ -51,7 +51,8 @@ format_to_serializer = {
     'dict': DictSerializer,
     'yaml': YAMLSerializer,
     'json': JSONSerializer,
-    'pickle': PickleSerializer}
+    'pickle': PickleSerializer,
+    'hdf5': HDF5Serializer}
 
 
 format_to_unserializer = {
@@ -59,7 +60,8 @@ format_to_unserializer = {
     'dict': DictUnserializer,
     'yaml': YAMLUnserializer,
     'json': JSONUnserializer,
-    'pickle': PickleUnserializer}
+    'pickle': PickleUnserializer,
+    'hdf5': HDF5Unserializer}
 
 
 def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @ReservedAssignment @IgnorePep8
@@ -154,7 +156,7 @@ def write(url, *nineml_objects, **kwargs):
     with open(url, 'w') as file:  # @ReservedAssignment
         # file is passed to the serializer for serializations that store
         # elements dynamically, such as HDF5
-        serializer = Serializer(document=document, file=file, **kwargs)
+        serializer = Serializer(document=document, fname=file, **kwargs)
         serializer.serialize()
         serializer.to_file(serializer.root, file, **kwargs)
     if register:
