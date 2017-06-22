@@ -1021,7 +1021,7 @@ class NodeToSerialize(BaseNode):
         return child_elem if within is None else serial_elem
 
     def children(self, nineml_objects, reference=None, parent_elem=None,
-                 **options):
+                 sort=True, **options):
         """
         Serialize an iterable (e.g. list or tuple) of nineml_objects of the
         same type. Should be used instead of calling the 'child' method over
@@ -1042,7 +1042,9 @@ class NodeToSerialize(BaseNode):
         """
         if parent_elem is None:
             parent_elem = self._serial_elem
-        for nineml_object in sorted(nineml_objects, key=lambda o: str(o.key)):
+        if sort:
+            nineml_objects = sorted(nineml_objects, key=lambda o: str(o.key))
+        for nineml_object in nineml_objects:
             self.visitor.visit(nineml_object, parent=parent_elem,
                                reference=reference, multiple=True, **options)
 
