@@ -141,14 +141,14 @@ class C(AnnotatedNineMLObject, ContainerObject):
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
         node.children(self.es, reference=True)
-        node.child(self.f, reference=True)
+        node.child(self.f)
         node.attr('g', self.g)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(node.attr('name'),
                    node.children(E, allow_ref=True),
-                   node.child(F, allow_ref=True),
+                   node.child(F),
                    node.attr('g', dtype=float))
 
 

@@ -977,6 +977,7 @@ class NodeToSerialize(BaseNode):
     def __init__(self, *args, **kwargs):
         super(NodeToSerialize, self).__init__(*args, **kwargs)
         self.withins = set()
+        self.has_ref = False
 
     def child(self, nineml_object, within=None, reference=None,
               multiple=False, **options):

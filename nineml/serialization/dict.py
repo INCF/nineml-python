@@ -21,17 +21,10 @@ class DictSerializer(BaseSerializer):
             parent[name].append(elem)
         else:
             if name in parent:
-                if name == 'Reference':
-                    if isinstance(parent[name], list):
-                        parent[name].append(elem)
-                    else:
-                        parent[name] = [parent[name] + elem]
-                else:
-                    raise NineMLSerializationError(
-                        "'{}' already exists in parent ({}) when creating "
-                        "singleton element".format(name, parent))
-            else:
-                parent[name] = elem
+                raise NineMLSerializationError(
+                    "'{}' already exists in parent ({}) when creating "
+                    "singleton element".format(name, parent))
+            parent[name] = elem
         if namespace is not None:
             self.set_attr(elem, NS_ATTR, namespace, **options)
         return elem

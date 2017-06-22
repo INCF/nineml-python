@@ -3,6 +3,7 @@ from . import NINEML_BASE_NS
 from tempfile import mkstemp
 import contextlib
 import nineml
+from itertools import chain, izip, repeat
 from nineml.exceptions import (NineMLSerializationError,
                                NineMLSerializationNotSupportedError)
 from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
@@ -23,10 +24,23 @@ class HDF5Serializer(BaseSerializer):
         self._file = h5py.File(fname, 'w')
         super(HDF5Serializer, self).__init__(**kwargs)
 
-    def create_elem(self, name, parent, namespace=None, **options):  # @UnusedVariable @IgnorePep8
-        elem = parent.create_group(name)
+    def create_elem(self, name, parent, namespace=None, multiple=False,
+                    **options):  # @UnusedVariable @IgnorePep8
+        if multiple:
+            if name not in parent:
+                parent.create_group(name)
+            # Add a new group named by the next available index
+            new_index = len(parent[name])
+            parent[name].create_group(str(new_index))
+        else:
+            if name in parent:
+                raise NineMLSerializationError(
+                    "'{}' already exists in parent ({}) when creating "
+                    "singleton element".format(name, parent))
+            elem = parent.create_group(name)
         if namespace is not None:
             self.set_attr(elem, NS_ATTR, namespace, **options)
+        return elem
 
     def create_root(self, **options):  # @UnusedVariable
         return self._file.create_group(nineml.Document.nineml_type)
@@ -55,7 +69,11 @@ class HDF5Unserializer(BaseUnserializer):
     """
 
     def get_children(self, serial_elem, **options):  # @UnusedVariable
-        return serial_elem.iteritems()
+        return chain(
+            ((n, e) for n, e in serial_elem.iteritems()
+             if isinstance(e, dict)),
+            *(izip(repeat(n), e) for n, e in serial_elem.iteritems()
+              if isinstance(e, list)))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         return serial_elem.attrs[name]
