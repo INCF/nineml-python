@@ -237,7 +237,7 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
         branches = OrderedDefaultListDict()
-        for name, elem in node.visitor.get_children(node.serial_element):
+        for name, elem in node.visitor.get_all_children(node.serial_element):
             ns = node.visitor.get_namespace(elem)
             child_node = type(node)(node.visitor, elem, name, **options)
             branches[(name, ns)].append(_AnnotationsBranch.unserialize_node(
@@ -424,7 +424,7 @@ class _AnnotationsBranch(BaseAnnotations):
     @classmethod
     def unserialize_node(cls, node, name, ns, **options):  # @UnusedVariable @IgnorePep8
         branches = OrderedDefaultListDict()
-        for child_name, child_elem in node.visitor.get_children(
+        for child_name, child_elem in node.visitor.get_all_children(
                 node.serial_element):
             child_ns = node.visitor.get_namespace(child_elem)
             child_node = type(node)(node.visitor, child_elem, child_name,

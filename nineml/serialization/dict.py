@@ -70,6 +70,7 @@ class DictUnserializer(BaseUnserializer):
             raise NineMLSerializationError(
                 "Muliple children of type '{}' found in {}"
                 .format(nineml_type, parent))
+        return child
 
     def get_children(self, parent, nineml_type, **options):  # @UnusedVariable
         try:

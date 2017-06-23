@@ -141,7 +141,7 @@ class C(AnnotatedNineMLObject, ContainerObject):
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
         node.children(self.es, reference=True)
-        node.child(self.f)
+        node.child(self.f, reference=False)
         node.attr('g', self.g)
 
     @classmethod
@@ -212,6 +212,11 @@ class TestSerialization(unittest.TestCase):
             for format in format_to_serializer:  # @ReservedAssignment @IgnorePep8
                 S = format_to_serializer[format]
                 U = format_to_unserializer[format]
+                if S is None or U is None:
+                    logger.warning(
+                        "Skipping over '{}' serialization test as it required "
+                        "modules were note imported"
+                        .format(format))
                 doc = Document()
                 f = F('an_F', 10, 20)
                 f.annotations.set((F_ANNOT_TAG, F_ANNOT_NS), F_ANNOT_ATTR,

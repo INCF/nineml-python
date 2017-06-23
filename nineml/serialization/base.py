@@ -150,8 +150,9 @@ class BaseSerializer(BaseVisitor):
         reference : bool | None
             Whether to write the nineml object as a reference (see Reference).
             If None then it is determined by the 'ref_style' kwarg
-        ref_style : str | None
-            Can be one of 'force_reference' or 'force_inline' or None.
+        ref_style : str
+            Can be one of 'force_reference' or 'force_inline',
+            'prefer_reference' (default) or 'prefer_inline'
         multiple : bool
             Whether to allow for multiple elements of the same type (important
             for formats such as JSON and YAML which save them in lists)
@@ -167,11 +168,19 @@ class BaseSerializer(BaseVisitor):
         # Write object as reference if appropriate
         if parent is not None and is_doc_level and not isinstance(
                 nineml_object, Annotations):
-            ref_style = options.get('ref_style', None)
+            ref_style = options.get('ref_style', 'prefer_reference')
             if ref_style == 'force_reference':
                 reference = True
-            if ref_style == 'force_inline':
+            elif ref_style == 'force_inline':
                 reference = False
+            elif reference is None:
+                if ref_style == 'prefer_reference':
+                    reference = True
+                elif ref_style == 'prefer_inline':
+                    reference = False
+                else:
+                    raise NineMLSerializationError(
+                        "Unrecognised ref_style '{}'".format(ref_style))
             url = self._get_reference_url(nineml_object, reference=reference,
                                           **options)
             if url is not False:
@@ -890,8 +899,7 @@ class BaseUnserializer(BaseVisitor):
         Extract annotations from serial element if present
         """
         try:
-            _, annot_elem = self.get_single_child(
-                serial_elem, [self.node_name(Annotations)])
+            annot_elem = self.get_child(serial_elem, Annotations.nineml_type)
             annot_node = NodeToUnserialize(self, annot_elem, 'Annotations',
                                            check_unprocessed=False)
             annotations = Annotations.unserialize_node(annot_node, **options)
@@ -1143,10 +1151,11 @@ class NodeToUnserialize(BaseNode):
         super(NodeToUnserialize, self).__init__(visitor, serial_elem)
         self._name = name
         if check_unprocessed:
-            self.unprocessed_attr = set(self.visitor.get_attr_keys(serial_elem,
-                                                                   **options))
+            self.unprocessed_attr = set(
+                a for a in self.visitor.get_attr_keys(serial_elem, **options)
+                if not a.startswith('@'))  # Special attributes start with '@'
             self.unprocessed_children = set(
-                n for n, _ in self.visitor.get_children(
+                n for n, _ in self.visitor.get_all_children(
                     serial_elem, **options))
             self.unprocessed_children.discard(
                 self.visitor.node_name(Annotations))
@@ -1192,18 +1201,22 @@ class NodeToUnserialize(BaseNode):
         child : BaseNineMLObject
             Child extracted from the element
         """
+        # Create a dictionary mapping nineml_types to the valid nineml classes
         name_map = self._get_name_map(nineml_classes)
+        # If the child is nested within another element, find that containing
+        # element and use it as the parent elem
         if within is not None:
             try:
-                serial_elem = self.visitor.get_child(self._serial_elem, within,
+                parent_elem = self.visitor.get_child(self._serial_elem, within,
                                                      **options)
                 # If the within element is found it cannot be empty
                 allow_none = False
-                if list(self.visitor.get_attr_keys(serial_elem)):
+                if any(not a.startswith('@')
+                       for a in self.visitor.get_attr_keys(parent_elem)):
                     raise NineMLSerializationError(
                         "'{}' elements can not have attributes ('{}')"
                         .format(within, "', '".join(
-                            self.visitor.get_attr_keys(serial_elem))))
+                            self.visitor.get_attr_keys(parent_elem))))
             except NineMLMissingSerializationError:
                 if allow_none:
                     return None
@@ -1211,28 +1224,33 @@ class NodeToUnserialize(BaseNode):
                     raise
             self.unprocessed_children.discard(within)
         else:
-            serial_elem = self._serial_elem
+            parent_elem = self._serial_elem
         child = None
+        # Check to see if there is a valid reference to the child element
         if allow_ref:
             try:
-                ref_elem = self.visitor.get_child(serial_elem,
+                ref_elem = self.visitor.get_child(parent_elem,
                                                   Reference.nineml_type)
                 ref = self.visitor.visit(ref_elem, Reference, **options)
-                if any(isinstance(ref.user_object, c) for c in nineml_classes):
+                if any(isinstance(ref.user_object, c)
+                       for c in name_map.itervalues()):
                     child = ref.user_object
+                self.unprocessed_children.discard(Reference.nineml_type)
             except NineMLMissingSerializationError:
                 pass
+        # If there were no valid references to the child element look for
+        # the child element itself
         if child is None:
             if allow_ref == 'only':
                 raise NineMLMissingSerializationError(
                     "Missing reference to '{}' type elements in {}"
                     .format("', '".join(name_map), self.name))
             child_elems = []
-            for nineml_type, cls in name_map:
+            for nineml_type, cls in name_map.iteritems():
                 try:
                     child_elems.append(
                         (cls,
-                         self.visitor.get_child(serial_elem, nineml_type)))
+                         self.visitor.get_child(parent_elem, nineml_type)))
                 except NineMLMissingSerializationError:
                     pass
             if len(child_elems) > 1:
@@ -1246,6 +1264,7 @@ class NodeToUnserialize(BaseNode):
                     .format('|'.join(name_map), self.name))
             child_cls, child_elem = child_elems[0]
             child = self.visitor.visit(child_elem, child_cls, **options)
+            self.unprocessed_children.discard(child.nineml_type)
         return child
 
     def children(self, nineml_classes, n='*', allow_ref=False,
@@ -1280,7 +1299,8 @@ class NodeToUnserialize(BaseNode):
         if parent_elem is None:
             parent_elem = self._serial_elem
         if allow_ref:
-            for ref_elem in self.visitor.get_children(parent_elem, **options):
+            for ref_elem in self.visitor.get_children(
+                    parent_elem, Reference.nineml_type, **options):
                 ref = self.visitor.visit(ref_elem, Reference, **options)
                 if self.visitor.node_name(type(ref.user_object)) in name_map:
                     children.append(ref.user_object)

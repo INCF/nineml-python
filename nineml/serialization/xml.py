@@ -2,7 +2,8 @@ import re
 from lxml import etree
 from lxml.builder import ElementMaker
 from nineml.document import Document
-from nineml.exceptions import NineMLSerializationError
+from nineml.exceptions import (
+    NineMLSerializationError, NineMLMissingSerializationError)
 from .base import BaseSerializer, BaseUnserializer
 from nineml.exceptions import NineMLNameError
 from . import DEFAULT_VERSION
@@ -79,7 +80,11 @@ class XMLUnserializer(BaseUnserializer):
 
     def get_child(self, parent, nineml_type, **options):
         children = list(self.get_children(parent, nineml_type, **options))
-        if len(children) != 1:
+        if not children:
+            raise NineMLMissingSerializationError(
+                "Expected {} in {}"
+                .format(nineml_type, parent))
+        elif len(children) > 1:
             raise NineMLSerializationError(
                 "Expected 1 {} in {} but found {}"
                 .format(nineml_type, parent, len(children)))
