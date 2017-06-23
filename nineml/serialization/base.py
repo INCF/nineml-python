@@ -3,7 +3,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
-    NineMLUnexpectedMultipleSerializationError, NineMLNameError, NineMLIOError)
+    NineMLUnexpectedMultipleSerializationError, NineMLNameError)
 import nineml
 from nineml.reference import Reference
 from nineml.base import ContainerObject, DocumentLevelObject
@@ -456,7 +456,7 @@ class BaseUnserializer(BaseVisitor):
             version = extracted_version
         super(BaseUnserializer, self).__init__(version, document=document)
         # Prepare elements in document for lazy loading
-        self._unloaded = {}
+        self._doc_elems = {}
         if self.root is not None:
             self._annotation_elem = None
             for nineml_type, elem in self.get_all_children(self.root):
@@ -469,7 +469,7 @@ class BaseUnserializer(BaseVisitor):
                     continue
                 name = self._get_elem_name(elem)
                 # Check for duplicates
-                if name in self._unloaded:
+                if name in self._doc_elems:
                     raise NineMLSerializationError(
                         "Duplicate elements for name '{}' found in document"
                         .format(name))
@@ -478,14 +478,19 @@ class BaseUnserializer(BaseVisitor):
                     elem_cls = class_map[nineml_type]
                 except KeyError:
                     elem_cls = self.get_nineml_class(nineml_type, elem)
-                self._unloaded[name] = (elem, elem_cls)
+                self._doc_elems[name] = (elem, elem_cls)
+        self._loaded_elems = []  # keeps track of loaded doc elements
 
     def unserialize(self):
         """
         Unserializes the root element and all elements underneath it
         """
-        for name in self._unloaded:
-            self.load_element(name)
+        for name in self._doc_elems:
+            # If a doc element is referenced in another it will be loaded and
+            # added to the document so we need to check whether it still needs
+            # to be loaded.
+            if name not in self._loaded_elems:
+                self.load_element(name)
         return self.document
 
     def load_element(self, name, **options):
@@ -499,16 +504,17 @@ class BaseUnserializer(BaseVisitor):
             Name of the document level object to load
         """
         try:
-            serial_elem, nineml_cls = self._unloaded[name]
+            serial_elem, nineml_cls = self._doc_elems[name]
         except KeyError:
             raise NineMLNameError(
                 "'{}' was not found in the NineML document {} (elements in "
                 "the document were '{}').".format(
                     name, self.url or '',
-                    "', '".join(self._unloaded.iterkeys())))
+                    "', '".join(self._doc_elems.iterkeys())))
         nineml_object = self.visit(serial_elem, nineml_cls, **options)
         AddToDocumentVisitor(self.document, **options).visit(nineml_object,
                                                              **options)
+        self._loaded_elems.append(name)
         return nineml_object
 
     def visit(self, serial_elem, nineml_cls, allow_ref=False, **options):  # @UnusedVariable @IgnorePep8
@@ -571,7 +577,7 @@ class BaseUnserializer(BaseVisitor):
         return self._url
 
     def iterkeys(self):
-        return self._unloaded.iterkeys()
+        return self._doc_elems.iterkeys()
 
     def keys(self):
         return list(self.iterkeys())

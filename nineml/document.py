@@ -210,7 +210,7 @@ class Document(AnnotatedNineMLObject, dict):
         elif self._unserializer is None:
             return False
         else:
-            return name in self._unserializer._unloaded
+            return name in self._unserializer.keys()
 
     @property
     def elements(self):
