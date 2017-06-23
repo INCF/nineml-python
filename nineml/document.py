@@ -115,45 +115,6 @@ class Document(AnnotatedNineMLObject, dict):
             AddToDocumentVisitor(self).visit(nineml_obj, **kwargs)
         return nineml_obj
 
-#     def _add(self, nineml_obj, **kwargs):
-#         """
-#         Adds a cloned version of the element to the document, setting the
-#         document reference (and the corresponding url) of clones to the
-#         document. Differs from 'add' in that it doesn't check whether the
-#         nineml object already exists in the document (to avoid infinite loops
-#         when unserializing, the only time it should really be called outside of
-#         'add')
-# 
-#         Parameters
-#         ----------
-#         nineml_obj : DocumentLevelObject
-#             A document level object to add to the document
-#         clone : bool
-#             Whether to clone the element before adding it to the document
-#         clone_definitions : str
-#             Whether to clone definitions of user layer objects
-#         kwargs : dict
-#             Keyword arguments passed to the clone method
-#         """
-#         if clone:
-#             nineml_obj = nineml_obj.clone(
-#                 clone_definitions=clone_definitions, **kwargs)
-#         elif nineml_obj.document is not None:
-#             raise NineMLRuntimeError(
-#                 "Attempting to add the same object '{}' {} to document"
-#                 " '{}' document when it is already in another "
-#                 "document, '{}'. Please remove it from the original "
-#                 "document first or use the 'clone' keyword to add a "
-#                 "clone of the element instead"
-#                 .format(nineml_obj.name, nineml_obj.nineml_type,
-#                         self.url, nineml_obj.document.url))
-# #         nineml_obj._document = self  # Set its document to this one
-#         # Add any  objects that don't already belong
-#         # to another document
-#         AddNestedObjectsToDocumentVisitor(self).visit(
-#             
-#         return nineml_obj
-
     def remove(self, nineml_obj, ignore_missing=False):
         if not isinstance(nineml_obj, DocumentLevelObject):
             raise NineMLRuntimeError(

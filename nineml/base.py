@@ -309,10 +309,8 @@ class BaseNineMLObject(object):
         return nineml.serialize(self, **kwargs)
 
     @classmethod
-    def unserialize(cls, serial_elem, format, version,  # @ReservedAssignment @IgnorePep8
-                    **kwargs):
-        return nineml.unserialize(serial_elem, cls, format=format,
-                                  version=version, **kwargs)
+    def unserialize(cls, serial_elem, format, **kwargs):  # @ReservedAssignment
+        return nineml.unserialize(serial_elem, cls, format=format, **kwargs)
 
 
 def _clone_attr(attr, memo, **kwargs):
@@ -330,7 +328,10 @@ def _clone_attr(attr, memo, **kwargs):
         clone = type(attr)((k, _clone_attr(v, memo, **kwargs))
                            for k, v in attr.iteritems())
     elif isinstance(attr, Iterable):
-        assert not isinstance(attr, Iterator)
+        try:
+            assert not isinstance(attr, Iterator)
+        except:
+            raise
         clone = attr.__class__(_clone_attr(a, memo, **kwargs)
                                for a in attr)
     else:

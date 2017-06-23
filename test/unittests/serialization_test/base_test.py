@@ -1,6 +1,7 @@
 import unittest
 import logging
 import sys
+import pickle
 from tempfile import mkstemp
 from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
@@ -113,11 +114,12 @@ class B(AnnotatedNineMLObject):
 class C(AnnotatedNineMLObject, ContainerObject):
 
     nineml_type = 'C'
-    defining_attributes = ('name', 'es', 'f')
+    defining_attributes = ('name', '_es', 'f', 'g')
     class_to_member = {'E': 'e'}
 
     def __init__(self, name, es, f, g):
-        super(C, self).__init__()
+        AnnotatedNineMLObject.__init__(self)
+        ContainerObject.__init__(self)
         self.name = name
         self._es = dict((e.name, e) for e in es)
         self.f = f
@@ -207,6 +209,25 @@ class_map = {'Container': Container,
 
 class TestSerialization(unittest.TestCase):
 
+    def setUp(self):
+        f = F('an_F', 10, 20)
+        f.annotations.set((F_ANNOT_TAG, F_ANNOT_NS), F_ANNOT_ATTR,
+                          F_ANNOT_VAL)
+        a = A('an_A', A.default_x, 2.5)
+        self.container = Container(
+            name='a_container',
+            a=a,
+            bs=[
+                B('a_B', 'foo'),
+                B('another_B', 'bar')],
+            c=C(name='a_C',
+                es=[E('an_E', 1, 2),
+                    E('another_E', 3, 4),
+                    E('yet_another_E', 5, 6)],
+                f=f,
+                g=4.7),
+            d='wee')
+
     def test_rountrip(self):
         for version in (2, 1):
             for format in format_to_serializer:  # @ReservedAssignment @IgnorePep8
@@ -217,25 +238,7 @@ class TestSerialization(unittest.TestCase):
                         "Skipping over '{}' serialization test as it required "
                         "modules were note imported"
                         .format(format))
-                doc = Document()
-                f = F('an_F', 10, 20)
-                f.annotations.set((F_ANNOT_TAG, F_ANNOT_NS), F_ANNOT_ATTR,
-                                  F_ANNOT_VAL)
-                a = A('an_A', A.default_x, 2.5)
-                container = Container(
-                    name='a_container',
-                    a=a,
-                    bs=[
-                        B('a_B', 'foo'),
-                        B('another_B', 'bar')],
-                    c=C(name='a_C',
-                        es=[E('an_E', 1, 2),
-                            E('another_E', 3, 4),
-                            E('yet_another_E', 5, 6)],
-                        f=f,
-                        g=4.7),
-                    d='wee')
-                doc.add(container, clone=False)
+                doc = Document(self.container)
                 # Make temp file for serializers that write directly to file
                 # (e.g. HDF5)
                 _, fname = mkstemp()
