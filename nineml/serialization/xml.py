@@ -17,7 +17,10 @@ def extract_xmlns(tag_name):
 
 
 def strip_xmlns(tag_name):
-    return xmlns_re.match(tag_name).group(2)
+    try:
+        return xmlns_re.match(tag_name).group(2)
+    except:
+        raise
 
 
 def value_str(value):
@@ -91,11 +94,12 @@ class XMLUnserializer(BaseUnserializer):
         return children[0]
 
     def get_children(self, parent, nineml_type, **options):  # @UnusedVariable @IgnorePep8
-        return (e for e in parent.getchildren()
-                if strip_xmlns(e.tag) == nineml_type)
+        return (e for n, e in self.get_all_children(parent, **options)
+                if n == nineml_type)
 
     def get_all_children(self, parent, **options):  # @UnusedVariable
-        return ((strip_xmlns(e.tag), e) for e in parent.getchildren())
+        return ((strip_xmlns(e.tag), e) for e in parent.getchildren()
+                if not isinstance(e, etree._Comment))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         try:

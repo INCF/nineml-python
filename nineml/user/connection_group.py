@@ -152,13 +152,15 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
             ConnectionRuleProperties, within='Connectivity', allow_ref=True,
             **options)
         source = node.child(ComponentArray, within='Source',
-                            allow_ref='only', **options)
+                            allow_ref='only', allow_within_attrs=True,
+                            **options)
         destination = node.child(ComponentArray, within='Destination',
-                                 allow_ref='only', **options)
-        _, source_elem = node.visitor.get_single_child(
+                                 allow_ref='only', allow_within_attrs=True,
+                                 **options)
+        source_elem = node.visitor.get_child(
             node.serial_element, 'Source', **options)
         source_port = node.visitor.get_attr(source_elem, 'port', **options)
-        _, dest_elem = node.visitor.get_single_child(
+        dest_elem = node.visitor.get_child(
             node.serial_element, 'Destination', **options)
         destination_port = node.visitor.get_attr(dest_elem, 'port', **options)
         delay = node.child(Quantity, within='Delay', allow_none=True,

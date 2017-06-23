@@ -795,68 +795,6 @@ class BaseUnserializer(BaseVisitor):
                 "level object '{}' ('{}')".format(
                     elem, "', '".join(elem.attrib.keys())))
         return name
-# 
-#     def get_single_child(self, elem, names=None, allow_ref=False, **options):
-#         """
-#         Returns a single child element matching names
-# 
-#         Parameter
-#         ---------
-#         elem : <serial-element>
-#             The parent serial element
-#         names : str | iterable(str)
-#             A name or iterable of nineml_type names to return if found
-#         allow_ref : bool
-#             Whether to allow the child to be a reference to an object of the
-#             given types
-#         options : dict(str, object)
-#             Serialization format-specific options for the method
-#         """
-#         if isinstance(names, basestring):
-#             names = [names]
-#         child_elems = list(self.get_children(elem, **options))
-#         # If not searching for Annotaitons, ignore them
-#         annot_name = self.node_name(Annotations)
-#         if annot_name not in names:
-#             child_elems = [(n, e) for n, e in child_elems if n != annot_name]
-#         if allow_ref != 'only':
-#             if names is not None:
-#                 matches = [(n, e) for n, e in child_elems if n in names]
-#             else:
-#                 matches = child_elems
-#         else:
-#             matches = []
-#         if allow_ref:
-#             ref_name = self.node_name(Reference)
-#             ref_elems = [e for n, e in child_elems if n == ref_name]
-#             if names:
-#                 ref_matches = []
-#                 for ref_elem in ref_elems:
-#                     node = NodeToUnserialize(self, ref_elem, ref_name)
-#                     if self._version[0] == 1:
-#                         ref = Reference.unserialize_node_v1(node, **options)
-#                     else:
-#                         ref = Reference.unserialize_node(node, **options)
-#                     if self.node_name(type(ref.user_object)) in names:
-#                         ref_matches.append(ref_elem)
-#             else:
-#                 ref_matches = ref_elems
-#             matches += [(ref_name, e) for e in ref_matches]
-#         if len(matches) > 1:
-#             raise NineMLUnexpectedMultipleSerializationError(
-#                 "Multiple {} children found within {} ({}) (found {})"
-#                 .format('|'.join(names), elem,
-#                         ', '.join('{}:{}'.format(k, self.get_attr(elem, k))
-#                                   for k in self.get_attr_keys(elem)),
-#                         ', '.join(c[0] for c in self.get_children(elem))))
-#         elif not matches:
-#             raise NineMLMissingSerializationError(
-#                 "No '{}' child found within {} ({}) (found {})"
-#                 .format('|'.join(names), elem,
-#                         ', '.join('{}:{}'.format(k, self.get_attr(elem, k))
-#                                   for k in self.get_attr_keys(elem)),
-#                         ', '.join(c[0] for c in self.get_children(elem))))
-#         return matches[0]
 
     def get_nineml_class(self, nineml_type, elem, assert_doc_level=True):
         """
@@ -935,13 +873,14 @@ class BaseUnserializer(BaseVisitor):
         the nested 'Dynamics'|'ConnectionRule'|'RandomDistribution' element.
         """
         try:
-            nineml_type = next(n for n, _ in self.get_children(elem)
+            nineml_type = next(n for n, _ in self.get_all_children(elem)
                                if n in ('Dynamics', 'ConnectionRule',
                                         'RandomDistribution'))
         except StopIteration:
             raise NineMLSerializationError(
                 "No type defining block in ComponentClass ('{}')"
-                .format("', '".join(n for n, _ in self.get_children(elem))))
+                .format("', '".join(
+                    n for n, _ in self.get_all_children(elem))))
         return getattr(nineml, nineml_type)
 
     def _get_v1_component_type(self, elem):
@@ -952,8 +891,10 @@ class BaseUnserializer(BaseVisitor):
         can only be differentiated by the component class they reference in the
         'Definition' element.
         """
-        _, defn_elem = self.get_single_child(
-            elem, names=('Definition', 'Prototype'))
+        try:
+            defn_elem = self.get_child(elem, 'Prototype')
+        except NineMLMissingSerializationError:
+            defn_elem = self.get_child(elem, 'Definition')
         name = self.get_body(defn_elem)
         try:
             url = self.get_attr(defn_elem, 'url')
@@ -965,7 +906,7 @@ class BaseUnserializer(BaseVisitor):
         else:
             try:
                 elem_type, doc_elem = next(
-                    (t, e) for t, e in self.get_children(self.root)
+                    (t, e) for t, e in self.get_all_children(self.root)
                     if self._get_elem_name(e) == name)
             except StopIteration:
                 raise NineMLSerializationError(
@@ -1172,7 +1113,7 @@ class NodeToUnserialize(BaseNode):
         return self._name
 
     def child(self, nineml_classes, within=None, allow_ref=False,
-              allow_none=False, **options):
+              allow_none=False, allow_within_attrs=False, **options):
         """
         Extract a child of class ``cls`` from the serial
         element ``elem``. The number of expected children is specifed by
@@ -1192,6 +1133,8 @@ class NodeToUnserialize(BaseNode):
         allow_none : bool
             Whether the child is allowed to be missing, in which case None
             will be returned
+        allow_within_attrs : bool
+            Allow 'within' containers to have attributes
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
@@ -1211,12 +1154,15 @@ class NodeToUnserialize(BaseNode):
                                                      **options)
                 # If the within element is found it cannot be empty
                 allow_none = False
-                if any(not a.startswith('@')
-                       for a in self.visitor.get_attr_keys(parent_elem)):
-                    raise NineMLSerializationError(
-                        "'{}' elements can not have attributes ('{}')"
-                        .format(within, "', '".join(
-                            self.visitor.get_attr_keys(parent_elem))))
+                # Check the 'within' element for attributes (it typically
+                # shouldn't have any)
+                if not allow_within_attrs:
+                    if any(not a.startswith('@')
+                           for a in self.visitor.get_attr_keys(parent_elem)):
+                        raise NineMLSerializationError(
+                            "'{}' elements can not have attributes ('{}')"
+                            .format(within, "', '".join(
+                                self.visitor.get_attr_keys(parent_elem))))
             except NineMLMissingSerializationError:
                 if allow_none:
                     return None
@@ -1346,8 +1292,8 @@ class NodeToUnserialize(BaseNode):
         """
         try:
             if in_body:
-                _, attr_elem = self.visitor.get_single_child(
-                    self._serial_elem, names=name, **options)
+                attr_elem = self.visitor.get_child(
+                    self._serial_elem, name, **options)
                 self.unprocessed_children.remove(name)
                 value = self.visitor.get_body(attr_elem, **options)
             else:

@@ -95,10 +95,10 @@ class RandomDistribution(ComponentClass):
 
     @classmethod
     def unserialize_node_v1(cls, node, **options):
-        _, rd_elem = node.visitor.get_single_child(
+        rd_elem = node.visitor.get_child(
             node.serial_element, 'RandomDistribution', **options)
         node.unprocessed_children.remove('RandomDistribution')
-        if list(node.visitor.get_children(rd_elem)):
+        if list(node.visitor.get_all_children(rd_elem)):
             raise NineMLSerializationError(
                 "Not expecting {} blocks within 'RandomDistribution' block"
                 .format(', '.join(node.visitor.get_children(rd_elem))))

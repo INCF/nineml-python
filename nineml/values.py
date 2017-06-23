@@ -347,8 +347,8 @@ class ArrayValue(BaseValue):
                                 node.attr('columnName', **options)))
         else:
             rows = []
-            for name, elem in node.visitor.get_children(node.serial_element,
-                                                        **options):
+            for name, elem in node.visitor.get_all_children(
+                    node.serial_element, **options):
                 if name != 'ArrayValueRow':
                     raise NineMLSerializationError(
                         "Unrecognised element {} found in ArrayValue"

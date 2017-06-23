@@ -109,10 +109,10 @@ class ConnectionRule(ComponentClass):
 
     @classmethod
     def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
-        _, cr_elem = node.visitor.get_single_child(
-            node.serial_element, 'ConnectionRule', **options)
+        cr_elem = node.visitor.get_child(node.serial_element, 'ConnectionRule',
+                                         **options)
         node.unprocessed_children.remove('ConnectionRule')
-        if list(node.visitor.get_children(cr_elem)):
+        if list(node.visitor.get_all_children(cr_elem)):
             raise NineMLSerializationError(
                 "Not expecting {} blocks within 'ConnectionRule' block"
                 .format(', '.join(node.visitor.get_children(cr_elem))))

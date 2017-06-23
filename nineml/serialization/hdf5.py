@@ -50,7 +50,9 @@ class HDF5Serializer(BaseSerializer):
         return elem
 
     def create_root(self, **options):  # @UnusedVariable
-        return self._file.create_group(nineml.Document.nineml_type)
+        root = self._file.create_group(nineml.Document.nineml_type)
+        root.attrs[NS_ATTR] = self.nineml_namespace
+        return root
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
         serial_elem.attrs[name] = value
@@ -59,7 +61,7 @@ class HDF5Serializer(BaseSerializer):
         self.set_attr(serial_elem, BODY_ATTR, value, **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
-        if file.name != self._file.name:
+        if file.name != self._file.filename:
             raise NineMLSerializationError(
                 "Can only write elems to the file that is named in the "
                 "__init__ method as the file is written to as the elements "

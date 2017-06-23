@@ -31,7 +31,7 @@ class DictSerializer(BaseSerializer):
         return elem
 
     def create_root(self, **options):  # @UnusedVariable
-        return OrderedDict()
+        return OrderedDict([('@namespace', self.nineml_namespace)])
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
         serial_elem[name] = value
@@ -56,9 +56,6 @@ class DictUnserializer(BaseUnserializer):
     attributes. Is used as the base class for the Pickle, JSON and YAML
     unserializers
     """
-
-    def __init__(self, root, version, **kwargs):
-        super(DictUnserializer, self).__init__(root, version, **kwargs)
 
     def get_child(self, parent, nineml_type, **options):  # @UnusedVariable
         try:

@@ -15,6 +15,9 @@ from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 
 
+V1_DELAY_VALUE_TYPES = ('SingleValue', 'ArrayValue', 'ExternalArrayValue',
+                        'RandomValue')
+
 class Projection(BaseULObject, DocumentLevelObject):
     """
     A collection of connections between two :class:`Population`\s.
@@ -249,14 +252,27 @@ class Projection(BaseULObject, DocumentLevelObject):
         pre_within = 'Source'
         post_within = 'Destination'
         # Get Delay
-        _, delay_elem = node.visitor.get_single_child(node.serial_element,
-                                                      'Delay')
+        delay_elem = node.visitor.get_child(node.serial_element, 'Delay')
         node.unprocessed_children.remove('Delay')
         units = node.document[
             node.visitor.get_attr(delay_elem, 'units', **options)]
-        nineml_type, value_elem = node.visitor.get_single_child(
-            delay_elem, ('SingleValue', 'ArrayValue', 'RandomValue'),
-            **options)
+        value_elem = None
+        nineml_type = None
+        for value_type in V1_DELAY_VALUE_TYPES:
+            try:
+                value_elem = node.visitor.get_child(
+                    delay_elem, value_type, **options)
+                if nineml_type is not None:
+                    raise NineMLSerializationError(
+                        "Double value elements ({} and {}) found in Delay"
+                        .format(value_type, nineml_type))
+                nineml_type = value_type
+            except NineMLMissingSerializationError:
+                continue
+        if value_elem is None:
+            raise NineMLMissingSerializationError(
+                "Did not find one of '{}' in Delay element"
+                .format("', '".join(V1_DELAY_VALUE_TYPES)))
         value = node.visitor.visit(
             value_elem,
             node.visitor.get_nineml_class(nineml_type, value_elem,
@@ -281,7 +297,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         port_connections = []
         for receive_name in cls.version1_nodes:
             try:
-                _, receive_elem = node.visitor.get_single_child(
+                receive_elem = node.visitor.get_child(
                     node.serial_element, receive_name, **options)
             except NineMLMissingSerializationError:
                 if receive_name == 'Plasticity':
@@ -289,7 +305,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                 else:
                     raise
             receiver = eval(cls.v1tov2[receive_name])
-            for elem_name, send_elem in node.visitor.get_children(
+            for elem_name, send_elem in node.visitor.get_all_children(
                     receive_elem, **options):
                 if elem_name in ('Component', 'Reference'):
                     continue

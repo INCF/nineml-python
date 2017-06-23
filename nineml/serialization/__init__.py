@@ -117,7 +117,10 @@ def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @Rese
             raise NineMLIOError(
                 "Unrecognised url '{}'".format(url))
         with contextlib.closing(file):
-            doc = Unserializer(root=file, url=url, **kwargs).unserialize()
+            try:
+                doc = Unserializer(root=file, url=url, **kwargs).unserialize()
+            except:
+                raise
         if register:
             nineml.Document.registry[url] = weakref.ref(doc), mtime
     if name is not None:

@@ -542,8 +542,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
     @classmethod
     def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
-        _, dyn_elem = node.visitor.get_single_child(node.serial_element,
-                                                    'Dynamics')
+        dyn_elem = node.visitor.get_child(node.serial_element, 'Dynamics',
+                                          **options)
         node.unprocessed_children.remove('Dynamics')
         return cls(
             name=node.attr('name', **options),

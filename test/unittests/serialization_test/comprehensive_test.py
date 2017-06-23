@@ -11,7 +11,7 @@ from nineml.serialization import ext_to_format, format_to_serializer
 format_to_ext = dict((v, k) for k, v in ext_to_format.iteritems())  # @UndefinedVariable @IgnorePep8
 
 
-class TestComprehensiveXML(TestCase):
+class TestComprehensiveSerialization(TestCase):
 
     def setUp(self):
         self._tmp_dir = tempfile.mkdtemp()
@@ -33,12 +33,8 @@ class TestComprehensiveXML(TestCase):
                 for i, document in enumerate(docs):
                     doc = document.clone()
                     url = os.path.join(
-                        self._tmp_dir, 'test{}v{}.{}'.format(i, version, ext))
+                        self._tmp_dir, 'test{}v{}{}'.format(i, version, ext))
                     nineml.write(url, doc, format=format, version=version)
-                    if format in ('yaml', 'json'):
-                        with open(url) as f:
-                            d = f.read()
-                        print d
-                    reread_doc = nineml.read(url, force_reload=True)
+                    reread_doc = nineml.read(url, reload=True)
                     self.assertTrue(doc.equals(reread_doc),
                                     doc.find_mismatch(reread_doc))
