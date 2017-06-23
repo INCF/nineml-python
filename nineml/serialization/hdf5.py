@@ -9,6 +9,10 @@ from nineml.exceptions import (NineMLSerializationError,
 from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
 from nineml.exceptions import NineMLNameError
 
+# Specifies whether a given group represents multiple child elements (i.e. a
+# list) or not
+MULT_ATTR = '@multiple'
+
 
 class HDF5Serializer(BaseSerializer):
     """
@@ -29,6 +33,7 @@ class HDF5Serializer(BaseSerializer):
         if multiple:
             if name not in parent:
                 parent.create_group(name)
+                parent.attrs[MULT_ATTR] = True
             # Add a new group named by the next available index
             new_index = len(parent[name])
             parent[name].create_group(str(new_index))
@@ -38,6 +43,7 @@ class HDF5Serializer(BaseSerializer):
                     "'{}' already exists in parent ({}) when creating "
                     "singleton element".format(name, parent))
             elem = parent.create_group(name)
+            parent.attrs[MULT_ATTR] = False
         if namespace is not None:
             self.set_attr(elem, NS_ATTR, namespace, **options)
         return elem
@@ -69,10 +75,24 @@ class HDF5Unserializer(BaseUnserializer):
     """
 
     def get_child(self, parent, nineml_type, **options):  # @UnusedVariable
+        if parent.attrs[MULT_ATTR]:
+            raise NineMLSerializationError(
+                "'{}' is a multiple element within {}"
+                .format(nineml_type, parent))
         return parent[nineml_type]
 
     def get_children(self, parent, nineml_type, **options):  # @UnusedVariable
+        if not parent.attrs[MULT_ATTR]:
+            raise NineMLSerializationError(
+                "'{}' is not a multiple element within {}"
+                .format(nineml_type, parent))
         return parent[nineml_type].itervalues()
+
+    def get_all_children(self, parent, **options):  # @UnusedVariable
+        return chain(
+            ((n, e) for n, e in parent.iteritems() if not e.attrs[MULT_ATTR]),
+            *(izip(repeat(n), e.itervalues()) for n, e in parent.iteritems()
+              if e.attrs[MULT_ATTR]))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         return serial_elem.attrs[name]

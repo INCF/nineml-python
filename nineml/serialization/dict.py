@@ -1,4 +1,5 @@
 from nineml.exceptions import NineMLSerializationNotSupportedError
+from itertools import izip, repeat, chain
 from . import NINEML_BASE_NS
 from collections import OrderedDict
 from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
@@ -80,6 +81,12 @@ class DictUnserializer(BaseUnserializer):
                 "Single child of type '{}' found in {}"
                 .format(nineml_type, parent))
         return iter(children)
+
+    def get_all_children(self, parent, **options):  # @UnusedVariable
+        return chain(
+            ((n, e) for n, e in parent.iteritems() if isinstance(e, dict)),
+            *(izip(repeat(n), e) for n, e in parent.iteritems()
+              if isinstance(e, list)))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         try:

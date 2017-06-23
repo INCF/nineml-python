@@ -450,7 +450,7 @@ class BaseUnserializer(BaseVisitor):
         self._unloaded = {}
         if self.root is not None:
             self._annotation_elem = None
-            for nineml_type, elem in self.get_children(self.root):
+            for nineml_type, elem in self.get_all_children(self.root):
                 # Strip out document level annotations
                 if nineml_type == self.node_name(Annotations):
                     if self._annotation_elem is not None:
@@ -594,7 +594,7 @@ class BaseUnserializer(BaseVisitor):
     @abstractmethod
     def get_children(self, parent, nineml_type, **options):
         """
-        Iterates over all child elements of the given type in the parent
+        Iterates over child elements of the given type in the parent
         element
 
         Parameters
@@ -610,6 +610,26 @@ class BaseUnserializer(BaseVisitor):
         -------
         children : iterator(<serial-element>)
             An iterator over the children named in the parent serial element
+        """
+
+    @abstractmethod
+    def get_all_children(self, parent, **options):
+        """
+        Iterates over all child elements in the parent element together with
+        their nineml type in tuples.
+
+        Parameters
+        ----------
+        parent : <serial-element>
+            A serial element to get the children of
+        options : dict(str, object)
+            Serialization format-specific options for the method
+
+        Returns
+        -------
+        children : iterator((str, <serial-element>))
+            An iterator over all tuples containing the all children and their
+            nineml types
         """
 
     @abstractmethod

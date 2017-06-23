@@ -85,9 +85,12 @@ class XMLUnserializer(BaseUnserializer):
                 .format(nineml_type, parent, len(children)))
         return children[0]
 
-    def get_children(self, serial_elem, nineml_type, **options):  # @UnusedVariable @IgnorePep8
-        return (e for e in serial_elem.getchildren()
+    def get_children(self, parent, nineml_type, **options):  # @UnusedVariable @IgnorePep8
+        return (e for e in parent.getchildren()
                 if strip_xmlns(e.tag) == nineml_type)
+
+    def get_all_children(self, parent, **options):  # @UnusedVariable
+        return ((strip_xmlns(e.tag), e) for e in parent.getchildren())
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         try:
