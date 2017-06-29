@@ -172,10 +172,9 @@ class Constant(BaseALObject, ExpressionSymbol):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        value = node.attr('value', dtype=float, **options)
         return cls(
             name=node.attr('name', **options),
-            value=value,
+            value=node.attr('value', dtype=float, **options),
             units=node.visitor.document[
                 node.attr('units', **options)])
 
@@ -186,9 +185,8 @@ class Constant(BaseALObject, ExpressionSymbol):
 
     @classmethod
     def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
-        value = node.body(dtype=float, **options)
         return cls(
             name=node.attr('name', **options),
-            value=value,
+            value=node.body(dtype=float, **options),
             units=node.visitor.document[
                 node.attr('units', **options)])

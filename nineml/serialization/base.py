@@ -178,16 +178,11 @@ class BaseSerializer(BaseVisitor):
             # Set parent to document root if not provided
             if parent is None:
                 parent = self.root
-            # Check if the nineml object can be flattened into a single attr
-            # for formats that don't have a concept of a body (i.e. all except
-            # XML).
-            if self.flat_bodies and nineml_object.flattenable_body:
-                node = FlatBodyNodeToSerialize(self, parent)
-            else:
-                serial_elem = self.create_elem(
-                    self.node_name(type(nineml_object)),
-                    parent=parent, multiple=multiple, **options)
-                node = NodeToSerialize(self, serial_elem)
+            # Create element to hold the serialization
+            serial_elem = self.create_elem(
+                self.node_name(type(nineml_object)),
+                parent=parent, multiple=multiple, **options)
+            node = NodeToSerialize(self, serial_elem)
             if self._version[0] == 1 and hasattr(nineml_object,
                                                  'serialize_node_v1'):
                 nineml_object.serialize_node_v1(node, **options)

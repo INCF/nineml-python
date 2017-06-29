@@ -28,8 +28,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
                        'Constant': 'constant'}
     v1_nineml_type = 'ComponentClass'
 
-    def __init__(self, name, parameters=None, aliases=None, constants=None,
-                 document=None):
+    def __init__(self, name, parameters=None, aliases=None, constants=None):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
