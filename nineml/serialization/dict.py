@@ -36,7 +36,7 @@ class DictSerializer(BaseSerializer):
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
         serial_elem[name] = value
 
-    def set_body(self, serial_elem, value, sole=False, **options):  # @UnusedVariable @IgnorePep8
+    def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
         self.set_attr(serial_elem, BODY_ATTR, value, **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
@@ -101,7 +101,7 @@ class DictUnserializer(BaseUnserializer):
                 .format(serial_elem, name, value))
         return value
 
-    def get_body(self, serial_elem, sole=True, **options):  # @UnusedVariable
+    def get_body(self, serial_elem, **options):  # @UnusedVariable
         try:
             body = self.get_attr(serial_elem, BODY_ATTR)
         except NineMLNameError:

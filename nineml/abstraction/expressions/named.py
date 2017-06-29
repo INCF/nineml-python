@@ -181,7 +181,7 @@ class Constant(BaseALObject, ExpressionSymbol):
     def serialize_node_v1(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
         node.attr('units', self.units.name, **options)
-        node.body(self.value, sole=False)
+        node.body(self.value, **options)
 
     @classmethod
     def unserialize_node_v1(cls, node, **options):  # @UnusedVariable

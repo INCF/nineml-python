@@ -45,7 +45,7 @@ class XMLSerializer(BaseSerializer):
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
         serial_elem.attrib[name] = value_str(value)
 
-    def set_body(self, serial_elem, value, sole=False, **options):  # @UnusedVariable @IgnorePep8
+    def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
         serial_elem.text = value_str(value)
 
     def E(self, namespace=None):
@@ -109,7 +109,7 @@ class XMLUnserializer(BaseUnserializer):
                 "Element {} doesn't contain '{}' attribute"
                 .format(serial_elem, name))
 
-    def get_body(self, serial_elem, sole=True, **options):  # @UnusedVariable
+    def get_body(self, serial_elem, **options):  # @UnusedVariable
         body = serial_elem.text
         if body is not None and not body.strip():
             body = None

@@ -270,7 +270,7 @@ class BaseSerializer(BaseVisitor):
         """
 
     @abstractmethod
-    def set_body(self, serial_elem, value, sole=False, **options):
+    def set_body(self, serial_elem, value, **options):
         """
         Set the body of a serial element. For formats that don't support body
         values (e.g. JSON and YAML), the value is stored in an attribute named
@@ -658,7 +658,7 @@ class BaseUnserializer(BaseVisitor):
         """
 
     @abstractmethod
-    def get_body(self, serial_elem, sole=True, **options):
+    def get_body(self, serial_elem, **options):
         """
         Extracts the body of the serial element. For formats in which elements
         don't have a body, this is extracted from an attribute named '@body'
@@ -1063,7 +1063,7 @@ class NodeToSerialize(BaseNode):
         else:
             self.visitor.set_attr(self._serial_elem, name, value, **options)
 
-    def body(self, value, sole=True, **options):
+    def body(self, value, **options):
         """
         Set the body of the elem
 
@@ -1071,16 +1071,11 @@ class NodeToSerialize(BaseNode):
         ----------
         value : str | float | int
             The value for the body of the element
-        sole : bool
-            Whether the body attribute is the sole attribute/child of the
-            element (saving within an explicit @body attribute can be avoided
-            be in JSON, YAML, HDF5, etc. formats that don't have a notion
-            of body)
         options : dict
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
         """
-        self.visitor.set_body(self._serial_elem, value, sole, **options)
+        self.visitor.set_body(self._serial_elem, value, **options)
 
 
 class NodeToUnserialize(BaseNode):
@@ -1099,8 +1094,7 @@ class NodeToUnserialize(BaseNode):
             self.unprocessed_children.discard(
                 self.visitor.node_name(Annotations))
             self.unprocessed_body = (
-                self.visitor.get_body(serial_elem, sole=False,
-                                      **options) is not None)
+                self.visitor.get_body(serial_elem, **options) is not None)
         else:
             self.unprocessed_attr = set([])
             self.unprocessed_children = set([])
@@ -1312,7 +1306,7 @@ class NodeToUnserialize(BaseNode):
                     "Node {} does not have required attribute '{}'"
                     .format(self.name, name))
 
-    def body(self, dtype=str, allow_empty=False, sole=True, **options):
+    def body(self, dtype=str, allow_empty=False, **options):
         """
         Returns the body of the serial element
 
@@ -1322,18 +1316,13 @@ class NodeToUnserialize(BaseNode):
             The type of the returned value
         allow_empty : bool
             Whether the body can be empty
-        sole : bool
-            Whether the body attribute is the sole attribute/child of the
-            element (saving within an explicit @body attribute can be avoided
-            be in JSON, YAML, HDF5, etc. formats that don't have a notion
-            of body)
 
         Returns
         -------
         body : int | float | str
             The return type of the body
         """
-        value = self.visitor.get_body(self._serial_elem, sole, **options)
+        value = self.visitor.get_body(self._serial_elem, **options)
         self.unprocessed_body = False
         if value is None:
             if allow_empty:

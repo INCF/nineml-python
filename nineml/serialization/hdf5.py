@@ -57,7 +57,7 @@ class HDF5Serializer(BaseSerializer):
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
         serial_elem.attrs[name] = value
 
-    def set_body(self, serial_elem, value, sole=False, **options):  # @UnusedVariable @IgnorePep8
+    def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
         self.set_attr(serial_elem, BODY_ATTR, value, **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
@@ -109,7 +109,7 @@ class HDF5Unserializer(BaseUnserializer):
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
         return serial_elem.attrs[name]
 
-    def get_body(self, serial_elem, sole=True, **options):  # @UnusedVariable
+    def get_body(self, serial_elem, **options):  # @UnusedVariable
         try:
             return serial_elem.attrs[BODY_ATTR]
         except KeyError:
