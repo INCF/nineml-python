@@ -168,23 +168,9 @@ class BaseSerializer(BaseVisitor):
         # Write object as reference if appropriate
         if parent is not None and is_doc_level and not isinstance(
                 nineml_object, Annotations):
-            ref_style = options.get('ref_style', 'prefer_reference')
-            if ref_style == 'force_reference':
-                reference = True
-            elif ref_style == 'force_inline':
-                reference = False
-            elif reference is None:
-                if ref_style == 'prefer_reference':
-                    reference = True
-                elif ref_style == 'prefer_inline':
-                    reference = False
-                else:
-                    raise NineMLSerializationError(
-                        "Unrecognised ref_style '{}'".format(ref_style))
             url = self._get_reference_url(nineml_object, reference=reference,
                                           **options)
-            if url is not False:
-                # Write the element as a reference
+            if url is not False:  # Write the element as a reference
                 serial_elem = self.visit(
                     Reference(nineml_object.name, self.document, url=url),
                     parent=parent, multiple=multiple, **options)
@@ -192,10 +178,16 @@ class BaseSerializer(BaseVisitor):
             # Set parent to document root if not provided
             if parent is None:
                 parent = self.root
-            serial_elem = self.create_elem(self.node_name(type(nineml_object)),
-                                           parent=parent, multiple=multiple,
-                                           **options)
-            node = NodeToSerialize(self, serial_elem)
+            # Check if the nineml object can be flattened into a single attr
+            # for formats that don't have a concept of a body (i.e. all except
+            # XML).
+            if self.flat_bodies and nineml_object.flattenable_body:
+                node = FlatBodyNodeToSerialize(self, parent)
+            else:
+                serial_elem = self.create_elem(
+                    self.node_name(type(nineml_object)),
+                    parent=parent, multiple=multiple, **options)
+                node = NodeToSerialize(self, serial_elem)
             if self._version[0] == 1 and hasattr(nineml_object,
                                                  'serialize_node_v1'):
                 nineml_object.serialize_node_v1(node, **options)
@@ -328,7 +320,7 @@ class BaseSerializer(BaseVisitor):
         """
 
     def _get_reference_url(self, nineml_object, reference=None,
-                           ref_style=None, absolute_refs=False, **options):  # @UnusedVariable @IgnorePep8
+                           ref_style='prefer', absolute_refs=False, **options):  # @UnusedVariable @IgnorePep8
         """
         Determine whether to write the elemnt as a reference or not depending
         on whether it needs to be, as determined by ``reference``, e.g. in the
@@ -374,7 +366,12 @@ class BaseSerializer(BaseVisitor):
                 raise NineMLSerializationError(
                     "Unrecognised ref_style '{}'".format(ref_style))
         else:
-            write_ref = reference
+            if ref_style == 'force':
+                reference = True
+            elif ref_style == 'force_inline':
+                reference = False
+            else:
+                write_ref = reference
         # If the element is to be written as a reference and it is not in the
         # current document add it
         if write_ref:

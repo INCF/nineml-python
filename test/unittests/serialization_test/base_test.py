@@ -228,7 +228,7 @@ class TestSerialization(unittest.TestCase):
                 g=4.7),
             d='wee')
 
-    def test_rountrip(self):
+    def test_roundtrip(self):
         for version in (2, 1):
             for format in format_to_serializer:  # @ReservedAssignment @IgnorePep8
                 S = format_to_serializer[format]
