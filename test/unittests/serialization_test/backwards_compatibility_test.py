@@ -29,9 +29,9 @@ class TestBackwardsCompatibility(unittest.TestCase):
                 "Loaded version 1 didn't match loaded version 2:\n{}"
                 .format(v1.find_mismatch(v2)))
             v1_to_v2_xml = XMLSerializer(document=v2_doc, version=2.0).visit(
-                v1, ref_style='force_reference')
+                v1, ref_style='force')
             v2_to_v1_xml = XMLSerializer(document=v1_doc, version=1.0).visit(
-                v2, ref_style='force_reference')
+                v2, ref_style='force')
             v1_xml = self._get_xml_element(full_v1_xml, name)
             v2_xml = self._get_xml_element(full_v2_xml, name)
             # Test the version 1 converted to version 2

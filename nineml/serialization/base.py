@@ -336,7 +336,8 @@ class BaseSerializer(BaseVisitor):
         reference : bool | None
             Whether the child should be written as a reference or not. If None
             the ref_style option is used to determine whether it is or not.
-        ref_style : (None | 'prefer' | 'force' | 'inline')
+        ref_style : (None | 'prefer' | 'force' | 'inline' | 'force_inline' |
+                     'local')
             The strategy used to write references if they are not explicitly
             required by the serialization (i.e. for Projections and Selections)
         absolute_refs : bool
@@ -349,29 +350,27 @@ class BaseSerializer(BaseVisitor):
             document should be used, if False then the object shouldn't
             be written as a reference
         """
-        if reference is None:
-            if ref_style is None:
-                # No preference is supplied so the element will be written as
-                # a reference if it was loaded from a reference
-                write_ref = nineml_object.document is not None
-            elif ref_style == 'prefer':
-                # Write the element as a reference
-                write_ref = True
-            elif ref_style == 'inline':
-                # Write the element inline
-                write_ref = False
-            elif ref_style == 'local':
-                write_ref = True
-            else:
-                raise NineMLSerializationError(
-                    "Unrecognised ref_style '{}'".format(ref_style))
+        if ref_style == 'force':
+            write_ref = True
+        elif ref_style == 'force_inline':
+            write_ref = False
+        elif reference is not None:
+            write_ref = reference
+        elif ref_style == 'prefer':
+            # Write the element as a reference
+            write_ref = True
+        elif ref_style == 'inline':
+            # Write the element inline
+            write_ref = False
+        elif ref_style == 'local':
+            write_ref = True
+        elif ref_style is None:
+            # No preference is supplied so the element will be written as
+            # a reference if it was loaded from a reference
+            write_ref = nineml_object.document is not None
         else:
-            if ref_style == 'force':
-                reference = True
-            elif ref_style == 'force_inline':
-                reference = False
-            else:
-                write_ref = reference
+            raise NineMLSerializationError(
+                "Unrecognised ref_style '{}'".format(ref_style))
         # If the element is to be written as a reference and it is not in the
         # current document add it
         if write_ref:
