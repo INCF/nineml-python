@@ -20,7 +20,7 @@ class TestComprehensiveSerialization(TestCase):
         shutil.rmtree(self._tmp_dir)
 
     def test_write_read_roundtrip(self):
-        for version in (2.0, 1.0):
+        for version in (1.0, 2.0):
             if version == 1.0:
                 docs = v1_safe_docs
             else:
@@ -36,6 +36,9 @@ class TestComprehensiveSerialization(TestCase):
                         self._tmp_dir, 'test{}v{}{}'.format(i, version, ext))
                     nineml.write(url, doc, format=format, version=version,
                                  indent=2)
+#                     if format in ('xml', 'json', 'yaml'):
+#                         with open(url) as f:
+#                             print f.read()
                     reread_doc = nineml.read(url, reload=True)
                     self.assertTrue(doc.equals(reread_doc),
                                     doc.find_mismatch(reread_doc))

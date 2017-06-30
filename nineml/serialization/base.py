@@ -1015,6 +1015,7 @@ class NodeToSerialize(BaseNode):
                 not self.visitor.supports_bodies):
             self.visitor.set_attr(serial_elem, nineml_object.nineml_type,
                                   nineml_object.serialize_body(**options))
+            child_elem = None
         else:
             child_elem = self.visitor.visit(
                 nineml_object, parent=serial_elem, reference=reference,
@@ -1178,7 +1179,7 @@ class NodeToUnserialize(BaseNode):
         # Check to see if the child has been flattened into an attribute (for
         # classes that are serialized to a single body element in formats that
         # support body content, i.e. XML, such as SingleValue)
-        for nineml_cls in nineml_classes:
+        for nineml_cls in name_map.itervalues():
             if (hasattr(nineml_cls, 'unserialize_body') and
                     not self.visitor.supports_bodies):
                 try:

@@ -13,10 +13,12 @@ from nineml.utils import ensure_valid_identifier
 from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
+from nineml.values import SingleValue
 
 
 V1_DELAY_VALUE_TYPES = ('SingleValue', 'ArrayValue', 'ExternalArrayValue',
                         'RandomValue')
+
 
 class Projection(BaseULObject, DocumentLevelObject):
     """
@@ -256,28 +258,38 @@ class Projection(BaseULObject, DocumentLevelObject):
         node.unprocessed_children.remove('Delay')
         units = node.document[
             node.visitor.get_attr(delay_elem, 'units', **options)]
-        value_elem = None
-        nineml_type = None
-        for value_type in V1_DELAY_VALUE_TYPES:
-            try:
-                value_elem = node.visitor.get_child(
-                    delay_elem, value_type, **options)
-                if nineml_type is not None:
-                    raise NineMLSerializationError(
-                        "Double value elements ({} and {}) found in Delay"
-                        .format(value_type, nineml_type))
-                nineml_type = value_type
-            except NineMLMissingSerializationError:
-                continue
-        if value_elem is None:
-            raise NineMLMissingSerializationError(
-                "Did not find one of '{}' in Delay element"
-                .format("', '".join(V1_DELAY_VALUE_TYPES)))
-        value = node.visitor.visit(
-            value_elem,
-            node.visitor.get_nineml_class(nineml_type, value_elem,
-                                          assert_doc_level=False),
-            **options)
+        try:
+            # Attempt to get SingleValue, written as an attribute
+            value = SingleValue.unserialize_body(
+                node.visitor.get_attr(delay_elem,
+                                      SingleValue.nineml_type, **options),
+                **options)
+        except KeyError:
+            # Otherwise get SingleValue, ArrayValue or RandomDistributionValue
+            # written as a child
+            value_elem = None
+            nineml_type = None
+            for value_type in V1_DELAY_VALUE_TYPES:
+                try:
+                    value_elem = node.visitor.get_child(
+                        delay_elem, value_type, **options)
+                    if nineml_type is not None:
+                        raise NineMLSerializationError(
+                            "Double value elements ({} and {}) found in Delay"
+                            .format(value_type, nineml_type))
+                    nineml_type = value_type
+                except NineMLMissingSerializationError:
+                    continue
+            if value_elem is not None:
+                value = node.visitor.visit(
+                    value_elem,
+                    node.visitor.get_nineml_class(nineml_type, value_elem,
+                                                  assert_doc_level=False),
+                    **options)
+            else:
+                raise NineMLMissingSerializationError(
+                    "Did not find one of '{}' in Delay element"
+                    .format("', '".join(V1_DELAY_VALUE_TYPES)))
         delay = Quantity(value, units)
         # Get Pre
         pre = node.child(

@@ -28,10 +28,8 @@ class ConnectionRule(ComponentClass):
                       'Probabilistic', 'RandomFanIn',
                       'RandomFanOut')
 
-    def __init__(self, name, standard_library, parameters=None,
-                 document=None):
-        super(ConnectionRule, self).__init__(
-            name, parameters, document=document)
+    def __init__(self, name, standard_library, parameters=None):
+        super(ConnectionRule, self).__init__(name, parameters)
         # Convert to lower case
         if (not standard_library.startswith(self.standard_library_basepath) or
                 standard_library[self._base_len:] not in self.standard_types):
@@ -95,8 +93,7 @@ class ConnectionRule(ComponentClass):
         return cls(
             name=node.attr('name', **options),
             standard_library=standard_library,
-            parameters=node.children(Parameter, **options),
-            document=node.visitor.document)
+            parameters=node.children(Parameter, **options))
 
     # connection_rule
     def serialize_node_v1(self, node, **options):  # @UnusedVariable @IgnorePep8
@@ -121,8 +118,7 @@ class ConnectionRule(ComponentClass):
         return cls(
             name=node.attr('name', **options),
             standard_library=standard_library,
-            parameters=node.children(Parameter, **options),
-            document=node.visitor.document)
+            parameters=node.children(Parameter, **options))
 
     @property
     def lib_type(self):

@@ -16,10 +16,8 @@ class RandomDistribution(ComponentClass):
                       'multinomial', 'negative-binomial', 'normal',
                       'pareto', 'poisson', 'uniform', 'weibull')
 
-    def __init__(self, name, standard_library, parameters=None,
-                 document=None):
-        super(RandomDistribution, self).__init__(
-            name, parameters, document=document)
+    def __init__(self, name, standard_library, parameters=None):
+        super(RandomDistribution, self).__init__(name, parameters)
         if (not standard_library.startswith(self.standard_library_basepath) or
                 standard_library[self._base_len:] not in self.standard_types):
             raise NineMLRuntimeError(
@@ -82,8 +80,7 @@ class RandomDistribution(ComponentClass):
         return cls(
             name=node.attr('name', **options),
             standard_library=node.attr('standard_library', **options),
-            parameters=node.children(Parameter, **options),
-            document=node.visitor.document)
+            parameters=node.children(Parameter, **options))
 
     def serialize_node_v1(self, node, **options):  # @UnusedVariable @IgnorePep8
         node.attr('name', self.name, **options)
@@ -107,8 +104,7 @@ class RandomDistribution(ComponentClass):
         return cls(
             name=node.attr('name', **options),
             standard_library=standard_library,
-            parameters=node.children(Parameter, **options),
-            document=node.visitor.document)
+            parameters=node.children(Parameter, **options))
 
 from .visitors.modifiers import(  # @IgnorePep8
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)

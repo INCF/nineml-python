@@ -5,7 +5,7 @@ from collections import defaultdict, Iterator, Iterable
 import sympy
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException,
-    NineMLSerializationException)
+    NineMLSerializationError)
 
 
 def sort_key(elem):
@@ -322,7 +322,7 @@ class BaseNineMLObject(object):
         try:
             node.body(self.serialize_body(**options), **options)
         except AttributeError:
-            raise NineMLSerializationException(
+            raise NineMLSerializationError(
                 "'serialize_node (or serialize_body) not implemented for "
                 "'{}' class".format(self.nineml_type))
 
@@ -334,9 +334,9 @@ class BaseNineMLObject(object):
         override this method.
         """
         try:
-            return cls(cls.unserialize_body(node.body(**options), **options))
+            return cls.unserialize_body(node.body(**options), **options)
         except AttributeError:
-            raise NineMLSerializationException(
+            raise NineMLSerializationError(
                 "'serialize_node (or serialize_body) not implemented for "
                 "'{}' class".format(cls.nineml_type))
 
@@ -424,17 +424,7 @@ class AnnotatedNineMLObject(BaseNineMLObject):
 class DocumentLevelObject(BaseNineMLObject):
 
     def __init__(self):
-        # Document level objects can be nested inside other document-level
-        # objects, in which case they shouldn't belong to the document
-        # directly
-        # FIXME: Once network is its own element in the 9ML spec then the
-        #        check for the nineml_type == 'Network' will no longer be
-        #        necessary
-#         if (document is not None and
-#             self.nineml_type != 'Annotations' and
-#                 (self.nineml_type == 'Network' or self.name in document)):
-#             self._document = document
-#         else:
+        # _document is set when the object is added to a document
         self._document = None
 
     @property
