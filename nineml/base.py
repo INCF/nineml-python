@@ -4,7 +4,8 @@ import operator
 from collections import defaultdict, Iterator, Iterable
 import sympy
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException)
+    NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException,
+    NineMLSerializationException)
 
 
 def sort_key(elem):
@@ -311,6 +312,33 @@ class BaseNineMLObject(object):
     @classmethod
     def unserialize(cls, serial_elem, format, **kwargs):  # @ReservedAssignment
         return nineml.unserialize(serial_elem, cls, format=format, **kwargs)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        """
+        A generic serialize_node for classes that only implement
+        the serialize_body method (e.g. SingleValue). All other classes should
+        override this method.
+        """
+        try:
+            node.body(self.serialize_body(**options), **options)
+        except AttributeError:
+            raise NineMLSerializationException(
+                "'serialize_node (or serialize_body) not implemented for "
+                "'{}' class".format(self.nineml_type))
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        """
+        A generic unserialize_node for classes that only implement the
+        unserialize_body method (e.g. SingleValue). All other classes should
+        override this method.
+        """
+        try:
+            return cls(cls.unserialize_body(node.body(**options), **options))
+        except AttributeError:
+            raise NineMLSerializationException(
+                "'serialize_node (or serialize_body) not implemented for "
+                "'{}' class".format(cls.nineml_type))
 
 
 def _clone_attr(attr, memo, **kwargs):

@@ -31,6 +31,8 @@ def value_str(value):
 class XMLSerializer(BaseSerializer):
     "Serializer class for the XML format"
 
+    supports_bodies = True
+
     def __init__(self, version=DEFAULT_VERSION, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
         super(XMLSerializer, self).__init__(version=version, document=document)
 
@@ -70,6 +72,8 @@ class XMLSerializer(BaseSerializer):
 
 class XMLUnserializer(BaseUnserializer):
     "Unserializer class for the XML format"
+
+    supports_bodies = True
 
     def __init__(self, root, version=None,  # @ReservedAssignment @IgnorePep8
                  url=None, document=None, **kwargs):

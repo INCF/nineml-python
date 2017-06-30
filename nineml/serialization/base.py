@@ -35,6 +35,11 @@ class BaseVisitor(object):
 
     __metaclass__ = ABCMeta
 
+    # A flag to determine whether the serialization form supports element
+    # bodies, which is only true of XML amongst the supported formats at this
+    # stage.
+    supports_bodies = False
+
     def __init__(self, version, document):
         self._version = self.standardize_version(version)
         self._document = document
@@ -1004,9 +1009,16 @@ class NodeToSerialize(BaseNode):
             self.withins.add(within)
         else:
             serial_elem = self._serial_elem
-        child_elem = self.visitor.visit(nineml_object, parent=serial_elem,
-                                        reference=reference, multiple=multiple,
-                                        **options)
+        # If the visitor doesn't support body content (i.e. all but XML) and
+        # the nineml_object can be flattened into a single attribute
+        if (hasattr(nineml_object, 'serialize_body') and
+                not self.visitor.supports_bodies):
+            self.visitor.set_attr(serial_elem, nineml_object.nineml_type,
+                                  nineml_object.serialize_body(**options))
+        else:
+            child_elem = self.visitor.visit(
+                nineml_object, parent=serial_elem, reference=reference,
+                multiple=multiple, **options)
         return child_elem if within is None else serial_elem
 
     def children(self, nineml_objects, reference=None, parent_elem=None,
@@ -1056,7 +1068,7 @@ class NodeToSerialize(BaseNode):
             Options that can be passed to specific branches of the element
             tree (unlikely to be used but included for completeness)
         """
-        if in_body:
+        if in_body and self.visitor.supports_bodies:
             attr_elem = self.visitor.create_elem(
                 name, parent=self._serial_elem, multiple=False, **options)
             self.visitor.set_body(attr_elem, value, **options)
@@ -1163,6 +1175,20 @@ class NodeToUnserialize(BaseNode):
             self.unprocessed_children.discard(within)
         else:
             parent_elem = self._serial_elem
+        # Check to see if the child has been flattened into an attribute (for
+        # classes that are serialized to a single body element in formats that
+        # support body content, i.e. XML, such as SingleValue)
+        for nineml_cls in nineml_classes:
+            if (hasattr(nineml_cls, 'unserialize_body') and
+                    not self.visitor.supports_bodies):
+                try:
+                    child = nineml_cls.unserialize_body(
+                        self.visitor.get_attr(
+                            parent_elem, nineml_cls.nineml_type, **options))
+                    self.unprocessed_attr.discard(nineml_cls.nineml_type)
+                    return child
+                except KeyError:
+                    pass
         child = None
         # Check to see if there is a valid reference to the child element
         if allow_ref:
@@ -1283,7 +1309,7 @@ class NodeToUnserialize(BaseNode):
             The attribute to retrieve
         """
         try:
-            if in_body:
+            if in_body and self.visitor.supports_bodies:
                 attr_elem = self.visitor.get_child(
                     self._serial_elem, name, **options)
                 self.unprocessed_children.remove(name)
