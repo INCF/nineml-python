@@ -531,19 +531,19 @@ class ArrayValue(BaseValue):
             clone._datafile = self.DataFile(*self._datafile)
 
 
-class RandomValue(BaseValue):
+class RandomDistributionValue(BaseValue):
 
-    nineml_type = "RandomValue"
+    nineml_type = "RandomDistributionValue"
     defining_attributes = ("_distribution",)
 
     def __init__(self, distribution):
-        super(RandomValue, self).__init__()
+        super(RandomDistributionValue, self).__init__()
         self._distribution = distribution
         self._generator = None
 
     def __float__(self):
         raise TypeError(
-            "RandomValues cannot be converted to a single float")
+            "RandomDistributionValues cannot be converted to a single float")
 
     @property
     def key(self):
@@ -573,7 +573,7 @@ class RandomValue(BaseValue):
     def __iter__(self):
         if self._generator is None:
             raise NineMLRuntimeError(
-                "Generator not set for RandomValue '{}'"
+                "Generator not set for RandomDistributionValue '{}'"
                 .format(self))
         yield self._generator()
 
@@ -586,7 +586,7 @@ class RandomValue(BaseValue):
         self._generator = generator_cls(self.distribution)
 
     def __repr__(self):
-        return ("RandomValue({})".format(self.distribution.name))
+        return ("RandomDistributionValue({})".format(self.distribution.name))
 
     def inverse(self):
         raise NotImplementedError
@@ -601,5 +601,5 @@ class RandomValue(BaseValue):
         return cls(distribution)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
-        super(RandomValue, self)._copy_to_clone(clone, memo, **kwargs)
+        super(RandomDistributionValue, self)._copy_to_clone(clone, memo, **kwargs)
         clone._generator = None

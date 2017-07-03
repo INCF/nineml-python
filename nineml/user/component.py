@@ -13,7 +13,7 @@ from . import BaseULObject
 from nineml.document import Document
 from nineml.base import (
     DocumentLevelObject, ContainerObject)
-from nineml.values import SingleValue, ArrayValue, RandomValue
+from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
 from os import path
 
 
@@ -310,7 +310,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     def get_random_distributions(self):
         return [p.value.distribution for p in self.properties
-                if p.value.nineml_type == 'RandomValue']
+                if p.value.nineml_type == 'RandomDistributionValue']
 
     def elements(self, local=False):
         """
@@ -460,7 +460,7 @@ class Property(BaseULObject):
     @classmethod
     def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
         name = node.attr('name', **options)
-        value = node.child((SingleValue, ArrayValue, RandomValue),
+        value = node.child((SingleValue, ArrayValue, RandomDistributionValue),
                            **options)
         units = node.document[node.attr('units', **options)]
         quantity = Quantity(value, units)

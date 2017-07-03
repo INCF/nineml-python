@@ -83,15 +83,15 @@ class TestArrayValueExceptions(unittest.TestCase):
                 val)
 
 
-class TestRandomValueExceptions(unittest.TestCase):
+class TestRandomDistributionValueExceptions(unittest.TestCase):
 
     def test___float___typeerror(self):
         """
         line #: 457
-        message: RandomValues cannot be converted to a single float
+        message: RandomDistributionValues cannot be converted to a single float
         """
 
-        randomvalue = next(instances_of_all_types['RandomValue'].itervalues())
+        randomvalue = next(instances_of_all_types['RandomDistributionValue'].itervalues())
         self.assertRaises(
             TypeError,
             float,
@@ -100,10 +100,10 @@ class TestRandomValueExceptions(unittest.TestCase):
     def test___iter___ninemlruntimeerror(self):
         """
         line #: 481
-        message: Generator not set for RandomValue '{}'
+        message: Generator not set for RandomDistributionValue '{}'
         """
 
-        randomvalue = next(instances_of_all_types['RandomValue'].itervalues())
+        randomvalue = next(instances_of_all_types['RandomDistributionValue'].itervalues())
         gen = iter(randomvalue)
         self.assertRaises(
             NineMLRuntimeError,
@@ -116,7 +116,7 @@ class TestRandomValueExceptions(unittest.TestCase):
         message:
         """
 
-        randomvalue = next(instances_of_all_types['RandomValue'].itervalues())
+        randomvalue = next(instances_of_all_types['RandomDistributionValue'].itervalues())
         self.assertRaises(
             NotImplementedError,
             randomvalue.inverse)

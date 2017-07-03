@@ -10,7 +10,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLDimensionError, NineMLValueError,
     NineMLSerializationError)
 from nineml.values import (
-    SingleValue, ArrayValue, RandomValue)
+    SingleValue, ArrayValue, RandomDistributionValue)
 from nineml.utils import ensure_valid_identifier
 
 
@@ -437,7 +437,7 @@ class Quantity(AnnotatedNineMLObject):
             else:
                 units = value.units
                 value = value.value
-        elif not isinstance(value, (SingleValue, ArrayValue, RandomValue)):
+        elif not isinstance(value, (SingleValue, ArrayValue, RandomDistributionValue)):
             try:
                 # Convert value from float
                 value = SingleValue(float(value))
@@ -512,7 +512,7 @@ class Quantity(AnnotatedNineMLObject):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        value = node.child((SingleValue, ArrayValue, RandomValue),
+        value = node.child((SingleValue, ArrayValue, RandomDistributionValue),
                            allow_ref=True, **options)
         units_str = node.attr('units', **options)
         try:

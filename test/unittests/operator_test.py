@@ -3,7 +3,7 @@ from string import ascii_lowercase
 from itertools import chain, cycle, repeat
 import traceback
 import math
-from nineml.values import SingleValue, ArrayValue, RandomValue
+from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
 from operator import (
     add, sub, mul, truediv, div, pow, floordiv, mod, neg, iadd, idiv,
     ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
@@ -544,7 +544,7 @@ class TestQuantities(unittest.TestCase):
                     len_val = 0
                 else:
                     qty = next(qty_iter)
-                    while qty.value.nineml_type == 'RandomValue':
+                    while qty.value.nineml_type == 'RandomDistributionValue':
                         qty = next(qty_iter)
                     if op in div_ops:
                         qty._value = qty.value ** 2 + 0.1  # Ensure that not 0

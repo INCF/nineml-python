@@ -17,7 +17,7 @@ from nineml.values import SingleValue
 
 
 V1_DELAY_VALUE_TYPES = ('SingleValue', 'ArrayValue', 'ExternalArrayValue',
-                        'RandomValue')
+                        'RandomDistributionValue')
 
 
 class Projection(BaseULObject, DocumentLevelObject):

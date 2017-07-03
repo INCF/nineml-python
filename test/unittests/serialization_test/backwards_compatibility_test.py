@@ -129,9 +129,9 @@ version1 = """<?xml version="1.0" encoding="UTF-8"?>
       <SingleValue>1.0</SingleValue>
     </Property>
     <Property name="weight" units="nA">
-      <RandomValue>
+      <RandomDistributionValue>
         <Reference>RDP</Reference>
-      </RandomValue>
+      </RandomDistributionValue>
     </Property>
   </Component>
   <Component name="CRP">
@@ -274,9 +274,9 @@ version2 = """<?xml version="1.0" encoding="UTF-8"?>
     </Property>
     <Property name="weight">
       <Quantity units="nA">
-        <RandomValue>
+        <RandomDistributionValue>
           <Reference name="RDP"/>
-        </RandomValue>
+        </RandomDistributionValue>
       </Quantity>
     </Property>
   </DynamicsProperties>

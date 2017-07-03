@@ -9,7 +9,7 @@ import nineml
 import nineml.units as un
 from nineml.annotations import Annotations
 from nineml.units import Quantity
-from nineml.values import SingleValue, ArrayValue, RandomValue
+from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
 from nineml.document import Document
 from nineml.reference import Reference
 from nineml.abstraction import (
@@ -236,7 +236,7 @@ dynPropB = DynamicsProperties(
     definition=Definition(dynB),
     properties={
         'P1': 11.1 * un.unitless,
-        'P2': Quantity(RandomValue(ranDistrPropA), un.unitless),
+        'P2': Quantity(RandomDistributionValue(ranDistrPropA), un.unitless),
         'P3': -101 * un.unitless})
 
 dynPropC = DynamicsProperties(

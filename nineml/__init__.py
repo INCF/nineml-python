@@ -21,5 +21,5 @@ from .user import (  # @IgnorePep8
     DynamicsProperties, ConnectionRuleProperties, RandomDistributionProperties,
     Network, MultiDynamics, MultiDynamicsProperties, Concatenate,
     ComponentArray, EventConnectionGroup, AnalogConnectionGroup)
-from .values import SingleValue, ArrayValue, RandomValue  # @IgnorePep8
+from .values import SingleValue, ArrayValue, RandomDistributionValue  # @IgnorePep8
 from .serialization import read, write, serialize, unserialize  # @IgnorePep8

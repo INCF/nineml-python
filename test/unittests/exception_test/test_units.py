@@ -90,7 +90,7 @@ class TestQuantityExceptions(unittest.TestCase):
         message: Cannot get item from random distribution
         """
 
-        random_value = next(instances_of_all_types['RandomValue'].itervalues())
+        random_value = next(instances_of_all_types['RandomDistributionValue'].itervalues())
         qty = Quantity(random_value, un.ms)
         self.assertRaises(
             NineMLRuntimeError,
