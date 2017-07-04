@@ -1215,6 +1215,7 @@ class NodeToUnserialize(BaseNode):
                     child_elems.append(
                         (cls,
                          self.visitor.get_child(parent_elem, nineml_type)))
+                    child_nineml_type = nineml_type
                 except NineMLMissingSerializationError:
                     pass
             if len(child_elems) > 1:
@@ -1228,7 +1229,7 @@ class NodeToUnserialize(BaseNode):
                     .format('|'.join(name_map), self.name))
             child_cls, child_elem = child_elems[0]
             child = self.visitor.visit(child_elem, child_cls, **options)
-            self.unprocessed_children.discard(child.nineml_type)
+            self.unprocessed_children.discard(child_nineml_type)
         return child
 
     def children(self, nineml_classes, n='*', allow_ref=False,
