@@ -455,7 +455,7 @@ class _AnnotationsBranch(BaseAnnotations):
 
 
 # Python-9ML library specific annotations
-PY9ML_NS = 'http://github.com/INCF/lib9ml'
+PY9ML_NS = 'http://github.com/INCF/nineml-python'
 
 # Annotation
 INDICES_TAG = 'Indices'
