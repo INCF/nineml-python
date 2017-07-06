@@ -3,13 +3,12 @@ NineML Python Library
 
 NineML (9ML) is a language for describing the dynamics and connectivity of neuronal
 network simulations (http://nineml.net). The language is defined as an object
-model, described in the NineML specification (http://nineml.net/specification),
-with a serializations to XML, JSON, YAML, Python Pickle, and HDF5.
+model, described in the NineML specification (http://nineml.net/specification).
 
 The NineML Python Library (9ML-Python) is a software library written in Python,
 which maps the NineML object model onto Python classes for convenient creation,
 manipulation and validation of NineML models, as well as handling their
-serialization to and f.
+serialization to and from XML, JSON, YAML, Python Pickle, and HDF5.
 
 
 Installation
