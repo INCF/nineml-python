@@ -44,7 +44,7 @@ lxml_, and h5py_ if they are not already installed.
 If you have not installed the HDF5 library in the previous step (and you don't
 plan to use HDF5 serialization), you can avoid having to install h5py_ by
 installing sympy_, pyyaml_ and lxml_ separately (pyaml_ and lxml_ are also optional if you
-don't require XML support).
+don't require XML or YAML support).
 
 NB: As of 12/10/2016 Sympy v1.0 has a bug in its ccode printer, which is
 used by 9ML-python to write expressions within MathInline elements. This bug has
