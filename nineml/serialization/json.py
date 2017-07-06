@@ -12,7 +12,7 @@ class JSONSerializer(DictSerializer):
                 check_circular=True, allow_nan=True, cls=None, indent=None,
                 separators=None, encoding='utf-8', default=None,
                 sort_keys=False, **options):  # @UnusedVariable
-        json.dump(serial_elem, file, skipkeys=skipkeys,
+        json.dump(self.to_elem(serial_elem), file, skipkeys=skipkeys,
                   ensure_ascii=ensure_ascii, check_circular=check_circular,
                   allow_nan=allow_nan, cls=cls, indent=indent,
                   separators=separators, encoding=encoding, default=default,
@@ -22,7 +22,7 @@ class JSONSerializer(DictSerializer):
                 check_circular=True, allow_nan=True, cls=None, indent=None,
                 separators=None, encoding='utf-8', default=None,
                 sort_keys=False, **options):  # @UnusedVariable  @IgnorePep8
-        return json.dumps(serial_elem, skipkeys=skipkeys,
+        return json.dumps(self.to_elem(serial_elem), skipkeys=skipkeys,
                           ensure_ascii=ensure_ascii,
                           check_circular=check_circular, allow_nan=allow_nan,
                           cls=cls, indent=indent, separators=separators,
@@ -36,7 +36,7 @@ class JSONUnserializer(DictUnserializer):
     """
 
     def from_file(self, file, encoding=None, **options):  # @ReservedAssignment @UnusedVariable @IgnorePep8
-        return json.load(file, encoding=encoding)
+        return self.from_elem(json.load(file, encoding=encoding))
 
     def from_str(self, string, encoding=None, **options):  # @UnusedVariable
-        return json.loads(string, encoding=encoding)
+        return self.from_elem(json.loads(string, encoding=encoding))

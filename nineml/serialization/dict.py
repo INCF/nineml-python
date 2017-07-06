@@ -49,6 +49,9 @@ class DictSerializer(BaseSerializer):
             "'dict' format cannot be converted to a string "
             "(use JSON or Pickle)")
 
+    def to_elem(self, serial_elem, **options):  # @UnusedVariable
+        return {'NineML': serial_elem}
+
 
 class DictUnserializer(BaseUnserializer):
     """
@@ -128,6 +131,9 @@ class DictUnserializer(BaseUnserializer):
         raise NineMLSerializationNotSupportedError(
             "'dict' format cannot be read from a string "
             "(use JSON or Pickle)")
+
+    def from_elem(self, serial_elem, **options):  # @UnusedVariable
+        return serial_elem['NineML']
 
     @classmethod
     def _is_child(cls, elem):

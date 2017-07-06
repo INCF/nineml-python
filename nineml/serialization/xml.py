@@ -69,6 +69,9 @@ class XMLSerializer(BaseSerializer):
             encoding=encoding, pretty_print=pretty_print,
             xml_declaration=xml_declaration)
 
+    def to_elem(self, serial_elem, **options):  # @UnusedVariable
+        return serial_elem
+
 
 class XMLUnserializer(BaseUnserializer):
     "Unserializer class for the XML format"
@@ -140,3 +143,6 @@ class XMLUnserializer(BaseUnserializer):
         except etree.LxmlError as e:
             raise NineMLSerializationError(
                 "Could not parse XML string '{}': \n{}".format(file, e))
+
+    def from_elem(self, serial_elem, **options):  # @UnusedVariable
+        return serial_elem

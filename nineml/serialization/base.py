@@ -795,7 +795,7 @@ class BaseUnserializer(BaseVisitor):
             raise NineMLSerializationError(
                 "Missing 'name' (or 'symbol') attribute from document "
                 "level object '{}' ('{}')".format(
-                    elem, "', '".join(elem.attrib.keys())))
+                    elem, "', '".join(self.get_attr_keys(elem))))
         return name
 
     def get_nineml_class(self, nineml_type, elem, assert_doc_level=True):

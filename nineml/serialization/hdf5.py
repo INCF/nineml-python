@@ -71,6 +71,9 @@ class HDF5Serializer(BaseSerializer):
         raise NineMLSerializationNotSupportedError(
             "'HDF5' format cannot be converted to a string")
 
+    def to_elem(self, serial_elem, **options):  # @UnusedVariable
+        return serial_elem
+
 
 class HDF5Unserializer(BaseUnserializer):
     """
@@ -141,3 +144,6 @@ class HDF5Unserializer(BaseUnserializer):
     def from_str(self, string, **options):
         raise NineMLSerializationNotSupportedError(
             "'HDF5' format cannot be read from a string")
+
+    def from_elem(self, serial_elem, **options):  # @UnusedVariable
+        return serial_elem
