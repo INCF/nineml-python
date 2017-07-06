@@ -8,7 +8,7 @@ model, described in the NineML specification (http://nineml.net/specification).
 The NineML Python Library (9ML-Python) is a software library written in Python,
 which maps the NineML object model onto Python classes for convenient creation,
 manipulation and validation of NineML models, as well as handling their
-serialization to and from XML, JSON, YAML, Python Pickle, and HDF5.
+serialization to and from XML_, JSON_, YAML_, and HDF5_.
 
 
 Installation
@@ -17,8 +17,8 @@ Installation
 HDF5
 ~~~~
 
-To add support to read/write HDF5 serializations you must first install the
-HDF5 library.
+To add support to read/write HDF5_ serializations you must first install the
+HDF5_ library.
 
 On macOS it can be installed using Homebrew_
 
@@ -43,7 +43,7 @@ lxml_, and h5py_ if they are not already installed.
 
 If you have not installed the HDF5 library in the previous step (and you don't
 plan to use HDF5 serialization), you can avoid having to install h5py_ by
-installing sympy_ and lxml_ separately (lxml_ is also optional if you
+installing sympy_, pyyaml_ and lxml_ separately (pyaml_ and lxml_ are also optional if you
 don't require XML support).
 
 NB: As of 12/10/2016 Sympy v1.0 has a bug in its ccode printer, which is
@@ -100,8 +100,13 @@ Links
 .. image:: https://coveralls.io/repos/INCF/nineml-python/badge.svg
    :target: https://coveralls.io/github/ICNF/nineml-python
    :alt: Unit Test Coverage
-   
+  
+.. _HDF5: http://support.hdfgroup.org/HDF5/
+.. _YAML: http://yaml.org
+.. _JSON: http://www.json.org
+.. _XML: http://www.w3.org/XML/
 .. _h5py: http://h5py.org/
+.. _pyyaml: http://pyyaml.org/
 .. _sympy: http://sympy.org
 .. _lxml: http://pypi.python.org/pypi/lxml
 .. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
