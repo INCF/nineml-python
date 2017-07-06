@@ -76,10 +76,7 @@ def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @Rese
     if file_path_re.match(url) is not None:
         if url.startswith('.'):
             if relative_to is None:
-                raise NineMLIOError(
-                    "'relative_to' kwarg must be provided when using "
-                    "relative paths (i.e. paths starting with '.'), "
-                    "'{}'".format(url))
+                relative_to = os.getcwd()
             url = os.path.abspath(os.path.join(relative_to, url))
         mtime = time.ctime(os.path.getmtime(url))
     elif url_re.match(url) is not None:
