@@ -194,6 +194,8 @@ class ExpandExpressionsQuerier(BaseNineMLVisitor):
     ----------
     component_class : Dynamics
         The Dynamics class to expand the expressions of
+    new_name : str
+        The name for the new dynamics object
     """
 
     def __init__(self, component_class, new_name):
@@ -215,11 +217,6 @@ class ExpandExpressionsQuerier(BaseNineMLVisitor):
         Returns a clone of the component class passed to the __init__ method
         with all expressions defined in terms of inputs to the class (i.e.
         parameters, constants, analog ports or reserved symbols)
-
-        Parameters
-        ----------
-        new_name : str
-            The name for the new dynamics object
         """
         return Dynamics(
             name=self.new_name,
