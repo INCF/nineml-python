@@ -894,16 +894,9 @@ class BaseNineMLVisitor(object):
 
     class UnitVisitor(Visitor):
 
-        def __init__(default_action=None, default_post_action=None)
-
         def action_unit(unit, **kwargs):
             # Do action here
 
-        def default_action(self, obj, **kwargs):
-            pass
-
-        def default_post_action(self, obj, **kwargs):
-            pass
     """
 
     class Context(object):
@@ -1025,17 +1018,19 @@ class BaseNineMLVisitor(object):
             context = None
         return context
 
-    def default_action(self, obj, **kwargs):  # @UnusedVariable
-        assert False, (
-            "'{}' method has not be implemented and a default action was not "
-            "supplied to '{}' visitor"
-            .format(self._method_name, type(self).__name__))
+    def default_action(self, obj, **kwargs):
+        """
+        Default action performed on every object that doesn't define an
+        explicit '<nineml-type-name>_action' method
+        """
+        pass
 
-    def default_post_action(self, obj, **kwargs):  # @UnusedVariable
-        assert False, (
-            "'{}' method has not be implemented and a default post action was "
-            "not supplied to '{}' visitor"
-            .format(self._method_name, type(self).__name__))
+    def default_post_action(self, obj, **kwargs):
+        """
+        Default action performed on every object that doesn't define an
+        explicit '<nineml-type-name>_post_action' method
+        """
+        pass
 
 
 import nineml  # @IgnorePep8
