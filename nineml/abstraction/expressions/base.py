@@ -239,7 +239,16 @@ class Expression(AnnotatedNineMLObject):
             for old, new in name_map.iteritems()))
 
     def subs(self, old, new):
+        "Substitute 'old' expression for 'new' in the rhs of the expression"
         self._rhs = self._rhs.subs(old, new)
+
+    def simplify(self):
+        """
+        Simplify the RHS of the expression
+        (see http://docs.sympy.org/latest/tutorial/simplification.html)
+        """
+        self._rhs = sympy.simplify(self._rhs)
+        return self
 
     def rhs_str_substituted(self, name_map={}, funcname_map={}):
         """

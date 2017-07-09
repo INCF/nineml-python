@@ -1,8 +1,15 @@
+from collections import defaultdict
+from itertools import chain
+import sympy
+from nineml.abstraction.expressions.base import (
+    reserved_identifiers)
 from .base import DynamicsActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentElementFinder,
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
     ComponentDimensionResolver)
+from ..base import Dynamics, Regime
+from nineml.base import BaseNineMLVisitor
 
 
 class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
@@ -174,3 +181,70 @@ class DynamicsHasRandomProcessQuerier(DynamicsActionVisitor):
     def action_stateassignment(self, stateassignment):
         if list(stateassignment.rhs_random_distributions):
             self._found = True
+
+
+class ExpandExpressionsQuerier(BaseNineMLVisitor):
+    """
+    A querier that expands all mathematical expressions into terms of inputs,
+    (i.e. analog receive/reduce ports and parameters), constants and
+    reserved identifiers
+
+    Parameters
+    ----------
+    component_class : Dynamics
+        The Dynamics class to expand the expressions of
+    """
+
+    def __init__(self, component_class):
+        self.component_class = component_class
+        self.expanded_aliases = defaultdict(dict)
+        self.inputs = reserved_identifiers + [
+            sympy.Symbol(n) for n in chain(
+                component_class.parameter_names,
+                component_class.analog_receive_port_names,
+                component_class.analog_reduce_port_names,
+                component_class.constant_names)]
+        self.outputs = list(chain(
+            component_class.state_variable_names,
+            component_class.analog_send_port_names))
+        self.visit(component_class)
+
+    def expanded_dynamics(self, new_name):
+        return Dynamics(
+            name=new_name,
+            parameters=(p.clone() for p in self.component_class.parameters),
+            analog_ports=(p.clone()
+                          for p in self.component_class.analog_ports),
+            event_ports=(p.clone for p in self.component_class.event_ports),
+            state_variables=(sv.clone()
+                             for sv in self.component_class.state_variables),
+            constants=(c.clone() for c in self.component_class.constants),
+            regimes=(self.expand_time_derivs(r)
+                     for r in self.component_class.regimes),
+            aliases=(self.expanded_aliases[n]
+                     for n in self.component_class.analog_send_port_names
+                     if n in self.component_class.alias_names))
+
+    def action_alias(self, alias):
+        self.expand(alias)
+
+    def expand(self, expr, regime_name=None):
+        try:
+            return self.expanded_exprs[regime_name][expr.name]
+        except KeyError:
+            expanded_expr = expr.clone()
+            for sym in expr.rhs_symbols:
+                if sym not in self.inputs:
+                    expanded_expr.rhs.subs(sym, self.expand(sym))
+            expanded_expr.simplify()
+            self.expanded_exprs[regime_name][expr.name] = expanded_expr
+            return expanded_expr
+
+    def expand_time_derivs(self, regime):
+        return Regime(
+            name=regime.name,
+            time_derivatives=(
+                self.expand(td) for td in regime.time_derivatives),
+            transitions=(
+                t.clone() for t in regime.transitions),
+            aliases=(self.expand(a, cache=False) for a in regime.aliases))

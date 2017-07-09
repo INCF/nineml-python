@@ -1,4 +1,4 @@
 lxml
-pyaml
+pyyaml
 h5py
-sympy==0.7.6  # There is a bug in 1.0, which is fixed in 1.0.1dev, that affects C-code printing
+sympy>=1.1
