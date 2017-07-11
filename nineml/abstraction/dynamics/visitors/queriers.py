@@ -1,16 +1,10 @@
-from collections import defaultdict
-from itertools import chain
 import sympy
-from nineml.abstraction.expressions.base import (
-    reserved_identifiers)
 from .base import DynamicsActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentElementFinder,
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
-    ComponentDimensionResolver)
-from ..base import Dynamics
-from ..regimes import Regime
-from nineml.base import BaseNineMLVisitor
+    ComponentDimensionResolver, ComponentExpandExpressionsQuerier)
+import nineml
 
 
 class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
@@ -184,7 +178,7 @@ class DynamicsHasRandomProcessQuerier(DynamicsActionVisitor):
             self._found = True
 
 
-class ExpandExpressionsQuerier(BaseNineMLVisitor):
+class DynamicsExpandExpressionsQuerier(ComponentExpandExpressionsQuerier):
     """
     A querier that expands all mathematical expressions into terms of inputs,
     (i.e. analog receive/reduce ports and parameters), constants and
@@ -198,28 +192,14 @@ class ExpandExpressionsQuerier(BaseNineMLVisitor):
         The name for the new dynamics object
     """
 
-    def __init__(self, component_class, new_name):
-        self.component_class = component_class
-        self.new_name = new_name
-        self.expanded_exprs = defaultdict(dict)
-        self.expanded_regimes = {}
-        self.inputs = reserved_identifiers + [
-            sympy.Symbol(n) for n in chain(
-                component_class.parameter_names,
-                component_class.analog_receive_port_names,
-                component_class.analog_reduce_port_names,
-                component_class.constant_names)]
-        self.visit(component_class)
-
-    @property
-    def expanded(self):
+    def post_action_dynamics(self, new_name):
         """
         Returns a clone of the component class passed to the __init__ method
         with all expressions defined in terms of inputs to the class (i.e.
         parameters, constants, analog ports or reserved symbols)
         """
-        return Dynamics(
-            name=self.new_name,
+        self._expanded = nineml.Dynamics(
+            name=new_name,
             parameters=(p.clone() for p in self.component_class.parameters),
             analog_ports=(p.clone()
                           for p in self.component_class.analog_ports),
@@ -227,39 +207,19 @@ class ExpandExpressionsQuerier(BaseNineMLVisitor):
             state_variables=(sv.clone()
                              for sv in self.component_class.state_variables),
             constants=(c.clone() for c in self.component_class.constants),
-            regimes=(self.expanded_regimes[n]
+            regimes=(self.expanded_regimes[self.context_key(n)]
                      for n in self.component_class.regime_names),
-            aliases=(self.expanded_exprs[None][n]
+            aliases=(self.expanded_exprs[self.context_key(n)]
                      for n in self.component_class.alias_names
                      if n in self.component_class.analog_send_port_names))
 
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        if isinstance(self.context.parent, Regime):
-            regime = self.context.parent
-        else:
-            regime = None
-        self.expand(alias, regime=regime)
-
-    def action_regime(self, regime, **kwargs):  # @UnusedVariable
-        self.expanded_regimes[regime.name] = Regime(
-            name=regime.name,
-            time_derivatives=(self.expand(td, regime=regime)
-                              for td in regime.time_derivatives),
-            transitions=(t.clone() for t in regime.transitions),
-            aliases=(self.expand(a, regime=regime) for a in regime.aliases))
-
-    def expand(self, expr, regime=None):
-        # Get key to store the expression under. Aliases that are not part of
-        # a regime use a key == None
-        regime_name = regime.name if regime is not None else None
-        try:
-            return self.expanded_exprs[regime_name][expr.key]
-        except KeyError:
-            expanded_expr = expr.clone()
-            for sym in expr.rhs_symbols:
-                # Expand all symbols that are not inputs to the Dynamics class
-                if sym not in self.inputs:
-                    expanded_expr.rhs.subs(sym, self.expand(sym, regime))
-            expanded_expr.simplify()
-            self.expanded_exprs[regime_name][expr.key] = expanded_expr
-            return expanded_expr
+    def post_action_regime(self, regime, **kwargs):  # @UnusedVariable
+        self.expanded_regimes[
+            regime.name] = nineml.abstraction.dynamics.Regime(
+                name=regime.name,
+                time_derivatives=(
+                    self.expand(td) for td in regime.time_derivatives),
+                transitions=(t.clone() for t in regime.transitions),
+                aliases=(
+                    self.expand(a) for a in regime.aliases
+                    if a.name in self.component_class.analog_send_port_names))

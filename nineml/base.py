@@ -1018,6 +1018,10 @@ class BaseNineMLVisitor(object):
             context = None
         return context
 
+    @property
+    def context_key(self, key):
+        return '.'.join([c.parent.key for c in self.contexts] + [key])
+
     def default_action(self, obj, **kwargs):
         """
         Default action performed on every object that doesn't define an
@@ -1025,7 +1029,7 @@ class BaseNineMLVisitor(object):
         """
         pass
 
-    def default_post_action(self, obj, **kwargs):
+    def default_post_action(self, obj, results, **kwargs):
         """
         Default action performed on every object that doesn't define an
         explicit '<nineml-type-name>_post_action' method
