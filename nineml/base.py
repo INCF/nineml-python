@@ -1022,7 +1022,7 @@ class BaseNineMLVisitor(object):
         return context
 
     def context_key(self, key):
-        return '.'.join([c.parent.key for c in self.contexts] + [key])
+        return tuple([c.parent for c in self.contexts] + [key])
 
     def default_action(self, obj, **kwargs):
         """

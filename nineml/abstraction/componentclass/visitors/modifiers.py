@@ -173,7 +173,7 @@ class ComponentSubstituteAliases(BaseNineMLVisitor):
         # a regime use a key == None
         cache_key = self.context_key(expr.key)
         try:
-            rhs = self.cached[cache_key]
+            rhs = self.cache[cache_key]
         except KeyError:
             for sym in list(expr.rhs_symbols):
                 # Substitute all alias symbols with their RHS expresssions
@@ -181,7 +181,7 @@ class ComponentSubstituteAliases(BaseNineMLVisitor):
                     alias = self.get_alias(str(sym))
                     expr.subs(sym, self.substitute(alias))
             expr.simplify()
-            self.cached[cache_key] = rhs = expr.rhs
+            self.cache[cache_key] = rhs = expr.rhs
         return rhs
 
     def get_alias(self, name):
@@ -198,8 +198,8 @@ class ComponentSubstituteAliases(BaseNineMLVisitor):
         return alias
 
     def remove_uneeded_aliases(self, container):
-        container.remove(a for a in container.aliases
-                         if a.name not in self.outputs)
+        container.remove(*(a for a in container.aliases
+                           if a.name not in self.outputs))
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         return self.substitute(alias)

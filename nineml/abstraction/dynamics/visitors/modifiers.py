@@ -227,10 +227,10 @@ class DynamicsSubstituteAliases(ComponentSubstituteAliases):
     def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
         self.outputs.update(dynamics.analog_send_port_names)
 
-    def action_time_derivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.substitute(time_derivative)
 
-    def action_state_assignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
         self.substitute(state_assignment)
 
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable @IgnorePep8
