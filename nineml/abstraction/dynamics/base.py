@@ -228,6 +228,18 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             self._dimension_resolver = resolver
         return resolver.dimension_of(element)
 
+    def substituted_aliases(self):
+        """
+        Returns a equivalent Dynamics class with all references to aliases with
+        substituted by their RHS expressions where they appear
+        in time derivatives, state assignments, and triggers, and
+        all aliases removed that do not correspond directly to analog send
+        ports
+        """
+        substituted = self.clone()
+        DynamicsSubstituteAliases(substituted)
+        return substituted
+
     def overridden_in_regimes(self, alias):
         return (r for r in self.regimes if alias.name in r.alias_names)
 
@@ -570,4 +582,4 @@ from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsHasRandomProcessQuerier)
 from .visitors.modifiers import (  # @IgnorePep8
     DynamicsRenameSymbol, DynamicsAssignIndices,
-    DynamicsExpandAliasDefinition)
+    DynamicsExpandAliasDefinition, DynamicsSubstituteAliases)
