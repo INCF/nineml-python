@@ -7,6 +7,7 @@ This file contains utility classes for modifying components.
 from nineml.exceptions import NineMLRuntimeError, NineMLNameError
 from .base import ComponentActionVisitor
 from nineml.base import BaseNineMLVisitor
+from nineml.abstraction.expressions import Expression
 
 
 class ComponentModifier(object):
@@ -150,38 +151,40 @@ class ComponentSubstituteAliases(BaseNineMLVisitor):
     def __init__(self, component_class):
         super(ComponentSubstituteAliases, self).__init__()
         self.component_class = component_class
-        self.expanded_exprs = {}
-        self.expanded_regimes = {}
         # Outputs of the class for which corresponding aliases needed to be
         # retained. Set in 'action' method of component_class
         self.outputs = set()
+        # Cache to the previously substituted aliases
+        self.cache = {}
         self.visit(component_class)
 
-    @property
-    def expanded(self):
-        return self._expanded
+    def substitute(self, expr):
+        """
+        Substitute alias symbols in expression with equivalent expression
+        of inputs, constants and reserved identifiers
 
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        return self.expand(alias)
-
-    def expand(self, expr):
+        Parameters
+        ----------
+        nineml_obj : Expression
+            An expression object to substitute alias symbols in
+        """
+        assert isinstance(expr, Expression)
         # Get key to store the expression under. Aliases that are not part of
         # a regime use a key == None
-        key = self.context_key(expr.key)
+        cache_key = self.context_key(expr.key)
         try:
-            expanded = self.expanded_exprs[key]
+            rhs = self.cached[cache_key]
         except KeyError:
-            expanded = expr.clone()
-            for sym in expr.rhs_symbols:
-                # Expand all symbols that are not inputs to the Dynamics class
+            for sym in list(expr.rhs_symbols):
+                # Substitute all alias symbols with their RHS expresssions
                 if str(sym) in self.component_class.alias_names:
-                    alias = self.alias(str(sym))
-                    expanded.subs(sym, self.expand(alias).rhs)
-            expanded.simplify()
-            self.expanded_exprs[key] = expanded
-        return expanded
+                    alias = self.get_alias(str(sym))
+                    expr.subs(sym, self.substitute(alias))
+            expr.simplify()
+            self.cached[cache_key] = rhs = expr.rhs
+        return rhs
 
-    def alias(self, name):
+    def get_alias(self, name):
         alias = None
         for context in reversed(self.contexts):
             try:
@@ -197,3 +200,6 @@ class ComponentSubstituteAliases(BaseNineMLVisitor):
     def remove_uneeded_aliases(self, container):
         container.remove(a for a in container.aliases
                          if a.name not in self.outputs)
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        return self.substitute(alias)

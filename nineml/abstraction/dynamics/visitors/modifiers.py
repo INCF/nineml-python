@@ -227,31 +227,17 @@ class DynamicsSubstituteAliases(ComponentSubstituteAliases):
     def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
         self.outputs.update(dynamics.analog_send_port_names)
 
+    def action_time_derivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.substitute(time_derivative)
+
+    def action_state_assignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.substitute(state_assignment)
+
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable @IgnorePep8
+        self.substitute(trigger)
+
     def post_action_dynamics(self, dynamics, results, **kwargs):  # @UnusedVariable @IgnorePep8
         self.remove_uneeded_aliases(dynamics)
-            
-        return nineml.Dynamics(
-            name=self.new_name,
-            parameters=(p.clone() for p in dynamics.parameters),
-            analog_ports=(p.clone()
-                          for p in dynamics.analog_ports),
-            event_ports=(p.clone for p in dynamics.event_ports),
-            state_variables=(sv.clone()
-                             for sv in dynamics.state_variables),
-            constants=(c.clone() for c in self.component_class.constants),
-            regimes=(results.result_of(r)
-                     for r in self.component_class.regimes),
-            aliases=(results.result_of(a)
-                     for a in self.component_class.aliases
-                     if a.name in self.component_class.analog_send_port_names))
 
     def post_action_regime(self, regime, results, **kwargs):  # @UnusedVariable
-        expanded = nineml.abstraction.dynamics.Regime(
-            name=regime.name,
-            time_derivatives=(
-                self.expand(td) for td in regime.time_derivatives),
-            transitions=(t.clone() for t in regime.transitions),
-            aliases=(results.result_of(a) for a in regime.aliases
-                     if a.name in self.component_class.analog_send_port_names))
-        self.expanded_regimes[regime.name] = expanded
-        return expanded
+        self.remove_uneeded_aliases(regime)
