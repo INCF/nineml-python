@@ -1,6 +1,4 @@
 from copy import copy
-from collections import defaultdict
-from itertools import chain
 import sympy
 from sympy import sympify
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
@@ -10,7 +8,7 @@ from ...expressions import reserved_identifiers
 from nineml.units import Dimension
 from nineml.abstraction.ports import SendPortBase
 from nineml.abstraction.expressions import Expression
-from nineml.exceptions import NineMLNameError
+from nineml.exceptions import NineMLNameError, NineMLRuntimeError
 from nineml.base import BaseNineMLVisitor
 import operator
 
@@ -278,58 +276,3 @@ class ComponentDimensionResolver(ComponentActionVisitor):
 
     def action_alias(self, alias):
         self._flatten(alias)
-
-
-class ComponentExpandExpressionsQuerier(BaseNineMLVisitor):
-    """
-    A querier that expands all mathematical expressions into terms of inputs,
-    to the component class (e.g. analog receive/reduce ports and parameters),
-    constants and reserved identifiers, removing all aliases except ones that
-    map directly to outputs.
-
-    Parameters
-    ----------
-    component_class : ComponentClass
-        The component class to expand the expressions of
-    new_name : str
-        The name for the expanded class
-    """
-
-    def __init__(self, component_class):
-        super(ComponentExpandExpressionsQuerier, self).__init__()
-        self.component_class = component_class
-        self.expanded_exprs = {}
-        self.expanded_regimes = {}
-        self.inputs = list(reserved_identifiers) + [
-            sympy.Symbol(n) for n in chain(
-                component_class.parameter_names,
-                component_class.analog_receive_port_names,
-                component_class.analog_reduce_port_names,
-                component_class.constant_names)]
-        self.visit(component_class)
-
-    @property
-    def expanded(self):
-        return self._expanded
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self.expand(alias)
-
-    def expand(self, expr):
-        # Get key to store the expression under. Aliases that are not part of
-        # a regime use a key == None
-        key = self.conext_key + expr.key
-        try:
-            return self.expanded_exprs[key]
-        except KeyError:
-            expanded_expr = expr.clone()
-            for sym in expr.rhs_symbols:
-                # Expand all symbols that are not inputs to the Dynamics class
-                if sym not in self.inputs:
-                    
-                    expanded_expr.rhs.subs(sym, self.expand(sym))
-            expanded_expr.simplify()
-            self.expanded_exprs[key] = expanded_expr
-            return expanded_expr
-        except AttributeError:
-            raise

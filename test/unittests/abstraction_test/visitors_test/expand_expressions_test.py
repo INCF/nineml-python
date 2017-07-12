@@ -3,7 +3,7 @@ from nineml.abstraction import (
     Dynamics, Regime, Alias, Parameter, AnalogReceivePort, AnalogReducePort,
     OnCondition)
 from nineml.abstraction.dynamics.visitors.queriers import (
-    DynamicsExpandExpressionsQuerier)
+    DynamicsSubstituteAliasQuerier)
 from nineml import units as un
 
 
@@ -45,6 +45,6 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
         self.ref_expanded_a = None
 
     def test_expand_expressions(self):
-        expanded_a = DynamicsExpandExpressionsQuerier(self.a).expanded('new_a')
+        expanded_a = DynamicsSubstituteAliasQuerier(self.a, 'new_a').expanded
         self.assertEqual(expanded_a, self.ref_expanded_a,
                          expanded_a.find_mismatch(self.ref_expanded_a))

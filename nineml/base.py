@@ -946,6 +946,9 @@ class BaseNineMLVisitor(object):
         def children(self):
             return self._children
 
+        def result_of(self, child):
+            return self._children[child.nineml_type][child.key]
+
     def __init__(self):
         self.contexts = []
         self._method_name = None
@@ -1018,7 +1021,6 @@ class BaseNineMLVisitor(object):
             context = None
         return context
 
-    @property
     def context_key(self, key):
         return '.'.join([c.parent.key for c in self.contexts] + [key])
 

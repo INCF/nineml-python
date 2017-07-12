@@ -67,8 +67,8 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         return StateAssignment(lhs=lhs, rhs=rhs)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
         node.attr('variable', self.lhs, **options)
+        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
@@ -421,10 +421,10 @@ class OnEvent(Transition):
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         target_regime = node.attr('target_regime', **options)
         return cls(src_port_name=node.attr('port', **options),
-                       state_assignments=node.children(StateAssignment,
-                                                       **options),
-                       output_events=node.children(OutputEvent, **options),
-                       target_regime=target_regime)
+                   state_assignments=node.children(StateAssignment,
+                                                   **options),
+                   output_events=node.children(OutputEvent, **options),
+                   target_regime=target_regime)
 
 
 class OnCondition(Transition):
@@ -485,10 +485,9 @@ class OnCondition(Transition):
         target_regime = node.attr('target_regime', **options)
         trigger = node.child(Trigger, **options)
         return cls(trigger=trigger,
-                           state_assignments=node.children(StateAssignment,
-                                                           **options),
-                           output_events=node.children(OutputEvent, **options),
-                           target_regime=target_regime)
+                   state_assignments=node.children(StateAssignment, **options),
+                   output_events=node.children(OutputEvent, **options),
+                   target_regime=target_regime)
 
 
 class Trigger(BaseALObject, Expression):

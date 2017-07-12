@@ -4,9 +4,9 @@ This file contains utility classes for modifying components.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from itertools import chain
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, NineMLNameError
 from .base import ComponentActionVisitor
+from nineml.base import BaseNineMLVisitor
 
 
 class ComponentModifier(object):
@@ -130,3 +130,70 @@ class ComponentAssignIndices(ComponentActionVisitor):
     def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         for elem in component_class.elements():
             component_class.index_of(elem)
+
+
+class ComponentSubstituteAliases(BaseNineMLVisitor):
+    """
+    Substitutes all references to aliases in expressions with their RHS,
+    so that all expressions are defined interms of inputs to the (e.g. analog
+    receive/reduce ports and parameters), constants and reserved identifiers.
+    The only aliases that are retained are ones that map to analog output ports
+
+    Parameters
+    ----------
+    component_class : ComponentClass
+        The component class to expand the expressions of
+    new_name : str
+        The name for the expanded class
+    """
+
+    def __init__(self, component_class):
+        super(ComponentSubstituteAliases, self).__init__()
+        self.component_class = component_class
+        self.expanded_exprs = {}
+        self.expanded_regimes = {}
+        # Outputs of the class for which corresponding aliases needed to be
+        # retained. Set in 'action' method of component_class
+        self.outputs = set()
+        self.visit(component_class)
+
+    @property
+    def expanded(self):
+        return self._expanded
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
+        return self.expand(alias)
+
+    def expand(self, expr):
+        # Get key to store the expression under. Aliases that are not part of
+        # a regime use a key == None
+        key = self.context_key(expr.key)
+        try:
+            expanded = self.expanded_exprs[key]
+        except KeyError:
+            expanded = expr.clone()
+            for sym in expr.rhs_symbols:
+                # Expand all symbols that are not inputs to the Dynamics class
+                if str(sym) in self.component_class.alias_names:
+                    alias = self.alias(str(sym))
+                    expanded.subs(sym, self.expand(alias).rhs)
+            expanded.simplify()
+            self.expanded_exprs[key] = expanded
+        return expanded
+
+    def alias(self, name):
+        alias = None
+        for context in reversed(self.contexts):
+            try:
+                alias = context.parent.alias(name)
+                break
+            except (NineMLNameError, AttributeError):
+                continue
+        if alias is None:
+            raise NineMLRuntimeError("Did not find alias '{}' in any "
+                                     "context".format(name))
+        return alias
+
+    def remove_uneeded_aliases(self, container):
+        container.remove(a for a in container.aliases
+                         if a.name not in self.outputs)

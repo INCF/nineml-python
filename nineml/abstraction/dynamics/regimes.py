@@ -151,8 +151,8 @@ class TimeDerivative(ODE, BaseALObject):
         return TimeDerivative(variable=variable, rhs=rhs)
 
     def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
-        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
         node.attr('variable', self.variable, **options)
+        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
