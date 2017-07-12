@@ -1,7 +1,7 @@
 import unittest
 from nineml.abstraction import (
     Dynamics, Regime, Alias, Parameter, AnalogReceivePort, AnalogReducePort,
-    OnCondition, AnalogSendPort, Constant)
+    OnCondition, AnalogSendPort, Constant, StateAssignment)
 from nineml.abstraction.dynamics.visitors.modifiers import (
     DynamicsSubstituteAliases)
 from nineml import units as un
@@ -15,7 +15,8 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
         self.a = Dynamics(
             name='A',
             aliases=['A1:=P1 / P2', 'A2 := ARP2 + P3', 'A3 := A4 * P4 * P5',
-                     'A4:=P6 ** 2 + ADP1', 'A5:=SV1 * SV2 * P8'],
+                     'A4:=P6 ** 2 + ADP1', 'A5:=SV1 * SV2 * P8',
+                     'A6:=SV1 * P1 / P8', 'A7:=A1 / P8'],
             regimes=[
                 Regime('dSV1/dt = -A1 / A2',
                        'dSV2/dt = -ADP1 / P7',
@@ -27,8 +28,11 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
                        name='R1'),
                 Regime('dSV1/dt = -A1 / A2',
                        'dSV3/dt = -A1 / A2 * A4',
-                       transitions=[OnCondition('SV1 < 10',
-                                                target_regime='R1')],
+                       transitions=[OnCondition(
+                           'C2 > A6',
+                           state_assignments=[
+                               StateAssignment('SV1', 'SV1 - A7')],
+                           target_regime='R1')],
                        name='R2')],
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.resistance),
                           AnalogReceivePort('ARP2', dimension=un.charge),
@@ -43,7 +47,8 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
                         Parameter('P6', dimension=un.dimensionless),
                         Parameter('P7', dimension=un.time),
                         Parameter('P8', dimension=un.current)],
-            constants=[Constant('C1', value=1.0, units=un.unitless)])
+            constants=[Constant('C1', value=10.0, units=un.unitless),
+                       Constant('C2', value=1.0, units=un.ohm)])
 
         self.ref_substituted_a = Dynamics(
             name='substituted_A',
@@ -59,8 +64,11 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
                        name='R1'),
                 Regime('dSV1/dt = -(P1 / P2) / (ARP2 + P3)',
                        'dSV3/dt = -(P1 / P2) / (ARP2 + P3) * (P6 ** 2 + ADP1)',
-                       transitions=[OnCondition('SV1 < 10',
-                                                target_regime='R1')],
+                       transitions=[OnCondition(
+                           'C2 > (SV1 * P1 / P8)',
+                           state_assignments=[
+                               StateAssignment('SV1', 'SV1 - (P1 / P2) / P8')],
+                           target_regime='R1')],
                        name='R2')],
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.resistance),
                           AnalogReceivePort('ARP2', dimension=un.charge),
@@ -75,7 +83,8 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
                         Parameter('P6', dimension=un.dimensionless),
                         Parameter('P7', dimension=un.time),
                         Parameter('P8', dimension=un.current)],
-            constants=[Constant('C1', value=1.0, units=un.unitless)]
+            constants=[Constant('C1', value=10.0, units=un.unitless),
+                       Constant('C2', value=1.0, units=un.ohm)]
         )
 
     def test_substitute_aliases(self):

@@ -234,7 +234,12 @@ class DynamicsSubstituteAliases(ComponentSubstituteAliases):
         self.substitute(state_assignment)
 
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable @IgnorePep8
+        old_rhs = trigger.rhs
         self.substitute(trigger)
+        # If trigger expression has changed update on_condition key
+        if trigger.rhs != old_rhs:
+            member_dict = self.contexts[-2].parent._on_conditions
+            member_dict[trigger.rhs] = member_dict.pop(old_rhs)
 
     def post_action_dynamics(self, dynamics, results, **kwargs):  # @UnusedVariable @IgnorePep8
         self.remove_uneeded_aliases(dynamics)
