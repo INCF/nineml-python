@@ -180,7 +180,6 @@ class ComponentSubstituteAliases(BaseNineMLVisitor):
                 if str(sym) in self.component_class.alias_names:
                     alias = self.get_alias(str(sym))
                     expr.subs(sym, self.substitute(alias))
-            expr.simplify()
             self.cache[cache_key] = rhs = expr.rhs
         return rhs
 
