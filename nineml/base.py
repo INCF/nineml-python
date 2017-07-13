@@ -965,6 +965,7 @@ class BaseNineMLVisitor(object):
     def __init__(self):
         self.contexts = []
         self._method_name = None
+        self._stop = False
 
     def visit(self, obj, **kwargs):
         # Allow deriving classes to run a function when visiting the top most

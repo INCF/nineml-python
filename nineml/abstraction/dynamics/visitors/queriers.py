@@ -6,6 +6,9 @@ from ...componentclass.visitors.queriers import (
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
     ComponentDimensionResolver)
 from nineml.base import BaseNineMLVisitor
+from nineml.abstraction.expressions import reserved_symbols
+from .modifiers import DynamicsSubstituteAliases
+from nineml.exceptions import NineMLStopVisitException
 
 
 class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
@@ -162,15 +165,15 @@ class DynamicsDimensionResolver(ComponentDimensionResolver,
         self._flatten(statevariable)
 
 
-class DynamicsHasRandomProcessQuerier(DynamicsActionVisitor):
+class DynamicsHasRandomProcess(DynamicsActionVisitor):
 
     def __init__(self):
-        super(DynamicsHasRandomProcessQuerier, self).__init__(
+        super(DynamicsHasRandomProcess, self).__init__(
             require_explicit_overrides=False)
         self._found = False
 
     def visit_componentclass(self, component_class):
-        super(DynamicsHasRandomProcessQuerier, self).visit_componentclass(
+        super(DynamicsHasRandomProcess, self).visit_componentclass(
             component_class)
         return self._found
 
@@ -179,23 +182,71 @@ class DynamicsHasRandomProcessQuerier(DynamicsActionVisitor):
             self._found = True
 
 
-class DynamicsIsLinearQuerier(BaseNineMLVisitor):
+class DynamicsIsLinear(BaseNineMLVisitor):
+    """
+    Checks to see whether the dynamics class is linear or nonlinear
 
-    def __init__(self):
+    Parameters
+    ----------
+    dynamics : Dynamics
+        The dynamics element to check linearity of
+    outputs : list(str) | None
+        List of outputs that are relevant to the check. For example, if there
+        is an analog send port on a synapse that is not connected to the cell
+        then any alias that maps the state variable/inputs to the analog send
+        port is not relevant.
+    """
+
+    def __init__(self, dynamics, outputs=None):
+        super(DynamicsIsLinear, self).__init__()
         self._is_linear = True
+        self.outputs = (set(dynamics.analog_send_port_names)
+                        if outputs is None else outputs)
+        substituted = dynamics.clone()
+        DynamicsSubstituteAliases(substituted)
+        self.inputs = [
+            sympy.Symbol(i) for i in chain(
+                reserved_symbols,
+                substituted.state_variable_names,
+                substituted.analog_receive_port_names,
+                substituted.analog_reduce_port_names)]
+        try:
+            self.visit(substituted)
+        except NineMLStopVisitException:
+            pass
+
+    @property
+    def is_linear(self):
+        return self._is_linear
 
     def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
+        # Dynamics are piecewise
         if dynamics.num_regimes > 1:
-            self._is_linear = False
-        self.inputs = list(chain(
-            dynamics.state_variable_names,
-            dynamics.analog_receive_ports,
-            dynamics.analog_reduce_ports))
+            self._set_nonlinear()
+
+    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
+        # Dynamics are piecewise
+        if on_condition.num_state_assignments:
+            self._set_nonlinear()
 
     def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
-        pass
+        self._check_linear(state_assignment)
 
-    def is_linear_expr(self, expr):
-        collected = sympy.collect(expr)
-        for inpt in self.inputs:
-            collected.coeff(inpt)
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._check_linear(time_derivative)
+
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable @IgnorePep8
+        if alias.name in self.outputs:
+            self._check_linear(alias)
+
+    def _notlinear(self, expr):
+        # Check to see whether expression represents linear dynamics
+        return not sympy.poly(expr.rhs, *self.inputs).is_linear
+
+    def _check_linear(self, expr):
+        if self._notlinear(expr):
+            self._set_nonlinear()
+
+    def _set_nonlinear(self):
+        self._is_linear = False
+        raise NineMLStopVisitException()

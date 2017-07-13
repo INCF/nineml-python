@@ -257,18 +257,14 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
     @property
     def is_random(self):
-        return DynamicsHasRandomProcessQuerier().visit(self)
+        return DynamicsHasRandomProcess().visit(self)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_componentclass(self, **kwargs)
 
-    def is_linear(self):
-        if self.num_regimes > 1:
-            return False
-        # FIXME: Need to analyse all the time derivatives and determine whether
-        # they are all linear (i.e. +-*/ of other states)
-        return True
+    def is_linear(self, outputs=None):
+        return DynamicsIsLinear(self, outputs=outputs).is_linear
 
     def is_flat(self):
         return True
@@ -579,7 +575,8 @@ from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsRequiredDefinitions,
                                 DynamicsExpressionExtractor,
                                 DynamicsDimensionResolver,
-                                DynamicsHasRandomProcessQuerier)
+                                DynamicsHasRandomProcess,
+                                DynamicsIsLinear)
 from .visitors.modifiers import (  # @IgnorePep8
     DynamicsRenameSymbol, DynamicsAssignIndices,
     DynamicsExpandAliasDefinition, DynamicsSubstituteAliases)
