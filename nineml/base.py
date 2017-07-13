@@ -934,19 +934,32 @@ class BaseNineMLVisitor(object):
 
     class Results(object):
 
-        def __init__(self):
+        def __init__(self, action_result):
+            self._action = action_result
+            self._post_action = None
             self._attr = {}
             self._children = defaultdict(dict)
 
         @property
-        def attr(self):
-            return self._attr
+        def action(self):
+            return self._action
+
+        @property
+        def post_action(self):
+            return self._post_action
 
         @property
         def children(self):
-            return self._children
+            return self._children.itervalues()
 
-        def result_of(self, child):
+        @property
+        def child_names(self):
+            return self._children.iterkeys()
+
+        def attr_result(self, name):
+            return self._attr[name]
+
+        def child_result(self, child):
             return self._children[child.nineml_type][child.key]
 
     def __init__(self):
@@ -959,25 +972,27 @@ class BaseNineMLVisitor(object):
         if not self.contexts:
             self.initial(obj, **kwargs)
         # Run the 'action_<obj-nineml_type>' method on the visited object
-        result = self.action(obj, **kwargs)
+        action_result = self.action(obj, **kwargs)
         # Visit all the attributes of the object that are 9ML objects
         # themselves
-        results = self.Results()
+        results = self.Results(action_result)
         for attr_name in obj.defining_attributes:
             attr = getattr(obj, attr_name)
             if isinstance(attr, BaseNineMLObject):
                 # Create the context around the visit of the attribute
-                self.contexts.append(self.Context(obj, result, attr_name))
-                results.attr[attr_name] = self.visit(attr, **kwargs)
+                self.contexts.append(self.Context(obj, action_result,
+                                                  attr_name))
+                results._attr[attr_name] = self.visit(attr, **kwargs)
                 self.contexts.pop()
         # Visit children of the object
         if isinstance(obj, ContainerObject):
             for child_type in obj.class_to_member:
                 dct = obj._member_dict(child_type)
-                self.contexts.append(self.Context(obj, result, dct=dct))
+                self.contexts.append(self.Context(obj, action_result,
+                                                  dct=dct))
                 for child in obj._members_iter(child_type,
                                                obj.class_to_member):
-                    results.children[
+                    results._children[
                         child_type][child.key] = self.visit(child, **kwargs)
                 self.contexts.pop()
         # Peform "post-action" method that runs after the children/attributes
@@ -985,6 +1000,7 @@ class BaseNineMLVisitor(object):
         self.post_action(obj, results, **kwargs)
         if not self.contexts:
             self.final(obj, **kwargs)
+        return results
 
     def action(self, obj, **kwargs):
         try:
@@ -1024,19 +1040,19 @@ class BaseNineMLVisitor(object):
     def context_key(self, key):
         return tuple([c.parent for c in self.contexts] + [key])
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, **kwargs):  # @UnusedVariable
         """
         Default action performed on every object that doesn't define an
         explicit '<nineml-type-name>_action' method
         """
-        pass
+        return None
 
-    def default_post_action(self, obj, results, **kwargs):
+    def default_post_action(self, obj, results, **kwargs):  # @UnusedVariable
         """
         Default action performed on every object that doesn't define an
         explicit '<nineml-type-name>_post_action' method
         """
-        pass
+        return results
 
 
 import nineml  # @IgnorePep8

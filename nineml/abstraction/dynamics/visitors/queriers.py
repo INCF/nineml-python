@@ -1,8 +1,11 @@
+from itertools import chain
+import sympy
 from .base import DynamicsActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentElementFinder,
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
     ComponentDimensionResolver)
+from nineml.base import BaseNineMLVisitor
 
 
 class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
@@ -174,3 +177,25 @@ class DynamicsHasRandomProcessQuerier(DynamicsActionVisitor):
     def action_stateassignment(self, stateassignment):
         if list(stateassignment.rhs_random_distributions):
             self._found = True
+
+
+class DynamicsIsLinearQuerier(BaseNineMLVisitor):
+
+    def __init__(self):
+        self._is_linear = True
+
+    def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
+        if dynamics.num_regimes > 1:
+            self._is_linear = False
+        self.inputs = list(chain(
+            dynamics.state_variable_names,
+            dynamics.analog_receive_ports,
+            dynamics.analog_reduce_ports))
+
+    def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
+        pass
+
+    def is_linear_expr(self, expr):
+        collected = sympy.collect(expr)
+        for inpt in self.inputs:
+            collected.coeff(inpt)
