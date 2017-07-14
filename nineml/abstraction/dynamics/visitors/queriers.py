@@ -9,6 +9,7 @@ from nineml.base import BaseNineMLVisitor
 from nineml.abstraction.expressions import reserved_symbols
 from .modifiers import DynamicsSubstituteAliases
 from nineml.exceptions import NineMLStopVisitException
+from sympy.polys.polyerrors import PolynomialError
 
 
 class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
@@ -239,12 +240,15 @@ class DynamicsIsLinear(BaseNineMLVisitor):
         if alias.name in self.outputs:
             self._check_linear(alias)
 
-    def _notlinear(self, expr):
+    def _linear(self, expr):
         # Check to see whether expression represents linear dynamics
-        return not sympy.poly(expr.rhs, *self.inputs).is_linear
+        try:
+            return sympy.poly(expr.rhs, *self.inputs).is_linear
+        except PolynomialError:
+            return False
 
     def _check_linear(self, expr):
-        if self._notlinear(expr):
+        if not self._linear(expr):
             self._set_nonlinear()
 
     def _set_nonlinear(self):
