@@ -1,5 +1,0 @@
-<NineML xmlns="http://nineml.net/9ML/2.0">
-  <ConnectionRule name="RandomFanOut" standard_library="http://nineml.net/connectionrules/RandomFanOut">
-    <Parameter name="probability" dimension="dimensionless"/>
-  </ConnectionRule>
-</NineML>
