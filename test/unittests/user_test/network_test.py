@@ -13,8 +13,6 @@ from __future__ import division
 import os.path
 import unittest
 from nineml.abstraction import ConnectionRule
-from nineml import Document
-from nineml.serialization.xml import XMLUnserializer
 from nineml.abstraction import (
     Dynamics, Parameter, AnalogSendPort, AnalogReducePort, StateVariable,
     EventSendPort, OnCondition, Regime, TimeDerivative, StateAssignment,
@@ -149,12 +147,29 @@ class TestNetwork(unittest.TestCase):
                                 StateAssignment('B', 'B + weight')])])],
             aliases=['Isyn:=A'])
 
-        all_to_all_class = ConnectionRule(
-            'AllToAllClass', standard_library=(
-                "http://nineml.net/9ML/1.0/connectionrules/AllToAll"))
+        one_to_one_class = ConnectionRule(
+            'OneToOneClass', standard_library=(
+                "http://nineml.net/9ML/1.0/connectionrules/OneToOne"))
 
-        all_to_all = ConnectionRuleProperties(
-            "AllToAll", all_to_all_class, {})
+        one_to_one = ConnectionRuleProperties(
+            "OneToOne", one_to_one_class, {})
+
+        random_fan_in_class = ConnectionRule(
+            name="RandomFanIn",
+            parameters=[
+                Parameter(name="number")],
+            standard_library=(
+                "http://nineml.net/9ML/1.0/connectionrules/RandomFanIn"))
+
+        exc_random_fan_in = ConnectionRuleProperties(
+            name="RandomFanInProps",
+            definition=random_fan_in_class,
+            properties={'number': 100})
+
+        inh_random_fan_in = ConnectionRuleProperties(
+            name="RandomFanInProps",
+            definition=random_fan_in_class,
+            properties={'number': 200})
 
         celltype = DynamicsProperties(
             name="liaf_props",
@@ -195,30 +210,65 @@ class TestNetwork(unittest.TestCase):
 
         ext_prj = Projection(
             "External", pre=ext, post=exc_and_inh, response=psr,
-            plasticity=static_ext, connectivity=all_to_all, delay=self.delay,
+            plasticity=static_ext, connectivity=one_to_one, delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
 
         exc_prj = Projection(
-            "Excitation", pre=ext, post=exc, response=psr,
-            plasticity=static_exc, connectivity=all_to_all, delay=self.delay,
+            "Excitation", pre=exc, post=exc_and_inh, response=psr,
+            plasticity=static_exc, connectivity=exc_random_fan_in,
+            delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
         inh_prj = Projection(
-            "Inhibition", pre=ext, post=inh, response=psr,
-            plasticity=static_inh, connectivity=all_to_all, delay=self.delay,
+            "Inhibition", pre=inh, post=exc_and_inh, response=psr,
+            plasticity=static_inh, connectivity=inh_random_fan_in,
+            delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
         self.model = Network("brunel_network")
         self.model.add(ext)
         self.model.add(exc)
         self.model.add(inh)
+        self.model.add(exc_and_inh)
         self.model.add(ext_prj)
         self.model.add(exc_prj)
         self.model.add(inh_prj)
 
     def test_scale(self):
-        pass
+        new_order = 100
+        scale = new_order / self.order
+        scaled = self.model.scale(scale)
+        self.assertEqual(scaled.population('Ext').size, new_order * 5)
+        self.assertEqual(scaled.population('Exc').size, new_order * 4)
+        self.assertEqual(scaled.population('Inh').size, new_order)
+        self.assertEqual(scaled.selection('All').size, new_order * 5)
+        self.assertEqual(
+            scaled.projection('External').connectivity.source_size,
+            new_order * 5)
+        self.assertEqual(
+            scaled.projection('Excitation').connectivity.source_size,
+            new_order * 4)
+        self.assertEqual(
+            scaled.projection('Inhibition').connectivity.source_size,
+            new_order)
+        self.assertEqual(
+            scaled.projection('External').connectivity.destination_size,
+            new_order * 5)
+        self.assertEqual(
+            scaled.projection('Excitation').connectivity.destination_size,
+            new_order * 5)
+        self.assertEqual(
+            scaled.projection('Inhibition').connectivity.destination_size,
+            new_order * 5)
+        self.assertEqual(len(scaled.projection('External')), new_order * 5)
+        # NB: The number of connections is scaled on both both by the number
+        # of connections made in each "fan" and the number of neurons in
+        # populations
+        self.assertEqual(len(scaled.projection('Excitation')),
+                         int(100 * scale) * new_order * 5)
+        self.assertEqual(len(scaled.projection('Inhibition')),
+                         int(200 * scale) * new_order * 5)
 
     def test_delay_limits(self):
         pass
@@ -244,16 +294,3 @@ class TestNetwork(unittest.TestCase):
 # 
 #     def connectivity_has_been_sampled(self):    
 #         return any(p.connectivity.has_been_sampled() for p in self.projections)
-
-    def test_xml_roundtrip(self):
-
-        doc = Document(self.model)  # , static_exc, static_inh, exc_prj, inh_prj, ext_stim, psr, p1, p2, inpt, celltype) @IgnorePep8
-        xml = doc.serialize()
-        loaded_doc = XMLUnserializer(root=xml).unserialize()
-        if loaded_doc != doc:
-            mismatch = loaded_doc.find_mismatch(doc)
-        else:
-            mismatch = ''
-        self.assertEqual(loaded_doc, doc,
-                         "Brunel network model failed xml roundtrip:\n\n{}"
-                         .format(mismatch))
