@@ -264,7 +264,21 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return visitor.visit_componentclass(self, **kwargs)
 
     def is_linear(self, outputs=None):
-        return DynamicsIsLinear(self, outputs=outputs).is_linear
+        """
+        Queries whether time derivative and analog send port expressions in the
+        Dynamics class is linear w.r.t. inputs and states. I.e. don't contain
+        piece-wise dynamics, multiplication/division of states by other states/
+        inputs or non-linear functions (e.g. sin, cos, etc...).
+
+        Parameters
+        ----------
+        outputs : list(str)
+            List of relevant outputs to check for linearity. I.e. expressions
+            that only mapped to analog send ports that aren't in the list are
+            not checked for linearity (presumably as they are not connected).
+            If outputs is None all expressions are checked.
+        """
+        return DynamicsIsLinear(self, outputs=outputs).result
 
     def is_flat(self):
         return True

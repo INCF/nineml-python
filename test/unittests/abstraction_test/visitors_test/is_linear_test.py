@@ -8,9 +8,9 @@ from nineml import units as un
 
 class DynamicsIsLinearTest(unittest.TestCase):
 
-    def setUp(self):
-
-        self.a = Dynamics(
+    def test_basic_linear(self):
+        """A basic linear dynamics example"""
+        a = Dynamics(
             name='A',
             regimes=[
                 Regime('dSV1/dt = -SV1 / P1',
@@ -18,8 +18,11 @@ class DynamicsIsLinearTest(unittest.TestCase):
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.per_time)],
             parameters=[Parameter('P1', dimension=un.time),
                         Parameter('P2', dimension=un.dimensionless)])
+        self.assertTrue(a.is_linear())
 
-        self.b = Dynamics(
+    def test_multi_regime_nonlinear(self):
+        """Nonlinear due to multiple regimes"""
+        b = Dynamics(
             name='B',
             regimes=[
                 Regime('dSV1/dt = -SV1 / P1',
@@ -30,8 +33,14 @@ class DynamicsIsLinearTest(unittest.TestCase):
                        name='R2')],
             event_ports=[EventReceivePort('ERP1')],
             parameters=[Parameter('P1', dimension=un.time)])
+        self.assertFalse(b.is_linear())
 
-        self.c = Dynamics(
+    def test_on_condition_state_assignment_nonlinear(self):
+        """
+        Nonlinear due to a state assignment in on-condition (i.e. piece-wise
+        dynamics
+        """
+        c = Dynamics(
             name='C',
             regimes=[
                 Regime('dSV1/dt = -P1 * SV1',
@@ -40,8 +49,11 @@ class DynamicsIsLinearTest(unittest.TestCase):
                            state_assignments=[StateAssignment('SV1', 20)])],
                        name='R1')],
             parameters=[Parameter('P1', dimension=un.per_time)])
+        self.assertFalse(c.is_linear())
 
-        self.d = Dynamics(
+    def test_input_multiplication_nonlinear(self):
+        """Nonlinear due to multiplication of SV1 and SV2 in SV1 T.D."""
+        d = Dynamics(
             name='D',
             regimes=[
                 Regime('dSV1/dt = -SV1 * SV2 / P1',
@@ -49,8 +61,15 @@ class DynamicsIsLinearTest(unittest.TestCase):
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.per_time)],
             parameters=[Parameter('P1', dimension=un.time),
                         Parameter('P2', dimension=un.dimensionless)])
+        self.assertFalse(d.is_linear())
 
-        self.e = Dynamics(
+    def test_output_filtering(self):
+        """
+        Tests whether the 'outputs' argument is able to filter (presumably)
+        unconnected nonlinear mappings from inputs and states to analog send
+        ports
+        """
+        e = Dynamics(
             name='E',
             regimes=[
                 Regime('dSV1/dt = -SV1 / P1',
@@ -62,8 +81,12 @@ class DynamicsIsLinearTest(unittest.TestCase):
             parameters=[Parameter('P1', dimension=un.time),
                         Parameter('P2', dimension=un.dimensionless)],
             constants=[Constant('C1', 10, units=un.mA)])
+        self.assertFalse(e.is_linear())
+        self.assertTrue(e.is_linear(outputs=['A1']))
 
-        self.f = Dynamics(
+    def test_linear_state_assignment_in_onevent(self):
+        """Test linear state assignments in on events"""
+        f = Dynamics(
             name='F',
             regimes=[
                 Regime('dSV1/dt = -SV1 / P1',
@@ -81,8 +104,11 @@ class DynamicsIsLinearTest(unittest.TestCase):
                         Parameter('P3', dimension=un.resistance),
                         Parameter('P4', dimension=un.conductance)],
             constants=[Constant('C1', 10, units=un.pA)])
+        self.assertTrue(f.is_linear())
 
-        self.g = Dynamics(
+    def test_nonlinear_state_assignment_in_onevent(self):
+        """Test that nonlinear state assignements in on events"""
+        g = Dynamics(
             name='G',
             regimes=[
                 Regime('dSV1/dt = -SV1 / P1',
@@ -103,8 +129,11 @@ class DynamicsIsLinearTest(unittest.TestCase):
                         Parameter('P3', dimension=un.resistance),
                         Parameter('P4', dimension=un.conductance)],
             constants=[Constant('C1', 10, units=un.nA)])
+        self.assertFalse(g.is_linear())
 
-        self.h = Dynamics(
+    def test_nonlinear_function(self):
+        """Nonlinear due function in SV1 T.D."""
+        h = Dynamics(
             name='H',
             regimes=[
                 Regime('dSV1/dt = -sin(SV1) / P1',
@@ -112,14 +141,4 @@ class DynamicsIsLinearTest(unittest.TestCase):
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.per_time)],
             parameters=[Parameter('P1', dimension=un.time),
                         Parameter('P2', dimension=un.dimensionless)])
-
-    def test_is_linear(self):
-        self.assertTrue(self.a.is_linear())
-        self.assertFalse(self.b.is_linear())
-        self.assertFalse(self.c.is_linear())
-        self.assertFalse(self.d.is_linear())
-        self.assertFalse(self.e.is_linear())
-        self.assertTrue(self.e.is_linear(outputs=['A1']))
-        self.assertTrue(self.f.is_linear())
-        self.assertFalse(self.g.is_linear())
-        self.assertFalse(self.h.is_linear())
+        self.assertFalse(h.is_linear())

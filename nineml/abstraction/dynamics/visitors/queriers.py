@@ -200,14 +200,13 @@ class DynamicsIsLinear(BaseNineMLVisitor):
 
     def __init__(self, dynamics, outputs=None):
         super(DynamicsIsLinear, self).__init__()
-        self._is_linear = True
+        self._result = True
         self.outputs = (set(dynamics.analog_send_port_names)
                         if outputs is None else outputs)
         substituted = dynamics.clone()
         DynamicsSubstituteAliases(substituted)
-        self.inputs = [
+        self.input_and_states = [
             sympy.Symbol(i) for i in chain(
-                reserved_symbols,
                 substituted.state_variable_names,
                 substituted.analog_receive_port_names,
                 substituted.analog_reduce_port_names)]
@@ -217,18 +216,18 @@ class DynamicsIsLinear(BaseNineMLVisitor):
             pass
 
     @property
-    def is_linear(self):
-        return self._is_linear
+    def result(self):
+        return self._result
 
     def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
         # Dynamics are piecewise
         if dynamics.num_regimes > 1:
-            self._set_nonlinear()
+            self._report_nonlinear()
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         # Dynamics are piecewise
         if on_condition.num_state_assignments:
-            self._set_nonlinear()
+            self._report_nonlinear()
 
     def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
         self._check_linear(state_assignment)
@@ -240,17 +239,18 @@ class DynamicsIsLinear(BaseNineMLVisitor):
         if alias.name in self.outputs:
             self._check_linear(alias)
 
-    def _linear(self, expr):
-        # Check to see whether expression represents linear dynamics
+    def _is_linear(self, expr):
         try:
-            return sympy.poly(expr.rhs, *self.inputs).is_linear
+            # Check to see whether expression represents linear dynamics
+            return sympy.poly(expr.rhs, *self.input_and_states).is_linear
         except PolynomialError:
+            # Return false if not a polynomial
             return False
 
     def _check_linear(self, expr):
-        if not self._linear(expr):
-            self._set_nonlinear()
+        if not self._is_linear(expr):
+            self._report_nonlinear()
 
-    def _set_nonlinear(self):
-        self._is_linear = False
+    def _report_nonlinear(self):
+        self._result = False
         raise NineMLStopVisitException()
