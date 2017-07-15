@@ -250,6 +250,12 @@ dynPropC = DynamicsProperties(
                     Initial('SV3', Quantity([8, 7, 6, 5, 4], un.unitless))],
     check_initial_values=True)
 
+dynPropC2 = DynamicsProperties(
+    name='dynPropC2',
+    definition=dynPropC,
+    properties={
+        'P1': 100.0 * un.unitless})
+
 dynPropD = DynamicsProperties(
     name='dynPropD',
     definition=dynD,
@@ -488,14 +494,14 @@ netC = Network(
 
 arp = dynA.port('ARP2')
 doc1 = Document(
-    dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, multiDynPropA,
-    multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
-    selA, conA, conPropA, conB, projA, projB, projC, projD, projE, netA,
-    netB, *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))),
-    arp=arp)
+    dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, dynPropC2,
+    multiDynPropA, multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC,
+    popD, popE, selA, conA, conPropA, conB, projA, projB, projC, projD, projE,
+    netA, netB,
+    *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))), arp=arp)
 
 doc2 = Document(
-    dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC,
+    dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, dynPropC2,
     ranDistrA, ranDistrPropA, popA, popB, popC, popD, popE,
     selA, conA, conPropA, conB, projA, projB, projC, projD, netA, netB,
     clone_definitions=True)
