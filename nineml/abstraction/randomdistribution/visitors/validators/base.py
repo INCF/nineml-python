@@ -13,8 +13,6 @@ from .general import (
 from .names import (
     LocalNameConflictsRandomDistributionValidator,
     DimensionNameConflictsRandomDistributionValidator)
-from .ports import (
-    PortConnectionsRandomDistributionValidator)
 from .types import (
     TypesRandomDistributionValidator)
 

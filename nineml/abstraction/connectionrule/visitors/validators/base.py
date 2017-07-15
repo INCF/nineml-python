@@ -13,8 +13,6 @@ from .general import (
 from .names import (
     LocalNameConflictsConnectionRuleValidator,
     DimensionNameConflictsConnectionRuleValidator)
-from .ports import (
-    PortConnectionsConnectionRuleValidator)
 from .types import (
     TypesConnectionRuleValidator)
 

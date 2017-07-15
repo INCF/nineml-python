@@ -7,8 +7,6 @@ docstring needed
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
 from . import BaseDynamicsValidator
-from ....componentclass.visitors.validators.ports import (
-    PortConnectionsComponentValidator)
 from ..base import DynamicsActionVisitor
 
 
@@ -115,27 +113,3 @@ class OutputAnalogPortsDynamicsValidator(BaseDynamicsValidator):
         if alias not in chain(*(r.aliases
                                 for r in self.component_class.regimes)):
             self.add_symbol(symbol=alias.lhs)
-
-
-class PortConnectionsDynamicsValidator(
-        DynamicsActionVisitor,
-        PortConnectionsComponentValidator):
-
-    """Check that all the port connections point to a port, and that
-    each send & recv port only has a single connection.
-    """
-
-    def action_analogsendport(self, analogsendport):
-        self._action_port(analogsendport)
-
-    def action_analogreceiveport(self, analogreceiveport):
-        self._action_port(analogreceiveport)
-
-    def action_analogreduceport(self, analogreduceport):
-        self._action_port(analogreduceport)
-
-    def action_eventsendport(self, eventsendport):
-        self._action_port(eventsendport)
-
-    def action_eventreceiveport(self, eventreceiveport):
-        self._action_port(eventreceiveport)

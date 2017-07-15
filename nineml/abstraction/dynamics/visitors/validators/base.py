@@ -20,8 +20,7 @@ from .names import (
     DuplicateRegimeNamesDynamicsValidator,
     RegimeAliasMatchesBaseScopeValidator)
 from .ports import (
-    EventPortsDynamicsValidator, OutputAnalogPortsDynamicsValidator,
-    PortConnectionsDynamicsValidator)
+    EventPortsDynamicsValidator, OutputAnalogPortsDynamicsValidator)
 from .types import (
     TypesDynamicsValidator)
 
@@ -51,7 +50,6 @@ class DynamicsValidator(object):
                                                              **kwargs)
         AliasesAreNotRecursiveDynamicsValidator(component_class, **kwargs)
         NoUnresolvedSymbolsDynamicsValidator(component_class, **kwargs)
-        PortConnectionsDynamicsValidator(component_class, **kwargs)
         RegimeGraphDynamicsValidator(component_class, **kwargs)
         RegimeOnlyHasOneHandlerPerEventDynamicsValidator(component_class,
                                                          **kwargs)

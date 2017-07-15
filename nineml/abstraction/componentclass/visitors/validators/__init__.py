@@ -7,4 +7,3 @@ from .general import (
 from .names import (LocalNameConflictsComponentValidator,
                               DimensionNameConflictsComponentValidator)
 from .types import TypesComponentValidator
-from .ports import PortConnectionsComponentValidator
