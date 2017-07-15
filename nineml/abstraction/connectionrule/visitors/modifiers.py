@@ -5,33 +5,8 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 from ...componentclass.visitors.modifiers import (
-    ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices,
-    ComponentExpandPortDefinition, ComponentExpandAliasDefinition)
+    ComponentRenameSymbol, ComponentAssignIndices)
 from .base import ConnectionRuleActionVisitor
-
-
-class ConnectionRuleExpandPortDefinition(ConnectionRuleActionVisitor,
-                                         ComponentExpandPortDefinition):
-
-    pass
-
-
-class ConnectionRuleExpandAliasDefinition(ConnectionRuleActionVisitor,
-                                          ComponentExpandAliasDefinition):
-
-    """
-    An action-class that walks over a component_class, and expands an alias in
-    Aliases
-    """
-
-    pass
-
-
-class ConnectionRuleModifier(ComponentModifier):
-
-    """Utility classes for modifying components"""
-
-    _ExpandPortDefinition = ConnectionRuleExpandPortDefinition
 
 
 class ConnectionRuleRenameSymbol(ConnectionRuleActionVisitor,

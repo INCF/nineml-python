@@ -10,45 +10,6 @@ from nineml.base import BaseNineMLVisitor
 from nineml.abstraction.expressions import Expression
 
 
-class ComponentModifier(object):
-
-    """Utility classes for modifying components"""
-
-    pass
-
-
-class ComponentExpandPortDefinition(ComponentActionVisitor):
-
-    def __init__(self, originalname, targetname):
-
-        super(ComponentExpandPortDefinition, self).__init__(
-            require_explicit_overrides=False)
-        self.originalname = originalname
-        self.targetname = targetname
-        self.namemap = {originalname: targetname}
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        alias.name_transform_inplace(self.namemap)
-
-
-class ComponentExpandAliasDefinition(ComponentActionVisitor):
-
-    """ An action-class that walks over a component, and expands an alias in
-    Assignments, Aliases, TimeDerivatives and Conditions
-    """
-
-    def __init__(self, originalname, targetname):
-
-        super(ComponentExpandAliasDefinition, self).__init__(
-            require_explicit_overrides=False)
-        self.originalname = originalname
-        self.targetname = targetname
-        self.namemap = {originalname: targetname}
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        alias.rhs_name_transform_inplace(self.namemap)
-
-
 class ComponentRenameSymbol(ComponentActionVisitor):
 
     """ Can be used for:

@@ -7,32 +7,7 @@ This file contains utility classes for modifying components.
 
 from .base import RandomDistributionActionVisitor
 from ...componentclass.visitors.modifiers import (
-    ComponentModifier, ComponentRenameSymbol, ComponentAssignIndices,
-    ComponentExpandPortDefinition, ComponentExpandAliasDefinition)
-
-
-class RandomDistributionExpandPortDefinition(RandomDistributionActionVisitor,
-                                             ComponentExpandPortDefinition):
-
-    pass
-
-
-class RandomDistributionExpandAliasDefinition(RandomDistributionActionVisitor,
-                                              ComponentExpandAliasDefinition):
-
-    """
-    An action-class that walks over a component_class, and expands an alias in
-    Aliases
-    """
-
-    pass
-
-
-class RandomDistributionModifier(ComponentModifier):
-
-    """Utility classes for modifying components"""
-
-    _ExpandPortDefinition = RandomDistributionExpandPortDefinition
+    ComponentRenameSymbol, ComponentAssignIndices)
 
 
 class RandomDistributionRenameSymbol(RandomDistributionActionVisitor,
