@@ -1,6 +1,13 @@
 NineML Python Library
 =====================
 
+.. image:: https://travis-ci.org/INCF/nineml-python.svg?branch=master
+   :target: https://travis-ci.org/ICNF/nineml-python
+   :alt: Unit Test Status
+.. image:: https://coveralls.io/repos/INCF/nineml-python/badge.svg
+   :target: https://coveralls.io/github/ICNF/nineml-python
+   :alt: Unit Test Coverage
+
 NineML (9ML) is a language for describing the dynamics and connectivity of neuronal
 network simulations (http://nineml.net). The language is defined as an object
 model, described in the NineML specification (http://nineml.net/specification).
@@ -93,13 +100,6 @@ Links
 
 :copyright: Copyright 20011-2017 by the nineml-python team, see AUTHORS.
 :license: BSD 3, see LICENSE for details.
-
-.. image:: https://travis-ci.org/INCF/nineml-python.svg?branch=master
-   :target: https://travis-ci.org/ICNF/nineml-python
-   :alt: Unit Test Status
-.. image:: https://coveralls.io/repos/INCF/nineml-python/badge.svg
-   :target: https://coveralls.io/github/ICNF/nineml-python
-   :alt: Unit Test Coverage
   
 .. _HDF5: http://support.hdfgroup.org/HDF5/
 .. _YAML: http://yaml.org
