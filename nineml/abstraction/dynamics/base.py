@@ -228,7 +228,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             self._dimension_resolver = resolver
         return resolver.dimension_of(element)
 
-    def substituted_aliases(self):
+    def substitute_aliases(self):
         """
         Returns a equivalent Dynamics class with all references to aliases with
         substituted by their RHS expressions where they appear
@@ -481,23 +481,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return (a for a in self.aliases
                 if a.name in self.analog_send_port_names)
 
-    # -------------------------- #
-
-    def backsub_all(self):
-        """Expand all alias definitions in local equations.
-
-        This function finds |Aliases|, |TimeDerivatives|, *send* |AnalogPorts|,
-        |StateAssignments| and |Conditions| which are defined in terms of other
-        |Aliases|, and expands them, such that each only has |Parameters|,
-        |StateVariables| and recv/reduce |AnalogPorts| on the RHS.
-
-        """
-
-        for alias in self.aliases:
-            alias_expander = DynamicsExpandAliasDefinition(
-                originalname=alias.lhs, targetname=("(%s)" % alias.rhs))
-            alias_expander.visit(self)
-
     def _resolve_transition_regimes(self):
         # Check that the names of the regimes are unique:
         assert_no_duplicates([r.name for r in self.regimes])
@@ -592,5 +575,4 @@ from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsHasRandomProcess,
                                 DynamicsIsLinear)
 from .visitors.modifiers import (  # @IgnorePep8
-    DynamicsRenameSymbol, DynamicsAssignIndices,
-    DynamicsExpandAliasDefinition, DynamicsSubstituteAliases)
+    DynamicsRenameSymbol, DynamicsAssignIndices, DynamicsSubstituteAliases)

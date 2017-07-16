@@ -254,21 +254,6 @@ class ComponentClass_test(unittest.TestCase):
             analog_ports=[AnalogSendPort('A')]
         )
 
-    def test_backsub_all(self):
-
-        # Check the aliases:
-        # ====================== #
-        c2 = Dynamics(name='C1',
-                      aliases=['A:=1.0+2.0', 'B:=5.0*A', 'C:=B+2.0'])
-        self.assertEqual(c2.alias('A').rhs_as_python_func(), 3)
-
-        # This should assert, because its not yet back-subbed
-        c2.backsub_all()
-        self.assertEqual(c2.alias('B').rhs_as_python_func(), 15)
-        # Check the ordering:
-        self.assertEqual(c2.alias('C').rhs_as_python_func(), ((5 * (3)) + 2))
-        # ====================== #
-
     def test_event_ports(self):
         # Signature: name
                 # No Docstring
