@@ -16,12 +16,15 @@ from nineml.abstraction import ConnectionRule
 from nineml.abstraction import (
     Dynamics, Parameter, AnalogSendPort, AnalogReducePort, StateVariable,
     EventSendPort, OnCondition, Regime, TimeDerivative, StateAssignment,
-    OutputEvent, Constant, OnEvent, AnalogReceivePort, EventReceivePort)
+    OutputEvent, Constant, OnEvent, AnalogReceivePort, EventReceivePort,
+    RandomDistribution)
 from nineml.user import (
     DynamicsProperties, Population,
-    Projection, ConnectionRuleProperties,
+    Projection, ConnectionRuleProperties, RandomDistributionProperties,
     Network, Selection, Concatenate)
+from nineml.values import RandomDistributionValue
 import nineml.units as un
+from nineml.exceptions import NineMLRandomDistributionDelayException
 
 
 src_dir = os.path.dirname(__file__)
@@ -151,7 +154,7 @@ class TestNetwork(unittest.TestCase):
             'OneToOneClass', standard_library=(
                 "http://nineml.net/9ML/1.0/connectionrules/OneToOne"))
 
-        one_to_one = ConnectionRuleProperties(
+        self.one_to_one = ConnectionRuleProperties(
             "OneToOne", one_to_one_class, {})
 
         random_fan_in_class = ConnectionRule(
@@ -171,7 +174,7 @@ class TestNetwork(unittest.TestCase):
             definition=random_fan_in_class,
             properties={'number': 200})
 
-        celltype = DynamicsProperties(
+        self.celltype = DynamicsProperties(
             name="liaf_props",
             definition=liaf,
             properties={'tau': self.tau, 'theta': self.theta,
@@ -185,18 +188,18 @@ class TestNetwork(unittest.TestCase):
             properties={'rate': self.input_rate},
             initial_values={"t_next": 0.5 * un.ms})
 
-        psr = DynamicsProperties(
+        self.psr = DynamicsProperties(
             name="syn",
             definition=psr,
             properties={'tau_syn': self.tau_syn},
             initial_values={"A": 0.0 * un.nA, "B": 0.0 * un.nA})
 
-        exc = Population("Exc", self.order * 4, celltype)
-        inh = Population("Inh", self.order, celltype)
+        exc = Population("Exc", self.order * 4, self.celltype)
+        inh = Population("Inh", self.order, self.celltype)
         ext = Population("Ext", self.order * 5, ext_stim)
         exc_and_inh = Selection("All", Concatenate(exc, inh))
 
-        static_ext = DynamicsProperties(
+        self.static_ext = DynamicsProperties(
             "ExternalPlasticity",
             static, {}, initial_values={"weight": self.Je * un.nA})
 
@@ -209,19 +212,20 @@ class TestNetwork(unittest.TestCase):
             static, initial_values={"weight": self.Ji * un.nA})
 
         ext_prj = Projection(
-            "External", pre=ext, post=exc_and_inh, response=psr,
-            plasticity=static_ext, connectivity=one_to_one, delay=self.delay,
+            "External", pre=ext, post=exc_and_inh, response=self.psr,
+            plasticity=self.static_ext, connectivity=self.one_to_one,
+            delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
 
         exc_prj = Projection(
-            "Excitation", pre=exc, post=exc_and_inh, response=psr,
+            "Excitation", pre=exc, post=exc_and_inh, response=self.psr,
             plasticity=static_exc, connectivity=exc_random_fan_in,
             delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
         inh_prj = Projection(
-            "Inhibition", pre=inh, post=exc_and_inh, response=psr,
+            "Inhibition", pre=inh, post=exc_and_inh, response=self.psr,
             plasticity=static_inh, connectivity=inh_random_fan_in,
             delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
@@ -271,7 +275,49 @@ class TestNetwork(unittest.TestCase):
                          int(200 * scale) * new_order * 5)
 
     def test_delay_limits(self):
-        pass
+        limits = self.model.delay_limits()
+        self.assertEqual(limits['min_delay'], 1.5 * un.ms)
+        self.assertEqual(limits['max_delay'], 1.5 * un.ms)
+
+    def test_delay_no_projs(self):
+        simple_network = Network(
+            name='simple',
+            populations=[self.model.population('Exc')])
+        zero_limits = simple_network.delay_limits()
+        self.assertEqual(zero_limits['min_delay'], 0.0 * un.s)
+        self.assertEqual(zero_limits['max_delay'], 0.0 * un.s)
+
+    def test_delay_rand_distr(self):
+
+        rand_delay_class = RandomDistribution(
+            name="RandomDelay",
+            parameters=[
+                Parameter('mean', dimension=un.dimensionless),
+                Parameter('stddev', dimension=un.dimensionless)],
+            standard_library=(
+                'http://www.uncertml.org/distributions/normal'))
+
+        pop1 = Population("Pop1", 100, self.celltype)
+        pop2 = Population("Pop2", 100, self.celltype)
+
+        rand_delay = RandomDistributionProperties(
+            name="RandomDelayProps",
+            definition=rand_delay_class,
+            properties={'mean': 5.0,
+                        'stddev': 1.0})
+
+        rand_delay_prj = Projection(
+            "External", pre=pop1, post=pop2, response=self.psr,
+            plasticity=self.static_ext, connectivity=self.one_to_one,
+            delay=RandomDistributionValue(rand_delay) * un.ms,
+            port_connections=[('response', 'Isyn', 'post', 'Isyn'),
+                              ('plasticity', 'weight', 'response', 'weight')])
+        rand_distr_network = Network('rand_distr_net',
+                                     populations=[pop1, pop2],
+                                     projections=[rand_delay_prj])
+        self.assertRaises(
+            NineMLRandomDistributionDelayException,
+            rand_distr_network.delay_limits)
 
     def test_components(self):
         pass

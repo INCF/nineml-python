@@ -1,4 +1,3 @@
-import os.path
 import re
 import math
 from itertools import chain
@@ -8,12 +7,13 @@ from .population import Population
 from .projection import Projection
 from .selection import Selection
 from . import BaseULObject
-import nineml
 from nineml.exceptions import name_error
 from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.utils import ensure_valid_identifier
 from .component_array import ComponentArray
 from .connection_group import BaseConnectionGroup
+from nineml.values import RandomDistributionValue
+from nineml.exceptions import NineMLRandomDistributionDelayException
 
 
 class Network(BaseULObject, DocumentLevelObject, ContainerObject):
@@ -134,13 +134,17 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         network in ms
         """
         if not self.num_projections:
-            min_delay = 0.0 * un.ms
-            max_delay = 0.0 * un.ms
+            min_delay = 0.0 * un.s
+            max_delay = 0.0 * un.s
         else:
             min_delay = float('inf') * un.ms
             max_delay = 0.0 * un.ms
             for proj in self.projections:
                 delay = proj.delay
+                if isinstance(delay.value, RandomDistributionValue):
+                    raise NineMLRandomDistributionDelayException(
+                        "Delay of '{}' projection is randomly distributed "
+                        "so cannot determine delay limits".format(proj.name))
                 if delay > max_delay:
                     max_delay = delay
                 if delay < min_delay:
@@ -162,18 +166,6 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                       populations=populations, projections=projections,
                       selections=selections)
         return network
-
-    @classmethod
-    def from_document(cls, document):
-        name = os.path.splitext(os.path.basename(document.url))[0]
-        return Network(name=name, populations=document.populations,
-                       projections=document.projections,
-                       selections=document.selections, document=document)
-
-    @classmethod
-    def read(cls, url):
-        document = nineml.read(url)
-        return cls.from_document(document)
 
     _conn_group_name_re = re.compile(
         r'(\w+)__(\w+)_(\w+)__(\w+)_(\w+)__connection_group')

@@ -601,5 +601,6 @@ class RandomDistributionValue(BaseValue):
         return cls(distribution)
 
     def _copy_to_clone(self, clone, memo, **kwargs):
-        super(RandomDistributionValue, self)._copy_to_clone(clone, memo, **kwargs)
+        super(RandomDistributionValue, self)._copy_to_clone(clone, memo,
+                                                            **kwargs)
         clone._generator = None

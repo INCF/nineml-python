@@ -98,6 +98,10 @@ class NineMLStopVisitException(NineMLException):
     pass
 
 
+class NineMLRandomDistributionDelayException(NineMLException):
+    pass
+
+
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 
