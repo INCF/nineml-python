@@ -225,7 +225,7 @@ class ComponentDimensionResolver(ComponentActionVisitor):
             assert False, "Unrecognised expression type '{}'".format(expr)
         return flattened
 
-    def _find_element(self, sym):
+    def find_element(self, sym):
         name = Expression.symbol_to_str(sym)
         element = None
         for scope in reversed(self._scopes):
@@ -244,7 +244,7 @@ class ComponentDimensionResolver(ComponentActionVisitor):
         try:
             flattened = self._dims[sym]
         except KeyError:
-            element = self._find_element(sym)
+            element = self.find_element(sym)
             flattened = self._flatten(element.rhs)
             self._dims[sym] = flattened
         return flattened

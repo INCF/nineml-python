@@ -58,7 +58,7 @@ class RandomDistribution(ComponentClass):
             self._dimension_resolver = resolver
         return resolver.dimension_of(element)
 
-    def _find_element(self, element):
+    def find_element(self, element):
         return RandomDistributionElementFinder(element).found_in(self)
 
     def validate(self, **kwargs):

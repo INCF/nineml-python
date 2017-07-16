@@ -213,7 +213,7 @@ class Transition(BaseALObject, ContainerObject):
             self._target_regime_name = None
         self._source_regime = None
 
-    def _find_element(self, element):
+    def find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)
 
     @property

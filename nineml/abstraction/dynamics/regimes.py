@@ -272,7 +272,7 @@ class Regime(BaseALObject, ContainerObject):
                 elem.set_source_regime(self)
         super(Regime, self).add(*elements)
 
-    def _find_element(self, element):
+    def find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)
 
     def __repr__(self):

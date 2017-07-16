@@ -243,7 +243,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def overridden_in_regimes(self, alias):
         return (r for r in self.regimes if alias.name in r.alias_names)
 
-    def _find_element(self, element):
+    def find_element(self, element):
         return DynamicsElementFinder(element).found_in(self)
 
     def validate(self, validate_dimensions=None, **kwargs):
