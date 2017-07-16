@@ -141,8 +141,10 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             if "#" in definition:
                 defn_url, name = definition.split("#")
             else:
-                defn_url, name = definition, path.basename(
-                    definition).replace(".xml", "")
+                raise NineMLRuntimeError(
+                    "Must provide name of class using '#' syntax when "
+                    "providing definition as url string ('{}')"
+                    .format(definition))
             definition = Definition(
                 name=name,
                 document=None,
