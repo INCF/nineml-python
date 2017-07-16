@@ -6,7 +6,6 @@ from ...componentclass.visitors.queriers import (
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
     ComponentDimensionResolver)
 from nineml.base import BaseNineMLVisitor
-from nineml.abstraction.expressions import reserved_symbols
 from .modifiers import DynamicsSubstituteAliases
 from nineml.exceptions import NineMLStopVisitException
 from sympy.polys.polyerrors import PolynomialError
