@@ -14,3 +14,6 @@ class TestReadWrite(unittest.TestCase):
         write(tmp_path, dynA, dynB)
         reread_dynA = read('{}#{}'.format(tmp_path, 'dynA'))
         self.assertEqual(dynA, reread_dynA)
+        # Read again using document cache
+        reread_dynB = read('{}#{}'.format(tmp_path, 'dynB'))
+        self.assertEqual(dynB, reread_dynB)
