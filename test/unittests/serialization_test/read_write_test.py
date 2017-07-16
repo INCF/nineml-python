@@ -19,6 +19,6 @@ class TestReadWrite(unittest.TestCase):
         # Read again using document cache via Dynamics Properties
         dynBProps = DynamicsProperties(
             name='dynBProps',
-            definition='{}#dynB'.format(self.tmp_path),
+            definition='{}#dynB'.format(os.path.join(tmp_dir, self.tmp_path)),
             properties={'P1': 1, 'P2': 2, 'P3': 3})
         self.assertEqual(dynB, dynBProps.component_class)
