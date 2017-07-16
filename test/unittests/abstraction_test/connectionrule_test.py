@@ -2,6 +2,8 @@ from __future__ import division
 from itertools import groupby
 import unittest
 import random
+import nineml.units as un
+from nineml.utils.testing.comprehensive import conA
 from nineml.abstraction.connectionrule import (
     all_to_all_connection_rule, one_to_one_connection_rule,
     explicit_connection_rule, probabilistic_connection_rule,
@@ -80,3 +82,13 @@ class Connectivity_test(unittest.TestCase):
                 {'probability': p}), size, size)
         num_conns = len(list(connectivity.connections()))
         self.assertAlmostEqual(num_conns / size ** 2, p, 2)
+
+
+class ConnectionRuleVisitorTests(unittest.TestCase):
+
+    def test_basic_visitors(self):
+        param = conA.parameter('number')
+        self.assertEqual(conA.dimension_of(param), un.dimensionless)
+        conA.assign_indices()  # Doesn't actually do anything at this stage
+        self.assertTrue(conA.find_element(param))
+        self.assertEqual(conA.all_expressions, [])
