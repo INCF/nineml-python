@@ -86,7 +86,7 @@ Populations
 ===========
 
 .. autoclass:: Population
-   :members: get_components
+   :members: all_components
 
 .. autoclass:: Selection
    :members:
@@ -108,7 +108,7 @@ Projections
 ===========
 
 .. autoclass:: Projection
-   :members: get_components
+   :members: all_components
 
 .. autoclass:: Delay
 

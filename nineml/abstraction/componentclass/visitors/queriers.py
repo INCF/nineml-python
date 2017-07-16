@@ -8,8 +8,7 @@ from ...expressions import reserved_identifiers
 from nineml.units import Dimension
 from nineml.abstraction.ports import SendPortBase
 from nineml.abstraction.expressions import Expression
-from nineml.exceptions import NineMLNameError, NineMLRuntimeError
-from nineml.base import BaseNineMLVisitor
+from nineml.exceptions import NineMLNameError
 import operator
 
 

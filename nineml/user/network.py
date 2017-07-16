@@ -115,10 +115,10 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     # Core accessors
     # =========================================================================
 
-    def get_components(self):
+    def all_components(self):
         components = []
-        for p in chain(self.populations.values(), self.projections.values()):
-            components.extend(p.get_components())
+        for p in chain(self.populations, self.projections):
+            components.extend(p.all_components())
         return components
 
     def resample_connectivity(self, *args, **kwargs):

@@ -320,23 +320,13 @@ class TestNetwork(unittest.TestCase):
             rand_distr_network.delay_limits)
 
     def test_components(self):
-        pass
+        names = set(c.name for c in self.model.all_components())
+        self.assertEqual(
+            names, set(('ExternalPlasticity', 'ExcitatoryPlasticity',
+                        'InhibitoryPlasticity', 'OneToOne',
+                        'RandomFanInProps', 'liaf_props', 'stim', 'syn')))
 
     def test_resample_connectivity(self):
-        pass
-
-    def test_connectivity_has_been_sampled(self):
-        pass
-
-#     def get_components(self):
-#         components = []
-#         for p in chain(self.populations.values(), self.projections.values()):
-#             components.extend(p.get_components())
-#         return components
-# 
-#     def resample_connectivity(self, *args, **kwargs):
-#         for projection in self.projections:
-#             projection.resample_connectivity(*args, **kwargs)
-# 
-#     def connectivity_has_been_sampled(self):    
-#         return any(p.connectivity.has_been_sampled() for p in self.projections)
+        scaled = self.model.scale(10 * self.order)
+        scaled.resample_connectivity()
+        self.assertTrue(scaled.connectivity_has_been_sampled())

@@ -159,8 +159,7 @@ class Projection(BaseULObject, DocumentLevelObject):
                         ', '.join(str(pc)
                                   for pc in self.analog_port_connections)))
 
-    @property
-    def components(self):
+    def all_components(self):
         """
         Return a list of all components used by the projection.
         """

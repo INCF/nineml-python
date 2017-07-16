@@ -71,7 +71,7 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
         """
         return iter([self.component_class])
 
-    def get_components(self):
+    def all_components(self):
         """
         Return a list of all components used by the population.
         """
@@ -86,7 +86,7 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
 
     @property
     def attributes_with_units(self):
-        return chain(*[c.attributes_with_units for c in self.get_components()])
+        return chain(*[c.attributes_with_units for c in self.all_components()])
 
     def serialize_node(self, node, **options):
         node.attr('Size', self.size, in_body=True, **options)
