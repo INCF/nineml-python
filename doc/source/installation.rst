@@ -2,34 +2,68 @@
 Installation
 ============
 
-Use of the Python 9ML API requires that you have Python (version 2.7) and the
-`lxml`, `ply`, `numpy` and `quantities` packages installed.
+Use of the Python 9ML API requires that you have Python (version 2.7) with the
+`sympy` package installed. To serialize NineML_ to XML, YAML and HDF5
+formats the `lxml`, 'pyyaml` and `h5py` packages are also required
+respectively.
 
-Installing Python
-=================
+Depdendencies
+-------------
 
-If you are using Linux, Python is available via your package management system.
-For Mac OS X or Windows, you can download the Python installer from http://www.python.org,
-or install an all-in-one package for scientific computing with Python from
-Enthought (http://www.enthought.com/products/epd.php; free academic licence),
-Python(x,y) (http://www.pythonxy.com/; free) or Anaconda (http://continuum.io/downloads).
-We strongly recommend using virtualenv or Anaconda's virtual Python environments.
+macOS
+~~~~~
 
-Installing dependencies
-=======================
+If you are not already using another Python installation (e.g. Enthought,
+Python(x,y), etc...) it is
+recommended to install Python using the Homebrew_ package manager::
+    
+    $ brew install python
 
-On Linux, most or all of the dependencies can be installed via the package management system.
-If using Anaconda, use "conda install". Otherwise:
+While other Python installations should work fine, it is not recommended to use
+the system Python installation at `/usr/bin/python` for scientific
+computing as some of the standard pacakges (e.g. `six`) have been modified and
+this can cause problems with other packages down the track.
 
-* lxml - see http://lxml.de/installation.html
-* ply - `pip install ply`
-* NumPy - see http://docs.scipy.org/doc/numpy/user/install.html
-* quantities - `pip install quantities`
+Before installing `h5py` you will also need to install a development version of
+HDF5. With Homebrew_ this can be done with::
+
+    $ brew install hdf5
+
+Linux
+~~~~~
+
+On Linux, Python 2.7 and development packages for HDF5 (i.e. with headers)
+should be available via your package management system. Please see the relevant
+documentation for the appropriate package
 
 
-Installing the nineml package
-=============================
+Windows
+~~~~~~~
 
-::
+On Windows, you can download the Python installer from http://www.python.org.
+To use HDF5 serialization you will need to install HDF5 from source, see
+http://docs.h5py.org/en/latest/build.html.
+
+
+Install Python packages
+-----------------------
+
+To install the Python package it is recommeded to install from PyPI using
+`pip`::
 
     $ pip install nineml
+    
+Otherwise for the latest version you can clone the repository at
+http://github.com/INCF/nineml-python and run::
+
+
+    $ pip install -r <path-to-repo>/requirements.txt <path-to-repo>
+
+To install the `nineml` package without one of the serialization depdencies
+(e.g. h5py) you can manually install the dependencies you require and then
+just use pip without the requirements file::
+
+    $ pip install <path-to-repo>
+
+.. _NineML: http://nineml.net
+.. _Homebrew: http://brew.sh
