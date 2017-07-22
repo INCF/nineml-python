@@ -48,7 +48,7 @@ To work on the development version::
 To keep your NineML repository up-to-date with respect to the official
 repository, add it as a remote::
 
-    $ git remote add upstream https://github.com/INCF/nineml.git
+    $ git remote add upstream https://github.com/INCF/nineml-python.git
 
 and then you can pull in any upstream changes::
 
@@ -67,7 +67,7 @@ or
 Coding style
 ============
 
-We try to stay fairly close to PEP8_. Please note in particular:
+We follow the PEP8_ coding style. Please note in particular:
 
     - indentation of four spaces, no tabs
     - single space around most operators, but no space around the '=' sign when

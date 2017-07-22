@@ -6,7 +6,7 @@ NineML_ is a language for describing the dynamics and connectivity of neuronal n
 simulations; in particular for large-scale simulations of many point neurons.
 
 The language is defined as an object model, described in the `NineML specification`_,
-with a standardized serializations to XML, JSON, YAML and HDF5.
+with standardized serializations to XML, JSON, YAML and HDF5.
 
 This documentation describes the :py:mod:`nineml` Python package, which
 implements the NineML_ object model using Python classes, allowing models to be
@@ -35,7 +35,6 @@ Developers' guide
     :maxdepth: 2
 
     contributing
-    implementation_reference
 
 
 .. _NineML: http://nineml.net

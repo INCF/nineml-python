@@ -1,2 +1,0 @@
-Implementation reference (for developers)
-=========================================

@@ -46,4 +46,4 @@ Network Models
 
 Example - Brunel
 ~~~~~~~~~~~~~~~~
-.. literalinclude:: /../../examples/network/brunel.py
+.. literalinclude:: /../../examples/network/brunel_network.py
