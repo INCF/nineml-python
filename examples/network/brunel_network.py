@@ -16,7 +16,6 @@ from nineml.user import (
     DynamicsProperties, Population, RandomDistributionProperties,
     Projection, ConnectionRuleProperties, AnalogPortConnection,
     EventPortConnection, Network, Selection, Concatenate)
-from nineml import Document
 from nineml.units import ms, mV, nA, unitless, Hz, Mohm
 import ninemlcatalog
 

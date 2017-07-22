@@ -442,11 +442,3 @@ Writing user layer models
     network = Network(name if name else "BrunelNetwork")
     network.add(exc_cells, inh_cells, external, all_cells, input_prj, exc_prj,
                 inh_prj)
-
-
-Using NineML model descriptions for simulations
-===============================================
-
-
-.. todo:: links to PyDSTool, nineml2nmodl, PyNN, etc.
-

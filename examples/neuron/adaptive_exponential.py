@@ -1,6 +1,5 @@
 from nineml import units as un
-from nineml import abstraction as al, user as ul, Document
-from nineml.xml import E, etree
+from nineml import abstraction as al, user as ul
 
 
 def create_adaptive_exponential():

@@ -22,7 +22,7 @@ Users' guide
     motivation
     installation
     getting_started
-    examples/index
+    examples
     api_reference/index
     annotations
     getting_help

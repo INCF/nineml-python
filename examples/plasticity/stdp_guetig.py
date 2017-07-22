@@ -1,5 +1,4 @@
-from nineml import units as un, user as ul, abstraction as al, Document
-from nineml.xml import etree, E
+from nineml import units as un, user as ul, abstraction as al
 
 
 def create_stdp_guetig():
