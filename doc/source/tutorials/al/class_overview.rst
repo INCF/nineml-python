@@ -23,7 +23,7 @@ where :math:`a,b,c,d` are parameters of our neuron and :math:`I` is the injected
 
 
 Interfaces: Parameters and Ports
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We begin by defining the *interface* to our neuron. The interface is composed of 
 
@@ -100,7 +100,7 @@ This code should now run; but we are missing the condition, :math:`v> 30mV`.
 
 
 Transitions: Events, Conditions & Assignments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We have discussed that component can contain multiple ``Regimes``. In order to
 move between regimes; we introduce the idea of ``Transition`` s. A transition
@@ -169,7 +169,7 @@ Further Classes
 ===============
 
 Aliases
-~~~~~~~~
+~~~~~~~
 
 Aliases are motivated by 2 cases; firstly that we would like to be able to
 ``send`` something other than pure ``StateVariables``,  and that often we end
@@ -207,8 +207,6 @@ would create the port as::
     p = AnalogPort(name="I", mode='reduce', reduce_op='+')
 
 See the docs for `AnalogPort` for more information.
-
-
 
 
 
