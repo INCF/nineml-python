@@ -1,9 +1,10 @@
-:mod:`nineml` 1.0rc release notes
-=================================
+:mod:`nineml` 1.0 release candidate release notes
+=================================================
 
-DATE
+|date|
 
-This is the first public release of the Python :mod:`nineml` package,
-corresponding to the release of `version 1`_ of the NineML specification.
+This is a candidate for the first public release of the Python :mod:`nineml`
+package, corresponding to the release of `NineML specification`_.
 
-.. _`version 1`: http://nineml.net/specification/nineml_version1.pdf
+.. _`NineML specification`: http://nineml-spec.readthedocs.io/
+.. |date| date::

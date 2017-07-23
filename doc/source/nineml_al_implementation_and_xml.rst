@@ -1,12 +1,10 @@
 
 
 The Building Blocks of the NineML Abstraction Layer
------------------------------------------------------
+---------------------------------------------------
 
 A NineML component can be considered in 2 parts: the internal *dynamics* and the 
-external *interface*. 
-
-
+external *interface*.
 
 Dynamics
 --------
@@ -17,15 +15,12 @@ The dynamics of a component are specified in terms of the following:
 * StateVariables
 * Regimes
 * Transitions
-
-
 * Aliases
 * Events
 
 
-
 StateVariables & Regime Graphs
-###############################
+##############################
 
 The dynamics of a component is defined by a set of *state-variables*; variables that can
 change either continuously or discontinuously as a function of time. The changes
@@ -89,7 +84,7 @@ Notes:
 
 
 Aliases
-########
+#######
 
 
 Aliases are motivated from two problems;
@@ -123,7 +118,7 @@ Aliases are motivated from two problems;
 
 
 Events
-#######
+######
 
 As well as being able to communicate continuous values, components are also able
 to emit and receive `Event` s. Events are discrete notifications that are transmitted 
@@ -143,7 +138,7 @@ potentials firing for example.
 
 
 Interface
-----------
+---------
 The interface is the *external* view of the component; what inputs and outputs the component exposes
 to other components and the parameters that can be set for the component.
 
@@ -162,7 +157,7 @@ throughout.
 
 
 Ports
-######
+#####
 
 Ports allow components to communicate between each other during a simulation. 
 There are 2 types, *AnalogPorts* and *EventPorts*, and each can have

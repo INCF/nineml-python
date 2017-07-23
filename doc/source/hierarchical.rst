@@ -1,10 +1,6 @@
 
 Hierchical Components
-======================
-
-
-Subcomponents 
---------------
+=====================
 
 Hierarchical components allow us to build a single component, out of several
 smaller components. For example, imagine we could build a component that
@@ -82,10 +78,10 @@ with corresponding code::
          event_ports = [al.RecvEventPort('spikeinput') ],
          parameters = [ al.Parameter(p) for p in ['tau','q','vrev']  ]
          )
-
+ 
 
 Multi-Dynamics
-------------------------------
+--------------
 
 We now define a larger component, which will contain these sub_dynamics. When
 we create the component, we specify the name of each subcomponent, which
