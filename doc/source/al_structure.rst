@@ -1,16 +1,14 @@
-
-
 The Building Blocks of the NineML Abstraction Layer
----------------------------------------------------
+===================================================
 
-A NineML component can be considered in 2 parts: the internal *dynamics* and the 
-external *interface*.
+A NineML component can be considered in 2 parts: the internal *dynamics* and
+the external *interface*.
 
 Dynamics
 --------
 
-The dynamics are the *internal* mechanisms governing the behaviour of the component.
-The dynamics of a component are specified in terms of the following:
+The dynamics are the *internal* mechanisms governing the behaviour of the
+component. The dynamics of a component are specified in terms of the following:
 
 * StateVariables
 * Regimes
@@ -20,11 +18,11 @@ The dynamics of a component are specified in terms of the following:
 
 
 StateVariables & Regime Graphs
-##############################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The dynamics of a component is defined by a set of *state-variables*; variables that can
-change either continuously or discontinuously as a function of time. The changes
-to state variables happen in two ways:
+The dynamics of a component is defined by a set of *state-variables*; variables
+that can change either continuously or discontinuously as a function of time.
+The changes to state variables happen in two ways:
     * through ``TimeDerivatives``  , which define the state variables
       evolution over time, for example :math:`dX/dt=1-X`
 
@@ -46,7 +44,8 @@ This diagram shows the dynamics block for an imaginary component.
 
 
 This dynamics has 3 state variables, *X,Y & Z*, and a state graph with 3
-regimes, *regime1*, *regime2* & *regime3*. At any time, a component will be in one of these regimes, and the state variables will evolve accordingly. 
+regimes, *regime1*, *regime2* & *regime3*. At any time, a component will be in
+one of these regimes, and the state variables will evolve accordingly. 
 
 
 
@@ -68,23 +67,18 @@ When a transition is triggered; three things can happen:
 During a transition, multiple StateAssignments and `OutputEvents` can occur.
 
 
-
-
-Notes:
-
-* The Regime-graph for a component must not contain an islands - regimes which
-  can not be reached from each other.
-* If a TimeDerivative for a state variable is not defined in a regime, it is 
-  assumed to be zero.
-* A Transition does not need to lead to a change of regime. It can cause
-  StateAssignments and OutputEvents, and leave the component in the original
-  regime. (For example *t5* in the diagram)
-
-
+.. note::
+    * The Regime-graph for a component must not contain an islands - regimes
+      which can not be reached from each other.
+    * If a TimeDerivative for a state variable is not defined in a regime, it
+      is assumed to be zero.
+    * A Transition does not need to lead to a change of regime. It can cause
+      StateAssignments and OutputEvents, and leave the component in the
+      original regime. (For example *t5* in the diagram)
 
 
 Aliases
-#######
+~~~~~~~
 
 
 Aliases are motivated from two problems;
@@ -101,8 +95,8 @@ Aliases are motivated from two problems;
 
   In this case, *m_alpha*, *m_beta*, *minf* and *mtau* are all alias
   definitions. There is no reason we couldn't expand our :math:`dm/dt`
-  description out to eliminate the these intermediate aliases, but the expression
-  would be very long and difficult to read.
+  description out to eliminate the these intermediate aliases, but the
+  expression would be very long and difficult to read.
 
 * If we would like to communicate a value other than a simple state variable to
   to another component. For example, if we have a component representing a
@@ -115,38 +109,29 @@ Aliases are motivated from two problems;
     aliases are the same across all regimes.
 
 
-
-
 Events
-######
+~~~~~~
 
-As well as being able to communicate continuous values, components are also able
-to emit and receive `Event` s. Events are discrete notifications that are transmitted 
-over EventPorts.  Since EventPorts have names, saying
+As well as being able to communicate continuous values, components are also
+able to emit and receive `Event` s. Events are discrete notifications that are
+transmitted over EventPorts.  Since EventPorts have names, saying
 that we transmit a 'event1' for example would mean transmitting an event on
 the EventPort called 'event1'. Events can be used to signal action
 potentials firing for example. 
 
 
 
-
-
-
-
-
-
-
-
 Interface
 ---------
-The interface is the *external* view of the component; what inputs and outputs the component exposes
-to other components and the parameters that can be set for the component.
+The interface is the *external* view of the component; what inputs and outputs
+the component exposes to other components and the parameters that can be set
+for the component.
 
 The interface consists of *Ports* and *Parameters*.
 
 
 Parameters
-##########
+~~~~~~~~~~
 Parameters allow us to define the dynamics of a component once, then adjust the
 behaviours by using different parameters. For example, if we are building an
 integrate-and-fire neuron, we can specify that the Reset-Voltage and the
@@ -157,7 +142,7 @@ throughout.
 
 
 Ports
-#####
+~~~~~
 
 Ports allow components to communicate between each other during a simulation. 
 There are 2 types, *AnalogPorts* and *EventPorts*, and each can have
@@ -167,15 +152,15 @@ AnalogPorts:
     AnalogPorts transmit and receive continuous values, `Alias` es and
     `StateVariables`. AnalogPorts can have 3 modes:
 
-        * ``SendPort`` - transmit data originating in this component which can be read by
-          other components
+        * ``SendPort`` - transmit data originating in this component which can
+           be read by other components
         * ``RecvPort`` - receive data from another components ``SendPort`` port.
             Each recv port can be connected to *one* ``SendPort``.
 
         * ``ReducePort`` - receive data from multiple ``SendPort`` . These
           differ from ``RecvPorts`` in that they can be connected to multiple
           ``SendPort`` . ``ReducePorts`` take an additional operator,
-          ``reduce_op``, which specifies how the data from multiple ``Send``
+          ``operator``, which specifies how the data from multiple ``Send``
           ports should be combined to produce a single value. Currently, the
           only supported operations is `+`, which sums the inputs. The
           motivation for ``ReducePorts`` is that it allows us to make our
@@ -187,26 +172,26 @@ AnalogPorts:
             
             dV/dt = (1/C) * InjectedCurrents
           
-          Then, when we connect this neuron to synapses, current-clamps, etc, we
-          simply need to connect the SendPorts containing the currents of these components onto
-          the ``InjectedCurrents`` reduce-port, within having to change our
-          original component definitions.
+          Then, when we connect this neuron to synapses, current-clamps, etc,
+          we simply need to connect the SendPorts containing the currents of
+          these components onto the ``InjectedCurrents`` reduce-port, within
+          having to change our original component definitions.
         
 
 EventPorts:
     Event ports transmit discrete events. They are useful for example in
-    simulation of integrate-and-fire neurons to notify components about neuron's
-    spiking. Event ports only have 2 modes:
+    simulation of integrate-and-fire neurons to notify components about
+    neuron's spiking. Event ports only have 2 modes:
 
-        * ``SendPort`` - transmit events originating in this component which can be read by
-          other components
-        * ``RecvPort`` - receive events from another components ``SendPort`` port.
-            Each recv port can be connected to *multiple* ``SendPort``.
+        * ``SendPort`` - transmit events originating in this component which
+          can be read by other components
+        * ``RecvPort`` - receive events from another components ``SendPort``
+          port. Each recv port can be connected to *multiple* ``SendPort``.
 
     For example, a synapse component may have a ``RecvPort`` connected to the
     presynaptic neurons ``SendPort`` port. When the presynaptic neuron fires;
-    it delivers an event to the synapse, which could cause it to produce current
-    flow in a post-synaptic neuron. 
+    it delivers an event to the synapse, which could cause it to produce
+    current flow in a post-synaptic neuron.
 
 
 
