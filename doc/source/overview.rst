@@ -19,22 +19,26 @@ where if :math:`v> 30mV` then we have a spike
 
     u \leftarrow u + d
 
-where :math:`a,b,c,d` are parameters of our neuron and :math:`I` is the injected current. *V* and *U* are state variables, which need to be solved over time.
+where :math:`a,b,c,d` are parameters of our neuron and :math:`I` is the
+injected current. *V* and *U* are state variables, which need to be solved over
+time.
 
 
 Interfaces: Parameters and Ports
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We begin by defining the *interface* to our neuron. The interface is composed of 
+We begin by defining the *interface* to our neuron. The interface is composed
+of 
 
- * **Parameters**: values used to instantiate a component of a particular type. In this case, these would be
-     *a*, *b*, *c* and *d*. Parameters are set once at the beginning of a simulation.
+ * **Parameters**: values used to instantiate a component of a particular type.
+   In this case, these would be *a*, *b*, *c* and *d*. Parameters are set once
+   at the beginning of a simulation.
 
  * **Ports**: which allow the component to communicate with other components
      during the simulation. Ports are divided into two categories:
 
     - **Event** ports, which transmit or receive single, discrete *events* at
-            points in time. For example, an event could represent a neuron spiking.
+      points in time. For example, an event could represent a neuron spiking.
     - **Analog** ports, which transmit or receive continuous signals, for
             example the membrane voltage of the neuron. 
 
@@ -44,10 +48,10 @@ We begin by defining the *interface* to our neuron. The interface is composed of
 
 In this case, the neuron receives an injected current *I*, which will be a
 ``recv`` Analog-port. Other components (such as synapses) may be interested in
-the neuron's voltage, *V*, so we should transmit this as a ``send`` Analog-port.
-When the neuron reaches the condition for firing (:math:`v> 30mV`), we may also
-want to notify other components about this event, so we also have a ``send``
-Event-port. 
+the neuron's voltage, *V*, so we should transmit this as a ``send``
+Analog-port. When the neuron reaches the condition for firing
+(:math:`v> 30mV`), we may also want to notify other components about this
+event, so we also have a ``send`` Event-port. 
 
 We can build a |COMPONENTCLASS|  with this interface with the following code:
 
@@ -166,7 +170,7 @@ Regime, i.e. d/dt = 0.
 
 
 Further Classes
-===============
+---------------
 
 Aliases
 ~~~~~~~

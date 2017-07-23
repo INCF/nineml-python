@@ -4,26 +4,22 @@ Hierchical Components
 
 Hierarchical components allow us to build a single component, out of several
 smaller components. For example, imagine we could build a component that
-represented an integrate-and-fire neuron (iaf) with 2 input synapses. We could
+represented an integrate-and-fire neuron (IAF) with 2 input synapses. We could
 do this by either by creating a single component, as we have been doing
-previously, or by creating 3 components; the iaf component and 2 synapses, and
+previously, or by creating 3 components; the IAF component and 2 synapses, and
 then creating a larger component out of them by specifying internal
 connectivity.
 
-
-
 Building larger components out of smaller components has several advantages:
     
-    * We can define components in a reusable way. I.e., we can write the iaf
+    * We can define components in a reusable way. I.e., we can write the IAF
         subcomponent once, then reuse it across multiple components.
     * We can isolated unrelated variables; reducing the chance of a typo
         producing a bug or variable collisions.
 
-
-
-We look at the IAF with 2 synapse example in more detail. The following figure
-shows a cartoon of an iaf neuron with a refractory period. Orange boxes denote
-regimes, yellow ovals denote transitions and the ports are shown on the
+We look at the IAF with two synapse example in more detail. The following
+figure shows a cartoon of an iaf neuron with a refractory period. Orange boxes
+denote regimes, yellow ovals denote transitions and the ports are shown on the
 right-hand-side. Parameters have been omitted.
 
 .. image:: /_static/images/iaf_component_im.png
@@ -32,14 +28,12 @@ right-hand-side. Parameters have been omitted.
 The corresponding code to generate this component is::
 
     r1 = al.Regime(name = "subthresholdregime",
-                time_derivatives = ["dV/dt = ( gl*( vrest - V ) + ISyn)/(cm)"],
-                transitions = [al.On("V > vthresh",
-                                       do=["tspike = t",
-                                           "V = vreset",
-                                           al.OutputEvent('spikeoutput')],
-                                       to="refractoryregime"),],
-              ),
-
+        time_derivatives = ["dV/dt = ( gl*( vrest - V ) + ISyn)/(cm)"],
+        transitions = [al.On("V > vthresh",
+                             do=["tspike = t",
+                                 "V = vreset",
+                                 al.OutputEvent('spikeoutput')],
+                             to="refractoryregime")])
     r2 = al.Regime(name="refractoryregime",
                    time_derivatives=["dV/dt = 0"],
     iaf = al.Dynamics( 
@@ -90,8 +84,8 @@ allows us to reference them in the future.
 We also need to specify that the voltage send port from the iaf needs to be
 connected to the voltage receive ports of the synapse. Similarly we need to
 connect the current port from the synapses into the current reduce port on the
-iaf neuron. These connections are shown in red on the diagram, and correspond to
-the arguments corresponding to the `port_connections` argument.
+IAF neuron. These connections are shown in red on the diagram, and correspond
+to the arguments corresponding to the `port_connections` argument.
 
 
 In a diagram:

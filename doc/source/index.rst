@@ -26,6 +26,7 @@ Users' guide
     getting_started
     serialization
     al_structure
+    overview
     hierarchical
     examples
     api_reference/index
