@@ -75,7 +75,7 @@ with corresponding code::
  
 
 Multi-Dynamics
---------------
+==============
 
 We now define a larger component, which will contain these sub_dynamics. When
 we create the component, we specify the name of each subcomponent, which
@@ -105,3 +105,5 @@ In code::
                                           ("iaf", "V", "coba_inhib", "V"),
                                           ("coba_excit", "I", "iaf", "ISyn"),
                                           ("coba_inhib", "I", "iaf", "ISyn")]
+                                          
+ 
