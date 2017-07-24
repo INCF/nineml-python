@@ -20,12 +20,29 @@ MathInline expressions
 
 
 
-Features and methods
-====================
+Generic features and methods
+============================
 
 All types
 ---------
 
+Methods:
+
+ * equals
+ * find_mismatch
+ * key
+ * sort_key
+ * clone
+ * write
+ * serialize
+ * unserialize
+ * annotations
+
+Document-level types
+--------------------
+
+ * document
+ * url
 
 
 Container types
@@ -48,11 +65,16 @@ NineML types that have child elements, i.e.
 all derive from the ``ContainerObject`` class, which defines several useful
 methods.
 
-Document-level types
---------------------
-
-  ``document`` and ``url`` attributes 
-
+ * add
+ * remove
+ * elements
+ * element
+ * num_elements
+ * element_keys
+ * index_of
+ * from_index
+ * parent
+ * document
 
 .. _`NineML specification`: http://nineml.net/specification/
 

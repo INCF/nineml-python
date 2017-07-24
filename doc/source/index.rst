@@ -27,7 +27,6 @@ Users' guide
     nineml_types
     serialization
     hierarchical
-    annotations
     examples
     api/index
     releases/index

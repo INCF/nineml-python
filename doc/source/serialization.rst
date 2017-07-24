@@ -61,6 +61,3 @@ If we want to load all the components from a file, we can use::
 
     from nineml.abstraction.readers import XMLReader
     component_list = XMLReader.read_components("test.xml")
-
-
-

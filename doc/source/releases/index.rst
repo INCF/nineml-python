@@ -2,7 +2,7 @@
 Release notes
 =============
 
-The following versions of NineML Python have been released
+All released NineML Python versions:
 
 .. toctree::
    :maxdepth: 1

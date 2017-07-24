@@ -8,4 +8,4 @@ This is a candidate for the first public release of the Python :mod:`nineml`
 package, corresponding to the release of `NineML specification`_.
 
 .. _`NineML specification`: http://nineml-spec.readthedocs.io/
-.. |date| date::
+.. |date| date:: %x
