@@ -14,7 +14,7 @@ encapsulated in :class:`Network`.
 Components
 ==========
 
-.. autoclass:: Component
+.. autoclass:: nineml.user.Component
    :members: component_class, properties, initial_values
 
 .. autoclass:: DynamicsProperties

@@ -29,7 +29,7 @@ Users' guide
     hierarchical
     annotations
     examples
-    api_reference/index
+    api/index
     releases/index
     getting_help
 
