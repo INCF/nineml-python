@@ -25,13 +25,13 @@ are:
         a module for specifying random distributions.
 
 Common types
-------------
+============
 
 .. autoclass:: Parameter
    :members:
 
 Mathematics
------------
+===========
 
 When writing mathematical expressions, the Python NineML library uses a
 notation similar to C/C++. That is::
@@ -67,9 +67,6 @@ in expressions, together with the constant 'pi'.
    :members:
 
 .. autoclass:: Alias
-   :members:
-
-.. autoclass:: Condition
    :members:
 
 .. autoclass:: OnCondition

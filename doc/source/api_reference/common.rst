@@ -1,6 +1,6 @@
-==========
-Common API
-==========
+================
+Common Types API
+================
 
 A number of elements are common across all modules.
 

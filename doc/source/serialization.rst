@@ -1,17 +1,32 @@
 Serialization
 =============
 
-Writing to file
----------------
+Formats
+-------
 
-To write a NineML "document-level" object to file, we can use the ``write``
-method, which takes the filename as a parameter::
+
+
+General
+-------
+
+To write a collection of NineML "document-level" objects to file, in either
+XML, YAML, JSON, HDF5, Python Pickle use the ``nineml.write`` method
+
+.. currentmodule:: nineml.serialization
+
+.. autofunction:: write
+   :members:
+
+
+which takes the filename as the first parameter followed by the objects to add
+to the document::
 
      # Construct the component:
-     c = ComponentClass(...)
+     dyn = Dynamics(...)
+     pop = Population(...)
 
      # Save the component as NineML-XML:
-     c.write("test.xml")
+     nineml.write('test.xml', dyn, pop)
 
 
 ``write`` is a simple wrapper around ``XMLWriter.write``. We could also

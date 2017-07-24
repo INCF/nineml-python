@@ -2,7 +2,7 @@
 User layer API
 ==============
 
-.. currentmodule:: nineml.user
+.. currentmodule:: nineml
 
 A NineML model is made up of populations of cells, connected via synapses,
 which may exhibit plasticity. The models for the cells, synapses and plasticity
@@ -14,10 +14,8 @@ encapsulated in :class:`Network`.
 Components
 ==========
 
-.. currentmodule:: nineml.user
-
-.. autoclass:: nineml.user.components.Component
-   :members: component_class, properties, initial_values, diff
+.. autoclass:: Component
+   :members: component_class, properties, initial_values
 
 .. autoclass:: DynamicsProperties
 
@@ -47,11 +45,23 @@ previously-defined :class:`Component`\s. :class:`Reference` is used inside
    :members: user_object
 
 
-Properties and physical quantities
-==================================
+Values and Physical Quantities
+==============================
+
+.. autoclass:: SingleValue
+
+.. autoclass:: ArrayValue
+
+.. autoclass:: RandomDistributionValue
+
+.. autoclass:: Quantity
+
+
+Properties
+==========
 
 .. autoclass:: Property
-   :members: is_single, is_array, is_random, value, quantity
+   :members: value, quantity
 
    .. attribute:: name
 
@@ -65,46 +75,29 @@ Properties and physical quantities
 
       The value of the parameter (magnitude and units).
 
-.. autoclass:: InitialValue
-
-.. currentmodule:: nineml.user.values
-
-.. autoclass:: SingleValue
-
-.. autoclass:: ArrayValue
-
-.. autoclass:: ArrayValueRow
-
-.. autoclass:: ExternalArrayValue
-
-.. autoclass:: ComponentValue
-
-
-.. currentmodule:: nineml.user
+.. autoclass:: Initial
 
 Populations
 ===========
 
 .. autoclass:: Population
-   :members: all_components
+   :members:
 
 .. autoclass:: Selection
    :members:
 
 .. autoclass:: Concatenate
-   :members: items
+   :members:
 
 
 Projections
 ===========
 
 .. autoclass:: Projection
-   :members: all_components
-
-.. autoclass:: Delay
+   :members:
 
 .. autoclass:: AnalogPortConnection
-   :members: sender, receiver, send_class, receive_class
+   :members: sender, receiver
 
    .. attribute:: send_port
 
@@ -116,7 +109,7 @@ Projections
 
 
 .. autoclass:: EventPortConnection
-   :members: sender, receiver, send_class, receive_class
+   :members: sender, receiver
 
    .. attribute:: send_port
 
@@ -131,4 +124,4 @@ Networks
 ========
 
 .. autoclass:: Network
-   :members: add
+   :members:

@@ -1,5 +1,6 @@
-:mod:`nineml` 1.0 release candidate release notes
-=================================================
+===================================
+:mod:`nineml` 1.0 release candidate
+===================================
 
 |date|
 

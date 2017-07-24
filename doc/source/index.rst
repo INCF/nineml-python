@@ -23,16 +23,15 @@ Users' guide
     
     motivation
     installation
+    relate_to_spec
     getting_started
     serialization
-    al_structure
-    overview
     hierarchical
+    annotations
     examples
     api_reference/index
-    annotations
-    getting_help
     releases/index
+    getting_help
 
 Developers' guide
 -----------------
@@ -41,7 +40,7 @@ Developers' guide
     :maxdepth: 2
 
     contributing
-    implementation
+    developer
 
 
 .. _NineML: http://nineml.net
