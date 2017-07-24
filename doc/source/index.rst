@@ -23,8 +23,8 @@ Users' guide
     
     motivation
     installation
-    relate_to_spec
     getting_started
+    nineml_types
     serialization
     hierarchical
     annotations

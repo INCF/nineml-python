@@ -1,5 +1,5 @@
-
-Hierchical Components
+=====================
+Hierarchical dynamics
 =====================
 
 Hierarchical components allow us to build a single component, out of several
