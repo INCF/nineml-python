@@ -2,6 +2,8 @@
 NineML Types
 ============
 
+.. currentmodule:: nineml
+
 Relationship to specification
 =============================
 
@@ -36,7 +38,6 @@ Methods:
  * write
  * serialize
  * unserialize
- * annotations
 
 Document-level types
 --------------------
@@ -48,7 +49,7 @@ Document-level types
 Container types
 ---------------
 
-NineML types that have child elements, i.e.
+NineML types that can have multiple child elements of one or more types, i.e.:
 
  * Dynamics
  * ConnectionRule
@@ -62,8 +63,23 @@ NineML types that have child elements, i.e.
  * Network
  * Selection
  
-all derive from the ``ContainerObject`` class, which defines several useful
-methods.
+derive from the ``ContainerObject`` class, which defines several
+methods to accessing, adding and removing their children. Internally, each
+child is stored in a dictionary according to its type. However, access to
+children is provided through four standardised accessor methods for each
+child type the container can hold:
+
+    ``<child-type-plural>``:
+        Property that returns an iterator over child elements of the given
+        type (e.g. ``aliases``, ``parameters``, ``on_conditions``)
+    ``<child-type>_names/keys``:
+        Property that returns an iterator over the names of child elements.
+        (e.g. ``alias_names``, ``parameter_names``, ``on_condition_keys``)
+    ``num_<child-type-plural>``:
+        Property that returns the number child elements in the container
+    ``<child-type>``:
+        Accessor method that takes the name/key of the child type and returns
+        the corresponding element in the container.
 
  * add
  * remove
@@ -75,6 +91,15 @@ methods.
  * from_index
  * parent
  * document
+ 
+Annotations
+-----------
+
+All NineML types can be annotated (except Annotations themselves) via their
+``annotations`` property.
+
+.. autoclass:: Annotations
+    :members: set, get, add, pop, delete, empty
 
 .. _`NineML specification`: http://nineml.net/specification/
 

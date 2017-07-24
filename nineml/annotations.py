@@ -20,6 +20,9 @@ class BaseAnnotations(BaseNineMLObject):
         return self._repr()
 
     def empty(self):
+        """
+        Returns true if there are no annotation branches.
+        """
         return not self._branches
 
     def equals(self, other, **kwargs):  # @UnusedVariable

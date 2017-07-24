@@ -25,3 +25,4 @@ from .user import (  # @IgnorePep8
 from .values import SingleValue, ArrayValue, RandomDistributionValue  # @IgnorePep8
 from .serialization import read, write, serialize, unserialize  # @IgnorePep8
 from .reference import Reference  # @IgnorePep8
+from .annotations import Annotations  # @IgnorePep8
