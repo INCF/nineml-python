@@ -26,7 +26,12 @@ class BaseReference(AnnotatedNineMLObject):
                 relative_to = os.path.dirname(document.url)
             else:
                 relative_to = None
-            remote_doc = nineml.read(url, relative_to=relative_to)
+            if (relative_to is not None and
+                os.path.realpath(os.path.join(relative_to,
+                                              url)) == document_url):
+                remote_doc = document
+            else:
+                remote_doc = nineml.read(url, relative_to=relative_to)
         else:
             remote_doc = document
         self._referred_to = remote_doc[name]

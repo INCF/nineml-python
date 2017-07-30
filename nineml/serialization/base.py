@@ -900,9 +900,12 @@ class BaseUnserializer(BaseVisitor):
         name = self.get_body(defn_elem)
         try:
             url = self.get_attr(defn_elem, 'url')
+            if url.startswith('.'):
+                url = os.path.realpath(os.path.join(os.path.dirname(self.url),
+                                                    url))
         except KeyError:
             url = None
-        if url is not None:
+        if url is not None and url != self.url:
             defn_cls = type(
                 Reference(name, self.document, url=url).user_object)
         else:
