@@ -38,9 +38,9 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
         return self.dynamics_properties.component_class
 
     def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
         node.attr('Size', self.size, in_body=True, **options)
         node.child(self.dynamics_properties, **options)
-        node.attr('name', self.name, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):

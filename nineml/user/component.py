@@ -279,9 +279,9 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                             self.component_class.name, param_dimension))
 
     def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
         node.child(self._definition, **options)
         node.children(self._properties.itervalues(), **options)
-        node.attr('name', self.name, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable

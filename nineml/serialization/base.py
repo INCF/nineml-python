@@ -1195,20 +1195,23 @@ class NodeToUnserialize(BaseNode):
             try:
                 ref_elem = self.visitor.get_child(parent_elem,
                                                   Reference.nineml_type)
+            except NineMLMissingSerializationError:
+                ref_elem = None
+            if ref_elem is not None:
                 ref = self.visitor.visit(ref_elem, Reference, **options)
                 if any(isinstance(ref.user_object, c)
                        for c in name_map.itervalues()):
                     child = ref.user_object
                 self.unprocessed_children.discard(Reference.nineml_type)
-            except NineMLMissingSerializationError:
-                pass
         # If there were no valid references to the child element look for
         # the child element itself
         if child is None:
             if allow_ref == 'only':
                 raise NineMLMissingSerializationError(
-                    "Missing reference to '{}' type elements in {}"
-                    .format("', '".join(name_map), self.name))
+                    "Missing reference to '{}' type elements in {}{}"
+                    .format("', '".join(name_map),
+                            ('{} of '.format(within)
+                             if within is not None else ''), self.name))
             child_elems = []
             for nineml_type, cls in name_map.iteritems():
                 try:

@@ -71,8 +71,8 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
         return self._operation
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.child(self.operation, **options)
         node.attr('name', self.name, **options)
+        node.child(self.operation, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable

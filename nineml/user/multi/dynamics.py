@@ -135,10 +135,10 @@ class MultiDynamicsProperties(DynamicsProperties):
         return len(self._sub_components)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
         node.children(self.sub_components, **options)
         node.children(self.port_exposures, **options)
         node.children(self.port_connections, **options)
-        node.attr('name', self.name, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):
@@ -295,8 +295,8 @@ class SubDynamicsProperties(BaseULObject):
         return _NamespaceProperty(self, self._component.property(local_name))
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.child(self._component, **options)
         node.attr('name', self.name, **options)
+        node.child(self._component, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):
@@ -506,8 +506,8 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
         return self.component_class.num_event_send_ports
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.child(self._component_class, **options)
         node.attr('name', self.name, **options)
+        node.child(self._component_class, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):
@@ -948,6 +948,7 @@ class MultiDynamics(Dynamics):
         return ComponentClass.clone(self, **kwargs)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
         node.children(self.sub_components, **options)
         node.children(self.analog_port_connections, **options)
         node.children(self.event_port_connections, **options)
@@ -956,7 +957,6 @@ class MultiDynamics(Dynamics):
         node.children(self.analog_reduce_ports, **options)
         node.children(self.event_send_ports, **options)
         node.children(self.event_receive_ports, **options)
-        node.attr('name', self.name, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):

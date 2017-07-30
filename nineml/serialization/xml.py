@@ -132,9 +132,13 @@ class XMLUnserializer(BaseUnserializer):
         try:
             xml = etree.parse(file)
         except (etree.LxmlError, IOError) as e:
+            try:
+                name = file.url
+            except AttributeError:
+                name = file.name
             raise NineMLSerializationError(
                 "Could not read URL or file path '{}': \n{}"
-                .format(file, e))
+                .format(name, e))
         return xml.getroot()
 
     def from_str(self, string):

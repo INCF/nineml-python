@@ -94,8 +94,8 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         return ':=' in alias_str
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
         node.attr('name', self.lhs, **options)
+        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
