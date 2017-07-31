@@ -19,7 +19,7 @@ objects (i.e. maintaining floating point representations of values).
 Although these six formats are similar, in that they all represent hierarchical
 object models, there are slight differences that prevent general one-to-one
 mappings between all of them. These issues, and how they are overcome are
-explained in the `Serialization Section`_ of the `NineML Specification`_.   
+explained in the `Serialization`_ of the `NineML Specification`_.   
 
 Documents
 ---------
@@ -36,10 +36,8 @@ General
 To write a collection of NineML "document-level" objects to file, in either
 XML, YAML, JSON, HDF5, Python Pickle use the ``nineml.write`` method
 
-.. currentmodule:: nineml.serialization
-
-.. autofunction:: write
-   :members:
+.. automodule:: nineml.serialization
+   :members: read, write
 
 
 which takes the filename as the first parameter followed by the objects to add
@@ -53,25 +51,26 @@ to the document::
      nineml.write('test.xml', dyn, pop)
 
 
-``write`` is a simple wrapper around ``XMLWriter.write``. We could also
-have written::
+``write`` is a simple wrapper around the relevant serializer for the selected
+data format, e.g. ``XMLSerializer.write`` for XML_ serialization. Therefore,
+we could also have written::
 
      # Construct the component:
      c = ComponentClass(...)
 
      # Save the component as NineML-XML:
-     from nineml.abstraction.writers import XMLWriter
-     XMLWriter.write(c,"test.xml")
+     from nineml.serialization.xml import XMLSerialzer
+     XMLSerializer(c).write_to_file("test.xml")
 
 
 Reading from file
 -----------------
 
-We can load files from XML; we do this with the ``XMLReader``::
+We can load files from serialized files; we do this with an Unserializer class::
 
 
-    from nineml.abstraction.readers import XMLReader
-    c = XMLReader.read("test.xml")
+    from nineml.serialization.hdf5 import HDF5Unserializer
+    c = HDF5Unserializer("test.xml").read()['comp_class_name']
 
 This will work provided there is just a single component specified in the file.
 If more than one component is specified, then we need to explicitly name the
