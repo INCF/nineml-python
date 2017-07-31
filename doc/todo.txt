@@ -1,6 +1,3 @@
-- Write sections on
-  - Annotations
-  - Relationship to spec
 - Add more notes on Document and check getting started for accuracy
 - API reference
  - Trim down methods documented in API and make sure all have doc strings
