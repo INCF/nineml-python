@@ -42,7 +42,7 @@ which adds some common methods.
 .. currentmodule:: nineml.base
 
 .. autoclass:: BaseNineMLObject
-    :members: equals, find_mismatch, key, sort_key, clone, write, serialize, unserialize  
+    :members: equals, find_mismatch, key, sort_key, clone  
 
 Document-level types
 --------------------

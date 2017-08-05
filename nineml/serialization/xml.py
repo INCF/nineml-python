@@ -63,11 +63,11 @@ class XMLSerializer(BaseSerializer):
                                              pretty_print=pretty_print,
                                              xml_declaration=xml_declaration)
 
-    def to_str(self, serial_elem, pretty_print=True,  # @ReservedAssignment @IgnorePep8
-               xml_declaration=True, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8
-        return etree.ElementTree(serial_elem).tostring(
-            encoding=encoding, pretty_print=pretty_print,
-            xml_declaration=xml_declaration)
+    def to_str(self, serial_elem, pretty_print=False,  # @ReservedAssignment @IgnorePep8
+               xml_declaration=False, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8
+        return etree.tostring(serial_elem, encoding=encoding,
+                              pretty_print=pretty_print,
+                              xml_declaration=xml_declaration)
 
     def to_elem(self, serial_elem, **options):  # @UnusedVariable
         return serial_elem

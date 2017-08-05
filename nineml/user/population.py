@@ -90,8 +90,8 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
 
     def serialize_node(self, node, **options):
         node.attr('name', self.name, **options)
-        node.child(self.cell, within='Cell', **options)
         node.attr('Size', self.size, in_body=True, **options)
+        node.child(self.cell, within='Cell', **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):

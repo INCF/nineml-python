@@ -207,6 +207,8 @@ def serialize(nineml_object, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # 
         The version to serialize the NineML objects to
     document : Document
         The document to write local references to
+    to_str : bool
+        To serialize to a string instead of a serial element.
     """
     if isinstance(nineml_object, nineml.Document):
         if document is not None and document is not nineml_object:

@@ -304,13 +304,60 @@ class BaseNineMLObject(object):
                     _clone_attr(getattr(self, attr_name), memo, **kwargs))
 
     def write(self, url, **kwargs):
+        """
+        Serialize and writes the 9ML object to file
+
+        Parameters
+        ----------
+        url : str
+            A path on the local file system (either absoluate or relative).
+            The format for the serialization is written in is determined by the
+            extension of the url.
+        register : bool
+            Whether to store the document in the cache after writing
+        version : str | float | int
+            The version to serialize the NineML objects to
+        """
         nineml.write(url, self, **kwargs)
 
     def serialize(self, **kwargs):
+        """
+        Serializes a NineML object into a serialized element
+
+        Parameters
+        ----------
+        format : str
+            The name of the format (which matches a key format_to_serializer)
+        version : str | float | int
+            The version to serialize the NineML objects to
+        document : Document
+            The document to write local references to
+        to_str : bool
+            To serialize to a string instead of a serial element.
+        """
         return nineml.serialize(self, **kwargs)
 
     @classmethod
     def unserialize(cls, serial_elem, format, **kwargs):  # @ReservedAssignment
+        """
+        Unserializes a serial element to the given NineML class
+
+        Parameters
+        ----------
+        serial_elem : <serial-element>
+            A serial element in the format given
+        format : str
+            The name of the format (which matches a key format_to_serializer)
+        version : str | float | int
+            The version to serialize the NineML objects to
+        document : Document | None
+            The document to read local references from
+        url : URL | None
+            The url to assign to the unserialized object
+        root : <serial-element>
+            A serial element of containing the document to read local
+            references from
+        """
         return nineml.unserialize(serial_elem, cls, format=format, **kwargs)
 
     def serialize_node(self, node, **options):  # @UnusedVariable

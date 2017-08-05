@@ -248,3 +248,15 @@ class TestSerialization(unittest.TestCase):
                             class_map=class_map).unserialize()
                 self.assertTrue(new_doc.equals(doc, annot_ns=[F_ANNOT_NS]),
                                 new_doc.find_mismatch(doc))
+
+    def test_to_str(self):
+        for format in ('json', 'yaml', 'xml'):  # @ReservedAssignment
+            for version in (2, 1):
+                # Check serialization to string
+                a = self.container.a
+                serial_str = a.serialize(to_str=True, format=format,
+                                         version=version)
+                new_a = A.unserialize(
+                    serial_str, format=format, version=version)
+                self.assertTrue(new_a.equals(a, annot_ns=[F_ANNOT_NS]),
+                                new_a.find_mismatch(a))
