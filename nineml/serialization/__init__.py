@@ -65,6 +65,26 @@ format_to_unserializer = {
 
 
 def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @ReservedAssignment @IgnorePep8
+    """
+    Reads a NineML document from the given url or file system path and returns
+    a Document object.
+
+    Parameters
+    ----------
+    url : str
+        An url or path on the local file system (either absoluate or relative).
+        The format the file is read-from/written-to is determined by the
+        extension of the url/filename.  If a '#' is in the ``url`` string then
+        the part of the string after the '#' is treated as the name of the
+        object to return from the Document.
+    relative_to : URL | None
+        The URL/file path to resolve relative file paths from
+    reload : bool
+        Whether to reload the document from file if it is already in the cache
+        or not.
+    register : bool
+        Whether to store the document in the cache after it is read
+    """
     if not isinstance(url, basestring):
         raise NineMLIOError(
             "{} is not a valid URL (it is not even a string)"
@@ -126,8 +146,18 @@ def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @Rese
 
 def write(url, *nineml_objects, **kwargs):
     """
-    Provided for symmetry with read method, takes a nineml.document.Document
-    object and writes it to the specified file
+    Writes NineML objects or single document to file given by a path
+
+    Parameters
+    ----------
+    url : str
+        A path on the local file system (either absoluate or relative).
+        The format for the serialization is written in is determined by the
+        extension of the url.
+    register : bool
+        Whether to store the document in the cache after writing
+    version : str | float | int
+        The version to serialize the NineML objects to
     """
     register = kwargs.pop('register', True)
     # Encapsulate the NineML element in a document if it is not already
@@ -163,7 +193,21 @@ def write(url, *nineml_objects, **kwargs):
 
 
 def serialize(nineml_object, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # @ReservedAssignment @IgnorePep8
-              document=None, **kwargs):
+              document=None, to_str=False, **kwargs):
+    """
+    Serializes a NineML object into a serialized element
+
+    Parameters
+    ----------
+    nineml_object : BaseNineMLObject
+        The object to serialize
+    format : str
+        The name of the format (which matches a key format_to_serializer)
+    version : str | float | int
+        The version to serialize the NineML objects to
+    document : Document
+        The document to write local references to
+    """
     if isinstance(nineml_object, nineml.Document):
         if document is not None and document is not nineml_object:
             raise NineMLSerializationError(
@@ -172,14 +216,42 @@ def serialize(nineml_object, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # 
         document = nineml_object
     Serializer = format_to_serializer[format]
     serializer = Serializer(version=version, document=document)
-    return serializer.visit(nineml_object, **kwargs)
+    serial_elem = serializer.visit(nineml_object, **kwargs)
+    if to_str:
+        serialized = serializer.to_str(serial_elem, **kwargs)
+    else:
+        serialized = serial_elem
+    return serialized
 
 
 def unserialize(serial_elem, nineml_cls, format, version,  # @ReservedAssignment @IgnorePep8
                 root=None, url=None, document=None, **kwargs):
+    """
+    Unserializes a serial element to the given NineML class
+
+    Parameters
+    ----------
+    serial_elem : <serial-element>
+        A serial element in the format given
+    nineml_cls : type
+        The class to attempt to unserialize the serial element to
+    format : str
+        The name of the format (which matches a key format_to_serializer)
+    version : str | float | int
+        The version to serialize the NineML objects to
+    document : Document | None
+        The document to read local references from
+    url : URL | None
+        The url to assign to the unserialized object
+    root : <serial-element>
+        A serial element of containing the document to read local references
+        from
+    """
     Unserializer = format_to_unserializer[format]
     unserializer = Unserializer(version=version, root=root,
                                 url=url, document=document)
+    if isinstance(serial_elem, basestring):
+        serial_elem = unserializer.from_str(serial_elem, **kwargs)
     return unserializer.visit(serial_elem, nineml_cls, **kwargs)
 
 
