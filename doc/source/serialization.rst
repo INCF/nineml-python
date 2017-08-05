@@ -94,7 +94,7 @@ used when serializing NineML documents. Valid options are
 
 
 local:
-   All references are written locallly to the serialized document.
+   All references are written locally to the serialized document.
 prefer:
    Objects are written as references where possible
 inline:
