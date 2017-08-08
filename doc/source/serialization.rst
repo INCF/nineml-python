@@ -62,10 +62,10 @@ standard Python objects (i.e dictionary or pickled dictionary).
 
 .. note::
    Although the set of hierarchical object models that can be represented by
-   XML_, JSON_/YAML_ and HDF5_ are very similar there are slight differences
+   XML_, JSON_/YAML_ and HDF5_ are very similar, there are slight differences
    that prevent general one-to-one mappings between them. These issues,
-   and how they are overcome are explained in the `Serialization`_ of the
-   `NineML Specification`_.
+   and how they are overcome are explained in the `Serialization Section`_ of
+   the `NineML Specification`_.
 
 
 Versions
@@ -109,5 +109,6 @@ None:
 .. _HDF5: http://www.hdfgroup.org/HDF5/
 .. _JSON: http://www.json.org/
 .. _`Python Pickle`: https://docs.python.org/3/library/pickle.html
+.. _`Serialization Section`: http://nineml-spec.readthedocs.io/latest/serialization
 .. _`NineML specification`: http://nineml.net/specification/
 .. _`NineML catalog`: http://github.com/INCF/nineml-catalog
