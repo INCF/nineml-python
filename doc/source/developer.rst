@@ -65,9 +65,7 @@ including ``add``, ``remove``, and general iterators used to traverse the
 object hierarchy.
 
 Children of container objects should be stored with separate dictionary
-attributes for each child type named::
-
-    _<pluralized-lowercase-child-type>
+attributes for each child type named *_<pluralized-lowercase-child-type>*
     
 Iterators and accessors
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,15 +73,15 @@ Iterators and accessors
 The container class also needs to define three iterator properties and one
 accessor method following the conventions
 
-<pluralized-lowercase-child-type>:
+*<pluralized-lowercase-child-type>*:
     A property that returns an iterator over all children in the dictionary
-num_<pluralized-lowercase-child-type>:
+*num_<pluralized-lowercase-child-type>*:
     A property that returns the number of children in the dictionary:
-<pluralized-lowercase-child-type>_names
+*<pluralized-lowercase-child-type>_names*:
     A property that returns an iterator over the keys of the dictionary.
     If the child type doesn't have a ``name`` attribute then the iterator
     should be named <pluralized-lowercase-nineml-type>_keys instead.
-<lowercase-child-type>:
+*<lowercase-child-type>*:
     An accessor that takes the name (or key) of a child and returns the child.
 
 ``class_to_member``
