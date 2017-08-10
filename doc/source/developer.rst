@@ -65,7 +65,7 @@ including ``add``, ``remove``, and general iterators used to traverse the
 object hierarchy.
 
 Children of container objects should be stored with separate dictionary
-attributes for each child type named *_<pluralized-lowercase-child-type>*
+attributes for each child type named ``_<pluralized-lowercase-child-type>``.
     
 Iterators and accessors
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -87,8 +87,9 @@ accessor method following the conventions
 ``class_to_member``
 ^^^^^^^^^^^^^^^^^^^
 
-Container classes must also have a ``class_to_member`` attribute that maps the
-name of the child type to the accessor method i.e. ``<lowercase-child-type>``.
+Container classes must also have a ``class_to_member`` dictionary attribute
+that maps the name of the child type to the accessor method i.e.
+``<lowercase-child-type>``.
 
 
 DocumentLevelObject
@@ -128,7 +129,7 @@ node.
 
 The node method calls then call format-specific method of the serialization
 visitor to un/serialize the NineML objects.  However, in some cases (
-particularly in some fiddly v1.0 syntax), the serialization visitor needs to
+particularly in some awkward v1.0 syntax), the serialization visitor needs to
 be accessed directly, which is available at ``node.visitor``.
 
  
