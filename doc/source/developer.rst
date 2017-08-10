@@ -88,8 +88,14 @@ accessor method following the conventions
 ^^^^^^^^^^^^^^^^^^^
 
 Container classes must also have a ``class_to_member`` dictionary attribute
-that maps the name of the child type to the accessor method i.e.
-``<lowercase-child-type>``.
+that maps the name of the child type to the name of the accessor method i.e.
+
+.. code-block:: python
+    
+    class AContainerClass(ContainerObject):
+
+        class_to_member = {'AChildType': 'achildtype',
+                           'AnotherChildType': 'anotherchildtype'}
 
 
 DocumentLevelObject
