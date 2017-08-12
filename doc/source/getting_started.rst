@@ -14,7 +14,7 @@ To read a file containing only abstraction layer elements:
 .. code-block:: python
 
    >>> import nineml, pprint
-   >>> doc = nineml.read("BrunelIaF.xml")
+   >>> doc = nineml.read("./BrunelIaF.xml")
    >>> pprint(doc.items())
    [('BrunelIaF', Dynamics(name='BrunelIaF')),
     ('current', Dimension(name='current', i=1)),
