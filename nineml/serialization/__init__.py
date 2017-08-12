@@ -103,7 +103,8 @@ def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @Rese
         mtime = None  # Cannot load mtime of a general URL
     else:
         raise NineMLIOError(
-            "{} is not a valid URL or file path".format(url))
+            "{} is not a valid URL or file path (NB: relative file paths must "
+            "start with './')".format(url))
     if reload:
         nineml.Document.registry.pop(url, None)
     try:  # Try to use cached document in registry

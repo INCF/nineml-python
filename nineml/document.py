@@ -263,10 +263,20 @@ class Document(AnnotatedNineMLObject, dict):
         return result
 
     def as_network(self, name):
+        populations = []
+        projections = []
+        selections = []
+        for elem in self.elements:
+            if isinstance(elem, nineml.Population):
+                populations.append(elem)
+            elif isinstance(elem, nineml.Projection):
+                projections.append(elem)
+            elif isinstance(elem, nineml.Selection):
+                selections.append(elem)
         # Return Document as a Network object
         return nineml.user.Network(
-            name, populations=self.populations, projections=self.projections,
-            selections=self.selections)
+            name, populations=populations, projections=projections,
+            selections=selections)
 
     def serialize_node(self, node, **options):
         node.children(
