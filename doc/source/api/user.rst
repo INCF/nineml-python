@@ -14,14 +14,14 @@ encapsulated in :class:`Network`.
 Components
 ==========
 
-.. autoclass:: nineml.user.Component
+.. autoclass:: DynamicsProperties
    :members: component_class, properties, initial_values
 
-.. autoclass:: DynamicsProperties
-
 .. autoclass:: ConnectionRuleProperties
+   :members: component_class, properties
 
 .. autoclass:: RandomDistributionProperties
+   :members: component_class, properties
 
 References
 ==========
@@ -49,79 +49,56 @@ Values and Physical Quantities
 ==============================
 
 .. autoclass:: SingleValue
+   :members: name, value, units, quantity
 
 .. autoclass:: ArrayValue
+   :members: name, value, units, quantity
 
 .. autoclass:: RandomDistributionValue
+   :members: name, value, units, quantity
 
 .. autoclass:: Quantity
+   :members: name, value, units, quantity
 
 
 Properties
 ==========
 
 .. autoclass:: Property
-   :members: value, quantity
-
-   .. attribute:: name
-
-      The name of the parameter.
-
-   .. attribute:: unit
-
-      The units of the parameter.
-
-   .. attribute:: value
-
-      The value of the parameter (magnitude and units).
+   :members: name, value, units, quantity
 
 .. autoclass:: Initial
+   :members: name, value, units, quantity
 
 Populations
 ===========
 
 .. autoclass:: Population
-   :members:
+   :members: all_components, cell, component_class, component_classes, name, size
 
 .. autoclass:: Selection
-   :members:
+   :members: port, receive_port, send_port, name, populations, ports, size, operation
 
 .. autoclass:: Concatenate
-   :members:
+   :members: items, num_items, populations
 
 
 Projections
 ===========
 
 .. autoclass:: Projection
-   :members:
+   :members: all_components, connections, connectivity, delay, name, plasticity, post, pre, response, port_connections
 
 .. autoclass:: AnalogPortConnection
-   :members: sender, receiver
-
-   .. attribute:: send_port
-
-      The name of the send port.
-
-   .. attribute:: receive_port
-
-      The name of the receive or reduce port.
+   :members: sender, receiver, send_port, receive_port
 
 
 .. autoclass:: EventPortConnection
-   :members: sender, receiver
-
-   .. attribute:: send_port
-
-      The name of the send port.
-
-   .. attribute:: receive_port
-
-      The name of the receive or reduce port.
+   :members: sender, receiver, send_port, receive_port
 
 
 Networks
 ========
 
 .. autoclass:: Network
-   :members:
+   :members: all_components, delay_limits, flatten, name, scale, resample_connectivity, connectivity_has_been_sampled

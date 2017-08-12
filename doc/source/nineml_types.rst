@@ -111,7 +111,7 @@ There are a number of standard methods for container types
 .. currentmodule:: nineml.base
 
 .. autoclass:: ContainerObject
-   :members: add, remove, elements, element, num_elements, element_keys, index_of, from_index, parent, document 
+   :members: add, remove, elements, element, num_elements, element_keys, index_of, from_index, parent, document, assign_indices
 
  
 Annotations

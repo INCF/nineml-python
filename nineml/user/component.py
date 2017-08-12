@@ -112,10 +112,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     properties : List[Property]|Dict[str,Quantity]
         a dictionary containing (value,units) pairs or a
         for the component_class's properties.
-    initial_values : List[Property]|Dict[str,Quantity]
-        a dictionary containing (value,units) pairs or a
-        for the component_class's state variables.
-
     """
     __metaclass__ = ABCMeta  # Abstract base class
     v1_nineml_type = 'Component'

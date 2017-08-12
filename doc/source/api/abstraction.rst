@@ -28,86 +28,101 @@ Common types
 ============
 
 .. autoclass:: Parameter
-   :members:
+   :members: name, dimension, set_dimension
 
 Mathematics
 ===========
 
-When writing mathematical expressions, the Python NineML library uses a
-notation similar to C/C++. That is::
+Mathematical expressions are stored in Sympy_ objects throughout the Python
+NineML library. However, they are typically constructed by passing a string
+representation to a derived class of the ``Expression`` class (
+e.g. ``Trigger``, ``Alias``). The Sympy_ string parsing has been slightly
+extended to handle the ANSI-C-based format in the NineML specification, such as
+using the caret symbol to signify raising to the power of (Sympy_ uses the
+Python syntax of '**' to signify raising to the power of), e.g::
 
-    (3B + 1)V^2
+    (3 * B + 1) * V ^ 2
 
-is not valid, it should be written as::
+.. note::
+    Currently, trigonometric functions are parsed as generic functions but this
+    is planned to change in later versions of the library to use in-built
+    Sympy_ functions. For the most part this will not have much effect on the
+    represented expressions but in some cases it may prevent Sympy_'s solving
+    and simplifying algorithms from making use of additional assumptions.
 
-    (3*B + 1) * V * V
-
-The functions 'exp', 'sin', 'cos', 'log', 'log10', 'pow', 'sinh', 'cosh',
-'tanh', 'sqrt', 'mod', 'sum', 'atan', 'asin', 'acos', 'asinh', 'acosh',
-'atanh', 'atan2', 'uniform', 'binomial', 'poisson', 'exponential' can be used
-in expressions, together with the constant 'pi'.
-
+.. autoclass:: Expression
+   :members: negate, expand_integer_powers, rhs_name_transform_inplace, rhs_str_substituted, rhs_suffixed, simplify, subs, rhs_as_python_func, rhs_atoms, rhs_cstr, rhs_funcs, rhs_random_distributions, rhs_str, rhs_symbol_names, rhs_symbols
 
 :mod:`dynamics` module
 ======================
 
 .. autoclass:: Dynamics
-   :members:
-
-.. autoclass:: Regime
-   :members:
-
-.. autoclass:: TimeDerivative
-   :members:
-
-.. autoclass:: StateVariable
-   :members:
-
-.. autoclass:: Expression
-   :members:
+   :members: all_on_conditions, all_on_events, all_output_analogs, all_time_derivatives, all_transitions, dimension_of, find_element, is_random, is_flat, is_linear, rename_symbol, overridden_in_regimes, required_for, substitute_aliases, validate, all_expressions, regimes, state_variables, parameters, analog_receive_ports, analog_reduce_ports, analog_send_ports, event_send_ports, event_receive_ports
 
 .. autoclass:: Alias
-   :members:
+   :members: from_str, is_alias_str, name
 
-.. autoclass:: OnCondition
-   :members:
-
-.. autoclass:: OnEvent
-   :members:
-
-.. autoclass:: StateAssignment
-   :members:
-
-.. autoclass:: OutputEvent
-   :members:
+Ports
+-----
 
 .. autoclass:: AnalogSendPort
-   :members:
+   :members: name, is_incoming, can_connect_to, dimension
 
 .. autoclass:: AnalogReceivePort
-   :members:
+   :members: name, is_incoming, can_connect_to, dimension
 
 .. autoclass:: AnalogReducePort
-   :members:
+   :members: name, is_incoming, can_connect_to, dimension, operator
 
 .. autoclass:: EventSendPort
-   :members:
+   :members: name, is_incoming, can_connect_to
 
 .. autoclass:: EventReceivePort
-   :members:
+   :members: name, is_incoming, can_connect_to
+
+Time derivatives
+----------------
+
+.. autoclass:: Regime
+   :members: all_state_assignments, all_target_triggers, add, remove, find_element, no_time_derivatives, time_derivatives, on_conditions, on_events
+
+.. autoclass:: TimeDerivative
+   :members: variable, from_str, rhs, key
+
+.. autoclass:: StateVariable
+   :members: set_dimension, dimension, name
+
+Transitions
+-----------
+
+.. autoclass:: OnEvent
+   :members: src_port_name, port, target_regime, source_regime, target_regime_name, set_target_regime, set_source_regime, state_assignments, output_events
+
+.. autoclass:: OnCondition
+   :members: trigger, target_regime, source_regime, target_regime_name, set_target_regime, set_source_regime, state_assignments, output_events
+
+.. autoclass:: Trigger
+   :members: reactivate_condition, crossing_time_expr, key
+
+.. autoclass:: StateAssignment
+   :members: variable, from_str
+
+.. autoclass:: OutputEvent
+   :members: port, port_name
 
 
 :mod:`connectionrule` module
 ============================
 
 .. autoclass:: ConnectionRule
-   :members:
+   :members: standard_library, standard_types
 
 
 :mod:`randomdistribution` module
 ================================
 
 .. autoclass:: RandomDistribution
-   :members:
+   :members: standard_library, standard_types
 
 
+.. _SymPy: http://www.sympy.org/

@@ -33,9 +33,16 @@ t = sympy.Symbol('t')  # The symbol for time
 
 class Expression(AnnotatedNineMLObject):
 
-    """ This is a base class for Expressions and Conditionals which provides
+    """
+    Base class for Expressions and Conditionals which provides
     the basic interface for parsing, yielding of python functions,
-    C equivalents, name substitution """
+    C equivalents, name substitution
+
+    Parameters
+    ----------
+    rhs : str | Sympy.Basic
+        The expression in string or Sympy_ form
+    """
 
     defining_attributes = ('_rhs',)
 

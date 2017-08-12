@@ -230,11 +230,7 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     An |AnalogReducePort| represents a collection of continuous inputs to a
     Component from a common type of input that can be reduced into a single
     input. For example, or the currents provided by a collection of
-    ion-channels.
-
-    .. note::
-
-        Currently support ``operator`` s are: ``+``.
+    ion-channels. NB: The only currently supported operators are: ``+``.
 
     """
     nineml_type = 'AnalogReducePort'

@@ -276,8 +276,6 @@ class Transition(BaseALObject, ContainerObject):
     def set_source_regime(self, regime):
         """Returns the target regime of this transition.
 
-        .. note::
-
         Notes
         -----
         This method will only be available after the Dynamics

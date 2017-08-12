@@ -7,16 +7,30 @@ from nineml.base import (
 
 
 class Initial(Property):
-
     """
-    temporary, longer-term plan is to use SEDML or something similar
+    Represents the initial state of a state variable
     """
     nineml_type = "Initial"
 
 
 class DynamicsProperties(Component, DynamicPortsObject):
     """
-    Container for the set of properties for a component_class.
+    A DynamicsProperties may be regarded as a parameterized instance of a
+    nineml.abstraction.Dynamics.
+
+    Parameters
+    ----------
+    name : str
+        a name for the component_class.
+    definition : Definition
+        the URL of an abstraction layer component_class class definition,
+        a Definition or a Prototype instance.
+    properties : List[Property]|Dict[str,Quantity]
+        a dictionary containing (value,units) pairs or a
+        for the component_class's properties.
+    initial_values : List[Property]|Dict[str,Quantity]
+        a dictionary containing (value,units) pairs or a
+        for the component_class's state variables.
     """
     nineml_type = 'DynamicsProperties'
     defining_attributes = ('_name', '_definition', '_properties',

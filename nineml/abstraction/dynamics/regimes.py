@@ -163,7 +163,6 @@ class TimeDerivative(ODE, BaseALObject):
 
 
 class Regime(BaseALObject, ContainerObject):
-
     """
     A Regime is something that contains TimeDerivatives, has temporal extent,
     defines a set of Transitions which occur based on |Conditions|, and can
@@ -181,7 +180,7 @@ class Regime(BaseALObject, ContainerObject):
     transitions : list(Transition)
         A list containing either OnEvent or OnCondition objects, which will
         automatically be sorted into the appropriate classes automatically.
-    *args : list(TimeDerivative)
+    \*args : list(TimeDerivative)
         Any non-keyword arguments will be treated as time_derivatives.
     """
 
