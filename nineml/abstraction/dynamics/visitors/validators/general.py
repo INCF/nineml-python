@@ -41,7 +41,8 @@ class TimeDerivativesAreDeclaredDynamicsValidator(BaseDynamicsVisitor):
             timederivative.variable)
 
 
-class StateAssignmentsAreOnStateVariablesDynamicsValidator(BaseDynamicsVisitor):
+class StateAssignmentsAreOnStateVariablesDynamicsValidator(
+        BaseDynamicsVisitor):
 
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
@@ -72,7 +73,8 @@ class AliasesAreNotRecursiveDynamicsValidator(
 
 
 class NoUnresolvedSymbolsDynamicsValidator(
-        NoUnresolvedSymbolsComponentValidator):
+        NoUnresolvedSymbolsComponentValidator,
+        BaseDynamicsVisitor):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
@@ -136,7 +138,8 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
 
 
 class NoDuplicatedObjectsDynamicsValidator(
-        NoDuplicatedObjectsComponentValidator):
+        NoDuplicatedObjectsComponentValidator,
+        BaseDynamicsVisitor):
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         self.all_objects.append(regime)
@@ -191,7 +194,8 @@ class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(BaseDynamicsVisitor):
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
-        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator):
+        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
+        BaseDynamicsVisitor):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -208,7 +212,8 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
         self.check_lhssymbol_is_valid(time_derivative.variable)
 
 
-class DimensionalityDynamicsValidator(DimensionalityComponentValidator):
+class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
+                                      BaseDynamicsVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(DimensionalityDynamicsValidator,
