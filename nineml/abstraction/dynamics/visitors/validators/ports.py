@@ -17,8 +17,7 @@ class EventPortsDynamicsValidator(BaseNineMLVisitor):
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        super(EventPortsDynamicsValidator, self).__init__(
-            require_explicit_overrides=False, **kwargs)
+        super(EventPortsDynamicsValidator, self).__init__()
 
         # Mapping component_class to list of events/eventports at that
         # component_class
@@ -85,8 +84,7 @@ class OutputAnalogPortsDynamicsValidator(BaseNineMLVisitor):
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        super(OutputAnalogPortsDynamicsValidator, self).__init__(
-            require_explicit_overrides=False, **kwargs)
+        super(OutputAnalogPortsDynamicsValidator, self).__init__()
         self.output_analogports = []
         self.available_symbols = []
         self.component_class = component_class

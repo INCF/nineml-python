@@ -13,7 +13,7 @@ from nineml.base import BaseNineMLVisitor
 class TypesComponentValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor(self).__init__()
+        BaseNineMLVisitor.__init__(self)
         self.visit(component_class)
 
     def action_componentclass(self, component):

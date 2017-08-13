@@ -22,7 +22,7 @@ class LocalNameConflictsComponentValidator(BaseNineMLVisitor):
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__()
+        BaseNineMLVisitor.__init__(self)
         self.symbols = []
         self.component_class = component_class
         self.visit(component_class)
@@ -49,7 +49,7 @@ class LocalNameConflictsComponentValidator(BaseNineMLVisitor):
 class DimensionNameConflictsComponentValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__()
+        BaseNineMLVisitor.__init__(self)
         self.dimensions = {}
         self.visit(component_class)
 

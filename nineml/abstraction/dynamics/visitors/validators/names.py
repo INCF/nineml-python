@@ -57,8 +57,7 @@ class DimensionNameConflictsDynamicsValidator(
 class DuplicateRegimeNamesDynamicsValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        super(DuplicateRegimeNamesDynamicsValidator, self).__init__(
-            require_explicit_overrides=False)
+        super(DuplicateRegimeNamesDynamicsValidator, self).__init__()
         self.visit(component_class)
 
     def action_componentclass(self, component_class):  # @UnusedVariable @IgnorePep8
@@ -69,8 +68,7 @@ class DuplicateRegimeNamesDynamicsValidator(BaseNineMLVisitor):
 class RegimeAliasMatchesBaseScopeValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        super(RegimeAliasMatchesBaseScopeValidator, self).__init__(
-            require_explicit_overrides=False)
+        super(RegimeAliasMatchesBaseScopeValidator, self).__init__()
         self.component_class = component_class
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable

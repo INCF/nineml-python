@@ -45,7 +45,7 @@ class ComponentRequiredDefinitions(BaseNineMLVisitor):
     """
 
     def __init__(self, component_class, expressions):
-        BaseNineMLVisitor(self).__init__()
+        BaseNineMLVisitor.__init__(self)
         # Expression can either be a single expression or an iterable of
         # expressions
         self.parameters = set()

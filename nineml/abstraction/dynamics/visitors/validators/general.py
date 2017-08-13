@@ -181,7 +181,7 @@ class NoDuplicatedObjectsDynamicsValidator(
 class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__()
+        BaseNineMLVisitor.__init__(self)
         self.visit(component_class)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable

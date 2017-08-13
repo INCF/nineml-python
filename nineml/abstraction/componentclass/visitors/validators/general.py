@@ -22,7 +22,7 @@ class AliasesAreNotRecursiveComponentValidator(BaseNineMLVisitor):
     """Check that aliases are not self-referential"""
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__()
+        BaseNineMLVisitor.__init__(self)
         self.visit(component_class)
 
     def action_componentclass(self, component_class):
@@ -58,7 +58,7 @@ class NoUnresolvedSymbolsComponentValidator(BaseNineMLVisitor):
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseNineMLVisitor.__init__()
+        BaseNineMLVisitor.__init__(self)
 
         self.available_symbols = []
         self.aliases = []
@@ -143,7 +143,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__()
+        BaseNineMLVisitor.__init__(self)
 
         self.visit(component_class)
 
