@@ -94,13 +94,13 @@ dynB = Dynamics(
                do=[StateAssignment('SV3', '2 * random.normal()')])])
     ],
     constants=[Constant('C1', 10.0 * un.mA, un.nA)],
-    analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
-                  AnalogReducePort('ADP1', operator='+'),
-                  AnalogSendPort('A1'),
-                  AnalogSendPort('A2'),
-                  AnalogSendPort('SV3')],
-    event_ports=[EventSendPort('ESP1'),
-                 EventReceivePort('ERP1')],
+    analog_receive_ports=[AnalogReceivePort('ARP1', dimension=un.current)],
+    analog_reduce_ports=[AnalogReducePort('ADP1', operator='+')],
+    analog_send_ports=[AnalogSendPort('A1'),
+                       AnalogSendPort('A2'),
+                       AnalogSendPort('SV3')],
+    event_send_ports=[EventSendPort('ESP1')],
+    event_receive_ports=[EventReceivePort('ERP1')],
     parameters=['P1', 'P2', 'P3']
 )
 
@@ -112,15 +112,16 @@ dynC = Dynamics(
         Regime(
             'dSV1/dt = -SV1 / (P2*t)',
             'dSV2/dt = SV1 / (ARP1*t) + SV2 / (P1*t)',
-            transitions=[On('SV1 > P1', do=[OutputEvent('ESP1')]),
-                         On('ERP1', do=[OutputEvent('ESP1')])],
+            on_conditions=[OnCondition('SV1 > P1',
+                                       output_events=[OutputEvent('ESP1')])],
+            on_events=[OnEvent('ERP1', output_events=[OutputEvent('ESP1')])],
             aliases=[Alias('A1', 'P1 * 2')],
             name='R1',
         ),
         Regime(name='R2', transitions=On('SV1 > 1', to='R1'))
     ],
-    analog_ports=[AnalogReceivePort('ARP1'), AnalogReceivePort('ARP2'),
-                  AnalogSendPort('A1'), AnalogSendPort('A2')],
+    ports=[AnalogReceivePort('ARP1'), AnalogReceivePort('ARP2'),
+           AnalogSendPort('A1'), AnalogSendPort('A2')],
     parameters=['P1', 'P2']
 )
 
@@ -140,9 +141,11 @@ dynD = Dynamics(
     ],
     constants=[Constant('C1', -67.0 * un.Mohm)],
     aliases=[Alias('A1', Expression('SV1 / C1'))],
-    analog_ports=[AnalogSendPort('A1', dimension=un.current),
-                  AnalogReducePort('ADP1', dimension=un.voltage / un.time),
-                  AnalogReceivePort('ARP1', dimension=un.current)],
+    ports=[AnalogSendPort('A1', dimension=un.current),
+           AnalogReducePort('ADP1', dimension=un.voltage / un.time),
+           AnalogReceivePort('ARP1', dimension=un.current),
+           EventSendPort('ESP1'),
+           EventReceivePort('ERP1')],
     parameters=[Parameter('P1', dimension=un.time),
                 Parameter('P2', dimension=un.voltage),
                 Parameter('P3', dimension=un.voltage / (un.time * un.current))]

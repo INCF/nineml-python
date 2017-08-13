@@ -180,8 +180,14 @@ class Regime(BaseALObject, ContainerObject):
     transitions : list(Transition)
         A list containing either OnEvent or OnCondition objects, which will
         automatically be sorted into the appropriate classes automatically.
+    on_conditions : list(OnCondition)
+        A list containing either OnEvent or OnCondition objects, which will
+        automatically be sorted into the appropriate classes automatically.
+    on_events : list(OnEvent)
+        A list containing either OnEvent or OnCondition objects, which will
+        automatically be sorted into the appropriate classes automatically.
     \*args : list(TimeDerivative)
-        Any non-keyword arguments will be treated as time_derivatives.
+        Any non-keyword arguments will be treated as a TimeDerivative.
     """
 
     nineml_type = 'Regime'
@@ -210,7 +216,8 @@ class Regime(BaseALObject, ContainerObject):
     def __init__(self, *args, **kwargs):
         BaseALObject.__init__(self)
         ContainerObject.__init__(self)
-        valid_kwargs = ('name', 'transitions', 'time_derivatives', 'aliases')
+        valid_kwargs = ('name', 'transitions', 'on_events', 'on_conditions',
+                        'time_derivatives', 'aliases')
         for arg in kwargs:
             if arg not in valid_kwargs:
                 err = 'Unexpected Arg: %s' % arg
@@ -251,11 +258,16 @@ class Regime(BaseALObject, ContainerObject):
         self.add(*time_derivatives)
 
         # We support passing in 'transitions', which is a list of both OnEvents
-        # and OnConditions. So, lets filter this by type and add them
-        # appropriately:
+        # and OnConditions as well as separate on_conditions and on_events.
         transitions = normalise_parameter_as_list(
             kwargs.get('transitions', None))
         self.add(*transitions)
+        on_conditions = normalise_parameter_as_list(
+            kwargs.get('on_conditions', None))
+        self.add(*on_conditions)
+        on_events = normalise_parameter_as_list(
+            kwargs.get('on_events', None))
+        self.add(*on_events)
 
         # Add regime specific aliases
         aliases = normalise_parameter_as_list(kwargs.get('aliases', None))

@@ -199,7 +199,9 @@ class TestAnnotations(unittest.TestCase):
                                             output_events=[
                                                 OutputEvent('ESP3'),
                                                 OutputEvent('ESP2')],
-                                            target_regime='R1')])])
+                                            target_regime='R1')])],
+            aliases=[Alias('ASP1', 'SV1+SV2'),
+                     Alias('ASP2', 'SV2+SV3')])
         # Set indices of parameters in non-ascending order so that they
         # can be differentiated from indices on read.
         a.index_of(a.parameter('P1'))

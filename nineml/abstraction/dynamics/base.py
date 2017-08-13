@@ -35,13 +35,25 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         A list containing either |Parameter| objects
         or strings representing the parameter names. If ``None``, then the
         parameters are automatically inferred from the |Dynamics| block.
+    ports : list(Port)
+        A list of ports for the dynamics class. The most general argument to
+        pass ports into the constructor with. Note that you can also use the
+        more specific arguments (e.g. analog_ports, analog_send_ports, et...),
+        a they all get concatenated in the end in any case.
     analog_ports : list(AnalogPort)
-        A list of |AnalogPorts|, which will be the
-        local |AnalogPorts| for this object.
+        A list of analog ports for the dynamics class
     event_ports: list(EventPort)
-        A list of |EventPorts| objects, which will be the
-        local event-ports for this object. If this is ``None``, then they
-        will be automatically inferred from the dynamics block.
+        A list of event ports for the dynamics class
+    event_send_ports: list(EventPort)
+        A list of event send ports for the dynamics class
+    event_receive_ports: list(EventPort)
+        A list of event receive ports for the dynamics class
+    analog_receive_ports : list(AnalogPort)
+        A list of analog receive ports for the dynamics class
+    analog_reduce_ports : list(AnalogPort)
+        A list of analog reduce ports for the dynamics class
+    analog_send_ports : list(AnalogPort)
+        A list of analog send ports for the dynamics class
     regimes: list(Regime)
         List of the regimes within the Dynamics component class
     aliases : list(Alias)
@@ -91,8 +103,11 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',
                           '_event_send_ports')
 
-    def __init__(self, name, parameters=None, analog_ports=[],
-                 event_ports=[], regimes=None, aliases=None,
+    def __init__(self, name, parameters=None, ports=None, analog_ports=None,
+                 event_ports=None, analog_receive_ports=None,
+                 analog_reduce_ports=None, analog_send_ports=None,
+                 event_receive_ports=None, event_send_ports=None,
+                 regimes=None, aliases=None,
                  state_variables=None, constants=None,
                  validate_dimensions=True, strict_unused=True,
                  **kwargs):
@@ -115,9 +130,27 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         self._regimes = dict((r.name, r) for r in regimes)
         self._state_variables = dict((s.name, s) for s in state_variables)
 
-        # Ensure analog_ports is a list not an iterator
-        analog_ports = list(analog_ports)
-        event_ports = list(event_ports)
+        # Combine various port arguments into analog and event port lists.
+        # The original constructor just had analog_ports and event_ports, so
+        # they were retained for backwards compatibility and the other args
+        # were added to make it more forgiving.
+        if analog_ports is None:
+            analog_ports = []
+        if event_ports is None:
+            event_ports = []
+        for ports_arg in (ports, analog_receive_ports, analog_reduce_ports,
+                          analog_send_ports, event_receive_ports,
+                          event_send_ports):
+            if ports_arg is not None:
+                for port in ports_arg:
+                    if port.communicates == 'analog':
+                        analog_ports.append(port)
+                    elif port.communicates == 'event':
+                        event_ports.append(port)
+                    else:
+                        assert False, (
+                            "Unrecognised port communication '{}' for port {}"
+                            .format(port.communicates, port))
 
         # Check there aren't any duplicates in the port and parameter names
         assert_no_duplicates(p if isinstance(p, basestring) else p.name
@@ -132,8 +165,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
                                          if isinstance(p, AnalogReducePort))
 
         # Create dummy event ports to keep the ActionVisitor base class of
-        # the interface inferrer happy
-        self._event_receive_ports = self._event_send_ports = self.subnodes = {}
+        # the interface inferer happy
+        self._event_receive_ports = self._event_send_ports = {}
 
         # EventPort, StateVariable and Parameter Inference:
         inferred_struct = DynamicsInterfaceInferer(self)
@@ -428,16 +461,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def event_receive_port_names(self):
         """Returns an iterator over the local |EventReceivePort| names"""
         return self._event_receive_ports.iterkeys()
-
-    @property
-    def all_components(self):
-        """
-        Returns an iterator over this component_class and all sub_dynamics
-        """
-        yield self
-        for subcomponent in self.subnodes.values():
-            for subcomp in subcomponent.all_components:
-                yield subcomp
 
     @property
     def all_expressions(self):
