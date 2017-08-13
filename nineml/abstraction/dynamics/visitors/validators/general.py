@@ -13,20 +13,18 @@ from ....componentclass.visitors.validators import (
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
     DimensionalityComponentValidator)
-from . import BaseDynamicsValidator
+from nineml.base import BaseNineMLVisitor
 from nineml import units as un
 
 
-class TimeDerivativesAreDeclaredDynamicsValidator(
-        BaseDynamicsValidator):
+class TimeDerivativesAreDeclaredDynamicsValidator(BaseNineMLVisitor):
 
     """ Check all variables used in TimeDerivative blocks are defined
         as  StateVariables.
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseDynamicsValidator.__init__(
-            self, require_explicit_overrides=False, **kwargs)
+        BaseNineMLVisitor.__init__(self)
         self.sv_declared = []
         self.time_derivatives_used = []
         self.visit(component_class)
@@ -43,15 +41,13 @@ class TimeDerivativesAreDeclaredDynamicsValidator(
             timederivative.variable)
 
 
-class StateAssignmentsAreOnStateVariablesDynamicsValidator(
-        BaseDynamicsValidator):
+class StateAssignmentsAreOnStateVariablesDynamicsValidator(BaseNineMLVisitor):
 
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseDynamicsValidator.__init__(
-            self, require_explicit_overrides=False, **kwargs)
+        BaseNineMLVisitor.__init__(self)
         self.sv_declared = []
         self.state_assignments_lhs = []
         self.visit(component_class)
@@ -68,8 +64,7 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
 
 
 class AliasesAreNotRecursiveDynamicsValidator(
-        AliasesAreNotRecursiveComponentValidator,
-        BaseDynamicsValidator):
+        AliasesAreNotRecursiveComponentValidator):
 
     """Check that aliases are not self-referential"""
 
@@ -77,8 +72,7 @@ class AliasesAreNotRecursiveDynamicsValidator(
 
 
 class NoUnresolvedSymbolsDynamicsValidator(
-        NoUnresolvedSymbolsComponentValidator,
-        BaseDynamicsValidator):
+        NoUnresolvedSymbolsComponentValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
@@ -100,11 +94,10 @@ class NoUnresolvedSymbolsDynamicsValidator(
         self.state_assignments.append(state_assignment)
 
 
-class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
+class RegimeGraphDynamicsValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseDynamicsValidator.__init__(
-            self, require_explicit_overrides=False, **kwargs)
+        BaseNineMLVisitor.__init__(self)
         self.connected_regimes_from_regime = defaultdict(set)
         self.component_class = component_class
         self.visit(component_class)
@@ -143,8 +136,7 @@ class RegimeGraphDynamicsValidator(BaseDynamicsValidator):
 
 
 class NoDuplicatedObjectsDynamicsValidator(
-        NoDuplicatedObjectsComponentValidator,
-        BaseDynamicsValidator):
+        NoDuplicatedObjectsComponentValidator):
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         self.all_objects.append(regime)
@@ -186,12 +178,10 @@ class NoDuplicatedObjectsDynamicsValidator(
         self.all_objects.append(on_event)
 
 
-class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
-        BaseDynamicsValidator):
+class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseDynamicsValidator.__init__(
-            self, require_explicit_overrides=False, **kwargs)
+        BaseNineMLVisitor.__init__()
         self.visit(component_class)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
@@ -201,8 +191,7 @@ class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
-        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
-        BaseDynamicsValidator):
+        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -219,8 +208,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
         self.check_lhssymbol_is_valid(time_derivative.variable)
 
 
-class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
-                                      BaseDynamicsValidator):
+class DimensionalityDynamicsValidator(DimensionalityComponentValidator):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(DimensionalityDynamicsValidator,

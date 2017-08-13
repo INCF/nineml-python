@@ -5,8 +5,8 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from ...expressions.utils import is_builtin_symbol
-from .base import ComponentVisitor
-from nineml.base import ContainerObject, accessor_name_from_type, clone_id
+from nineml.base import (
+    ContainerObject, accessor_name_from_type, clone_id)
 from ..base import Parameter
 from ...expressions import Constant, Alias
 
@@ -27,7 +27,7 @@ def lookup_memo(visit_elem):
     return visit_elem_with_memo_lookup
 
 
-class ComponentCloner(ComponentVisitor):
+class ComponentCloner(object):
     """
     Abstract base class for cloning abstraction layer objects
 

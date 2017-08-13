@@ -9,12 +9,10 @@ from ....componentclass.visitors.validators import (
     NoUnresolvedSymbolsComponentValidator,
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
-from . import BaseConnectionRuleValidator
 
 
 class AliasesAreNotRecursiveConnectionRuleValidator(
-        AliasesAreNotRecursiveComponentValidator,
-        BaseConnectionRuleValidator):
+        AliasesAreNotRecursiveComponentValidator):
 
     """Check that aliases are not self-referential"""
 
@@ -22,8 +20,7 @@ class AliasesAreNotRecursiveConnectionRuleValidator(
 
 
 class NoUnresolvedSymbolsConnectionRuleValidator(
-        NoUnresolvedSymbolsComponentValidator,
-        BaseConnectionRuleValidator):
+        NoUnresolvedSymbolsComponentValidator):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
@@ -32,16 +29,14 @@ class NoUnresolvedSymbolsConnectionRuleValidator(
 
 
 class NoDuplicatedObjectsConnectionRuleValidator(
-        NoDuplicatedObjectsComponentValidator,
-        BaseConnectionRuleValidator):
+        NoDuplicatedObjectsComponentValidator):
 
     def action_connectionrule(self, connectionrule, **kwargs):  # @UnusedVariable @IgnorePep8
         self.all_objects.append(connectionrule)
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceConnectionRuleValidator(
-        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
-        BaseConnectionRuleValidator):
+        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)

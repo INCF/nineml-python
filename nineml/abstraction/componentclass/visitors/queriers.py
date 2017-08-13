@@ -17,8 +17,7 @@ class ComponentClassInterfaceInferer(BaseNineMLVisitor):
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
     def __init__(self, component_class):
-        super(ComponentClassInterfaceInferer, self).__init__(
-            require_explicit_overrides=False)
+        super(ComponentClassInterfaceInferer, self).__init__()
         # Parameters:
         # Use visitation to collect all atoms that are not aliases and not
         # state variables
@@ -46,6 +45,7 @@ class ComponentRequiredDefinitions(BaseNineMLVisitor):
     """
 
     def __init__(self, component_class, expressions):
+        BaseNineMLVisitor(self).__init__()
         # Expression can either be a single expression or an iterable of
         # expressions
         self.parameters = set()
@@ -133,8 +133,7 @@ class ComponentRequiredDefinitions(BaseNineMLVisitor):
 class ComponentElementFinder(BaseNineMLVisitor):
 
     def __init__(self, element):
-        super(ComponentElementFinder, self).__init__(
-            require_explicit_overrides=True)
+        super(ComponentElementFinder, self).__init__()
         self.element = element
 
     def found_in(self, component_class):
