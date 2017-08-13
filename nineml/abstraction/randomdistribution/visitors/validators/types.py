@@ -7,7 +7,9 @@ docstring needed
 
 from ....componentclass.visitors.validators.types import (
     TypesComponentValidator)
+from ..base import BaseRandomDistributionVisitor
 
 
-class TypesRandomDistributionValidator(TypesComponentValidator):
+class TypesRandomDistributionValidator(TypesComponentValidator,
+                                       BaseRandomDistributionVisitor):
     pass

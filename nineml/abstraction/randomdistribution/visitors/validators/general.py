@@ -9,10 +9,12 @@ from ....componentclass.visitors.validators import (
     NoUnresolvedSymbolsComponentValidator,
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
+from ..base import BaseRandomDistributionVisitor
 
 
 class AliasesAreNotRecursiveRandomDistributionValidator(
-        AliasesAreNotRecursiveComponentValidator):
+        AliasesAreNotRecursiveComponentValidator,
+        BaseRandomDistributionVisitor):
 
     """Check that aliases are not self-referential"""
 
@@ -20,7 +22,8 @@ class AliasesAreNotRecursiveRandomDistributionValidator(
 
 
 class NoUnresolvedSymbolsRandomDistributionValidator(
-        NoUnresolvedSymbolsComponentValidator):
+        NoUnresolvedSymbolsComponentValidator,
+        BaseRandomDistributionVisitor):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
@@ -29,12 +32,14 @@ class NoUnresolvedSymbolsRandomDistributionValidator(
 
 
 class NoDuplicatedObjectsRandomDistributionValidator(
-        NoDuplicatedObjectsComponentValidator):
+        NoDuplicatedObjectsComponentValidator,
+        BaseRandomDistributionVisitor):
     pass
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator(
-        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator):
+        CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
+        BaseRandomDistributionVisitor):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)

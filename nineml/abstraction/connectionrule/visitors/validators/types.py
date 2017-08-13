@@ -7,7 +7,9 @@ docstring needed
 
 from ....componentclass.visitors.validators.types import (
     TypesComponentValidator)
+from ..base import BaseConnectionRuleVisitor
 
 
-class TypesConnectionRuleValidator(TypesComponentValidator):
+class TypesConnectionRuleValidator(TypesComponentValidator,
+                                   BaseConnectionRuleVisitor):
     pass

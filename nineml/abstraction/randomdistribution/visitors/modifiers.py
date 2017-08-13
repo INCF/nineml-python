@@ -7,9 +7,10 @@ This file contains utility classes for modifying components.
 
 from ...componentclass.visitors.modifiers import (
     ComponentRenameSymbol, ComponentAssignIndices)
+from .base import BaseRandomDistributionVisitor
 
-
-class RandomDistributionRenameSymbol(ComponentRenameSymbol):
+class RandomDistributionRenameSymbol(ComponentRenameSymbol,
+                                     BaseRandomDistributionVisitor):
 
     """ Can be used for:
     Aliases
@@ -17,5 +18,6 @@ class RandomDistributionRenameSymbol(ComponentRenameSymbol):
     pass
 
 
-class RandomDistributionAssignIndices(ComponentAssignIndices):
+class RandomDistributionAssignIndices(ComponentAssignIndices,
+                                      BaseRandomDistributionVisitor):
     pass

@@ -6,12 +6,14 @@ This file contains utility classes for modifying components.
 """
 
 import sympy
+from .base import BaseDynamicsVisitor
 from ...componentclass.visitors.modifiers import (
     ComponentRenameSymbol, ComponentAssignIndices,
     ComponentSubstituteAliases)
 
 
-class DynamicsRenameSymbol(ComponentRenameSymbol):
+class DynamicsRenameSymbol(ComponentRenameSymbol,
+                           BaseDynamicsVisitor):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
@@ -91,7 +93,8 @@ class DynamicsRenameSymbol(ComponentRenameSymbol):
             self.old_symbol_name, self.new_symbol_name)
 
 
-class DynamicsAssignIndices(ComponentAssignIndices):
+class DynamicsAssignIndices(ComponentAssignIndices,
+                            BaseDynamicsVisitor):
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         for elem in regime.elements():
@@ -108,7 +111,8 @@ class DynamicsAssignIndices(ComponentAssignIndices):
             on_event.index_of(elem)
 
 
-class DynamicsSubstituteAliases(ComponentSubstituteAliases):
+class DynamicsSubstituteAliases(ComponentSubstituteAliases,
+                                BaseDynamicsVisitor):
 
     def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
         self.outputs.update(dynamics.analog_send_port_names)

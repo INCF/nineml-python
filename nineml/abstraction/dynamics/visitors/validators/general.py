@@ -13,18 +13,18 @@ from ....componentclass.visitors.validators import (
     NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
     DimensionalityComponentValidator)
-from nineml.base import BaseNineMLVisitor
+from ..base import BaseDynamicsVisitor
 from nineml import units as un
 
 
-class TimeDerivativesAreDeclaredDynamicsValidator(BaseNineMLVisitor):
+class TimeDerivativesAreDeclaredDynamicsValidator(BaseDynamicsVisitor):
 
     """ Check all variables used in TimeDerivative blocks are defined
         as  StateVariables.
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseDynamicsVisitor.__init__(self)
         self.sv_declared = []
         self.time_derivatives_used = []
         self.visit(component_class)
@@ -41,13 +41,13 @@ class TimeDerivativesAreDeclaredDynamicsValidator(BaseNineMLVisitor):
             timederivative.variable)
 
 
-class StateAssignmentsAreOnStateVariablesDynamicsValidator(BaseNineMLVisitor):
+class StateAssignmentsAreOnStateVariablesDynamicsValidator(BaseDynamicsVisitor):
 
     """ Check that we only attempt to make StateAssignments to state-variables.
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseDynamicsVisitor.__init__(self)
         self.sv_declared = []
         self.state_assignments_lhs = []
         self.visit(component_class)
@@ -94,10 +94,10 @@ class NoUnresolvedSymbolsDynamicsValidator(
         self.state_assignments.append(state_assignment)
 
 
-class RegimeGraphDynamicsValidator(BaseNineMLVisitor):
+class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseDynamicsVisitor.__init__(self)
         self.connected_regimes_from_regime = defaultdict(set)
         self.component_class = component_class
         self.visit(component_class)
@@ -178,10 +178,10 @@ class NoDuplicatedObjectsDynamicsValidator(
         self.all_objects.append(on_event)
 
 
-class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(BaseNineMLVisitor):
+class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(BaseDynamicsVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseDynamicsVisitor.__init__(self)
         self.visit(component_class)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable

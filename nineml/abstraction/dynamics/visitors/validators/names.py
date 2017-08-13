@@ -9,7 +9,7 @@ from ....componentclass.visitors.validators import (
     LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
 from nineml.exceptions import NineMLRuntimeError
-from nineml.base import BaseNineMLVisitor
+from ..base import BaseDynamicsVisitor
 
 
 # Check that the sub-components stored are all of the
@@ -54,7 +54,7 @@ class DimensionNameConflictsDynamicsValidator(
         self.check_conflicting_dimension(port.dimension)
 
 
-class DuplicateRegimeNamesDynamicsValidator(BaseNineMLVisitor):
+class DuplicateRegimeNamesDynamicsValidator(BaseDynamicsVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(DuplicateRegimeNamesDynamicsValidator, self).__init__()
@@ -65,7 +65,7 @@ class DuplicateRegimeNamesDynamicsValidator(BaseNineMLVisitor):
         assert_no_duplicates(regime_names)
 
 
-class RegimeAliasMatchesBaseScopeValidator(BaseNineMLVisitor):
+class RegimeAliasMatchesBaseScopeValidator(BaseDynamicsVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(RegimeAliasMatchesBaseScopeValidator, self).__init__()

@@ -2,9 +2,11 @@ from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentRequiredDefinitions,
     ComponentElementFinder, ComponentExpressionExtractor,
     ComponentDimensionResolver)
+from .base import BaseRandomDistributionVisitor
 
 
-class RandomDistributionInterfaceInferer(ComponentClassInterfaceInferer):
+class RandomDistributionInterfaceInferer(ComponentClassInterfaceInferer,
+                                         BaseRandomDistributionVisitor):
 
     """
     Not extended from base classes currently, just mixes in the
@@ -14,17 +16,21 @@ class RandomDistributionInterfaceInferer(ComponentClassInterfaceInferer):
     pass
 
 
-class RandomDistributionRequiredDefinitions(ComponentRequiredDefinitions):
+class RandomDistributionRequiredDefinitions(ComponentRequiredDefinitions,
+                                            BaseRandomDistributionVisitor):
     pass
 
 
-class RandomDistributionElementFinder(ComponentElementFinder):
+class RandomDistributionElementFinder(ComponentElementFinder,
+                                      BaseRandomDistributionVisitor):
     pass
 
 
-class RandomDistributionExpressionExtractor(ComponentExpressionExtractor):
+class RandomDistributionExpressionExtractor(ComponentExpressionExtractor,
+                                            BaseRandomDistributionVisitor):
     pass
 
 
-class RandomDistributionDimensionResolver(ComponentDimensionResolver):
+class RandomDistributionDimensionResolver(ComponentDimensionResolver,
+                                          BaseRandomDistributionVisitor):
     pass

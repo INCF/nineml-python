@@ -4,13 +4,14 @@ from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentElementFinder,
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
     ComponentDimensionResolver)
-from nineml.base import BaseNineMLVisitor
+from .base import BaseDynamicsVisitor
 from .modifiers import DynamicsSubstituteAliases
 from nineml.exceptions import NineMLStopVisitException
 from sympy.polys.polyerrors import PolynomialError
 
 
-class DynamicsInterfaceInferer(ComponentClassInterfaceInferer):
+class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
+                               BaseDynamicsVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
@@ -49,7 +50,8 @@ class DynamicsInterfaceInferer(ComponentClassInterfaceInferer):
         self.atoms.update(trigger.rhs_atoms)
 
 
-class DynamicsRequiredDefinitions(ComponentRequiredDefinitions):
+class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
+                               BaseDynamicsVisitor):
 
     def __init__(self, component_class, expressions):
         self.state_variables = set()
@@ -77,7 +79,8 @@ class DynamicsRequiredDefinitions(ComponentRequiredDefinitions):
         return (r.name for r in self.state_variables)
 
 
-class DynamicsElementFinder(ComponentElementFinder):
+class DynamicsElementFinder(ComponentElementFinder,
+                               BaseDynamicsVisitor):
 
     def __init__(self, element):
         ComponentElementFinder.__init__(self, element)
@@ -135,7 +138,8 @@ class DynamicsElementFinder(ComponentElementFinder):
             self._found()
 
 
-class DynamicsExpressionExtractor(ComponentExpressionExtractor):
+class DynamicsExpressionExtractor(ComponentExpressionExtractor,
+                                  BaseDynamicsVisitor):
 
     def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         self.expressions.append(assignment.rhs)
@@ -147,13 +151,14 @@ class DynamicsExpressionExtractor(ComponentExpressionExtractor):
         self.expressions.append(trigger.rhs)
 
 
-class DynamicsDimensionResolver(ComponentDimensionResolver):
+class DynamicsDimensionResolver(ComponentDimensionResolver,
+                                BaseDynamicsVisitor):
 
     def action_statevariable(self, statevariable):
         self._flatten(statevariable)
 
 
-class DynamicsHasRandomProcess(BaseNineMLVisitor):
+class DynamicsHasRandomProcess(BaseDynamicsVisitor):
 
     def __init__(self):
         super(DynamicsHasRandomProcess, self).__init__()
@@ -169,7 +174,7 @@ class DynamicsHasRandomProcess(BaseNineMLVisitor):
             self._found = True
 
 
-class DynamicsIsLinear(BaseNineMLVisitor):
+class DynamicsIsLinear(BaseDynamicsVisitor):
     """
     Checks to see whether the dynamics class is linear or nonlinear
 
