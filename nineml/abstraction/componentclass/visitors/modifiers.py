@@ -5,20 +5,18 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.exceptions import NineMLRuntimeError, NineMLNameError
-from .base import ComponentActionVisitor
 from nineml.base import BaseNineMLVisitor
 from nineml.abstraction.expressions import Expression
 
 
-class ComponentRenameSymbol(ComponentActionVisitor):
+class ComponentRenameSymbol(BaseNineMLVisitor):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
     """
 
     def __init__(self, component_class, old_symbol_name, new_symbol_name):
-        ComponentActionVisitor.__init__(
-            self, require_explicit_overrides=True)
+        super(ComponentRenameSymbol, self).__init__()
         self.old_symbol_name = old_symbol_name
         self.new_symbol_name = new_symbol_name
         self.namemap = {old_symbol_name: new_symbol_name}
@@ -76,7 +74,7 @@ class ComponentRenameSymbol(ComponentActionVisitor):
             constant.name_transform_inplace(self.namemap)
 
 
-class ComponentAssignIndices(ComponentActionVisitor):
+class ComponentAssignIndices(BaseNineMLVisitor):
 
     """
     Forces the generation of indices for all commonly index elements of the
@@ -84,8 +82,7 @@ class ComponentAssignIndices(ComponentActionVisitor):
     """
 
     def __init__(self, component_class):
-        ComponentActionVisitor.__init__(
-            self, require_explicit_overrides=False)
+        super(ComponentAssignIndices, self).__init__()
         self.component_class = component_class
         self.visit(component_class)
 

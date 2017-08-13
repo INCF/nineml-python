@@ -3,8 +3,8 @@ import sympy
 from sympy import sympify
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions.elementary.piecewise import ExprCondPair
-from .base import ComponentActionVisitor
 from ...expressions import reserved_identifiers
+from nineml.base import BaseNineMLVisitor
 from nineml.units import Dimension
 from nineml.abstraction.ports import SendPortBase
 from nineml.abstraction.expressions import Expression
@@ -12,7 +12,7 @@ from nineml.exceptions import NineMLNameError
 import operator
 
 
-class ComponentClassInterfaceInferer(ComponentActionVisitor):
+class ComponentClassInterfaceInferer(BaseNineMLVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
@@ -39,7 +39,7 @@ class ComponentClassInterfaceInferer(ComponentActionVisitor):
         self.declared_symbols.add(constant.name)
 
 
-class ComponentRequiredDefinitions(object):
+class ComponentRequiredDefinitions(BaseNineMLVisitor):
     """
     Gets lists of required parameters, states, ports, random variables,
     constants and expressions (in resolved order of execution).
@@ -130,7 +130,7 @@ class ComponentRequiredDefinitions(object):
         return (e.name for e in self.expressions)
 
 
-class ComponentElementFinder(ComponentActionVisitor):
+class ComponentElementFinder(BaseNineMLVisitor):
 
     def __init__(self, element):
         super(ComponentElementFinder, self).__init__(
@@ -161,18 +161,17 @@ class ComponentElementFinder(ComponentActionVisitor):
             self._found()
 
 
-class ComponentExpressionExtractor(ComponentActionVisitor):
+class ComponentExpressionExtractor(BaseNineMLVisitor):
 
     def __init__(self):
-        super(ComponentExpressionExtractor, self).__init__(
-            require_explicit_overrides=False)
+        super(ComponentExpressionExtractor, self).__init__()
         self.expressions = []
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.expressions.append(alias.rhs)
 
 
-class ComponentDimensionResolver(ComponentActionVisitor):
+class ComponentDimensionResolver(BaseNineMLVisitor):
     """
     Used to calculate the unit dimension of elements within a component class
     """
@@ -180,8 +179,7 @@ class ComponentDimensionResolver(ComponentActionVisitor):
     reserved_symbol_dims = {sympy.Symbol('t'): sympy.Symbol('t')}
 
     def __init__(self, component_class):
-        ComponentActionVisitor.__init__(
-            self, require_explicit_overrides=False)
+        super(ComponentDimensionResolver, self).__init__()
         self.component_class = component_class
         self._dims = {}
         # Insert declared dimensions into dimensionality database

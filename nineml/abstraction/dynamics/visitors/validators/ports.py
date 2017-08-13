@@ -6,11 +6,10 @@ docstring needed
 """
 from itertools import chain
 from nineml.exceptions import NineMLRuntimeError
-from . import BaseDynamicsValidator
-from ..base import DynamicsActionVisitor
+from nineml.base import BaseNineMLVisitor
 
 
-class EventPortsDynamicsValidator(BaseDynamicsValidator):
+class EventPortsDynamicsValidator(BaseNineMLVisitor):
 
     """
     Check that each OutputEvent and OnEvent has a corresponding EventPort
@@ -78,7 +77,7 @@ class EventPortsDynamicsValidator(BaseDynamicsValidator):
 
 # Check that the sub-components stored are all of the
 # right types:
-class OutputAnalogPortsDynamicsValidator(BaseDynamicsValidator):
+class OutputAnalogPortsDynamicsValidator(BaseNineMLVisitor):
 
     """
     Check that all output AnalogPorts reference a local symbol, either an alias

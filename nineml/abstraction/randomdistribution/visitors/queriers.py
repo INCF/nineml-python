@@ -1,12 +1,10 @@
-from .base import RandomDistributionActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentRequiredDefinitions,
     ComponentElementFinder, ComponentExpressionExtractor,
     ComponentDimensionResolver)
 
 
-class RandomDistributionInterfaceInferer(ComponentClassInterfaceInferer,
-                                         RandomDistributionActionVisitor):
+class RandomDistributionInterfaceInferer(ComponentClassInterfaceInferer):
 
     """
     Not extended from base classes currently, just mixes in the
@@ -16,34 +14,17 @@ class RandomDistributionInterfaceInferer(ComponentClassInterfaceInferer,
     pass
 
 
-class RandomDistributionRequiredDefinitions(ComponentRequiredDefinitions,
-                                            RandomDistributionActionVisitor):
-
-    def __init__(self, component_class, expressions):
-        RandomDistributionActionVisitor.__init__(
-            self, require_explicit_overrides=False)
-        ComponentRequiredDefinitions.__init__(self, component_class,
-                                              expressions)
+class RandomDistributionRequiredDefinitions(ComponentRequiredDefinitions):
+    pass
 
 
-class RandomDistributionElementFinder(ComponentElementFinder,
-                                      RandomDistributionActionVisitor):
-
-    def __init__(self, element):
-        RandomDistributionActionVisitor.__init__(
-            self, require_explicit_overrides=True)
-        ComponentElementFinder.__init__(self, element)
+class RandomDistributionElementFinder(ComponentElementFinder):
+    pass
 
 
-class RandomDistributionExpressionExtractor(ComponentExpressionExtractor,
-                                            RandomDistributionActionVisitor):
-
-    def __init__(self):
-        RandomDistributionActionVisitor.__init__(
-            self, require_explicit_overrides=True)
-        ComponentExpressionExtractor.__init__(self)
+class RandomDistributionExpressionExtractor(ComponentExpressionExtractor):
+    pass
 
 
-class RandomDistributionDimensionResolver(ComponentDimensionResolver,
-                                          RandomDistributionActionVisitor):
+class RandomDistributionDimensionResolver(ComponentDimensionResolver):
     pass

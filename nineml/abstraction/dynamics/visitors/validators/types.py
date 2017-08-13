@@ -5,17 +5,16 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ....componentclass.visitors.validators.types import TypesComponentValidator
+from ....componentclass.visitors.validators.types import (
+    TypesComponentValidator)
 from ...regimes import Regime, StateVariable, TimeDerivative
 from ...transitions import (OutputEvent, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
 from ....ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                        EventSendPort, EventReceivePort)
-from ..base import DynamicsActionVisitor
 
 
-class TypesDynamicsValidator(DynamicsActionVisitor,
-                             TypesComponentValidator):
+class TypesDynamicsValidator(TypesComponentValidator):
 
     def action_regime(self, regime):
         assert isinstance(regime, Regime)

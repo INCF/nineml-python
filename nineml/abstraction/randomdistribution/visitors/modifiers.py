@@ -5,13 +5,11 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
-from .base import RandomDistributionActionVisitor
 from ...componentclass.visitors.modifiers import (
     ComponentRenameSymbol, ComponentAssignIndices)
 
 
-class RandomDistributionRenameSymbol(RandomDistributionActionVisitor,
-                                     ComponentRenameSymbol):
+class RandomDistributionRenameSymbol(ComponentRenameSymbol):
 
     """ Can be used for:
     Aliases
@@ -19,6 +17,5 @@ class RandomDistributionRenameSymbol(RandomDistributionActionVisitor,
     pass
 
 
-class RandomDistributionAssignIndices(ComponentAssignIndices,
-                                      RandomDistributionActionVisitor):
+class RandomDistributionAssignIndices(ComponentAssignIndices):
     pass

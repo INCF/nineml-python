@@ -6,12 +6,12 @@ docstring needed
 """
 
 from nineml.exceptions import NineMLRuntimeError
-from base import BaseValidator
+from nineml.base import BaseNineMLVisitor
 
 
 # Check that the sub-components stored are all of the
 # right types:
-class LocalNameConflictsComponentValidator(BaseValidator):
+class LocalNameConflictsComponentValidator(BaseNineMLVisitor):
 
     """
     Check for conflicts between Aliases, StateVariables, Parameters, and
@@ -22,8 +22,7 @@ class LocalNameConflictsComponentValidator(BaseValidator):
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__()
         self.symbols = []
         self.component_class = component_class
         self.visit(component_class)
@@ -47,11 +46,10 @@ class LocalNameConflictsComponentValidator(BaseValidator):
         self.check_conflicting_symbol(symbol=constant.name)
 
 
-class DimensionNameConflictsComponentValidator(BaseValidator):
+class DimensionNameConflictsComponentValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__()
         self.dimensions = {}
         self.visit(component_class)
 

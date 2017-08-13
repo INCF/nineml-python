@@ -585,8 +585,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
         context:
         --------
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__()
 
         self.available_symbols = []
         self.aliases = []
@@ -618,8 +617,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
         context:
         --------
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__()
 
         self.available_symbols = []
         self.aliases = []
@@ -660,8 +658,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
         context:
         --------
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__()
 
         self.available_symbols = []
         self.aliases = []

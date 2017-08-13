@@ -7,15 +7,12 @@ docstring needed
 from ....componentclass.visitors.validators import (
     LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
-from . import BaseRandomDistributionValidator
-from ..base import RandomDistributionActionVisitor
 
 
 # Check that the sub-components stored are all of the
 # right types:
 class LocalNameConflictsRandomDistributionValidator(
-        LocalNameConflictsComponentValidator,
-        RandomDistributionActionVisitor):
+        LocalNameConflictsComponentValidator):
 
     """
     Check for conflicts between Aliases, Parameters, and Ports
@@ -24,6 +21,5 @@ class LocalNameConflictsRandomDistributionValidator(
 
 
 class DimensionNameConflictsRandomDistributionValidator(
-        DimensionNameConflictsComponentValidator,
-        BaseRandomDistributionValidator):
+        DimensionNameConflictsComponentValidator):
     pass

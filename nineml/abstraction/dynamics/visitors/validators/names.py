@@ -8,16 +8,14 @@ from nineml.utils import assert_no_duplicates
 from ....componentclass.visitors.validators import (
     LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
-from . import BaseDynamicsValidator
-from ..base import DynamicsActionVisitor
 from nineml.exceptions import NineMLRuntimeError
+from nineml.base import BaseNineMLVisitor
 
 
 # Check that the sub-components stored are all of the
 # right types:
 class LocalNameConflictsDynamicsValidator(
-        LocalNameConflictsComponentValidator,
-        DynamicsActionVisitor):
+        LocalNameConflictsComponentValidator):
 
     """
     Check for conflicts between Aliases, StateVariables, Parameters, and
@@ -41,8 +39,7 @@ class LocalNameConflictsDynamicsValidator(
 
 
 class DimensionNameConflictsDynamicsValidator(
-        DimensionNameConflictsComponentValidator,
-        BaseDynamicsValidator):
+        DimensionNameConflictsComponentValidator):
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(state_variable.dimension)
@@ -57,7 +54,7 @@ class DimensionNameConflictsDynamicsValidator(
         self.check_conflicting_dimension(port.dimension)
 
 
-class DuplicateRegimeNamesDynamicsValidator(BaseDynamicsValidator):
+class DuplicateRegimeNamesDynamicsValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(DuplicateRegimeNamesDynamicsValidator, self).__init__(
@@ -69,7 +66,7 @@ class DuplicateRegimeNamesDynamicsValidator(BaseDynamicsValidator):
         assert_no_duplicates(regime_names)
 
 
-class RegimeAliasMatchesBaseScopeValidator(DynamicsActionVisitor):
+class RegimeAliasMatchesBaseScopeValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
         super(RegimeAliasMatchesBaseScopeValidator, self).__init__(

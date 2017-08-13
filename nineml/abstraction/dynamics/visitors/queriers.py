@@ -1,6 +1,5 @@
 from itertools import chain
 import sympy
-from .base import DynamicsActionVisitor
 from ...componentclass.visitors.queriers import (
     ComponentClassInterfaceInferer, ComponentElementFinder,
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
@@ -11,8 +10,7 @@ from nineml.exceptions import NineMLStopVisitException
 from sympy.polys.polyerrors import PolynomialError
 
 
-class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
-                               DynamicsActionVisitor):
+class DynamicsInterfaceInferer(ComponentClassInterfaceInferer):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
@@ -51,11 +49,9 @@ class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
         self.atoms.update(trigger.rhs_atoms)
 
 
-class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
-                                  DynamicsActionVisitor):
+class DynamicsRequiredDefinitions(ComponentRequiredDefinitions):
 
     def __init__(self, component_class, expressions):
-        DynamicsActionVisitor.__init__(self, require_explicit_overrides=False)
         self.state_variables = set()
         ComponentRequiredDefinitions.__init__(self, component_class,
                                               expressions)
@@ -81,10 +77,9 @@ class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
         return (r.name for r in self.state_variables)
 
 
-class DynamicsElementFinder(ComponentElementFinder, DynamicsActionVisitor):
+class DynamicsElementFinder(ComponentElementFinder):
 
     def __init__(self, element):
-        DynamicsActionVisitor.__init__(self, require_explicit_overrides=True)
         ComponentElementFinder.__init__(self, element)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
@@ -140,13 +135,7 @@ class DynamicsElementFinder(ComponentElementFinder, DynamicsActionVisitor):
             self._found()
 
 
-class DynamicsExpressionExtractor(ComponentExpressionExtractor,
-                                  DynamicsActionVisitor):
-
-    def __init__(self):
-        DynamicsActionVisitor.__init__(self,
-                                             require_explicit_overrides=True)
-        ComponentExpressionExtractor.__init__(self)
+class DynamicsExpressionExtractor(ComponentExpressionExtractor):
 
     def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
         self.expressions.append(assignment.rhs)
@@ -158,18 +147,16 @@ class DynamicsExpressionExtractor(ComponentExpressionExtractor,
         self.expressions.append(trigger.rhs)
 
 
-class DynamicsDimensionResolver(ComponentDimensionResolver,
-                                DynamicsActionVisitor):
+class DynamicsDimensionResolver(ComponentDimensionResolver):
 
     def action_statevariable(self, statevariable):
         self._flatten(statevariable)
 
 
-class DynamicsHasRandomProcess(DynamicsActionVisitor):
+class DynamicsHasRandomProcess(BaseNineMLVisitor):
 
     def __init__(self):
-        super(DynamicsHasRandomProcess, self).__init__(
-            require_explicit_overrides=False)
+        super(DynamicsHasRandomProcess, self).__init__()
         self._found = False
 
     def visit_componentclass(self, component_class):

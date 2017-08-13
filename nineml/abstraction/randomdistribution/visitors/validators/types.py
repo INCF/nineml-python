@@ -5,10 +5,9 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ....componentclass.visitors.validators.types import TypesComponentValidator
-from ..base import RandomDistributionActionVisitor
+from ....componentclass.visitors.validators.types import (
+    TypesComponentValidator)
 
 
-class TypesRandomDistributionValidator(RandomDistributionActionVisitor,
-                                       TypesComponentValidator):
+class TypesRandomDistributionValidator(TypesComponentValidator):
     pass

@@ -6,11 +6,9 @@ This file contains utility classes for modifying components.
 """
 from ...componentclass.visitors.modifiers import (
     ComponentRenameSymbol, ComponentAssignIndices)
-from .base import ConnectionRuleActionVisitor
 
 
-class ConnectionRuleRenameSymbol(ConnectionRuleActionVisitor,
-                                 ComponentRenameSymbol):
+class ConnectionRuleRenameSymbol(ComponentRenameSymbol):
 
     """ Can be used for:
     Aliases
@@ -18,6 +16,5 @@ class ConnectionRuleRenameSymbol(ConnectionRuleActionVisitor,
     pass
 
 
-class ConnectionRuleAssignIndices(ComponentAssignIndices,
-                                     ConnectionRuleActionVisitor):
+class ConnectionRuleAssignIndices(ComponentAssignIndices):
     pass

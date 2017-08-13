@@ -5,15 +5,14 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ..base import ComponentActionVisitor
 from ...base import ComponentClass, Parameter
 from nineml.abstraction.expressions import Alias, Constant
+from nineml.base import BaseNineMLVisitor
 
 
-class TypesComponentValidator(ComponentActionVisitor):
+class TypesComponentValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        super(TypesComponentValidator, self).__init__()
         self.visit(component_class)
 
     def action_componentclass(self, component):

@@ -14,16 +14,15 @@ import sympy
 from sympy import sympify
 from nineml.base import SendPortBase
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
-from .base import BaseValidator
+from nineml.base import BaseNineMLVisitor
 
 
-class AliasesAreNotRecursiveComponentValidator(BaseValidator):
+class AliasesAreNotRecursiveComponentValidator(BaseNineMLVisitor):
 
     """Check that aliases are not self-referential"""
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__()
         self.visit(component_class)
 
     def action_componentclass(self, component_class):
@@ -52,15 +51,14 @@ class AliasesAreNotRecursiveComponentValidator(BaseValidator):
                         ','.join(unresolved_aliases.keys())))
 
 
-class NoUnresolvedSymbolsComponentValidator(BaseValidator):
+class NoUnresolvedSymbolsComponentValidator(BaseNineMLVisitor):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__()
 
         self.available_symbols = []
         self.aliases = []
@@ -115,10 +113,10 @@ class NoUnresolvedSymbolsComponentValidator(BaseValidator):
         self.add_symbol(constant.name)
 
 
-class NoDuplicatedObjectsComponentValidator(BaseValidator):
+class NoDuplicatedObjectsComponentValidator(BaseNineMLVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseValidator.__init__(self, require_explicit_overrides=True)
+        BaseNineMLVisitor.__init__(self)
         self.all_objects = list()
         self.visit(component_class)
         assert_no_duplicates(self.all_objects)
@@ -136,7 +134,8 @@ class NoDuplicatedObjectsComponentValidator(BaseValidator):
         self.all_objects.append(constant)
 
 
-class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(BaseValidator):
+class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
+        BaseNineMLVisitor):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -144,8 +143,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(BaseValidator):
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseValidator.__init__(
-            self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__()
 
         self.visit(component_class)
 
@@ -166,12 +164,12 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(BaseValidator):
         self.check_lhssymbol_is_valid(constant.name)
 
 
-class DimensionalityComponentValidator(BaseValidator):
+class DimensionalityComponentValidator(BaseNineMLVisitor):
 
     _RECURSION_MAX = 450
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseValidator.__init__(self, require_explicit_overrides=False)
+        BaseNineMLVisitor.__init__(self)
         self.component_class = component_class
         self._dimensions = {}
         # Insert declared dimensions into dimensionality database

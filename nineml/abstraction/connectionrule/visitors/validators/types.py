@@ -6,9 +6,7 @@ docstring needed
 """
 
 from ....componentclass.visitors.validators.types import TypesComponentValidator
-from ..base import ConnectionRuleActionVisitor
 
 
-class TypesConnectionRuleValidator(ConnectionRuleActionVisitor,
-                                   TypesComponentValidator):
+class TypesConnectionRuleValidator(TypesComponentValidator):
     pass

@@ -9,11 +9,9 @@ import sympy
 from ...componentclass.visitors.modifiers import (
     ComponentRenameSymbol, ComponentAssignIndices,
     ComponentSubstituteAliases)
-from .base import DynamicsActionVisitor
 
 
-class DynamicsRenameSymbol(ComponentRenameSymbol,
-                           DynamicsActionVisitor):
+class DynamicsRenameSymbol(ComponentRenameSymbol):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
@@ -93,8 +91,7 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
             self.old_symbol_name, self.new_symbol_name)
 
 
-class DynamicsAssignIndices(ComponentAssignIndices,
-                            DynamicsActionVisitor):
+class DynamicsAssignIndices(ComponentAssignIndices):
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         for elem in regime.elements():
