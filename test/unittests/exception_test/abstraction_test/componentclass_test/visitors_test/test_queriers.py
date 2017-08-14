@@ -17,9 +17,9 @@ class TestComponentDimensionResolverExceptions(unittest.TestCase):
     def find_element(self, sym):
         name = Expression.symbol_to_str(sym)
         element = None
-        for scope in reversed(self._scopes):
+        for context in reversed(self.contexts):
             try:
-                element = scope.element(
+                element = context.parent.element(
                     name, class_map=self.class_to_visit.class_to_member)
             except KeyError:
                 pass

@@ -195,18 +195,20 @@ class DimensionalityComponentValidator(BaseNineMLVisitor):
             # Look back through the scope stack to find the referenced
             # element
             element = None
-            for scope in reversed(self._scopes):
+            for context in reversed(self.contexts):
+                if isinstance(context.parent, self.class_to_visit):
+                    class_map = self.class_to_visit.class_to_member
+                else:
+                    class_map = None
                 try:
-                    element = scope.element(
-                        name,
-                        class_map=self.class_to_visit.class_to_member)
+                    element = context.parent.element(name, class_map=class_map)
                 except KeyError:
                     pass
             if element is None:
                 raise NineMLRuntimeError(
                     "Did not find '{}' in '{}' dynamics class (scopes: {})"
                     .format(name, self.component_class.name,
-                            list(reversed(self._scopes))))
+                            list(reversed(c.parent for c in self.contexts))))
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions

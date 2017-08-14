@@ -22,9 +22,9 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
             # Look back through the scope stack to find the referenced
             # element
             element = None
-            for scope in reversed(self._scopes):
+            for context in reversed(self.contexts):
                 try:
-                    element = scope.element(
+                    element = context.parent.element(
                         name,
                         class_map=self.class_to_visit.class_to_member)
                 except KeyError:

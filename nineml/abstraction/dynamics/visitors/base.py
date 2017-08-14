@@ -6,7 +6,9 @@ class BaseDynamicsVisitor(BaseNineMLVisitor):
 
     class_to_visit = Dynamics
 
-    def action_dynamics(self, dynamics, **kwargs):
-        if not hasattr(self, 'action_componentclass'):
-            return None
-        return self.action_componentclass(dynamics, **kwargs)
+    def __getattr__(self, attr):
+        if (attr in ('action_dynamics', 'action_multidynamics') and
+                hasattr(self, 'action_componentclass')):
+            return self.action_componentclass
+        else:
+            raise AttributeError(attr)

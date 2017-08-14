@@ -751,7 +751,7 @@ class ContainerObject(BaseNineMLObject):
         else:
             raise NineMLNameError(
                 "'{}' was not found in '{}' {} object"
-                .format(name, self._name, self.__class__.__name__))
+                .format(name, self.key, self.__class__.__name__))
 
     def num_elements(self, class_map=None):
         if class_map is None:
@@ -843,7 +843,10 @@ class ContainerObject(BaseNineMLObject):
     # =========================================================================
 
     def _member_accessor(self, element_type, class_map):
-        return getattr(self, accessor_name_from_type(class_map, element_type))
+        try:
+            return getattr(self, accessor_name_from_type(class_map, element_type))
+        except:
+            raise
 
     def _members_iter(self, element_type, class_map):
         """
@@ -946,13 +949,14 @@ class BaseNineMLVisitor(object):
 
     """
 
+    class_to_visit = None
+
     class Context(object):
         "The context within which the current element is situated"
 
         def __init__(self, parent, parent_result, attr_name=None, dct=None):
             self._parent = parent
             self._parent_result = parent_result
-            assert attr_name is not None or dct is not None
             self._attr_name = attr_name
             self._dct = dct
 
@@ -1024,25 +1028,44 @@ class BaseNineMLVisitor(object):
         # Visit all the attributes of the object that are 9ML objects
         # themselves
         results = self.Results(action_result)
+        # Add the container object to the list of scopes
         for attr_name in obj.defining_attributes:
-            attr = getattr(obj, attr_name)
+            try:
+                attr = getattr(obj, attr_name)
+            except AttributeError:
+                if attr_name.startswith('_'):
+                    attr = getattr(obj, attr_name[1:])
+                else:
+                    raise
             if isinstance(attr, BaseNineMLObject):
                 # Create the context around the visit of the attribute
-                self.contexts.append(self.Context(obj, action_result,
-                                                  attr_name))
+                context = self.Context(obj, action_result, attr_name)
+                self.contexts.append(context)
                 results._attr[attr_name] = self.visit(attr, **kwargs)
-                self.contexts.pop()
+                popped = self.contexts.pop()
+                assert context is popped
         # Visit children of the object
         if isinstance(obj, ContainerObject):
-            for child_type in obj.class_to_member:
-                dct = obj._member_dict(child_type)
-                self.contexts.append(self.Context(obj, action_result,
-                                                  dct=dct))
-                for child in obj._members_iter(child_type,
-                                               obj.class_to_member):
+            if (self.class_to_visit is not None and
+                    isinstance(obj, self.class_to_visit)):
+                # Used for derived classes (e.g. MultiDynamics) that are
+                # polymorphic accessors with the base class in terms of
+                # accessors but have different internal structure.
+                class_map = self.class_to_visit.class_to_member
+            else:
+                class_map = obj.class_to_member
+            for child_type in class_map:
+                try:
+                    dct = obj._member_dict(child_type)
+                except (NineMLInvalidElementTypeException, AttributeError):
+                    dct = None  # If class_map comes from class_to_visit
+                context = self.Context(obj, action_result, dct=dct)
+                self.contexts.append(context)
+                for child in obj._members_iter(child_type, class_map):
                     results._children[
                         child_type][child.key] = self.visit(child, **kwargs)
-                self.contexts.pop()
+                popped = self.contexts.pop()
+                assert context is popped
         # Peform "post-action" method that runs after the children/attributes
         # have been visited
         self.post_action(obj, results, **kwargs)
@@ -1051,18 +1074,27 @@ class BaseNineMLVisitor(object):
         return results
 
     def action(self, obj, **kwargs):
-        try:
-            method = getattr(self, 'action_' + obj.nineml_type.lower())
-        except AttributeError:
-            method = self.default_action
-        return method(obj, **kwargs)
+        return self._get_action_method(obj)(obj, **kwargs)
 
     def post_action(self, obj, results, **kwargs):
+        return self._get_action_method(obj, post=True)(obj, results, **kwargs)
+
+    def _get_action_method(self, obj, post=False):
+        prefix = 'post_action_' if post else 'action_'
+        method_names = obj.nineml_type.lower()
         try:
-            method = getattr(self, 'post_action_' + obj.nineml_type.lower())
+            method_names += obj.alternative_actions
         except AttributeError:
-            method = self.default_post_action
-        return method(obj, results, **kwargs)
+            pass
+        for name in method_names:
+            try:
+                return getattr(self, prefix + name)
+            except AttributeError:
+                continue
+        if post:
+            return self.default_post_action
+        else:
+            return self.default_action
 
     def initial(self, obj, **kwargs):
         """

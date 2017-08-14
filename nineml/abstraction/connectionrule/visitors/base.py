@@ -6,7 +6,9 @@ class BaseConnectionRuleVisitor(BaseNineMLVisitor):
 
     class_to_visit = ConnectionRule
 
-    def action_connectionrule(self, connectionrule, **kwargs):
-        if not hasattr(self, 'action_componentclass'):
-            return None
-        return self.action_componentclass(connectionrule, **kwargs)
+    def __getattr__(self, attr):
+        if (attr in ('action_connectionrule') and
+                hasattr(self, 'action_componentclass')):
+            return self.action_componentclass
+        else:
+            raise AttributeError(attr)

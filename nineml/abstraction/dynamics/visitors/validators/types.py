@@ -12,9 +12,11 @@ from ...transitions import (OutputEvent, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
 from ....ports import (AnalogSendPort, AnalogReceivePort, AnalogReducePort,
                        EventSendPort, EventReceivePort)
+from ..base import BaseDynamicsVisitor
 
 
-class TypesDynamicsValidator(TypesComponentValidator):
+class TypesDynamicsValidator(TypesComponentValidator,
+                             BaseDynamicsVisitor):
 
     def action_regime(self, regime):
         assert isinstance(regime, Regime)

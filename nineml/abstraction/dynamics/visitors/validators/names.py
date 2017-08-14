@@ -15,7 +15,8 @@ from ..base import BaseDynamicsVisitor
 # Check that the sub-components stored are all of the
 # right types:
 class LocalNameConflictsDynamicsValidator(
-        LocalNameConflictsComponentValidator):
+        LocalNameConflictsComponentValidator,
+        BaseDynamicsVisitor):
 
     """
     Check for conflicts between Aliases, StateVariables, Parameters, and
@@ -39,7 +40,8 @@ class LocalNameConflictsDynamicsValidator(
 
 
 class DimensionNameConflictsDynamicsValidator(
-        DimensionNameConflictsComponentValidator):
+        DimensionNameConflictsComponentValidator,
+        BaseDynamicsVisitor):
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(state_variable.dimension)
