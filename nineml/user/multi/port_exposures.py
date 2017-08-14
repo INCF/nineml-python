@@ -213,6 +213,7 @@ class _ReceivePortExposureAlias(_PortExposureAlias):
 class AnalogSendPortExposure(_BaseAnalogPortExposure, AnalogSendPort):
 
     nineml_type = 'AnalogSendPortExposure'
+    alternative_actions = ('analogsendport',)
 
     @property
     def alias(self):
@@ -222,6 +223,7 @@ class AnalogSendPortExposure(_BaseAnalogPortExposure, AnalogSendPort):
 class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
 
     nineml_type = 'AnalogReceivePortExposure'
+    alternative_actions = ('analogreceiveport',)
 
     @property
     def alias(self):
@@ -231,6 +233,7 @@ class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
 class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
 
     nineml_type = 'AnalogReducePortExposure'
+    alternative_actions = ('analogreduceport',)
 
     @property
     def alias(self):
@@ -244,11 +247,13 @@ class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
 class EventSendPortExposure(BasePortExposure, EventSendPort):
 
     nineml_type = 'EventSendPortExposure'
+    alternative_actions = ('eventsendport',)
 
 
 class EventReceivePortExposure(BasePortExposure, EventReceivePort):
 
     nineml_type = 'EventReceivePortExposure'
+    alternative_actions = ('eventreceiveport',)
 
 
 class _LocalAnalogPortConnections(Alias):

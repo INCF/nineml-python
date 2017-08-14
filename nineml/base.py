@@ -1081,7 +1081,7 @@ class BaseNineMLVisitor(object):
 
     def _get_action_method(self, obj, post=False):
         prefix = 'post_action_' if post else 'action_'
-        method_names = obj.nineml_type.lower()
+        method_names = [obj.nineml_type.lower()]
         try:
             method_names += obj.alternative_actions
         except AttributeError:

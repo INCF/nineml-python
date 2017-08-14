@@ -27,6 +27,10 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     class_to_member = {'Parameter': 'parameter', 'Alias': 'alias',
                        'Constant': 'constant'}
     v1_nineml_type = 'ComponentClass'
+    # Specifies that visitors will attempt to call the generic
+    # action_componentclass method if there is not a specific action_dynamics,
+    # action_connectionrule, etc...
+    alternative_actions = ('componentclass',)
 
     def __init__(self, name, parameters=None, aliases=None, constants=None):
         ensure_valid_identifier(name)
