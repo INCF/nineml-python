@@ -38,12 +38,7 @@ defined to hold the corresponding type in the v1 syntax.
 
 ``defining_attributes`` is a tuple of strings, listing the attributes of
 the given NineML-type class that contain data (both attributes and child
-objects) that are part of the `NineML specification`_.
-
-For "internal attributes" (i.e. ones starting with '_') that are exposed in
-the public API via @property methods, the name of the @property method is
-preferred, with the exception of dictionary attributes (see ContainerObject_)
-that are exposed as iterators (so their keys can be compared within unittests). 
+objects) that are part of the `NineML specification`_. 
 
 AnnotatedObject
 ~~~~~~~~~~~~~~~
