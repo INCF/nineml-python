@@ -51,7 +51,7 @@ class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
 
 
 class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
-                               BaseDynamicsVisitor):
+                                  BaseDynamicsVisitor):
 
     def __init__(self, component_class, expressions):
         self.state_variables = set()
@@ -160,13 +160,13 @@ class DynamicsDimensionResolver(ComponentDimensionResolver,
 
 class DynamicsHasRandomProcess(BaseDynamicsVisitor):
 
-    def __init__(self):
+    def __init__(self, component_class):
         super(DynamicsHasRandomProcess, self).__init__()
         self._found = False
+        self.visit(component_class)
 
-    def visit_componentclass(self, component_class):
-        super(DynamicsHasRandomProcess, self).visit_componentclass(
-            component_class)
+    @property
+    def found(self):
         return self._found
 
     def action_stateassignment(self, stateassignment):

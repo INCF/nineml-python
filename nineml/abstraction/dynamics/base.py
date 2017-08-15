@@ -245,8 +245,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
-    def clone(self, memo=None, **kwargs):  # @UnusedVariable
-        return DynamicsCloner(memo=memo).visit(self, **kwargs)
+#     def clone(self, memo=None, **kwargs):  # @UnusedVariable
+#         return DynamicsCloner(memo=memo).visit(self, **kwargs)
 
     def dimension_of(self, element):
         try:
@@ -285,7 +285,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
     @property
     def is_random(self):
-        return DynamicsHasRandomProcess().visit(self)
+        return DynamicsHasRandomProcess(self).found
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

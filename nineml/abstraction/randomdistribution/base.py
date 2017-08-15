@@ -6,7 +6,8 @@ from .. import Parameter
 class RandomDistribution(ComponentClass):
 
     nineml_type = 'RandomDistribution'
-    defining_attributes = ('_name', '_parameters')
+    defining_attributes = ('_name', '_parameters', '_standard_library',
+                           '_aliases', '_constants')
 
     standard_library_basepath = 'http://www.uncertml.org/distributions/'
     _base_len = len(standard_library_basepath)
@@ -47,8 +48,8 @@ class RandomDistribution(ComponentClass):
     def required_for(self, expressions):
         return RandomDistributionRequiredDefinitions(self, expressions)
 
-    def clone(self, memo=None, **kwargs):  # @UnusedVariable
-        return RandomDistributionCloner(memo=memo).visit(self, **kwargs)
+#     def clone(self, memo=None, **kwargs):  # @UnusedVariable
+#         return RandomDistributionCloner(memo=memo).visit(self, **kwargs)
 
     def dimension_of(self, element):
         try:
