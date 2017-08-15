@@ -844,7 +844,8 @@ class ContainerObject(BaseNineMLObject):
 
     def _member_accessor(self, element_type, class_map):
         try:
-            return getattr(self, accessor_name_from_type(class_map, element_type))
+            return getattr(self, accessor_name_from_type(class_map,
+                                                         element_type))
         except:
             raise
 
