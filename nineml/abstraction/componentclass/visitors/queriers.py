@@ -270,5 +270,5 @@ class ComponentDimensionResolver(BaseNineMLVisitor):
     def _flatten_reserved(self, expr, **kwargs):  # @UnusedVariable
         return self.reserved_symbol_dims[expr]
 
-    def action_alias(self, alias):
+    def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self._flatten(alias)

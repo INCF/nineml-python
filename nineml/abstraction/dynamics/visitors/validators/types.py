@@ -18,10 +18,10 @@ from ..base import BaseDynamicsVisitor
 class TypesDynamicsValidator(TypesComponentValidator,
                              BaseDynamicsVisitor):
 
-    def action_regime(self, regime):
+    def action_regime(self, regime, **kwargs):  # @UnusedVariable
         assert isinstance(regime, Regime)
 
-    def action_statevariable(self, state_variable):
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         assert isinstance(state_variable, StateVariable)
 
     def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
@@ -48,10 +48,10 @@ class TypesDynamicsValidator(TypesComponentValidator,
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         assert isinstance(time_derivative, TimeDerivative)
 
-    def action_trigger(self, trigger):
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
         assert isinstance(trigger, Trigger)
 
-    def action_oncondition(self, on_condition):
+    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         assert isinstance(on_condition, OnCondition)
 
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable

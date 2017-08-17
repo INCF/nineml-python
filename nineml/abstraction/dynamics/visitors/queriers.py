@@ -19,34 +19,34 @@ class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
         self.state_variable_names = set()
         super(DynamicsInterfaceInferer, self).__init__(dynamicsclass)
 
-    def action_statevariable(self, state_variable):
+    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.declared_symbols.add(state_variable.name)
 
-    def action_outputevent(self, event_out):
+    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable @IgnorePep8
         self.event_out_port_names.add(event_out.port_name)
 
-    def action_onevent(self, on_event):
+    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable @IgnorePep8
         self.input_event_port_names.add(on_event.src_port_name)
 
-    def action_analogreceiveport(self, analog_receive_port):
+    def action_analogreceiveport(self, analog_receive_port, **kwargs):  # @UnusedVariable @IgnorePep8
         self.declared_symbols.add(analog_receive_port.name)
 
-    def action_analogreduceport(self, analog_reduce_port):
+    def action_analogreduceport(self, analog_reduce_port, **kwargs):  # @UnusedVariable @IgnorePep8
         self.declared_symbols.add(analog_reduce_port.name)
 
-    def action_stateassignment(self, assignment):
+    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable @IgnorePep8
         inferred_sv = assignment.lhs
         self.declared_symbols.add(inferred_sv)
         self.state_variable_names.add(inferred_sv)
         self.atoms.update(assignment.rhs_atoms)
 
-    def action_timederivative(self, time_derivative):
+    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         inferred_sv = time_derivative.variable
         self.state_variable_names.add(inferred_sv)
         self.declared_symbols.add(inferred_sv)
         self.atoms.update(time_derivative.rhs_atoms)
 
-    def action_trigger(self, trigger):
+    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable @IgnorePep8
         self.atoms.update(trigger.rhs_atoms)
 
 
@@ -154,7 +154,7 @@ class DynamicsExpressionExtractor(ComponentExpressionExtractor,
 class DynamicsDimensionResolver(ComponentDimensionResolver,
                                 BaseDynamicsVisitor):
 
-    def action_statevariable(self, statevariable):
+    def action_statevariable(self, statevariable, **kwargs):  # @UnusedVariable @IgnorePep8
         self._flatten(statevariable)
 
 
@@ -169,7 +169,7 @@ class DynamicsHasRandomProcess(BaseDynamicsVisitor):
     def found(self):
         return self._found
 
-    def action_stateassignment(self, stateassignment):
+    def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8
         if list(stateassignment.rhs_random_distributions):
             self._found = True
 

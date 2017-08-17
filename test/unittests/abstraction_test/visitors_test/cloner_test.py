@@ -5,6 +5,7 @@ from nineml.abstraction import (
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort)
 from nineml.user.multi.dynamics import MultiDynamics
 from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
+from nineml.visitors import Cloner
 
 
 # Testing Skeleton for class: DynamicsClonerPrefixNamespace
@@ -41,7 +42,8 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
 
         # Test Cloner, no hierachy
         # Everything should be as before:
-        c_clone = DynamicsCloner().visit(c)
+#         c_clone = DynamicsCloner().visit(c)
+        c_clone = Cloner(c).clone
 
         self.assertEqual(c_clone.name, 'C')
         self.assertEqual(set(c_clone.alias_names), set(['C1', 'C2', 'C3']))

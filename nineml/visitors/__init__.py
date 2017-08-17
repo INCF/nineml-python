@@ -1,25 +1,47 @@
 from nineml.base import BaseNineMLVisitor
 
 
-def clone_id(obj):
-    """
-    Used in storing cloned objects in 'memo' dictionary to avoid duplicate
-    clones of the same object referenced from different points in a complex
-    data tree. First looks for special method 'clone_id' and falls back on the
-    'id' function that returns a memory-address based ID.
-
-    Parameters
-    ----------
-    obj : object
-        Any object
-    """
-    try:
-        return obj.clone_id
-    except AttributeError:
-        return id(obj)
-
-
 class Cloner(BaseNineMLVisitor):
+
+    def __init__(self, nineml_object, class_to_visit=None):
+        super(Cloner, self).__init__()
+        self.class_to_visit = class_to_visit
+        self.memo = {}
+        result = self.visit(nineml_object)
+        self.clone = result.action
+
+    def default_post_action(self, obj, results, **kwargs):  # @UnusedVariable
+        clone_id = self.clone_id(obj)
+        try:
+            return self.memo[clone_id]
+        except KeyError:
+            kwargs = {}
+            for child_type in results.child_names:
+                kwargs[child_type.lower()] = list(
+                    results.child_results(child_type))
+            try:
+                clone = self.memo[clone_id] = type(obj)(**kwargs)
+            except:
+                raise
+        return clone
+
+    @classmethod
+    def clone_id(cls, obj):
+        """
+        Used in storing cloned objects in 'memo' dictionary to avoid duplicate
+        clones of the same object referenced from different points in a complex
+        data tree. First looks for special method 'clone_id' and falls back on
+        the 'id' function that returns a memory-address based ID.
+
+        Parameters
+        ----------
+        obj : object
+            Any object
+        """
+        try:
+            return obj.clone_id
+        except AttributeError:
+            return id(obj)
 
     def clone(self, memo=None, **kwargs):
         """

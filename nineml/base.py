@@ -1014,6 +1014,9 @@ class BaseNineMLVisitor(object):
         def child_result(self, child):
             return self._children[child.nineml_type][child.key]
 
+        def child_results(self, child_type):
+            return self._children[child_type].itervalues()
+
     def __init__(self):
         self.contexts = []
         self._method_name = None
@@ -1075,27 +1078,35 @@ class BaseNineMLVisitor(object):
         return results
 
     def action(self, obj, **kwargs):
-        return self._get_action_method(obj)(obj, **kwargs)
+        self._action(obj, prefix='action_', default=self.default_action,
+                     **kwargs)
 
     def post_action(self, obj, results, **kwargs):
-        return self._get_action_method(obj, post=True)(obj, results, **kwargs)
+        self._action(obj, prefix='post_action_', results=results,
+                     default=self.default_post_action, **kwargs)
 
-    def _get_action_method(self, obj, post=False):
-        prefix = 'post_action_' if post else 'action_'
-        method_names = [obj.nineml_type.lower()]
+    def _action(self, obj, prefix, default=None, action_type=None,
+                results=None, **kwargs):
         try:
-            method_names += obj.alternative_actions
+            method_name = prefix + action_type
+        except TypeError:
+            method_name = prefix + obj.nineml_type.lower()
+        try:
+            method = getattr(self, method_name)
         except AttributeError:
-            pass
-        for name in method_names:
+            if default is None:
+                raise
             try:
-                return getattr(self, prefix + name)
+                for action_type in obj.alternative_actions:
+                    try:
+                        self._action(obj, prefix, action_type=action_type,
+                                     **kwargs)
+                    except AttributeError:
+                        continue
             except AttributeError:
-                continue
-        if post:
-            return self.default_post_action
-        else:
-            return self.default_action
+                pass
+            method = default
+        return method(obj, results=results, **kwargs)
 
     def initial(self, obj, **kwargs):
         """

@@ -120,10 +120,10 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
             elif len(self.connected) > len(self.regimes):
                 assert False
 
-    def action_componentclass(self, component_class):
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         self.regimes = list(component_class.regimes)
 
-    def action_regime(self, regime):  # @UnusedVariable
+    def action_regime(self, regime, **kwargs):  # @UnusedVariable
         for transition in regime.transitions:
             self.connected_regimes_from_regime[regime].add(
                 transition.target_regime)

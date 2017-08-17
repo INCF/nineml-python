@@ -62,7 +62,7 @@ class DuplicateRegimeNamesDynamicsValidator(BaseDynamicsVisitor):
         super(DuplicateRegimeNamesDynamicsValidator, self).__init__()
         self.visit(component_class)
 
-    def action_componentclass(self, component_class):  # @UnusedVariable @IgnorePep8
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         regime_names = [r.name for r in component_class.regimes]
         assert_no_duplicates(regime_names)
 

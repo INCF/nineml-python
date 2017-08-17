@@ -25,7 +25,7 @@ class AliasesAreNotRecursiveComponentValidator(BaseNineMLVisitor):
         BaseNineMLVisitor.__init__(self)
         self.visit(component_class)
 
-    def action_componentclass(self, component_class):
+    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
 
         unresolved_aliases = dict((a.lhs, a) for a in component_class.aliases)
 

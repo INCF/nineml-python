@@ -16,10 +16,10 @@ class TypesComponentValidator(BaseNineMLVisitor):
         BaseNineMLVisitor.__init__(self)
         self.visit(component_class)
 
-    def action_componentclass(self, component):
+    def action_componentclass(self, component, **kwargs):  # @UnusedVariable
         assert isinstance(component, ComponentClass)
 
-    def action_parameter(self, parameter):
+    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         assert isinstance(parameter, Parameter), \
             "{} != {}".format(type(parameter), Parameter)
 
