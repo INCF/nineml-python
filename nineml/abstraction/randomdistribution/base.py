@@ -48,8 +48,8 @@ class RandomDistribution(ComponentClass):
     def required_for(self, expressions):
         return RandomDistributionRequiredDefinitions(self, expressions)
 
-#     def clone(self, memo=None, **kwargs):  # @UnusedVariable
-#         return RandomDistributionCloner(memo=memo).visit(self, **kwargs)
+    def flatten(self):
+        return RandomDistributionFlattener(self).flattened
 
     def dimension_of(self, element):
         try:
@@ -114,4 +114,4 @@ from .visitors.queriers import (RandomDistributionRequiredDefinitions,  # @Ignor
                                 RandomDistributionExpressionExtractor,
                                 RandomDistributionDimensionResolver)
 from .visitors.validators import RandomDistributionValidator  # @IgnorePep8
-from .visitors.cloner import RandomDistributionCloner  # @IgnorePep8
+from .visitors.modifiers import RandomDistributionFlattener  # @IgnorePep8

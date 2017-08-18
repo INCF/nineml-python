@@ -5,7 +5,8 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 from ...componentclass.visitors.modifiers import (
-    ComponentRenameSymbol, ComponentAssignIndices)
+    ComponentRenameSymbol, ComponentAssignIndices,
+    ComponentFlattener, lookup_memo)
 from .base import BaseConnectionRuleVisitor
 
 
@@ -21,3 +22,15 @@ class ConnectionRuleRenameSymbol(ComponentRenameSymbol,
 class ConnectionRuleAssignIndices(ComponentAssignIndices,
                                   BaseConnectionRuleVisitor):
     pass
+
+
+class ConnectionRuleFlattener(ComponentFlattener):
+
+    @lookup_memo
+    def visit_componentclass(self, component_class, **kwargs):
+        ccn = component_class.__class__(
+            name=component_class.name,
+            standard_library=component_class.standard_library,
+            parameters=[p.accept_visitor(self, **kwargs)
+                        for p in component_class.parameters])
+        return ccn

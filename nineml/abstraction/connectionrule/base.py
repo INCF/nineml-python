@@ -58,9 +58,9 @@ class ConnectionRule(ComponentClass):
 
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
-# 
-#     def clone(self, memo=None, **kwargs):  # @UnusedVariable
-#         return ConnectionRuleCloner(memo=memo).visit(self, **kwargs)
+
+    def flatten(self, memo=None, **kwargs):  # @UnusedVariable
+        return ConnectionRuleFlattener(self).flatten
 
     def dimension_of(self, element):
         try:
@@ -136,7 +136,7 @@ from .visitors.queriers import (  # @IgnorePep8
     ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder,
     ConnectionRuleExpressionExtractor, ConnectionRuleDimensionResolver)
 from .visitors.validators import ConnectionRuleValidator  # @IgnorePep8
-from .visitors.cloner import ConnectionRuleCloner  # @IgnorePep8
+from .visitors.modifiers import ConnectionRuleFlattener  # @IgnorePep8
 
 
 one_to_one_connection_rule = ConnectionRule(

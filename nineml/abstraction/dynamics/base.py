@@ -245,8 +245,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
-#     def clone(self, memo=None, **kwargs):  # @UnusedVariable
-#         return DynamicsCloner(memo=memo).visit(self, **kwargs)
+    def flatten(self):
+        return DynamicsFlattener(self).flattened
 
     def dimension_of(self, element):
         try:
@@ -585,7 +585,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 from .regimes import StateVariable, Regime  # @IgnorePep8
 from .visitors.validators import DynamicsValidator  # @IgnorePep8
 from .visitors import DynamicsInterfaceInferer  # @IgnorePep8
-from .visitors.cloner import DynamicsCloner  # @IgnorePep8
 from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsRequiredDefinitions,
                                 DynamicsExpressionExtractor,
@@ -593,4 +592,5 @@ from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsHasRandomProcess,
                                 DynamicsIsLinear)
 from .visitors.modifiers import (  # @IgnorePep8
-    DynamicsRenameSymbol, DynamicsAssignIndices, DynamicsSubstituteAliases)
+    DynamicsRenameSymbol, DynamicsAssignIndices, DynamicsSubstituteAliases,
+    DynamicsFlattener)
