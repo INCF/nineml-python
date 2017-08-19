@@ -584,13 +584,13 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 # Import visitor modules and those which import visitor modules
 from .regimes import StateVariable, Regime  # @IgnorePep8
 from .visitors.validators import DynamicsValidator  # @IgnorePep8
-from .visitors import DynamicsInterfaceInferer  # @IgnorePep8
 from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsRequiredDefinitions,
                                 DynamicsExpressionExtractor,
                                 DynamicsDimensionResolver,
                                 DynamicsHasRandomProcess,
-                                DynamicsIsLinear)
+                                DynamicsIsLinear,
+                                DynamicsInterfaceInferer)
 from .visitors.modifiers import (  # @IgnorePep8
     DynamicsRenameSymbol, DynamicsAssignIndices, DynamicsSubstituteAliases,
     DynamicsFlattener)

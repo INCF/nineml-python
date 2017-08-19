@@ -10,12 +10,6 @@ from .base import BaseDynamicsVisitor
 from ...componentclass.visitors.modifiers import (
     ComponentRenameSymbol, ComponentAssignIndices,
     ComponentSubstituteAliases, ComponentFlattener, lookup_memo)
-from ..regimes import TimeDerivative, Regime, StateVariable
-from ..transitions import (
-    OnCondition, OnEvent, Trigger, StateAssignment, OutputEvent)
-from ...ports import (
-    AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
-    EventReceivePort)
 
 
 class DynamicsRenameSymbol(ComponentRenameSymbol,
@@ -282,3 +276,11 @@ class DynamicsFlattener(ComponentFlattener):
         )
         self.copy_indices(on_event, oe, **kwargs)
         return oe
+
+
+from ..regimes import TimeDerivative, Regime, StateVariable  # @IgnorePep8
+from ..transitions import (  # @IgnorePep8
+    OnCondition, OnEvent, Trigger, StateAssignment, OutputEvent)
+from ...ports import (  # @IgnorePep8
+    AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
+    EventReceivePort)

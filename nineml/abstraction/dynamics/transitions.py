@@ -214,7 +214,8 @@ class Transition(BaseALObject, ContainerObject):
         self._source_regime = None
 
     def find_element(self, element):
-        return DynamicsElementFinder(element).found_in(self)
+        return (nineml.abstraction.dynamics.visitors.queriers.
+                DynamicsElementFinder(element).found_in(self))
 
     @property
     def target_regime(self):
@@ -586,4 +587,4 @@ class Trigger(BaseALObject, Expression):
                              **options))
 
 
-from .visitors.queriers import DynamicsElementFinder  # @IgnorePep8
+import nineml.abstraction.dynamics.visitors.queriers

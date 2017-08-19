@@ -166,6 +166,22 @@ class ComponentSubstituteAliases(BaseNineMLVisitor):
         return self.substitute(alias)
 
 
+def lookup_memo(visit_elem):
+    """
+    Decorator that checks the cloner's "memo" dictionary for a previously
+    cloned version before returning a new clone
+    """
+    def visit_elem_with_memo_lookup(cloner, elem, **kwargs):
+        try:
+            clone = cloner.memo[clone_id(elem)]
+            assert clone == visit_elem(cloner, elem, **kwargs)
+        except KeyError:
+            clone = visit_elem(cloner, elem, **kwargs)
+            cloner.memo[clone_id(elem)] = clone
+        return clone
+    return visit_elem_with_memo_lookup
+
+
 class ComponentFlattener(object):
     """
     Abstract base class for cloning abstraction layer objects
@@ -176,11 +192,12 @@ class ComponentFlattener(object):
         A dictionary containing mapping of object IDs of previously cloned
         objects to avoid re-cloning the same objects
     """
-    def __init__(self, memo=None, **kwargs):
+    def __init__(self, component_class, memo=None, **kwargs):
         super(ComponentFlattener, self).__init__(**kwargs)
         if memo is None:
             memo = {}
         self.memo = memo
+        self.flattened = self.visit_componentclass(component_class)
 
     def prefix_variable(self, variable, **kwargs):
         prefix = kwargs.get('prefix', '')
@@ -226,18 +243,3 @@ class ComponentFlattener(object):
                 index = source.index_of(s)
                 destination._indices[key][d] = index
 
-
-def lookup_memo(visit_elem):
-    """
-    Decorator that checks the cloner's "memo" dictionary for a previously
-    cloned version before returning a new clone
-    """
-    def visit_elem_with_memo_lookup(cloner, elem, **kwargs):
-        try:
-            clone = cloner.memo[clone_id(elem)]
-            assert clone == visit_elem(cloner, elem, **kwargs)
-        except KeyError:
-            clone = visit_elem(cloner, elem, **kwargs)
-            cloner.memo[clone_id(elem)] = clone
-        return clone
-    return visit_elem_with_memo_lookup

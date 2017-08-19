@@ -4,8 +4,7 @@ from nineml.abstraction import (
     Dynamics as Dynamics, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort)
 from nineml.user.multi.dynamics import MultiDynamics
-from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
-from nineml.visitors import Cloner
+from nineml.abstraction.dynamics.visitors.modifiers import DynamicsFlattener
 
 
 # Testing Skeleton for class: DynamicsClonerPrefixNamespace
@@ -43,7 +42,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
         # Test Cloner, no hierachy
         # Everything should be as before:
 #         c_clone = DynamicsCloner().visit(c)
-        c_clone = Cloner(c).clone
+        c_clone = DynamicsFlattener(c).flattened
 
         self.assertEqual(c_clone.name, 'C')
         self.assertEqual(set(c_clone.alias_names), set(['C1', 'C2', 'C3']))
@@ -80,7 +79,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
                           port_exposures=[('c2', 'cIn2', 'cIn2_c2'),
                                           ('c1', 'cIn1', 'cIn1_c1')])
 
-        b_clone = DynamicsCloner().visit(b)
+        b_clone = DynamicsFlattener(b).flattened
 #         c1_clone = b_clone.get_subnode('c1')
 #         c2_clone = b_clone.get_subnode('c2')
 # 

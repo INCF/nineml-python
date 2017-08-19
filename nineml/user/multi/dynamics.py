@@ -623,9 +623,6 @@ class MultiDynamics(Dynamics):
     def __getitem__(self, comp_name):
         return self._sub_components[comp_name]
 
-    def flatten(self):
-        return DynamicsCloner().visit(self)
-
     def __repr__(self):
         return ("MultiDynamics(name='{}', sub_components=[{}])"
                 .format(self.name, ', '.join(str(sc)

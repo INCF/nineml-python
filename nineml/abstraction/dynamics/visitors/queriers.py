@@ -5,7 +5,6 @@ from ...componentclass.visitors.queriers import (
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
     ComponentDimensionResolver)
 from .base import BaseDynamicsVisitor
-from .modifiers import DynamicsSubstituteAliases
 from nineml.exceptions import NineMLStopVisitException
 from sympy.polys.polyerrors import PolynomialError
 
@@ -245,3 +244,6 @@ class DynamicsIsLinear(BaseDynamicsVisitor):
     def _report_nonlinear(self):
         self._result = False
         raise NineMLStopVisitException()
+
+
+from .modifiers import DynamicsSubstituteAliases  # @IgnorePep8
