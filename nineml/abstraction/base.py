@@ -22,6 +22,7 @@ class Parameter(BaseALObject):
 
     nineml_type = 'Parameter'
     defining_attributes = ('_name', '_dimension')
+    nineml_attrs = ('name', 'dimension')
 
     def __init__(self, name, dimension=None):
         """Parameter Constructor

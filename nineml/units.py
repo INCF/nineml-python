@@ -25,6 +25,7 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
                        'temperature', 'luminous_intensity')
     SI_units = ('kg', 'm', 's', 'A', 'mol', 'K', 'cd')
     defining_attributes = ('_dims',)
+    nineml_attrs = ('dims',)
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
     def __init__(self, name, dimensions=None, **kwargs):
@@ -281,6 +282,7 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'Unit'
     defining_attributes = ('_dimension', '_power', '_offset')
+    nineml_attrs = ('dimension', 'power', 'offset')
 
     def __init__(self, name, dimension, power, offset=0.0):
         ensure_valid_identifier(name)

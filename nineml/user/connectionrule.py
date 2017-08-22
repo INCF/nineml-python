@@ -35,6 +35,7 @@ class BaseConnectivity(BaseNineMLObject):
 
     __metaclass__ = ABCMeta
     defining_attributes = ('_rule_props', '_src_size', '_dest_size')
+    nineml_attrs = ('rule_props', 'src_size', 'dest_size')
 
     def __init__(self, connection_rule_properties, source_size,
                  destination_size, **kwargs):  # @UnusedVariable
@@ -106,6 +107,7 @@ class InverseConnectivity(BaseNineMLObject):
     """
     nineml_type = '_InverseConnectivity'
     defining_attributes = ('_connectivity',)
+    nineml_attrs = ('connectivity',)
 
     def __init__(self, connectivity):  # @UnusedVariable
         self._connectivity = connectivity

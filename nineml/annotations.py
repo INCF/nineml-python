@@ -225,6 +225,7 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
 
     nineml_type = 'Annotations'
     defining_attributes = ('_branches',)
+    nineml_attrs = ('branches',)
 
     def __init__(self, branches=None):
         BaseAnnotations.__init__(self, branches=branches)

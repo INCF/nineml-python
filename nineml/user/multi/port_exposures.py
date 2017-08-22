@@ -16,6 +16,7 @@ from nineml.utils import ensure_valid_identifier
 class BasePortExposure(BaseULObject):
 
     defining_attributes = ('_name', '_port_name', '_sub_component_name')
+    nineml_attrs = ('name', 'port_name', 'sub_component_name')
 
     def __init__(self, component, port, name=None):
         super(BasePortExposure, self).__init__()
