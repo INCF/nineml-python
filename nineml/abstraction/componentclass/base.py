@@ -13,9 +13,10 @@ from nineml.base import ContainerObject
 from nineml.utils import (
     filter_discrete_types, ensure_valid_identifier,
     normalise_parameter_as_list)
-from ..expressions import Alias
+from ..expressions import Alias, Constant
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import name_error
+from ..base import Parameter  # @IgnorePep8
 
 
 class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
@@ -31,6 +32,9 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     # action_componentclass method if there is not a specific action_dynamics,
     # action_connectionrule, etc...
     alternative_actions = ('componentclass',)
+    # New NineML types
+    child_types = (Parameter, Alias, Constant)
+    nineml_attrs = ('name',)
 
     def __init__(self, name, parameters=None, aliases=None, constants=None):
         ensure_valid_identifier(name)
@@ -147,6 +151,3 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
             except StopIteration:
                 continue
             a.set_dimension(std_dim)
-
-
-from ..base import Parameter  # @IgnorePep8

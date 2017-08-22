@@ -111,11 +111,37 @@ class B(AnnotatedNineMLObject):
                    node.attr('z'))
 
 
+class E(AnnotatedNineMLObject, DocumentLevelObject):
+
+    nineml_type = 'E'
+    defining_attributes = ('name', 'u', 'v')
+
+    def __init__(self, name, u, v):
+        AnnotatedNineMLObject.__init__(self)
+        self.name = name
+        DocumentLevelObject.__init__(self)
+        self.name = name
+        self.u = u
+        self.v = v
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name)
+        node.attr('u', self.u)
+        node.attr('v', self.v)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(node.attr('name'),
+                   node.attr('u', dtype=int),
+                   node.attr('v', dtype=int))
+
+
 class C(AnnotatedNineMLObject, ContainerObject):
 
     nineml_type = 'C'
     defining_attributes = ('name', '_es', 'f', 'g')
     class_to_member = {'E': 'e'}
+    child_types = (E,)
 
     def __init__(self, name, es, f, g):
         AnnotatedNineMLObject.__init__(self)
@@ -152,31 +178,6 @@ class C(AnnotatedNineMLObject, ContainerObject):
                    node.children(E, allow_ref=True),
                    node.child(F),
                    node.attr('g', dtype=float))
-
-
-class E(AnnotatedNineMLObject, DocumentLevelObject):
-
-    nineml_type = 'E'
-    defining_attributes = ('name', 'u', 'v')
-
-    def __init__(self, name, u, v):
-        AnnotatedNineMLObject.__init__(self)
-        self.name = name
-        DocumentLevelObject.__init__(self)
-        self.name = name
-        self.u = u
-        self.v = v
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name)
-        node.attr('u', self.u)
-        node.attr('v', self.v)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):  # @UnusedVariable
-        return cls(node.attr('name'),
-                   node.attr('u', dtype=int),
-                   node.attr('v', dtype=int))
 
 
 class F(AnnotatedNineMLObject, DocumentLevelObject):

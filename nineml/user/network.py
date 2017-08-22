@@ -37,6 +37,8 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
     class_to_member = {'Population': 'population',
                        'Projection': 'projection',
                        'Selection': 'selection'}
+    child_types = (Population, Projection, Selection)
+    nineml_attrs = ('name',)
 
     def __init__(self, name, populations=[], projections=[],
                  selections=[]):

@@ -164,6 +164,8 @@ class Transition(BaseALObject, ContainerObject):
                            'target_regime_name')
     class_to_member = {'StateAssignment': 'state_assignment',
                        'OutputEvent': 'output_event'}
+    child_types = (StateAssignment, OutputEvent)
+    nineml_attrs = ('target_regime_name',)
 
     def __init__(self, state_assignments=None, output_events=None,
                  target_regime=None):

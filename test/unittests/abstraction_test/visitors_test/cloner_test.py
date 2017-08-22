@@ -4,7 +4,7 @@ from nineml.abstraction import (
     Dynamics as Dynamics, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort)
 from nineml.user.multi.dynamics import MultiDynamics
-from nineml.abstraction.dynamics.visitors.modifiers import DynamicsFlattener
+# from nineml.abstraction.dynamics.visitors.modifiers import DynamicsFlattener
 
 
 # Testing Skeleton for class: DynamicsClonerPrefixNamespace

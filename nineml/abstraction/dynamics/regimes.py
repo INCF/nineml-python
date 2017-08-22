@@ -14,6 +14,9 @@ from ..expressions import ODE
 from .. import BaseALObject
 from nineml.units import dimensionless, Dimension
 from nineml.base import ContainerObject
+from ..expressions import Alias, Expression  # @IgnorePep8
+from .transitions import OnEvent, OnCondition, Trigger  # @IgnorePep8
+from .visitors.queriers import DynamicsElementFinder  # @IgnorePep8
 
 
 class StateVariable(BaseALObject):
@@ -194,7 +197,8 @@ class Regime(BaseALObject, ContainerObject):
                        'OnEvent': 'on_event',
                        'OnCondition': 'on_condition',
                        'Alias': 'alias'}
-
+    child_types = (TimeDerivative, OnEvent, OnCondition, Alias)
+    nineml_attrs = ('name',)
     _n = 0
 
     @classmethod
@@ -424,8 +428,3 @@ class Regime(BaseALObject, ContainerObject):
                       transitions=(node.children(OnEvent, **options) +
                                    node.children(OnCondition, **options)),
                       aliases=node.children(Alias, **options))
-
-
-from ..expressions import Alias, Expression  # @IgnorePep8
-from .transitions import OnEvent, OnCondition, Trigger  # @IgnorePep8
-from .visitors.queriers import DynamicsElementFinder  # @IgnorePep8

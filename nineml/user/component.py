@@ -14,7 +14,6 @@ from nineml.document import Document
 from nineml.base import (
     DocumentLevelObject, ContainerObject)
 from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
-from os import path
 
 
 class Definition(BaseReference):

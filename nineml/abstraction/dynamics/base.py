@@ -592,5 +592,5 @@ from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
                                 DynamicsIsLinear,
                                 DynamicsInterfaceInferer)
 from .visitors.modifiers import (  # @IgnorePep8
-    DynamicsRenameSymbol, DynamicsAssignIndices, DynamicsSubstituteAliases,
-    DynamicsFlattener)
+    DynamicsRenameSymbol, DynamicsAssignIndices, DynamicsSubstituteAliases)
+# , DynamicsFlattener)

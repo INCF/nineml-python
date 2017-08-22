@@ -165,6 +165,43 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
         return len(list(self.event_receive_ports))
 
 
+class Item(BaseULObject):
+
+    nineml_type = 'Item'
+    defining_attributes = ('_index', '_population')
+
+    def __init__(self, index, population):
+        BaseULObject.__init__(self)
+        self._index = int(index)
+        self._population = population
+
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def key(self):
+        return str(self.index)
+
+    @property
+    def population(self):
+        """
+        Returns the population/selection/component-array referenced in the
+        Item
+        """
+        return self._population
+
+    def serialize_node(self, node, **options):
+        node.attr('index', self.index, **options)
+        node.child(self.population, reference=True, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        return cls(node.attr('index', dtype=int, **options),
+                   node.child((Population, Selection, ComponentArray),
+                              allow_ref='only', **options))
+
+
 class Concatenate(BaseULObject, ContainerObject):
     """
     Concatenates multiple :class:`Population`\s or :class:`Selection`\s
@@ -174,6 +211,7 @@ class Concatenate(BaseULObject, ContainerObject):
     nineml_type = 'Concatenate'
     defining_attributes = ('_items',)
     class_to_member = {'Item': 'item'}
+    child_types = (Item,)
 
     def __init__(self, *items, **kwargs):
         BaseULObject.__init__(self, **kwargs)
@@ -237,42 +275,6 @@ class Concatenate(BaseULObject, ContainerObject):
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(*node.children(Item, **options))
 
-
-class Item(BaseULObject):
-
-    nineml_type = 'Item'
-    defining_attributes = ('_index', '_population')
-
-    def __init__(self, index, population):
-        BaseULObject.__init__(self)
-        self._index = int(index)
-        self._population = population
-
-    @property
-    def index(self):
-        return self._index
-
-    @property
-    def key(self):
-        return str(self.index)
-
-    @property
-    def population(self):
-        """
-        Returns the population/selection/component-array referenced in the
-        Item
-        """
-        return self._population
-
-    def serialize_node(self, node, **options):
-        node.attr('index', self.index, **options)
-        node.child(self.population, reference=True, **options)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):
-        return cls(node.attr('index', dtype=int, **options),
-                   node.child((Population, Selection, ComponentArray),
-                              allow_ref='only', **options))
 
 
 # TGC 11/11/ This old implementation of Set (now called Selection) was copied
