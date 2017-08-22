@@ -827,7 +827,7 @@ class ContainerObject(BaseNineMLObject):
         if class_map is None:
             class_map = self.class_to_member
         if key is None:
-            key = accessor_name_from_type(class_map, element_type)
+            key = accessor_name_from_type(element_type, class_map)
         return self._indices[key]
 
     def all_indices(self):
@@ -844,8 +844,8 @@ class ContainerObject(BaseNineMLObject):
 
     def _member_accessor(self, element_type, class_map):
         try:
-            return getattr(self, accessor_name_from_type(class_map,
-                                                         element_type))
+            return getattr(self, accessor_name_from_type(element_type,
+                                                         class_map))
         except:
             raise
 
@@ -854,11 +854,11 @@ class ContainerObject(BaseNineMLObject):
         Looks up the name of values iterator from the nineml_type of the
         element argument.
         """
-        acc_name = accessor_name_from_type(class_map, element_type)
+        acc_name = accessor_name_from_type(element_type, class_map)
         return getattr(self, pluralise(acc_name))
 
     def _member_keys_iter(self, element_type, class_map):
-        acc_name = accessor_name_from_type(class_map, element_type)
+        acc_name = accessor_name_from_type(element_type, class_map)
         try:
             return getattr(self, (acc_name + '_names'))
         except AttributeError:
@@ -866,11 +866,11 @@ class ContainerObject(BaseNineMLObject):
             return getattr(self, (acc_name + '_keys'))
 
     def _num_members(self, element_type, class_map):
-        acc_name = accessor_name_from_type(class_map, element_type)
+        acc_name = accessor_name_from_type(element_type, class_map)
         return getattr(self, 'num_' + pluralise(acc_name))
 
     def _member_dict(self, element_type):
-        acc_name = accessor_name_from_type(self.class_to_member, element_type)
+        acc_name = accessor_name_from_type(element_type, self.class_to_member)
         return getattr(self, '_' + pluralise(acc_name))
 
     def _copy_to_clone(self, clone, memo, **kwargs):
@@ -878,6 +878,10 @@ class ContainerObject(BaseNineMLObject):
         clone._indices = defaultdict(dict)
         clone._parent = (self._parent.clone(memo, **kwargs)
                          if self._parent is not None else None)
+
+    @classmethod
+    def _accessor_name(cls):
+        return cls.__name__.lower()
 
     @property
     def parent(self):
@@ -897,7 +901,7 @@ class ContainerObject(BaseNineMLObject):
         return document
 
 
-def accessor_name_from_type(class_map, element_type):
+def accessor_name_from_type(element_type, class_map):
     """
     Looks up the name of the accessor method from the nineml_type of the
     element argument for a given container type
