@@ -77,6 +77,10 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
                         **options)
         return cls(lhs=lhs, rhs=rhs)
 
+    @classmethod
+    def _children_keys_name(cls):
+        return 'state_assignment_variables'
+
 
 class OutputEvent(BaseALObject):
     """

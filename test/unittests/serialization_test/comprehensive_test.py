@@ -39,6 +39,9 @@ class TestComprehensiveSerialization(TestCase):
 #                     if format in ('xml', 'json', 'yaml'):
 #                         with open(url) as f:
 #                             print f.read()
-                    reread_doc = nineml.read(url, reload=True)
+                    try:
+                        reread_doc = nineml.read(url, reload=True)
+                    except:
+                        raise
                     self.assertTrue(doc.equals(reread_doc),
                                     doc.find_mismatch(reread_doc))

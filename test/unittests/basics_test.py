@@ -17,32 +17,23 @@ class TestAccessors(unittest.TestCase):
         (re.compile(r'(Event|Analog)PortConnection'),
          re.compile(r'_(sender|receiver)_(name|role)'))]
 
-    def test_defining_attributes(self):
+    def test_nineml_attrs(self):
         for name, cls in all_types.iteritems():
-            if hasattr(cls, 'defining_attributes'):
-                for attr_name in cls.defining_attributes:
-                    for elem in instances_of_all_types[name].itervalues():
-                        if elem.__class__.__name__.startswith('_'):
-                            continue  # Skip temporary objects
-                        attr = getattr(elem, attr_name)
-                        # Get corresponding property if present and it is not
-                        # one of the exceptions
-                        if not attr_name.startswith('_'):
-                            continue
-                        if not hasattr(cls, attr_name[1:]):
-                            continue
-                        if any(c.match(name) and a.match(attr_name)
-                               for c, a in self.defattr_prop_exceptions):
-                            continue
-                        prop = getattr(elem, attr_name[1:])
-                        if isinstance(prop, collections.Iterator):
-                            continue
-                        # If none of the above conditions are true then the
-                        # accessor should be the same as the property
-                        self.assertEqual(attr, prop,
-                                         "'{}' in {} ({}) does not match "
-                                         "property ({})".format(
-                                             attr_name, elem, attr, prop))
+            for attr_name in cls.nineml_attrs:
+                for elem in instances_of_all_types[name].itervalues():
+                    if type(elem).__name__.startswith('_'):
+                        continue  # Skip temporary objects
+                    prop_attr = getattr(elem, attr_name)
+                    try:
+                        attr = getattr(elem, '_' + attr_name)
+                    except AttributeError:
+                        continue
+                    # If none of the above conditions are true then the
+                    # accessor should be the same as the property
+                    self.assertEqual(attr, prop_attr,
+                                     "'{}' in {} ({}) does not match "
+                                     "property ({})".format(
+                                         attr_name, elem, prop_attr, attr))
 
     def test_member_accessors(self):
         """
@@ -61,11 +52,12 @@ class TestAccessors(unittest.TestCase):
                 for elem in instances_of_all_types[name].values():
                     for child_type in cls.child_types:
                         num = elem._num_members(child_type)
-                        names = list(elem._member_keys_iter(child_type))
-                        members = sorted(elem._members_iter(child_type))
-                        accessor_members = sorted(
+                        names = sorted(elem._member_keys_iter(child_type))
+                        members = sorted(elem._members_iter(child_type),
+                                         key=lambda e: e.key)
+                        accessor_members = [
                             elem._member_accessor(child_type)(n)
-                            for n in names)
+                            for n in names]
                         # Check num_* matches number of members and names
                         self.assertIsInstance(
                             num, int, ("{} did not return an integer ({})"
@@ -98,8 +90,7 @@ class TestAccessors(unittest.TestCase):
                                             name, names))
                         # Check all members are of the correct type
                         self.assertTrue(
-                            all(m.nineml_type == child_type.nineml_type
-                                for m in members),
+                            all(isinstance(m, child_type) for m in members),
                             "Not all {} members accessed in '{}' {} via "
                             "iterator were of {} type ({})"
                             .format(child_type.nineml_type, elem.key, name,

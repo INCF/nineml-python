@@ -19,6 +19,10 @@ class BaseAnnotations(BaseNineMLObject):
     def __repr__(self):
         return self._repr()
 
+    @property
+    def branches(self):
+        return self._branches
+
     def empty(self):
         """
         Returns true if there are no annotation branches.

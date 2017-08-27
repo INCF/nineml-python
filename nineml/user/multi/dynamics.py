@@ -41,12 +41,118 @@ _DummyNamespaceRegime = collections.namedtuple('_DummyNamespaceRegime',
                                                'relative_name')
 
 
+class SubDynamicsProperties(BaseULObject):
+
+    nineml_type = 'SubDynamicsProperties'
+    defining_attributes = ('_name', '_component')
+    nineml_attrs = ('name', 'component')
+
+    def __init__(self, name, component):
+        BaseULObject.__init__(self)
+        self._name = name
+        self._component = component
+
+    def __repr__(self):
+        return "{}(name={}, component={})".format(self.nineml_type, self.name,
+                                                  self.component)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def component(self):
+        return self._component
+
+    @property
+    def component_class(self):
+        return self.component.component_class
+
+    def __iter__(self):
+        return self.properties
+
+    def append_namespace(self, name):
+        return append_namespace(name, self.name)
+
+    @property
+    def attributes_with_units(self):
+        return self.properties
+
+    @property
+    def initial_values(self):
+        return (_NamespaceInitial(self, iv)
+                for iv in self._component.initial_values)
+
+    @property
+    def initial_regime(self):
+        return self._component.initial_regime
+
+    @property
+    def num_initial_values(self):
+        return len(list(self.initial_values))
+
+    @property
+    def initial_value_names(self):
+        return (iv.name for iv in self.initial_values)
+
+    @name_error
+    def initial_value(self, name):
+        local_name, comp_name = split_namespace(name)
+        if comp_name != self.name:
+            raise NineMLNameError(
+                "'{}' does not name an initial value in '{}'"
+                "SubDynamicsProperties as it does not include the sub "
+                "component name '{}'".format(name, self.name, self.name))
+        return _NamespaceInitial(self,
+                                 self._component.initial_value(local_name))
+
+    @property
+    def properties(self):
+        return (_NamespaceProperty(self, p)
+                for p in self._component.properties)
+
+    @property
+    def num_properties(self):
+        return len(list(self.properties))
+
+    @property
+    def property_names(self):
+        return (p.name for p in self.properties)
+
+    @name_error
+    def property(self, name):
+        local_name, comp_name = split_namespace(name)
+        if comp_name != self.name:
+            raise NineMLNameError(
+                "'{}' does not name an property in '{}'"
+                "SubDynamicsProperties as it does not include the sub "
+                "component name '{}'".format(name, self.name, self.name))
+        return _NamespaceProperty(self, self._component.property(local_name))
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.child(self._component, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        dynamics_properties = node.child(
+            (DynamicsProperties, MultiDynamicsProperties), allow_ref=True,
+            **options)
+        return cls(node.attr('name', **options),
+                   dynamics_properties)
+
+    @classmethod
+    def _child_accessor_name(cls):
+        return 'sub_component'
+
+
 class MultiDynamicsProperties(DynamicsProperties):
 
     nineml_type = "MultiDynamicsProperties"
     v1_nineml_type = None
     defining_attributes = ('_name', '_definition', '_sub_components')
-    nineml_attrs = ('name', 'definition', 'sub_components')
+    nineml_attrs = ('name', 'definition')
+    child_types = (SubDynamicsProperties,)
     class_to_member = {'SubDynamicsProperties': 'sub_component'}
 
     def __init__(self, name, sub_components, port_connections=[],
@@ -207,111 +313,6 @@ class MultiDynamicsProperties(DynamicsProperties):
     def property(self, name):
         _, comp_name = split_namespace(name)
         return self.sub_component(comp_name).property(name)
-
-
-class SubDynamicsProperties(BaseULObject):
-
-    nineml_type = 'SubDynamicsProperties'
-    defining_attributes = ('_name', '_component')
-    nineml_attrs = ('name', 'component')
-
-    def __init__(self, name, component):
-        BaseULObject.__init__(self)
-        self._name = name
-        self._component = component
-
-    def __repr__(self):
-        return "{}(name={}, component={})".format(self.nineml_type, self.name,
-                                                  self.component)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def component(self):
-        return self._component
-
-    @property
-    def component_class(self):
-        return self.component.component_class
-
-    def __iter__(self):
-        return self.properties
-
-    def append_namespace(self, name):
-        return append_namespace(name, self.name)
-
-    @property
-    def attributes_with_units(self):
-        return self.properties
-
-    @property
-    def initial_values(self):
-        return (_NamespaceInitial(self, iv)
-                for iv in self._component.initial_values)
-
-    @property
-    def initial_regime(self):
-        return self._component.initial_regime
-
-    @property
-    def num_initial_values(self):
-        return len(list(self.initial_values))
-
-    @property
-    def initial_value_names(self):
-        return (iv.name for iv in self.initial_values)
-
-    @name_error
-    def initial_value(self, name):
-        local_name, comp_name = split_namespace(name)
-        if comp_name != self.name:
-            raise NineMLNameError(
-                "'{}' does not name an initial value in '{}'"
-                "SubDynamicsProperties as it does not include the sub "
-                "component name '{}'".format(name, self.name, self.name))
-        return _NamespaceInitial(self,
-                                 self._component.initial_value(local_name))
-
-    @property
-    def properties(self):
-        return (_NamespaceProperty(self, p)
-                for p in self._component.properties)
-
-    @property
-    def num_properties(self):
-        return len(list(self.properties))
-
-    @property
-    def property_names(self):
-        return (p.name for p in self.properties)
-
-    @name_error
-    def property(self, name):
-        local_name, comp_name = split_namespace(name)
-        if comp_name != self.name:
-            raise NineMLNameError(
-                "'{}' does not name an property in '{}'"
-                "SubDynamicsProperties as it does not include the sub "
-                "component name '{}'".format(name, self.name, self.name))
-        return _NamespaceProperty(self, self._component.property(local_name))
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name, **options)
-        node.child(self._component, **options)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):
-        dynamics_properties = node.child(
-            (DynamicsProperties, MultiDynamicsProperties), allow_ref=True,
-            **options)
-        return cls(node.attr('name', **options),
-                   dynamics_properties)
-
-    @classmethod
-    def _child_accessor_name(cls):
-        return 'sub_component'
 
 
 class SubDynamics(BaseULObject, DynamicPortsObject):

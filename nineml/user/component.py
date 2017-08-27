@@ -204,7 +204,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     __metaclass__ = ABCMeta  # Abstract base class
     v1_nineml_type = 'Component'
     defining_attributes = ('_name', '_definition', '_properties')
-    nineml_attrs = ('name', 'definition', 'properties')
+    nineml_attrs = ('name', 'definition')
     children = ("Property", "Definition", 'Prototype')
 
     class_to_member = {'Property': 'property'}

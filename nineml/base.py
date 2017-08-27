@@ -849,6 +849,12 @@ class ContainerObject(BaseNineMLObject):
 
     def _get_indices_dict(self, key, child_type):
         if key is None:
+            if child_type not in self.child_types:
+                raise NineMLInvalidElementTypeException(
+                    "{} is not a valid child type for container {} (valid "
+                    " types are {}). Please use explicit key"
+                    .format(child_type.__name__, self,
+                            ", ".join(t.__name__ for t in self.child_types)))
             key = child_type._child_accessor_name()
         return self._indices[key]
 
