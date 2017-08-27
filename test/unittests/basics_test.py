@@ -1,9 +1,9 @@
-import collections
 import unittest
 from nineml.utils.testing.comprehensive import (
     all_types, instances_of_all_types)
 from nineml.abstraction.ports import SendPortBase
 from nineml.base import pluralise
+from nineml import Document
 from nineml.user.multi import append_namespace
 from numpy import sum, product
 import re
@@ -17,9 +17,16 @@ class TestAccessors(unittest.TestCase):
         (re.compile(r'(Event|Analog)PortConnection'),
          re.compile(r'_(sender|receiver)_(name|role)'))]
 
+    non_standard_attrs = ('target_regime_name', 'port_name', 'values',
+                          'src_port_name')
+
     def test_nineml_attrs(self):
         for name, cls in all_types.iteritems():
+            if cls == Document:
+                continue
             for attr_name in cls.nineml_attrs:
+                if attr_name in self.non_standard_attrs:
+                    continue
                 for elem in instances_of_all_types[name].itervalues():
                     if type(elem).__name__.startswith('_'):
                         continue  # Skip temporary objects
@@ -30,10 +37,14 @@ class TestAccessors(unittest.TestCase):
                         continue
                     # If none of the above conditions are true then the
                     # accessor should be the same as the property
-                    self.assertEqual(attr, prop_attr,
-                                     "'{}' in {} ({}) does not match "
-                                     "property ({})".format(
-                                         attr_name, elem, prop_attr, attr))
+                    try:
+                        self.assertEqual(attr, prop_attr,
+                                         "'{}' in {} ({}) does not match "
+                                         "property ({})".format(
+                                             attr_name, elem, prop_attr, attr))
+                    except:
+                        attr == prop_attr
+                        raise
 
     def test_member_accessors(self):
         """

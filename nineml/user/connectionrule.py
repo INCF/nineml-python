@@ -52,9 +52,9 @@ class BaseConnectivity(BaseNineMLObject):
 
     def __eq__(self, other):
         try:
-            return (self._rule_properties == other._rule_props and
-                    self._source_size == other._src_size and
-                    self._destination_size == other._dest_size)
+            return (self._rule_properties == other._rule_properties and
+                    self._source_size == other._source_size and
+                    self._destination_size == other._destination_size)
         except AttributeError:
             return False
 

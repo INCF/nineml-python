@@ -22,6 +22,7 @@ class Definition(BaseReference):
     Base class for model components that are defined in the abstraction layer.
     """
     nineml_type = "Definition"
+    nineml_attrs = BaseReference.nineml_attrs + ('component_class',)
 
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
