@@ -89,6 +89,95 @@ class Prototype(Definition):
         return self.component.component_class
 
 
+class Property(BaseULObject):
+
+    """
+    Representation of a numerical- or string-valued parameter.
+
+    A numerical parameter is a (name, value, units) triplet, a string parameter
+    is a (name, value) pair.
+
+    Numerical values may either be numbers, or a component_class that generates
+    numbers, e.g. a RandomDistribution instance.
+    """
+    nineml_type = "Property"
+    defining_attributes = ('_name', '_quantity')
+    nineml_attrs = ('name', 'quantity')
+
+    def __init__(self, name, quantity):
+        super(Property, self).__init__()
+        assert isinstance(name, basestring)
+        quantity = Quantity.parse(quantity)
+        self._name = name
+        self._quantity = quantity
+
+    def __iter__(self):
+        """For convenient tuple expansion"""
+        return self.name, self.value, self.units
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def quantity(self):
+        return self._quantity
+
+    @quantity.setter
+    def quantity(self, qty):
+        if qty.units.dimension != self.units.dimension:
+            raise NineMLValueError(
+                "Incompatible dimension trying to set '{}' property with {} "
+                "({}), needs to have dimension {}".format(
+                    self.name, qty, qty.units.dimension, self.units.dimension))
+        self._quantity = qty
+
+    @property
+    def value(self):
+        return self.quantity.value
+
+    @property
+    def units(self):
+        return self.quantity.units
+
+    def __hash__(self):
+        return hash(self.name) ^ hash(self.quantity)
+
+    def __repr__(self):
+        units = self.units.name
+        if u"µ" in units:
+            units = units.replace(u"µ", "u")
+        return ("{}(name={}, value={}, units={})"
+                .format(self.nineml_type, self.name, self.value, units))
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.child(self._quantity, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        quantity = node.child(Quantity, **options)
+        return cls(name=name, quantity=quantity)
+
+    def serialize_node_v1(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.child(self.value, **options)
+        node.attr('units', self.units.name, **options)
+
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        value = node.child((SingleValue, ArrayValue, RandomDistributionValue),
+                           **options)
+        units = node.document[node.attr('units', **options)]
+        quantity = Quantity(value, units)
+        return cls(name=name, quantity=quantity)
+
+    def set_units(self, units):
+        self.quantity._units = units
+
+
 class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     """
     Base class for model components.
@@ -119,6 +208,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     children = ("Property", "Definition", 'Prototype')
 
     class_to_member = {'Property': 'property'}
+    child_types = (Property,)
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
@@ -378,92 +468,3 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
             except AttributeError:
                 raise NineMLNameError(
                     "No property named '{}' in component class".format(name))
-
-
-class Property(BaseULObject):
-
-    """
-    Representation of a numerical- or string-valued parameter.
-
-    A numerical parameter is a (name, value, units) triplet, a string parameter
-    is a (name, value) pair.
-
-    Numerical values may either be numbers, or a component_class that generates
-    numbers, e.g. a RandomDistribution instance.
-    """
-    nineml_type = "Property"
-    defining_attributes = ('_name', '_quantity')
-    nineml_attrs = ('name', 'quantity')
-
-    def __init__(self, name, quantity):
-        super(Property, self).__init__()
-        assert isinstance(name, basestring)
-        quantity = Quantity.parse(quantity)
-        self._name = name
-        self._quantity = quantity
-
-    def __iter__(self):
-        """For convenient tuple expansion"""
-        return self.name, self.value, self.units
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def quantity(self):
-        return self._quantity
-
-    @quantity.setter
-    def quantity(self, qty):
-        if qty.units.dimension != self.units.dimension:
-            raise NineMLValueError(
-                "Incompatible dimension trying to set '{}' property with {} "
-                "({}), needs to have dimension {}".format(
-                    self.name, qty, qty.units.dimension, self.units.dimension))
-        self._quantity = qty
-
-    @property
-    def value(self):
-        return self.quantity.value
-
-    @property
-    def units(self):
-        return self.quantity.units
-
-    def __hash__(self):
-        return hash(self.name) ^ hash(self.quantity)
-
-    def __repr__(self):
-        units = self.units.name
-        if u"µ" in units:
-            units = units.replace(u"µ", "u")
-        return ("{}(name={}, value={}, units={})"
-                .format(self.nineml_type, self.name, self.value, units))
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name, **options)
-        node.child(self._quantity, **options)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):  # @UnusedVariable
-        name = node.attr('name', **options)
-        quantity = node.child(Quantity, **options)
-        return cls(name=name, quantity=quantity)
-
-    def serialize_node_v1(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name, **options)
-        node.child(self.value, **options)
-        node.attr('units', self.units.name, **options)
-
-    @classmethod
-    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
-        name = node.attr('name', **options)
-        value = node.child((SingleValue, ArrayValue, RandomDistributionValue),
-                           **options)
-        units = node.document[node.attr('units', **options)]
-        quantity = Quantity(value, units)
-        return cls(name=name, quantity=quantity)
-
-    def set_units(self, units):
-        self.quantity._units = units

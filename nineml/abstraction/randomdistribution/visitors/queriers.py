@@ -23,7 +23,9 @@ class RandomDistributionRequiredDefinitions(ComponentRequiredDefinitions,
 
 class RandomDistributionElementFinder(ComponentElementFinder,
                                       BaseRandomDistributionVisitor):
-    pass
+
+    def action_randomdistribution(self, randomdistribution, **kwargs):  # @UnusedVariable @IgnorePep8
+        return self.action_componentclass(randomdistribution, **kwargs)
 
 
 class RandomDistributionExpressionExtractor(ComponentExpressionExtractor,

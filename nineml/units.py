@@ -430,6 +430,7 @@ class Quantity(AnnotatedNineMLObject):
     """
     nineml_type = 'Quantity'
     defining_attributes = ("_value", "_units")
+    nineml_attrs = ('value', 'units')
 
     def __init__(self, value, units=None):
         super(Quantity, self).__init__()

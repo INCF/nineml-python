@@ -112,6 +112,9 @@ class ComponentRequiredDefinitions(BaseVisitor):
             self._required_stack.pop()
             self.expressions.append(alias)
 
+    def default_action(self, obj, **kwargs):
+        pass
+
     @property
     def parameter_names(self):
         return (p.name for p in self.parameters)
@@ -148,7 +151,8 @@ class ComponentElementFinder(BaseVisitor):
         self.found = True
 
     def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        pass
+        if self.element == component_class:
+            self._found()
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         if self.element == parameter:
@@ -162,6 +166,14 @@ class ComponentElementFinder(BaseVisitor):
         if self.element is constant:
             self._found()
 
+    def action_dimension(self, dimension, **kwargs):  # @UnusedVariable
+        if self.element is dimension:
+            self._found()
+
+    def action_unit(self, unit, **kwargs):  # @UnusedVariable
+        if self.element is unit:
+            self._found()
+
 
 class ComponentExpressionExtractor(BaseVisitor):
 
@@ -171,6 +183,9 @@ class ComponentExpressionExtractor(BaseVisitor):
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.expressions.append(alias.rhs)
+
+    def default_action(self, obj, **kwargs):
+        pass
 
 
 class ComponentDimensionResolver(BaseVisitor):
@@ -192,10 +207,14 @@ class ComponentDimensionResolver(BaseVisitor):
             self._dims[sympify(a)] = sympify(a.units.dimension)
         self.visit(component_class)
 
+    @property
+    def base_child_types(self):
+        return self.visits_class.child_types
+
     def dimension_of(self, element):
         if isinstance(element, basestring):
             element = self.component_class.element(
-                element, class_map=self.visits_class.class_to_member)
+                element, child_types=self.base_child_types)
         return Dimension.from_sympy(self._flatten(element))
 
     def _flatten(self, expr, **kwargs):  # @UnusedVariable
@@ -231,7 +250,7 @@ class ComponentDimensionResolver(BaseVisitor):
         for context in reversed(self.contexts):
             try:
                 element = context.parent.element(
-                    name, class_map=self.visits_class.class_to_member)
+                    name, child_types=context.child_types)
             except KeyError:
                 pass
         if element is None:
@@ -275,3 +294,6 @@ class ComponentDimensionResolver(BaseVisitor):
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self._flatten(alias)
+
+    def default_action(self, obj, **kwargs):
+        pass

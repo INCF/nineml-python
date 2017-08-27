@@ -14,21 +14,21 @@ from .base import BaseRandomDistributionVisitor
 class RandomDistributionRenameSymbol(ComponentRenameSymbol,
                                      BaseRandomDistributionVisitor):
 
-    """ Can be used for:
-    Aliases
-    """
-    pass
+    def action_randomdistribution(self, randomdistribution, **kwargs):
+        return self.action_componentclass(randomdistribution, **kwargs)
 
 
 class RandomDistributionAssignIndices(ComponentAssignIndices,
                                       BaseRandomDistributionVisitor):
-    pass
+
+    def action_randomdistribution(self, randomdistribution, **kwargs):
+        return self.action_componentclass(randomdistribution, **kwargs)
 
 
 class RandomDistributionFlattener(ComponentFlattener):
 
     @lookup_memo
-    def visit_componentclass(self, component_class, **kwargs):
+    def visit_randomdistribution(self, component_class, **kwargs):
         ccn = component_class.__class__(
             name=component_class.name,
             standard_library=component_class.standard_library,

@@ -175,6 +175,9 @@ class DynamicsHasRandomProcess(BaseDynamicsVisitor):
         if list(stateassignment.rhs_random_distributions):
             self._found = True
 
+    def default_action(self, obj, **kwargs):
+        pass
+
 
 class DynamicsIsLinear(BaseDynamicsVisitor):
     """
@@ -247,6 +250,9 @@ class DynamicsIsLinear(BaseDynamicsVisitor):
     def _report_nonlinear(self):
         self._result = False
         raise NineMLStopVisitException()
+
+    def default_action(self, obj, **kwargs):
+        pass
 
 
 from .modifiers import DynamicsSubstituteAliases  # @IgnorePep8

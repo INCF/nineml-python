@@ -26,7 +26,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
                 try:
                     element = context.parent.element(
                         name,
-                        class_map=self.visits_class.class_to_member)
+                        child_types=self.visits_class.child_types)
                 except KeyError:
                     pass
             if element is None:

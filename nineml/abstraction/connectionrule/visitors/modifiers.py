@@ -13,15 +13,15 @@ from .base import BaseConnectionRuleVisitor
 class ConnectionRuleRenameSymbol(ComponentRenameSymbol,
                                  BaseConnectionRuleVisitor):
 
-    """ Can be used for:
-    Aliases
-    """
-    pass
+    def action_connectionrule(self, connectionrule, **kwargs):
+        return self.action_componentclass(connectionrule, **kwargs)
 
 
 class ConnectionRuleAssignIndices(ComponentAssignIndices,
                                   BaseConnectionRuleVisitor):
-    pass
+
+    def action_connectionrule(self, connectionrule, **kwargs):
+        return self.action_componentclass(connectionrule, **kwargs)
 
 
 class ConnectionRuleFlattener(ComponentFlattener):

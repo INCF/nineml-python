@@ -9,6 +9,7 @@ from nineml.abstraction.expressions.utils import is_valid_lhs_target
 from nineml.abstraction.expressions import reserved_identifiers, Expression
 from nineml.utils import assert_no_duplicates
 from nineml.base import BaseNineMLObject
+from nineml.abstraction.ports import Port
 import operator
 import sympy
 from sympy import sympify
@@ -226,12 +227,9 @@ class DimensionalityComponentValidator(BaseVisitor):
             # element
             element = None
             for context in reversed(self.contexts):
-                if isinstance(context.parent, self.visits_class):
-                    class_map = self.visits_class.class_to_member
-                else:
-                    class_map = None
                 try:
-                    element = context.parent.element(name, class_map=class_map)
+                    element = context.parent.element(
+                        name, child_types=context.child_types)
                 except KeyError:
                     pass
             if element is None:
@@ -255,7 +253,7 @@ class DimensionalityComponentValidator(BaseVisitor):
                             str(e) for e in self._dimensions.iterkeys()),
                         "\n".join(
                             str(e) for e in self.component_class.elements(
-                                class_map=self.visits_class.class_to_member))
+                                child_types=self.visits_class.child_types))
                     ))
             self._recursion_count += 1
             dims = self._flatten_dims(expr, element)
@@ -350,7 +348,7 @@ class DimensionalityComponentValidator(BaseVisitor):
         # Get the state variable or alias associated with the analog send
         # port
         element = self.component_class.element(
-            port.name, self.visits_class.class_to_member)
+            port.name, child_types=self.visits_class.child_types)
         try:
             if element.dimension != port.dimension:
                 raise NineMLDimensionError(self._construct_error_message(

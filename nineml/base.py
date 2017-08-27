@@ -849,7 +849,7 @@ class ContainerObject(BaseNineMLObject):
 
     def _get_indices_dict(self, key, child_type):
         if key is None:
-            key = child_type._accessor_name()
+            key = child_type._child_accessor_name()
         return self._indices[key]
 
     def all_indices(self):
@@ -902,7 +902,10 @@ class ContainerObject(BaseNineMLObject):
                          if self._parent is not None else None)
 
     def _member_accessor(self, child_type):
-        return getattr(self, child_type._accessor_name())
+        try:
+            return getattr(self, child_type._child_accessor_name())
+        except:
+            raise
 
     def _members_iter(self, child_type):
         return getattr(self, child_type._children_iter_name())

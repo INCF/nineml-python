@@ -8,8 +8,11 @@ docstring needed
 from ....componentclass.visitors.validators.types import (
     TypesComponentValidator)
 from ..base import BaseRandomDistributionVisitor
+from ...base import RandomDistribution
 
 
 class TypesRandomDistributionValidator(TypesComponentValidator,
                                        BaseRandomDistributionVisitor):
-    pass
+
+    def action_randomdistribution(self, randomdistribution, **kwargs):  # @UnusedVariable @IgnorePep8
+        assert isinstance(randomdistribution, RandomDistribution)

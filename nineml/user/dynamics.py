@@ -12,6 +12,10 @@ class Initial(Property):
     """
     nineml_type = "Initial"
 
+    @classmethod
+    def _child_accessor_name(cls):
+        return 'initial_value'
+
 
 class DynamicsProperties(Component, DynamicPortsObject):
     """
@@ -38,6 +42,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
     class_to_member = dict(
         tuple(Component.class_to_member.iteritems()) +
         (('Initial', 'initial_value'),))
+    child_types = Component.child_types + (Initial,)
 
     def __init__(self, name, definition, properties={}, initial_values={},
                  initial_regime=None,

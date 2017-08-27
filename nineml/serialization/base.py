@@ -919,7 +919,7 @@ class BaseUnserializer(BaseVisitor):
                     "from document {} ({})"
                     .format(name, self.document.url, "', '".join(
                         self._get_elem_name(e)
-                        for _, e in self.get_children(self.root))))
+                        for _, e in self.get_all_children(self.root))))
             if elem_type == 'ComponentClass':
                 defn_cls = self._get_v1_component_class_type(doc_elem)
             elif elem_type == 'Component':

@@ -223,8 +223,8 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         for proj in scaled.projections:
             conn = proj.connectivity
             props = conn.rule_properties
-            conn._src_size = proj.pre.size
-            conn._dest_size = proj.post.size
+            conn._source_size = proj.pre.size
+            conn._destination_size = proj.post.size
             if 'number' in props.property_names:
                 number = props.property('number')
                 props.set(Property(

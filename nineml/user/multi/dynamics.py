@@ -309,6 +309,10 @@ class SubDynamicsProperties(BaseULObject):
         return cls(node.attr('name', **options),
                    dynamics_properties)
 
+    @classmethod
+    def _child_accessor_name(cls):
+        return 'sub_component'
+
 
 class SubDynamics(BaseULObject, DynamicPortsObject):
 

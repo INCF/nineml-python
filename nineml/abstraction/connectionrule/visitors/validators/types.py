@@ -8,8 +8,11 @@ docstring needed
 from ....componentclass.visitors.validators.types import (
     TypesComponentValidator)
 from ..base import BaseConnectionRuleVisitor
+from ...base import ConnectionRule
 
 
 class TypesConnectionRuleValidator(TypesComponentValidator,
                                    BaseConnectionRuleVisitor):
-    pass
+
+    def action_connectionrule(self, connectionrule, **kwargs):  # @UnusedVariable @IgnorePep8
+        assert isinstance(connectionrule, ConnectionRule)

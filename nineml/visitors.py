@@ -26,8 +26,11 @@ class BaseVisitor(object):
     class Context(object):
         "The context within which the current element is situated"
 
-        def __init__(self, parent, parent_result, attr_name=None, dct=None):
+        def __init__(self, parent, parent_cls, parent_result, attr_name=None,
+                     dct=None):
             self._parent = parent
+            self._parent_cls = parent_cls
+            assert isinstance(parent, parent_cls)
             self._parent_result = parent_result
             self._attr_name = attr_name
             self._dct = dct
@@ -35,6 +38,17 @@ class BaseVisitor(object):
         @property
         def parent(self):
             return self._parent
+
+        @property
+        def parent_cls(self):
+            return self._parent_cls
+
+        @property
+        def child_types(self):
+            try:
+                return self._parent_cls.child_types
+            except AttributeError:
+                return None
 
         @property
         def parent_result(self):
@@ -50,7 +64,7 @@ class BaseVisitor(object):
 
         def replace(self, old, new):
             if self.attr_name is not None:
-                setattr(self.parent, self.attr_name, new)
+                setattr(self.parent, '_' + self.attr_name, new)
             elif self.dct is not None:
                 del self.dct[old.name]
                 self.dct[new.name] = new
@@ -117,7 +131,8 @@ class BaseVisitor(object):
             attr = getattr(obj, attr_name)
             if isinstance(attr, BaseNineMLObject):
                 # Create the context around the visit of the attribute
-                context = self.Context(obj, action_result, attr_name)
+                context = self.Context(obj, nineml_cls, action_result,
+                                       attr_name)
                 self.contexts.append(context)
                 results._attr[attr_name] = self.visit(attr, **kwargs)
                 popped = self.contexts.pop()
@@ -128,8 +143,8 @@ class BaseVisitor(object):
                 try:
                     dct = obj._member_dict(child_type)
                 except (NineMLInvalidElementTypeException, AttributeError):
-                    dct = None  # If class_map comes from visits_class
-                context = self.Context(obj, action_result, dct=dct)
+                    dct = None  # If child_type is from base class
+                context = self.Context(obj, nineml_cls, action_result, dct=dct)
                 self.contexts.append(context)
                 for child in obj._members_iter(child_type):
                     results._children[child_type][child.key] = self.visit(

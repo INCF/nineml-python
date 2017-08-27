@@ -54,7 +54,10 @@ class Projection(BaseULObject, DocumentLevelObject):
                            '_response', '_plasticity', '_delay',
                            '_analog_port_connections',
                            '_event_port_connections')
-
+    nineml_attrs = ('name', 'pre', 'post', 'connectivity',
+                    'response', 'plasticity', 'delay',
+                    'analog_port_connections',
+                    'event_port_connections')
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
     def __init__(self, name, pre, post, response, connectivity,

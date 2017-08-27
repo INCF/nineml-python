@@ -77,6 +77,9 @@ class ComponentRenameSymbol(BaseVisitor):
             self.note_lhs_changed(constant)
             constant.name_transform_inplace(self.namemap)
 
+    def default_action(self, obj, **kwargs):
+        pass
+
 
 class ComponentAssignIndices(BaseVisitor):
 
@@ -93,6 +96,9 @@ class ComponentAssignIndices(BaseVisitor):
     def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
         for elem in component_class.elements():
             component_class.index_of(elem)
+
+    def default_action(self, obj, **kwargs):
+        pass
 
 
 class ComponentSubstituteAliases(BaseVisitor):
@@ -164,6 +170,9 @@ class ComponentSubstituteAliases(BaseVisitor):
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         return self.substitute(alias)
+
+    def default_action(self, obj, **kwargs):
+        pass
 
 
 def lookup_memo(visit_elem):

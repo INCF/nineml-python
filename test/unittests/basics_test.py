@@ -59,58 +59,59 @@ class TestAccessors(unittest.TestCase):
         for name, cls in all_types.iteritems():
             if hasattr(cls, 'class_to_member'):
                 for elem in instances_of_all_types[name].values():
-                    for member in cls.class_to_member:
-                        num = elem._num_members(member, cls.class_to_member)
-                        names = list(elem._member_keys_iter(
-                            member, cls.class_to_member))
-                        members = sorted(elem._members_iter(
-                            member, cls.class_to_member))
+                    for child_type in cls.child_types:
+                        num = elem._num_members(child_type)
+                        names = list(elem._member_keys_iter(child_type))
+                        members = sorted(elem._members_iter(child_type))
                         accessor_members = sorted(
-                            elem._member_accessor(member,
-                                                  cls.class_to_member)(n)
+                            elem._member_accessor(child_type)(n)
                             for n in names)
                         # Check num_* matches number of members and names
                         self.assertIsInstance(
-                            num, int, ("num_{} did not return an integer ({})"
-                                       .format(cls.class_to_member[member],
-                                               num)))
+                            num, int, ("{} did not return an integer ({})"
+                                       .format(
+                                           child_type._num_children_name(),
+                                           num)))
                         self.assertEqual(
                             len(members), num,
-                            "num_{} did not return the same length ({}) as the"
+                            "{} did not return the same length ({}) as the"
                             " number of members ({})".format(
-                                cls.class_to_member[member], num,
+                                child_type._num_children_name(), num,
                                 len(members)))
                         self.assertEqual(
                             len(names), num,
-                            "num_{} did not return the same length ({}) as the"
+                            "{} did not return the same length ({}) as the"
                             " number of names ({})".format(
-                                cls.class_to_member[member], num,
+                                child_type._num_children_name(), num,
                                 len(names)))
                         # Check all names are strings and don't contain
                         # duplicates
                         self.assertTrue(
                             all(isinstance(n, basestring) for n in names),
                             "Not all names of {} in '{} {} were strings "
-                            "({})".format(member, elem.key, name,
-                                            names))
+                            "({})".format(child_type.nineml_type, elem.key,
+                                          name, names))
                         self.assertEqual(
                             len(names), len(set(names)),
                             "Duplicate names found in {} members of '{}' {} "
-                            "('{}')".format(member, elem.key, name, names))
+                            "('{}')".format(child_type.nineml_type, elem.key,
+                                            name, names))
                         # Check all members are of the correct type
                         self.assertTrue(
-                            all(m.nineml_type == member for m in members),
+                            all(m.nineml_type == child_type.nineml_type
+                                for m in members),
                             "Not all {} members accessed in '{}' {} via "
                             "iterator were of {} type ({})"
-                            .format(member, elem.key, name, member,
+                            .format(child_type.nineml_type, elem.key, name,
+                                    child_type.nineml_type,
                                     ', '.join(str(m) for m in members)))
                         self.assertEqual(
                             members, accessor_members,
                             "{} members accessed through iterator ({}) do not "
                             "match members accessed through individual "
                             "accessor method ({}) for '{}' {}"
-                            .format(member, members, accessor_members,
-                                    elem.key, name))
+                            .format(child_type.nineml_type, members,
+                                    accessor_members, elem.key, name))
                     total_num = elem.num_elements()
                     all_keys = list(elem.element_keys())
                     all_members = sorted(elem.elements())

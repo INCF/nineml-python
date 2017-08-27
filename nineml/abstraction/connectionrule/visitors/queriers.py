@@ -22,7 +22,9 @@ class ConnectionRuleRequiredDefinitions(ComponentRequiredDefinitions,
 
 class ConnectionRuleElementFinder(ComponentElementFinder,
                                   BaseConnectionRuleVisitor):
-    pass
+
+    def action_connectionrule(self, connectionrule, **kwargs):  # @UnusedVariable @IgnorePep8
+        return self.action_componentclass(connectionrule, **kwargs)
 
 
 class ConnectionRuleExpressionExtractor(ComponentExpressionExtractor,

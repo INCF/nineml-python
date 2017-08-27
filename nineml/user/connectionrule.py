@@ -34,8 +34,9 @@ class BaseConnectivity(BaseNineMLObject):
     """
 
     __metaclass__ = ABCMeta
-    defining_attributes = ('_rule_props', '_src_size', '_dest_size')
-    nineml_attrs = ('rule_props', 'src_size', 'dest_size')
+    defining_attributes = ('_rule_properties', '_source_size',
+                           '_destination_size')
+    nineml_attrs = ('rule_properties', 'source_size', 'destination_size')
 
     def __init__(self, connection_rule_properties, source_size,
                  destination_size, **kwargs):  # @UnusedVariable
@@ -45,21 +46,21 @@ class BaseConnectivity(BaseNineMLObject):
                 "Cannot connect to populations of different sizes "
                 "({} and {}) with OneToOne connection rule"
                 .format(source_size, destination_size))
-        self._rule_props = connection_rule_properties
-        self._src_size = source_size
-        self._dest_size = destination_size
+        self._rule_properties = connection_rule_properties
+        self._source_size = source_size
+        self._destination_size = destination_size
 
     def __eq__(self, other):
         try:
-            return (self._rule_props == other._rule_props and
-                    self._src_size == other._src_size and
-                    self._dest_size == other._dest_size)
+            return (self._rule_properties == other._rule_props and
+                    self._source_size == other._src_size and
+                    self._destination_size == other._dest_size)
         except AttributeError:
             return False
 
     @property
     def rule_properties(self):
-        return self._rule_props
+        return self._rule_properties
 
     @property
     def rule(self):
@@ -71,11 +72,11 @@ class BaseConnectivity(BaseNineMLObject):
 
     @property
     def source_size(self):
-        return self._src_size
+        return self._source_size
 
     @property
     def destination_size(self):
-        return self._dest_size
+        return self._destination_size
 
     def __ne__(self, other):
         return not (self == other)
@@ -208,44 +209,45 @@ class Connectivity(BaseConnectivity):
         return conn
 
     def _all_to_all(self):  # @UnusedVariable
-        return product(xrange(self._src_size), xrange(self._dest_size))
+        return product(xrange(self._source_size),
+                       xrange(self._destination_size))
 
     def _one_to_one(self):  # @UnusedVariable
-        assert self._src_size == self._dest_size
-        return ((i, i) for i in xrange(self._src_size))
+        assert self._source_size == self._destination_size
+        return ((i, i) for i in xrange(self._source_size))
 
     def _explicit_connection_list(self):  # @UnusedVariable
         return izip(
-            self._rule_props.property('sourceIndices').value.values,
-            self._rule_props.property('destinationIndices').value.values)
+            self._rule_properties.property('sourceIndices').value.values,
+            self._rule_properties.property('destinationIndices').value.values)
 
     def _probabilistic_connectivity(self):  # @UnusedVariable
         # Reinitialize the connectivity generator with the same RNG so that
         # it selects the same numbers
         rng = self._rng_cls(self._seed)
-        p = float(self._rule_props.property('probability').value)
+        p = float(self._rule_properties.property('probability').value)
         # Get an iterator over all of the source dest pairs to test
-        return chain(*(((s, d) for d in xrange(self._dest_size)
+        return chain(*(((s, d) for d in xrange(self._destination_size)
                         if rng.random() < p)
-                       for s in xrange(self._src_size)))
+                       for s in xrange(self._source_size)))
 
     def _random_fan_in(self):  # @UnusedVariable
-        N = int(self._rule_props.property('number').value)
+        N = int(self._rule_properties.property('number').value)
         rng = self._rng_cls(self._seed)
         return chain(*(
-            izip((int(math.floor(rng.random() * self._src_size))
+            izip((int(math.floor(rng.random() * self._source_size))
                   for _ in xrange(N)),
                  repeat(d))
-            for d in xrange(self._dest_size)))
+            for d in xrange(self._destination_size)))
 
     def _random_fan_out(self):  # @UnusedVariable
-        N = int(self._rule_props.property('number').value)
+        N = int(self._rule_properties.property('number').value)
         rng = self._rng_cls(self._seed)
         return chain(*(
             izip(repeat(s),
-                 (int(math.floor(rng.random() * self._dest_size))
+                 (int(math.floor(rng.random() * self._destination_size))
                   for _ in xrange(N)))
-            for s in xrange(self._src_size)))
+            for s in xrange(self._source_size)))
 
     def clone(self, memo=None, random_seeds=False, **kwargs):
         if memo is None:

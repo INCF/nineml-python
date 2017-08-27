@@ -12,6 +12,7 @@ class BaseReference(AnnotatedNineMLObject):
     """
 
     defining_attributes = ('url', '_referred_to')
+    nineml_attrs = ('url', 'name')
 
     def __init__(self, name, document, url=None):
         super(BaseReference, self).__init__()
