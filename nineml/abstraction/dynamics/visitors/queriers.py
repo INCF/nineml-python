@@ -14,9 +14,9 @@ class DynamicsInterfaceInferer(ComponentClassInterfaceInferer,
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
-    def __init__(self, dynamicsclass):
+    def __init__(self, dynamics):
         self.state_variable_names = set()
-        super(DynamicsInterfaceInferer, self).__init__(dynamicsclass)
+        super(DynamicsInterfaceInferer, self).__init__(dynamics)
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
         self.declared_symbols.add(state_variable.name)
@@ -83,6 +83,9 @@ class DynamicsElementFinder(ComponentElementFinder,
 
     def __init__(self, element):
         ComponentElementFinder.__init__(self, element)
+
+    def action_dynamics(self, dynamics, **kwargs):
+        return self.action_componentclass(dynamics, **kwargs)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         if self.element == regime:

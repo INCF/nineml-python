@@ -1,4 +1,5 @@
 from itertools import chain, izip
+import re
 from copy import copy
 import operator
 from collections import defaultdict, Iterator, Iterable
@@ -16,6 +17,9 @@ def hash_non_str(key):
     if not isinstance(key, basestring):
         key = hash(key)
     return key
+
+
+camel_caps_re = re.compile(r'([a-z])([A-Z])')
 
 
 def clone_id(obj):
@@ -387,6 +391,28 @@ class BaseNineMLObject(object):
                 "'serialize_node (or serialize_body) not implemented for "
                 "'{}' class".format(cls.nineml_type))
 
+    @classmethod
+    def _child_accessor_name(cls):
+        return camel_caps_re.sub(r'\1_\2', cls.nineml_type).lower()
+
+    @classmethod
+    def _children_iter_name(cls):
+        name = cls._child_accessor_name()
+        return pluralise(name)
+
+    @classmethod
+    def _children_dict_name(cls):
+        return '_' + cls._children_iter_name()
+
+    @classmethod
+    def _num_children_name(cls):
+        return 'num_' + cls._children_iter_name()
+
+    @classmethod
+    def _children_keys_name(cls):
+        return cls._child_accessor_name() + (
+            '_names' if hasattr(cls, 'name') else '_keys')
+
 
 def _clone_attr(attr, memo, **kwargs):
     """Recursively clone an attribute"""
@@ -692,25 +718,25 @@ class ContainerObject(BaseNineMLObject):
         """
         Updates the member key for a given element_type
         """
-        for element_type in self.class_to_member:
-            member_dict = self._member_dict(element_type)
+        for child_type in self.child_types:
+            member_dict = self._member_dict(child_type)
             try:
                 member_dict[new_key] = member_dict.pop(old_key)
             except KeyError:
                 pass
 
-    def elements(self, class_map=None):
+    def elements(self, child_types=None):
         """
         Iterates through all the core member elements of the container. For
         core 9ML objects this will be the same as those iterated by the
         __iter__ magic method, where as for 9ML extensions.
         """
-        if class_map is None:
-            class_map = self.class_to_member
-        return chain(*(self._members_iter(et, class_map=class_map)
-                       for et in class_map))
+        if child_types is None:
+            child_types = self.child_types
+        return chain(*(self._members_iter(child_type)
+                       for child_type in child_types))
 
-    def element(self, name, class_map=None, include_send_ports=False):
+    def element(self, name, child_types=None, include_send_ports=False):
         """
         Looks a member item by "name" (identifying characteristic)
 
@@ -718,7 +744,7 @@ class ContainerObject(BaseNineMLObject):
         ----------
         name : str
             Name of the element to return
-        class_map : dict[str, str]
+        child_types : dict[str, str]
             Mapping from element type to accessor name
         include_send_ports:
             As send ports will typically mask the name as an alias or
@@ -731,13 +757,12 @@ class ContainerObject(BaseNineMLObject):
         elem : NineMLBaseObject
             The element corresponding to the provided 'name' argument
         """
-        if class_map is None:
-            class_map = self.class_to_member
+        if child_types is None:
+            child_types = self.child_types
         send_port = None
-        for element_type in class_map:
+        for child_type in child_types:
             try:
-                elem = self._member_accessor(
-                    element_type, class_map=class_map)(name)
+                elem = self._member_accessor(child_type)(name)
                 # Ignore send ports as they otherwise mask
                 # aliases/state variables
                 if isinstance(elem, SendPortBase):
@@ -753,23 +778,22 @@ class ContainerObject(BaseNineMLObject):
                 "'{}' was not found in '{}' {} object"
                 .format(name, self.key, self.__class__.__name__))
 
-    def num_elements(self, class_map=None):
-        if class_map is None:
-            class_map = self.class_to_member
+    def num_elements(self, child_types=None):
+        if child_types is None:
+            child_types = self.child_types
         return reduce(operator.add,
-                      (self._num_members(et, class_map=class_map)
-                       for et in class_map))
+                      (self._num_members(child_type)
+                       for child_type in child_types))
 
-    def element_keys(self, class_map=None):
-        if class_map is None:
-            class_map = self.class_to_member
+    def element_keys(self, child_types=None):
+        if child_types is None:
+            child_types = self.child_types
         all_keys = set()
-        for element_type in class_map:
+        for child_type in child_types:
             # Some of these do not meet the stereotypical *_names format, e.g.
             # time_derivative_variables, could change these to *_keys instead
             try:
-                for key in self._member_keys_iter(element_type,
-                                                    class_map=class_map):
+                for key in self._member_keys_iter(child_type):
                     # Because send ports can have the same name as state
                     # variables and aliases duplicates need to be avoided
                     all_keys.add(key)
@@ -781,7 +805,7 @@ class ContainerObject(BaseNineMLObject):
         raise TypeError("{} containers are not iterable"
                          .format(type(self).__name__))
 
-    def index_of(self, element, key=None, class_map=None):
+    def index_of(self, element, key=None):
         """
         Returns the index of an element amongst others of its type. The indices
         are generated on demand but then remembered to allow them to be
@@ -794,7 +818,7 @@ class ContainerObject(BaseNineMLObject):
         referenced elsewhere in the code).
         """
 
-        dct = self._get_indices_dict(element, key, class_map)
+        dct = self._get_indices_dict(key, type(element))
         try:
             index = dct[element]
         except KeyError:
@@ -807,13 +831,13 @@ class ContainerObject(BaseNineMLObject):
             dct[element] = index
         return index
 
-    def from_index(self, index, element_type=None, key=None, class_map=None):
+    def from_index(self, index, child_type, key=None):
         """
         The inverse of the index_of method for retrieving an object from its
         index
         """
         try:
-            dct = self._get_indices_dict(element_type, key, class_map)
+            dct = self._get_indices_dict(key, child_type)
             for elem, i in dct.iteritems():
                 if i == index:
                     return elem
@@ -821,13 +845,11 @@ class ContainerObject(BaseNineMLObject):
             pass
         raise NineMLRuntimeError(
             "Could not find index {} for '{}'".format(
-                index, (element_type if element_type is not None else key)))
+                index, (child_type if key is None else key)))
 
-    def _get_indices_dict(self, element_type, key, class_map):
-        if class_map is None:
-            class_map = self.class_to_member
+    def _get_indices_dict(self, key, child_type):
         if key is None:
-            key = accessor_name_from_type(element_type, class_map)
+            key = child_type._accessor_name()
         return self._indices[key]
 
     def all_indices(self):
@@ -842,36 +864,36 @@ class ContainerObject(BaseNineMLObject):
     # derrived from the stereotypical naming structure used
     # =========================================================================
 
-    def _member_accessor(self, element_type, class_map):
-        try:
-            return getattr(self, accessor_name_from_type(element_type,
-                                                         class_map))
-        except:
-            raise
-
-    def _members_iter(self, element_type, class_map):
-        """
-        Looks up the name of values iterator from the nineml_type of the
-        element argument.
-        """
-        acc_name = accessor_name_from_type(element_type, class_map)
-        return getattr(self, pluralise(acc_name))
-
-    def _member_keys_iter(self, element_type, class_map):
-        acc_name = accessor_name_from_type(element_type, class_map)
-        try:
-            return getattr(self, (acc_name + '_names'))
-        except AttributeError:
-            # For members that don't have proper names, such as OnConditions
-            return getattr(self, (acc_name + '_keys'))
-
-    def _num_members(self, element_type, class_map):
-        acc_name = accessor_name_from_type(element_type, class_map)
-        return getattr(self, 'num_' + pluralise(acc_name))
-
-    def _member_dict(self, element_type):
-        acc_name = accessor_name_from_type(element_type, self.class_to_member)
-        return getattr(self, '_' + pluralise(acc_name))
+#     def _member_accessor(self, element_type, class_map):
+#         try:
+#             return getattr(self, accessor_name_from_type(element_type,
+#                                                          class_map))
+#         except:
+#             raise
+# 
+#     def _members_iter(self, element_type, class_map):
+#         """
+#         Looks up the name of values iterator from the nineml_type of the
+#         element argument.
+#         """
+#         acc_name = accessor_name_from_type(element_type, class_map)
+#         return getattr(self, pluralise(acc_name))
+# 
+#     def _member_keys_iter(self, element_type, class_map):
+#         acc_name = accessor_name_from_type(element_type, class_map)
+#         try:
+#             return getattr(self, (acc_name + '_names'))
+#         except AttributeError:
+#             # For members that don't have proper names, such as OnConditions
+#             return getattr(self, (acc_name + '_keys'))
+# 
+#     def _num_members(self, element_type, class_map):
+#         acc_name = accessor_name_from_type(element_type, class_map)
+#         return getattr(self, 'num_' + pluralise(acc_name))
+# 
+#     def _member_dict(self, element_type):
+#         acc_name = accessor_name_from_type(element_type, self.class_to_member)
+#         return getattr(self, '_' + pluralise(acc_name))
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)
@@ -879,9 +901,20 @@ class ContainerObject(BaseNineMLObject):
         clone._parent = (self._parent.clone(memo, **kwargs)
                          if self._parent is not None else None)
 
-    @classmethod
-    def _accessor_name(cls):
-        return cls.__name__.lower()
+    def _member_accessor(self, child_type):
+        return getattr(self, child_type._accessor_name())
+
+    def _members_iter(self, child_type):
+        return getattr(self, child_type._children_iter_name())
+
+    def _member_keys_iter(self, child_type):
+        return getattr(self, child_type._children_keys_name())
+
+    def _num_members(self, child_type):
+        return getattr(self, child_type._num_children_name())
+
+    def _member_dict(self, child_type):
+        return getattr(self, child_type._children_dict_name())
 
     @property
     def parent(self):
@@ -935,220 +968,220 @@ class SendPortBase(object):
     without causing circular import problems
     """
 
-
-class BaseNineMLVisitor(object):
-    """
-    Generic visitor base class that visits a 9ML object and all children (and
-    children's children etc...) and calls 'action_<nineml-type>' and
-    'post_action_<nineml-type>'. These methods are not implemented in this
-    base class but can be overridden in derived classes that wish to perform
-    an action on specific element types.
-
-    For example to perform an action on all units (and nothing else) in the
-    object a derived class can be written as
-
-    class UnitVisitor(Visitor):
-
-        def action_unit(unit, **kwargs):
-            # Do action here
-
-    """
-
-    class_to_visit = None
-
-    class Context(object):
-        "The context within which the current element is situated"
-
-        def __init__(self, parent, parent_result, attr_name=None, dct=None):
-            self._parent = parent
-            self._parent_result = parent_result
-            self._attr_name = attr_name
-            self._dct = dct
-
-        @property
-        def parent(self):
-            return self._parent
-
-        @property
-        def parent_result(self):
-            return self._parent_result
-
-        @property
-        def attr_name(self):
-            return self._attr_name
-
-        @property
-        def dct(self):
-            return self._dct
-
-        def replace(self, old, new):
-            if self.attr_name is not None:
-                setattr(self.parent, self.attr_name, new)
-            elif self.dct is not None:
-                del self.dct[old.name]
-                self.dct[new.name] = new
-
-    class Results(object):
-
-        def __init__(self, action_result):
-            self._action = action_result
-            self._post_action = None
-            self._attr = {}
-            self._children = defaultdict(dict)
-
-        @property
-        def action(self):
-            return self._action
-
-        @property
-        def post_action(self):
-            return self._post_action
-
-        @property
-        def children(self):
-            return self._children.itervalues()
-
-        @property
-        def child_names(self):
-            return self._children.iterkeys()
-
-        def attr_result(self, name):
-            return self._attr[name]
-
-        def child_result(self, child):
-            return self._children[child.nineml_type][child.key]
-
-        def child_results(self, child_type):
-            return self._children[child_type].itervalues()
-
-    def __init__(self):
-        self.contexts = []
-        self._method_name = None
-        self._stop = False
-
-    def visit(self, obj, **kwargs):
-        # Allow deriving classes to run a function when visiting the top most
-        # object in the hierarchy
-        if not self.contexts:
-            self.initial(obj, **kwargs)
-        # Run the 'action_<obj-nineml_type>' method on the visited object
-        action_result = self.action(obj, **kwargs)
-        # Visit all the attributes of the object that are 9ML objects
-        # themselves
-        results = self.Results(action_result)
-        # Add the container object to the list of scopes
-        for attr_name in obj.defining_attributes:
-            try:
-                attr = getattr(obj, attr_name)
-            except AttributeError:
-                if attr_name.startswith('_'):
-                    attr = getattr(obj, attr_name[1:])
-                else:
-                    raise
-            if isinstance(attr, BaseNineMLObject):
-                # Create the context around the visit of the attribute
-                context = self.Context(obj, action_result, attr_name)
-                self.contexts.append(context)
-                results._attr[attr_name] = self.visit(attr, **kwargs)
-                popped = self.contexts.pop()
-                assert context is popped
-        # Visit children of the object
-        if isinstance(obj, ContainerObject):
-            if (self.class_to_visit is not None and
-                    isinstance(obj, self.class_to_visit)):
-                # Used for derived classes (e.g. MultiDynamics) that are
-                # polymorphic accessors with the base class in terms of
-                # accessors but have different internal structure.
-                class_map = self.class_to_visit.class_to_member
-            else:
-                class_map = obj.class_to_member
-            for child_type in class_map:
-                try:
-                    dct = obj._member_dict(child_type)
-                except (NineMLInvalidElementTypeException, AttributeError):
-                    dct = None  # If class_map comes from class_to_visit
-                context = self.Context(obj, action_result, dct=dct)
-                self.contexts.append(context)
-                for child in obj._members_iter(child_type, class_map):
-                    results._children[
-                        child_type][child.key] = self.visit(child, **kwargs)
-                popped = self.contexts.pop()
-                assert context is popped
-        # Peform "post-action" method that runs after the children/attributes
-        # have been visited
-        self.post_action(obj, results, **kwargs)
-        if not self.contexts:
-            self.final(obj, **kwargs)
-        return results
-
-    def action(self, obj, **kwargs):
-        self._action(obj, prefix='action_', default=self.default_action,
-                     **kwargs)
-
-    def post_action(self, obj, results, **kwargs):
-        self._action(obj, prefix='post_action_', results=results,
-                     default=self.default_post_action, **kwargs)
-
-    def _action(self, obj, prefix, default=None, action_type=None,
-                results=None, **kwargs):
-        try:
-            method_name = prefix + action_type
-        except TypeError:
-            method_name = prefix + obj.nineml_type.lower()
-        try:
-            method = getattr(self, method_name)
-        except AttributeError:
-            if default is None:
-                raise
-            try:
-                for action_type in obj.alternative_actions:
-                    try:
-                        self._action(obj, prefix, action_type=action_type,
-                                     **kwargs)
-                    except AttributeError:
-                        continue
-            except AttributeError:
-                pass
-            method = default
-        return method(obj, results=results, **kwargs)
-
-    def initial(self, obj, **kwargs):
-        """
-        Ran after the object at the top of the hierarchy is visited
-        """
-        pass
-
-    def final(self, obj, **kwargs):
-        """
-        Ran after all the children and attributes the object at the top of the
-        hierarchy is visited
-        """
-        pass
-
-    @property
-    def context(self):
-        if self.contexts:
-            context = self.contexts[-1]
-        else:
-            context = None
-        return context
-
-    def context_key(self, key):
-        return tuple([c.parent for c in self.contexts] + [key])
-
-    def default_action(self, obj, **kwargs):  # @UnusedVariable
-        """
-        Default action performed on every object that doesn't define an
-        explicit '<nineml-type-name>_action' method
-        """
-        return None
-
-    def default_post_action(self, obj, results, **kwargs):  # @UnusedVariable
-        """
-        Default action performed on every object that doesn't define an
-        explicit '<nineml-type-name>_post_action' method
-        """
-        return results
+# 
+# class BaseVisitor(object):
+#     """
+#     Generic visitor base class that visits a 9ML object and all children (and
+#     children's children etc...) and calls 'action_<nineml-type>' and
+#     'post_action_<nineml-type>'. These methods are not implemented in this
+#     base class but can be overridden in derived classes that wish to perform
+#     an action on specific element types.
+# 
+#     For example to perform an action on all units (and nothing else) in the
+#     object a derived class can be written as
+# 
+#     class UnitVisitor(Visitor):
+# 
+#         def action_unit(unit, **kwargs):
+#             # Do action here
+# 
+#     """
+# 
+#     visits_class = None
+# 
+#     class Context(object):
+#         "The context within which the current element is situated"
+# 
+#         def __init__(self, parent, parent_result, attr_name=None, dct=None):
+#             self._parent = parent
+#             self._parent_result = parent_result
+#             self._attr_name = attr_name
+#             self._dct = dct
+# 
+#         @property
+#         def parent(self):
+#             return self._parent
+# 
+#         @property
+#         def parent_result(self):
+#             return self._parent_result
+# 
+#         @property
+#         def attr_name(self):
+#             return self._attr_name
+# 
+#         @property
+#         def dct(self):
+#             return self._dct
+# 
+#         def replace(self, old, new):
+#             if self.attr_name is not None:
+#                 setattr(self.parent, self.attr_name, new)
+#             elif self.dct is not None:
+#                 del self.dct[old.name]
+#                 self.dct[new.name] = new
+# 
+#     class Results(object):
+# 
+#         def __init__(self, action_result):
+#             self._action = action_result
+#             self._post_action = None
+#             self._attr = {}
+#             self._children = defaultdict(dict)
+# 
+#         @property
+#         def action(self):
+#             return self._action
+# 
+#         @property
+#         def post_action(self):
+#             return self._post_action
+# 
+#         @property
+#         def children(self):
+#             return self._children.itervalues()
+# 
+#         @property
+#         def child_names(self):
+#             return self._children.iterkeys()
+# 
+#         def attr_result(self, name):
+#             return self._attr[name]
+# 
+#         def child_result(self, child):
+#             return self._children[child.nineml_type][child.key]
+# 
+#         def child_results(self, child_type):
+#             return self._children[child_type].itervalues()
+# 
+#     def __init__(self):
+#         self.contexts = []
+#         self._method_name = None
+#         self._stop = False
+# 
+#     def visit(self, obj, **kwargs):
+#         # Allow deriving classes to run a function when visiting the top most
+#         # object in the hierarchy
+#         if not self.contexts:
+#             self.initial(obj, **kwargs)
+#         # Run the 'action_<obj-nineml_type>' method on the visited object
+#         action_result = self.action(obj, **kwargs)
+#         # Visit all the attributes of the object that are 9ML objects
+#         # themselves
+#         results = self.Results(action_result)
+#         # Add the container object to the list of scopes
+#         for attr_name in obj.defining_attributes:
+#             try:
+#                 attr = getattr(obj, attr_name)
+#             except AttributeError:
+#                 if attr_name.startswith('_'):
+#                     attr = getattr(obj, attr_name[1:])
+#                 else:
+#                     raise
+#             if isinstance(attr, BaseNineMLObject):
+#                 # Create the context around the visit of the attribute
+#                 context = self.Context(obj, action_result, attr_name)
+#                 self.contexts.append(context)
+#                 results._attr[attr_name] = self.visit(attr, **kwargs)
+#                 popped = self.contexts.pop()
+#                 assert context is popped
+#         # Visit children of the object
+#         if isinstance(obj, ContainerObject):
+#             if (self.visits_class is not None and
+#                     isinstance(obj, self.visits_class)):
+#                 # Used for derived classes (e.g. MultiDynamics) that are
+#                 # polymorphic accessors with the base class in terms of
+#                 # accessors but have different internal structure.
+#                 class_map = self.visits_class.class_to_member
+#             else:
+#                 class_map = obj.class_to_member
+#             for child_type in class_map:
+#                 try:
+#                     dct = obj._member_dict(child_type)
+#                 except (NineMLInvalidElementTypeException, AttributeError):
+#                     dct = None  # If class_map comes from visits_class
+#                 context = self.Context(obj, action_result, dct=dct)
+#                 self.contexts.append(context)
+#                 for child in obj._members_iter(child_type, class_map):
+#                     results._children[
+#                         child_type][child.key] = self.visit(child, **kwargs)
+#                 popped = self.contexts.pop()
+#                 assert context is popped
+#         # Peform "post-action" method that runs after the children/attributes
+#         # have been visited
+#         self.post_action(obj, results, **kwargs)
+#         if not self.contexts:
+#             self.final(obj, **kwargs)
+#         return results
+# 
+#     def action(self, obj, **kwargs):
+#         self._action(obj, prefix='action_', default=self.default_action,
+#                      **kwargs)
+# 
+#     def post_action(self, obj, results, **kwargs):
+#         self._action(obj, prefix='post_action_', results=results,
+#                      default=self.default_post_action, **kwargs)
+# 
+#     def _action(self, obj, prefix, default=None, action_type=None,
+#                 results=None, **kwargs):
+#         try:
+#             method_name = prefix + action_type
+#         except TypeError:
+#             method_name = prefix + obj.nineml_type.lower()
+#         try:
+#             method = getattr(self, method_name)
+#         except AttributeError:
+#             if default is None:
+#                 raise
+#             try:
+#                 for action_type in obj.alternative_actions:
+#                     try:
+#                         self._action(obj, prefix, action_type=action_type,
+#                                      **kwargs)
+#                     except AttributeError:
+#                         continue
+#             except AttributeError:
+#                 pass
+#             method = default
+#         return method(obj, results=results, **kwargs)
+# 
+#     def initial(self, obj, **kwargs):
+#         """
+#         Ran after the object at the top of the hierarchy is visited
+#         """
+#         pass
+# 
+#     def final(self, obj, **kwargs):
+#         """
+#         Ran after all the children and attributes the object at the top of the
+#         hierarchy is visited
+#         """
+#         pass
+# 
+#     @property
+#     def context(self):
+#         if self.contexts:
+#             context = self.contexts[-1]
+#         else:
+#             context = None
+#         return context
+# 
+#     def context_key(self, key):
+#         return tuple([c.parent for c in self.contexts] + [key])
+# 
+#     def default_action(self, obj, **kwargs):  # @UnusedVariable
+#         """
+#         Default action performed on every object that doesn't define an
+#         explicit '<nineml-type-name>_action' method
+#         """
+#         return None
+# 
+#     def default_post_action(self, obj, results, **kwargs):  # @UnusedVariable
+#         """
+#         Default action performed on every object that doesn't define an
+#         explicit '<nineml-type-name>_post_action' method
+#         """
+#         return results
 
 
 import nineml  # @IgnorePep8

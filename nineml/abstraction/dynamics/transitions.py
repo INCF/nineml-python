@@ -87,6 +87,7 @@ class OutputEvent(BaseALObject):
 
     nineml_type = 'OutputEvent'
     defining_attributes = ('port_name',)
+    nineml_attrs = ('port_name',)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -355,6 +356,7 @@ class OnEvent(Transition):
 
     nineml_type = "OnEvent"
     defining_attributes = (Transition.defining_attributes + ('src_port_name',))
+    nineml_attrs = (Transition.nineml_attrs + ('src_port_name',))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -432,6 +434,7 @@ class OnCondition(Transition):
 
     nineml_type = "OnCondition"
     defining_attributes = (Transition.defining_attributes + ('_trigger',))
+    nineml_attrs = (Transition.nineml_attrs + ('trigger',))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -589,4 +592,4 @@ class Trigger(BaseALObject, Expression):
                              **options))
 
 
-import nineml.abstraction.dynamics.visitors.queriers
+# import nineml.abstraction.dynamics.visitors.queriers

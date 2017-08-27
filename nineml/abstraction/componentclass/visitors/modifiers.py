@@ -5,7 +5,7 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.exceptions import NineMLRuntimeError, NineMLNameError
-from nineml.base import BaseNineMLVisitor
+from nineml.visitors import BaseVisitor
 from nineml.abstraction.expressions import Expression, Constant, Alias
 from nineml.abstraction.expressions.utils import is_builtin_symbol
 from nineml.base import (
@@ -13,7 +13,7 @@ from nineml.base import (
 from ..base import Parameter
 
 
-class ComponentRenameSymbol(BaseNineMLVisitor):
+class ComponentRenameSymbol(BaseVisitor):
 
     """ Can be used for:
     StateVariables, Aliases, Ports
@@ -78,7 +78,7 @@ class ComponentRenameSymbol(BaseNineMLVisitor):
             constant.name_transform_inplace(self.namemap)
 
 
-class ComponentAssignIndices(BaseNineMLVisitor):
+class ComponentAssignIndices(BaseVisitor):
 
     """
     Forces the generation of indices for all commonly index elements of the
@@ -95,7 +95,7 @@ class ComponentAssignIndices(BaseNineMLVisitor):
             component_class.index_of(elem)
 
 
-class ComponentSubstituteAliases(BaseNineMLVisitor):
+class ComponentSubstituteAliases(BaseVisitor):
     """
     Substitutes all references to aliases in expressions with their RHS,
     so that all expressions are defined interms of inputs to the (e.g. analog

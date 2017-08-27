@@ -94,6 +94,15 @@ class BaseVisitor(object):
         self._stop = False
 
     def visit(self, obj, nineml_cls=None, **kwargs):
+        # Use the class of the object to visit the object as if one is not
+        # explicitly provided. This allows classes to be visited as if they
+        # were base classes (e.g. Dynamics instead of MultiDynamics)
+        if nineml_cls is None:
+            if (self.visits_class is not None and
+                    isinstance(obj, self.visits_class)):
+                nineml_cls = self.visits_class
+            else:
+                nineml_cls = type(obj)
         # Allow deriving classes to run a function when visiting the top most
         # object in the hierarchy
         if not self.contexts:
@@ -119,12 +128,12 @@ class BaseVisitor(object):
                 try:
                     dct = obj._member_dict(child_type)
                 except (NineMLInvalidElementTypeException, AttributeError):
-                    dct = None  # If class_map comes from class_to_visit
+                    dct = None  # If class_map comes from visits_class
                 context = self.Context(obj, action_result, dct=dct)
                 self.contexts.append(context)
-                for child in obj._members_iter(child_type, class_map):
+                for child in obj._members_iter(child_type):
                     results._children[child_type][child.key] = self.visit(
-                        child, nineml_type=child_type, **kwargs)
+                        child, nineml_cls=child_type, **kwargs)
                 popped = self.contexts.pop()
                 assert context is popped
         # Peform "post-action" method that runs after the children/attributes
@@ -134,21 +143,17 @@ class BaseVisitor(object):
             self.final(obj, **kwargs)
         return results
 
-    def action(self, obj, nineml_cls=None, **kwargs):
-        if nineml_cls is None:
-            nineml_cls = type(obj)
+    def action(self, obj, nineml_cls, **kwargs):
         try:
-            method = getattr(self, 'action_' + nineml_cls._accessor_name())
+            method = getattr(self, 'action_' + nineml_cls.nineml_type.lower())
         except AttributeError:
             method = self.default_action
         return method(obj, **kwargs)
 
-    def post_action(self, obj, results, nineml_cls=None, **kwargs):
-        if nineml_cls is None:
-            nineml_cls = type(obj)
+    def post_action(self, obj, results, nineml_cls, **kwargs):
         try:
             method = getattr(self,
-                             'post_action_' + nineml_cls._accessor_name())
+                             'post_action_' + nineml_cls.nineml_type.lower())
         except AttributeError:
             method = self.default_post_action
         return method(obj, results, **kwargs)
@@ -182,7 +187,8 @@ class BaseVisitor(object):
         Default action performed on every object that doesn't define an
         explicit '<nineml-type-name>_action' method
         """
-        return None
+        assert False, ("No default action provided, so can't action {} ({})"
+                       .format(obj.nineml_type, obj))
 
     def default_post_action(self, obj, results, **kwargs):  # @UnusedVariable @IgnorePep8
         """

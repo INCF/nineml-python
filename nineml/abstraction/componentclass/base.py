@@ -28,10 +28,6 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     class_to_member = {'Parameter': 'parameter', 'Alias': 'alias',
                        'Constant': 'constant'}
     v1_nineml_type = 'ComponentClass'
-    # Specifies that visitors will attempt to call the generic
-    # action_componentclass method if there is not a specific action_dynamics,
-    # action_connectionrule, etc...
-    alternative_actions = ('componentclass',)
     # New NineML types
     child_types = (Parameter, Alias, Constant)
     nineml_attrs = ('name',)

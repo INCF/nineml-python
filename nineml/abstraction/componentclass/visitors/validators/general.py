@@ -14,15 +14,15 @@ import sympy
 from sympy import sympify
 from nineml.base import SendPortBase
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
-from nineml.base import BaseNineMLVisitor
+from nineml.visitors import BaseVisitor
 
 
-class AliasesAreNotRecursiveComponentValidator(BaseNineMLVisitor):
+class AliasesAreNotRecursiveComponentValidator(BaseVisitor):
 
     """Check that aliases are not self-referential"""
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseVisitor.__init__(self)
         self.visit(component_class)
 
     def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -50,15 +50,18 @@ class AliasesAreNotRecursiveComponentValidator(BaseNineMLVisitor):
                     "issue. Remaining Aliases: {}".format(
                         ','.join(unresolved_aliases.keys())))
 
+    def default_action(self, obj, **kwargs):
+        pass
 
-class NoUnresolvedSymbolsComponentValidator(BaseNineMLVisitor):
+
+class NoUnresolvedSymbolsComponentValidator(BaseVisitor):
     """
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseNineMLVisitor.__init__(self)
+        BaseVisitor.__init__(self)
 
         self.available_symbols = []
         self.aliases = []
@@ -112,11 +115,14 @@ class NoUnresolvedSymbolsComponentValidator(BaseNineMLVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(constant.name)
 
+    def default_action(self, obj, **kwargs):
+        pass
 
-class NoDuplicatedObjectsComponentValidator(BaseNineMLVisitor):
+
+class NoDuplicatedObjectsComponentValidator(BaseVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseVisitor.__init__(self)
         self.all_objects = list()
         self.visit(component_class)
         assert_no_duplicates(self.all_objects)
@@ -133,9 +139,15 @@ class NoDuplicatedObjectsComponentValidator(BaseNineMLVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.all_objects.append(constant)
 
+    def action_dimension(self, dimension, **kwargs):
+        pass
+
+    def action_unit(self, unit, **kwargs):
+        pass
+
 
 class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
-        BaseNineMLVisitor):
+        BaseVisitor):
 
     """
     This class checks that there is not a mathematical symbols, (e.g. pi, e)
@@ -143,7 +155,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseVisitor.__init__(self)
 
         self.visit(component_class)
 
@@ -163,27 +175,45 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(constant.name)
 
+    def default_action(self, obj, **kwargs):
+        pass
 
-class DimensionalityComponentValidator(BaseNineMLVisitor):
+
+class DimensionalityComponentValidator(BaseVisitor):
 
     _RECURSION_MAX = 450
 
-    def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseNineMLVisitor.__init__(self)
-        self.component_class = component_class
-        self._dimensions = {}
-        # Insert declared dimensions into dimensionality database
-        for e in component_class.elements(
-                class_map=self.class_to_visit.class_to_member):
-            if not isinstance(e, SendPortBase):
+    class DeclaredDimensionsVisitor(BaseVisitor):
+        """
+        Inserts declared dimensions into dimensionality dictionary
+        before inferring dimensions from derived expressions
+        """
+
+        def __init__(self, component_class, **kwargs):
+            BaseVisitor.__init__(self)
+            self._dimensions = {}
+            self.visit(component_class, **kwargs)
+
+        def default_action(self, obj, **kwargs):  # @UnusedVariable
+            if not isinstance(obj, SendPortBase):
                 try:
-                    self._dimensions[e] = sympify(e.dimension)
+                    self._dimensions[obj] = sympify(obj.dimension)
                 except AttributeError:
                     # If element doesn't have dimension attribute
                     try:
-                        self._dimensions[e] = sympify(e.units.dimension)
+                        self._dimensions[obj] = sympify(obj.units.dimension)
                     except AttributeError:
                         pass  # If element doesn't have units attribute
+
+        @property
+        def dimensions(self):
+            return self._dimensions
+
+    def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
+        BaseVisitor.__init__(self)
+        self.component_class = component_class
+        self._dimensions = self.DeclaredDimensionsVisitor(
+            component_class, **kwargs).dimensions
         self._recursion_count = 0
         self.visit(component_class)
 
@@ -196,8 +226,8 @@ class DimensionalityComponentValidator(BaseNineMLVisitor):
             # element
             element = None
             for context in reversed(self.contexts):
-                if isinstance(context.parent, self.class_to_visit):
-                    class_map = self.class_to_visit.class_to_member
+                if isinstance(context.parent, self.visits_class):
+                    class_map = self.visits_class.class_to_member
                 else:
                     class_map = None
                 try:
@@ -225,7 +255,7 @@ class DimensionalityComponentValidator(BaseNineMLVisitor):
                             str(e) for e in self._dimensions.iterkeys()),
                         "\n".join(
                             str(e) for e in self.component_class.elements(
-                                class_map=self.class_to_visit.class_to_member))
+                                class_map=self.visits_class.class_to_member))
                     ))
             self._recursion_count += 1
             dims = self._flatten_dims(expr, element)
@@ -320,7 +350,7 @@ class DimensionalityComponentValidator(BaseNineMLVisitor):
         # Get the state variable or alias associated with the analog send
         # port
         element = self.component_class.element(
-            port.name, self.class_to_visit.class_to_member)
+            port.name, self.visits_class.class_to_member)
         try:
             if element.dimension != port.dimension:
                 raise NineMLDimensionError(self._construct_error_message(
@@ -360,3 +390,6 @@ class DimensionalityComponentValidator(BaseNineMLVisitor):
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self._get_dimensions(alias)
+
+    def default_action(self, obj, **kwargs):
+        pass

@@ -1,7 +1,7 @@
-from nineml.base import BaseNineMLVisitor
+from nineml.visitors import BaseVisitor
 from ..base import ConnectionRule
 
 
-class BaseConnectionRuleVisitor(BaseNineMLVisitor):
+class BaseConnectionRuleVisitor(BaseVisitor):
 
-    class_to_visit = ConnectionRule
+    visits_class = ConnectionRule

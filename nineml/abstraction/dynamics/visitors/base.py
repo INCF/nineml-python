@@ -1,7 +1,7 @@
-from nineml.base import BaseNineMLVisitor
+from nineml.visitors import BaseVisitor
 from ..base import Dynamics
 
 
-class BaseDynamicsVisitor(BaseNineMLVisitor):
+class BaseDynamicsVisitor(BaseVisitor):
 
-    class_to_visit = Dynamics
+    visits_class = Dynamics

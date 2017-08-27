@@ -14,6 +14,7 @@ from nineml.abstraction.componentclass import (
 from ..ports import (AnalogReceivePort, AnalogSendPort,
                      AnalogReducePort, EventReceivePort,
                      EventSendPort)
+from .regimes import Regime, StateVariable
 from nineml.utils import (check_inferred_against_declared,
                           assert_no_duplicates)
 from nineml.annotations import VALIDATION, DIMENSIONALITY, PY9ML_NS
@@ -98,6 +99,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
          ('EventReceivePort', 'event_receive_port'),
          ('Regime', 'regime'),
          ('StateVariable', 'state_variable')))
+    child_types = ComponentClass.child_types + (
+        AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
+        EventReceivePort, Regime, StateVariable)
 
     send_port_dicts = ('_analog_send_ports', '_event_send_ports')
     receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',

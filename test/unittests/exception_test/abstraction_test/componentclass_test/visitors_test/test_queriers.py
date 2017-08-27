@@ -20,7 +20,7 @@ class TestComponentDimensionResolverExceptions(unittest.TestCase):
         for context in reversed(self.contexts):
             try:
                 element = context.parent.element(
-                    name, class_map=self.class_to_visit.class_to_member)
+                    name, class_map=self.visits_class.class_to_member)
             except KeyError:
                 pass
         if element is None:

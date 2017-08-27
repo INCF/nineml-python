@@ -25,7 +25,7 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
                        'temperature', 'luminous_intensity')
     SI_units = ('kg', 'm', 's', 'A', 'mol', 'K', 'cd')
     defining_attributes = ('_dims',)
-    nineml_attrs = ('dims',)
+    nineml_attrs = ('m', 'l', 't', 'i', 'n', 'k', 'j')
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
     def __init__(self, name, dimensions=None, **kwargs):

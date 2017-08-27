@@ -7,17 +7,15 @@ docstring needed
 
 from ...base import ComponentClass, Parameter
 from nineml.abstraction.expressions import Alias, Constant
-from nineml.base import BaseNineMLVisitor
+from nineml.visitors import BaseVisitor
+from nineml.units import Dimension, Unit
 
 
-class TypesComponentValidator(BaseNineMLVisitor):
+class TypesComponentValidator(BaseVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseVisitor.__init__(self)
         self.visit(component_class)
-
-    def action_componentclass(self, component, **kwargs):  # @UnusedVariable
-        assert isinstance(component, ComponentClass)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         assert isinstance(parameter, Parameter), \
@@ -28,3 +26,9 @@ class TypesComponentValidator(BaseNineMLVisitor):
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         assert isinstance(constant, Constant)
+
+    def action_dimension(self, dimension, **kwargs):  # @UnusedVariable
+        assert isinstance(dimension, Dimension)
+
+    def action_unit(self, unit, **kwargs):  # @UnusedVariable
+        assert isinstance(unit, Unit)

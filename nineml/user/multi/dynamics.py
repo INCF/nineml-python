@@ -8,7 +8,7 @@ from nineml.base import clone_id
 from itertools import product, groupby, izip, repeat
 from nineml.user import DynamicsProperties, Definition
 from nineml.annotations import PY9ML_NS
-from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
+# from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, name_error)
 from ..port_connections import (
@@ -207,6 +207,7 @@ class MultiDynamicsProperties(DynamicsProperties):
     def property(self, name):
         _, comp_name = split_namespace(name)
         return self.sub_component(comp_name).property(name)
+
 
 class SubDynamicsProperties(BaseULObject):
 

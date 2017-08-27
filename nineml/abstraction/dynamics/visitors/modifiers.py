@@ -19,6 +19,9 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
     StateVariables, Aliases, Ports
     """
 
+    def action_dynamics(self, dynamics, **kwargs):
+        return self.action_componentclass(dynamics, **kwargs)
+
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         if regime.name == self.old_symbol_name:
             regime._name = self.new_symbol_name
@@ -95,6 +98,9 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
 
 class DynamicsAssignIndices(ComponentAssignIndices,
                             BaseDynamicsVisitor):
+
+    def action_dynamics(self, dynamics, **kwargs):
+        return self.action_componentclass(dynamics, **kwargs)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
         for elem in regime.elements():

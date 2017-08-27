@@ -4,7 +4,7 @@ from sympy import sympify
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions.elementary.piecewise import ExprCondPair
 from ...expressions import reserved_identifiers
-from nineml.base import BaseNineMLVisitor
+from nineml.visitors import BaseVisitor
 from nineml.units import Dimension
 from nineml.abstraction.ports import SendPortBase
 from nineml.abstraction.expressions import Expression
@@ -12,7 +12,7 @@ from nineml.exceptions import NineMLNameError
 import operator
 
 
-class ComponentClassInterfaceInferer(BaseNineMLVisitor):
+class ComponentClassInterfaceInferer(BaseVisitor):
 
     """ Used to infer output |EventPorts|, |StateVariables| & |Parameters|."""
 
@@ -37,15 +37,18 @@ class ComponentClassInterfaceInferer(BaseNineMLVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.declared_symbols.add(constant.name)
 
+    def default_action(self, obj, **kwargs):
+        pass
 
-class ComponentRequiredDefinitions(BaseNineMLVisitor):
+
+class ComponentRequiredDefinitions(BaseVisitor):
     """
     Gets lists of required parameters, states, ports, random variables,
     constants and expressions (in resolved order of execution).
     """
 
     def __init__(self, component_class, expressions):
-        BaseNineMLVisitor.__init__(self)
+        BaseVisitor.__init__(self)
         # Expression can either be a single expression or an iterable of
         # expressions
         self.parameters = set()
@@ -130,7 +133,7 @@ class ComponentRequiredDefinitions(BaseNineMLVisitor):
         return (e.name for e in self.expressions)
 
 
-class ComponentElementFinder(BaseNineMLVisitor):
+class ComponentElementFinder(BaseVisitor):
 
     def __init__(self, element):
         super(ComponentElementFinder, self).__init__()
@@ -160,7 +163,7 @@ class ComponentElementFinder(BaseNineMLVisitor):
             self._found()
 
 
-class ComponentExpressionExtractor(BaseNineMLVisitor):
+class ComponentExpressionExtractor(BaseVisitor):
 
     def __init__(self):
         super(ComponentExpressionExtractor, self).__init__()
@@ -170,7 +173,7 @@ class ComponentExpressionExtractor(BaseNineMLVisitor):
         self.expressions.append(alias.rhs)
 
 
-class ComponentDimensionResolver(BaseNineMLVisitor):
+class ComponentDimensionResolver(BaseVisitor):
     """
     Used to calculate the unit dimension of elements within a component class
     """
@@ -192,7 +195,7 @@ class ComponentDimensionResolver(BaseNineMLVisitor):
     def dimension_of(self, element):
         if isinstance(element, basestring):
             element = self.component_class.element(
-                element, class_map=self.class_to_visit.class_to_member)
+                element, class_map=self.visits_class.class_to_member)
         return Dimension.from_sympy(self._flatten(element))
 
     def _flatten(self, expr, **kwargs):  # @UnusedVariable
@@ -228,7 +231,7 @@ class ComponentDimensionResolver(BaseNineMLVisitor):
         for context in reversed(self.contexts):
             try:
                 element = context.parent.element(
-                    name, class_map=self.class_to_visit.class_to_member)
+                    name, class_map=self.visits_class.class_to_member)
             except KeyError:
                 pass
         if element is None:

@@ -1,5 +1,6 @@
 from itertools import chain
-from nineml.base import clone_id, BaseNineMLVisitor
+from nineml.base import clone_id
+from nineml.visitors import BaseVisitor
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
@@ -288,7 +289,7 @@ class Document(AnnotatedNineMLObject, dict):
         return self._url
 
 
-class AddToDocumentVisitor(BaseNineMLVisitor):
+class AddToDocumentVisitor(BaseVisitor):
     """
     Traverses any 9ML object and adds any "unbound" objects to the document (or
     optionally clones of bound), i.e. objects that currently don't belong to

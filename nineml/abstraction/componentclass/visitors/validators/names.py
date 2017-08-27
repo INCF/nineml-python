@@ -6,12 +6,12 @@ docstring needed
 """
 
 from nineml.exceptions import NineMLRuntimeError
-from nineml.base import BaseNineMLVisitor
+from nineml.visitors import BaseVisitor
 
 
 # Check that the sub-components stored are all of the
 # right types:
-class LocalNameConflictsComponentValidator(BaseNineMLVisitor):
+class LocalNameConflictsComponentValidator(BaseVisitor):
 
     """
     Check for conflicts between Aliases, StateVariables, Parameters, and
@@ -22,7 +22,7 @@ class LocalNameConflictsComponentValidator(BaseNineMLVisitor):
     """
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseVisitor.__init__(self)
         self.symbols = []
         self.component_class = component_class
         self.visit(component_class)
@@ -45,11 +45,14 @@ class LocalNameConflictsComponentValidator(BaseNineMLVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(symbol=constant.name)
 
+    def default_action(self, obj, **kwargs):
+        pass
 
-class DimensionNameConflictsComponentValidator(BaseNineMLVisitor):
+
+class DimensionNameConflictsComponentValidator(BaseVisitor):
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseNineMLVisitor.__init__(self)
+        BaseVisitor.__init__(self)
         self.dimensions = {}
         self.visit(component_class)
 
@@ -69,3 +72,6 @@ class DimensionNameConflictsComponentValidator(BaseNineMLVisitor):
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(constant.units.dimension)
+
+    def default_action(self, obj, **kwargs):
+        pass

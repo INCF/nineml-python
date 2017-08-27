@@ -73,6 +73,9 @@ class EventPortsDynamicsValidator(BaseDynamicsVisitor):
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.input_events.append(on_event.src_port_name)
 
+    def default_action(self, obj, **kwargs):
+        pass
+
 
 # Check that the sub-components stored are all of the
 # right types:
@@ -110,3 +113,6 @@ class OutputAnalogPortsDynamicsValidator(BaseDynamicsVisitor):
         if alias not in chain(*(r.aliases
                                 for r in self.component_class.regimes)):
             self.add_symbol(symbol=alias.lhs)
+
+    def default_action(self, obj, **kwargs):
+        pass

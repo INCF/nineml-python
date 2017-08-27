@@ -1,7 +1,7 @@
-from nineml.base import BaseNineMLVisitor
+from nineml.visitors import BaseVisitor
 from ..base import RandomDistribution
 
 
-class BaseRandomDistributionVisitor(BaseNineMLVisitor):
+class BaseRandomDistributionVisitor(BaseVisitor):
 
-    class_to_visit = RandomDistribution
+    visits_class = RandomDistribution

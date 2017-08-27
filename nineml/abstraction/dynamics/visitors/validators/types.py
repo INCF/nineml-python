@@ -7,6 +7,7 @@ docstring needed
 
 from ....componentclass.visitors.validators.types import (
     TypesComponentValidator)
+from ...base import Dynamics
 from ...regimes import Regime, StateVariable, TimeDerivative
 from ...transitions import (OutputEvent, StateAssignment, Trigger,
                                      OnCondition, OnEvent)
@@ -17,6 +18,9 @@ from ..base import BaseDynamicsVisitor
 
 class TypesDynamicsValidator(TypesComponentValidator,
                              BaseDynamicsVisitor):
+
+    def action_dynamics(self, component, **kwargs):  # @UnusedVariable
+        assert isinstance(component, Dynamics)
 
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
         assert isinstance(regime, Regime)
