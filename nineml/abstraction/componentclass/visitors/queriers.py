@@ -208,13 +208,13 @@ class ComponentDimensionResolver(BaseVisitor):
         self.visit(component_class)
 
     @property
-    def base_child_types(self):
-        return self.visits_class.child_types
+    def base_children_types(self):
+        return self.visits_class.children_types
 
     def dimension_of(self, element):
         if isinstance(element, basestring):
             element = self.component_class.element(
-                element, child_types=self.base_child_types)
+                element, children_types=self.base_children_types)
         return Dimension.from_sympy(self._flatten(element))
 
     def _flatten(self, expr, **kwargs):  # @UnusedVariable
@@ -250,7 +250,7 @@ class ComponentDimensionResolver(BaseVisitor):
         for context in reversed(self.contexts):
             try:
                 element = context.parent.element(
-                    name, child_types=context.child_types)
+                    name, children_types=context.children_types)
             except KeyError:
                 pass
         if element is None:

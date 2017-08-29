@@ -718,25 +718,25 @@ class ContainerObject(BaseNineMLObject):
         """
         Updates the member key for a given element_type
         """
-        for child_type in self.child_types:
+        for child_type in self.children_types:
             member_dict = self._member_dict(child_type)
             try:
                 member_dict[new_key] = member_dict.pop(old_key)
             except KeyError:
                 pass
 
-    def elements(self, child_types=None):
+    def elements(self, children_types=None):
         """
         Iterates through all the core member elements of the container. For
         core 9ML objects this will be the same as those iterated by the
         __iter__ magic method, where as for 9ML extensions.
         """
-        if child_types is None:
-            child_types = self.child_types
+        if children_types is None:
+            children_types = self.children_types
         return chain(*(self._members_iter(child_type)
-                       for child_type in child_types))
+                       for child_type in children_types))
 
-    def element(self, name, child_types=None, include_send_ports=False):
+    def element(self, name, children_types=None, include_send_ports=False):
         """
         Looks a member item by "name" (identifying characteristic)
 
@@ -744,7 +744,7 @@ class ContainerObject(BaseNineMLObject):
         ----------
         name : str
             Name of the element to return
-        child_types : dict[str, str]
+        children_types : dict[str, str]
             Mapping from element type to accessor name
         include_send_ports:
             As send ports will typically mask the name as an alias or
@@ -757,10 +757,10 @@ class ContainerObject(BaseNineMLObject):
         elem : NineMLBaseObject
             The element corresponding to the provided 'name' argument
         """
-        if child_types is None:
-            child_types = self.child_types
+        if children_types is None:
+            children_types = self.children_types
         send_port = None
-        for child_type in child_types:
+        for child_type in children_types:
             try:
                 elem = self._member_accessor(child_type)(name)
                 # Ignore send ports as they otherwise mask
@@ -778,18 +778,18 @@ class ContainerObject(BaseNineMLObject):
                 "'{}' was not found in '{}' {} object"
                 .format(name, self.key, self.__class__.__name__))
 
-    def num_elements(self, child_types=None):
-        if child_types is None:
-            child_types = self.child_types
+    def num_elements(self, children_types=None):
+        if children_types is None:
+            children_types = self.children_types
         return reduce(operator.add,
                       (self._num_members(child_type)
-                       for child_type in child_types))
+                       for child_type in children_types))
 
-    def element_keys(self, child_types=None):
-        if child_types is None:
-            child_types = self.child_types
+    def element_keys(self, children_types=None):
+        if children_types is None:
+            children_types = self.children_types
         all_keys = set()
-        for child_type in child_types:
+        for child_type in children_types:
             # Some of these do not meet the stereotypical *_names format, e.g.
             # time_derivative_variables, could change these to *_keys instead
             try:
@@ -849,12 +849,12 @@ class ContainerObject(BaseNineMLObject):
 
     def _get_indices_dict(self, key, child_type):
         if key is None:
-            if child_type not in self.child_types:
+            if child_type not in self.children_types:
                 raise NineMLInvalidElementTypeException(
                     "{} is not a valid child type for container {} (valid "
                     " types are {}). Please use explicit key"
                     .format(child_type.__name__, self,
-                            ", ".join(t.__name__ for t in self.child_types)))
+                            ", ".join(t.__name__ for t in self.children_types)))
             key = child_type._child_accessor_name()
         return self._indices[key]
 

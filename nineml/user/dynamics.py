@@ -42,7 +42,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
     class_to_member = dict(
         tuple(Component.class_to_member.iteritems()) +
         (('Initial', 'initial_value'),))
-    child_types = Component.child_types + (Initial,)
+    children_types = Component.children_types + (Initial,)
 
     def __init__(self, name, definition, properties={}, initial_values={},
                  initial_regime=None,

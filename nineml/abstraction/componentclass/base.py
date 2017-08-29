@@ -29,7 +29,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
                        'Constant': 'constant'}
     v1_nineml_type = 'ComponentClass'
     # New NineML types
-    child_types = (Parameter, Alias, Constant)
+    children_types = (Parameter, Alias, Constant)
     nineml_attrs = ('name',)
 
     def __init__(self, name, parameters=None, aliases=None, constants=None):

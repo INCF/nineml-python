@@ -146,7 +146,7 @@ class C(AnnotatedNineMLObject, ContainerObject):
     defining_attributes = ('name', '_es', 'f', 'g')
     nineml_attrs = ('name', '_es', 'f', 'g')
     class_to_member = {'E': 'e'}
-    child_types = (E,)
+    children_types = (E,)
 
     def __init__(self, name, es, f, g):
         AnnotatedNineMLObject.__init__(self)

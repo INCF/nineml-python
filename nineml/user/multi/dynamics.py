@@ -152,7 +152,7 @@ class MultiDynamicsProperties(DynamicsProperties):
     v1_nineml_type = None
     defining_attributes = ('_name', '_definition', '_sub_components')
     nineml_attrs = ('name', 'definition')
-    child_types = (SubDynamicsProperties,)
+    children_types = (SubDynamicsProperties,)
     class_to_member = {'SubDynamicsProperties': 'sub_component'}
 
     def __init__(self, name, sub_components, port_connections=[],

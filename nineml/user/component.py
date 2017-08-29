@@ -209,7 +209,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     children = ("Property", "Definition", 'Prototype')
 
     class_to_member = {'Property': 'property'}
-    child_types = (Property,)
+    children_types = (Property,)
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML

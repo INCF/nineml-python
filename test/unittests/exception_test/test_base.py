@@ -19,7 +19,7 @@ import nineml.units as un
 #         self.assertRaises(
 #             NineMLInvalidElementTypeException,
 #             accessor_name_from_type,
-#             child_types=Dynamics.child_types,
+#             children_types=Dynamics.children_types,
 #             element_type=Trigger('a > b'))
 
 

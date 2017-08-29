@@ -198,7 +198,7 @@ class Regime(BaseALObject, ContainerObject):
                        'OnEvent': 'on_event',
                        'OnCondition': 'on_condition',
                        'Alias': 'alias'}
-    child_types = (TimeDerivative, OnEvent, OnCondition, Alias)
+    children_types = (TimeDerivative, OnEvent, OnCondition, Alias)
     nineml_attrs = ('name',)
     _n = 0
 
