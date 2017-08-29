@@ -440,7 +440,8 @@ class Quantity(AnnotatedNineMLObject):
             else:
                 units = value.units
                 value = value.value
-        elif not isinstance(value, (SingleValue, ArrayValue, RandomDistributionValue)):
+        elif not isinstance(value, (SingleValue, ArrayValue,
+                                    RandomDistributionValue)):
             try:
                 # Convert value from float
                 value = SingleValue(float(value))
@@ -463,7 +464,7 @@ class Quantity(AnnotatedNineMLObject):
 
     def __iter__(self):
         """For conveniently expanding quantities like a tuple"""
-        return (self.value, self.units)
+        return iter((self.value, self.units))
 
     def __float__(self):
         return float(self.value)

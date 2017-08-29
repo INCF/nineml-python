@@ -128,6 +128,8 @@ class BaseVisitor(object):
         results = self.Results(action_result)
         # Add the container object to the list of scopes
         for attr_name in obj.nineml_attrs:
+            if attr_name.startswith('_'):
+                continue
             attr = getattr(obj, attr_name)
             if isinstance(attr, BaseNineMLObject):
                 # Create the context around the visit of the attribute

@@ -1,4 +1,5 @@
 import unittest
+import collections
 from nineml.utils.testing.comprehensive import (
     all_types, instances_of_all_types)
 from nineml.abstraction.ports import SendPortBase
@@ -25,26 +26,10 @@ class TestAccessors(unittest.TestCase):
             if cls == Document:
                 continue
             for attr_name in cls.nineml_attrs:
-                if attr_name in self.non_standard_attrs:
-                    continue
                 for elem in instances_of_all_types[name].itervalues():
-                    if type(elem).__name__.startswith('_'):
-                        continue  # Skip temporary objects
-                    prop_attr = getattr(elem, attr_name)
-                    try:
-                        attr = getattr(elem, '_' + attr_name)
-                    except AttributeError:
-                        continue
-                    # If none of the above conditions are true then the
-                    # accessor should be the same as the property
-                    try:
-                        self.assertEqual(attr, prop_attr,
-                                         "'{}' in {} ({}) does not match "
-                                         "property ({})".format(
-                                             attr_name, elem, prop_attr, attr))
-                    except:
-                        attr == prop_attr
-                        raise
+                    # Test that the attribute listed in nineml_attrs is
+                    # accessible
+                    getattr(elem, attr_name)
 
     def test_member_accessors(self):
         """

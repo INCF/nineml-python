@@ -170,7 +170,7 @@ class Transition(BaseALObject, ContainerObject):
     class_to_member = {'StateAssignment': 'state_assignment',
                        'OutputEvent': 'output_event'}
     child_types = (StateAssignment, OutputEvent)
-    nineml_attrs = ('target_regime_name',)
+    nineml_attrs = ('_target_regime_name',)
 
     def __init__(self, state_assignments=None, output_events=None,
                  target_regime=None):
@@ -360,7 +360,7 @@ class OnEvent(Transition):
 
     nineml_type = "OnEvent"
     defining_attributes = (Transition.defining_attributes + ('src_port_name',))
-    nineml_attrs = (Transition.nineml_attrs + ('src_port_name',))
+    nineml_attrs = (Transition.nineml_attrs + ('_src_port_name',))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
