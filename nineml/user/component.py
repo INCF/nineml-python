@@ -23,6 +23,7 @@ class Definition(BaseReference):
     """
     nineml_type = "Definition"
     nineml_attrs = BaseReference.nineml_attrs + ('component_class',)
+    child_attrs = BaseReference.child_attrs + ('component_class',)
 
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
@@ -104,6 +105,7 @@ class Property(BaseULObject):
     nineml_type = "Property"
     defining_attributes = ('_name', '_quantity')
     nineml_attrs = ('name', 'quantity')
+    child_attrs = ('quantity',)
 
     def __init__(self, name, quantity):
         super(Property, self).__init__()
@@ -206,6 +208,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     v1_nineml_type = 'Component'
     defining_attributes = ('_name', '_definition', '_properties')
     nineml_attrs = ('name', 'definition')
+    child_attrs = ('definition',)
     children = ("Property", "Definition", 'Prototype')
 
     class_to_member = {'Property': 'property'}

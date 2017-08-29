@@ -111,6 +111,7 @@ class Constant(BaseALObject, ExpressionSymbol):
     nineml_type = 'Constant'
     defining_attributes = ('_name', '_value', '_units')
     nineml_attrs = ('name', 'value', 'units')
+    chlid_attrs = ('value', 'units')
 
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)

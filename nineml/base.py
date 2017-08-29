@@ -41,12 +41,12 @@ def clone_id(obj):
 
 
 class BaseNineMLObject(object):
-
     """
-    Base class for user layer classes
+    Base class for all 9ML-type classes
     """
     children = []
     v1_nineml_type = None
+    child_attrs = ()
 
     def __eq__(self, other):
         return self.equals(other)

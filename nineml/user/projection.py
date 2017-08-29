@@ -58,6 +58,9 @@ class Projection(BaseULObject, DocumentLevelObject):
                     'response', 'plasticity', 'delay',
                     'analog_port_connections',
                     'event_port_connections')
+    child_attrs = ('pre', 'post', 'connectivity', 'response', 'plastiticy',
+                   'delay')
+    children_types = (AnalogPortConnections, EventPortConnections)
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
     def __init__(self, name, pre, post, response, connectivity,

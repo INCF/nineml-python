@@ -72,6 +72,7 @@ class DimensionedPort(Port, ExpressionSymbol):
 
     defining_attributes = ('_name', '_dimension')
     nineml_attrs = ('name', 'dimension')
+    child_attrs = ('dimension',)
 
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
@@ -239,6 +240,7 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     mode = "reduce"
     defining_attributes = ('_name', '_dimension', '_operator')
     nineml_attrs = ('name', 'dimension', 'operator')
+    child_attrs = ('dimension',)
     _operator_map = {'add': '+', '+': '+', }
 
     def __init__(self, name, dimension=None, operator='+'):

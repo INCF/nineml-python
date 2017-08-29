@@ -19,6 +19,7 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                            '_destination_port', '_connectivity', '_delay')
     nineml_attrs = ('name', 'source', 'destination', 'source_port',
                     'destination_port', 'connectivity', 'delay')
+    child_attrs = ('source', 'destination', 'connectivity', 'delay')
 
     def __init__(self, name, source, destination, source_port,
                  destination_port, connectivity, delay,
