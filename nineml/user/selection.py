@@ -38,134 +38,6 @@ def combined_ports_property(population_property):
     return property(combined_property)
 
 
-class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
-    """
-    Container for combining multiple populations or subsets thereof.
-
-    **Arguments**:
-        *name*
-            a name for the selection
-        *operation*
-            a "selector" object which determines which neurons form part of the
-            selection. Only :class:`Concatenate` is currently supported.
-    """
-    nineml_type = "Selection"
-    defining_attributes = ('_name', '_operation')
-    nineml_attrs = ('name', 'operation')
-
-    def __init__(self, name, operation, **kwargs):
-        ensure_valid_identifier(name)
-        self._name = name
-        BaseULObject.__init__(self, **kwargs)
-        DocumentLevelObject.__init__(self)
-        self._operation = operation
-
-    def __repr__(self):
-        return "Selection(name='{}', {})".format(self.name, self.operation)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def operation(self):
-        return self._operation
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name, **options)
-        node.child(self.operation, **options)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):  # @UnusedVariable
-        # The only supported op at this stage
-        op = node.child(Concatenate, **options)
-        return cls(node.attr('name', **options), op)
-
-    def evaluate(self):
-        assert isinstance(self.operation, Concatenate), \
-            "Only concatenation is currently supported"
-        return self.operation.items
-
-    @property
-    def populations(self):
-        return self.operation.populations
-
-    @property
-    def component_classes(self):
-        return (p.component_class for p in self.populations)
-
-    @property
-    def size(self):
-        return sum(p.size for p in self.populations)
-
-    port = combined_port_accessor(Population.port)
-    ports = combined_ports_property(Population.ports)
-    send_port = combined_port_accessor(Population.send_port)
-    send_ports = combined_ports_property(Population.send_ports)
-    receive_port = combined_port_accessor(Population.receive_port)
-    receive_ports = combined_ports_property(Population.receive_ports)
-    event_receive_port = combined_port_accessor(
-        Population.event_receive_port)
-    event_receive_ports = combined_ports_property(
-        Population.event_receive_ports)
-    event_send_port = combined_port_accessor(
-        Population.event_send_port)
-    event_send_ports = combined_ports_property(
-        Population.event_send_ports)
-    analog_receive_port = combined_port_accessor(
-        Population.analog_receive_port)
-    analog_receive_ports = combined_ports_property(
-        Population.analog_receive_ports)
-    analog_send_port = combined_port_accessor(
-        Population.analog_send_port)
-    analog_send_ports = combined_ports_property(
-        Population.analog_send_ports)
-    analog_reduce_port = combined_port_accessor(
-        Population.analog_reduce_port)
-    analog_reduce_ports = combined_ports_property(
-        Population.analog_reduce_ports)
-
-    @property
-    def analog_send_port_names(self):
-        return (p.name for p in self.analog_send_ports)
-
-    @property
-    def num_analog_send_ports(self):
-        return len(list(self.analog_send_ports))
-
-    @property
-    def analog_receive_port_names(self):
-        return (p.name for p in self.analog_receive_ports)
-
-    @property
-    def num_analog_receive_ports(self):
-        return len(list(self.analog_reduce_ports))
-
-    @property
-    def analog_reduce_port_names(self):
-        return (p.name for p in self.analog_reduce_ports)
-
-    @property
-    def num_analog_reduce_ports(self):
-        return len(list(self.analog_reduce_ports))
-
-    @property
-    def event_send_port_names(self):
-        return (p.name for p in self.event_send_ports)
-
-    @property
-    def num_event_send_ports(self):
-        return len(list(self.event_receive_ports))
-
-    @property
-    def event_receive_port_names(self):
-        return (p.name for p in self.event_receive_ports)
-
-    @property
-    def num_event_receive_ports(self):
-        return len(list(self.event_receive_ports))
-
-
 class Item(BaseULObject):
 
     nineml_type = 'Item'
@@ -279,6 +151,133 @@ class Concatenate(BaseULObject, ContainerObject):
         return cls(*node.children(Item, **options))
 
 
+class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
+    """
+    Container for combining multiple populations or subsets thereof.
+
+    **Arguments**:
+        *name*
+            a name for the selection
+        *operation*
+            a "selector" object which determines which neurons form part of the
+            selection. Only :class:`Concatenate` is currently supported.
+    """
+    nineml_type = "Selection"
+    defining_attributes = ('_name', '_operation')
+    nineml_attrs = ('name', 'operation')
+    child_attrs = ('operation',)
+
+    def __init__(self, name, operation, **kwargs):
+        ensure_valid_identifier(name)
+        self._name = name
+        BaseULObject.__init__(self, **kwargs)
+        DocumentLevelObject.__init__(self)
+        self._operation = operation
+
+    def __repr__(self):
+        return "Selection(name='{}', {})".format(self.name, self.operation)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def operation(self):
+        return self._operation
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.child(self.operation, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        # The only supported op at this stage
+        op = node.child(Concatenate, **options)
+        return cls(node.attr('name', **options), op)
+
+    def evaluate(self):
+        assert isinstance(self.operation, Concatenate), \
+            "Only concatenation is currently supported"
+        return self.operation.items
+
+    @property
+    def populations(self):
+        return self.operation.populations
+
+    @property
+    def component_classes(self):
+        return (p.component_class for p in self.populations)
+
+    @property
+    def size(self):
+        return sum(p.size for p in self.populations)
+
+    port = combined_port_accessor(Population.port)
+    ports = combined_ports_property(Population.ports)
+    send_port = combined_port_accessor(Population.send_port)
+    send_ports = combined_ports_property(Population.send_ports)
+    receive_port = combined_port_accessor(Population.receive_port)
+    receive_ports = combined_ports_property(Population.receive_ports)
+    event_receive_port = combined_port_accessor(
+        Population.event_receive_port)
+    event_receive_ports = combined_ports_property(
+        Population.event_receive_ports)
+    event_send_port = combined_port_accessor(
+        Population.event_send_port)
+    event_send_ports = combined_ports_property(
+        Population.event_send_ports)
+    analog_receive_port = combined_port_accessor(
+        Population.analog_receive_port)
+    analog_receive_ports = combined_ports_property(
+        Population.analog_receive_ports)
+    analog_send_port = combined_port_accessor(
+        Population.analog_send_port)
+    analog_send_ports = combined_ports_property(
+        Population.analog_send_ports)
+    analog_reduce_port = combined_port_accessor(
+        Population.analog_reduce_port)
+    analog_reduce_ports = combined_ports_property(
+        Population.analog_reduce_ports)
+
+    @property
+    def analog_send_port_names(self):
+        return (p.name for p in self.analog_send_ports)
+
+    @property
+    def num_analog_send_ports(self):
+        return len(list(self.analog_send_ports))
+
+    @property
+    def analog_receive_port_names(self):
+        return (p.name for p in self.analog_receive_ports)
+
+    @property
+    def num_analog_receive_ports(self):
+        return len(list(self.analog_reduce_ports))
+
+    @property
+    def analog_reduce_port_names(self):
+        return (p.name for p in self.analog_reduce_ports)
+
+    @property
+    def num_analog_reduce_ports(self):
+        return len(list(self.analog_reduce_ports))
+
+    @property
+    def event_send_port_names(self):
+        return (p.name for p in self.event_send_ports)
+
+    @property
+    def num_event_send_ports(self):
+        return len(list(self.event_receive_ports))
+
+    @property
+    def event_receive_port_names(self):
+        return (p.name for p in self.event_receive_ports)
+
+    @property
+    def num_event_receive_ports(self):
+        return len(list(self.event_receive_ports))
 
 # TGC 11/11/ This old implementation of Set (now called Selection) was copied
 #            from nineml.user.populations.py probably some of it is worth

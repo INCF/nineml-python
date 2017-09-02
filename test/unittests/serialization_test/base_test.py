@@ -23,38 +23,6 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-class Container(AnnotatedNineMLObject, DocumentLevelObject):
-
-    nineml_type = 'Container'
-    v1_nineml_type = 'Cunfaener'
-    defining_attributes = ('name', 'a', 'bs', 'c', 'd')
-    nineml_attrs = ('name', 'a', 'bs', 'c', 'd')
-
-    def __init__(self, name, a, bs, c, d):
-        AnnotatedNineMLObject.__init__(self)
-        self.name = name
-        DocumentLevelObject.__init__(self)
-        self.a = a
-        self.bs = bs
-        self.c = c
-        self.d = d
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name)
-        node.child(self.a, reference=True)
-        node.children(self.bs)
-        node.child(self.c, within='CTag')
-        node.attr('d', self.d)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):  # @UnusedVariable
-        return cls(node.attr('name'),
-                   a=node.child(A, n=1, allow_ref=True),
-                   bs=node.children(B, n='*'),
-                   c=node.child(C, n=1, within='CTag'),
-                   d=node.attr('d'))
-
-
 class A(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'A'
@@ -209,6 +177,41 @@ class F(AnnotatedNineMLObject, DocumentLevelObject):
         return cls(node.attr('name'),
                    node.attr('w', dtype=int),
                    node.attr('r', dtype=int))
+
+
+class Container(AnnotatedNineMLObject, DocumentLevelObject):
+
+    nineml_type = 'Container'
+    v1_nineml_type = 'Cunfaener'
+    defining_attributes = ('name', 'a', 'bs', 'c', 'd')
+    nineml_attrs = ('name', 'a', 'bs', 'c', 'd')
+    children_types = (B,)
+    child_attrs = ('a', 'c', 'd')
+
+    def __init__(self, name, a, bs, c, d):
+        AnnotatedNineMLObject.__init__(self)
+        self.name = name
+        DocumentLevelObject.__init__(self)
+        self.a = a
+        self.bs = bs
+        self.c = c
+        self.d = d
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name)
+        node.child(self.a, reference=True)
+        node.children(self.bs)
+        node.child(self.c, within='CTag')
+        node.attr('d', self.d)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(node.attr('name'),
+                   a=node.child(A, n=1, allow_ref=True),
+                   bs=node.children(B, n='*'),
+                   c=node.child(C, n=1, within='CTag'),
+                   d=node.attr('d'))
+
 
 class_map = {'Container': Container,
              'Cunfaener': Container, 'A': A, 'E': E, 'F': F}

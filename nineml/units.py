@@ -282,7 +282,8 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'Unit'
     defining_attributes = ('_dimension', '_power', '_offset')
-    nineml_attrs = ('dimension', 'power', 'offset')
+    nineml_attrs = ('name', 'power', 'offset')
+    child_attrs = ('dimension',)
 
     def __init__(self, name, dimension, power, offset=0.0):
         ensure_valid_identifier(name)
@@ -430,7 +431,7 @@ class Quantity(AnnotatedNineMLObject):
     """
     nineml_type = 'Quantity'
     defining_attributes = ("_value", "_units")
-    nineml_attrs = ('value', 'units')
+    child_attrs = ('value', 'units')
 
     def __init__(self, value, units=None):
         super(Quantity, self).__init__()

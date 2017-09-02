@@ -8,7 +8,7 @@ from .dynamics import DynamicsProperties
 from .population import Population
 from .selection import Selection
 from .component import Quantity
-from nineml.base import DocumentLevelObject
+from nineml.base import DocumentLevelObject, ContainerObject
 from nineml.utils import ensure_valid_identifier
 from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
@@ -20,34 +20,29 @@ V1_DELAY_VALUE_TYPES = ('SingleValue', 'ArrayValue', 'ExternalArrayValue',
                         'RandomDistributionValue')
 
 
-class Projection(BaseULObject, DocumentLevelObject):
+class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
     """
     A collection of connections between two :class:`Population`\s.
 
-    **Arguments**:
-        *name*
+    Parameters
+    ----------
+        name : str
             a name for this projection.
-        *pre*
+        pre : Population
             the presynaptic :class:`Population`.
-        *post*
+        post : Population
             the postsynaptic :class:`Population`.
-        *response*
-            a `dynamics` :class:`Component` that defines the post-synaptic
-            response.
-        *plasticity*
-            a `dynamics` :class:`Component` that defines the plasticity
-            rule for the synaptic weight/efficacy.
-        *connectivity*
+        response : DynamicsProperties
+            a :class:`DynamicsProperties` :class:`Component` that defines the
+            post-synaptic response.
+        plasticity : DynamicsProperties
+            a :class:`DynamicsProperties` :class:`Component` that defines the
+            plasticity rule for the synaptic weight/efficacy.
+        connectivity : ConnectionRuleProperties
             a `connection rule` :class:`Component` that defines
             an algorithm for wiring up the neurons.
-        *delay*
-            a :class:`Delay` object specifying the delay of the connections.
-
-    **Attributes**:
-
-    Each of the arguments to the constructor is available as an attribute of
-    the same name.
-
+        delay
+            a :class:`Quantity` object specifying the delay of the connections.
     """
     nineml_type = "Projection"
     defining_attributes = ('_name', '_pre', '_post', '_connectivity',
@@ -58,9 +53,9 @@ class Projection(BaseULObject, DocumentLevelObject):
                     'response', 'plasticity', 'delay',
                     'analog_port_connections',
                     'event_port_connections')
-    child_attrs = ('pre', 'post', 'connectivity', 'response', 'plastiticy',
+    child_attrs = ('pre', 'post', 'connectivity', 'response', 'plasticity',
                    'delay')
-    children_types = (AnalogPortConnections, EventPortConnections)
+    children_types = (AnalogPortConnection, EventPortConnection)
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
     def __init__(self, name, pre, post, response, connectivity,
@@ -72,6 +67,7 @@ class Projection(BaseULObject, DocumentLevelObject):
         ensure_valid_identifier(name)
         self._name = name
         BaseULObject.__init__(self)
+        ContainerObject.__init__(self)
         DocumentLevelObject.__init__(self)
         assert isinstance(name, basestring)
         assert isinstance(delay, Quantity)
@@ -86,17 +82,14 @@ class Projection(BaseULObject, DocumentLevelObject):
         self._connectivity = connectivity_class(
             connectivity, pre.size, post.size, **kwargs)
         self._delay = delay
-        self._analog_port_connections = []
-        self._event_port_connections = []
+        self._analog_port_connections = {}
+        self._event_port_connections = {}
         for port_connection in port_connections:
             if isinstance(port_connection, tuple):
                 port_connection = BasePortConnection.from_tuple(
                     port_connection, self)
             port_connection.bind(self, to_roles=True)
-            if isinstance(port_connection, EventPortConnection):
-                self._event_port_connections.append(port_connection)
-            else:
-                self._analog_port_connections.append(port_connection)
+            self.add(port_connection)
 
     def __len__(self):
         return sum(1 for _ in self.connectivity.connections())
@@ -132,13 +125,35 @@ class Projection(BaseULObject, DocumentLevelObject):
     def delay(self):
         return self._delay
 
+    def analog_port_connection(self, name):
+        return self._analog_port_connections[name]
+
+    def event_port_connection(self, name):
+        return self._event_port_connections[name]
+
     @property
     def analog_port_connections(self):
-        return self._analog_port_connections
+        return self._analog_port_connections.itervalues()
 
     @property
     def event_port_connections(self):
-        return self._event_port_connections
+        return self._event_port_connections.itervalues()
+
+    @property
+    def analog_port_connection_names(self):
+        return self._analog_port_connections.iterkeys()
+
+    @property
+    def event_port_connection_names(self):
+        return self._event_port_connections.iterkeys()
+
+    @property
+    def num_analog_port_connections(self):
+        return len(self._analog_port_connections)
+
+    @property
+    def num_event_port_connections(self):
+        return len(self._event_port_connections)
 
     @property
     def port_connections(self):

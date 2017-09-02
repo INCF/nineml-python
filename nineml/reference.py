@@ -119,6 +119,7 @@ class Reference(BaseReference):
     """
     nineml_type = "Reference"
     nineml_attrs = BaseReference.nineml_attrs + ('user_object',)
+    child_attrs = ('user_object',)
 
     @property
     def user_object(self):

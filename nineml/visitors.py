@@ -127,32 +127,30 @@ class BaseVisitor(object):
         # themselves
         results = self.Results(action_result)
         # Add the container object to the list of scopes
-        for attr_name in obj.nineml_attrs:
-            if attr_name.startswith('_'):
-                continue
+        for attr_name in obj.child_attrs:
             attr = getattr(obj, attr_name)
-            if isinstance(attr, BaseNineMLObject):
-                # Create the context around the visit of the attribute
-                context = self.Context(obj, nineml_cls, action_result,
-                                       attr_name)
-                self.contexts.append(context)
-                results._attr[attr_name] = self.visit(attr, **kwargs)
-                popped = self.contexts.pop()
-                assert context is popped
+            if attr is None:
+                continue
+            # Create the context around the visit of the attribute
+            context = self.Context(obj, nineml_cls, action_result,
+                                   attr_name)
+            self.contexts.append(context)
+            results._attr[attr_name] = self.visit(attr, **kwargs)
+            popped = self.contexts.pop()
+            assert context is popped
         # Visit children of the object
-        if isinstance(obj, ContainerObject):
-            for child_type in nineml_cls.children_types:
-                try:
-                    dct = obj._member_dict(child_type)
-                except (NineMLInvalidElementTypeException, AttributeError):
-                    dct = None  # If child_type is from base class
-                context = self.Context(obj, nineml_cls, action_result, dct=dct)
-                self.contexts.append(context)
-                for child in obj._members_iter(child_type):
-                    results._children[child_type][child.key] = self.visit(
-                        child, nineml_cls=child_type, **kwargs)
-                popped = self.contexts.pop()
-                assert context is popped
+        for child_type in nineml_cls.children_types:
+            try:
+                dct = obj._member_dict(child_type)
+            except (NineMLInvalidElementTypeException, AttributeError):
+                dct = None  # If child_type is from base class
+            context = self.Context(obj, nineml_cls, action_result, dct=dct)
+            self.contexts.append(context)
+            for child in obj._members_iter(child_type):
+                results._children[child_type][child.key] = self.visit(
+                    child, nineml_cls=child_type, **kwargs)
+            popped = self.contexts.pop()
+            assert context is popped
         # Peform "post-action" method that runs after the children/attributes
         # have been visited
         self.post_action(obj, results, nineml_cls=nineml_cls, **kwargs)

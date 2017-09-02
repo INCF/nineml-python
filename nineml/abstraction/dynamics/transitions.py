@@ -439,7 +439,7 @@ class OnCondition(Transition):
     nineml_type = "OnCondition"
     defining_attributes = (Transition.defining_attributes + ('_trigger',))
     nineml_attrs = (Transition.nineml_attrs + ('trigger',))
-    child_attrs = ('Trigger',)
+    child_attrs = ('trigger',)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
