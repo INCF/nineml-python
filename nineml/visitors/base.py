@@ -1,6 +1,5 @@
 from collections import defaultdict
 from nineml.exceptions import NineMLInvalidElementTypeException
-from nineml.base import BaseNineMLObject, ContainerObject
 
 
 class BaseVisitor(object):
@@ -104,8 +103,6 @@ class BaseVisitor(object):
 
     def __init__(self):
         self.contexts = []
-        self._method_name = None
-        self._stop = False
 
     def visit(self, obj, nineml_cls=None, **kwargs):
         # Use the class of the object to visit the object as if one is not
@@ -117,10 +114,6 @@ class BaseVisitor(object):
                 nineml_cls = self.visits_class
             else:
                 nineml_cls = type(obj)
-        # Allow deriving classes to run a function when visiting the top most
-        # object in the hierarchy
-        if not self.contexts:
-            self.initial(obj, **kwargs)
         # Run the 'action_<obj-nineml_type>' method on the visited object
         action_result = self.action(obj, nineml_cls=nineml_cls, **kwargs)
         # Visit all the attributes of the object that are 9ML objects
@@ -132,8 +125,7 @@ class BaseVisitor(object):
             if attr is None:
                 continue
             # Create the context around the visit of the attribute
-            context = self.Context(obj, nineml_cls, action_result,
-                                   attr_name)
+            context = self.Context(obj, nineml_cls, action_result, attr_name)
             self.contexts.append(context)
             results._attr[attr_name] = self.visit(attr, **kwargs)
             popped = self.contexts.pop()
@@ -154,8 +146,6 @@ class BaseVisitor(object):
         # Peform "post-action" method that runs after the children/attributes
         # have been visited
         self.post_action(obj, results, nineml_cls=nineml_cls, **kwargs)
-        if not self.contexts:
-            self.final(obj, **kwargs)
         return results
 
     def action(self, obj, nineml_cls, **kwargs):
@@ -172,19 +162,6 @@ class BaseVisitor(object):
         except AttributeError:
             method = self.default_post_action
         return method(obj, results, **kwargs)
-
-    def initial(self, obj, **kwargs):
-        """
-        Ran after the object at the top of the hierarchy is visited
-        """
-        pass
-
-    def final(self, obj, **kwargs):
-        """
-        Ran after all the children and attributes the object at the top of the
-        hierarchy is visited
-        """
-        pass
 
     @property
     def context(self):

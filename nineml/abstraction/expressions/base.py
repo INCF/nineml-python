@@ -340,9 +340,6 @@ class Expression(AnnotatedNineMLObject):
         self.rhs = sympy.Not(self.rhs)
         return self
 
-    def simplify(self):
-        self.rhs = sympy.simplify(self.rhs)
-
     @classmethod
     def expand_integer_powers(cls, expr):
         """
