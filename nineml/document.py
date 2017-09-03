@@ -5,6 +5,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from logging import getLogger
+from nineml.visitors import Cloner
 
 
 logger = getLogger('lib9ml')
@@ -223,21 +224,8 @@ class Document(AnnotatedNineMLObject, dict):
             A list of all the references within the clone that may need to be
             updated once all objects are cloned
         """
-        if memo is None:
-            memo = {}
-        if refs is None:
-            refs = []
-        try:
-            clone = memo[clone_id(self)]
-        except KeyError:
-            clone = Document(*self.values(), memo=memo, refs=refs,
-                             clone=True, **kwargs)
-            memo[clone_id(self)] = clone
-            # Updated any cloned references to point to cloned objects
-            for ref in refs:
-                if id(ref._referred_to) in memo:
-                    ref._referred_to = memo[id(ref._referred_to)]
-        return clone
+        cloner = Cloner(**kwargs)
+        return cloner.visit(self).post_action
 
     def find_mismatch(self, other):
         """

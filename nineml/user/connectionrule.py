@@ -39,15 +39,15 @@ class BaseConnectivity(BaseNineMLObject):
     nineml_attrs = ('rule_properties', 'source_size', 'destination_size')
     child_attrs = ('rule_properties',)
 
-    def __init__(self, connection_rule_properties, source_size,
+    def __init__(self, rule_properties, source_size,
                  destination_size, **kwargs):  # @UnusedVariable
-        if (connection_rule_properties.lib_type == 'OneToOne' and
+        if (rule_properties.lib_type == 'OneToOne' and
                 source_size != destination_size):
             raise NineMLRuntimeError(
                 "Cannot connect to populations of different sizes "
                 "({} and {}) with OneToOne connection rule"
                 .format(source_size, destination_size))
-        self._rule_properties = connection_rule_properties
+        self._rule_properties = rule_properties
         self._source_size = source_size
         self._destination_size = destination_size
 
@@ -158,12 +158,12 @@ class Connectivity(BaseConnectivity):
     """
     nineml_type = '_Connectivity'
 
-    def __init__(self, connection_rule_properties, source_size,
+    def __init__(self, rule_properties, source_size,
                  destination_size, random_seed=None, rng_cls=None):
         """
         Parameters
         ----------
-        connection_rule_properties: ConnectionRuleProperties
+        rule_properties: ConnectionRuleProperties
             Connection rule and properties that define the connectivity
             instance
         source_size : int
@@ -179,7 +179,7 @@ class Connectivity(BaseConnectivity):
             (e.g. numpy.Random). If not supplied then random.Random is used
         """
         super(Connectivity, self).__init__(
-            connection_rule_properties, source_size, destination_size)
+            rule_properties, source_size, destination_size)
         if random_seed is None:
             random_seed = randint(0, sys.maxint)
         self._seed = random_seed

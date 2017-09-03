@@ -554,7 +554,7 @@ v1_safe_docs = [doc2]
 instances_of_all_types = defaultdict(dict)
 instances_of_all_types[doc1.nineml_type]['doc1'] = doc1
 instances_of_all_types[Reference.nineml_type] = dict((r.key, r) for r in (
-    Reference(o, doc1) for o in (
+    Reference(name=o, document=doc1) for o in (
         'dynA', 'dynB', 'dynC', 'dynE', 'dynF', 'dynPropA', 'dynPropB',
         'dynPropC', 'multiDynPropA', 'multiDynPropB', 'ranDistrA',
         'ranDistrPropA', 'popA', 'popB', 'popC', 'popD', 'popE', 'selA',
@@ -569,8 +569,8 @@ for elem in doc1.itervalues():
     add_with_sub_elements(elem)
 # Add remaining elements that are not picked up by recursive
 # search
-multiDynA = multiDynPropA.definition._referred_to
-multiDynB = multiDynPropB.definition._referred_to
+multiDynA = multiDynPropA.definition.target
+multiDynB = multiDynPropB.definition.target
 for elem in chain(multiDynA.sub_components,
                   multiDynB.sub_components, multiDynA.ports, multiDynB.ports,
                   multiDynA.port_connections, multiDynB.port_connections,

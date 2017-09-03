@@ -112,7 +112,7 @@ class C(AnnotatedNineMLObject, ContainerObject):
 
     nineml_type = 'C'
     defining_attributes = ('name', '_es', 'f', 'g')
-    nineml_attrs = ('name', '_es', 'f', 'g')
+    nineml_attrs = ('name', 'f', 'g')
     class_to_member = {'E': 'e'}
     children_types = (E,)
 

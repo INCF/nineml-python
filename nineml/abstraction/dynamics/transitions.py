@@ -489,7 +489,7 @@ class OnCondition(Transition):
         return cls(trigger=trigger,
                    state_assignments=node.children(StateAssignment, **options),
                    output_events=node.children(OutputEvent, **options),
-                   target_regime=target_regime)
+                   target_regime_name=target_regime)
 
 
 class Trigger(BaseALObject, Expression):

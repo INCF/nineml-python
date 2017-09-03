@@ -328,7 +328,7 @@ class Alias_test(unittest.TestCase):
             def visit_alias(self, component, **kwargs):  # @UnusedVariable
                 return kwargs
 
-        c = Alias(lhs='V', rhs='0')
+        c = Alias(name='V', rhs='0')
         v = AliasTestVisitor()
 
         self.assertEqual(
@@ -348,7 +348,7 @@ class StateAssignment_test(unittest.TestCase):
             def visit_stateassignment(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
                 return kwargs
 
-        c = StateAssignment(lhs='V', rhs='0')
+        c = StateAssignment(variable='V', rhs='0')
         v = StateAssignmentTestVisitor()
 
         self.assertEqual(

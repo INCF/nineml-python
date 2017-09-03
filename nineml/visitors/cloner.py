@@ -34,9 +34,12 @@ class Cloner(BaseVisitor):
             try:
                 init_args[attr] = getattr(obj, attr)
             except NineMLNotBoundException:
-                pass
+                init_args[attr] = None
         for attr in nineml_cls.child_attrs:
-            init_args[attr] = results.attr_result(attr).post_action
+            try:
+                init_args[attr] = results.attr_result(attr).post_action
+            except KeyError:
+                init_args[attr] = None
         for child_type in nineml_cls.children_types:
             init_args[child_type._children_iter_name()] = [
                 r.post_action for r in results.child_results(child_type)]
@@ -80,3 +83,11 @@ class Cloner(BaseVisitor):
         to in the containing container.
         """
         return copy(reference)
+
+
+    def post_action_nineml(self, reference, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        """
+        To clone NineML Documents
+        """
+        clone = nineml_cls(*self.values(), clone=True, **kwargs)
+        return clone

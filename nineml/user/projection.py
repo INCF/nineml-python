@@ -59,7 +59,8 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
     def __init__(self, name, pre, post, response, connectivity,
-                 delay, plasticity=None, port_connections=[],
+                 delay, plasticity=None, port_connections=None,
+                 analog_port_connections=None, event_port_connections=None,
                  connectivity_class=Connectivity, **kwargs):
         """
         Create a new projection.
@@ -84,7 +85,15 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
         self._delay = delay
         self._analog_port_connections = {}
         self._event_port_connections = {}
-        for port_connection in port_connections:
+        if port_connections is None:
+            port_connections = []
+        if analog_port_connections is None:
+            analog_port_connections = []
+        if event_port_connections is None:
+            event_port_connections = []
+        for port_connection in chain(port_connections,
+                                     event_port_connections,
+                                     analog_port_connections):
             if isinstance(port_connection, tuple):
                 port_connection = BasePortConnection.from_tuple(
                     port_connection, self)
