@@ -30,11 +30,11 @@ class Cloner(BaseVisitor):
         for attr in nineml_cls.nineml_attrs:
             kwargs[attr] = getattr(obj, attr)
         for attr in nineml_cls.child_attrs:
-            kwargs[attr] = results.attr_result[attr]
+            kwargs[attr] = results.attr_result(attr).post_action
         for child_type in nineml_cls.children_types:
-            kwargs[child_type._children_iter_name()] = list(
-                results.child_results(child_type))
-        return nineml_cls(**kwargs)
+            kwargs[child_type._children_iter_name()] = [
+                r.post_action for r in results.child_results(child_type)]
+        results.post_action = nineml_cls(**kwargs)
 
     @classmethod
     def clone_id(cls, obj):

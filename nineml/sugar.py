@@ -52,7 +52,7 @@ def DoOnEvent(input_event, do=None, to=None):
     return OnEvent(src_port_name=input_event,
                    state_assignments=assignments,
                    output_events=output_events,
-                   target_regime=to)
+                   target_regime_name=to)
 
 
 def DoOnCondition(condition, do=None, to=None):
@@ -60,4 +60,4 @@ def DoOnCondition(condition, do=None, to=None):
     return OnCondition(trigger=condition,
                        state_assignments=assignments,
                        output_events=output_events,
-                       target_regime=to)
+                       target_regime_name=to)

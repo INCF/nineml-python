@@ -34,8 +34,9 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
     """
 
     nineml_type = 'StateAssignment'
+    nineml_attrs = ('variable', 'rhs')
 
-    def __init__(self, lhs, rhs):
+    def __init__(self, variable, rhs):
         """
         StateAssignment
 
@@ -47,7 +48,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
             A expression for the new value of the state after an assignment.
         """
         BaseALObject.__init__(self)
-        ExpressionWithSimpleLHS.__init__(self, lhs=lhs, rhs=rhs)
+        ExpressionWithSimpleLHS.__init__(self, lhs=variable, rhs=rhs)
 
     @property
     def variable(self):
@@ -58,24 +59,24 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
         return visitor.visit_stateassignment(self, **kwargs)
 
     def __repr__(self):
-        return "StateAssignment('{}', '{}')".format(self.lhs, self.rhs)
+        return "StateAssignment('{}', '{}')".format(self.variable, self.rhs)
 
     @classmethod
     def from_str(cls, state_assignment_string):
         """Creates an StateAssignment object from a string"""
         lhs, rhs = state_assignment_string.split('=')
-        return StateAssignment(lhs=lhs, rhs=rhs)
+        return StateAssignment(variable=lhs, rhs=rhs)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('variable', self.lhs, **options)
+        node.attr('variable', self.variable, **options)
         node.attr('MathInline', self.rhs_xml, in_body=True, **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        lhs = node.attr('variable', **options)
+        variable = node.attr('variable', **options)
         rhs = node.attr('MathInline', in_body=True, dtype=Expression,
                         **options)
-        return cls(lhs=lhs, rhs=rhs)
+        return cls(variable=variable, rhs=rhs)
 
     @classmethod
     def _children_keys_name(cls):
@@ -170,10 +171,10 @@ class Transition(BaseALObject, ContainerObject):
     class_to_member = {'StateAssignment': 'state_assignment',
                        'OutputEvent': 'output_event'}
     children_types = (StateAssignment, OutputEvent)
-    nineml_attrs = ('_target_regime_name',)
+    nineml_attrs = ('target_regime_name',)
 
     def __init__(self, state_assignments=None, output_events=None,
-                 target_regime=None):
+                 target_regime_name=None):
         """Abstract class representing a transition from one Regime to
         another.
 
@@ -212,17 +213,9 @@ class Transition(BaseALObject, ContainerObject):
         self._output_events = {}
         self.add(*normalise_parameter_as_list(output_events))
 
-        if isinstance(target_regime, basestring):
-            self._target_regime = None
-            self._target_regime_name = target_regime
-        else:
-            self._target_regime = target_regime
-            self._target_regime_name = None
+        self._target_regime_name = target_regime_name
+        self._target_regime = None
         self._source_regime = None
-
-    def find_element(self, element):
-        return (nineml.abstraction.dynamics.visitors.queriers.
-                DynamicsElementFinder(element).found_in(self))
 
     @property
     def target_regime(self):
@@ -360,14 +353,14 @@ class OnEvent(Transition):
 
     nineml_type = "OnEvent"
     defining_attributes = (Transition.defining_attributes + ('src_port_name',))
-    nineml_attrs = (Transition.nineml_attrs + ('_src_port_name',))
+    nineml_attrs = (Transition.nineml_attrs + ('src_port_name',))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
         return visitor.visit_onevent(self, **kwargs)
 
     def __init__(self, src_port_name, state_assignments=None,
-                 output_events=None, target_regime=None):
+                 output_events=None, target_regime_name=None):
         """
         Constructor for ``OnEvent``
 
@@ -378,7 +371,7 @@ class OnEvent(Transition):
         """
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
-                            target_regime=target_regime)
+                            target_regime_name=target_regime_name)
         self._src_port_name = src_port_name.strip()
         self._port = None
         ensure_valid_identifier(self._src_port_name)
@@ -446,7 +439,7 @@ class OnCondition(Transition):
         return visitor.visit_oncondition(self, **kwargs)
 
     def __init__(self, trigger, state_assignments=None,
-                 output_events=None, target_regime=None):
+                 output_events=None, target_regime_name=None):
         """
         Parameters
         ----------
@@ -460,7 +453,7 @@ class OnCondition(Transition):
         self._trigger = Trigger(rhs=trigger)
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
-                            target_regime=target_regime)
+                            target_regime_name=target_regime_name)
 
     def __repr__(self):
         return 'OnCondition({})'.format(self.trigger.rhs)

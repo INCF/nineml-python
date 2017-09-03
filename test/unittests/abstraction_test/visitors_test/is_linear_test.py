@@ -26,10 +26,10 @@ class DynamicsIsLinearTest(unittest.TestCase):
             name='B',
             regimes=[
                 Regime('dSV1/dt = -SV1 / P1',
-                       transitions=[OnEvent('ERP1', target_regime='R2')],
+                       transitions=[OnEvent('ERP1', target_regime_name='R2')],
                        name='R1'),
                 Regime('dSV1/dt = -SV1 / P1',
-                       transitions=[OnEvent('ERP1', target_regime='R1')],
+                       transitions=[OnEvent('ERP1', target_regime_name='R1')],
                        name='R2')],
             event_ports=[EventReceivePort('ERP1')],
             parameters=[Parameter('P1', dimension=un.time)])

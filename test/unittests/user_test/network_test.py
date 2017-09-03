@@ -72,7 +72,7 @@ class TestNetwork(unittest.TestCase):
                     transitions=[
                         OnCondition(
                             't > t_rpend',
-                            target_regime='subthresholdRegime')]),
+                            target_regime_name='subthresholdRegime')]),
                 Regime(
                     name='subthresholdRegime',
                     time_derivatives=[
@@ -80,7 +80,7 @@ class TestNetwork(unittest.TestCase):
                     transitions=[
                         OnCondition(
                             'V > theta',
-                            target_regime='refractoryRegime',
+                            target_regime_name='refractoryRegime',
                             state_assignments=[
                                 StateAssignment('V', 'Vreset'),
                                 StateAssignment('t_rpend', 't + tau_rp')],
@@ -98,7 +98,7 @@ class TestNetwork(unittest.TestCase):
                     transitions=[
                         OnCondition(
                             't > t_next',
-                            target_regime='default',
+                            target_regime_name='default',
                             state_assignments=[
                                 StateAssignment(
                                     't_next',
@@ -145,7 +145,7 @@ class TestNetwork(unittest.TestCase):
                     transitions=[
                         OnEvent(
                             'spike',
-                            target_regime='default',
+                            target_regime_name='default',
                             state_assignments=[
                                 StateAssignment('B', 'B + weight')])])],
             aliases=['Isyn:=A'])

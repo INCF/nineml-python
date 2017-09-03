@@ -69,7 +69,7 @@ class MemberContainer_test(unittest.TestCase):
         a.regime('R1').add(TimeDerivative('SV3', '-SV3/t + P3/t'))
         a.regime('R1').on_event('spikein').add(StateAssignment('SV1', 'P1'))
         a.regime('R2').add(OnCondition(
-            'SV3 < 0.001', target_regime='R2',
+            'SV3 < 0.001', target_regime_name='R2',
             state_assignments=[StateAssignment('SV3', 1)]))
         a.add(Parameter('P3'))
         a.add(AnalogSendPort('SV3'))

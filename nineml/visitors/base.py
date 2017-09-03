@@ -84,6 +84,10 @@ class BaseVisitor(object):
         def post_action(self):
             return self._post_action
 
+        @post_action.setter
+        def post_action(self, post_action):
+            self._post_action = post_action
+
         @property
         def children(self):
             return self._children.itervalues()

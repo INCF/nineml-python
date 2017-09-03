@@ -59,7 +59,8 @@ dynA = Dynamics(
         ),
         Regime(name='R2',
                transitions=[
-                   OnCondition('(SV1 > C1) & (SV2 < P4)', target_regime='R1')])
+                   OnCondition('(SV1 > C1) & (SV2 < P4)',
+                               target_regime_name='R1')])
     ],
     analog_ports=[AnalogReceivePort('ARP1', dimension=un.current),
                   AnalogReceivePort('ARP2', dimension=(un.resistance *

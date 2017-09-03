@@ -22,7 +22,7 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
                        'dSV2/dt = -ADP1 / P7',
                        'dSV3/dt = -A1 * A3 / (A2 * C1)',
                        transitions=[OnCondition('SV1 > 10',
-                                                target_regime='R2')],
+                                                target_regime_name='R2')],
                        aliases=[Alias('A1', 'P1 / P2 * 2'),
                                 Alias('A5', 'SV1 * SV2 * P8 * 2')],
                        name='R1'),
@@ -32,7 +32,7 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
                            'C2 > A6',
                            state_assignments=[
                                StateAssignment('SV1', 'SV1 - A7')],
-                           target_regime='R1')],
+                           target_regime_name='R1')],
                        name='R2')],
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.resistance),
                           AnalogReceivePort('ARP2', dimension=un.charge),
@@ -59,7 +59,7 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
                        ('dSV3/dt = -2 * (P1 / P2) * ((P6 ** 2 + ADP1) * P4 * '
                         'P5) / ((ARP2 + P3) * C1)'),
                        transitions=[OnCondition('SV1 > 10',
-                                                target_regime='R2')],
+                                                target_regime_name='R2')],
                        aliases=[Alias('A5', 'SV1 * SV2 * P8 * 2')],
                        name='R1'),
                 Regime('dSV1/dt = -(P1 / P2) / (ARP2 + P3)',
@@ -68,7 +68,7 @@ class DynamicsSubstituteAliasesTest(unittest.TestCase):
                            'C2 > (SV1 * P1 / P8)',
                            state_assignments=[
                                StateAssignment('SV1', 'SV1 - (P1 / P2) / P8')],
-                           target_regime='R1')],
+                           target_regime_name='R1')],
                        name='R2')],
             analog_ports=[AnalogReceivePort('ARP1', dimension=un.resistance),
                           AnalogReceivePort('ARP2', dimension=un.charge),

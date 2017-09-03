@@ -51,7 +51,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
     defining_attributes = ('_name', '_rhs')
     nineml_attrs = ('name', 'rhs')
 
-    def __init__(self, lhs=None, rhs=None):
+    def __init__(self, name, rhs=None):
         """ Constructor for an Alias
 
         :param lhs: A `string` specifying the left-hand-side, i.e. the Alias
@@ -63,13 +63,13 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
         """
         BaseALObject.__init__(self)
-        ExpressionWithSimpleLHS.__init__(self, lhs, rhs)
+        ExpressionWithSimpleLHS.__init__(self, name, rhs)
 
     def __repr__(self):
-        return "Alias(name='{}', rhs='{}')".format(self.lhs, self.rhs)
+        return "Alias(name='{}', rhs='{}')".format(self.name, self.rhs)
 
     def __str__(self):
-        return "{} := {}".format(self.lhs, self.rhs)
+        return "{} := {}".format(self.name, self.rhs)
 
     @property
     def name(self):
@@ -87,7 +87,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
             raise NineMLRuntimeError(errmsg)
 
         lhs, rhs = alias_string.split(':=')
-        return Alias(lhs=lhs.strip(), rhs=rhs.strip())
+        return Alias(name=lhs.strip(), rhs=rhs.strip())
 
     @classmethod
     def is_alias_str(cls, alias_str):

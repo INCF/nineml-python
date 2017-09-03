@@ -105,6 +105,7 @@ class TimeDerivative(ODE, BaseALObject):
     """
 
     nineml_type = 'TimeDerivative'
+    nineml_attrs = ('variable',) + ODE.nineml_attrs
 
     def __init__(self, variable, rhs):
         ODE.__init__(self,

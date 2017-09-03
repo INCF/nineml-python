@@ -190,7 +190,7 @@ class TestAnnotations(unittest.TestCase):
                                 OnCondition('SV2 < P2 + P3',
                                             output_events=[
                                                 OutputEvent('ESP3')],
-                                            target_regime='R2')]),
+                                            target_regime_name='R2')]),
                      Regime(name='R2',
                             time_derivatives=[
                                 TimeDerivative('SV3', 'SV3/t')],
@@ -199,7 +199,7 @@ class TestAnnotations(unittest.TestCase):
                                             output_events=[
                                                 OutputEvent('ESP3'),
                                                 OutputEvent('ESP2')],
-                                            target_regime='R1')])],
+                                            target_regime_name='R1')])],
             aliases=[Alias('ASP1', 'SV1+SV2'),
                      Alias('ASP2', 'SV2+SV3')])
         # Set indices of parameters in non-ascending order so that they
