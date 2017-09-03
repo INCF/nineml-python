@@ -51,7 +51,7 @@ class AliasesAreNotRecursiveComponentValidator(BaseVisitor):
                     "issue. Remaining Aliases: {}".format(
                         ','.join(unresolved_aliases.keys())))
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -116,7 +116,7 @@ class NoUnresolvedSymbolsComponentValidator(BaseVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.add_symbol(constant.name)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -176,7 +176,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(constant.name)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -195,7 +195,7 @@ class DimensionalityComponentValidator(BaseVisitor):
             self._dimensions = {}
             self.visit(component_class, **kwargs)
 
-        def default_action(self, obj, **kwargs):  # @UnusedVariable
+        def default_action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable
             if not isinstance(obj, SendPortBase):
                 try:
                     self._dimensions[obj] = sympify(obj.dimension)
@@ -389,5 +389,5 @@ class DimensionalityComponentValidator(BaseVisitor):
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self._get_dimensions(alias)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass

@@ -73,7 +73,7 @@ class EventPortsDynamicsValidator(BaseDynamicsVisitor):
     def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
         self.input_events.append(on_event.src_port_name)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -114,5 +114,5 @@ class OutputAnalogPortsDynamicsValidator(BaseDynamicsVisitor):
                                 for r in self.component_class.regimes)):
             self.add_symbol(symbol=alias.lhs)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass

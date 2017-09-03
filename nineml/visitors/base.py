@@ -70,9 +70,9 @@ class BaseVisitor(object):
 
     class Results(object):
 
-        def __init__(self, action_result):
+        def __init__(self, action_result, post_action=None):
             self._action = action_result
-            self._post_action = None
+            self._post_action = post_action
             self._attr = {}
             self._children = defaultdict(dict)
 
@@ -135,7 +135,7 @@ class BaseVisitor(object):
             try:
                 dct = obj._member_dict(child_type)
             except (NineMLInvalidElementTypeException, AttributeError):
-                dct = None  # If child_type is from base class
+                dct = None  # If child_type is a base class of the obj
             context = self.Context(obj, nineml_cls, action_result, dct=dct)
             self.contexts.append(context)
             for child in obj._members_iter(child_type):
@@ -153,7 +153,7 @@ class BaseVisitor(object):
             method = getattr(self, 'action_' + nineml_cls.nineml_type.lower())
         except AttributeError:
             method = self.default_action
-        return method(obj, **kwargs)
+        return method(obj, nineml_cls=nineml_cls, **kwargs)
 
     def post_action(self, obj, results, nineml_cls, **kwargs):
         try:
@@ -161,7 +161,7 @@ class BaseVisitor(object):
                              'post_action_' + nineml_cls.nineml_type.lower())
         except AttributeError:
             method = self.default_post_action
-        return method(obj, results, **kwargs)
+        return method(obj, results, nineml_cls=nineml_cls, **kwargs)
 
     @property
     def context(self):
@@ -174,7 +174,7 @@ class BaseVisitor(object):
     def context_key(self, key):
         return tuple([c.parent for c in self.contexts] + [key])
 
-    def default_action(self, obj, **kwargs):  # @UnusedVariable
+    def default_action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable
         """
         Default action performed on every object that doesn't define an
         explicit '<nineml-type-name>_action' method
@@ -182,7 +182,7 @@ class BaseVisitor(object):
         assert False, ("No default action provided, so can't action {} ({})"
                        .format(obj.nineml_type, obj))
 
-    def default_post_action(self, obj, results, **kwargs):  # @UnusedVariable @IgnorePep8
+    def default_post_action(self, obj, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         """
         Default action performed on every object that doesn't define an
         explicit '<nineml-type-name>_post_action' method

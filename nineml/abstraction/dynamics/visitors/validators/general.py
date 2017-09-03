@@ -40,7 +40,7 @@ class TimeDerivativesAreDeclaredDynamicsValidator(BaseDynamicsVisitor):
         self.time_derivatives_used.append(
             timederivative.variable)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -66,7 +66,7 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
     def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
         self.state_assignments_lhs.append(state_assignment.lhs)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -144,7 +144,7 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
             if r not in self.connected:
                 self._add_connected_regimes_recursive(r)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -206,7 +206,7 @@ class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(BaseDynamicsVisitor):
                           for on_event in regime.on_events]
         assert_no_duplicates(event_triggers)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -228,7 +228,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
     def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_lhssymbol_is_valid(time_derivative.variable)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -259,5 +259,5 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
     def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
         self._flatten_dims(trigger.rhs, trigger)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass

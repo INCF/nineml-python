@@ -8,6 +8,7 @@ components definitions of interface and dynamics
 """
 from nineml.exceptions import NineMLRuntimeError, name_error
 from nineml.utils import normalise_parameter_as_list, filter_discrete_types
+from nineml.visitors import Cloner
 from itertools import chain
 from nineml.abstraction.componentclass import (
     ComponentClass, Parameter)
@@ -100,8 +101,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
          ('Regime', 'regime'),
          ('StateVariable', 'state_variable')))
     children_types = (StateVariable, AnalogSendPort, AnalogReceivePort,
-                   AnalogReducePort, EventSendPort, EventReceivePort,
-                   Regime) + ComponentClass.children_types
+                      AnalogReducePort, EventSendPort, EventReceivePort,
+                      Regime) + ComponentClass.children_types
 
     send_port_dicts = ('_analog_send_ports', '_event_send_ports')
     receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',
@@ -250,7 +251,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return DynamicsRequiredDefinitions(self, expressions)
 
     def flatten(self):
-        return DynamicsFlattener(self).flattened
+        results = Cloner(visit_as_class=Dynamics).visit(self)
+        return results.post_action
 
     def dimension_of(self, element):
         try:

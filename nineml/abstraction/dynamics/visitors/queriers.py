@@ -175,7 +175,7 @@ class DynamicsHasRandomProcess(BaseDynamicsVisitor):
         if list(stateassignment.rhs_random_distributions):
             self._found = True
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -251,7 +251,7 @@ class DynamicsIsLinear(BaseDynamicsVisitor):
         self._result = False
         raise NineMLStopVisitException()
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 

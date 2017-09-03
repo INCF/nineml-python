@@ -45,7 +45,7 @@ class LocalNameConflictsComponentValidator(BaseVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_symbol(symbol=constant.name)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -73,5 +73,5 @@ class DimensionNameConflictsComponentValidator(BaseVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
         self.check_conflicting_dimension(constant.units.dimension)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass

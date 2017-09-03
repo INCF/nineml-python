@@ -1,12 +1,13 @@
 from itertools import chain, izip
 import re
-from copy import copy
+# from copy import copy
 import operator
 from collections import defaultdict, Iterator, Iterable
 import sympy
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException,
     NineMLSerializationError)
+from .visitors.cloner import Cloner
 
 
 def sort_key(elem):
@@ -26,8 +27,8 @@ def clone_id(obj):
     """
     Used in storing cloned objects in 'memo' dictionary to avoid duplicate
     clones of the same object referenced from different points in a complex
-    data tree. First looks for special method 'clone_id' and falls back on the
-    'id' function that returns a memory-address based ID.
+    data tree. First looks for special method 'clone_id' and falls back on
+    the 'id' function that returns a memory-address based ID.
 
     Parameters
     ----------
@@ -266,7 +267,7 @@ class BaseNineMLObject(object):
         """
         return self.key
 
-    def clone(self, memo=None, **kwargs):
+    def clone(self, **kwargs):
         """
         General purpose clone operation, which copies the attributes used
         to define equality between 9ML objects. Other attributes, such as
@@ -276,29 +277,46 @@ class BaseNineMLObject(object):
 
         Parameters
         ----------
-        memo : dict
-            A dictionary to hold copies of objects that have already been
-            cloned to avoid issues with circular references
         exclude_annotations : bool
             Flags that annotations should be omitted from the clone
         """
-        if memo is None:
-            memo = {}
-        try:
-            # See if the attribute has already been cloned in memo
-            clone = memo[clone_id(self)]
-        except KeyError:
-            clone = copy(self)  # Create a new object of the same type
-            clone.__dict__ = {}  # Wipe it clean to start from scratch
-            # Save the element in the memo to avoid it being cloned twice in
-            # the object hierarchy. Due to possible recursion this needs to be
-            # set before the '_copy_to_clone' method is called.
-            memo[clone_id(self)] = clone
-            # The actual setting of attributes is handled by _copy_to_clone is
-            # used to allow sub classes to override it and control inheritance
-            # from super classes
-            self._copy_to_clone(clone, memo, **kwargs)
-        return clone
+        cloner = Cloner(**kwargs)
+        results = cloner.visit(self)
+        return results.post_action
+
+#     def clone(self, memo=None, **kwargs):
+#         """
+#         General purpose clone operation, which copies the attributes used
+#         to define equality between 9ML objects. Other attributes, such as
+#         the document the 9ML object belongs to are re-initialized. Use this
+#         in favour of Python's copy and deepcopy functions unless you know what
+#         you want (i.e. things are likely to break if you are not careful).
+# 
+#         Parameters
+#         ----------
+#         memo : dict
+#             A dictionary to hold copies of objects that have already been
+#             cloned to avoid issues with circular references
+#         exclude_annotations : bool
+#             Flags that annotations should be omitted from the clone
+#         """
+#         if memo is None:
+#             memo = {}
+#         try:
+#             # See if the attribute has already been cloned in memo
+#             clone = memo[clone_id(self)]
+#         except KeyError:
+#             clone = copy(self)  # Create a new object of the same type
+#             clone.__dict__ = {}  # Wipe it clean to start from scratch
+#             # Save the element in the memo to avoid it being cloned twice in
+#             # the object hierarchy. Due to possible recursion this needs to be
+#             # set before the '_copy_to_clone' method is called.
+#             memo[clone_id(self)] = clone
+#             # The actual setting of attributes is handled by _copy_to_clone is
+#             # used to allow sub classes to override it and control inheritance
+#             # from super classes
+#             self._copy_to_clone(clone, memo, **kwargs)
+#         return clone
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
@@ -1179,14 +1197,14 @@ class SendPortBase(object):
 #     def context_key(self, key):
 #         return tuple([c.parent for c in self.contexts] + [key])
 # 
-#     def default_action(self, obj, **kwargs):  # @UnusedVariable
+#     def default_action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable
 #         """
 #         Default action performed on every object that doesn't define an
 #         explicit '<nineml-type-name>_action' method
 #         """
 #         return None
 # 
-#     def default_post_action(self, obj, results, **kwargs):  # @UnusedVariable
+#     def default_post_action(self, obj, results, nineml_cls, **kwargs):  # @UnusedVariable
 #         """
 #         Default action performed on every object that doesn't define an
 #         explicit '<nineml-type-name>_post_action' method

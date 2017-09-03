@@ -501,7 +501,7 @@ doc1 = Document(
     multiDynPropA, multiDynPropB, ranDistrA, ranDistrPropA, popA, popB, popC,
     popD, popE, selA, conA, conPropA, conB, projA, projB, projC, projD, projE,
     netA, netB,
-    *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))), arp=arp)
+    *list(chain(*(netA.flatten() + netB.flatten() + netC.flatten()))))
 
 doc2 = Document(
     dynA, dynB, dynC, dynE, dynF, dynPropA, dynPropB, dynPropC, dynPropC2,

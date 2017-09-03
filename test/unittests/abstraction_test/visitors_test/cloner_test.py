@@ -4,6 +4,7 @@ from nineml.abstraction import (
     Dynamics as Dynamics, Regime, On, OutputEvent,
     AnalogSendPort as SendPort, AnalogReceivePort as RecvPort)
 from nineml.user.multi.dynamics import MultiDynamics
+from nineml.visitors import Cloner
 # from nineml.abstraction.dynamics.visitors.modifiers import DynamicsFlattener
 
 
@@ -42,7 +43,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
         # Test Cloner, no hierachy
         # Everything should be as before:
 #         c_clone = DynamicsCloner().visit(c)
-        c_clone = DynamicsFlattener(c).flattened
+        c_clone = Cloner(visit_as_class=Dynamics).clone(c).post_action
 
         self.assertEqual(c_clone.name, 'C')
         self.assertEqual(set(c_clone.alias_names), set(['C1', 'C2', 'C3']))

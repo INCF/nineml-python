@@ -37,7 +37,7 @@ class ComponentClassInterfaceInferer(BaseVisitor):
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         self.declared_symbols.add(constant.name)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -112,7 +112,7 @@ class ComponentRequiredDefinitions(BaseVisitor):
             self._required_stack.pop()
             self.expressions.append(alias)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
     @property
@@ -184,7 +184,7 @@ class ComponentExpressionExtractor(BaseVisitor):
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self.expressions.append(alias.rhs)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
@@ -295,5 +295,5 @@ class ComponentDimensionResolver(BaseVisitor):
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         self._flatten(alias)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass

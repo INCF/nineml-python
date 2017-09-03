@@ -66,7 +66,7 @@ class DuplicateRegimeNamesDynamicsValidator(BaseDynamicsVisitor):
         regime_names = [r.name for r in component_class.regimes]
         assert_no_duplicates(regime_names)
 
-    def default_action(self, obj, **kwargs):
+    def default_action(self, obj, nineml_cls, **kwargs):
         pass
 
 
