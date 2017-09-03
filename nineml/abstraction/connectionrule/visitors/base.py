@@ -4,4 +4,4 @@ from ..base import ConnectionRule
 
 class BaseConnectionRuleVisitor(BaseVisitor):
 
-    visits_class = ConnectionRule
+    visit_as_class = ConnectionRule

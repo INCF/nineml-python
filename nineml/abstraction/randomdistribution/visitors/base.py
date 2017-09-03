@@ -4,4 +4,4 @@ from ..base import RandomDistribution
 
 class BaseRandomDistributionVisitor(BaseVisitor):
 
-    visits_class = RandomDistribution
+    visit_as_class = RandomDistribution

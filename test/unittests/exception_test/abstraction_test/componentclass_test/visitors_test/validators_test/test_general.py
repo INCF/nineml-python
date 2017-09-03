@@ -26,7 +26,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
                 try:
                     element = context.parent.element(
                         name,
-                        children_types=self.visits_class.children_types)
+                        children_types=self.visit_as_class.children_types)
                 except KeyError:
                     pass
             if element is None:
@@ -499,7 +499,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
         # Get the state variable or alias associated with the analog send
         # port
         element = self.component_class.element(
-            port.name, self.visits_class.class_to_member)
+            port.name, self.visit_as_class.class_to_member)
         try:
             if element.dimension != port.dimension:
         """

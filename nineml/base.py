@@ -997,7 +997,7 @@ class SendPortBase(object):
 # 
 #     """
 # 
-#     visits_class = None
+#     visit_as_class = None
 # 
 #     class Context(object):
 #         "The context within which the current element is situated"
@@ -1097,19 +1097,19 @@ class SendPortBase(object):
 #                 assert context is popped
 #         # Visit children of the object
 #         if isinstance(obj, ContainerObject):
-#             if (self.visits_class is not None and
-#                     isinstance(obj, self.visits_class)):
+#             if (self.visit_as_class is not None and
+#                     isinstance(obj, self.visit_as_class)):
 #                 # Used for derived classes (e.g. MultiDynamics) that are
 #                 # polymorphic accessors with the base class in terms of
 #                 # accessors but have different internal structure.
-#                 class_map = self.visits_class.class_to_member
+#                 class_map = self.visit_as_class.class_to_member
 #             else:
 #                 class_map = obj.class_to_member
 #             for child_type in class_map:
 #                 try:
 #                     dct = obj._member_dict(child_type)
 #                 except (NineMLInvalidElementTypeException, AttributeError):
-#                     dct = None  # If class_map comes from visits_class
+#                     dct = None  # If class_map comes from visit_as_class
 #                 context = self.Context(obj, action_result, dct=dct)
 #                 self.contexts.append(context)
 #                 for child in obj._members_iter(child_type, class_map):

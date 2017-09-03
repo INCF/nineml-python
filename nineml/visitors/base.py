@@ -20,7 +20,7 @@ class BaseVisitor(object):
 
     """
 
-    visits_class = None
+    visit_as_class = None
 
     class Context(object):
         "The context within which the current element is situated"
@@ -109,9 +109,9 @@ class BaseVisitor(object):
         # explicitly provided. This allows classes to be visited as if they
         # were base classes (e.g. Dynamics instead of MultiDynamics)
         if nineml_cls is None:
-            if (self.visits_class is not None and
-                    isinstance(obj, self.visits_class)):
-                nineml_cls = self.visits_class
+            if (self.visit_as_class is not None and
+                    isinstance(obj, self.visit_as_class)):
+                nineml_cls = self.visit_as_class
             else:
                 nineml_cls = type(obj)
         # Run the 'action_<obj-nineml_type>' method on the visited object

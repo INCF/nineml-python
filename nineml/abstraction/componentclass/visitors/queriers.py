@@ -209,7 +209,7 @@ class ComponentDimensionResolver(BaseVisitor):
 
     @property
     def base_children_types(self):
-        return self.visits_class.children_types
+        return self.visit_as_class.children_types
 
     def dimension_of(self, element):
         if isinstance(element, basestring):
