@@ -907,7 +907,7 @@ class BaseUnserializer(BaseVisitor):
             url = None
         if url is not None and url != self.url:
             defn_cls = type(
-                Reference(name, self.document, url=url).user_object)
+                Reference(name, self.document, url=url).target)
         else:
             try:
                 elem_type, doc_elem = next(
@@ -1202,9 +1202,9 @@ class NodeToUnserialize(BaseNode):
                 ref_elem = None
             if ref_elem is not None:
                 ref = self.visitor.visit(ref_elem, Reference, **options)
-                if any(isinstance(ref.user_object, c)
+                if any(isinstance(ref.target, c)
                        for c in name_map.itervalues()):
-                    child = ref.user_object
+                    child = ref.target
                 self.unprocessed_children.discard(Reference.nineml_type)
         # If there were no valid references to the child element look for
         # the child element itself
@@ -1273,8 +1273,8 @@ class NodeToUnserialize(BaseNode):
             for ref_elem in self.visitor.get_children(
                     parent_elem, Reference.nineml_type, **options):
                 ref = self.visitor.visit(ref_elem, Reference, **options)
-                if self.visitor.node_name(type(ref.user_object)) in name_map:
-                    children.append(ref.user_object)
+                if self.visitor.node_name(type(ref.target)) in name_map:
+                    children.append(ref.target)
                     self.unprocessed_children.discard(ref_node_name)
         for nineml_type, nineml_cls in name_map.iteritems():
             for child_elem in self.visitor.get_children(

@@ -8,6 +8,7 @@ class RandomDistribution(ComponentClass):
     nineml_type = 'RandomDistribution'
     defining_attributes = ('_name', '_parameters', '_standard_library',
                            '_aliases', '_constants')
+    nineml_attrs = ComponentClass.nineml_attrs + ('standard_library',)
 
     standard_library_basepath = 'http://www.uncertml.org/distributions/'
     _base_len = len(standard_library_basepath)
@@ -17,7 +18,7 @@ class RandomDistribution(ComponentClass):
                       'multinomial', 'negative-binomial', 'normal',
                       'pareto', 'poisson', 'uniform', 'weibull')
 
-    def __init__(self, name, standard_library, parameters=None):
+    def __init__(self, name, standard_library, parameters=None, **kwargs):  # @UnusedVariable @IgnorePep8
         super(RandomDistribution, self).__init__(name, parameters)
         if (not standard_library.startswith(self.standard_library_basepath) or
                 standard_library[self._base_len:] not in self.standard_types):

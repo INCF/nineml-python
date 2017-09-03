@@ -1,7 +1,7 @@
 import os
-from copy import copy
 from .base import AnnotatedNineMLObject
 from nineml.exceptions import NineMLRuntimeError
+from nineml.base import DocumentLevelObject
 
 
 class BaseReference(AnnotatedNineMLObject):
@@ -9,45 +9,68 @@ class BaseReference(AnnotatedNineMLObject):
     """
     Base class for references to model components that are defined in the
     abstraction layer.
+
+    Parameters
+    ----------
+    name : str
+        Name of the target object in the given document
+    document : Document | None
+        The document in which the reference is located
+    url : URL | None
+        The URL of the document in which the target object is located. If None,
+        the target object is assumed to be in the reference document
+    target : BaseNineMLOjbect
+        The target object. Not typically provided but allowed as a kwarg to
+        allow the Cloner to properly clone references
     """
 
-    defining_attributes = ('url', '_referred_to')
+    defining_attributes = ('url', '_target')
     nineml_attrs = ('url', 'name')
+    child_attrs = ('target',)
 
-    def __init__(self, name, document, url=None):
+    def __init__(self, target=None, name=None, url=None, document=None):
         super(BaseReference, self).__init__()
-        document_url = document.url if document is not None else None
-        if url is not None and url != document_url:
-            if url.startswith('.'):
-                if document_url is None:
-                    raise NineMLRuntimeError(
-                        "Must supply a document with a non-None URL that is "
-                        "being referenced from if definition is a relative URL"
-                        " string, '{}'".format(url))
-                relative_to = os.path.dirname(document.url)
-            else:
-                relative_to = None
-            if (relative_to is not None and
-                os.path.realpath(os.path.join(relative_to,
-                                              url)) == document_url):
-                remote_doc = document
-            else:
-                remote_doc = nineml.read(url, relative_to=relative_to)
+        if target is not None:
+            assert isinstance(target, DocumentLevelObject)
+            self._target = target
         else:
-            remote_doc = document
-        self._referred_to = remote_doc[name]
+            assert name is not None
+            document_url = document.url if document is not None else None
+            if url is not None and url != document_url:
+                if url.startswith('.'):
+                    if document_url is None:
+                        raise NineMLRuntimeError(
+                            "Must supply a document with a non-None URL that "
+                            "is being referenced from if definition is a "
+                            "relative URL string, '{}'".format(url))
+                    relative_to = os.path.dirname(document.url)
+                else:
+                    relative_to = None
+                if (relative_to is not None and
+                    os.path.realpath(os.path.join(relative_to,
+                                                  url)) == document_url):
+                    remote_doc = document
+                else:
+                    remote_doc = nineml.read(url, relative_to=relative_to)
+            else:
+                remote_doc = document
+            self._target = remote_doc[name]
 
     @property
     def name(self):
-        return self._referred_to.name
+        return self._target.name
 
     @property
     def url(self):
-        return self._referred_to.url
+        return self._target.url
+
+    @property
+    def target(self):
+        return self._target
 
     @property
     def key(self):
-        return (self._referred_to.key +
+        return (self._target.key +
                 self.url if self.url is not None else '')
 
     def equals(self, other, **kwargs):
@@ -62,21 +85,21 @@ class BaseReference(AnnotatedNineMLObject):
         """
         if not isinstance(other, self.__class__):
             return False
-        return (self._referred_to == other._referred_to and
+        return (self._target == other._target and
                 self.url == other.url and
                 self.annotations_equal(other, **kwargs))
 
     def __hash__(self):
-        return (hash(self.__class__) ^ hash(self._referred_to.name) ^
+        return (hash(self.__class__) ^ hash(self._target.name) ^
                 hash(self.url))
 
     def __repr__(self):
             return ('{}(name="{}"{})'
-                    .format(self.__class__.__name__, self._referred_to.name,
+                    .format(self.__class__.__name__, self._target.name,
                             ' in "{}"'.format(self.url) if self.url else ''))
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        name = self._referred_to.name
+        name = self._target.name
         node.attr('name', name, **options)
         if self.url is not None and self.url != node.document.url:
             node.attr('url', self.url, **options)
@@ -88,7 +111,7 @@ class BaseReference(AnnotatedNineMLObject):
         return cls(name=name, document=node.document, url=url)
 
     def serialize_node_v1(self, node, **options):  # @UnusedVariable
-        name = self._referred_to.name
+        name = self._target.name
         node.body(name, **options)
         if self.url is not None and self.url != node.document.url:
             node.attr('url', self.url, **options)
@@ -118,19 +141,12 @@ class Reference(BaseReference):
 
     """
     nineml_type = "Reference"
-    nineml_attrs = BaseReference.nineml_attrs + ('user_object',)
-    child_attrs = ('user_object',)
 
-    @property
-    def user_object(self):
-        """The object being referred to."""
-        return self._referred_to
-
-    def clone(self, **kwargs):  # @UnusedVariable
-        # Typically won't be called unless Reference is created and referenced
-        # explicitly as the referenced object themselves is typically referred
-        # to in the containing container.
-        return copy(self)
+#     def clone(self, **kwargs):  # @UnusedVariable
+#         # Typically won't be called unless Reference is created and referenced
+#         # explicitly as the referenced object themselves is typically referred
+#         # to in the containing container.
+#         return copy(self)
 
 
 import nineml  # @IgnorePep8

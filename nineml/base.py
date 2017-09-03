@@ -47,6 +47,7 @@ class BaseNineMLObject(object):
     """
     children = []
     v1_nineml_type = None
+    nineml_attrs = ()
     child_attrs = ()
     children_types = ()
 
@@ -927,10 +928,7 @@ class ContainerObject(BaseNineMLObject):
                          if self._parent is not None else None)
 
     def _member_accessor(self, child_type):
-        try:
-            return getattr(self, child_type._child_accessor_name())
-        except:
-            raise
+        return getattr(self, child_type._child_accessor_name())
 
     def _members_iter(self, child_type):
         return getattr(self, child_type._children_iter_name())

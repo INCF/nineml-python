@@ -7,7 +7,7 @@ from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLImmutableError, NineMLTargetMissingError,
+    NineMLNotBoundException, NineMLImmutableError, NineMLTargetMissingError,
     NineMLNameError)
 from .namespace import append_namespace
 from nineml.utils import ensure_valid_identifier
@@ -17,17 +17,14 @@ class BasePortExposure(BaseULObject):
 
     defining_attributes = ('_name', '_port_name', '_sub_component_name')
     nineml_attrs = ('name', 'port_name', 'sub_component_name')
+    child_attrs = ()
 
-    def __init__(self, component, port, name=None):
+    def __init__(self, sub_component_name, port_name, name=None):
         super(BasePortExposure, self).__init__()
-        if isinstance(component, basestring):
-            self._sub_component_name = component
-        else:
-            self._sub_component_name = component.name
-        if isinstance(port, basestring):
-            self._port_name = port
-        else:
-            self._port_name = port.name
+        assert isinstance(sub_component_name, basestring)
+        self._sub_component_name = sub_component_name
+        assert isinstance(port_name, basestring)
+        self._port_name = port_name
         if name is None:
             name = append_namespace(self.port_name, self.sub_component_name)
         else:
@@ -39,6 +36,10 @@ class BasePortExposure(BaseULObject):
         return (hash(self._name) ^ hash(self._sub_component_name) ^
                 hash(self._port_name))
 
+    def __repr__(self):
+        return "{}(comp={}, port={})".format(
+            self.nineml_type, self.sub_component_name, self.port_name)
+
     @property
     def name(self):
         return self._name
@@ -46,7 +47,7 @@ class BasePortExposure(BaseULObject):
     @property
     def sub_component(self):
         if self._parent is None:
-            raise NineMLRuntimeError(
+            raise NineMLNotBoundException(
                 "Port exposure is not bound")
         try:
             return self._parent[self.sub_component_name]
@@ -58,7 +59,7 @@ class BasePortExposure(BaseULObject):
     @property
     def port(self):
         if self._parent is None:
-            raise NineMLRuntimeError(
+            raise NineMLNotBoundException(
                 "Port exposure is not bound")
         try:
             return self.sub_component.component_class.port(self.port_name)
@@ -110,19 +111,24 @@ class BasePortExposure(BaseULObject):
     def from_port(cls, port, component_name, name=None):
         if isinstance(port, AnalogSendPort):
             exposure = AnalogSendPortExposure(
-                name=name, component=component_name, port=port.name)
+                name=name, sub_component_name=component_name,
+                port_name=port.name)
         elif isinstance(port, AnalogReceivePort):
             exposure = AnalogReceivePortExposure(
-                name=name, component=component_name, port=port.name)
+                name=name, sub_component_name=component_name,
+                port_name=port.name)
         elif isinstance(port, AnalogReducePort):
             exposure = AnalogReducePortExposure(
-                name=name, component=component_name, port=port.name)
+                name=name, sub_component_name=component_name,
+                port_name=port.name)
         elif isinstance(port, EventSendPort):
             exposure = EventSendPortExposure(
-                name=name, component=component_name, port=port.name)
+                name=name, sub_component_name=component_name,
+                port_name=port.name)
         elif isinstance(port, EventReceivePort):
             exposure = EventReceivePortExposure(
-                name=name, component=component_name, port=port.name)
+                name=name, sub_component_name=component_name,
+                port_name=port.name)
         else:
             assert False
         return exposure

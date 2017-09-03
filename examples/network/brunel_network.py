@@ -109,7 +109,7 @@ def create_brunel(g, eta, name=None):
 
     # Selections
     all_cells = Selection(
-        "All", Concatenate(exc_cells, inh_cells))
+        "All", Concatenate((exc_cells, inh_cells)))
 
     # Projections
     input_prj = Projection(

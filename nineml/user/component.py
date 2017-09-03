@@ -22,60 +22,40 @@ class Definition(BaseReference):
     Base class for model components that are defined in the abstraction layer.
     """
     nineml_type = "Definition"
-    nineml_attrs = BaseReference.nineml_attrs + ('component_class',)
-    child_attrs = BaseReference.child_attrs + ('component_class',)
-
-    def __init__(self, *args, **kwargs):
-        if len(args) == 1:
-            AnnotatedNineMLObject.__init__(self)
-            self._referred_to = args[0]
-            if kwargs:
-                raise NineMLRuntimeError(
-                    "Cannot provide name, document or url arguments with "
-                    "explicit component class")
-        elif not args:
-            super(Definition, self).__init__(
-                name=kwargs['name'], document=kwargs['document'],
-                url=kwargs['url'])
-        else:
-            raise NineMLRuntimeError(
-                "Wrong number of arguments ({}), provided to Definition "
-                "__init__, can either be one (the component class) or zero"
-                .format(len(args)))
 
     @property
     def component_class(self):
-        return self._referred_to
+        return self._target
 
-    def clone(self, memo=None, clone_definitions=None, refs=None, **kwargs):
-        """
-        Since the document they belong to is reset for clones simply return
-        the clone of the referenced object
-
-        Parameters
-        ----------
-        memo : dict[int, BaseNinemlObject]
-            A dictionary containing already cloned nineml objects to avoid
-            circular references.
-        clone_definitions : 'local' | 'all' | None
-            Flat to specify whether to clone component class referenced by the
-            definition or just the definition itself
-        refs : list[BaseReference]
-            A list of all the references within the clone that may need to be
-            updated once all objects are cloned
-        """
-        if memo is None:
-            memo = {}
-        if clone_definitions == 'all' or (clone_definitions == 'local' and
-                                          self._referred_to.document is None):
-            referred_to = self._referred_to.clone(
-                clone_definitions=clone_definitions, memo=memo, **kwargs)
-        else:
-            referred_to = self._referred_to
-        clone = self.__class__(referred_to)
-        if refs is not None:
-            refs.append(clone)
-        return clone
+#     def clone(self, memo=None, clone_definitions=None, refs=None, **kwargs):
+#         """
+#         Since the document they belong to is reset for clones simply return
+#         the clone of the referenced object
+# 
+#         Parameters
+#         ----------
+#         memo : dict[int, BaseNinemlObject]
+#             A dictionary containing already cloned nineml objects to avoid
+#             circular references.
+#         clone_definitions : 'local' | 'all' | None
+#             Flat to specify whether to clone component class referenced by the
+#             definition or just the definition itself
+#         refs : list[BaseReference]
+#             A list of all the references within the clone that may need to be
+#             updated once all objects are cloned
+#         """
+#         if memo is None:
+#             memo = {}
+#         if clone_definitions == 'all' or (clone_definitions == 'local' and
+#                                           self._target.document is None):
+#             target = self._target.clone(
+#                 clone_definitions=clone_definitions, memo=memo, **kwargs)
+#         else:
+#             target = self._target
+#         clone = self.__class__(target)
+#         if refs is not None:
+#             refs.append(clone)
+#         return clone
 
 
 class Prototype(Definition):
@@ -84,7 +64,7 @@ class Prototype(Definition):
 
     @property
     def component(self):
-        return self._referred_to
+        return self._target
 
     @property
     def component_class(self):

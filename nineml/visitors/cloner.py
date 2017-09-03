@@ -1,4 +1,6 @@
 from .base import BaseVisitor
+from copy import copy
+from nineml.exceptions import NineMLNotBoundException
 
 
 class Cloner(BaseVisitor):
@@ -10,6 +12,7 @@ class Cloner(BaseVisitor):
         self.memo = {}
         self.exclude_annotations = exclude_annotations
         self.clone_definitions = clone_definitions
+        self.refs = []
 
     def visit(self, obj, nineml_cls=None, **kwargs):
         clone_id = self.clone_id(obj)
@@ -26,15 +29,18 @@ class Cloner(BaseVisitor):
         pass
 
     def default_post_action(self, obj, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        kwargs = {}
+        init_args = {}
         for attr in nineml_cls.nineml_attrs:
-            kwargs[attr] = getattr(obj, attr)
+            try:
+                init_args[attr] = getattr(obj, attr)
+            except NineMLNotBoundException:
+                pass
         for attr in nineml_cls.child_attrs:
-            kwargs[attr] = results.attr_result(attr).post_action
+            init_args[attr] = results.attr_result(attr).post_action
         for child_type in nineml_cls.children_types:
-            kwargs[child_type._children_iter_name()] = [
+            init_args[child_type._children_iter_name()] = [
                 r.post_action for r in results.child_results(child_type)]
-        results.post_action = nineml_cls(**kwargs)
+        results.post_action = nineml_cls(**init_args)
 
     @classmethod
     def clone_id(cls, obj):
@@ -53,3 +59,24 @@ class Cloner(BaseVisitor):
             return obj.clone_id
         except AttributeError:
             return id(obj)
+
+    def post_action_definition(self, definition, results, nineml_cls,
+                               **kwargs):
+        if self.clone_definitions == 'all' or (
+            self.clone_definitions == 'local' and
+                definition._target.document is None):
+            target = self.visit(
+                definition.target, **kwargs).post_action
+        else:
+            target = definition.target
+        clone = nineml_cls(target=target)
+        self.refs.append(clone)
+        results.post_action = clone
+
+    def post_action_reference(self, reference, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        """
+        Typically won't be called unless Reference is created and referenced
+        explicitly as the referenced object themselves is typically referred
+        to in the containing container.
+        """
+        return copy(reference)

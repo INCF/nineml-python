@@ -190,9 +190,10 @@ class DimensionalityComponentValidator(BaseVisitor):
         before inferring dimensions from derived expressions
         """
 
-        def __init__(self, component_class, **kwargs):
+        def __init__(self, component_class, visit_as_class, **kwargs):
             BaseVisitor.__init__(self)
             self._dimensions = {}
+            self.visit_as_class = visit_as_class
             self.visit(component_class, **kwargs)
 
         def default_action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable
@@ -214,7 +215,7 @@ class DimensionalityComponentValidator(BaseVisitor):
         BaseVisitor.__init__(self)
         self.component_class = component_class
         self._dimensions = self.DeclaredDimensionsVisitor(
-            component_class, **kwargs).dimensions
+            component_class, self.visit_as_class, **kwargs).dimensions
         self._recursion_count = 0
         self.visit(component_class)
 
@@ -236,7 +237,8 @@ class DimensionalityComponentValidator(BaseVisitor):
                 raise NineMLRuntimeError(
                     "Did not find '{}' in '{}' dynamics class (scopes: {})"
                     .format(name, self.component_class.name,
-                            list(reversed(c.parent for c in self.contexts))))
+                            list(
+                                reversed([c.parent for c in self.contexts]))))
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions

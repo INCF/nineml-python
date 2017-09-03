@@ -316,11 +316,9 @@ multiDynPropB = MultiDynamicsProperties(
         'c': dynPropC,
         'g': dynPropG},
     port_connections=[
-        EventPortConnection(multiDynA.send_port('ESP1__e'),
-                            dynG.receive_port('ERP1'),
+        EventPortConnection('ESP1__e', 'ERP1',
                             sender_name='multiA', receiver_name='g'),
-        AnalogPortConnection(dynG.send_port('SV1'),
-                             dynC.receive_port('ARP2'),
+        AnalogPortConnection('SV1', 'ARP2',
                              sender_name='g', receiver_name='c')],
     port_exposures=[
         EventSendPortExposure('multiA', 'ESP1__e', name='ESP1'),
@@ -376,11 +374,11 @@ popMultiB = Population(
 
 selA = Selection(
     name="selA",
-    operation=Concatenate(popA, popC))
+    operation=Concatenate((popA, popC)))
 
 selB = Selection(
     name='selB',
-    operation=Concatenate(popB, popD, popE))
+    operation=Concatenate((popB, popD, popE)))
 
 
 conA = ConnectionRule(
@@ -427,13 +425,13 @@ projB = Projection(
     delay=1 * un.ms,
     port_connections=[
         EventPortConnection(
-            send_port='ESP1',
-            receive_port='ERP1',
+            send_port_name='ESP1',
+            receive_port_name='ERP1',
             sender_role='pre',
             receiver_role='response'),
         AnalogPortConnection(
-            send_port='SV1',
-            receive_port='ARP1',
+            send_port_name='SV1',
+            receive_port_name='ARP1',
             sender_role='response',
             receiver_role='post')])
 
@@ -460,13 +458,13 @@ projD = Projection(
     delay=1 * un.ms,
     port_connections=[
         EventPortConnection(
-            send_port='ESP1',
-            receive_port='ERP1',
+            send_port_name='ESP1',
+            receive_port_name='ERP1',
             sender_role='pre',
             receiver_role='response'),
         AnalogPortConnection(
-            send_port='SV1',
-            receive_port='ARP1',
+            send_port_name='SV1',
+            receive_port_name='ARP1',
             sender_role='response',
             receiver_role='post')])
 

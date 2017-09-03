@@ -197,7 +197,7 @@ class TestNetwork(unittest.TestCase):
         exc = Population("Exc", self.order * 4, self.celltype)
         inh = Population("Inh", self.order, self.celltype)
         ext = Population("Ext", self.order * 5, ext_stim)
-        exc_and_inh = Selection("All", Concatenate(exc, inh))
+        exc_and_inh = Selection("All", Concatenate((exc, inh)))
 
         self.static_ext = DynamicsProperties(
             "ExternalPlasticity",

@@ -91,8 +91,8 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
-            send_port=None,
-            receive_port=None,
+            send_port_name=None,
+            receive_port_name=None,
             sender_role=None,
             receiver_role=None,
             sender_name=None,
@@ -147,8 +147,8 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
-            send_port=None,
-            receive_port=None,
+            send_port_name=None,
+            receive_port_name=None,
             sender_role=None,
             receiver_role=None,
             sender_name=None,
@@ -208,8 +208,8 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
-            send_port=None,
-            receive_port=None,
+            send_port_name=None,
+            receive_port_name=None,
             sender_role=None,
             receiver_role=None,
             sender_name=None,
@@ -274,8 +274,8 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
-            send_port=None,
-            receive_port=None,
+            send_port_name=None,
+            receive_port_name=None,
             sender_role=None,
             receiver_role=None,
             sender_name=None,

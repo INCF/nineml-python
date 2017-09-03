@@ -235,10 +235,6 @@ class CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator(
 class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
                                       BaseDynamicsVisitor):
 
-    def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        super(DimensionalityDynamicsValidator,
-              self).__init__(component_class, **kwargs)
-
     def action_timederivative(self, timederivative, **kwargs):  # @UnusedVariable @IgnorePep8
         dimension = self._get_dimensions(timederivative)
         sv = self.component_class.state_variable(timederivative.variable)

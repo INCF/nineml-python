@@ -360,8 +360,8 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
                 port_connections.append(pc_cls(
                     receiver_role=cls.v1tov2[receive_name],
                     sender_role=cls.v1tov2[send_name],
-                    send_port=send_port_name,
-                    receive_port=receive_port_name))
+                    send_port_name=send_port_name,
+                    receive_port_name=receive_port_name))
         return cls(name=name,
                    pre=pre,
                    post=post,

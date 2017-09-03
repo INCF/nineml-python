@@ -102,6 +102,13 @@ class NineMLRandomDistributionDelayException(NineMLException):
     pass
 
 
+class NineMLNotBoundException(NineMLException):
+    """
+    Raised when trying to access an attribute that hasn't been bound to the
+    object"""
+    pass
+
+
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 

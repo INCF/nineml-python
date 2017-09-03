@@ -1,7 +1,8 @@
 from . import BaseULObject
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLDimensionError)
+    NineMLRuntimeError, NineMLNameError, NineMLDimensionError,
+    NineMLNotBoundException)
 from nineml.abstraction.ports import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort)
@@ -14,13 +15,13 @@ class BasePortConnection(BaseULObject):
     defining_attributes = ('send_port_name', 'receive_port_name',
                            '_sender_role', '_receiver_role',
                            '_sender_name', '_receiver_name')
-    nineml_attrs = ('_send_port_name', '_receive_port_name',
-                    '_sender_role', '_receiver_role',
-                    '_sender_name', '_receiver_name')
+    nineml_attrs = ('send_port_name', 'receive_port_name',
+                    'sender_role', 'receiver_role',
+                    'sender_name', 'receiver_name')
 
     _projection_roles = ('pre', 'post', 'response', 'plasticity')
 
-    def __init__(self, send_port, receive_port,
+    def __init__(self, send_port_name, receive_port_name,
                  sender_role=None, receiver_role=None,
                  sender_name=None, receiver_name=None):
         """
@@ -36,18 +37,12 @@ class BasePortConnection(BaseULObject):
                            which uniquely identifies it within the container
         """
         BaseULObject.__init__(self)
-        if isinstance(send_port, basestring):
-            self._send_port_name = send_port
-            self._send_port = None
-        else:
-            self._send_port = send_port
-            self._send_port_name = None
-        if isinstance(receive_port, basestring):
-            self._receive_port_name = receive_port
-            self._receive_port = None
-        else:
-            self._receive_port = receive_port
-            self._receive_port_name = None
+        assert isinstance(send_port_name, basestring)
+        assert isinstance(receive_port_name, basestring)
+        self._send_port_name = send_port_name
+        self._send_port = None
+        self._receive_port_name = receive_port_name
+        self._receive_port = None
         if sender_role is not None:
             if sender_name is not None:
                 raise NineMLRuntimeError(
@@ -96,7 +91,7 @@ class BasePortConnection(BaseULObject):
 
     @property
     def name(self):
-        return '_'.join((
+        return '__'.join((
             (self.sender_role if self._sender_role is not None
              else self.sender_name), self.send_port_name,
             (self.receiver_role if self._receiver_role is not None
@@ -143,30 +138,34 @@ class BasePortConnection(BaseULObject):
     @property
     def sender_role(self):
         if self._sender_role is None:
-            raise NineMLRuntimeError(
+            raise NineMLNotBoundException(
                 "Sender object was not identified by its role")
         return self._sender_role
 
     @property
     def receiver_role(self):
         if self._receiver_role is None:
-            raise NineMLRuntimeError(
+            raise NineMLNotBoundException(
                 "Sender object was not identified by its role")
         return self._receiver_role
 
     @property
     def sender_name(self):
         if self._sender_name is None:
-            raise NineMLRuntimeError(
+            raise NineMLNotBoundException(
                 "Sender object was not identified by its name")
         return self._sender_name
 
     @property
     def receiver_name(self):
         if self._receiver_name is None:
-            raise NineMLRuntimeError(
+            raise NineMLNotBoundException(
                 "Sender object was not identified by its name")
         return self._receiver_name
+
+    @property
+    def receive_key(self):
+        return self.receiver_name, self.receive_port_name
 
     def assign_names_from_roles(self, role_map):
         """
@@ -188,8 +187,8 @@ class BasePortConnection(BaseULObject):
         """
         # Return a new port connection with the roles mapped to names or new
         # roles
-        return self.__class__(send_port=self.send_port_name,
-                              receive_port=self.receive_port_name,
+        return self.__class__(send_port_name=self.send_port_name,
+                              receive_port_name=self.receive_port_name,
                               sender_name=role_map[self.sender_role],
                               receiver_name=role_map[self.receiver_role])
 
@@ -217,7 +216,8 @@ class BasePortConnection(BaseULObject):
             self.receive_port_name, role_map[self.receiver_role])
         # Return a new port connection with the role namespace appended to the
         # port names.
-        return self.__class__(send_port=send_port, receive_port=receive_port,
+        return self.__class__(send_port_name=send_port,
+                              receive_port_name=receive_port,
                               sender_role=self.sender_role,
                               receiver_role=self.receiver_role)
 
@@ -302,8 +302,8 @@ class BasePortConnection(BaseULObject):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        return cls(send_port=node.attr('send_port', **options),
-                   receive_port=node.attr('receive_port', **options),
+        return cls(send_port_name=node.attr('send_port', **options),
+                   receive_port_name=node.attr('receive_port', **options),
                    sender_role=node.attr('sender_role', default=None,
                                          **options),
                    receiver_role=node.attr('receiver_role', default=None,
@@ -358,10 +358,12 @@ class BasePortConnection(BaseULObject):
                     "Selection '{}'".format(send_port, container.name))
         if port_type in ('AnalogSendPort', 'AnalogSendPortExposure'):
             port_connection = AnalogPortConnection(
-                receive_port=receive_port, send_port=send_port, **init_kwargs)
+                receive_port_name=receive_port,
+                send_port_name=send_port, **init_kwargs)
         elif port_type in ('EventSendPort', 'EventSendPortExposure'):
             port_connection = EventPortConnection(
-                receive_port=receive_port, send_port=send_port, **init_kwargs)
+                receive_port_name=receive_port, send_port_name=send_port,
+                **init_kwargs)
         else:
             assert False, "'{}' should be a send port not '{}'".format(
                 send_port, port_type)

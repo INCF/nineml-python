@@ -30,13 +30,13 @@ class TestPortConnection(unittest.TestCase):
             'pre': 'pre_cell', 'post': 'post_cell', 'response': 'psr',
             'plasticity': 'pls'}
         epc = EventPortConnection(
-            send_port='ESP1',
-            receive_port='ERP1',
+            send_port_name='ESP1',
+            receive_port_name='ERP1',
             sender_role='pre',
             receiver_role='response')
         apc = AnalogPortConnection(
-            send_port='SV1',
-            receive_port='ARP1',
+            send_port_name='SV1',
+            receive_port_name='ARP1',
             sender_role='response',
             receiver_role='post')
         # Test the creation of a new port connection with the original
