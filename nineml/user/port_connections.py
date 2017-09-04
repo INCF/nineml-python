@@ -1,5 +1,6 @@
 from . import BaseULObject
 from abc import ABCMeta, abstractmethod
+import nineml.units as un
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLDimensionError,
     NineMLNotBoundException)
@@ -431,6 +432,4 @@ class EventPortConnection(BasePortConnection):
         Included for compatibility with code written in
         nineml.user.multi.dynamics for future versions
         """
-        return 0.0
-
-import nineml.user
+        return 0.0 * un.s

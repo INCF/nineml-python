@@ -195,6 +195,10 @@ class TestAccessors(unittest.TestCase):
              ('DynamicsProperties', 'MultiDynamicsProperties', 'component'))):
             cls = all_types[class_name]
             for elem in instances_of_all_types[mutli_class_name].values():
+                if elem.key == 'multiDynPropB_dynamics':
+                    regimes = list(elem.regimes)
+                    regimes[0].on_conditions
+                    regimes[1].on_conditions
                 flat_elem = elem.flatten(elem.name)
                 for accessor_name in cls.class_to_member.itervalues():
                     if accessor_name.endswith('_port'):

@@ -196,12 +196,9 @@ class Regime(BaseALObject, ContainerObject):
     nineml_type = 'Regime'
     defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
                            '_name', '_aliases')
-    class_to_member = {'TimeDerivative': 'time_derivative',
-                       'OnEvent': 'on_event',
-                       'OnCondition': 'on_condition',
-                       'Alias': 'alias'}
-    nineml_children = (TimeDerivative, OnEvent, OnCondition, Alias)
     nineml_attr = ('name',)
+    nineml_children = (TimeDerivative, OnEvent, OnCondition, Alias)
+
     _n = 0
 
     @classmethod
@@ -286,9 +283,6 @@ class Regime(BaseALObject, ContainerObject):
             if isinstance(elem, (OnEvent, OnCondition)):
                 elem.set_source_regime(self)
         super(Regime, self).add(*elements)
-
-    def find_element(self, element):
-        return DynamicsElementFinder(element).found_in(self)
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, self.name)

@@ -22,9 +22,8 @@ from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
 # from nineml import units as un
 from nineml.annotations import VALIDATION, DIMENSIONALITY
 from nineml.abstraction import (
-    Dynamics, Regime, AnalogReceivePort, EventReceivePort,
-    StateVariable, OnEvent, OnCondition, OutputEvent, StateAssignment,
-    Trigger, Constant)
+    Dynamics, Regime, StateVariable, OnEvent, OnCondition, OutputEvent,
+    StateAssignment, Trigger, Constant)
 from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
     AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
@@ -267,9 +266,8 @@ class MultiDynamics(Dynamics):
         '_analog_receive_ports', '_analog_reduce_ports', '_event_send_ports',
         '_event_receive_ports')
     nineml_children = (SubDynamics, AnalogPortConnection, EventPortConnection,
-                      AnalogReceivePortExposure, AnalogReducePortExposure,
-                      EventSendPortExposure, EventReceivePortExposure)
-    core_type = Dynamics
+                       AnalogReceivePortExposure, AnalogReducePortExposure,
+                       EventSendPortExposure, EventReceivePortExposure)
 
     def __init__(self, name, sub_components, port_connections=None,
                  analog_port_connections=None, event_port_connections=None,
@@ -572,11 +570,13 @@ class MultiDynamics(Dynamics):
 
     @property
     def zero_delay_event_port_connections(self):
-        return (pc for pc in self.event_port_connections if pc.delay == 0.0)
+        return (pc for pc in self.event_port_connections
+                if pc.delay == 0.0 * un.s)
 
     @property
     def nonzero_delay_event_port_connections(self):
-        return (pc for pc in self.event_port_connections if pc.delay != 0.0)
+        return (pc for pc in self.event_port_connections
+                if pc.delay != 0.0 * un.s)
 
     @property
     def port_connections(self):

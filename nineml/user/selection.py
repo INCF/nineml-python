@@ -42,7 +42,8 @@ class Item(BaseULObject):
 
     nineml_type = 'Item'
     defining_attributes = ('_index', '_population')
-    nineml_attr = ('index', 'population')
+    nineml_attr = ('index',)
+    nineml_child = {'population': None}
 
     def __init__(self, index, population):
         BaseULObject.__init__(self)
