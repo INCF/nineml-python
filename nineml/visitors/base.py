@@ -46,9 +46,9 @@ class BaseVisitor(object):
             return self._parent_cls
 
         @property
-        def children_types(self):
+        def nineml_children(self):
             try:
-                return self._parent_cls.children_types
+                return self._parent_cls.nineml_children
             except AttributeError:
                 return None
 
@@ -139,7 +139,7 @@ class BaseVisitor(object):
             popped = self.contexts.pop()
             assert context is popped
         # Visit children of the object
-        for child_type in nineml_cls.children_types:
+        for child_type in nineml_cls.nineml_children:
             try:
                 dct = obj._member_dict(child_type)
             except (NineMLInvalidElementTypeException, AttributeError):

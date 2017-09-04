@@ -49,7 +49,7 @@ class TestAccessors(unittest.TestCase):
         for name, cls in all_types.iteritems():
             if hasattr(cls, 'class_to_member'):
                 for elem in instances_of_all_types[name].values():
-                    for child_type in cls.children_types:
+                    for child_type in cls.nineml_children:
                         num = elem._num_members(child_type)
                         names = sorted(elem._member_keys_iter(child_type))
                         members = sorted(elem._members_iter(child_type),

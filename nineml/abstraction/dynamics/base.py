@@ -100,9 +100,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
          ('EventReceivePort', 'event_receive_port'),
          ('Regime', 'regime'),
          ('StateVariable', 'state_variable')))
-    children_types = (StateVariable, AnalogSendPort, AnalogReceivePort,
+    nineml_children = (StateVariable, AnalogSendPort, AnalogReceivePort,
                       AnalogReducePort, EventSendPort, EventReceivePort,
-                      Regime) + ComponentClass.children_types
+                      Regime) + ComponentClass.nineml_children
 
     send_port_dicts = ('_analog_send_ports', '_event_send_ports')
     receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',

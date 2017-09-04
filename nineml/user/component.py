@@ -158,7 +158,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     v1_nineml_type = 'Component'
     defining_attributes = ('_name', '_definition', '_properties')
     nineml_attr = ('name',)
-    children_types = (Property,)
+    nineml_children = (Property,)
     child_attrs = {'definition': None}
 
     # initial_values is temporary, the idea longer-term is to use a separate

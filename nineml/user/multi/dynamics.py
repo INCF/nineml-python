@@ -266,7 +266,7 @@ class MultiDynamics(Dynamics):
         '_event_port_connections', '_analog_send_ports',
         '_analog_receive_ports', '_analog_reduce_ports', '_event_send_ports',
         '_event_receive_ports')
-    children_types = (SubDynamics, AnalogPortConnection, EventPortConnection,
+    nineml_children = (SubDynamics, AnalogPortConnection, EventPortConnection,
                       AnalogReceivePortExposure, AnalogReducePortExposure,
                       EventSendPortExposure, EventReceivePortExposure)
     core_type = Dynamics
@@ -1158,7 +1158,7 @@ class MultiDynamicsProperties(DynamicsProperties):
     defining_attributes = ('_name', '_definition', '_sub_components')
     nineml_attr = ('name',)
     child_attrs = {'definition': None}
-    children_types = (SubDynamicsProperties,)
+    nineml_children = (SubDynamicsProperties,)
 
     def __init__(self, name, sub_components, port_connections=[],
                  port_exposures=[], check_initial_values=False,

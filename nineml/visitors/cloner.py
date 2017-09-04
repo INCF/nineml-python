@@ -40,7 +40,7 @@ class Cloner(BaseVisitor):
                 init_args[attr] = results.attr_result(attr).post_action
             except KeyError:
                 init_args[attr] = None
-        for child_type in nineml_cls.children_types:
+        for child_type in nineml_cls.nineml_children:
             init_args[child_type._children_iter_name()] = [
                 r.post_action for r in results.child_results(child_type)]
         results.post_action = nineml_cls(**init_args)

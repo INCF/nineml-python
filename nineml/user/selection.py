@@ -84,7 +84,7 @@ class Concatenate(BaseULObject, ContainerObject):
 
     nineml_type = 'Concatenate'
     defining_attributes = ('_items',)
-    children_types = (Item,)
+    nineml_children = (Item,)
 
     def __init__(self, items, **kwargs):
         BaseULObject.__init__(self, **kwargs)

@@ -114,7 +114,7 @@ class C(AnnotatedNineMLObject, ContainerObject):
     defining_attributes = ('name', '_es', 'f', 'g')
     nineml_attr = ('name', 'f', 'g')
     class_to_member = {'E': 'e'}
-    children_types = (E,)
+    nineml_children = (E,)
 
     def __init__(self, name, es, f, g):
         AnnotatedNineMLObject.__init__(self)
@@ -185,7 +185,7 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
     v1_nineml_type = 'Cunfaener'
     defining_attributes = ('name', 'a', 'bs', 'c', 'd')
     nineml_attr = ('name', 'bs', d')
-    children_types = (B,)
+    nineml_children = (B,)
     child_attrs = {'a': A,
                    'c': C}
 

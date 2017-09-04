@@ -39,7 +39,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
     nineml_type = 'DynamicsProperties'
     defining_attributes = ('_name', '_definition', '_properties',
                            '_initial_values', 'initial_regime')
-    children_types = Component.children_types + (Initial,)
+    nineml_children = Component.nineml_children + (Initial,)
 
     def __init__(self, name, definition, properties={}, initial_values={},
                  initial_regime=None,
