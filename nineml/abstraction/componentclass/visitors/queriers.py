@@ -214,7 +214,7 @@ class ComponentDimensionResolver(BaseVisitor):
     def dimension_of(self, element):
         if isinstance(element, basestring):
             element = self.component_class.element(
-                element, nineml_children=self.base_nineml_children)
+                element, child_types=self.base_nineml_children)
         return Dimension.from_sympy(self._flatten(element))
 
     def _flatten(self, expr, **kwargs):  # @UnusedVariable
@@ -250,7 +250,7 @@ class ComponentDimensionResolver(BaseVisitor):
         for context in reversed(self.contexts):
             try:
                 element = context.parent.element(
-                    name, nineml_children=context.nineml_children)
+                    name, child_types=context.nineml_children)
             except KeyError:
                 pass
         if element is None:

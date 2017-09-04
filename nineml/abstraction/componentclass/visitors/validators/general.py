@@ -230,7 +230,7 @@ class DimensionalityComponentValidator(BaseVisitor):
             for context in reversed(self.contexts):
                 try:
                     element = context.parent.element(
-                        name, nineml_children=context.nineml_children)
+                        name, child_types=context.nineml_children)
                 except KeyError:
                     pass
             if element is None:
@@ -255,7 +255,8 @@ class DimensionalityComponentValidator(BaseVisitor):
                             str(e) for e in self._dimensions.iterkeys()),
                         "\n".join(
                             str(e) for e in self.component_class.elements(
-                                nineml_children=self.visit_as_class.nineml_children))
+                                child_types=(
+                                    self.visit_as_class.nineml_children)))
                     ))
             self._recursion_count += 1
             dims = self._flatten_dims(expr, element)
@@ -350,7 +351,7 @@ class DimensionalityComponentValidator(BaseVisitor):
         # Get the state variable or alias associated with the analog send
         # port
         element = self.component_class.element(
-            port.name, nineml_children=self.visit_as_class.nineml_children)
+            port.name, child_types=self.visit_as_class.nineml_children)
         try:
             if element.dimension != port.dimension:
                 raise NineMLDimensionError(self._construct_error_message(

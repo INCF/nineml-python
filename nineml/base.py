@@ -745,18 +745,18 @@ class ContainerObject(BaseNineMLObject):
             except KeyError:
                 pass
 
-    def elements(self, nineml_children=None):
+    def elements(self, child_types=None):
         """
         Iterates through all the core member elements of the container. For
         core 9ML objects this will be the same as those iterated by the
         __iter__ magic method, where as for 9ML extensions.
         """
-        if nineml_children is None:
-            nineml_children = self.nineml_children
+        if child_types is None:
+            child_types = self.nineml_children
         return chain(*(self._members_iter(child_type)
-                       for child_type in nineml_children))
+                       for child_type in child_types))
 
-    def element(self, name, nineml_children=None, include_send_ports=False):
+    def element(self, name, child_types=None, include_send_ports=False):
         """
         Looks a member item by "name" (identifying characteristic)
 
@@ -777,10 +777,10 @@ class ContainerObject(BaseNineMLObject):
         elem : NineMLBaseObject
             The element corresponding to the provided 'name' argument
         """
-        if nineml_children is None:
-            nineml_children = self.nineml_children
+        if child_types is None:
+            child_types = self.nineml_children
         send_port = None
-        for child_type in nineml_children:
+        for child_type in child_types:
             try:
                 elem = self._member_accessor(child_type)(name)
                 # Ignore send ports as they otherwise mask
@@ -798,18 +798,18 @@ class ContainerObject(BaseNineMLObject):
                 "'{}' was not found in '{}' {} object"
                 .format(name, self.key, self.__class__.__name__))
 
-    def num_elements(self, nineml_children=None):
-        if nineml_children is None:
-            nineml_children = self.nineml_children
+    def num_elements(self, child_types=None):
+        if child_types is None:
+            child_types = self.nineml_children
         return reduce(operator.add,
                       (self._num_members(child_type)
-                       for child_type in nineml_children))
+                       for child_type in child_types))
 
-    def element_keys(self, nineml_children=None):
-        if nineml_children is None:
-            nineml_children = self.nineml_children
+    def element_keys(self, child_types=None):
+        if child_types is None:
+            child_types = self.nineml_children
         all_keys = set()
-        for child_type in nineml_children:
+        for child_type in child_types:
             # Some of these do not meet the stereotypical *_names format, e.g.
             # time_derivative_variables, could change these to *_keys instead
             try:
@@ -867,22 +867,6 @@ class ContainerObject(BaseNineMLObject):
             "Could not find index {} for '{}'".format(
                 index, (child_type if key is None else key)))
 
-    def _get_indices_dict(self, key, child_type):
-        if key is None:
-            if child_type not in self.nineml_children:
-                raise NineMLInvalidElementTypeException(
-                    "{} is not a valid child type for container {} (valid "
-                    " types are {}). Please use explicit key"
-                    .format(child_type.__name__, self,
-                            ", ".join(t.__name__ for t in self.nineml_children)))
-            key = child_type._child_accessor_name()
-        return self._indices[key]
-
-    def all_indices(self):
-        for key, dct in self._indices.iteritems():
-            for elem, index in dct.iteritems():
-                yield key, elem, index
-
     # =========================================================================
     # Each member nineml_type is associated with a member accessor by the
     # class attribute 'class_to_member' dictionary. From this name accessors
@@ -890,42 +874,22 @@ class ContainerObject(BaseNineMLObject):
     # derrived from the stereotypical naming structure used
     # =========================================================================
 
-#     def _member_accessor(self, element_type, class_map):
-#         try:
-#             return getattr(self, accessor_name_from_type(element_type,
-#                                                          class_map))
-#         except:
-#             raise
-# 
-#     def _members_iter(self, element_type, class_map):
-#         """
-#         Looks up the name of values iterator from the nineml_type of the
-#         element argument.
-#         """
-#         acc_name = accessor_name_from_type(element_type, class_map)
-#         return getattr(self, pluralise(acc_name))
-# 
-#     def _member_keys_iter(self, element_type, class_map):
-#         acc_name = accessor_name_from_type(element_type, class_map)
-#         try:
-#             return getattr(self, (acc_name + '_names'))
-#         except AttributeError:
-#             # For members that don't have proper names, such as OnConditions
-#             return getattr(self, (acc_name + '_keys'))
-# 
-#     def _num_members(self, element_type, class_map):
-#         acc_name = accessor_name_from_type(element_type, class_map)
-#         return getattr(self, 'num_' + pluralise(acc_name))
-# 
-#     def _member_dict(self, element_type):
-#         acc_name = accessor_name_from_type(element_type, self.class_to_member)
-#         return getattr(self, '_' + pluralise(acc_name))
+    def _get_indices_dict(self, key, child_type):
+        if key is None:
+            if child_type not in self.nineml_children:
+                raise NineMLInvalidElementTypeException(
+                    "{} is not a valid child type for container {} (valid "
+                    " types are {}). Please use explicit key"
+                    .format(child_type.__name__, self,
+                            ", ".join(t.__name__
+                                      for t in self.nineml_children)))
+            key = child_type._child_accessor_name()
+        return self._indices[key]
 
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)
-        clone._indices = defaultdict(dict)
-        clone._parent = (self._parent.clone(memo, **kwargs)
-                         if self._parent is not None else None)
+    def all_indices(self):
+        for key, dct in self._indices.iteritems():
+            for elem, index in dct.iteritems():
+                yield key, elem, index
 
     def _member_accessor(self, child_type):
         return getattr(self, child_type._child_accessor_name())
@@ -958,6 +922,14 @@ class ContainerObject(BaseNineMLObject):
             else:
                 document = None
         return document
+
+# 
+#     def _copy_to_clone(self, clone, memo, **kwargs):
+#         super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)
+#         clone._indices = defaultdict(dict)
+#         clone._parent = (self._parent.clone(memo, **kwargs)
+#                          if self._parent is not None else None)
+
 
 
 def accessor_name_from_type(element_type, class_map):
