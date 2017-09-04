@@ -30,7 +30,7 @@ class StateVariable(BaseALObject):
     nineml_type = 'StateVariable'
     defining_attributes = ('_name', '_dimension')
     nineml_attr = ('name',)
-    child_attrs = {'dimension': Dimension}
+    nineml_child = {'dimension': Dimension}
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """

@@ -111,7 +111,7 @@ class Constant(BaseALObject, ExpressionSymbol):
     nineml_type = 'Constant'
     defining_attributes = ('_name', '_value', '_units')
     nineml_attr = ('name', 'value')
-    child_attrs = {'units': Unit}
+    nineml_child = {'units': Unit}
 
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)

@@ -163,7 +163,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     nineml_type = "Selection"
     defining_attributes = ('_name', '_operation')
     nineml_attr = ('name',)
-    child_attrs = {'operation': Concatenate}
+    nineml_child = {'operation': Concatenate}
 
     def __init__(self, name, operation, **kwargs):
         ensure_valid_identifier(name)

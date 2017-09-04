@@ -17,7 +17,7 @@ class BasePortExposure(BaseULObject):
 
     defining_attributes = ('_name', '_port_name', '_sub_component_name')
     nineml_attr = ('name', 'port_name', 'sub_component_name')
-    child_attrs = {}
+    nineml_child = {}
 
     def __init__(self, sub_component_name, port_name, name=None):
         super(BasePortExposure, self).__init__()

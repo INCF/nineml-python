@@ -66,7 +66,7 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
                            '_analog_port_connections',
                            '_event_port_connections')
     nineml_attr = ('name',)
-    child_attrs = ('pre', 'post', 'connectivity', 'response', 'plasticity',
+    nineml_child = ('pre', 'post', 'connectivity', 'response', 'plasticity',
                    'delay')
     nineml_children = (AnalogPortConnection, EventPortConnection)
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])

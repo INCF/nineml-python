@@ -15,7 +15,7 @@ class ConnectionRuleProperties(Component):
     docstring needed
     """
     nineml_type = 'ConnectionRuleProperties'
-    child_attrs = {'definition': ConnectionRule}
+    nineml_child = {'definition': ConnectionRule}
 
     def get_nineml_type(self):
         return self.nineml_type

@@ -35,7 +35,7 @@ class Cloner(BaseVisitor):
                 init_args[attr] = getattr(obj, attr)
             except NineMLNotBoundException:
                 init_args[attr] = None
-        for attr in nineml_cls.child_attrs:
+        for attr in nineml_cls.nineml_child:
             try:
                 init_args[attr] = results.attr_result(attr).post_action
             except KeyError:

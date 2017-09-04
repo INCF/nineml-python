@@ -55,7 +55,7 @@ class Property(BaseULObject):
     nineml_type = "Property"
     defining_attributes = ('_name', '_quantity')
     nineml_attr = ('name',)
-    child_attrs = {'quantity': Quantity}
+    nineml_child = {'quantity': Quantity}
 
     def __init__(self, name, quantity):
         super(Property, self).__init__()
@@ -159,7 +159,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     defining_attributes = ('_name', '_definition', '_properties')
     nineml_attr = ('name',)
     nineml_children = (Property,)
-    child_attrs = {'definition': None}
+    nineml_child = {'definition': None}
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML

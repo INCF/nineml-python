@@ -186,7 +186,7 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
     defining_attributes = ('name', 'a', 'bs', 'c', 'd')
     nineml_attr = ('name', 'bs', d')
     nineml_children = (B,)
-    child_attrs = {'a': A,
+    nineml_child = {'a': A,
                    'c': C}
 
     def __init__(self, name, a, bs, c, d):
