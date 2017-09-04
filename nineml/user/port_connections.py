@@ -291,11 +291,11 @@ class BasePortConnection(BaseULObject):
     def serialize_node(self, node, **options):  # @UnusedVariable
         try:
             node.attr('sender_role', self.sender_role)
-        except NineMLRuntimeError:
+        except NineMLNotBoundException:
             node.attr('sender_name', self.sender_name)
         try:
             node.attr('receiver_role', self.receiver_role)
-        except NineMLRuntimeError:
+        except NineMLNotBoundException:
             node.attr('receiver_name', self.receiver_name)
         node.attr('send_port', self.send_port_name, **options)
         node.attr('receive_port', self.receive_port_name, **options)

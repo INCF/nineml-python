@@ -9,6 +9,7 @@ from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
 from nineml.user.component_array import ComponentArray
 from nineml.base import DocumentLevelObject
+from nineml.exceptions import NineMLRuntimeError
 
 
 class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
@@ -24,7 +25,8 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                     'delay': Quantity}
 
     def __init__(self, name, source, destination, source_port,
-                 destination_port, connectivity, delay,
+                 destination_port, delay, connectivity=None,
+                 connection_rule_properties=None,
                  connectivity_class=Connectivity):
         self._name = name
         BaseULObject.__init__(self)
@@ -33,9 +35,16 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         self._destination = destination
         self._source_port = source_port
         self._destination_port = destination_port
-        if isinstance(connectivity, ConnectionRuleProperties):
-            connectivity = connectivity_class(connectivity, source.size,
-                                              destination.size)
+        if connectivity is not None:
+            assert isinstance(connectivity, Connectivity)
+            if connection_rule_properties is not None:
+                raise NineMLRuntimeError(
+                    "Cannot provide both connectivty and "
+                    "connection_rule_properties as kwargs to projection class")
+            self._connectivity = connectivity
+        else:
+            connectivity = connectivity_class(
+                connection_rule_properties, source.size, destination.size)
         self._connectivity = connectivity
         self._delay = delay
         if isinstance(source_port, Port):

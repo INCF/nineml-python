@@ -92,8 +92,8 @@ class BasePortExposure(BaseULObject):
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(name=node.attr('name', **options),
-                   component=node.attr('sub_component', **options),
-                   port=node.attr('port', **options))
+                   sub_component_name=node.attr('sub_component', **options),
+                   port_name=node.attr('port', **options))
 
     @classmethod
     def from_tuple(cls, tple, container):

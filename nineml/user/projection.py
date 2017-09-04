@@ -99,10 +99,7 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
         self._response = response
         self._plasticity = plasticity
         if connectivity is not None:
-            try:
-                assert isinstance(connectivity, Connectivity)
-            except:
-                raise
+            assert isinstance(connectivity, Connectivity)
             if connection_rule_properties is not None:
                 raise NineMLRuntimeError(
                     "Cannot provide both connectivty and "
@@ -409,7 +406,7 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
                    post=post,
                    response=response,
                    plasticity=plasticity,
-                   connection_rule_props=connection_rule_props,
+                   connection_rule_properties=connection_rule_props,
                    delay=delay,
                    port_connections=port_connections)
 
