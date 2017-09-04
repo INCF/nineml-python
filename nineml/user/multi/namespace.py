@@ -163,6 +163,10 @@ class _NamespaceNamed(_NamespaceObject):
     def relative_name(self):
         return self._object.name
 
+    @property
+    def relative_key(self):
+        return self._object.key
+
 
 class _NamespaceExpression(_NamespaceObject):
 

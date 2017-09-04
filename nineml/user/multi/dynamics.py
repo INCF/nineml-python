@@ -931,22 +931,21 @@ class _MultiRegime(Regime):
         All conditions across all sub-regimes sorted, grouped by their trigger
         and chained output-event -> on-events
         """
-        # Group on conditions by their trigger condition and return as an
-        # _MultiOnCondition
-        all_on_conds = list(self._all_sub_on_conds)
         # Get all event connection ports that receive connections with non-zero
-        # delay
+        # delay and create OnCondition events that are triggered after a
+        # time period
         nonzero_delay_receive_ports = [
             pc.receive_port.name
             for pc in self._parent.nonzero_delay_event_port_connections]
-        key = lambda oc: oc.trigger  # Group key for on conditions @IgnorePep8
-        # Chain delayed on events and grouped on conditions
-        return chain(
-            (_MultiOnCondition((_DelayedOnEvent(oe),), self)
-             for oe in self._all_sub_on_events
-             if oe.src_port_name in nonzero_delay_receive_ports),
-            (_MultiOnCondition(grp, self)
-             for _, grp in groupby(sorted(all_on_conds, key=key), key=key)))
+        for output_event in self._all_sub_on_events:
+            if output_event.src_port_name in nonzero_delay_receive_ports:
+                yield _MultiOnCondition([_DelayedOnEvent(output_event)], self)
+        # Group on conditions by their trigger condition and return as an
+        # _MultiOnCondition
+        key = attrgetter('trigger')  # Group key for on conditions @IgnorePep8
+        for _, group in groupby(sorted(self._all_sub_on_conds, key=key),
+                                key=key):
+            yield _MultiOnCondition(group, self)
 
     def time_derivative(self, variable):
         name, comp_name = split_namespace(variable)
@@ -1019,19 +1018,15 @@ class _MultiRegime(Regime):
                 # Get all receive ports that are activated by this output event
                 # i.e. all zero-delay event port connections that are linked to
                 # this output_event
-                try:
-                    active_ports = set(
-                        (pc.receiver_name, pc.receive_port_name)
-                        for pc in self._parent._event_port_connections[
-                            (output_event.sub_component.name,
-                             output_event.relative_port_name)].itervalues()
-                        if pc.delay == 0.0)
-                except KeyError:
-                    active_ports = []
+                active_ports = set(
+                    pc.receive_key for pc in self.parent.event_port_connections
+                    if (pc.send_key == (output_event.sub_component.name,
+                                        output_event.relative_port_name) and
+                        pc.delay == 0.0 * un.s))
                 # Get all the OnEvent transitions that are connected to this
                 for on_event in self._all_sub_on_events:
                     if (on_event.sub_component.name,
-                            on_event.src_port_name) in active_ports:
+                            on_event.relative_key) in active_ports:
                         yield on_event
                         for chained in self.daisy_chained_on_events(on_event):
                             yield chained

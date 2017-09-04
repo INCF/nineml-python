@@ -165,6 +165,10 @@ class BasePortConnection(BaseULObject):
         return self._receiver_name
 
     @property
+    def send_key(self):
+        return self.sender_name, self.send_port_name
+
+    @property
     def receive_key(self):
         return self.receiver_name, self.receive_port_name
 
@@ -433,3 +437,6 @@ class EventPortConnection(BasePortConnection):
         nineml.user.multi.dynamics for future versions
         """
         return 0.0 * un.s
+
+
+import nineml.user.multi  # @IgnorePep8
