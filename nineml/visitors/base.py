@@ -29,7 +29,10 @@ class BaseVisitor(object):
                      dct=None):
             self._parent = parent
             self._parent_cls = parent_cls
-            assert isinstance(parent, parent_cls)
+            try:
+                assert isinstance(parent, parent_cls)
+            except:
+                raise
             self._parent_result = parent_result
             self._attr_name = attr_name
             self._dct = dct
@@ -124,14 +127,15 @@ class BaseVisitor(object):
         # themselves
         results = self.Results(action_result)
         # Add the container object to the list of scopes
-        for attr_name in obj.child_attrs:
+        for attr_name, child_type in obj.child_attrs.iteritems():
             attr = getattr(obj, attr_name)
             if attr is None:
                 continue
             # Create the context around the visit of the attribute
             context = self.Context(obj, nineml_cls, action_result, attr_name)
             self.contexts.append(context)
-            results._attr[attr_name] = self.visit(attr, **kwargs)
+            results._attr[attr_name] = self.visit(attr, nineml_cls=child_type,
+                                                  **kwargs)
             popped = self.contexts.pop()
             assert context is popped
         # Visit children of the object

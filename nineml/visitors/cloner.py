@@ -43,7 +43,10 @@ class Cloner(BaseVisitor):
         for child_type in nineml_cls.children_types:
             init_args[child_type._children_iter_name()] = [
                 r.post_action for r in results.child_results(child_type)]
-        results.post_action = nineml_cls(**init_args)
+        try:
+            results.post_action = nineml_cls(**init_args)
+        except:
+            raise
 
     @classmethod
     def clone_id(cls, obj):
@@ -82,12 +85,11 @@ class Cloner(BaseVisitor):
         explicitly as the referenced object themselves is typically referred
         to in the containing container.
         """
-        return copy(reference)
+        results.post_action = copy(reference)
 
 
-    def post_action_nineml(self, reference, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+    def post_action_nineml(self, doc, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         """
         To clone NineML Documents
         """
-        clone = nineml_cls(*self.values(), clone=True, **kwargs)
-        return clone
+        results.post_action = nineml_cls(*doc.values(), clone=True, **kwargs)

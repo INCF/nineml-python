@@ -7,6 +7,7 @@ from nineml import Document
 from nineml.user.multi import append_namespace
 from numpy import sum, product
 import re
+from nineml.exceptions import NineMLNotBoundException
 
 
 class TestAccessors(unittest.TestCase):
@@ -28,7 +29,10 @@ class TestAccessors(unittest.TestCase):
                 for elem in instances_of_all_types[name].itervalues():
                     # Test that the attribute listed in nineml_attrs is
                     # accessible
-                    getattr(elem, attr_name)
+                    try:
+                        getattr(elem, attr_name)
+                    except NineMLNotBoundException:
+                        pass
 
     def test_member_accessors(self):
         """

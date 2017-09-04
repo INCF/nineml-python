@@ -14,6 +14,7 @@ from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.values import SingleValue
+from nineml.exceptions import NineMLRuntimeError
 
 
 V1_DELAY_VALUE_TYPES = ('SingleValue', 'ArrayValue', 'ExternalArrayValue',
@@ -38,28 +39,41 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
         plasticity : DynamicsProperties
             a :class:`DynamicsProperties` :class:`Component` that defines the
             plasticity rule for the synaptic weight/efficacy.
-        connectivity : ConnectionRuleProperties
-            a `connection rule` :class:`Component` that defines
-            an algorithm for wiring up the neurons.
         delay
             a :class:`Quantity` object specifying the delay of the connections.
+        connectivity : Connectivity
+            a ` :class:`Connectivity` instance that defines
+            an instantiated connectivity from the algorithm defined by a
+            connection rule properties. Cannot be provided in conjunction with
+            `connection_rule_properties` parameter
+        connection_rule_properties : ConnectionRuleProperties
+            a :class:`ConnectionRuleProperties` that defines
+            an algorithm for wiring up the neurons. Cannot be provided in
+            conjunction with the `connectivity` parameter
+        port_connections : list(AnalogPortConnection | EventPortConnection)
+            A list of port connections between pre, post, response, plasticity
+            dynamics
+        analog_port_connections : list(AnalogPortConnection)
+            A list of analog port connections between pre, post, response,
+            plasticity dynamics
+        event_port_connections : list(EventPortConnection)
+            A list of event port connections between pre, post, response,
+            plasticity dynamics
     """
     nineml_type = "Projection"
     defining_attributes = ('_name', '_pre', '_post', '_connectivity',
                            '_response', '_plasticity', '_delay',
                            '_analog_port_connections',
                            '_event_port_connections')
-    nineml_attrs = ('name', 'pre', 'post', 'connectivity',
-                    'response', 'plasticity', 'delay',
-                    'analog_port_connections',
-                    'event_port_connections')
+    nineml_attrs = ('name',)
     child_attrs = ('pre', 'post', 'connectivity', 'response', 'plasticity',
                    'delay')
     children_types = (AnalogPortConnection, EventPortConnection)
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
-    def __init__(self, name, pre, post, response, connectivity,
-                 delay, plasticity=None, port_connections=None,
+    def __init__(self, name, pre, post, response, delay, connectivity=None,
+                 connection_rule_properties=None,
+                 plasticity=None, port_connections=None,
                  analog_port_connections=None, event_port_connections=None,
                  connectivity_class=Connectivity, **kwargs):
         """
@@ -80,8 +94,15 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
         self._post = post
         self._response = response
         self._plasticity = plasticity
-        self._connectivity = connectivity_class(
-            connectivity, pre.size, post.size, **kwargs)
+        if connectivity is not None:
+            if connection_rule_properties is not None:
+                raise NineMLRuntimeError(
+                    "Cannot provide both connectivty and "
+                    "connection_rule_properties as kwargs to projection class")
+            self._connectivity = connectivity
+        else:
+            self._connectivity = connectivity_class(
+                connection_rule_properties, pre.size, post.size, **kwargs)
         self._delay = delay
         self._analog_port_connections = {}
         self._event_port_connections = {}
@@ -126,6 +147,10 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
     @property
     def connectivity(self):
         return self._connectivity
+
+    @property
+    def connection_rule_properties(self):
+        return self.connectivity.rule_properties
 
     def connections(self):
         return self.connectivity.connections()

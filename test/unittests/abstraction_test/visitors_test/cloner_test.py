@@ -80,7 +80,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
                           port_exposures=[('c2', 'cIn2', 'cIn2_c2'),
                                           ('c1', 'cIn1', 'cIn1_c1')])
 
-        b_clone = DynamicsFlattener(b).flattened
+        b_clone = Cloner(visit_as_class=Dynamics).visit(b).post_action
 #         c1_clone = b_clone.get_subnode('c1')
 #         c2_clone = b_clone.get_subnode('c2')
 # 

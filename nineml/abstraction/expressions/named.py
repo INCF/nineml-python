@@ -103,15 +103,15 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         name = node.attr('name', **options)
         rhs = node.attr('MathInline', in_body=True, dtype=Expression,
                         **options)
-        return cls(lhs=name, rhs=rhs)
+        return cls(name=name, rhs=rhs)
 
 
 class Constant(BaseALObject, ExpressionSymbol):
 
     nineml_type = 'Constant'
     defining_attributes = ('_name', '_value', '_units')
-    nineml_attrs = ('name', 'value', 'units')
-    chlid_attrs = ('value', 'units')
+    nineml_attrs = ('name', 'value')
+    child_attrs = {'units': Unit}
 
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)

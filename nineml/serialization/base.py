@@ -177,7 +177,8 @@ class BaseSerializer(BaseVisitor):
                                           **options)
             if url is not False:  # Write the element as a reference
                 serial_elem = self.visit(
-                    Reference(nineml_object.name, self.document, url=url),
+                    Reference(name=nineml_object.name, document=self.document,
+                              url=url),
                     parent=parent, multiple=multiple, **options)
         if serial_elem is None:  # If not written as a reference
             # Set parent to document root if not provided

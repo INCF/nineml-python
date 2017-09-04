@@ -11,6 +11,7 @@ from nineml.utils import ensure_valid_identifier
 from nineml.exceptions import NineMLRuntimeError
 from .expressions import ExpressionSymbol
 from nineml.base import SendPortBase  # A work around to avoid circular imports
+from nineml.units import Dimension
 
 
 class Port(BaseALObject):
@@ -72,7 +73,7 @@ class DimensionedPort(Port, ExpressionSymbol):
 
     defining_attributes = ('_name', '_dimension')
     nineml_attrs = ('name', 'dimension')
-    child_attrs = ('dimension',)
+    child_attrs = {'dimension': Dimension}
 
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
@@ -239,8 +240,8 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     nineml_type = 'AnalogReducePort'
     mode = "reduce"
     defining_attributes = ('_name', '_dimension', '_operator')
-    nineml_attrs = ('name', 'dimension', 'operator')
-    child_attrs = ('dimension',)
+    nineml_attrs = ('name', 'operator')
+    child_attrs = {'dimension': Dimension}
     _operator_map = {'add': '+', '+': '+', }
 
     def __init__(self, name, dimension=None, operator='+'):

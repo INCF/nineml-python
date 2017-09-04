@@ -213,7 +213,7 @@ class Document(AnnotatedNineMLObject, dict):
         for name in dict.keys(self):
             self[name]
 
-    def clone(self, memo=None, refs=None, **kwargs):
+    def clone(self, **kwargs):
         """
         Creates a duplicate of the current document with its url set to None to
         allow it to be written to a different file

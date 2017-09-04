@@ -7,6 +7,7 @@ from random import Random, randint
 from nineml.base import clone_id, BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError
 from nineml.user.component import Component
+from nineml.abstraction.connectionrule import ConnectionRule
 
 
 class ConnectionRuleProperties(Component):
@@ -14,6 +15,7 @@ class ConnectionRuleProperties(Component):
     docstring needed
     """
     nineml_type = 'ConnectionRuleProperties'
+    child_attrs = {'definition': ConnectionRule}
 
     def get_nineml_type(self):
         return self.nineml_type
@@ -37,7 +39,6 @@ class BaseConnectivity(BaseNineMLObject):
     defining_attributes = ('_rule_properties', '_source_size',
                            '_destination_size')
     nineml_attrs = ('rule_properties', 'source_size', 'destination_size')
-    child_attrs = ('rule_properties',)
 
     def __init__(self, rule_properties, source_size,
                  destination_size, **kwargs):  # @UnusedVariable
@@ -109,8 +110,6 @@ class InverseConnectivity(BaseNineMLObject):
     """
     nineml_type = '_InverseConnectivity'
     defining_attributes = ('_connectivity',)
-    nineml_attrs = ('connectivity',)
-    child_attrs = ('connectivity',)
 
     def __init__(self, connectivity):  # @UnusedVariable
         self._connectivity = connectivity

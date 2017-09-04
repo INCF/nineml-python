@@ -48,7 +48,7 @@ class BaseNineMLObject(object):
     children = []
     v1_nineml_type = None
     nineml_attrs = ()
-    child_attrs = ()
+    child_attrs = {}
     children_types = ()
 
     def __eq__(self, other):

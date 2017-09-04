@@ -12,6 +12,9 @@ class BaseReference(AnnotatedNineMLObject):
 
     Parameters
     ----------
+    target : BaseNineMLOjbect
+        The target object. Not typically provided but allowed as a kwarg to
+        allow the Cloner to properly clone references
     name : str
         Name of the target object in the given document
     document : Document | None
@@ -19,20 +22,20 @@ class BaseReference(AnnotatedNineMLObject):
     url : URL | None
         The URL of the document in which the target object is located. If None,
         the target object is assumed to be in the reference document
-    target : BaseNineMLOjbect
-        The target object. Not typically provided but allowed as a kwarg to
-        allow the Cloner to properly clone references
     """
 
     defining_attributes = ('url', '_target')
-    nineml_attrs = ('url', 'name')
-    child_attrs = ('target',)
+    child_attrs = {'target': None}
 
     def __init__(self, target=None, name=None, url=None, document=None):
         super(BaseReference, self).__init__()
         if target is not None:
             assert isinstance(target, DocumentLevelObject)
             self._target = target
+            if name is not None or url is not None or document is not None:
+                raise NineMLRuntimeError(
+                    "'name', 'url' and 'document' kwargs cannot be used in "
+                    "conjunction with 'target'")
         else:
             assert name is not None
             document_url = document.url if document is not None else None

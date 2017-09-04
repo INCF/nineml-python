@@ -42,293 +42,12 @@ _DummyNamespaceRegime = collections.namedtuple('_DummyNamespaceRegime',
                                                'relative_name')
 
 
-class SubDynamicsProperties(BaseULObject):
-
-    nineml_type = 'SubDynamicsProperties'
-    defining_attributes = ('_name', '_component')
-    nineml_attrs = ('name', 'component')
-    child_attrs = ('component',)
-
-    def __init__(self, name, component):
-        BaseULObject.__init__(self)
-        self._name = name
-        self._component = component
-
-    def __repr__(self):
-        return "{}(name={}, component={})".format(self.nineml_type, self.name,
-                                                  self.component)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def component(self):
-        return self._component
-
-    @property
-    def component_class(self):
-        return self.component.component_class
-
-    def __iter__(self):
-        return self.properties
-
-    def append_namespace(self, name):
-        return append_namespace(name, self.name)
-
-    @property
-    def attributes_with_units(self):
-        return self.properties
-
-    @property
-    def initial_values(self):
-        return (_NamespaceInitial(self, iv)
-                for iv in self._component.initial_values)
-
-    @property
-    def initial_regime(self):
-        return self._component.initial_regime
-
-    @property
-    def num_initial_values(self):
-        return len(list(self.initial_values))
-
-    @property
-    def initial_value_names(self):
-        return (iv.name for iv in self.initial_values)
-
-    @name_error
-    def initial_value(self, name):
-        local_name, comp_name = split_namespace(name)
-        if comp_name != self.name:
-            raise NineMLNameError(
-                "'{}' does not name an initial value in '{}'"
-                "SubDynamicsProperties as it does not include the sub "
-                "component name '{}'".format(name, self.name, self.name))
-        return _NamespaceInitial(self,
-                                 self._component.initial_value(local_name))
-
-    @property
-    def properties(self):
-        return (_NamespaceProperty(self, p)
-                for p in self._component.properties)
-
-    @property
-    def num_properties(self):
-        return len(list(self.properties))
-
-    @property
-    def property_names(self):
-        return (p.name for p in self.properties)
-
-    @name_error
-    def property(self, name):
-        local_name, comp_name = split_namespace(name)
-        if comp_name != self.name:
-            raise NineMLNameError(
-                "'{}' does not name an property in '{}'"
-                "SubDynamicsProperties as it does not include the sub "
-                "component name '{}'".format(name, self.name, self.name))
-        return _NamespaceProperty(self, self._component.property(local_name))
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name, **options)
-        node.child(self._component, **options)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):
-        dynamics_properties = node.child(
-            (DynamicsProperties, MultiDynamicsProperties), allow_ref=True,
-            **options)
-        return cls(node.attr('name', **options),
-                   dynamics_properties)
-
-    @classmethod
-    def _child_accessor_name(cls):
-        return 'sub_component'
-
-
-class MultiDynamicsProperties(DynamicsProperties):
-
-    nineml_type = "MultiDynamicsProperties"
-    v1_nineml_type = None
-    defining_attributes = ('_name', '_definition', '_sub_components')
-    nineml_attrs = ('name',)
-    child_attrs = ('definition',)
-    children_types = (SubDynamicsProperties,)
-
-    def __init__(self, name, sub_components, port_connections=[],
-                 port_exposures=[], check_initial_values=False,
-                 definition=None):
-        ensure_valid_identifier(name)
-        self._name = name
-        # Initiate inherited base classes
-        BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self)
-        ContainerObject.__init__(self)
-        # Extract abstraction layer component of sub-dynamics object (won't be
-        # necessary from v2) and convert dict of name: DynamicsProperties pairs
-        # into SubDynamics objects
-        if isinstance(sub_components, dict):
-            sub_components = [
-                SubDynamicsProperties(n, p)
-                for n, p in sub_components.iteritems()]
-        self._sub_components = {}
-        self.add(*sub_components)
-        if definition is None:
-            # This is just until the user layer is split into structure and
-            # property layers
-            self._definition = self._extract_definition(
-                sub_components, port_exposures, port_connections)
-        else:
-            self._definition = definition
-        # Check for property/parameter matches
-        self.check_properties()
-        if check_initial_values:
-            self.check_initial_values()
-
-    def _extract_definition(self, sub_components, port_exposures,
-                            port_connections):
-        sub_dynamics = [
-            SubDynamics(sc.name, sc.component.component_class)
-            for sc in sub_components]
-        # Construct component class definition
-        return Definition(MultiDynamics(
-            self.name + '_dynamics', sub_dynamics,
-            port_exposures=port_exposures,
-            port_connections=port_connections,
-            document=self.document))
-
-    def flatten(self):
-        return DynamicsProperties(
-            self.name, self.component_class.flatten(),
-            properties=self.properties, initial_values=self.initial_values)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def sub_components(self):
-        return self._sub_components.itervalues()
-
-    @property
-    def port_exposures(self):
-        return self.component_class.ports
-
-    @property
-    def port_connections(self):
-        return self.component_class.port_connections
-
-    @name_error
-    def sub_component(self, name):
-        return self._sub_components[name]
-
-    @name_error
-    def port_exposure(self, name):
-        return self.component_class.port(name)
-
-    @name_error
-    def port_connection(self, name):
-        return self.component_class.port_connection(name)
-
-    @property
-    def sub_component_names(self):
-        return self._sub_components.iterkeys()
-
-    @property
-    def port_exposure_names(self):
-        return self.component_class.port_exposure_names
-
-    @property
-    def attributes_with_units(self):
-        return chain(*[c.attributes_with_units
-                       for c in self.sub_components])
-
-    @property
-    def num_sub_components(self):
-        return len(self._sub_components)
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name, **options)
-        node.children(self.sub_components, **options)
-        node.children(self.port_exposures, **options)
-        node.children(self.port_connections, **options)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):
-        sub_component_properties = node.children(SubDynamicsProperties,
-                                                 **options)
-        port_exposures = node.children(
-            (AnalogSendPortExposure, AnalogReceivePortExposure,
-             AnalogReducePortExposure, EventSendPortExposure,
-             EventReceivePortExposure), **options)
-        port_connections = node.children(
-            (AnalogPortConnection, EventPortConnection), **options)
-        return cls(name=node.attr('name', **options),
-                   sub_components=sub_component_properties,
-                   port_exposures=port_exposures,
-                   port_connections=port_connections)
-
-    def serialize_node_v1(self, node, **options):
-        self.serialize_node(node, **options)
-
-    @classmethod
-    def unserialize_node_v1(self, node, **options):
-        return self.unserialize_node(node, **options)
-
-    @property
-    def initial_values(self):
-        return chain(*(sc.initial_values for sc in self.sub_components))
-
-    @name_error
-    def initial_value(self, name):
-        _, comp_name = split_namespace(name)
-        return self.sub_component(comp_name).initial_value(name)
-
-    @property
-    def initial_value_names(self):
-        return (iv.name for iv in self.initial_values)
-
-    @property
-    def num_initial_values(self):
-        return len(list(self.initial_values))
-
-    @property
-    def initial_regime(self):
-        return make_regime_name(dict(
-            (name, _DummyNamespaceRegime(scp.initial_regime))
-            for name, scp in self._sub_components.iteritems()))
-
-    @property
-    def properties(self):
-        """
-        The set of component_class properties (parameter values).
-        """
-        return chain(*(sc.properties for sc in self.sub_components))
-
-    @property
-    def property_names(self):
-        return (p.name for p in self.properties)
-
-    @property
-    def num_properties(self):
-        return len(list(self.properties))
-
-    # Property is declared last so as not to overwrite the 'property' decorator
-
-    @name_error
-    def property(self, name):
-        _, comp_name = split_namespace(name)
-        return self.sub_component(comp_name).property(name)
-
-
 class SubDynamics(BaseULObject, DynamicPortsObject):
 
     nineml_type = 'SubDynamics'
     defining_attributes = ('_name', '_component_class')
     nineml_attrs = ('name', 'component_class')
-    child_attrs = ('component_class',)
+    child_attrs = {'component_class': Dynamics}
 
     def __init__(self, name, component_class):
         assert isinstance(name, basestring)
@@ -851,16 +570,6 @@ class MultiDynamics(Dynamics):
     def num_analog_send_ports(self):
         return len(self._analog_send_port_exposures)
 
-#     @property
-#     def analog_port_connections(self):
-#         return chain(*(d.itervalues()
-#                        for d in self._analog_port_connections.itervalues()))
-# 
-#     @property
-#     def event_port_connections(self):
-#         return chain(*(d.itervalues()
-#                        for d in self._event_port_connections.itervalues()))
-
     @property
     def zero_delay_event_port_connections(self):
         return (pc for pc in self.event_port_connections if pc.delay == 0.0)
@@ -955,49 +664,6 @@ class MultiDynamics(Dynamics):
     @property
     def regime_names(self):
         return (r.name for r in self.regimes)
-# 
-#     @property
-#     def analog_port_connection_names(self):
-#         return chain(*[
-#             ['___'.join((snd, sprt, rcv, rprt)) for rcv, rprt in rcvs]
-#             for (snd,
-#                  sprt), rcvs in self._analog_port_connections.iteritems()])
-# 
-#     @property
-#     def event_port_connection_names(self):
-#         return chain(*[
-#             ['___'.join((snd, sprt, rcv, rprt)) for rcv, rprt in rcvs]
-#             for (snd, sprt), rcvs in self._event_port_connections.iteritems()])
-# 
-#     def analog_port_connection(self, name):
-#         try:
-#             sender, send_port, receiver, receive_port = name.split('___')
-#         except (ValueError, AttributeError):
-#             raise NineMLNameError(
-#                 "Name provided to analog_port_connection '{}' was not a "
-#                 "4-tuple of (sender, send_port, receiver, receive_port)")
-#         try:
-#             return self._analog_port_connections[
-#                 (sender, send_port)][(receiver, receive_port)]
-#         except KeyError:
-#             raise NineMLNameError(
-#                 "No analog port connection with between {}->{} and {}->{}"
-#                 .format(sender, send_port, receiver, receive_port))
-# 
-#     def event_port_connection(self, name):
-#         try:
-#             sender, send_port, receiver, receive_port = name.split('___')
-#         except (ValueError, AttributeError):
-#             raise NineMLNameError(
-#                 "Name provided to analog_port_connection '{}' was not a "
-#                 "4-tuple of (sender, send_port, receiver, receive_port)")
-#         try:
-#             return self._event_port_connections[
-#                 (sender, send_port)][(receiver, receive_port)]
-#         except KeyError:
-#             raise NineMLNameError(
-#                 "No event port connection with between {}->{} and {}->{}"
-#                 .format(sender, send_port, receiver, receive_port))
 
     def parameter(self, name):
         _, comp_name = split_namespace(name)
@@ -1074,18 +740,6 @@ class MultiDynamics(Dynamics):
             self.sub_component(sc_n).regime(append_namespace(r_n, sc_n))
             for sc_n, r_n in izip(self._sub_component_keys, sub_regime_names))
 
-#     def analog_receive_port_exposure(self, exposed_port_name):
-#         port_name, comp_name = split_namespace(exposed_port_name)
-#         try:
-#             exposure = next(pe for pe in chain(self.analog_receive_ports,
-#                                                self.analog_reduce_ports)
-#                             if (pe.port_name == port_name and
-#                                 pe.sub_component.name == comp_name))
-#         except StopIteration:
-#             raise NineMLNameError(
-#                 "No port exposure that exposes '{}'".format(exposed_port_name))
-#         return exposure
-
     @property
     def num_parameters(self):
         return len(list(self.parameters))
@@ -1105,18 +759,6 @@ class MultiDynamics(Dynamics):
     @property
     def num_state_variables(self):
         return len(list(self.state_variables))
-# 
-#     @property
-#     def num_analog_port_connections(self):
-#         return reduce(
-#             operator.add,
-#             (len(d) for d in self._analog_port_connections.itervalues()))
-# 
-#     @property
-#     def num_event_port_connections(self):
-#         return reduce(
-#             operator.add,
-#             (len(d) for d in self._event_port_connections.itervalues()))
 
     @property
     def _sub_component_keys(self):
@@ -1401,6 +1043,287 @@ class _MultiRegime(Regime):
     @property
     def _all_sub_on_conds(self):
         return chain(*[r.on_conditions for r in self.sub_regimes])
+
+
+class SubDynamicsProperties(BaseULObject):
+
+    nineml_type = 'SubDynamicsProperties'
+    defining_attributes = ('_name', '_component')
+    nineml_attrs = ('name', 'component')
+    child_attrs = {'component': DynamicsProperties}
+
+    def __init__(self, name, component):
+        BaseULObject.__init__(self)
+        self._name = name
+        self._component = component
+
+    def __repr__(self):
+        return "{}(name={}, component={})".format(self.nineml_type, self.name,
+                                                  self.component)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def component(self):
+        return self._component
+
+    @property
+    def component_class(self):
+        return self.component.component_class
+
+    def __iter__(self):
+        return self.properties
+
+    def append_namespace(self, name):
+        return append_namespace(name, self.name)
+
+    @property
+    def attributes_with_units(self):
+        return self.properties
+
+    @property
+    def initial_values(self):
+        return (_NamespaceInitial(self, iv)
+                for iv in self._component.initial_values)
+
+    @property
+    def initial_regime(self):
+        return self._component.initial_regime
+
+    @property
+    def num_initial_values(self):
+        return len(list(self.initial_values))
+
+    @property
+    def initial_value_names(self):
+        return (iv.name for iv in self.initial_values)
+
+    @name_error
+    def initial_value(self, name):
+        local_name, comp_name = split_namespace(name)
+        if comp_name != self.name:
+            raise NineMLNameError(
+                "'{}' does not name an initial value in '{}'"
+                "SubDynamicsProperties as it does not include the sub "
+                "component name '{}'".format(name, self.name, self.name))
+        return _NamespaceInitial(self,
+                                 self._component.initial_value(local_name))
+
+    @property
+    def properties(self):
+        return (_NamespaceProperty(self, p)
+                for p in self._component.properties)
+
+    @property
+    def num_properties(self):
+        return len(list(self.properties))
+
+    @property
+    def property_names(self):
+        return (p.name for p in self.properties)
+
+    @name_error
+    def property(self, name):
+        local_name, comp_name = split_namespace(name)
+        if comp_name != self.name:
+            raise NineMLNameError(
+                "'{}' does not name an property in '{}'"
+                "SubDynamicsProperties as it does not include the sub "
+                "component name '{}'".format(name, self.name, self.name))
+        return _NamespaceProperty(self, self._component.property(local_name))
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.child(self._component, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        dynamics_properties = node.child(
+            (DynamicsProperties, MultiDynamicsProperties), allow_ref=True,
+            **options)
+        return cls(node.attr('name', **options),
+                   dynamics_properties)
+
+    @classmethod
+    def _child_accessor_name(cls):
+        return 'sub_component'
+
+
+class MultiDynamicsProperties(DynamicsProperties):
+
+    nineml_type = "MultiDynamicsProperties"
+    v1_nineml_type = None
+    defining_attributes = ('_name', '_definition', '_sub_components')
+    nineml_attrs = ('name',)
+    child_attrs = {'definition': None}
+    children_types = (SubDynamicsProperties,)
+
+    def __init__(self, name, sub_components, port_connections=[],
+                 port_exposures=[], check_initial_values=False,
+                 definition=None):
+        ensure_valid_identifier(name)
+        self._name = name
+        # Initiate inherited base classes
+        BaseULObject.__init__(self)
+        DocumentLevelObject.__init__(self)
+        ContainerObject.__init__(self)
+        # Extract abstraction layer component of sub-dynamics object (won't be
+        # necessary from v2) and convert dict of name: DynamicsProperties pairs
+        # into SubDynamics objects
+        if isinstance(sub_components, dict):
+            sub_components = [
+                SubDynamicsProperties(n, p)
+                for n, p in sub_components.iteritems()]
+        self._sub_components = {}
+        self.add(*sub_components)
+        if definition is None:
+            # This is just until the user layer is split into structure and
+            # property layers
+            self._definition = self._extract_definition(
+                sub_components, port_exposures, port_connections)
+        else:
+            self._definition = definition
+        # Check for property/parameter matches
+        self.check_properties()
+        if check_initial_values:
+            self.check_initial_values()
+
+    def _extract_definition(self, sub_components, port_exposures,
+                            port_connections):
+        sub_dynamics = [
+            SubDynamics(sc.name, sc.component.component_class)
+            for sc in sub_components]
+        # Construct component class definition
+        return Definition(MultiDynamics(
+            self.name + '_dynamics', sub_dynamics,
+            port_exposures=port_exposures,
+            port_connections=port_connections,
+            document=self.document))
+
+    def flatten(self):
+        return DynamicsProperties(
+            self.name, self.component_class.flatten(),
+            properties=self.properties, initial_values=self.initial_values)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def sub_components(self):
+        return self._sub_components.itervalues()
+
+    @property
+    def port_exposures(self):
+        return self.component_class.ports
+
+    @property
+    def port_connections(self):
+        return self.component_class.port_connections
+
+    @name_error
+    def sub_component(self, name):
+        return self._sub_components[name]
+
+    @name_error
+    def port_exposure(self, name):
+        return self.component_class.port(name)
+
+    @name_error
+    def port_connection(self, name):
+        return self.component_class.port_connection(name)
+
+    @property
+    def sub_component_names(self):
+        return self._sub_components.iterkeys()
+
+    @property
+    def port_exposure_names(self):
+        return self.component_class.port_exposure_names
+
+    @property
+    def attributes_with_units(self):
+        return chain(*[c.attributes_with_units
+                       for c in self.sub_components])
+
+    @property
+    def num_sub_components(self):
+        return len(self._sub_components)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.children(self.sub_components, **options)
+        node.children(self.port_exposures, **options)
+        node.children(self.port_connections, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):
+        sub_component_properties = node.children(SubDynamicsProperties,
+                                                 **options)
+        port_exposures = node.children(
+            (AnalogSendPortExposure, AnalogReceivePortExposure,
+             AnalogReducePortExposure, EventSendPortExposure,
+             EventReceivePortExposure), **options)
+        port_connections = node.children(
+            (AnalogPortConnection, EventPortConnection), **options)
+        return cls(name=node.attr('name', **options),
+                   sub_components=sub_component_properties,
+                   port_exposures=port_exposures,
+                   port_connections=port_connections)
+
+    def serialize_node_v1(self, node, **options):
+        self.serialize_node(node, **options)
+
+    @classmethod
+    def unserialize_node_v1(self, node, **options):
+        return self.unserialize_node(node, **options)
+
+    @property
+    def initial_values(self):
+        return chain(*(sc.initial_values for sc in self.sub_components))
+
+    @name_error
+    def initial_value(self, name):
+        _, comp_name = split_namespace(name)
+        return self.sub_component(comp_name).initial_value(name)
+
+    @property
+    def initial_value_names(self):
+        return (iv.name for iv in self.initial_values)
+
+    @property
+    def num_initial_values(self):
+        return len(list(self.initial_values))
+
+    @property
+    def initial_regime(self):
+        return make_regime_name(dict(
+            (name, _DummyNamespaceRegime(scp.initial_regime))
+            for name, scp in self._sub_components.iteritems()))
+
+    @property
+    def properties(self):
+        """
+        The set of component_class properties (parameter values).
+        """
+        return chain(*(sc.properties for sc in self.sub_components))
+
+    @property
+    def property_names(self):
+        return (p.name for p in self.properties)
+
+    @property
+    def num_properties(self):
+        return len(list(self.properties))
+
+    # Property is declared last so as not to overwrite the 'property' decorator
+
+    @name_error
+    def property(self, name):
+        _, comp_name = split_namespace(name)
+        return self.sub_component(comp_name).property(name)
 
 
 class _MultiTransition(BaseALObject, ContainerObject):

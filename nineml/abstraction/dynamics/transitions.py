@@ -424,71 +424,6 @@ class OnEvent(Transition):
                    state_assignments=node.children(StateAssignment,
                                                    **options),
                    output_events=node.children(OutputEvent, **options),
-                   target_regime=target_regime)
-
-
-class OnCondition(Transition):
-
-    nineml_type = "OnCondition"
-    defining_attributes = (Transition.defining_attributes + ('_trigger',))
-    nineml_attrs = (Transition.nineml_attrs + ('trigger',))
-    child_attrs = ('trigger',)
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_oncondition(self, **kwargs)
-
-    def __init__(self, trigger, state_assignments=None,
-                 output_events=None, target_regime_name=None):
-        """
-        Parameters
-        ----------
-        trigger: str | sympy.Basic | Trigger
-            Either a |Trigger| object, sympy expr or a ``string`` object
-            specifying the conditions under which this transition should
-            occur.
-        """
-        if isinstance(trigger, Trigger):
-            trigger = trigger.rhs
-        self._trigger = Trigger(rhs=trigger)
-        Transition.__init__(self, state_assignments=state_assignments,
-                            output_events=output_events,
-                            target_regime_name=target_regime_name)
-
-    def __repr__(self):
-        return 'OnCondition({})'.format(self.trigger.rhs)
-
-    @property
-    def trigger(self):
-        return self._trigger
-
-    @property
-    def key(self):
-        """
-        This is included to allow OnConditions to be polymorphic with
-        other named structures
-        """
-        return self.trigger.rhs
-
-    @property
-    def sort_key(self):
-        return self.trigger.sort_key
-
-    def _clone_defining_attr(self, clone, memo, **kwargs):
-        super(OnCondition, self)._clone_defining_attr(clone, memo, **kwargs)
-        clone._trigger = self._trigger
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.child(self.trigger, **options)
-        super(OnCondition, self).serialize_node(node, **options)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):  # @UnusedVariable
-        target_regime = node.attr('target_regime', **options)
-        trigger = node.child(Trigger, **options)
-        return cls(trigger=trigger,
-                   state_assignments=node.children(StateAssignment, **options),
-                   output_events=node.children(OutputEvent, **options),
                    target_regime_name=target_regime)
 
 
@@ -588,6 +523,71 @@ class Trigger(BaseALObject, Expression):
     def unserialize_node(cls, node, **options):  # @UnusedVariable
         return cls(node.attr('MathInline', in_body=True, dtype=Expression,
                              **options))
+
+
+class OnCondition(Transition):
+
+    nineml_type = "OnCondition"
+    defining_attributes = (Transition.defining_attributes + ('_trigger',))
+    nineml_attrs = (Transition.nineml_attrs + ('trigger',))
+    child_attrs = {'trigger': Trigger}
+
+    def accept_visitor(self, visitor, **kwargs):
+        """ |VISITATION| """
+        return visitor.visit_oncondition(self, **kwargs)
+
+    def __init__(self, trigger, state_assignments=None,
+                 output_events=None, target_regime_name=None):
+        """
+        Parameters
+        ----------
+        trigger: str | sympy.Basic | Trigger
+            Either a |Trigger| object, sympy expr or a ``string`` object
+            specifying the conditions under which this transition should
+            occur.
+        """
+        if isinstance(trigger, Trigger):
+            trigger = trigger.rhs
+        self._trigger = Trigger(rhs=trigger)
+        Transition.__init__(self, state_assignments=state_assignments,
+                            output_events=output_events,
+                            target_regime_name=target_regime_name)
+
+    def __repr__(self):
+        return 'OnCondition({})'.format(self.trigger.rhs)
+
+    @property
+    def trigger(self):
+        return self._trigger
+
+    @property
+    def key(self):
+        """
+        This is included to allow OnConditions to be polymorphic with
+        other named structures
+        """
+        return self.trigger.rhs
+
+    @property
+    def sort_key(self):
+        return self.trigger.sort_key
+
+    def _clone_defining_attr(self, clone, memo, **kwargs):
+        super(OnCondition, self)._clone_defining_attr(clone, memo, **kwargs)
+        clone._trigger = self._trigger
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self.trigger, **options)
+        super(OnCondition, self).serialize_node(node, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        target_regime = node.attr('target_regime', **options)
+        trigger = node.child(Trigger, **options)
+        return cls(trigger=trigger,
+                   state_assignments=node.children(StateAssignment, **options),
+                   output_events=node.children(OutputEvent, **options),
+                   target_regime_name=target_regime)
 
 
 # import nineml.abstraction.dynamics.visitors.queriers

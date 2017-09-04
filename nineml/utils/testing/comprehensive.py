@@ -406,7 +406,7 @@ projA = Projection(
     post=popB,
     response=dynPropG,
     delay=Quantity(3.1, un.ms),
-    connectivity=conPropA,
+    connection_rule_properties=conPropA,
     port_connections=[
         ('pre', 'ESP1', 'response', 'ERP1'),
         ('response', 'A1', 'post', 'ARP1')])
@@ -419,7 +419,7 @@ projB = Projection(
         name="dynFPropsA",
         definition=dynF,
         properties={'P1': 10.7 * un.ms, 'P2': 3.1 * un.nA}),
-    connectivity=ConnectionRuleProperties(
+    connection_rule_properties=ConnectionRuleProperties(
         name="conPropB2",
         definition=conB),
     delay=1 * un.ms,
@@ -441,7 +441,7 @@ projC = Projection(
     post=popB,
     response=dynPropG,
     delay=2.4 * un.ms,
-    connectivity=conPropA,
+    connection_rule_properties=conPropA,
     port_connections=[
         ('pre', 'ESP1', 'response', 'ERP1'),
         ('response', 'A1', 'post', 'ARP1')])
@@ -454,7 +454,7 @@ projD = Projection(
         name="dynFPropsB",
         definition=dynF,
         properties={'P1': -1.72 * un.ms, 'P2': 88.0 * un.nA}),
-    connectivity=conPropB1,
+    connection_rule_properties=conPropB1,
     delay=1 * un.ms,
     port_connections=[
         EventPortConnection(
@@ -474,7 +474,7 @@ projE = Projection(
     post=popMultiB,
     response=dynPropH,
     delay=0.5 * un.s,
-    connectivity=conPropB1,
+    connection_rule_properties=conPropB1,
     port_connections=[
         ('pre', 'ESP1__e', 'response', 'ERP1'),
         ('response', 'A1', 'post', 'ARP1')])

@@ -27,36 +27,6 @@ class Definition(BaseReference):
     def component_class(self):
         return self._target
 
-#     def clone(self, memo=None, clone_definitions=None, refs=None, **kwargs):
-#         """
-#         Since the document they belong to is reset for clones simply return
-#         the clone of the referenced object
-# 
-#         Parameters
-#         ----------
-#         memo : dict[int, BaseNinemlObject]
-#             A dictionary containing already cloned nineml objects to avoid
-#             circular references.
-#         clone_definitions : 'local' | 'all' | None
-#             Flat to specify whether to clone component class referenced by the
-#             definition or just the definition itself
-#         refs : list[BaseReference]
-#             A list of all the references within the clone that may need to be
-#             updated once all objects are cloned
-#         """
-#         if memo is None:
-#             memo = {}
-#         if clone_definitions == 'all' or (clone_definitions == 'local' and
-#                                           self._target.document is None):
-#             target = self._target.clone(
-#                 clone_definitions=clone_definitions, memo=memo, **kwargs)
-#         else:
-#             target = self._target
-#         clone = self.__class__(target)
-#         if refs is not None:
-#             refs.append(clone)
-#         return clone
-
 
 class Prototype(Definition):
 
@@ -85,7 +55,7 @@ class Property(BaseULObject):
     nineml_type = "Property"
     defining_attributes = ('_name', '_quantity')
     nineml_attrs = ('name', 'quantity')
-    child_attrs = ('quantity',)
+    child_attrs = {'quantity': Quantity}
 
     def __init__(self, name, quantity):
         super(Property, self).__init__()
@@ -187,12 +157,9 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     __metaclass__ = ABCMeta  # Abstract base class
     v1_nineml_type = 'Component'
     defining_attributes = ('_name', '_definition', '_properties')
-    nineml_attrs = ('name', 'definition')
-    child_attrs = ('definition',)
-    children = ("Property", "Definition", 'Prototype')
-
-    class_to_member = {'Property': 'property'}
+    nineml_attrs = ('name',)
     children_types = (Property,)
+    child_attrs = {'definition': None}
 
     # initial_values is temporary, the idea longer-term is to use a separate
     # library such as SEDML
