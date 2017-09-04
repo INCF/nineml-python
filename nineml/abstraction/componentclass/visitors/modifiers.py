@@ -6,11 +6,7 @@ This file contains utility classes for modifying components.
 """
 from nineml.exceptions import NineMLRuntimeError, NineMLNameError
 from nineml.visitors import BaseVisitor
-from nineml.abstraction.expressions import Expression, Constant, Alias
-from nineml.abstraction.expressions.utils import is_builtin_symbol
-from nineml.base import (
-    ContainerObject, accessor_name_from_type, clone_id)
-from ..base import Parameter
+from nineml.abstraction.expressions import Expression
 
 
 class ComponentRenameSymbol(BaseVisitor):
