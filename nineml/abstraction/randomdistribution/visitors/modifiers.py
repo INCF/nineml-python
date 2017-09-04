@@ -6,8 +6,7 @@ This file contains utility classes for modifying components.
 """
 
 from ...componentclass.visitors.modifiers import (
-    ComponentRenameSymbol, ComponentAssignIndices, ComponentFlattener,
-    lookup_memo)
+    ComponentRenameSymbol, ComponentAssignIndices)
 from .base import BaseRandomDistributionVisitor
 
 
@@ -23,15 +22,3 @@ class RandomDistributionAssignIndices(ComponentAssignIndices,
 
     def action_randomdistribution(self, randomdistribution, **kwargs):
         return self.action_componentclass(randomdistribution, **kwargs)
-
-
-class RandomDistributionFlattener(ComponentFlattener):
-
-    @lookup_memo
-    def visit_randomdistribution(self, component_class, **kwargs):
-        ccn = component_class.__class__(
-            name=component_class.name,
-            standard_library=component_class.standard_library,
-            parameters=[p.accept_visitor(self, **kwargs)
-                        for p in component_class.parameters])
-        return ccn

@@ -69,9 +69,6 @@ class ConnectionRule(ComponentClass):
             self._dimension_resolver = resolver
         return resolver.dimension_of(element)
 
-    def find_element(self, element):
-        return ConnectionRuleElementFinder(element).found_in(self)
-
     def validate(self, **kwargs):
         ConnectionRuleValidator.validate_componentclass(self, **kwargs)
 
@@ -132,10 +129,9 @@ class ConnectionRule(ComponentClass):
 from .visitors.modifiers import (  # @IgnorePep8
     ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
 from .visitors.queriers import (  # @IgnorePep8
-    ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder,
+    ConnectionRuleRequiredDefinitions,
     ConnectionRuleExpressionExtractor, ConnectionRuleDimensionResolver)
 from .visitors.validators import ConnectionRuleValidator  # @IgnorePep8
-from .visitors.modifiers import ConnectionRuleFlattener  # @IgnorePep8
 
 
 one_to_one_connection_rule = ConnectionRule(

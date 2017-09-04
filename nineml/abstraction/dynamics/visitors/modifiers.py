@@ -9,7 +9,7 @@ import sympy
 from .base import BaseDynamicsVisitor
 from ...componentclass.visitors.modifiers import (
     ComponentRenameSymbol, ComponentAssignIndices,
-    ComponentSubstituteAliases, ComponentFlattener, lookup_memo)
+    ComponentSubstituteAliases)
 
 
 class DynamicsRenameSymbol(ComponentRenameSymbol,

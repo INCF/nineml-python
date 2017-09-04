@@ -98,6 +98,12 @@ class NineMLStopVisitException(NineMLException):
     pass
 
 
+class NineMLFoundElementException(NineMLStopVisitException):
+
+    def __init__(self, element):
+        self.element = element
+
+
 class NineMLRandomDistributionDelayException(NineMLException):
     pass
 

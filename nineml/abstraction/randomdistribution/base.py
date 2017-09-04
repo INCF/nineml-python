@@ -58,9 +58,6 @@ class RandomDistribution(ComponentClass):
             self._dimension_resolver = resolver
         return resolver.dimension_of(element)
 
-    def find_element(self, element):
-        return RandomDistributionElementFinder(element).found_in(self)
-
     def validate(self, **kwargs):
         RandomDistributionValidator.validate_componentclass(self, **kwargs)
 
@@ -109,8 +106,6 @@ class RandomDistribution(ComponentClass):
 from .visitors.modifiers import(  # @IgnorePep8
     RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
 from .visitors.queriers import (RandomDistributionRequiredDefinitions,  # @IgnorePep8
-                                RandomDistributionElementFinder,
                                 RandomDistributionExpressionExtractor,
                                 RandomDistributionDimensionResolver)
 from .visitors.validators import RandomDistributionValidator  # @IgnorePep8
-from .visitors.modifiers import RandomDistributionFlattener  # @IgnorePep8

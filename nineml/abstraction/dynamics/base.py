@@ -280,9 +280,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def overridden_in_regimes(self, alias):
         return (r for r in self.regimes if alias.name in r.alias_names)
 
-    def find_element(self, element):
-        return DynamicsElementFinder(element).found_in(self)
-
     def validate(self, validate_dimensions=None, **kwargs):
         if validate_dimensions is None:
             validate_dimensions = (
@@ -593,8 +590,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 # Import visitor modules and those which import visitor modules
 from .regimes import StateVariable, Regime  # @IgnorePep8
 from .visitors.validators import DynamicsValidator  # @IgnorePep8
-from .visitors.queriers import (DynamicsElementFinder,  # @IgnorePep8
-                                DynamicsRequiredDefinitions,
+from .visitors.queriers import (DynamicsRequiredDefinitions,  # @IgnorePep8
                                 DynamicsExpressionExtractor,
                                 DynamicsDimensionResolver,
                                 DynamicsHasRandomProcess,

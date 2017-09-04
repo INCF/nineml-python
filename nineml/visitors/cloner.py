@@ -6,7 +6,7 @@ from nineml.exceptions import NineMLNotBoundException
 class Cloner(BaseVisitor):
 
     def __init__(self, visit_as_class=None, exclude_annotations=False,
-                 clone_definitions=True, **kwargs):  # @UnusedVariable
+                 clone_definitions=True, no_memo=False, **kwargs):  # @UnusedVariable
         super(Cloner, self).__init__()
         self.visit_as_class = visit_as_class
         self.memo = {}
@@ -19,7 +19,8 @@ class Cloner(BaseVisitor):
         return results.post_action
 
     def visit(self, obj, nineml_cls=None, **kwargs):
-        clone_id = self.clone_id(obj)
+#         clone_id = self.clone_id(obj)
+        clone_id = id(obj)
         try:
             # See if the attribute has already been cloned in memo
             results = self.Results(None, self.memo[clone_id])
@@ -63,7 +64,8 @@ class Cloner(BaseVisitor):
             Any object
         """
         try:
-            return obj.clone_id
+            id_ = obj.clone_id
+            return id_
         except AttributeError:
             return id(obj)
 
@@ -94,3 +96,13 @@ class Cloner(BaseVisitor):
         To clone NineML Documents
         """
         results.post_action = nineml_cls(*doc.values(), clone=True, **kwargs)
+
+    def copy_indices(self, source, destination, **kwargs):  # @UnusedVariable
+        # Copy indices if destination is of same type (i.e. not flattened)
+        if source.nineml_type == destination.nineml_type:
+            assert isinstance(source, ContainerObject)
+            for s in source.elements():
+                d = destination._member_dict(s)[s.key]
+                key = accessor_name_from_type(source.class_to_member, s)
+                index = source.index_of(s)
+                destination._indices[key][d] = index

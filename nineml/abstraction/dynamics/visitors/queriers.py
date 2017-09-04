@@ -1,7 +1,7 @@
 from itertools import chain
 import sympy
 from ...componentclass.visitors.queriers import (
-    ComponentClassInterfaceInferer, ComponentElementFinder,
+    ComponentClassInterfaceInferer,
     ComponentRequiredDefinitions, ComponentExpressionExtractor,
     ComponentDimensionResolver)
 from .base import BaseDynamicsVisitor
@@ -76,68 +76,6 @@ class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
     @property
     def state_variable_names(self):
         return (r.name for r in self.state_variables)
-
-
-class DynamicsElementFinder(ComponentElementFinder,
-                               BaseDynamicsVisitor):
-
-    def __init__(self, element):
-        ComponentElementFinder.__init__(self, element)
-
-    def action_dynamics(self, dynamics, **kwargs):
-        return self.action_componentclass(dynamics, **kwargs)
-
-    def action_regime(self, regime, **kwargs):  # @UnusedVariable
-        if self.element == regime:
-            self._found()
-
-    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        if self.element == state_variable:
-            self._found()
-
-    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
-            self._found()
-
-    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
-            self._found()
-
-    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
-            self._found()
-
-    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
-            self._found()
-
-    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        if self.element == port:
-            self._found()
-
-    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
-        if self.element == event_out:
-            self._found()
-
-    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
-        if self.element == assignment:
-            self._found()
-
-    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        if self.element == time_derivative:
-            self._found()
-
-    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        if self.element == trigger:
-            self._found()
-
-    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
-        if self.element == on_condition:
-            self._found()
-
-    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        if self.element == on_event:
-            self._found()
 
 
 class DynamicsExpressionExtractor(ComponentExpressionExtractor,

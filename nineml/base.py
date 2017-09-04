@@ -8,6 +8,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException,
     NineMLSerializationError)
 from .visitors.cloner import Cloner
+from .visitors.queriers import ObjectFinder
 
 
 def sort_key(elem):
@@ -430,6 +431,18 @@ class BaseNineMLObject(object):
     def _children_keys_name(cls):
         return cls._child_accessor_name() + (
             '_names' if hasattr(cls, 'name') else '_keys')
+
+    def find(self, nineml_obj):
+        """
+        Finds the element within the container that equals the given
+        element
+
+        Parameters
+        ----------
+        nineml_obj : BaseNineMLObject
+            The object to find within the container
+        """
+        return ObjectFinder(nineml_obj, self).found
 
 
 def _clone_attr(attr, memo, **kwargs):

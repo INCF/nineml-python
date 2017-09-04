@@ -136,45 +136,6 @@ class ComponentRequiredDefinitions(BaseVisitor):
         return (e.name for e in self.expressions)
 
 
-class ComponentElementFinder(BaseVisitor):
-
-    def __init__(self, element):
-        super(ComponentElementFinder, self).__init__()
-        self.element = element
-
-    def found_in(self, component_class):
-        self.found = False
-        self.visit(component_class)
-        return self.found
-
-    def _found(self):
-        self.found = True
-
-    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        if self.element == component_class:
-            self._found()
-
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        if self.element == parameter:
-            self._found()
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        if self.element == alias:
-            self._found()
-
-    def action_constant(self, constant, **kwargs):  # @UnusedVariable
-        if self.element is constant:
-            self._found()
-
-    def action_dimension(self, dimension, **kwargs):  # @UnusedVariable
-        if self.element is dimension:
-            self._found()
-
-    def action_unit(self, unit, **kwargs):  # @UnusedVariable
-        if self.element is unit:
-            self._found()
-
-
 class ComponentExpressionExtractor(BaseVisitor):
 
     def __init__(self):
