@@ -43,10 +43,7 @@ class Cloner(BaseVisitor):
         for child_type in nineml_cls.children_types:
             init_args[child_type._children_iter_name()] = [
                 r.post_action for r in results.child_results(child_type)]
-        try:
-            results.post_action = nineml_cls(**init_args)
-        except:
-            raise
+        results.post_action = nineml_cls(**init_args)
 
     @classmethod
     def clone_id(cls, obj):

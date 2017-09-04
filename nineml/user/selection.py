@@ -162,7 +162,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     """
     nineml_type = "Selection"
     defining_attributes = ('_name', '_operation')
-    nineml_attrs = ('name', 'operation')
+    nineml_attrs = ('name',)
     child_attrs = {'operation': Concatenate}
 
     def __init__(self, name, operation, **kwargs):

@@ -127,7 +127,7 @@ class BaseVisitor(object):
         # themselves
         results = self.Results(action_result)
         # Add the container object to the list of scopes
-        for attr_name, child_type in obj.child_attrs.iteritems():
+        for attr_name, child_type in nineml_cls.child_attrs.iteritems():
             attr = getattr(obj, attr_name)
             if attr is None:
                 continue

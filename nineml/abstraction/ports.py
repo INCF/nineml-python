@@ -72,7 +72,7 @@ class DimensionedPort(Port, ExpressionSymbol):
     """
 
     defining_attributes = ('_name', '_dimension')
-    nineml_attrs = ('name', 'dimension')
+    nineml_attrs = ('name',)
     child_attrs = {'dimension': Dimension}
 
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated

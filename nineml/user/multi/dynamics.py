@@ -46,7 +46,7 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
 
     nineml_type = 'SubDynamics'
     defining_attributes = ('_name', '_component_class')
-    nineml_attrs = ('name', 'component_class')
+    nineml_attrs = ('name',)
     child_attrs = {'component_class': Dynamics}
 
     def __init__(self, name, component_class):
@@ -1049,7 +1049,7 @@ class SubDynamicsProperties(BaseULObject):
 
     nineml_type = 'SubDynamicsProperties'
     defining_attributes = ('_name', '_component')
-    nineml_attrs = ('name', 'component')
+    nineml_attrs = ('name',)
     child_attrs = {'component': DynamicsProperties}
 
     def __init__(self, name, component):

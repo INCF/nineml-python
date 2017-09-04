@@ -54,7 +54,7 @@ class Property(BaseULObject):
     """
     nineml_type = "Property"
     defining_attributes = ('_name', '_quantity')
-    nineml_attrs = ('name', 'quantity')
+    nineml_attrs = ('name',)
     child_attrs = {'quantity': Quantity}
 
     def __init__(self, name, quantity):
