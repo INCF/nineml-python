@@ -101,8 +101,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
          ('Regime', 'regime'),
          ('StateVariable', 'state_variable')))
     nineml_children = (StateVariable, AnalogSendPort, AnalogReceivePort,
-                      AnalogReducePort, EventSendPort, EventReceivePort,
-                      Regime) + ComponentClass.nineml_children
+                       AnalogReducePort, EventSendPort, EventReceivePort,
+                       Regime) + ComponentClass.nineml_children
 
     send_port_dicts = ('_analog_send_ports', '_event_send_ports')
     receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',
@@ -250,9 +250,12 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
-    def flatten(self):
-        results = Cloner(visit_as_class=Dynamics).visit(self)
-        return results.post_action
+    def flatten(self, name=None, **kwargs):  # @UnusedVariable
+        flattened = Cloner(visit_as_class=Dynamics, **kwargs).visit(
+            self, **kwargs).post_action
+        if name is not None:
+            flattened._name = name
+        return flattened
 
     def dimension_of(self, element):
         try:

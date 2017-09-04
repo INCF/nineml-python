@@ -15,6 +15,7 @@ docstring goes here
 from ..componentclass import ComponentClass, Parameter
 from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
 import nineml.units as un
+from nineml.visitors import Cloner
 
 
 class ConnectionRule(ComponentClass):
@@ -59,9 +60,6 @@ class ConnectionRule(ComponentClass):
 
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
-
-    def flatten(self, memo=None, **kwargs):  # @UnusedVariable
-        return ConnectionRuleFlattener(self).flatten
 
     def dimension_of(self, element):
         try:

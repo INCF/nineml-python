@@ -61,17 +61,19 @@ class Document(AnnotatedNineMLObject, dict):
         # circular references
         self._loading = []
         memo = kwargs.pop('memo', {})
+        cloner = Cloner(**kwargs)
         for nineml_obj in nineml_objects:
             self.add(
                 nineml_obj, memo=memo,
                 clone_definitions=kwargs.pop('clone_definitions', 'local'),
+                cloner=cloner,
                 **kwargs)
 
     def __repr__(self):
         return "NineMLDocument(url='{}', {} elements)".format(
             str(self.url), len(self))
 
-    def add(self, nineml_obj, clone=True, clone_definitions='local', **kwargs):
+    def add(self, nineml_obj, clone=True, cloner=None, **kwargs):
         """
         Adds a cloned version of the element to the document, setting the
         document reference (and the corresponding url) of clones to the
@@ -112,8 +114,9 @@ class Document(AnnotatedNineMLObject, dict):
                         self.url, nineml_obj.document.url))
         else:
             if clone:
-                nineml_obj = nineml_obj.clone(
-                    clone_definitions=clone_definitions, **kwargs)
+                if cloner is None:
+                    cloner = Cloner(**kwargs)
+                nineml_obj = cloner.clone(nineml_obj, **kwargs)
             AddToDocumentVisitor(self).visit(nineml_obj, **kwargs)
         return nineml_obj
 

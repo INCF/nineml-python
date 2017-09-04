@@ -114,7 +114,7 @@ def create_brunel(g, eta, name=None):
     # Projections
     input_prj = Projection(
         "External", external, all_cells,
-        connectivity=ConnectionRuleProperties(
+        connection_rule_properties=ConnectionRuleProperties(
             "OneToOne", one_to_one_class),
         response=psr,
         plasticity=DynamicsProperties(
@@ -132,7 +132,7 @@ def create_brunel(g, eta, name=None):
 
     exc_prj = Projection(
         "Excitation", exc_cells, all_cells,
-        connectivity=ConnectionRuleProperties(
+        connection_rule_properties=ConnectionRuleProperties(
             "RandomExc", random_fan_in_class, {"number": (Ce * unitless)}),
         response=psr,
         plasticity=DynamicsProperties(
@@ -150,7 +150,7 @@ def create_brunel(g, eta, name=None):
 
     inh_prj = Projection(
         "Inhibition", inh_cells, all_cells,
-        connectivity=ConnectionRuleProperties(
+        connection_rule_properties=ConnectionRuleProperties(
             "RandomInh", random_fan_in_class, {"number": (Ci * unitless)}),
         response=psr,
         plasticity=DynamicsProperties(

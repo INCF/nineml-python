@@ -86,7 +86,7 @@ class TestProjection(unittest.TestCase):
                 name="ResponseProps",
                 definition=self.response_dynamics,
                 properties={'P1': 10 * un.ms, 'P2': 1 * un.nA}),
-            connectivity=ConnectionRuleProperties(
+            connection_rule_properties=ConnectionRuleProperties(
                 name="ConnectionRuleProps",
                 definition=self.one_to_one),
             delay=1 * un.ms)

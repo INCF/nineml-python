@@ -179,18 +179,18 @@ class F(AnnotatedNineMLObject, DocumentLevelObject):
                    node.attr('r', dtype=int))
 
 
-class Container(AnnotatedNineMLObject, DocumentLevelObject):
+class Container(ContainerObject, DocumentLevelObject):
 
     nineml_type = 'Container'
     v1_nineml_type = 'Cunfaener'
     defining_attributes = ('name', 'a', 'bs', 'c', 'd')
-    nineml_attr = ('name', 'bs', d')
+    nineml_attr = ('name', 'bs', 'd')
     nineml_children = (B,)
     nineml_child = {'a': A,
-                   'c': C}
+                    'c': C}
 
     def __init__(self, name, a, bs, c, d):
-        AnnotatedNineMLObject.__init__(self)
+        ContainerObject.__init__(self)
         self.name = name
         DocumentLevelObject.__init__(self)
         self.a = a

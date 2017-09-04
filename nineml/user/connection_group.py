@@ -19,9 +19,9 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                            '_destination_port', '_connectivity', '_delay')
     nineml_attr = ('name', 'source_port', 'destination_port')
     nineml_child = {'source': ComponentArray,
-                   'destination': ComponentArray,
-                   'connectivity': Connectivity,
-                   'delay': Quantity}
+                    'destination': ComponentArray,
+                    'connectivity': Connectivity,
+                    'delay': Quantity}
 
     def __init__(self, name, source, destination, source_port,
                  destination_port, connectivity, delay,
@@ -130,7 +130,7 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         return cls(name, source, destination,
                    source_port=port_conn.send_port_name,
                    destination_port=port_conn.receive_port_name,
-                   connectivity=conn_props, delay=delay)
+                   connection_rule_properties=conn_props, delay=delay)
 
     @abstractmethod
     def _check_ports(self, source_port, destination_port):
@@ -172,7 +172,7 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
                            **options)
         return cls(name=name, source=source, destination=destination,
                    source_port=source_port, destination_port=destination_port,
-                   connectivity=connectivity, delay=delay)
+                   connection_rule_properties=connectivity, delay=delay)
 
 
 class AnalogConnectionGroup(BaseConnectionGroup):

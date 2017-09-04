@@ -14,6 +14,10 @@ class Cloner(BaseVisitor):
         self.clone_definitions = clone_definitions
         self.refs = []
 
+    def clone(self, obj, **kwargs):
+        results = self.visit(obj, **kwargs)
+        return results.post_action
+
     def visit(self, obj, nineml_cls=None, **kwargs):
         clone_id = self.clone_id(obj)
         try:

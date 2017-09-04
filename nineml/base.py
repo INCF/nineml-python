@@ -281,9 +281,7 @@ class BaseNineMLObject(object):
         exclude_annotations : bool
             Flags that annotations should be omitted from the clone
         """
-        cloner = Cloner(**kwargs)
-        results = cloner.visit(self)
-        return results.post_action
+        return Cloner(**kwargs).clone(self)
 
 #     def clone(self, memo=None, **kwargs):
 #         """

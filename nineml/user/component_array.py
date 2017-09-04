@@ -8,7 +8,7 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
     nineml_type = "ComponentArray"
     defining_attributes = ('_name', "_size", "_dynamics_properties")
     nineml_attr = ('name', 'size',)
-    nineml_child = {'dynamics_properties': DynamicsProperties}
+    nineml_child = {'dynamics_properties': None}
     suffix = {'pre': '__cell', 'post': '__cell', 'response': '__psr',
               'plasticity': '__pls'}
 

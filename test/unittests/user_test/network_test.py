@@ -213,20 +213,20 @@ class TestNetwork(unittest.TestCase):
 
         ext_prj = Projection(
             "External", pre=ext, post=exc_and_inh, response=self.psr,
-            plasticity=self.static_ext, connectivity=self.one_to_one,
+            plasticity=self.static_ext, connection_rule_properties=self.one_to_one,
             delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
 
         exc_prj = Projection(
             "Excitation", pre=exc, post=exc_and_inh, response=self.psr,
-            plasticity=static_exc, connectivity=exc_random_fan_in,
+            plasticity=static_exc, connection_rule_properties=exc_random_fan_in,
             delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
         inh_prj = Projection(
             "Inhibition", pre=inh, post=exc_and_inh, response=self.psr,
-            plasticity=static_inh, connectivity=inh_random_fan_in,
+            plasticity=static_inh, connection_rule_properties=inh_random_fan_in,
             delay=self.delay,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])
@@ -308,7 +308,7 @@ class TestNetwork(unittest.TestCase):
 
         rand_delay_prj = Projection(
             "External", pre=pop1, post=pop2, response=self.psr,
-            plasticity=self.static_ext, connectivity=self.one_to_one,
+            plasticity=self.static_ext, connection_rule_properties=self.one_to_one,
             delay=RandomDistributionValue(rand_delay) * un.ms,
             port_connections=[('response', 'Isyn', 'post', 'Isyn'),
                               ('plasticity', 'weight', 'response', 'weight')])

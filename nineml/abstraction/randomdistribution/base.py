@@ -1,6 +1,7 @@
 from ..componentclass import ComponentClass
 from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
 from .. import Parameter
+from nineml.visitors import Cloner
 
 
 class RandomDistribution(ComponentClass):
@@ -48,9 +49,6 @@ class RandomDistribution(ComponentClass):
 
     def required_for(self, expressions):
         return RandomDistributionRequiredDefinitions(self, expressions)
-
-    def flatten(self):
-        return RandomDistributionFlattener(self).flattened
 
     def dimension_of(self, element):
         try:
