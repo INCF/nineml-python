@@ -99,7 +99,7 @@ class SingleValue(BaseValue):
     """
     nineml_type = "SingleValue"
     defining_attributes = ("_value",)
-    nineml_attrs = ('value',)
+    nineml_attr = ('value',)
 
     def __init__(self, value):
         super(SingleValue, self).__init__()
@@ -256,7 +256,7 @@ class ArrayValue(BaseValue):
 
     nineml_type = "ArrayValue"
     defining_attributes = ("_values",)
-    nineml_attrs = ('values',)
+    nineml_attr = ('values',)
     DataFile = collections.namedtuple('DataFile', 'url mimetype, columnName')
 
     def __init__(self, values, datafile=None):
@@ -537,7 +537,7 @@ class RandomDistributionValue(BaseValue):
 
     nineml_type = "RandomDistributionValue"
     defining_attributes = ("_distribution",)
-    nineml_attrs = ('distribution',)
+    nineml_attr = ('distribution',)
 
     def __init__(self, distribution):
         super(RandomDistributionValue, self).__init__()

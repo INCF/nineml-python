@@ -15,7 +15,7 @@ class BasePortConnection(BaseULObject):
     defining_attributes = ('send_port_name', 'receive_port_name',
                            '_sender_role', '_receiver_role',
                            '_sender_name', '_receiver_name')
-    nineml_attrs = ('send_port_name', 'receive_port_name',
+    nineml_attr = ('send_port_name', 'receive_port_name',
                     'sender_role', 'receiver_role',
                     'sender_name', 'receiver_name')
 

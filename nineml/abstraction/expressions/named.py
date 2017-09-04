@@ -49,7 +49,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
     """
     nineml_type = 'Alias'
     defining_attributes = ('_name', '_rhs')
-    nineml_attrs = ('name', 'rhs')
+    nineml_attr = ('name', 'rhs')
 
     def __init__(self, name, rhs=None):
         """ Constructor for an Alias
@@ -110,7 +110,7 @@ class Constant(BaseALObject, ExpressionSymbol):
 
     nineml_type = 'Constant'
     defining_attributes = ('_name', '_value', '_units')
-    nineml_attrs = ('name', 'value')
+    nineml_attr = ('name', 'value')
     child_attrs = {'units': Unit}
 
     def __init__(self, name, value, units=None):

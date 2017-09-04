@@ -21,13 +21,13 @@ class TestAccessors(unittest.TestCase):
     non_standard_attrs = ('target_regime_name', 'port_name', 'values',
                           'src_port_name')
 
-    def test_nineml_attrs(self):
+    def test_nineml_attr(self):
         for name, cls in all_types.iteritems():
             if cls == Document:
                 continue
-            for attr_name in cls.nineml_attrs:
+            for attr_name in cls.nineml_attr:
                 for elem in instances_of_all_types[name].itervalues():
-                    # Test that the attribute listed in nineml_attrs is
+                    # Test that the attribute listed in nineml_attr is
                     # accessible
                     try:
                         getattr(elem, attr_name)

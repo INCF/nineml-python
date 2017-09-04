@@ -17,7 +17,7 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
 
     defining_attributes = ('_name', '_source', '_destination', '_source_port',
                            '_destination_port', '_connectivity', '_delay')
-    nineml_attrs = ('name', 'source_port', 'destination_port')
+    nineml_attr = ('name', 'source_port', 'destination_port')
     child_attrs = {'source': ComponentArray,
                    'destination': ComponentArray,
                    'connectivity': Connectivity,

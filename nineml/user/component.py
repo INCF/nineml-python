@@ -54,7 +54,7 @@ class Property(BaseULObject):
     """
     nineml_type = "Property"
     defining_attributes = ('_name', '_quantity')
-    nineml_attrs = ('name',)
+    nineml_attr = ('name',)
     child_attrs = {'quantity': Quantity}
 
     def __init__(self, name, quantity):
@@ -157,7 +157,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     __metaclass__ = ABCMeta  # Abstract base class
     v1_nineml_type = 'Component'
     defining_attributes = ('_name', '_definition', '_properties')
-    nineml_attrs = ('name',)
+    nineml_attr = ('name',)
     children_types = (Property,)
     child_attrs = {'definition': None}
 

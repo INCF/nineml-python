@@ -30,7 +30,7 @@ class Cloner(BaseVisitor):
 
     def default_post_action(self, obj, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         init_args = {}
-        for attr in nineml_cls.nineml_attrs:
+        for attr in nineml_cls.nineml_attr:
             try:
                 init_args[attr] = getattr(obj, attr)
             except NineMLNotBoundException:

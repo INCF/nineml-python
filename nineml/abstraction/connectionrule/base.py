@@ -22,7 +22,7 @@ class ConnectionRule(ComponentClass):
     nineml_type = 'ConnectionRule'
     defining_attributes = ('_name', '_parameters', '_standard_library',
                            '_aliases', '_constants')
-    nineml_attrs = ComponentClass.nineml_attrs + ('standard_library',)
+    nineml_attr = ComponentClass.nineml_attr + ('standard_library',)
 
     standard_library_basepath = 'http://nineml.net/9ML/1.0/connectionrules/'
     _base_len = len(standard_library_basepath)

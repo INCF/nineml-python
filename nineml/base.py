@@ -47,7 +47,7 @@ class BaseNineMLObject(object):
     """
     children = []
     v1_nineml_type = None
-    nineml_attrs = ()
+    nineml_attr = ()
     child_attrs = {}
     children_types = ()
 

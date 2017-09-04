@@ -27,7 +27,7 @@ class A(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'A'
     defining_attributes = ('name', 'x', 'y')
-    nineml_attrs = ('name', 'x', 'y')
+    nineml_attr = ('name', 'x', 'y')
     default_x = 5
 
     def __init__(self, name, x, y):
@@ -65,7 +65,7 @@ class B(AnnotatedNineMLObject):
 
     nineml_type = 'B'
     defining_attributes = ('name', 'z',)
-    nineml_attrs = ('name', 'z',)
+    nineml_attr = ('name', 'z',)
 
     def __init__(self, name, z):
         super(B, self).__init__()
@@ -86,7 +86,7 @@ class E(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'E'
     defining_attributes = ('name', 'u', 'v')
-    nineml_attrs = ('name', 'u', 'v')
+    nineml_attr = ('name', 'u', 'v')
 
     def __init__(self, name, u, v):
         AnnotatedNineMLObject.__init__(self)
@@ -112,7 +112,7 @@ class C(AnnotatedNineMLObject, ContainerObject):
 
     nineml_type = 'C'
     defining_attributes = ('name', '_es', 'f', 'g')
-    nineml_attrs = ('name', 'f', 'g')
+    nineml_attr = ('name', 'f', 'g')
     class_to_member = {'E': 'e'}
     children_types = (E,)
 
@@ -157,7 +157,7 @@ class F(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'F'
     defining_attributes = ('name', 'w', 'r')
-    nineml_attrs = ('name', 'w', 'r')
+    nineml_attr = ('name', 'w', 'r')
 
     def __init__(self, name, w, r):
         AnnotatedNineMLObject.__init__(self)
@@ -184,7 +184,7 @@ class Container(AnnotatedNineMLObject, DocumentLevelObject):
     nineml_type = 'Container'
     v1_nineml_type = 'Cunfaener'
     defining_attributes = ('name', 'a', 'bs', 'c', 'd')
-    nineml_attrs = ('name', 'bs', d')
+    nineml_attr = ('name', 'bs', d')
     children_types = (B,)
     child_attrs = {'a': A,
                    'c': C}

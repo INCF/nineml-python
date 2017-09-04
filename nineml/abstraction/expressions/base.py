@@ -45,7 +45,7 @@ class Expression(AnnotatedNineMLObject):
     """
 
     defining_attributes = ('_rhs',)
-    nineml_attrs = ('rhs',)
+    nineml_attr = ('rhs',)
 
     # Regular expression for extracting function names from strings (i.e. a
     # chain of valid identifiers followed by an open parenthesis.
@@ -482,7 +482,7 @@ class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):
     """
 
     defining_attributes = ('_name', '_rhs')
-    nineml_attrs = ('name', 'rhs')
+    nineml_attr = ('name', 'rhs')
 
     def __init__(self, lhs, rhs, assign_to_reserved=False):
         ExpressionWithLHS.__init__(self, rhs)

@@ -29,7 +29,7 @@ class StateVariable(BaseALObject):
 
     nineml_type = 'StateVariable'
     defining_attributes = ('_name', '_dimension')
-    nineml_attrs = ('name',)
+    nineml_attr = ('name',)
     child_attrs = {'dimension': Dimension}
 
     def accept_visitor(self, visitor, **kwargs):
@@ -105,7 +105,7 @@ class TimeDerivative(ODE, BaseALObject):
     """
 
     nineml_type = 'TimeDerivative'
-    nineml_attrs = ('variable',) + ODE.nineml_attrs
+    nineml_attr = ('variable',) + ODE.nineml_attr
 
     def __init__(self, variable, rhs):
         ODE.__init__(self,
@@ -201,7 +201,7 @@ class Regime(BaseALObject, ContainerObject):
                        'OnCondition': 'on_condition',
                        'Alias': 'alias'}
     children_types = (TimeDerivative, OnEvent, OnCondition, Alias)
-    nineml_attrs = ('name',)
+    nineml_attr = ('name',)
     _n = 0
 
     @classmethod

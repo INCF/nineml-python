@@ -23,7 +23,7 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     """
     nineml_type = "Population"
     defining_attributes = ('_name', '_size', '_cell')
-    nineml_attrs = ('name', 'size')
+    nineml_attr = ('name', 'size')
     child_attrs = {'cell': DynamicsProperties}
 
     def __init__(self, name, size, cell):

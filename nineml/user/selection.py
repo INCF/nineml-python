@@ -42,7 +42,7 @@ class Item(BaseULObject):
 
     nineml_type = 'Item'
     defining_attributes = ('_index', '_population')
-    nineml_attrs = ('index', 'population')
+    nineml_attr = ('index', 'population')
 
     def __init__(self, index, population):
         BaseULObject.__init__(self)
@@ -162,7 +162,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     """
     nineml_type = "Selection"
     defining_attributes = ('_name', '_operation')
-    nineml_attrs = ('name',)
+    nineml_attr = ('name',)
     child_attrs = {'operation': Concatenate}
 
     def __init__(self, name, operation, **kwargs):

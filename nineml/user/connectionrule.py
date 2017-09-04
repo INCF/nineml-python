@@ -38,7 +38,7 @@ class BaseConnectivity(BaseNineMLObject):
     __metaclass__ = ABCMeta
     defining_attributes = ('_rule_properties', '_source_size',
                            '_destination_size')
-    nineml_attrs = ('rule_properties', 'source_size', 'destination_size')
+    nineml_attr = ('rule_properties', 'source_size', 'destination_size')
 
     def __init__(self, rule_properties, source_size,
                  destination_size, **kwargs):  # @UnusedVariable

@@ -34,7 +34,7 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
     """
 
     nineml_type = 'StateAssignment'
-    nineml_attrs = ('variable', 'rhs')
+    nineml_attr = ('variable', 'rhs')
 
     def __init__(self, variable, rhs):
         """
@@ -92,7 +92,7 @@ class OutputEvent(BaseALObject):
 
     nineml_type = 'OutputEvent'
     defining_attributes = ('port_name',)
-    nineml_attrs = ('port_name',)
+    nineml_attr = ('port_name',)
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
@@ -171,7 +171,7 @@ class Transition(BaseALObject, ContainerObject):
     class_to_member = {'StateAssignment': 'state_assignment',
                        'OutputEvent': 'output_event'}
     children_types = (StateAssignment, OutputEvent)
-    nineml_attrs = ('target_regime_name',)
+    nineml_attr = ('target_regime_name',)
 
     def __init__(self, state_assignments=None, output_events=None,
                  target_regime_name=None):
@@ -353,7 +353,7 @@ class OnEvent(Transition):
 
     nineml_type = "OnEvent"
     defining_attributes = (Transition.defining_attributes + ('src_port_name',))
-    nineml_attrs = (Transition.nineml_attrs + ('src_port_name',))
+    nineml_attr = (Transition.nineml_attr + ('src_port_name',))
 
     def accept_visitor(self, visitor, **kwargs):
         """ |VISITATION| """
