@@ -7,7 +7,6 @@ docstring needed
 from ....componentclass.visitors.validators import (
     AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,
-    NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
 from ..base import BaseConnectionRuleVisitor
 
@@ -29,14 +28,6 @@ class NoUnresolvedSymbolsConnectionRuleValidator(
     parameters, aliases, statevariables and ports
     """
     pass
-
-
-class NoDuplicatedObjectsConnectionRuleValidator(
-        NoDuplicatedObjectsComponentValidator,
-        BaseConnectionRuleVisitor):
-
-    def action_connectionrule(self, connectionrule, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(connectionrule)
 
 
 class CheckNoLHSAssignmentsToMathsNamespaceConnectionRuleValidator(

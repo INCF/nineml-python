@@ -4,13 +4,13 @@ This file contains the DynamicsValidator class for validating component
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
+from nineml.visitors.validators import NoDuplicatedObjectsValidator
 from .general import (
     TimeDerivativesAreDeclaredDynamicsValidator,
     StateAssignmentsAreOnStateVariablesDynamicsValidator,
     AliasesAreNotRecursiveDynamicsValidator,
     NoUnresolvedSymbolsDynamicsValidator,
-    RegimeGraphDynamicsValidator, NoDuplicatedObjectsDynamicsValidator,
+    RegimeGraphDynamicsValidator,
     RegimeOnlyHasOneHandlerPerEventDynamicsValidator,
     CheckNoLHSAssignmentsToMathsNamespaceDynamicsValidator,
     DimensionalityDynamicsValidator)
@@ -38,7 +38,7 @@ class DynamicsValidator(object):
         """
         # Check class structure:
         TypesDynamicsValidator(component_class, **kwargs)
-        NoDuplicatedObjectsDynamicsValidator(component_class, **kwargs)
+        NoDuplicatedObjectsValidator(component_class, **kwargs)
         DuplicateRegimeNamesDynamicsValidator(component_class, **kwargs)
         LocalNameConflictsDynamicsValidator(component_class, **kwargs)
         DimensionNameConflictsDynamicsValidator(component_class, **kwargs)

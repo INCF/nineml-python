@@ -41,6 +41,13 @@ class BaseVisitor(object):
         def parent(self):
             return self._parent
 
+        def __repr__(self):
+            return ("Context(parent={}, parent_cls={}, parent_result={}, "
+                    "attr_name={}, dct={}".format(self.parent, self.parent_cls,
+                                                  self.parent_result,
+                                                  self.attr_name,
+                                                  self.dct))
+
         @property
         def parent_cls(self):
             return self._parent_cls

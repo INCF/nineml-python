@@ -7,9 +7,7 @@ docstring needed
 from nineml.exceptions import NineMLRuntimeError, NineMLDimensionError
 from nineml.abstraction.expressions.utils import is_valid_lhs_target
 from nineml.abstraction.expressions import reserved_identifiers, Expression
-from nineml.utils import assert_no_duplicates
 from nineml.base import BaseNineMLObject
-from nineml.abstraction.ports import Port
 import operator
 import sympy
 from sympy import sympify
@@ -117,33 +115,6 @@ class NoUnresolvedSymbolsComponentValidator(BaseVisitor):
         self.add_symbol(constant.name)
 
     def default_action(self, obj, nineml_cls, **kwargs):
-        pass
-
-
-class NoDuplicatedObjectsComponentValidator(BaseVisitor):
-
-    def __init__(self, component_class, **kwargs):  # @UnusedVariable
-        BaseVisitor.__init__(self)
-        self.all_objects = list()
-        self.visit(component_class)
-        assert_no_duplicates(self.all_objects)
-
-    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(component_class)
-
-    def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
-        self.all_objects.append(parameter)
-
-    def action_alias(self, alias, **kwargs):  # @UnusedVariable
-        self.all_objects.append(alias)
-
-    def action_constant(self, constant, **kwargs):  # @UnusedVariable
-        self.all_objects.append(constant)
-
-    def action_dimension(self, dimension, **kwargs):
-        pass
-
-    def action_unit(self, unit, **kwargs):
         pass
 
 

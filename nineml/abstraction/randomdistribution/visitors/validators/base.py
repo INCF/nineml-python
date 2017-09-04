@@ -4,11 +4,10 @@ This file contains the RandomDistributionValidator class for validating componen
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-
+from nineml.visitors.validators import NoDuplicatedObjectsValidator
 from .general import (
     AliasesAreNotRecursiveRandomDistributionValidator,
     NoUnresolvedSymbolsRandomDistributionValidator,
-    NoDuplicatedObjectsRandomDistributionValidator,
     CheckNoLHSAssignmentsToMathsNamespaceRandomDistributionValidator)
 from .names import (
     LocalNameConflictsRandomDistributionValidator,
@@ -29,8 +28,7 @@ class RandomDistributionValidator(object):
         """
         # Check class structure:
         TypesRandomDistributionValidator(component_class, **kwargs)
-#         NoDuplicatedObjectsRandomDistributionValidator(component_class,
-#                                                        **kwargs)
+        NoDuplicatedObjectsValidator(component_class, **kwargs)
 #         LocalNameConflictsRandomDistributionValidator(component_class,
 #                                                       **kwargs)
 #         DimensionNameConflictsRandomDistributionValidator(component_class,

@@ -5,10 +5,10 @@ This file contains the ConnectionRuleValidator class for validating component
 :license: BSD-3, see LICENSE for details.
 """
 
+from nineml.visitors.validators import NoDuplicatedObjectsValidator
 from .general import (
     AliasesAreNotRecursiveConnectionRuleValidator,
     NoUnresolvedSymbolsConnectionRuleValidator,
-    NoDuplicatedObjectsConnectionRuleValidator,
     CheckNoLHSAssignmentsToMathsNamespaceConnectionRuleValidator)
 from .names import (
     LocalNameConflictsConnectionRuleValidator,
@@ -29,7 +29,7 @@ class ConnectionRuleValidator(object):
         """
         # Check class structure:
         TypesConnectionRuleValidator(component_class, **kwargs)
-#         NoDuplicatedObjectsConnectionRuleValidator(component_class, **kwargs)
+        NoDuplicatedObjectsValidator(component_class, **kwargs)
 #         LocalNameConflictsConnectionRuleValidator(component_class, **kwargs)
 #         DimensionNameConflictsConnectionRuleValidator(component_class,
 #                                                       **kwargs)

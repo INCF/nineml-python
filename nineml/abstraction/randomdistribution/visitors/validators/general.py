@@ -7,7 +7,6 @@ docstring needed
 from ....componentclass.visitors.validators import (
     AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,
-    NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator)
 from ..base import BaseRandomDistributionVisitor
 
@@ -28,12 +27,6 @@ class NoUnresolvedSymbolsRandomDistributionValidator(
     Check that aliases and timederivatives are defined in terms of other
     parameters, aliases, statevariables and ports
     """
-    pass
-
-
-class NoDuplicatedObjectsRandomDistributionValidator(
-        NoDuplicatedObjectsComponentValidator,
-        BaseRandomDistributionVisitor):
     pass
 
 

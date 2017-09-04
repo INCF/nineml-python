@@ -10,7 +10,6 @@ from nineml.utils import assert_no_duplicates
 from ....componentclass.visitors.validators import (
     AliasesAreNotRecursiveComponentValidator,
     NoUnresolvedSymbolsComponentValidator,
-    NoDuplicatedObjectsComponentValidator,
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
     DimensionalityComponentValidator)
 from ..base import BaseDynamicsVisitor
@@ -146,53 +145,6 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
 
     def default_action(self, obj, nineml_cls, **kwargs):
         pass
-
-
-class NoDuplicatedObjectsDynamicsValidator(
-        NoDuplicatedObjectsComponentValidator,
-        BaseDynamicsVisitor):
-
-    def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
-        return self.action_componentclass(dynamics, **kwargs)
-
-    def action_regime(self, regime, **kwargs):  # @UnusedVariable
-        self.all_objects.append(regime)
-
-    def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(state_variable)
-
-    def action_analogsendport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_eventsendport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_eventreceiveport(self, port, **kwargs):  # @UnusedVariable
-        self.all_objects.append(port)
-
-    def action_outputevent(self, event_out, **kwargs):  # @UnusedVariable
-        self.all_objects.append(event_out)
-
-    def action_stateassignment(self, assignment, **kwargs):  # @UnusedVariable
-        self.all_objects.append(assignment)
-
-    def action_timederivative(self, time_derivative, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(time_derivative)
-
-    def action_trigger(self, trigger, **kwargs):  # @UnusedVariable
-        self.all_objects.append(trigger)
-
-    def action_onevent(self, onevent, **kwargs):  # @UnusedVariable
-        self.all_objects.append(onevent)
-
-    def action_oncondition(self, oncondition, **kwargs):  # @UnusedVariable
-        self.all_objects.append(oncondition)
 
 
 class RegimeOnlyHasOneHandlerPerEventDynamicsValidator(BaseDynamicsVisitor):
