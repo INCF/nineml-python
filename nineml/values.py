@@ -9,11 +9,9 @@ import itertools
 from itertools import izip
 from operator import itemgetter
 import numpy
-import nineml
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
 from nineml.utils import nearly_equal
-
 
 # =============================================================================
 # Operator argument decorators
@@ -256,7 +254,7 @@ class ArrayValue(BaseValue):
 
     nineml_type = "ArrayValue"
     defining_attributes = ("_values",)
-    nineml_attr = ('values',)
+    nineml_attr = ('_values',)
     DataFile = collections.namedtuple('DataFile', 'url mimetype, columnName')
 
     def __init__(self, values, datafile=None):
@@ -537,7 +535,9 @@ class RandomDistributionValue(BaseValue):
 
     nineml_type = "RandomDistributionValue"
     defining_attributes = ("_distribution",)
-    nineml_attr = ('distribution',)
+    nineml_child = {
+        'distribution':
+        nineml.user.RandomDistributionProperties}
 
     def __init__(self, distribution):
         super(RandomDistributionValue, self).__init__()

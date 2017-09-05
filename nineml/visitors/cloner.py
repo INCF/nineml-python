@@ -1,17 +1,32 @@
 from .base import BaseVisitor
 from copy import copy
 from nineml.exceptions import (
-    NineMLNotBoundException, NineMLInvalidElementTypeException)
+    NineMLNotBoundException, NineMLInvalidElementTypeException,
+    NineMLRuntimeError)
 
 
 class Cloner(BaseVisitor):
+    """
+    A Cloner visitor that visits any NineML object (except Documents) and
+    creates a copy of the object
+    """
 
     def __init__(self, visit_as_class=None, exclude_annotations=False,
-                 clone_definitions=True, no_memo=False, **kwargs):  # @UnusedVariable @IgnorePep8
+                 clone_definitions=None, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
         super(Cloner, self).__init__()
         self.visit_as_class = visit_as_class
         self.memo = {}
         self.exclude_annotations = exclude_annotations
+        self.document = document
+        if clone_definitions is None:
+            if document is not None:
+                clone_definitions = 'local'
+            else:
+                clone_definitions = 'all'
+        elif clone_definitions == 'local' and document is None:
+            raise NineMLRuntimeError(
+                "'document' kwarg must be provided if clone_definitions is "
+                " set to 'local'")
         self.clone_definitions = clone_definitions
         self.refs = []
 
@@ -62,12 +77,11 @@ class Cloner(BaseVisitor):
         results.post_action = nineml_cls(**init_args)
 
     def post_action_definition(self, definition, results, nineml_cls,
-                               **kwargs):
+                               **kwargs):  # @UnusedVariable
         if self.clone_definitions == 'all' or (
             self.clone_definitions == 'local' and
-                definition._target.document is None):
-            target = self.visit(
-                definition.target, **kwargs).post_action
+                definition._target.document is self.document):
+            target = results.attr_result('target').post_action
         else:
             target = definition.target
         clone = nineml_cls(target=target)

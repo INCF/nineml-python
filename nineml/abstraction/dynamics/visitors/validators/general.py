@@ -13,7 +13,7 @@ from ....componentclass.visitors.validators import (
     CheckNoLHSAssignmentsToMathsNamespaceComponentValidator,
     DimensionalityComponentValidator)
 from ..base import BaseDynamicsVisitor
-from nineml import units as un
+import nineml.units as un
 
 
 class TimeDerivativesAreDeclaredDynamicsValidator(BaseDynamicsVisitor):

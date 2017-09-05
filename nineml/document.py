@@ -58,13 +58,9 @@ class Document(AnnotatedNineMLObject, dict):
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
-        cloner = kwargs.pop('cloner', Cloner(**kwargs))
+        cloner = kwargs.pop('cloner', Cloner(document=self, **kwargs))
         for nineml_obj in nineml_objects:
-            self.add(
-                nineml_obj,
-                clone_definitions=kwargs.pop('clone_definitions', 'local'),
-                cloner=cloner,
-                **kwargs)
+            self.add(nineml_obj, cloner=cloner, **kwargs)
 
     def __repr__(self):
         return "NineMLDocument(url='{}', {} elements)".format(

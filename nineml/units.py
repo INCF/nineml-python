@@ -9,8 +9,6 @@ from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLDimensionError, NineMLValueError,
     NineMLSerializationError)
-from nineml.values import (
-    SingleValue, ArrayValue, RandomDistributionValue)
 from nineml.utils import ensure_valid_identifier
 
 
@@ -432,7 +430,7 @@ class Quantity(AnnotatedNineMLObject):
     nineml_type = 'Quantity'
     defining_attributes = ("_value", "_units")
     nineml_child = {'value': None,
-                   'units': Unit}
+                    'units': Unit}
 
     def __init__(self, value, units=None):
         super(Quantity, self).__init__()
@@ -652,7 +650,6 @@ class Quantity(AnnotatedNineMLObject):
                      'UnitCurrent': 'i', 'UnitLuminousIntensity': 'j',
                      'UnitSubstance': 'n', 'UnitTemperature': 'k'}
 
-
 # ----------------- #
 # Common dimensions #
 # ----------------- #
@@ -771,3 +768,7 @@ kg_per_coulomb = Unit(name="kg_per_coulomb", dimension=mass_per_charge,
                       power=0)
 cm_per_s = Unit(name="cm_per_s", dimension=velocity, power=-2)
 pF_per_nA = Unit(name='pF_per_nA', dimension=voltage / time, power=-6)
+
+
+from nineml.values import (  # @IgnorePep8
+    SingleValue, ArrayValue, RandomDistributionValue)

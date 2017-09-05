@@ -1,12 +1,12 @@
 # encoding: utf-8
 from .base import BaseULObject
-from .population import Population
 from .component import (Property, Component, Definition,
                         Prototype)
+from .randomdistribution import RandomDistributionProperties
+from .population import Population
 from .dynamics import Initial, DynamicsProperties
 from .connectionrule import (
     ConnectionRuleProperties, Connectivity, InverseConnectivity)
-from .randomdistribution import RandomDistributionProperties
 from .multi import MultiDynamics, MultiDynamicsProperties, append_namespace
 from .port_connections import (
     AnalogPortConnection, EventPortConnection)
