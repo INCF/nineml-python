@@ -4,7 +4,6 @@ from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error,
     NineMLValueError)
-from nineml.base import AnnotatedNineMLObject
 from nineml.reference import BaseReference
 from nineml.utils import ensure_valid_identifier
 from ..abstraction import ComponentClass
