@@ -8,11 +8,11 @@ A Python library for working with 9ML model descriptions.
 __version__ = "0.2dev"
 
 from . import annotations  # @IgnorePep8
-# from . import units  # @IgnorePep8
+from . import units  # @IgnorePep8
 from .document import Document  # @IgnorePep8
-# from . import abstraction  # @IgnorePep8
-# from . import user  # @IgnorePep8
-# from . import exceptions  # @IgnorePep8
+from . import abstraction  # @IgnorePep8
+from . import user  # @IgnorePep8
+from . import exceptions  # @IgnorePep8
 from .units import Unit, Dimension, Quantity  # @IgnorePep8
 from .abstraction import (  # @IgnorePep8
     Dynamics, ConnectionRule, RandomDistribution)

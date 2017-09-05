@@ -12,6 +12,7 @@ import numpy
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
 from nineml.utils import nearly_equal
+from nineml.user.randomdistribution import RandomDistributionProperties
 
 # =============================================================================
 # Operator argument decorators
@@ -536,8 +537,7 @@ class RandomDistributionValue(BaseValue):
     nineml_type = "RandomDistributionValue"
     defining_attributes = ("_distribution",)
     nineml_child = {
-        'distribution':
-        nineml.user.RandomDistributionProperties}
+        'distribution': RandomDistributionProperties}
 
     def __init__(self, distribution):
         super(RandomDistributionValue, self).__init__()
@@ -599,7 +599,7 @@ class RandomDistributionValue(BaseValue):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        distribution = node.child(nineml.user.RandomDistributionProperties,
+        distribution = node.child(RandomDistributionProperties,
                                   allow_ref=True, **options)
         return cls(distribution)
 
