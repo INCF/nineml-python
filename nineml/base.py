@@ -251,7 +251,7 @@ class BaseNineMLObject(object):
         """
         return self.key
 
-    def clone(self, **kwargs):
+    def clone(self, cloner=None, **kwargs):
         """
         General purpose clone operation, which copies the attributes used
         to define equality between 9ML objects. Other attributes, such as
@@ -264,7 +264,9 @@ class BaseNineMLObject(object):
         exclude_annotations : bool
             Flags that annotations should be omitted from the clone
         """
-        return Cloner(**kwargs).clone(self)
+        if cloner is None:
+            cloner = Cloner(**kwargs)
+        return cloner.clone(self, **kwargs)
 
 #     def clone(self, memo=None, **kwargs):
 #         """

@@ -74,7 +74,7 @@ class DynamicsClonerPrefixNamespace_test(unittest.TestCase):
         # Test Cloner, 1 level of hierachy
         # Everything should be as before:
         b = MultiDynamics(name='B',
-                          sub_components={'c1': c, 'c2': c},
+                          sub_components={'c1': c, 'c2': c.clone()},
                           port_connections=[('c1', 'C1', 'c2', 'cIn1'),
                                             ('c2', 'emit', 'c1', 'spikein')],
                           port_exposures=[('c2', 'cIn2', 'cIn2_c2'),

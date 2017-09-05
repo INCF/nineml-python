@@ -1,6 +1,7 @@
 import unittest
 from nineml.abstraction import Dynamics, ConnectionRule, RandomDistribution
 from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.visitors.cloner import Cloner
 
 
 class TestCloners(unittest.TestCase):
@@ -32,29 +33,32 @@ class TestCloners(unittest.TestCase):
                              "{}".format(rd.name, rd.find_mismatch(clone)))
 
     def test_instances_of_all_types(self):
-        prev_elem = None
-        memo = {}
-        for elems in instances_of_all_types.itervalues():
-            for elem in elems.itervalues():
-                clone = elem.clone(memo=memo)
+        prev_obj = None
+        cloner = Cloner()
+        for objs in instances_of_all_types.itervalues():
+            for obj in objs.itervalues():
+                # Skip temporary objects
+                if type(obj).__name__.startswith('_'):
+                    continue
+                clone = obj.clone(cloner=cloner)
                 if hasattr(clone, 'validate'):
                     clone.validate()
-                self.assertNotEqual(id(clone), id(elem))
-                elem_keys = set(elem.__dict__.keys())
+                self.assertNotEqual(id(clone), id(obj))
+                obj_keys = set(obj.__dict__.keys())
                 clone_keys = set(clone.__dict__.keys())
                 self.assertEqual(
-                    elem_keys, clone_keys,
+                    obj_keys, clone_keys,
                     "Not all attributes were copied to clone ({}) of {}"
-                    .format("', '".join(elem_keys - clone_keys), elem))
+                    .format("', '".join(obj_keys - clone_keys), obj))
                 try:
-                    self.assertEqual(elem, clone,
+                    self.assertEqual(obj, clone,
                                      "Clone of {} does not match original:\n{}"
-                                     .format(elem, elem.find_mismatch(clone)))
+                                     .format(obj, obj.find_mismatch(clone)))
                 except:
-                    elem.find_mismatch(clone)
-                self.assertNotEqual(elem, prev_elem,
-                                    "{} matches previous elem {} incorrectly")
-                prev_elem = elem
+                    obj.find_mismatch(clone)
+                self.assertNotEqual(obj, prev_obj,
+                                    "{} matches previous obj {} incorrectly")
+                prev_obj = obj
 
 
 if __name__ == '__main__':

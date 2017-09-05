@@ -23,8 +23,12 @@ class Cloner(BaseVisitor):
         # Temporary objects generated when flattening a MultiDynamics object
         # (e.g. _NamespaceObject, _MultiRegime, MultiTransition), which can't
         # be referenced by their memory position as the memory is freed after
-        # they go out of scope, are not saved in the memo.
-        id_ = id(obj) if not type(obj).__name__.startswith('_') else None
+        # they go out of scope, are not saved in # the memo.
+        if type(obj).__name__.startswith('_'):
+            assert nineml_cls is not None
+            id_ = None
+        else:
+            id_ = id(obj)
         try:
             # See if the attribute has already been cloned in memo
             results = self.Results(None, self.memo[id_])
@@ -77,13 +81,6 @@ class Cloner(BaseVisitor):
         to in the containing container.
         """
         results.post_action = copy(reference)
-
-
-    def post_action_nineml(self, doc, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        """
-        To clone NineML Documents
-        """
-        results.post_action = nineml_cls(*doc.values(), clone=True, **kwargs)
 
     def copy_index(self, obj, clone):
         """

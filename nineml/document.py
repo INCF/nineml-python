@@ -58,11 +58,10 @@ class Document(AnnotatedNineMLObject, dict):
         # Stores the list of elements that are being loaded to check for
         # circular references
         self._loading = []
-        memo = kwargs.pop('memo', {})
-        cloner = Cloner(**kwargs)
+        cloner = kwargs.pop('cloner', Cloner(**kwargs))
         for nineml_obj in nineml_objects:
             self.add(
-                nineml_obj, memo=memo,
+                nineml_obj,
                 clone_definitions=kwargs.pop('clone_definitions', 'local'),
                 cloner=cloner,
                 **kwargs)
@@ -214,7 +213,7 @@ class Document(AnnotatedNineMLObject, dict):
         for name in dict.keys(self):
             self[name]
 
-    def clone(self, **kwargs):
+    def clone(self, cloner=None, **kwargs):
         """
         Creates a duplicate of the current document with its url set to None to
         allow it to be written to a different file
@@ -225,8 +224,9 @@ class Document(AnnotatedNineMLObject, dict):
             A list of all the references within the clone that may need to be
             updated once all objects are cloned
         """
-        cloner = Cloner(**kwargs)
-        return cloner.visit(self).post_action
+        if cloner is None:
+            cloner = Cloner(**kwargs)
+        return Document(*self.values(), clone=True, cloner=cloner, **kwargs)
 
     def find_mismatch(self, other):
         """
