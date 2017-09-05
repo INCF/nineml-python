@@ -508,6 +508,7 @@ doc2 = Document(
     selA, conA, conPropA, conB, projA, projB, projC, projD, netA, netB,
     clone_definitions=True)
 
+
 # -----------------------------------------------------------------------------
 # Create dictionaries holding all nineml types and corresponding examples in
 # the example document

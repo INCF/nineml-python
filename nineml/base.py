@@ -907,23 +907,14 @@ class ContainerObject(BaseNineMLObject):
 
     @property
     def document(self):
-        try:
-            # If a document level object return its document attribute
-            document = DocumentLevelObject.document(self)
-        except TypeError:
+        if isinstance(self, DocumentLevelObject):
+            document = self._document
+        elif self.parent is not None:
             # Otherwise return parent's document if set
-            if self.parent is not None:
-                document = self.parent.document
-            else:
-                document = None
+            document = self.parent.document
+        else:
+            document = None
         return document
-
-# 
-#     def _copy_to_clone(self, clone, memo, **kwargs):
-#         super(ContainerObject, self)._copy_to_clone(clone, memo, **kwargs)
-#         clone._indices = defaultdict(dict)
-#         clone._parent = (self._parent.clone(memo, **kwargs)
-#                          if self._parent is not None else None)
 
 
 def pluralise(word):
