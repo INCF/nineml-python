@@ -33,6 +33,7 @@ class BaseNineMLObject(object):
     nineml_attr = ()
     nineml_child = {}
     nineml_children = ()
+    temporary = False
 
     def __eq__(self, other):
         return self.equals(other)
@@ -86,6 +87,7 @@ class BaseNineMLObject(object):
                 other_elem = sorted(other_elem, key=sort_key)
             if isinstance(self_elem, BaseNineMLObject):
                 if not self_elem.equals(other_elem, **kwargs):
+                    self_elem.equals(other_elem, **kwargs)
                     return False
             elif isinstance(self_elem, dict):
                 try:
@@ -267,48 +269,6 @@ class BaseNineMLObject(object):
         if cloner is None:
             cloner = Cloner(**kwargs)
         return cloner.clone(self, **kwargs)
-
-#     def clone(self, memo=None, **kwargs):
-#         """
-#         General purpose clone operation, which copies the attributes used
-#         to define equality between 9ML objects. Other attributes, such as
-#         the document the 9ML object belongs to are re-initialized. Use this
-#         in favour of Python's copy and deepcopy functions unless you know what
-#         you want (i.e. things are likely to break if you are not careful).
-# 
-#         Parameters
-#         ----------
-#         memo : dict
-#             A dictionary to hold copies of objects that have already been
-#             cloned to avoid issues with circular references
-#         exclude_annotations : bool
-#             Flags that annotations should be omitted from the clone
-#         """
-#         if memo is None:
-#             memo = {}
-#         try:
-#             # See if the attribute has already been cloned in memo
-#             clone = memo[clone_id(self)]
-#         except KeyError:
-#             clone = copy(self)  # Create a new object of the same type
-#             clone.__dict__ = {}  # Wipe it clean to start from scratch
-#             # Save the element in the memo to avoid it being cloned twice in
-#             # the object hierarchy. Due to possible recursion this needs to be
-#             # set before the '_copy_to_clone' method is called.
-#             memo[clone_id(self)] = clone
-#             # The actual setting of attributes is handled by _copy_to_clone is
-#             # used to allow sub classes to override it and control inheritance
-#             # from super classes
-#             self._copy_to_clone(clone, memo, **kwargs)
-#         return clone
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        self._clone_defining_attr(clone, memo, **kwargs)
-
-    def _clone_defining_attr(self, clone, memo, **kwargs):
-        for attr_name in self.defining_attributes:
-            setattr(clone, attr_name,
-                    _clone_attr(getattr(self, attr_name), memo, **kwargs))
 
     def write(self, url, **kwargs):
         """

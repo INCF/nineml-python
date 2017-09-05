@@ -96,6 +96,8 @@ def split_multi_regime_name(name):
 
 class _NamespaceObject(BaseNineMLObject):
 
+    temporary = True
+
     def __init__(self, sub_component, element, parent=None):
         self._sub_component = sub_component
         self._object = element

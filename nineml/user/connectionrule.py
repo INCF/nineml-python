@@ -94,10 +94,6 @@ class BaseConnectivity(BaseNineMLObject):
     @abstractmethod
     def has_been_sampled(self):
         pass
-# 
-#     @abstractmethod
-#     def clone(self, memo, **kwargs):
-#         pass
 
 
 class Connectivity(BaseConnectivity):
@@ -107,7 +103,8 @@ class Connectivity(BaseConnectivity):
     nineml_type = '_Connectivity'
 
     def __init__(self, rule_properties, source_size,
-                 destination_size, random_seed=None, rng_cls=None):
+                 destination_size, random_seed=None, rng_cls=None,
+                 **kwargs):  # @UnusedVariable
         """
         Parameters
         ----------
@@ -198,26 +195,13 @@ class Connectivity(BaseConnectivity):
                  (int(math.floor(rng.random() * self._destination_size))
                   for _ in xrange(N)))
             for s in xrange(self._source_size)))
-# 
-#     def clone(self, memo=None, random_seeds=False, **kwargs):
-#         if memo is None:
-#             memo = {}
-#         try:
-#             # See if the attribute has already been cloned in memo
-#             clone = memo[clone_id(self)]
-#         except KeyError:
-#             if random_seeds:
-#                 random_seed = self._seed
-#             else:
-#                 random_seed = None
-#             clone = self.__class__(
-#                 self.rule_properties.clone(memo=memo,
-#                                            random_seeds=random_seeds,
-#                                            **kwargs),
-#                 self.source_size, self.destination_size,
-#                 random_seed=random_seed, rng_cls=self._rng_cls)
-#             memo[clone_id(self)] = clone
-#         return clone
+
+    @property
+    def key(self):
+        return '{}__{}__{}__{}'.format(self.rule_properties.name,
+                                       self.source_size,
+                                       self.destination_size,
+                                       self._seed)
 
     def has_been_sampled(self):
         return True  # Because seed and RNG class is set at start
@@ -232,10 +216,14 @@ class InverseConnectivity(BaseNineMLObject):
     """
     nineml_type = '_InverseConnectivity'
     defining_attributes = ('_connectivity',)
-    nineml_child = {'_connectivity': Connectivity}
+    nineml_child = {'connectivity': Connectivity}
 
     def __init__(self, connectivity):  # @UnusedVariable
         self._connectivity = connectivity
+
+    @property
+    def connectivity(self):
+        return self._connectivity
 
     def __eq__(self, other):
         return self._connectivity == other._connectivity

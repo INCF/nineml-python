@@ -12,7 +12,8 @@ class Cloner(BaseVisitor):
     """
 
     def __init__(self, visit_as_class=None, exclude_annotations=False,
-                 clone_definitions=None, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
+                 clone_definitions=None, document=None,
+                 random_seeds=False, **kwargs):  # @UnusedVariable @IgnorePep8
         super(Cloner, self).__init__()
         self.visit_as_class = visit_as_class
         self.memo = {}
@@ -28,6 +29,7 @@ class Cloner(BaseVisitor):
                 "'document' kwarg must be provided if clone_definitions is "
                 " set to 'local'")
         self.clone_definitions = clone_definitions
+        self.random_seeds = random_seeds
         self.refs = []
 
     def clone(self, obj, **kwargs):
@@ -39,7 +41,7 @@ class Cloner(BaseVisitor):
         # (e.g. _NamespaceObject, _MultiRegime, MultiTransition), which can't
         # be referenced by their memory position as the memory is freed after
         # they go out of scope, are not saved in # the memo.
-        if type(obj).__name__.startswith('_'):
+        if obj.temporary:
             assert nineml_cls is not None
             id_ = None
         else:
@@ -52,7 +54,7 @@ class Cloner(BaseVisitor):
                                                 **kwargs)
             clone = results.post_action
             self.copy_index(obj, clone)
-            if id_ is not None:
+            if not obj.temporary:
                 self.memo[id_] = clone
         return results
 
@@ -87,6 +89,21 @@ class Cloner(BaseVisitor):
         clone = nineml_cls(target=target)
         self.refs.append(clone)
         results.post_action = clone
+
+    def post_action__connectivity(self, connectivity, results, nineml_cls,
+                                  **kwargs):
+        if self.random_seeds:
+            random_seed = connectivity._seed
+        else:
+            random_seed = None
+        clone = nineml_cls(
+            results.attr_result('rule_properties').post_action,
+            random_seed=random_seed,
+            source_size=connectivity.source_size,
+            destination_size=connectivity.destination_size,
+            **kwargs)
+        results.post_action = clone
+        return clone
 
     def post_action_reference(self, reference, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         """

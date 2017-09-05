@@ -94,6 +94,7 @@ class Document(AnnotatedNineMLObject, dict):
                 if nineml_obj == self[nineml_obj.name]:
                     nineml_obj = self[nineml_obj.name]
                 else:
+                    nineml_obj == self[nineml_obj.name]
                     raise NineMLNameError(
                         "Could not add '{}' as a different object with that "
                         "name already exists in the document '{}'"

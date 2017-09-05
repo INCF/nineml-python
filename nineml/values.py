@@ -9,10 +9,10 @@ import itertools
 from itertools import izip
 from operator import itemgetter
 import numpy
+import nineml
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
 from nineml.utils import nearly_equal
-from nineml.user.randomdistribution import RandomDistributionProperties
 
 # =============================================================================
 # Operator argument decorators
@@ -255,7 +255,7 @@ class ArrayValue(BaseValue):
 
     nineml_type = "ArrayValue"
     defining_attributes = ("_values",)
-    nineml_attr = ('_values',)
+    nineml_attr = ('values',)
     DataFile = collections.namedtuple('DataFile', 'url mimetype, columnName')
 
     def __init__(self, values, datafile=None):
@@ -277,7 +277,7 @@ class ArrayValue(BaseValue):
 
     @property
     def values(self):
-        return iter(self._values)
+        return self._values
 
     @property
     def key(self):
@@ -315,7 +315,7 @@ class ArrayValue(BaseValue):
             ('...' if len(self) >= 5 else ''))
 
     def __hash__(self):
-        return hash(self.values)
+        return hash(tuple(self.values))
 
     def inverse(self):
         try:
@@ -536,8 +536,7 @@ class RandomDistributionValue(BaseValue):
 
     nineml_type = "RandomDistributionValue"
     defining_attributes = ("_distribution",)
-    nineml_child = {
-        'distribution': RandomDistributionProperties}
+    nineml_child = {'distribution': None}
 
     def __init__(self, distribution):
         super(RandomDistributionValue, self).__init__()
@@ -599,7 +598,7 @@ class RandomDistributionValue(BaseValue):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
-        distribution = node.child(RandomDistributionProperties,
+        distribution = node.child(nineml.RandomDistributionProperties,
                                   allow_ref=True, **options)
         return cls(distribution)
 

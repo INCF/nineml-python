@@ -265,8 +265,9 @@ class MultiDynamics(Dynamics):
         '_analog_receive_ports', '_analog_reduce_ports', '_event_send_ports',
         '_event_receive_ports')
     nineml_children = (SubDynamics, AnalogPortConnection, EventPortConnection,
-                       AnalogReceivePortExposure, AnalogReducePortExposure,
-                       EventSendPortExposure, EventReceivePortExposure)
+                       AnalogSendPortExposure, AnalogReceivePortExposure,
+                       AnalogReducePortExposure, EventSendPortExposure,
+                       EventReceivePortExposure)
 
     def __init__(self, name, sub_components, port_connections=None,
                  analog_port_connections=None, event_port_connections=None,
@@ -831,6 +832,8 @@ class MultiDynamics(Dynamics):
 
 class _MultiRegime(Regime):
 
+    temporary = True
+
     def __init__(self, sub_regimes, parent):
         """
         Parameters
@@ -1323,6 +1326,8 @@ class _MultiTransition(BaseALObject, ContainerObject):
     Collects multiple simultaneous transitions into a single transition
     """
 
+    temporary = True
+
     def __init__(self, sub_transitions, parent):
         BaseALObject.__init__(self)
         ContainerObject.__init__(self)
@@ -1483,6 +1488,8 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
 
 
 class _ExposedOutputEvent(OutputEvent):
+
+    temporary = True
 
     def __init__(self, port_exposure):
         self._port_exposure = port_exposure

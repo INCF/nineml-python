@@ -8,7 +8,7 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
     nineml_type = "ComponentArray"
     defining_attributes = ('_name', "_size", "_dynamics_properties")
     nineml_attr = ('name', 'size',)
-    nineml_child = {'dynamics_properties': None}
+    nineml_child = {'dynamics_properties': DynamicsProperties}
     suffix = {'pre': '__cell', 'post': '__cell', 'response': '__psr',
               'plasticity': '__pls'}
 
@@ -17,6 +17,9 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)
         self.size = size
+        if not dynamics_properties.component_class.is_flat:
+            dynamics_properties = dynamics_properties.flatten(
+                name + '_flat_dyn')
         self._dynamics_properties = dynamics_properties
 
     @property
@@ -52,4 +55,3 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
         return cls(name=node.attr('name', **options),
                    size=node.attr('Size', in_body=True, dtype=int, **options),
                    dynamics_properties=dynamics_properties)
-
