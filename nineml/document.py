@@ -1,5 +1,3 @@
-from itertools import chain
-# from nineml.base import clone_id
 from nineml.visitors import BaseVisitor
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError)

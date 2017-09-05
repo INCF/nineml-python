@@ -20,9 +20,10 @@ class Cloner(BaseVisitor):
         return results.post_action
 
     def visit(self, obj, nineml_cls=None, **kwargs):
-        # Temporary objects, which can't be referenced by their memory position
-        # as the memory is freed after they go out of scope, are not saved in
-        # the memo
+        # Temporary objects generated when flattening a MultiDynamics object
+        # (e.g. _NamespaceObject, _MultiRegime, MultiTransition), which can't
+        # be referenced by their memory position as the memory is freed after
+        # they go out of scope, are not saved in the memo.
         id_ = id(obj) if not type(obj).__name__.startswith('_') else None
         try:
             # See if the attribute has already been cloned in memo
@@ -94,23 +95,3 @@ class Cloner(BaseVisitor):
                 obj._child_accessor_name()][clone] = index
         except (AttributeError, NineMLInvalidElementTypeException):
             pass
-
-
-def clone_id(obj):
-    """
-    Used in storing cloned objects in 'memo' dictionary to avoid duplicate
-    clones of the same object referenced from different points in a complex
-    data tree. First looks for special method 'clone_id', which is used by
-    temporary objects to produce an ID that will persist for the life of
-    the visit and falls back on the 'id' function that returns a
-    memory-address based ID.
-
-    Parameters
-    ----------
-    obj : object
-        Any object
-    """
-    try:
-        return obj.clone_id
-    except AttributeError:
-        return id(obj)

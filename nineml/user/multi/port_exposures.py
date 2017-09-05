@@ -11,7 +11,6 @@ from nineml.exceptions import (
     NineMLNameError)
 from .namespace import append_namespace
 from nineml.utils import ensure_valid_identifier
-from nineml.visitors.cloner import clone_id
 
 
 class BasePortExposure(BaseULObject):
@@ -188,10 +187,6 @@ class _PortExposureAlias(Alias):
     def _copy_to_clone(self, clone, memo, **kwargs):
         clone._exposure = self._exposure.clone(memo=memo, **kwargs)
 
-    @property
-    def clone_id(self):
-        return (type(self), clone_id(self._exposure))
-
 
 class _SendPortExposureAlias(_PortExposureAlias):
 
@@ -271,10 +266,6 @@ class _LocalAnalogPortConnections(Alias):
     def __hash__(self):
         return (hash(self._receive_port_name) ^ hash(self._receiver_name) ^
                 hash(self._parent))
-
-    @property
-    def clone_id(self):
-        return tuple(clone_id(pc) for pc in self._port_connections)
 
     @property
     def receive_port_name(self):

@@ -13,7 +13,6 @@ from nineml.abstraction import (
 from nineml.exceptions import NineMLImmutableError, NineMLNameError
 from nineml.abstraction.expressions import reserved_identifiers
 from nineml.base import BaseNineMLObject
-from nineml.visitors.cloner import clone_id
 
 
 # Matches multiple underscores, so they can be escaped by appending another
@@ -124,27 +123,6 @@ class _NamespaceObject(BaseNineMLObject):
     @property
     def annotations(self):
         return self._object.annotations
-
-    def clone(self, memo=None, **kwargs):  # @UnusedVariable
-        if memo is None:
-            memo = {}
-        try:
-            # See if the attribute has already been cloned in memo
-            clone = memo[clone_id(self)]
-        except KeyError:
-            clone = self.__class__(self._sub_component, self._object,
-                                   self._parent)
-            memo[clone_id(self)] = clone
-        return clone
-
-    @property
-    def clone_id(self):
-        """
-        Return a unique ID for the namespace object that is invariant on
-        separate accessor calls (namespace objects are generated on the fly).
-        """
-        return (clone_id(self._sub_component), clone_id(self._object),
-                clone_id(self._parent))
 
 
 class _NamespaceNamed(_NamespaceObject):
@@ -276,15 +254,6 @@ class _NamespaceTransition(_NamespaceNamed):
     @property
     def num_output_events(self):
         return self._object.num_output_events
-
-    @property
-    def clone_id(self):
-        """
-        The parent doesn't need to be included as namespace transitions are
-        combined into MultiTransitions, which the reference the parent
-        MultiRegime container
-        """
-        return (clone_id(self._sub_component), clone_id(self._object))
 
 
 class _NamespaceOnEvent(_NamespaceTransition, OnEvent):
@@ -453,12 +422,3 @@ class _NamespaceRegime(_NamespaceNamed, Regime):
     @property
     def num_on_conditions(self):
         return self._object.num_on_conditions
-
-    @property
-    def clone_id(self):
-        """
-        The parent doesn't need to be included as namespace regimes are
-        combined into MultiRegimes, which the reference the parent
-        MultiDynamics container
-        """
-        return (clone_id(self._sub_component), clone_id(self._object))

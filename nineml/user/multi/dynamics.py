@@ -5,7 +5,6 @@ from .. import BaseULObject
 import sympy
 import operator
 from operator import attrgetter
-from nineml.visitors.cloner import clone_id
 from itertools import product, groupby, izip, repeat
 from nineml.user import DynamicsProperties, Definition
 from nineml.annotations import PY9ML_NS
@@ -862,11 +861,6 @@ class _MultiRegime(Regime):
         return hash(self.name) ^ hash(self._parent)
 
     @property
-    def clone_id(self):
-        return tuple(chain([id(self._parent)],
-                           [clone_id(sr) for sr in self.sub_regimes]))
-
-    @property
     def sub_regimes(self):
         return self._sub_regimes.itervalues()
 
@@ -1352,11 +1346,6 @@ class _MultiTransition(BaseALObject, ContainerObject):
                 hash(self._parent))
 
     @property
-    def clone_id(self):
-        return tuple(chain([clone_id(self._parent)],
-                           [clone_id(sr) for sr in self.sub_transitions]))
-
-    @property
     def target_regime(self):
         sub_regimes = copy(self._parent._sub_regimes)
         sub_regimes.update(
@@ -1510,10 +1499,6 @@ class _ExposedOutputEvent(OutputEvent):
     def port(self):
         return self._port_exposure
 
-    @property
-    def clone_id(self):
-        return (type(self), clone_id(self.port_exposure))
-
 
 class _DelayedOnEvent(_NamespaceOnCondition):
     """
@@ -1530,8 +1515,3 @@ class _DelayedOnEvent(_NamespaceOnCondition):
     def trigger(self):
         state_var = make_delay_trigger_name(self._port_connection)
         return Trigger('t > {}'.format(state_var))
-
-    @property
-    def clone_id(self):
-        return tuple(chain((type(self), clone_id(self._sub_component),
-                           [clone_id(pc) for pc in self._port_connections])))

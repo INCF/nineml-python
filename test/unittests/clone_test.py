@@ -46,9 +46,12 @@ class TestCloners(unittest.TestCase):
                     elem_keys, clone_keys,
                     "Not all attributes were copied to clone ({}) of {}"
                     .format("', '".join(elem_keys - clone_keys), elem))
-                self.assertEqual(elem, clone,
-                                 "Clone of {} does not match original:\n{}"
-                                 .format(elem, elem.find_mismatch(clone)))
+                try:
+                    self.assertEqual(elem, clone,
+                                     "Clone of {} does not match original:\n{}"
+                                     .format(elem, elem.find_mismatch(clone)))
+                except:
+                    elem.find_mismatch(clone)
                 self.assertNotEqual(elem, prev_elem,
                                     "{} matches previous elem {} incorrectly")
                 prev_elem = elem
