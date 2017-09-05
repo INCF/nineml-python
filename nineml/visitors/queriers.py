@@ -19,4 +19,4 @@ class ObjectFinder(BaseVisitor):
 
     def action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable
         if obj == self.ref_obj:
-            raise NineMLFoundElementException()
+            raise NineMLFoundElementException(obj)

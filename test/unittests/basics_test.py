@@ -200,7 +200,8 @@ class TestAccessors(unittest.TestCase):
                     regimes[0].on_conditions
                     regimes[1].on_conditions
                 flat_elem = elem.flatten(elem.name)
-                for accessor_name in cls.class_to_member.itervalues():
+                for child_type in cls.nineml_children:
+                    accessor_name = child_type._child_accessor_name()
                     if accessor_name.endswith('_port'):
                         continue  # Already covered in previous test
                     all_sc_nums = []

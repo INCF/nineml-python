@@ -12,7 +12,8 @@ from nineml.abstraction import (
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
 from nineml.exceptions import NineMLImmutableError, NineMLNameError
 from nineml.abstraction.expressions import reserved_identifiers
-from nineml.base import BaseNineMLObject, clone_id
+from nineml.base import BaseNineMLObject
+from nineml.visitors.cloner import clone_id
 
 
 # Matches multiple underscores, so they can be escaped by appending another
@@ -276,6 +277,15 @@ class _NamespaceTransition(_NamespaceNamed):
     def num_output_events(self):
         return self._object.num_output_events
 
+    @property
+    def clone_id(self):
+        """
+        The parent doesn't need to be included as namespace transitions are
+        combined into MultiTransitions, which the reference the parent
+        MultiRegime container
+        """
+        return (clone_id(self._sub_component), clone_id(self._object))
+
 
 class _NamespaceOnEvent(_NamespaceTransition, OnEvent):
 
@@ -443,3 +453,12 @@ class _NamespaceRegime(_NamespaceNamed, Regime):
     @property
     def num_on_conditions(self):
         return self._object.num_on_conditions
+
+    @property
+    def clone_id(self):
+        """
+        The parent doesn't need to be included as namespace regimes are
+        combined into MultiRegimes, which the reference the parent
+        MultiDynamics container
+        """
+        return (clone_id(self._sub_component), clone_id(self._object))

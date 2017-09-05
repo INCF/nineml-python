@@ -1,10 +1,10 @@
 import unittest
 from nineml.base import (
-    BaseNineMLObject, accessor_name_from_type)
+    BaseNineMLObject)
 from nineml.utils.testing.comprehensive import dynA
 from nineml.exceptions import (
-    NineMLNameError, NineMLInvalidElementTypeException, NineMLRuntimeError)
-from nineml.abstraction import Dynamics, Trigger, Parameter
+    NineMLNameError, NineMLRuntimeError)
+from nineml.abstraction import Parameter
 import nineml.units as un
 
 # 

@@ -90,5 +90,5 @@ class ConnectionRuleVisitorTests(unittest.TestCase):
         param = conA.parameter('number')
         self.assertEqual(conA.dimension_of(param), un.dimensionless)
         conA.assign_indices()  # Doesn't actually do anything at this stage
-        self.assertTrue(conA.find_element(param))
+        self.assertTrue(conA.find(param) is param)
         self.assertEqual(conA.all_expressions, [])

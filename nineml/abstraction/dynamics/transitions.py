@@ -168,8 +168,6 @@ class Transition(BaseALObject, ContainerObject):
 
     defining_attributes = ('_state_assignments', '_output_events',
                            'target_regime_name')
-    class_to_member = {'StateAssignment': 'state_assignment',
-                       'OutputEvent': 'output_event'}
     nineml_children = (StateAssignment, OutputEvent)
     nineml_attr = ('target_regime_name',)
 

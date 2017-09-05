@@ -2,7 +2,7 @@ from itertools import chain
 from .. import BaseULObject
 import sympy
 import operator
-from nineml.base import clone_id, BaseNineMLObject, _clone_attr
+from nineml.base import BaseNineMLObject, _clone_attr
 from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
@@ -11,6 +11,7 @@ from nineml.exceptions import (
     NineMLNameError)
 from .namespace import append_namespace
 from nineml.utils import ensure_valid_identifier
+from nineml.visitors.cloner import clone_id
 
 
 class BasePortExposure(BaseULObject):

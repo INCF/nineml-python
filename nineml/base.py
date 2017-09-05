@@ -24,24 +24,6 @@ def hash_non_str(key):
 camel_caps_re = re.compile(r'([a-z])([A-Z])')
 
 
-def clone_id(obj):
-    """
-    Used in storing cloned objects in 'memo' dictionary to avoid duplicate
-    clones of the same object referenced from different points in a complex
-    data tree. First looks for special method 'clone_id' and falls back on
-    the 'id' function that returns a memory-address based ID.
-
-    Parameters
-    ----------
-    obj : object
-        Any object
-    """
-    try:
-        return obj.clone_id
-    except AttributeError:
-        return id(obj)
-
-
 class BaseNineMLObject(object):
     """
     Base class for all 9ML-type classes

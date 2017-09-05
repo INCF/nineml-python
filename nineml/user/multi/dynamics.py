@@ -5,7 +5,7 @@ from .. import BaseULObject
 import sympy
 import operator
 from operator import attrgetter
-from nineml.base import clone_id
+from nineml.visitors.cloner import clone_id
 from itertools import product, groupby, izip, repeat
 from nineml.user import DynamicsProperties, Definition
 from nineml.annotations import PY9ML_NS
@@ -864,7 +864,7 @@ class _MultiRegime(Regime):
     @property
     def clone_id(self):
         return tuple(chain([id(self._parent)],
-                           [id(sr) for sr in self.sub_regimes]))
+                           [clone_id(sr) for sr in self.sub_regimes]))
 
     @property
     def sub_regimes(self):
@@ -1353,8 +1353,8 @@ class _MultiTransition(BaseALObject, ContainerObject):
 
     @property
     def clone_id(self):
-        return tuple(chain([id(self._parent)],
-                           [id(sr) for sr in self.sub_transitions]))
+        return tuple(chain([clone_id(self._parent)],
+                           [clone_id(sr) for sr in self.sub_transitions]))
 
     @property
     def target_regime(self):

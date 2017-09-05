@@ -20,16 +20,20 @@ class Cloner(BaseVisitor):
         return results.post_action
 
     def visit(self, obj, nineml_cls=None, **kwargs):
-        clone_id = self.clone_id(obj)
+        # Temporary objects, which can't be referenced by their memory position
+        # as the memory is freed after they go out of scope, are not saved in
+        # the memo
+        id_ = id(obj) if not type(obj).__name__.startswith('_') else None
         try:
             # See if the attribute has already been cloned in memo
-            results = self.Results(None, self.memo[clone_id])
+            results = self.Results(None, self.memo[id_])
         except KeyError:
             results = super(Cloner, self).visit(obj, nineml_cls=nineml_cls,
                                                 **kwargs)
             clone = results.post_action
             self.copy_index(obj, clone)
-            self.memo[clone_id] = clone
+            if id_ is not None:
+                self.memo[id_] = clone
         return results
 
     def action(self, obj, nineml_cls, **kwargs):
@@ -51,25 +55,6 @@ class Cloner(BaseVisitor):
             init_args[child_type._children_iter_name()] = [
                 r.post_action for r in results.child_results(child_type)]
         results.post_action = nineml_cls(**init_args)
-
-    @classmethod
-    def clone_id(cls, obj):
-        """
-        Used in storing cloned objects in 'memo' dictionary to avoid duplicate
-        clones of the same object referenced from different points in a complex
-        data tree. First looks for special method 'clone_id' and falls back on
-        the 'id' function that returns a memory-address based ID.
-
-        Parameters
-        ----------
-        obj : object
-            Any object
-        """
-        try:
-            id_ = obj.clone_id
-            return id_
-        except AttributeError:
-            return id(obj)
 
     def post_action_definition(self, definition, results, nineml_cls,
                                **kwargs):
@@ -109,3 +94,23 @@ class Cloner(BaseVisitor):
                 obj._child_accessor_name()][clone] = index
         except (AttributeError, NineMLInvalidElementTypeException):
             pass
+
+
+def clone_id(obj):
+    """
+    Used in storing cloned objects in 'memo' dictionary to avoid duplicate
+    clones of the same object referenced from different points in a complex
+    data tree. First looks for special method 'clone_id', which is used by
+    temporary objects to produce an ID that will persist for the life of
+    the visit and falls back on the 'id' function that returns a
+    memory-address based ID.
+
+    Parameters
+    ----------
+    obj : object
+        Any object
+    """
+    try:
+        return obj.clone_id
+    except AttributeError:
+        return id(obj)

@@ -10,5 +10,5 @@ class RandomDistributionVisitorTests(unittest.TestCase):
         param = ranDistrA.parameter('P1')
         self.assertEqual(ranDistrA.dimension_of(param), un.dimensionless)
         ranDistrA.assign_indices()  # Doesn't do anything at this stage
-        self.assertTrue(ranDistrA.find_element(param))
+        self.assertTrue(ranDistrA.find(param) is param)
         self.assertEqual(ranDistrA.all_expressions, [])
