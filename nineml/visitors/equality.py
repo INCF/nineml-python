@@ -11,7 +11,7 @@ from nineml.utils import nearly_equal
 
 class EqualityChecker(BaseDualVisitor):
 
-    def __init__(self, annotations_ns=True, **kwargs):  # @UnusedVariable
+    def __init__(self, annotations_ns=[], **kwargs):  # @UnusedVariable
         super(EqualityChecker, self).__init__()
         self.annotations_ns = annotations_ns
 
@@ -25,7 +25,7 @@ class EqualityChecker(BaseDualVisitor):
         return True
 
     def action(self, obj1, obj2, nineml_cls, **kwargs):
-        for ns in self.annotation_ns:
+        for ns in self.annotations_ns:
             if ns in obj1.annotations and ns in obj2.annotations:
                 if not obj1.annotations.equals(obj2.annotations, **kwargs):
                     raise NineMLDualVisitAnnotationsMismatchException(
@@ -62,11 +62,15 @@ class EqualityChecker(BaseDualVisitor):
             raise NineMLDualVisitValueException(
                 'values', val1, val2, self.contexts1, self.contexts2)
 
-    def action_unit(self, unit1, unit2, nineml_cls, **kwargs):
-        pass
+    def action_unit(self, unit1, unit2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        # Ignore name
+        self._check_attr(unit1, unit2, 'power', nineml_cls)
+        self._check_attr(unit1, unit2, 'offset', nineml_cls)
 
-    def action_dimension(self, dim1, dim2, nineml_cls, **kwargs):
-        pass
+    def action_dimension(self, dim1, dim2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        # Ignore name
+        for sym in nineml_cls.dimension_symbols:
+            self._check_attr(dim1, dim2, sym, nineml_cls)
 
     def _check_rhs(self, expr1, expr2, nineml_cls):
         try:
@@ -95,45 +99,46 @@ class MismatchFinder(EqualityChecker):
         self.visit(obj1, obj2)
         return self.mismatch
 
-    def action(self, obj1, obj2, **kwargs):
+    def visit(self, *args, **kwargs):
         try:
-            super(MismatchFinder, self).visit(obj1, obj2, **kwargs)
+            super(MismatchFinder, self).visit(*args, **kwargs)
         except NineMLDualVisitTypeException as e:
             self.mismatch += (
-                "({}) & ({}): types, {} & {} (expected={})\n"
+                "[{}] | [{}]: types, [{}] | [{}] (expected={})\n"
                 .format(self._format_context(e.contexts1),
                         self._format_context(e.contexts2),
                         type(e.obj1), type(e.obj2), e.nineml_cls))
         except NineMLDualVisitKeysMismatchException as e:
             self.mismatch += (
-                "({}) & ({}): {} keys, {} & {}\n"
+                "[{}] | [{}]: {} keys, {} | {}\n"
                 .format(self._format_context(e.contexts1),
                         self._format_context(e.contexts2),
                         e.children_type.nineml_type,
-                        tuple(sorted(e.obj1_member_keys_iter())),
-                        tuple(sorted(e.obj2_member_keys_iter()))))
+                        sorted(e.obj1._member_keys_iter(e.children_type)),
+                        sorted(e.obj2._member_keys_iter(e.children_type))))
         except NineMLDualVisitValueException as e:
             self.mismatch += (
-                "({}) & ({}): {} attr, {} & {}"
+                "[{}] | [{}]: {} attr, [{}] | [{}]"
                 .format(self._format_context(e.contexts1, obj=e.obj1),
                         self._format_context(e.contexts2, obj=e.obj2),
                         e.attr_name,
                         e.nineml_cls.nineml_type,
-                        getattr(obj1, e.attr_name),
-                        getattr(obj2, e.attr_name)))
+                        getattr(e.obj1, e.attr_name),
+                        getattr(e.obj2, e.attr_name)))
         except NineMLDualVisitAnnotationsMismatchException as e:
             self.mismatch += (
-                "({}) & ({}): {} annotations, {} & {}"
+                "[{}] | [{}]: {} annotations, [{}] | [{}]"
                 .format(self._format_context(e.contexts1),
                         self._format_context(e.contexts2),
                         e.namespace,
                         e.nineml_cls.nineml_type,
-                        obj1.annotations[e.namespace],
-                        obj2.annotations[e.namespace]))
+                        e.obj1.annotations[e.namespace],
+                        e.obj2.annotations[e.namespace]))
 
     @classmethod
     def _format_context(self, contexts, obj=None):
-        out = '>'.join('{}({})'.format(type(c.parent).__name__, c.parent.key)
+        out = '>'.join("{}('{}')".format(type(c.parent).__name__, c.parent.key)
                        for c in contexts)
         if obj is not None:
             out += '>{}({})'.format(type(obj).__name__, obj.key)
+        return out

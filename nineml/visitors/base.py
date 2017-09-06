@@ -268,7 +268,7 @@ class BaseDualVisitor(BaseVisitor):
             elif child1 is None or child1 is None:
                 raise NineMLDualVisitTypeException(
                     child1, child2, child_type, self.contexts1, label=1)
-            results._attr[child_name] = self.visit(
+            results._child[child_name] = self.visit(
                 child1, child2, nineml_cls=child_type, **kwargs)
             popped1 = self.contexts1.pop()
             assert context1 is popped1
@@ -301,7 +301,7 @@ class BaseDualVisitor(BaseVisitor):
             popped1 = self.contexts1.pop()
             assert context1 is popped1
             popped2 = self.contexts2.pop()
-            assert context2 is popped1
+            assert context2 is popped2
         # Peform "post-action" method that runs after the children/attributes
         # have been visited
         self.post_action(obj1, obj2, results, nineml_cls=nineml_cls, **kwargs)
