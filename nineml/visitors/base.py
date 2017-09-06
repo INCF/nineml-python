@@ -2,7 +2,8 @@ from collections import defaultdict
 from nineml.exceptions import (
     NineMLDualVisitTypeException,
     NineMLDualVisitKeysMismatchException,
-    NineMLInvalidElementTypeException)
+    NineMLInvalidElementTypeException,
+    NineMLDualVisitNoneChildException)
 
 
 class BaseVisitor(object):
@@ -254,54 +255,12 @@ class BaseDualVisitor(BaseVisitor):
         results = self.Results(action_result)
         # Add the container object to the list of scopes
         for child_name, child_type in nineml_cls.nineml_child.iteritems():
-            child1 = getattr(obj1, child_name)
-            child2 = getattr(obj2, child_name)
-            # Create the context around the visit of the attribute
-            context1 = self.Context(obj1, nineml_cls, action_result,
-                                    child_name)
-            context2 = self.Context(obj2, nineml_cls, action_result,
-                                    child_name)
-            self.contexts1.append(context1)
-            self.contexts2.append(context2)
-            if child1 is None and child2 is None:
-                continue
-            elif child1 is None or child1 is None:
-                raise NineMLDualVisitTypeException(
-                    child1, child2, child_type, self.contexts1, label=1)
-            results._child[child_name] = self.visit(
-                child1, child2, nineml_cls=child_type, **kwargs)
-            popped1 = self.contexts1.pop()
-            assert context1 is popped1
-            popped2 = self.contexts2.pop()
-            assert context2 is popped2
+            self._compare_child(obj1, obj2, nineml_cls, results, action_result,
+                                child_name, child_type, **kwargs)
         # Visit children of the object
         for children_type in nineml_cls.nineml_children:
-            try:
-                dct1 = obj1._member_dict(children_type)
-            except (NineMLInvalidElementTypeException, AttributeError):
-                dct1 = None  # If children_type is a base class of the obj
-            try:
-                dct2 = obj2._member_dict(children_type)
-            except (NineMLInvalidElementTypeException, AttributeError):
-                dct2 = None  # If children_type is a base class of the obj
-            context1 = self.Context(obj1, nineml_cls, action_result, dct=dct1)
-            context2 = self.Context(obj2, nineml_cls, action_result, dct=dct2)
-            self.contexts1.append(context1)
-            self.contexts2.append(context2)
-            keys1 = set(obj1._member_keys_iter(children_type))
-            keys2 = set(obj2._member_keys_iter(children_type))
-            if keys1 != keys2:
-                raise NineMLDualVisitKeysMismatchException(
-                    children_type, obj1, obj2, self.contexts1, self.contexts2)
-            for key in keys1:
-                child1 = obj1.element(key, child_types=[children_type])
-                child2 = obj2.element(key, child_types=[children_type])
-                results._children[children_type][key] = self.visit(
-                    child1, child2, nineml_cls=children_type, **kwargs)
-            popped1 = self.contexts1.pop()
-            assert context1 is popped1
-            popped2 = self.contexts2.pop()
-            assert context2 is popped2
+            self._compare_children(obj1, obj2, nineml_cls, results,
+                                   action_result, children_type, **kwargs)
         # Peform "post-action" method that runs after the children/attributes
         # have been visited
         self.post_action(obj1, obj2, results, nineml_cls=nineml_cls, **kwargs)
@@ -336,3 +295,55 @@ class BaseDualVisitor(BaseVisitor):
         explicit '<nineml-type-name>_post_action' method
         """
         return results
+
+    def _compare_child(self, obj1, obj2, nineml_cls, results, action_result,
+                       child_name, child_type, **kwargs):
+        child1 = getattr(obj1, child_name)
+        child2 = getattr(obj2, child_name)
+        # Create the context around the visit of the attribute
+        context1 = self.Context(obj1, nineml_cls, action_result,
+                                child_name)
+        context2 = self.Context(obj2, nineml_cls, action_result,
+                                child_name)
+        self.contexts1.append(context1)
+        self.contexts2.append(context2)
+        if child1 is None and child2 is None:
+            return
+        elif child1 is None or child1 is None:
+            raise NineMLDualVisitNoneChildException(
+                child1, child2, child_type, self.contexts1, label=1)
+        results._child[child_name] = self.visit(
+            child1, child2, nineml_cls=child_type, **kwargs)
+        popped1 = self.contexts1.pop()
+        assert context1 is popped1
+        popped2 = self.contexts2.pop()
+        assert context2 is popped2
+
+    def _compare_children(self, obj1, obj2, nineml_cls, results, action_result,
+                          children_type, **kwargs):
+        try:
+            dct1 = obj1._member_dict(children_type)
+        except (NineMLInvalidElementTypeException, AttributeError):
+            dct1 = None  # If children_type is a base class of the obj
+        try:
+            dct2 = obj2._member_dict(children_type)
+        except (NineMLInvalidElementTypeException, AttributeError):
+            dct2 = None  # If children_type is a base class of the obj
+        context1 = self.Context(obj1, nineml_cls, action_result, dct=dct1)
+        context2 = self.Context(obj2, nineml_cls, action_result, dct=dct2)
+        self.contexts1.append(context1)
+        self.contexts2.append(context2)
+        keys1 = set(obj1._member_keys_iter(children_type))
+        keys2 = set(obj2._member_keys_iter(children_type))
+        if keys1 != keys2:
+            raise NineMLDualVisitKeysMismatchException(
+                children_type, obj1, obj2, self.contexts1, self.contexts2)
+        for key in keys1:
+            child1 = obj1._member_accessor(children_type)(key)
+            child2 = obj2._member_accessor(children_type)(key)
+            results._children[children_type][key] = self.visit(
+                child1, child2, nineml_cls=children_type, **kwargs)
+        popped1 = self.contexts1.pop()
+        assert context1 is popped1
+        popped2 = self.contexts2.pop()
+        assert context2 is popped2

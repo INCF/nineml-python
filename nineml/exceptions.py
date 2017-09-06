@@ -115,7 +115,11 @@ class NineMLNotBoundException(NineMLException):
     pass
 
 
-class NineMLDualVisitTypeException(NineMLException):
+class NineMLDualVisitException(NineMLException):
+    pass
+
+
+class NineMLDualVisitTypeException(NineMLDualVisitException):
 
     def __init__(self, nineml_cls, obj1, obj2, contexts1, contexts2):
         self.nineml_cls = nineml_cls
@@ -125,19 +129,29 @@ class NineMLDualVisitTypeException(NineMLException):
         self.contexts2 = tuple(contexts2)
 
 
-class NineMLDualVisitValueException(NineMLException):
+class NineMLDualVisitNoneChildException(NineMLDualVisitException):
+
+    def __init__(self, child_name, obj1, obj2, contexts1, contexts2):
+        self.child_name = child_name
+        self.obj1 = obj1
+        self.obj2 = obj2
+        self.contexts1 = tuple(contexts1)
+        self.contexts2 = tuple(contexts2)
+
+
+class NineMLDualVisitValueException(NineMLDualVisitException):
 
     def __init__(self, attr_name, obj1, obj2, nineml_cls, contexts1,
                  contexts2):
         self.attr_name = attr_name
-        self.obj2 = obj1
+        self.obj1 = obj1
         self.obj2 = obj2
         self.nineml_cls = nineml_cls
         self.contexts1 = tuple(contexts1)
         self.contexts2 = tuple(contexts2)
 
 
-class NineMLDualVisitKeysMismatchException(NineMLException):
+class NineMLDualVisitKeysMismatchException(NineMLDualVisitException):
 
     def __init__(self, children_type, obj1, obj2, contexts1, contexts2):
         self.children_type = children_type
@@ -147,7 +161,7 @@ class NineMLDualVisitKeysMismatchException(NineMLException):
         self.contexts2 = tuple(contexts2)
 
 
-class NineMLDualVisitAnnotationsMismatchException(NineMLException):
+class NineMLDualVisitAnnotationsMismatchException(NineMLDualVisitException):
 
     def __init__(self, children_type, obj1, obj2, namespace, contexts1,
                  contexts2):
