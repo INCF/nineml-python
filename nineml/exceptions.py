@@ -115,6 +115,38 @@ class NineMLNotBoundException(NineMLException):
     pass
 
 
+class NineMLDualVisitTypeException(NineMLException):
+
+    def __init__(self, nineml_cls, obj1, obj2, contexts1, contexts2):
+        self.nineml_cls = nineml_cls
+        self.obj1 = obj1
+        self.obj2 = obj2
+        self.contexts1 = tuple(contexts1)
+        self.contexts2 = tuple(contexts2)
+
+
+class NineMLDualVisitValueException(NineMLException):
+
+    def __init__(self, attr_name, obj1, obj2, nineml_cls, contexts1,
+                 contexts2):
+        self.attr_name = attr_name
+        self.obj2 = obj1
+        self.obj2 = obj2
+        self.nineml_cls = nineml_cls
+        self.contexts1 = tuple(contexts1)
+        self.contexts2 = tuple(contexts2)
+
+
+class NineMLDualVisitKeysMismatchException(NineMLException):
+
+    def __init__(self, children_type, obj1, obj2, contexts1, contexts2):
+        self.children_type = children_type
+        self.obj1 = obj1
+        self.obj2 = obj2
+        self.contexts1 = tuple(contexts1)
+        self.contexts2 = tuple(contexts2)
+
+
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 

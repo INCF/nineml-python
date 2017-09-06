@@ -63,19 +63,20 @@ class Cloner(BaseVisitor):
 
     def default_post_action(self, obj, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         init_args = {}
-        for attr in nineml_cls.nineml_attr:
+        for attr_name in nineml_cls.nineml_attr:
             try:
-                init_args[attr] = getattr(obj, attr)
+                init_args[attr_name] = getattr(obj, attr_name)
             except NineMLNotBoundException:
-                init_args[attr] = None
-        for attr in nineml_cls.nineml_child:
+                init_args[attr_name] = None
+        for child_name in nineml_cls.nineml_child:
             try:
-                init_args[attr] = results.attr_result(attr).post_action
+                init_args[child_name] = results.child_result(
+                    child_name).post_action
             except KeyError:
-                init_args[attr] = None
+                init_args[child_name] = None
         for child_type in nineml_cls.nineml_children:
             init_args[child_type._children_iter_name()] = [
-                r.post_action for r in results.child_results(child_type)]
+                r.post_action for r in results.children_results(child_type)]
         results.post_action = nineml_cls(**init_args)
 
     def post_action_definition(self, definition, results, nineml_cls,
@@ -83,7 +84,7 @@ class Cloner(BaseVisitor):
         if self.clone_definitions == 'all' or (
             self.clone_definitions == 'local' and
                 definition._target.document is self.document):
-            target = results.attr_result('target').post_action
+            target = results.child_result('target').post_action
         else:
             target = definition.target
         clone = nineml_cls(target=target)
@@ -97,7 +98,7 @@ class Cloner(BaseVisitor):
         else:
             random_seed = None
         clone = nineml_cls(
-            results.attr_result('rule_properties').post_action,
+            results.child_result('rule_properties').post_action,
             random_seed=random_seed,
             source_size=connectivity.source_size,
             destination_size=connectivity.destination_size,
