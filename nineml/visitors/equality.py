@@ -4,7 +4,8 @@ from .base import BaseDualVisitor
 from nineml.exceptions import (NineMLDualVisitTypeException,
                                NineMLDualVisitKeysMismatchException,
                                NineMLDualVisitValueException,
-                               NineMLNotBoundException)
+                               NineMLNotBoundException,
+                               NineMLDualVisitAnnotationsMismatchException)
 from nineml.utils import nearly_equal
 
 
@@ -24,8 +25,16 @@ class EqualityChecker(BaseDualVisitor):
         return True
 
     def action(self, obj1, obj2, nineml_cls, **kwargs):
-#         for ns in self.annotation_ns:
-#             self.visit(obj1.annotations[ns], obj2.annotations[ns], **kwargs)
+        for ns in self.annotation_ns:
+            if ns in obj1.annotations and ns in obj2.annotations:
+                if not obj1.annotations.equals(obj2.annotations, **kwargs):
+                    raise NineMLDualVisitAnnotationsMismatchException(
+                        nineml_cls, obj1, obj2, ns,
+                        self.contexts1, self.contexts2)
+            elif ns in obj1.annotations or ns in obj2.annotations:
+                raise NineMLDualVisitAnnotationsMismatchException(
+                    nineml_cls, obj1, obj2, ns,
+                    self.contexts1, self.contexts2)
         return super(EqualityChecker, self).action(obj1, obj2, nineml_cls,
                                                    **kwargs)
 
@@ -53,6 +62,12 @@ class EqualityChecker(BaseDualVisitor):
             raise NineMLDualVisitValueException(
                 'values', val1, val2, self.contexts1, self.contexts2)
 
+    def action_unit(self, unit1, unit2, nineml_cls, **kwargs):
+        pass
+
+    def action_dimension(self, dim1, dim2, nineml_cls, **kwargs):
+        pass
+
     def _check_rhs(self, expr1, expr2, nineml_cls):
         try:
             expr_eq = (sympy.expand(expr1.rhs - expr2.rhs) == 0)
@@ -73,34 +88,48 @@ class EqualityChecker(BaseDualVisitor):
             pass
 
 
-class MismatchPrinter(EqualityChecker):
+class MismatchFinder(EqualityChecker):
 
-    def mismatch(self, obj1, obj2, **kwargs):
+    def find(self, obj1, obj2):
+        self.mismatch = ''
+        self.visit(obj1, obj2)
+        return self.mismatch
+
+    def action(self, obj1, obj2, **kwargs):
         try:
-            self.visit(obj1, obj2, **kwargs)
+            super(MismatchFinder, self).visit(obj1, obj2, **kwargs)
         except NineMLDualVisitTypeException as e:
-            print("Mismatch in type: first={}, second={}, expected={}, "
-                  "first-context={}, second-context={}"
-                  .format(type(e.obj1), type(e.obj2), e.nineml_cls,
-                          self._format_context(e.contexts1),
-                          self._format_context(e.contexts2)))
+            self.mismatch += (
+                "({}) & ({}): types, {} & {} (expected={})\n"
+                .format(self._format_context(e.contexts1),
+                        self._format_context(e.contexts2),
+                        type(e.obj1), type(e.obj2), e.nineml_cls))
         except NineMLDualVisitKeysMismatchException as e:
-            print("Mismatch between {} keys: first={}, second={}, "
-                  "first-context={}, second-context={}"
-                  .format(e.children_type.nineml_type,
-                          tuple(sorted(e.obj1_member_keys_iter())),
-                          tuple(sorted(e.obj2_member_keys_iter())),
-                          self._format_context(e.contexts1),
-                          self._format_context(e.contexts2)))
+            self.mismatch += (
+                "({}) & ({}): {} keys, {} & {}\n"
+                .format(self._format_context(e.contexts1),
+                        self._format_context(e.contexts2),
+                        e.children_type.nineml_type,
+                        tuple(sorted(e.obj1_member_keys_iter())),
+                        tuple(sorted(e.obj2_member_keys_iter()))))
         except NineMLDualVisitValueException as e:
-            print("Mismatch between {} attributes of {}: first={}, second={}, "
-                  "first-context={}, second-context={}"
-                  .format(e.attr_name,
-                          e.nineml_cls.nineml_type,
-                          getattr(obj1, e.attr_name),
-                          getattr(obj2, e.attr_name),
-                          self._format_context(e.contexts1, obj=e.obj1),
-                          self._format_context(e.contexts2, obj=e.obj2)))
+            self.mismatch += (
+                "({}) & ({}): {} attr, {} & {}"
+                .format(self._format_context(e.contexts1, obj=e.obj1),
+                        self._format_context(e.contexts2, obj=e.obj2),
+                        e.attr_name,
+                        e.nineml_cls.nineml_type,
+                        getattr(obj1, e.attr_name),
+                        getattr(obj2, e.attr_name)))
+        except NineMLDualVisitAnnotationsMismatchException as e:
+            self.mismatch += (
+                "({}) & ({}): {} annotations, {} & {}"
+                .format(self._format_context(e.contexts1),
+                        self._format_context(e.contexts2),
+                        e.namespace,
+                        e.nineml_cls.nineml_type,
+                        obj1.annotations[e.namespace],
+                        obj2.annotations[e.namespace]))
 
     @classmethod
     def _format_context(self, contexts, obj=None):

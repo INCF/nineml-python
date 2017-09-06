@@ -147,6 +147,18 @@ class NineMLDualVisitKeysMismatchException(NineMLException):
         self.contexts2 = tuple(contexts2)
 
 
+class NineMLDualVisitAnnotationsMismatchException(NineMLException):
+
+    def __init__(self, children_type, obj1, obj2, namespace, contexts1,
+                 contexts2):
+        self.children_type = children_type
+        self.obj1 = obj1
+        self.obj2 = obj2
+        self.namespace = namespace
+        self.contexts1 = tuple(contexts1)
+        self.contexts2 = tuple(contexts2)
+
+
 def internal_error(s):
     assert False, 'INTERNAL ERROR:' + s
 

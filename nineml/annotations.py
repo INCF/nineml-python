@@ -229,7 +229,6 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
 
     nineml_type = 'Annotations'
     defining_attributes = ('_branches',)
-    nineml_attr = ('branches',)
 
     def __init__(self, branches=None):
         BaseAnnotations.__init__(self, branches=branches)
@@ -288,6 +287,7 @@ class _AnnotationsBranch(BaseAnnotations):
 
     nineml_type = '_AnnotationsBranch'
     defining_attributes = ('_branches', '_attr', '_name', '_ns', '_body')
+    nineml_attr = ('attr', 'name', 'ns', 'body')
 
     def __init__(self, name, ns, attr=None, branches=None, body=None):
         super(_AnnotationsBranch, self).__init__(branches)

@@ -449,8 +449,6 @@ class ExpressionWithLHS(Expression):
     # Sub-classes should override this, to allow
     # proper-prefixing:
 
-    nineml_attr = ('lhs', 'rhs')
-
     def __init__(self, rhs):
         Expression.__init__(self, rhs)
 
