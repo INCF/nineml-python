@@ -117,13 +117,13 @@ A = Dynamics(
 
 
 a_mismatch = """
-[Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current_voltage')] | [Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current')]: 'm' attr of Dimension, [1] | [0]
-[Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current_voltage')] | [Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current')]: 'l' attr of Dimension, [2] | [0]
-[Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current_voltage')] | [Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current')]: 't' attr of Dimension, [-3] | [0]
-[Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current_voltage')] | [Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current')]: 'i' attr of Dimension, [0] | [1]
-[Dynamics('dyn')] | [Dynamics('dyn')]: Parameter keys, ['P1', 'P2', 'P3', 'P4'] | ['P2', 'P3', 'P4']
-[Dynamics('dyn')>Alias('A1')] | [Dynamics('dyn')>Alias('A1')]: 'rhs' attr of Alias, [P1*SV2] | [SV2]"""
-
+[Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current')] - 'm' attr: [1] | [0]
+[Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current')] - 'l' attr: [2] | [0]
+[Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current')] - 't' attr: [-3] | [0]
+[Dynamics('dyn')>AnalogSendPort('A1')>Dimension('current')] - 'i' attr: [0] | [1]
+[Dynamics('dyn')] - Parameter keys: ['P1', 'P2', 'P3', 'P4'] | ['P2', 'P3', 'P4']
+[Dynamics('dyn')>Alias('A1')] - 'rhs' attr: [P1*SV2] | [SV2]
+"""
 
 B = Dynamics(
     name='dyn',
@@ -160,7 +160,9 @@ B = Dynamics(
                Constant('C2', value=22.2, units=un.degC)])
 
 
-b_mismatch = "[Dynamics('dyn')] | [Dynamics('dyn')]: AnalogSendPort keys, ['A1', 'A2'] | ['A1', 'A3']"
+b_mismatch = """
+[Dynamics('dyn')] - AnalogSendPort keys: ['A1', 'A2'] | ['A1', 'A3']
+"""
 
 
 C = Dynamics(
@@ -198,7 +200,9 @@ C = Dynamics(
                Constant('C2', value=22.2, units=un.degC)])
 
 
-c_mismatch = "[Dynamics('dyn')>Alias('A4')] | [Dynamics('dyn')>Alias('A4')]: 'rhs' attr of Alias, [C2*SV1] | [2*C2*SV1]"
+c_mismatch = """
+[Dynamics('dyn')>Alias('A4')] - 'rhs' attr: [C2*SV1] | [2*C2*SV1]
+"""
 
 
 D = Dynamics(

@@ -106,15 +106,13 @@ class MismatchFinder(EqualityChecker):
             super(MismatchFinder, self).visit(*args, **kwargs)
         except NineMLDualVisitTypeException as e:
             self.mismatch += (
-                "[{}] | [{}]: types, [{}] | [{}] (expected={})\n"
-                .format(self._format_context(e.contexts1),
-                        self._format_context(e.contexts2),
+                "{} - types: [{}] | [{}] (expected={})\n"
+                .format(self._format_contexts(e.contexts1, e.contexts2),
                         type(e.obj1), type(e.obj2), e.nineml_cls))
         except NineMLDualVisitAnnotationsMismatchException as e:
             self.mismatch += (
-                "[{}] | [{}]: {} annotations, [{}] | [{}]\n"
-                .format(self._format_context(e.contexts1),
-                        self._format_context(e.contexts2),
+                "{} - '{}' annotations: [{}] | [{}]\n"
+                .format(self._format_contexts(e.contexts1, e.contexts2),
                         e.namespace,
                         e.nineml_cls.nineml_type,
                         e.obj1.annotations[e.namespace],
@@ -128,9 +126,8 @@ class MismatchFinder(EqualityChecker):
                 child_type, **kwargs)
         except NineMLDualVisitNoneChildException as e:
             self.mismatch += (
-                "[{}] | [{}]: one {} child None, [{}] | [{}]\n"
-                .format(self._format_context(e.contexts1),
-                        self._format_context(e.contexts2),
+                "{} - '{}' child: [{}] | [{}]\n"
+                .format(self._format_contexts(e.contexts1, e.contexts2),
                         e.child_name, e.obj1, e.obj2))
             self._pop_contexts()
 
@@ -142,9 +139,8 @@ class MismatchFinder(EqualityChecker):
                 **kwargs)
         except NineMLDualVisitKeysMismatchException as e:
             self.mismatch += (
-                "[{}] | [{}]: {} keys, {} | {}\n"
-                .format(self._format_context(e.contexts1),
-                        self._format_context(e.contexts2),
+                "{} - {} keys: {} | {}\n"
+                .format(self._format_contexts(e.contexts1, e.contexts2),
                         e.children_type.nineml_type,
                         sorted(e.obj1._member_keys_iter(e.children_type)),
                         sorted(e.obj2._member_keys_iter(e.children_type))))
@@ -156,11 +152,10 @@ class MismatchFinder(EqualityChecker):
                 obj1, obj2, attr_name, nineml_cls, **kwargs)
         except NineMLDualVisitValueException as e:
             self.mismatch += (
-                "[{}] | [{}]: '{}' attr of {}, [{}] | [{}]\n"
-                .format(self._format_context(e.contexts1, obj=e.obj1),
-                        self._format_context(e.contexts2, obj=e.obj2),
+                "{} - '{}' attr: [{}] | [{}]\n"
+                .format(self._format_contexts(e.contexts1, e.contexts2,
+                                              obj1=e.obj1, obj2=e.obj2),
                         e.attr_name,
-                        e.nineml_cls.nineml_type,
                         getattr(e.obj1, e.attr_name),
                         getattr(e.obj2, e.attr_name)))
 
@@ -170,11 +165,10 @@ class MismatchFinder(EqualityChecker):
                 obj1, obj2, attr_name, **kwargs)
         except NineMLDualVisitValueException as e:
             self.mismatch += (
-                "[{}] | [{}]: '{}' attr of {}, [{}] | [{}]\n"
-                .format(self._format_context(e.contexts1, obj=e.obj1),
-                        self._format_context(e.contexts2, obj=e.obj2),
+                "{} - '{}' attr: [{}] | [{}]\n"
+                .format(self._format_contexts(e.contexts1, e.contexts2,
+                                              obj1=e.obj1, obj2=e.obj2),
                         e.attr_name,
-                        e.nineml_cls.nineml_type,
                         getattr(e.obj1, e.attr_name),
                         getattr(e.obj2, e.attr_name)))
 
@@ -183,9 +177,15 @@ class MismatchFinder(EqualityChecker):
         self.contexts2.pop()
 
     @classmethod
-    def _format_context(self, contexts, obj=None):
-        out = '>'.join("{}('{}')".format(type(c.parent).__name__, c.parent.key)
-                       for c in contexts)
-        if obj is not None:
-            out += ">{}('{}')".format(type(obj).__name__, obj.key)
+    def _format_contexts(self, contexts1, contexts2, obj1=None, obj2=None):
+        l1 = [(type(c.parent).__name__, c.parent.key) for c in contexts1]
+        l2 = [(type(c.parent).__name__, c.parent.key) for c in contexts2]
+        if obj1 is not None:
+            l1.append((type(obj2).__name__, obj2.key))
+        if obj2 is not None:
+            l2.append((type(obj2).__name__, obj2.key))
+        out = '[' + '>'.join("{}('{}')".format(t, k) for t, k in l1) + ']'
+        if l2 != l1:
+            out += (' | [' + '>'.join("{}('{}')".format(t, k) for t, k in l2) +
+                    ']')
         return out
