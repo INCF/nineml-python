@@ -187,7 +187,7 @@ class MismatchFinder(EqualityChecker):
         l1 = [(type(c.parent).__name__, c.parent.key) for c in contexts1]
         l2 = [(type(c.parent).__name__, c.parent.key) for c in contexts2]
         if obj1 is not None:
-            l1.append((type(obj2).__name__, obj2.key))
+            l1.append((type(obj1).__name__, obj1.key))
         if obj2 is not None:
             l2.append((type(obj2).__name__, obj2.key))
         out = '[' + '>'.join("{}('{}')".format(t, k) for t, k in l1) + ']'
