@@ -2,7 +2,7 @@ from nineml.utils import OrderedDefaultListDict
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
 from nineml.exceptions import (
-    NineMLXMLError, NineMLRuntimeError, NineMLNameError)
+    NineMLAnnotationsError, NineMLRuntimeError, NineMLNameError)
 
 
 class BaseAnnotations(BaseNineMLObject):
@@ -43,6 +43,13 @@ class BaseAnnotations(BaseNineMLObject):
     def __contains__(self, key):
         return self._parse_key(key) in self._branches
 
+    def has_namespace(self, ns):
+        return ns in set(ns for _, ns in self._branches.iterkeys())
+
+    def namespace(self, namespace):
+        return (b for (k, ns), b in self._branches.iteritems()
+                if ns == namespace)
+
     def __getitem__(self, key):
         """
         Returns the list of sub-branches for the given key
@@ -68,9 +75,10 @@ class BaseAnnotations(BaseNineMLObject):
 
         Parameters
         ----------
-        key : str
-            The name of the key to append a new branch for if no args provided
-            otherwise the name of the branch to add a sub-branch to
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         *args : list(str)
             A list of keys for the sub-branches ending in the key of the new
             sub-branch to add. Intermediate branches that are not present are
@@ -97,11 +105,10 @@ class BaseAnnotations(BaseNineMLObject):
 
         Parameters
         ----------
-        key : str | (str, str)
-            A string containing the name of the branch to pop from the list or
-            a tuple containing the name and namespace of the branch. If the
-            namespace is not provided it is assumed to be the same as the
-            branch above
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         """
         try:
             return self._branches.pop(self._parse_key(key))
@@ -115,8 +122,10 @@ class BaseAnnotations(BaseNineMLObject):
 
         Parameters
         ----------
-        key : str
-            Name of the first branch in the annotations tree
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         *args : list(str) + (int|float|str)
             A list of subsequent branches to the leaf node followed by the
             attribute name and a value
@@ -142,8 +151,10 @@ class BaseAnnotations(BaseNineMLObject):
 
         Parameters
         ----------
-        key : str
-            Name of the first branch in the annotations tree
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         *args : list(str) + (int|float|str)
             A list of subsequent branches to the leaf node followed by the
             attribute name to return the value of
@@ -181,8 +192,10 @@ class BaseAnnotations(BaseNineMLObject):
 
         Parameters
         ----------
-        key : str
-            Name of the first branch in the annotations tree
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         *args : list(str) + (int|float|str)
             A list of subsequent branches to the leaf node followed by the
             attribute name to delete
@@ -261,11 +274,13 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
 
         Parameters
         ----------
-        key : str
-            Key of the annotations sub-branch
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         """
         if not isinstance(key, tuple):
-            raise NineMLXMLError(
+            raise NineMLAnnotationsError(
                 "All annotations under the root must have an explicit, "
                 "'{}' branch does not".format(key))
         return key
@@ -351,8 +366,10 @@ class _AnnotationsBranch(BaseAnnotations):
 
         Parameters
         ----------
-        key : str
-            Name of the first branch in the annotations tree
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         *args : list(str) + (int|float|str)
             A list of subsequent branches to the leaf node followed by the
             attribute name and a value
@@ -372,8 +389,10 @@ class _AnnotationsBranch(BaseAnnotations):
 
         Parameters
         ----------
-        key : str
-            Name of the first branch in the annotations tree
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         *args : list(str) + (int|float|str)
             A list of subsequent branches to the leaf node followed by the
             attribute name to return the value of
@@ -406,8 +425,10 @@ class _AnnotationsBranch(BaseAnnotations):
 
         Parameters
         ----------
-        key : str
-            Name of the first branch in the annotations tree
+        key : str | tuple(str, str)
+            Name of the next branch in the annotations tree, optionally with
+            a namespace, provided as a tuple (key, namespace). If the namespace
+            is not provided it is taken to be the same as the containing branch
         *args : list(str) + (int|float|str)
             A list of subsequent branches to the leaf node followed by the
             attribute name to delete

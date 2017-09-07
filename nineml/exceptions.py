@@ -70,6 +70,10 @@ class NineMLUnexpectedMultipleSerializationError(NineMLSerializationError):
     pass
 
 
+class NineMLAnnotationsError(NineMLRuntimeError):
+    pass
+
+
 class NineMLXMLTagError(NineMLXMLError):
     pass
 

@@ -1,5 +1,6 @@
 import sympy
 from itertools import izip
+import re
 from .base import BaseDualVisitor
 from nineml.exceptions import (NineMLDualVisitException,
                                NineMLDualVisitTypeException,
@@ -26,12 +27,14 @@ class EqualityChecker(BaseDualVisitor):
 
     def action(self, obj1, obj2, nineml_cls, **kwargs):
         for ns in self.annotations_ns:
-            if ns in obj1.annotations and ns in obj2.annotations:
+            if (obj1.annotations.has_namespace(ns) and
+                    obj2.annotations.has_namespace(ns)):
                 if not obj1.annotations.equals(obj2.annotations, **kwargs):
                     raise NineMLDualVisitAnnotationsMismatchException(
                         nineml_cls, obj1, obj2, ns,
                         self.contexts1, self.contexts2)
-            elif ns in obj1.annotations or ns in obj2.annotations:
+            elif (obj1.annotations.has_namespace(ns) or
+                    obj2.annotations.has_namespace(ns)):
                 raise NineMLDualVisitAnnotationsMismatchException(
                     nineml_cls, obj1, obj2, ns,
                     self.contexts1, self.contexts2)
@@ -114,9 +117,12 @@ class MismatchFinder(EqualityChecker):
                 "{} - '{}' annotations: [{}] | [{}]\n"
                 .format(self._format_contexts(e.contexts1, e.contexts2),
                         e.namespace,
-                        e.nineml_cls.nineml_type,
-                        e.obj1.annotations[e.namespace],
-                        e.obj2.annotations[e.namespace]))
+                        ', '.join(re.sub('\s', '', str(a))
+                                  for a in e.obj1.annotations.namespace(
+                                      e.namespace)),
+                        ', '.join(re.sub('\s', '', str(a))
+                                  for a in e.obj2.annotations.namespace(
+                            e.namespace))))
 
     def _compare_child(self, obj1, obj2, nineml_cls, results, action_result,
                        child_name, child_type, **kwargs):
