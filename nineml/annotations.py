@@ -1,17 +1,36 @@
+from itertools import chain
 from nineml.utils import OrderedDefaultListDict
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
 from nineml.exceptions import (
-    NineMLAnnotationsError, NineMLRuntimeError, NineMLNameError)
+    NineMLAnnotationsError, NineMLRuntimeError, NineMLNameError,
+    NineMLNameError)
+
+
+class classproperty(object):
+
+    def __init__(self, getter):
+        self.getter = getter
+
+    def __get__(self, _, owner):
+        return self.getter(owner)
 
 
 class BaseAnnotations(BaseNineMLObject):
+
+    @classproperty
+    def nineml_children(self):
+        return (_AnnotationsBranch,)
 
     def __init__(self, branches=None):
         self._branches = OrderedDefaultListDict()
         if branches is not None:
             assert all(isinstance(b, list) for b in branches.itervalues())
             self._branches.update(branches)
+
+    def _members_iter(self, child_type):
+        assert child_type is _AnnotationsBranch
+        return chain(*self._branches.itervalues())
 
     def __len__(self):
         return len(self._branches)
@@ -21,7 +40,18 @@ class BaseAnnotations(BaseNineMLObject):
 
     @property
     def branches(self):
-        return self._branches
+        return self._branches.itervalues()
+
+    def branch(self, key):
+        return self._branches[key]
+
+    @property
+    def branch_keys(self):
+        return self._branches.iterkeys()
+
+    @property
+    def num_branches(self):
+        return len(self._branches)
 
     def empty(self):
         """
@@ -233,6 +263,35 @@ class BaseAnnotations(BaseNineMLObject):
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
 
+    def _parse_key(self, key):
+        """
+        Prepend current enclosing NS onto key if not provided explicitly
+
+        Parameters
+        ----------
+        key : str
+            Key of the annotations sub-branch
+        """
+        if isinstance(key, basestring):
+            name = key
+            ns = self.ns
+        elif len(key) == 2:
+            name, ns = key
+            index = len(self._branches[(name, ns)]) - 1
+            if index < 0:
+                raise NineMLAnnotationsError(
+                    "({}, {}) not present in annotations {} "
+                    "(present {})".format(
+                        name, ns, self, ', '.join(
+                            str(k) for k in self._branches.iterkeys())))
+        elif len(key) == 3:
+            name, ns, index = key
+        else:
+            raise NineMLRuntimeError(
+                "Annotations key can either be a string, 2-tuple or 3-tuple, "
+                "{} given".format(key))
+        return name, ns, index
+
 
 class Annotations(BaseAnnotations, DocumentLevelObject):
     """
@@ -283,7 +342,7 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
             raise NineMLAnnotationsError(
                 "All annotations under the root must have an explicit, "
                 "'{}' branch does not".format(key))
-        return key
+        return super(Annotations, self)._parse_key(key)
 
     @property
     def _name(self):
@@ -304,14 +363,19 @@ class _AnnotationsBranch(BaseAnnotations):
     defining_attributes = ('_branches', '_attr', '_name', '_ns', '_body')
     nineml_attr = ('attr', 'name', 'ns', 'body')
 
-    def __init__(self, name, ns, attr=None, branches=None, body=None):
+    def __init__(self, name, ns, index, attr=None, branches=None, body=None):
         super(_AnnotationsBranch, self).__init__(branches)
         if attr is None:
             attr = {}
         self._name = name
         self._ns = ns
+        self._index = index
         self._attr = attr
         self._body = body
+
+    @classmethod
+    def _children_iter_name(cls):
+        return 'branches'
 
     def empty(self):
         return super(_AnnotationsBranch, self).empty() and not self.attr
@@ -331,6 +395,10 @@ class _AnnotationsBranch(BaseAnnotations):
     @property
     def attr(self):
         return self._attr
+
+    @property
+    def key(self):
+        return (self._name, self._ns, self._index)
 
     def equals(self, other, **kwargs):  # @UnusedVariable
         return (super(_AnnotationsBranch, self).equals(other) and
@@ -469,18 +537,6 @@ class _AnnotationsBranch(BaseAnnotations):
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
 
-    def _parse_key(self, key):
-        """
-        Prepend current enclosing NS onto key if not provided explicitly
-
-        Parameters
-        ----------
-        key : str
-            Key of the annotations sub-branch
-        """
-        if not isinstance(key, tuple):
-            key = (key, self.ns)
-        return key
 
 
 # Python-9ML library specific annotations
