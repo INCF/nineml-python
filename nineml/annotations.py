@@ -36,9 +36,8 @@ class BaseAnnotations(BaseNineMLObject):
         if isinstance(branches, OrderedDefaultListDict):
             self._branches = branches
         if branches is not None:
-            for key, branch_group in groupby(sorted(branches, key=sort_key),
-                                             key=group_key):
-                self._branches[key].extend(branch_group)
+            for branch in branches:
+                self._branches[branch.key[:2]].append(branch)
 
     def _members_iter(self, child_type):
         assert child_type is _AnnotationsBranch
