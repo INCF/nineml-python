@@ -54,6 +54,8 @@ class Cloner(BaseVisitor):
                                                 **kwargs)
             clone = results.post_action
             self.copy_index(obj, clone)
+            if obj.annotations and not self.exclude_annotations:
+                clone.annotations = self.visit(obj.annotations, **kwargs)
             if not obj.temporary:
                 self.memo[id_] = clone
         return results
