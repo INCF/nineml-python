@@ -1,5 +1,6 @@
 from .base import BaseVisitor
 from copy import copy
+import nineml
 from nineml.exceptions import (
     NineMLNotBoundException, NineMLInvalidElementTypeException,
     NineMLRuntimeError)
@@ -54,8 +55,9 @@ class Cloner(BaseVisitor):
                                                 **kwargs)
             clone = results.post_action
             self.copy_index(obj, clone)
-            if obj.annotations and not self.exclude_annotations:
-                clone.annotations = self.visit(obj.annotations, **kwargs)
+            if (not isinstance(obj, nineml.annotations.BaseAnnotations) and
+                    obj.annotations and not self.exclude_annotations):
+                clone._annotations = self.visit(obj.annotations, **kwargs)
             if not obj.temporary:
                 self.memo[id_] = clone
         return results

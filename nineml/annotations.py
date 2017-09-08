@@ -1,4 +1,5 @@
-from itertools import chain
+from itertools import chain, groupby
+from collections import defaultdict
 from nineml.utils import OrderedDefaultListDict
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
@@ -16,6 +17,14 @@ class classproperty(object):
         return self.getter(owner)
 
 
+def sort_key(branch):
+    return branch.key
+
+
+def group_key(branch):
+    return branch.key[:2]
+
+
 class BaseAnnotations(BaseNineMLObject):
 
     @classproperty
@@ -24,9 +33,12 @@ class BaseAnnotations(BaseNineMLObject):
 
     def __init__(self, branches=None):
         self._branches = OrderedDefaultListDict()
+        if isinstance(branches, OrderedDefaultListDict):
+            self._branches = branches
         if branches is not None:
-            assert all(isinstance(b, list) for b in branches.itervalues())
-            self._branches.update(branches)
+            for key, branch_group in groupby(sorted(branches, key=sort_key),
+                                             key=group_key):
+                self._branches[key].extend(branch_group)
 
     def _members_iter(self, child_type):
         assert child_type is _AnnotationsBranch
@@ -40,18 +52,19 @@ class BaseAnnotations(BaseNineMLObject):
 
     @property
     def branches(self):
-        return self._branches.itervalues()
+        return chain(*self._branches.itervalues())
 
-    def branch(self, key):
-        return self._branches[key]
-
-    @property
-    def branch_keys(self):
-        return self._branches.iterkeys()
+    def branch(self, key_index):
+        name, ns, index = key_index
+        return self._branches[(name, ns)][index]
 
     @property
     def num_branches(self):
-        return len(self._branches)
+        return len(list(self.branches))
+
+    @property
+    def branch_keys(self):
+        return (b.key for b in self.branches)
 
     def empty(self):
         """
@@ -117,7 +130,8 @@ class BaseAnnotations(BaseNineMLObject):
         key = self._parse_key(key)
         key_branches = self._branches[key]
         if not key_branches or not args:
-            branch = _AnnotationsBranch(*key)
+            name, ns = key
+            branch = _AnnotationsBranch(name, ns, len(key_branches))
             key_branches.append(branch)
         if args:
             if len(key_branches) > 1:
@@ -166,7 +180,8 @@ class BaseAnnotations(BaseNineMLObject):
         if len(key_branches) == 1:
             branch = key_branches[0]
         elif not key_branches:
-            branch = _AnnotationsBranch(*key)
+            name, ns = key
+            branch = _AnnotationsBranch(name, ns, len(key_branches))
             key_branches.append(branch)
         else:
             raise NineMLNameError(
@@ -277,20 +292,28 @@ class BaseAnnotations(BaseNineMLObject):
             ns = self.ns
         elif len(key) == 2:
             name, ns = key
-            index = len(self._branches[(name, ns)]) - 1
-            if index < 0:
-                raise NineMLAnnotationsError(
-                    "({}, {}) not present in annotations {} "
-                    "(present {})".format(
-                        name, ns, self, ', '.join(
-                            str(k) for k in self._branches.iterkeys())))
-        elif len(key) == 3:
-            name, ns, index = key
         else:
             raise NineMLRuntimeError(
                 "Annotations key can either be a string, 2-tuple or 3-tuple, "
                 "{} given".format(key))
-        return name, ns, index
+        return name, ns
+
+    @classmethod
+    def _unserialize_branches(cls, node, **options):
+        indices = defaultdict(int)
+        branches = []
+        for child_name, child_elem in node.visitor.get_all_children(
+                node.serial_element):
+            child_ns = node.visitor.get_namespace(child_elem)
+            child_node = type(node)(node.visitor, child_elem, child_name,
+                                    check_unprocessed=False)
+            key = (child_name, child_ns)
+            branches.append(
+                _AnnotationsBranch.unserialize_node(
+                    child_node, name=child_name, ns=child_ns,
+                    index=indices[key], **options))
+            indices[key] += 1
+        return branches
 
 
 class Annotations(BaseAnnotations, DocumentLevelObject):
@@ -315,13 +338,7 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
-        branches = OrderedDefaultListDict()
-        for name, elem in node.visitor.get_all_children(node.serial_element):
-            ns = node.visitor.get_namespace(elem)
-            child_node = type(node)(node.visitor, elem, name, **options)
-            branches[(name, ns)].append(_AnnotationsBranch.unserialize_node(
-                child_node, name, ns, **options))
-        return cls(branches)
+        return cls(cls._unserialize_branches(node, **options))
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
@@ -361,7 +378,7 @@ class _AnnotationsBranch(BaseAnnotations):
 
     nineml_type = '_AnnotationsBranch'
     defining_attributes = ('_branches', '_attr', '_name', '_ns', '_body')
-    nineml_attr = ('attr', 'name', 'ns', 'body')
+    nineml_attr = ('attr', 'name', 'ns', 'index', 'body')
 
     def __init__(self, name, ns, index, attr=None, branches=None, body=None):
         super(_AnnotationsBranch, self).__init__(branches)
@@ -387,6 +404,10 @@ class _AnnotationsBranch(BaseAnnotations):
     @property
     def ns(self):
         return self._ns
+
+    @property
+    def index(self):
+        return self._index
 
     @property
     def body(self):
@@ -519,24 +540,15 @@ class _AnnotationsBranch(BaseAnnotations):
             node.attr(key, val)
 
     @classmethod
-    def unserialize_node(cls, node, name, ns, **options):  # @UnusedVariable @IgnorePep8
-        branches = OrderedDefaultListDict()
-        for child_name, child_elem in node.visitor.get_all_children(
-                node.serial_element):
-            child_ns = node.visitor.get_namespace(child_elem)
-            child_node = type(node)(node.visitor, child_elem, child_name,
-                                    check_unprocessed=False)
-            branches[(child_name, child_ns)].append(
-                cls.unserialize_node(child_node, child_name, child_ns,
-                                     **options))
+    def unserialize_node(cls, node, name, ns, index=None, **options):  # @UnusedVariable @IgnorePep8
         attr = dict((k, node.attr(k))
                     for k in node.visitor.get_attr_keys(node.serial_element))
-        return cls(name, ns, attr=attr, branches=branches,
+        return cls(name, ns, index=index, attr=attr,
+                   branches=cls._unserialize_branches(node, **options),
                    body=node.body(allow_empty=True))
 
     def _copy_to_clone(self, clone, memo, **kwargs):
         self._clone_defining_attr(clone, memo, **kwargs)
-
 
 
 # Python-9ML library specific annotations
