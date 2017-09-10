@@ -55,9 +55,9 @@ class Cloner(BaseVisitor):
                                                 **kwargs)
             clone = results.post_action
             self.copy_index(obj, clone)
-            if (not isinstance(obj, nineml.annotations.BaseAnnotations) and
-                    obj.annotations and not self.exclude_annotations):
-                clone._annotations = self.visit(obj.annotations, **kwargs)
+            if (hasattr(obj, 'annotations') and not self.exclude_annotations):
+                clone._annotations = self.visit(obj.annotations,
+                                                **kwargs).post_action
             if not obj.temporary:
                 self.memo[id_] = clone
         return results
