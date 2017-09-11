@@ -1,4 +1,4 @@
-from collections import defaultdict
+from nineml.utils import OrderedDefaultOrderedDictDict
 from nineml.exceptions import (
     NineMLDualVisitTypeException,
     NineMLDualVisitKeysMismatchException,
@@ -88,7 +88,7 @@ class BaseVisitor(object):
             self._action = action_result
             self._post_action = post_action
             self._child = {}
-            self._children = defaultdict(dict)
+            self._children = OrderedDefaultOrderedDictDict()
 
         @property
         def action(self):
