@@ -120,9 +120,11 @@ class BaseSerializer(BaseVisitor):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, version=DEFAULT_VERSION, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
+    def __init__(self, version=DEFAULT_VERSION, document=None,
+                 preserve_order=False, **kwargs):  # @UnusedVariable @IgnorePep8
         if document is None:
             document = nineml.Document()
+        self.preserve_order = preserve_order
         super(BaseSerializer, self).__init__(version, document)
         self._root = self.create_root()
 
@@ -1047,7 +1049,7 @@ class NodeToSerialize(BaseNode):
         """
         if parent_elem is None:
             parent_elem = self._serial_elem
-        if sort:
+        if sort and not self.visitor.preserve_order:
             nineml_objects = sorted(nineml_objects, key=lambda o: str(o.key))
         for nineml_object in nineml_objects:
             self.visitor.visit(nineml_object, parent=parent_elem,

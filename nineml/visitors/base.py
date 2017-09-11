@@ -1,9 +1,16 @@
-from nineml.utils import OrderedDefaultOrderedDictDict
+from collections import OrderedDict
 from nineml.exceptions import (
     NineMLDualVisitTypeException,
     NineMLDualVisitKeysMismatchException,
     NineMLInvalidElementTypeException,
     NineMLDualVisitNoneChildException)
+
+
+class OrderedDefaultOrderedDictDict(OrderedDict):
+
+    def __missing__(self, key):
+        self[key] = value = OrderedDict()
+        return value
 
 
 class BaseVisitor(object):
