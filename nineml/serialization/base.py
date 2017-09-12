@@ -202,23 +202,24 @@ class BaseSerializer(BaseVisitor):
                                     not options.get('no_annotations', False))
             except AttributeError:
                 save_annotations = False
-            save_indices = (isinstance(nineml_object, ContainerObject) and
-                            options.get('save_indices', False))
+#             save_indices = (isinstance(nineml_object, ContainerObject) and
+#                             options.get('save_indices', False))
+#             if save_annotations:
+#                 # Make a clone of the annotations and add save_indices
+#                 annotations = nineml_object.annotations.clone()
+#             else:
+#                 annotations = Annotations()
+#             if save_indices:
+#                 # Copy all indices to annotations
+#                 for key, elem, index in nineml_object.all_indices():
+#                     index_annot = annotations.add((INDEX_TAG, PY9ML_NS))
+#                     index_annot.set(INDEX_KEY_ATTR, key)
+#                     index_annot.set(INDEX_NAME_ATTR, elem.key)
+#                     index_annot.set(INDEX_INDEX_ATTR, index)
+#                 save_annotations = True
             if save_annotations:
-                # Make a clone of the annotations and add save_indices
-                annotations = nineml_object.annotations.clone()
-            else:
-                annotations = Annotations()
-            if save_indices:
-                # Copy all indices to annotations
-                for key, elem, index in nineml_object.all_indices():
-                    index_annot = annotations.add((INDEX_TAG, PY9ML_NS))
-                    index_annot.set(INDEX_KEY_ATTR, key)
-                    index_annot.set(INDEX_NAME_ATTR, elem.key)
-                    index_annot.set(INDEX_INDEX_ATTR, index)
-                save_annotations = True
-            if save_annotations:
-                self.visit(annotations, parent=serial_elem, **options)
+                self.visit(nineml_object.annotations, parent=serial_elem,
+                           **options)
         return serial_elem
 
     @property

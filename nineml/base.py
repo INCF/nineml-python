@@ -878,7 +878,7 @@ class ContainerObject(BaseNineMLObject):
 
 
 def pluralise(word):
-    if word.endswith('s'):
+    if word.endswith('s') or word.endswith('h'):
         word = word + 'es'
     elif word.endswith('y'):
         word = word[:-1] + 'ies'

@@ -31,6 +31,7 @@ class BaseAnnotations(ContainerObject):
         return (_AnnotationsBranch,)
 
     def __init__(self, branches=None):
+        ContainerObject.__init__(self)
         if isinstance(branches, OrderedDefaultListDict):
             self._branches = branches
         else:
