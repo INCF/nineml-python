@@ -1,11 +1,10 @@
-from itertools import chain, groupby
-from collections import defaultdict
+from itertools import chain
+from operator import attrgetter
 from nineml.utils import OrderedDefaultListDict
 from nineml.base import DocumentLevelObject, BaseNineMLObject
 import re
 from nineml.exceptions import (
-    NineMLAnnotationsError, NineMLRuntimeError, NineMLNameError,
-    NineMLNameError)
+    NineMLAnnotationsError, NineMLRuntimeError, NineMLNameError)
 
 
 class classproperty(object):
@@ -32,12 +31,18 @@ class BaseAnnotations(BaseNineMLObject):
         return (_AnnotationsBranch,)
 
     def __init__(self, branches=None):
-        self._branches = OrderedDefaultListDict()
         if isinstance(branches, OrderedDefaultListDict):
             self._branches = branches
-        if branches is not None:
-            for branch in branches:
-                self._branches[branch.key[:2]].append(branch)
+        else:
+            self._branches = OrderedDefaultListDict()
+            if branches is not None:
+                for i, branch in enumerate(branches):
+                    if branch.abs_index is not None:
+                        assert i == branch.abs_index
+                    else:
+                        assert branch.rel_index == len(
+                            self._branches[(branch.name, branch.ns)])
+                    self._branches[(branch.name, branch.ns)].append(branch)
 
     def _members_iter(self, child_type):
         assert child_type is _AnnotationsBranch
@@ -130,7 +135,7 @@ class BaseAnnotations(BaseNineMLObject):
         key_branches = self._branches[key]
         if not key_branches or not args:
             name, ns = key
-            branch = _AnnotationsBranch(name, ns, len(key_branches))
+            branch = _AnnotationsBranch(name, ns, rel_index=len(key_branches))
             key_branches.append(branch)
         if args:
             if len(key_branches) > 1:
@@ -180,7 +185,7 @@ class BaseAnnotations(BaseNineMLObject):
             branch = key_branches[0]
         elif not key_branches:
             name, ns = key
-            branch = _AnnotationsBranch(name, ns, len(key_branches))
+            branch = _AnnotationsBranch(name, ns, rel_index=len(key_branches))
             key_branches.append(branch)
         else:
             raise NineMLNameError(
@@ -266,11 +271,10 @@ class BaseAnnotations(BaseNineMLObject):
         return members
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        for (name, ns), key_branches in self._branches.iteritems():
-            for branch in key_branches:
+        for branch in sorted(self.branches, key=attrgetter('key')):
                 branch_elem = node.visitor.create_elem(
-                    name, parent=node.serial_element, multiple=True,
-                    namespace=ns, **options)
+                    branch.name, parent=node.serial_element, multiple=True,
+                    namespace=branch.ns, **options)
                 branch_node = type(node)(node.visitor, branch_elem)
                 branch.serialize_node(branch_node, **options)
 
@@ -299,19 +303,16 @@ class BaseAnnotations(BaseNineMLObject):
 
     @classmethod
     def _unserialize_branches(cls, node, **options):
-        indices = defaultdict(int)
         branches = []
         for child_name, child_elem in node.visitor.get_all_children(
                 node.serial_element):
             child_ns = node.visitor.get_namespace(child_elem)
             child_node = type(node)(node.visitor, child_elem, child_name,
                                     check_unprocessed=False)
-            key = (child_name, child_ns)
             branches.append(
                 _AnnotationsBranch.unserialize_node(
                     child_node, name=child_name, ns=child_ns,
-                    index=indices[key], **options))
-            indices[key] += 1
+                    abs_index=len(branches), **options))
         return branches
 
 
@@ -374,18 +375,51 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
 
 
 class _AnnotationsBranch(BaseAnnotations):
+    """
+    Represents a branch of an annotations tree (i.e. a tag in XML, dict in
+    JSON/YAML).
+
+    Parameters
+    ----------
+    name : str
+        Name of the annotations branch (e.g. XML tag name)
+    ns : URL
+        Namespace of the annotations branch (e.g. XML tag namespace)
+    abs_index : int
+        Absolute position of the branch within the containing branch
+    rel_index : int
+        Relative position of the branch within the containing branch w.r.t.
+        the other branches with the same name/ns combination
+    attr : dict(str, str)
+        Attributes of the branch
+    branches : list(_AnnotationsBranch)
+        List of sub branches of the branch
+    body : str
+        Body of the branch (e.g. XML element body)
+    """
 
     nineml_type = '_AnnotationsBranch'
     defining_attributes = ('_branches', '_attr', '_name', '_ns', '_body')
-    nineml_attr = ('attr', 'name', 'ns', 'index', 'body')
+    nineml_attr = ('attr', 'name', 'ns', 'abs_index', 'rel_index', 'body')
 
-    def __init__(self, name, ns, index, attr=None, branches=None, body=None):
+    def __init__(self, name, ns, abs_index=None, rel_index=None, attr=None,
+                 branches=None, body=None):
+        if abs_index is not None:
+            if rel_index is not None:
+                raise NineMLAnnotationsError(
+                    "Both relative and absolute indices can't be not None"
+                    "({} and {}) for elem {{{}}}{}".format(
+                        abs_index, rel_index, ns, name))
+        elif rel_index is None:
+            raise NineMLAnnotationsError(
+                "Both relative and absolute indices can't be None")
         super(_AnnotationsBranch, self).__init__(branches)
         if attr is None:
             attr = {}
         self._name = name
         self._ns = ns
-        self._index = index
+        self._abs_index = abs_index
+        self._rel_index = rel_index
         self._attr = attr
         self._body = body
 
@@ -405,8 +439,12 @@ class _AnnotationsBranch(BaseAnnotations):
         return self._ns
 
     @property
-    def index(self):
-        return self._index
+    def abs_index(self):
+        return self._abs_index
+
+    @property
+    def rel_index(self):
+        return self._rel_index
 
     @property
     def body(self):
@@ -418,7 +456,8 @@ class _AnnotationsBranch(BaseAnnotations):
 
     @property
     def key(self):
-        return (self._name, self._ns, self._index)
+        return (self._abs_index if self._abs_index is not None else
+                (self._name, self._ns, self._rel_index))
 
     def equals(self, other, **kwargs):  # @UnusedVariable
         return (super(_AnnotationsBranch, self).equals(other) and
@@ -539,10 +578,10 @@ class _AnnotationsBranch(BaseAnnotations):
             node.attr(key, val)
 
     @classmethod
-    def unserialize_node(cls, node, name, ns, index=None, **options):  # @UnusedVariable @IgnorePep8
+    def unserialize_node(cls, node, name, ns, abs_index=None, **options):  # @UnusedVariable @IgnorePep8
         attr = dict((k, node.attr(k))
                     for k in node.visitor.get_attr_keys(node.serial_element))
-        return cls(name, ns, index=index, attr=attr,
+        return cls(name, ns, abs_index=abs_index, attr=attr,
                    branches=cls._unserialize_branches(node, **options),
                    body=node.body(allow_empty=True))
 
