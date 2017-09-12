@@ -167,12 +167,12 @@ class NineMLDualVisitKeysMismatchException(NineMLDualVisitException):
 
 class NineMLDualVisitAnnotationsMismatchException(NineMLDualVisitException):
 
-    def __init__(self, children_type, obj1, obj2, namespace, contexts1,
+    def __init__(self, children_type, obj1, obj2, key, contexts1,
                  contexts2):
         self.children_type = children_type
         self.obj1 = obj1
         self.obj2 = obj2
-        self.namespace = namespace
+        self.key = key
         self.contexts1 = tuple(contexts1)
         self.contexts2 = tuple(contexts2)
 

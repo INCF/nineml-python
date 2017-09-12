@@ -1,5 +1,5 @@
 import sympy
-from itertools import izip
+from itertools import izip, chain
 import re
 from .base import BaseDualVisitor
 from nineml.exceptions import (NineMLDualVisitException,
@@ -8,7 +8,8 @@ from nineml.exceptions import (NineMLDualVisitException,
                                NineMLDualVisitValueException,
                                NineMLNotBoundException,
                                NineMLDualVisitAnnotationsMismatchException,
-                               NineMLDualVisitNoneChildException)
+                               NineMLDualVisitNoneChildException,
+                               NineMLNameError)
 from nineml.utils import nearly_equal
 
 
@@ -26,18 +27,25 @@ class EqualityChecker(BaseDualVisitor):
         return True
 
     def action(self, obj1, obj2, nineml_cls, **kwargs):
-        for ns in self.annotations_ns:
-            if (obj1.annotations.has_namespace(ns) and
-                    obj2.annotations.has_namespace(ns)):
-                if not obj1.annotations.equals(obj2.annotations, **kwargs):
-                    raise NineMLDualVisitAnnotationsMismatchException(
-                        nineml_cls, obj1, obj2, ns,
-                        self.contexts1, self.contexts2)
-            elif (obj1.annotations.has_namespace(ns) or
-                    obj2.annotations.has_namespace(ns)):
-                raise NineMLDualVisitAnnotationsMismatchException(
-                    nineml_cls, obj1, obj2, ns,
-                    self.contexts1, self.contexts2)
+        if hasattr(obj1, 'annotations'):
+            for key in set(chain(obj1.annotations.branch_keys,
+                                 obj2.annotations.branch_keys)):
+                if key[1] in self.annotations_ns:
+                    try:
+                        annot1 = obj1.annotations.branch(key)
+                    except NineMLNameError:
+                        raise NineMLDualVisitAnnotationsMismatchException(
+                            nineml_cls, obj1, obj2, key, self.contexts1,
+                            self.contexts2)
+                    try:
+                        annot2 = obj2.annotations.branch(key)
+                    except NineMLNameError:
+                        raise NineMLDualVisitAnnotationsMismatchException(
+                            nineml_cls, obj1, obj2, key, self.contexts1,
+                            self.contexts2)
+                    self.visit(annot1, annot2, **kwargs)
+        else:
+            assert not hasattr(obj2, 'annotations')
         return super(EqualityChecker, self).action(obj1, obj2, nineml_cls,
                                                    **kwargs)
 
@@ -116,13 +124,12 @@ class MismatchFinder(EqualityChecker):
             self.mismatch += (
                 "{} - '{}' annotations: [{}] | [{}]\n"
                 .format(self._format_contexts(e.contexts1, e.contexts2),
-                        e.namespace,
-                        ', '.join(re.sub('\s', '', str(a))
-                                  for a in e.obj1.annotations.namespace(
-                                      e.namespace)),
+                        e.key, ', '.join(re.sub('\s', '', str(a))
+                                         for a in e.obj1.annotations.namespace(
+                                             e.key[1])),
                         ', '.join(re.sub('\s', '', str(a))
                                   for a in e.obj2.annotations.namespace(
-                            e.namespace))))
+                                      e.key[1]))))
 
     def _compare_child(self, obj1, obj2, nineml_cls, results, action_result,
                        child_name, child_type, **kwargs):

@@ -1,7 +1,7 @@
 from itertools import chain
 from operator import attrgetter
 from nineml.utils import OrderedDefaultListDict
-from nineml.base import DocumentLevelObject, BaseNineMLObject
+from nineml.base import DocumentLevelObject, ContainerObject
 import re
 from nineml.exceptions import (
     NineMLAnnotationsError, NineMLRuntimeError, NineMLNameError)
@@ -24,7 +24,7 @@ def group_key(branch):
     return branch.key[:2]
 
 
-class BaseAnnotations(BaseNineMLObject):
+class BaseAnnotations(ContainerObject):
 
     @classproperty
     def nineml_children(self):
@@ -60,7 +60,12 @@ class BaseAnnotations(BaseNineMLObject):
 
     def branch(self, key_index):
         name, ns, index = key_index
-        return self._branches[(name, ns)][index]
+        try:
+            return self._branches[(name, ns)][index]
+        except (KeyError, IndexError):
+            raise NineMLNameError(
+                "{} branch not present in annotations ({})"
+                .format(key_index, ", ".join(self.branch_keys)))
 
     @property
     def num_branches(self):
@@ -271,7 +276,7 @@ class BaseAnnotations(BaseNineMLObject):
         return members
 
     def serialize_node(self, node, **options):  # @UnusedVariable
-        for branch in sorted(self.branches, key=attrgetter('key')):
+        for branch in sorted(self.branches, key=attrgetter('sort_key')):
                 branch_elem = node.visitor.create_elem(
                     branch.name, parent=node.serial_element, multiple=True,
                     namespace=branch.ns, **options)
@@ -424,8 +429,12 @@ class _AnnotationsBranch(BaseAnnotations):
         self._body = body
 
     @classmethod
-    def _children_iter_name(cls):
-        return 'branches'
+    def _child_accessor_name(cls):
+        return 'branch'
+
+    @classmethod
+    def _children_keys_name(cls):
+        return 'branch_keys'
 
     def empty(self):
         return super(_AnnotationsBranch, self).empty() and not self.attr
@@ -458,6 +467,10 @@ class _AnnotationsBranch(BaseAnnotations):
     def key(self):
         return (self._abs_index if self._abs_index is not None else
                 (self._name, self._ns, self._rel_index))
+
+    @property
+    def sort_key(self):
+        return self._abs_index if self._abs_index is not None else self.key
 
     def equals(self, other, **kwargs):  # @UnusedVariable
         return (super(_AnnotationsBranch, self).equals(other) and

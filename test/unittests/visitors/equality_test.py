@@ -282,7 +282,7 @@ E = Dynamics(
 
 E.state_variable('SV2').annotations.set(('Z1', 'NS1'), 'Y1', 'X1', 3.0)
 
-e_mismatch = "[Dynamics('dyn')] - 'NS1' annotations: [[{NS1}Z1:{NS1}Y1:X1=2.0]] | [[{NS1}Z1:{NS1}Y1:X1=3.0]]"  # @IgnorePep8
+e_mismatch = "[Dynamics('dyn')>_AnnotationsBranch('('Z1', 'NS1', 0)')>_AnnotationsBranch('('Y1', 'NS1', 0)')] - 'attr' attr: [{'X1': '2.0'}] | [{'X1': '3.0'}]"  # @IgnorePep8
 
 
 F = Dynamics(
