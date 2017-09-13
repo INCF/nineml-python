@@ -57,10 +57,6 @@ class Parameter(BaseALObject):
                 .format(self.name,
                         ', dimension={}'.format(self.dimension.name)))
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_parameter(self, **kwargs)
-
     def _sympy_(self):
         return sympy.Symbol(self.name)
 

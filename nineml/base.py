@@ -2,8 +2,7 @@ from itertools import chain
 import re
 # from copy import copy
 import operator
-from collections import defaultdict, Iterator, Iterable, OrderedDict
-import sympy
+from collections import defaultdict, OrderedDict
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException,
     NineMLSerializationError)

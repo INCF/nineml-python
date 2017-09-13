@@ -91,84 +91,53 @@ class Dynamics(ComponentClass, DynamicPortsObject):
                        AnalogReducePort, EventSendPort, EventReceivePort,
                        Regime) + ComponentClass.nineml_children
 
-    send_port_dicts = ('_analog_send_ports', '_event_send_ports')
-    receive_port_dicts = ('_analog_receive_ports', '_analog_reduce_ports',
-                          '_event_send_ports')
-
-    def __init__(self, name, parameters=None, ports=None, analog_ports=None,
-                 event_ports=None, analog_receive_ports=None,
-                 analog_reduce_ports=None, analog_send_ports=None,
-                 event_receive_ports=None, event_send_ports=None,
-                 regimes=None, aliases=None,
-                 state_variables=None, constants=None,
-                 validate_dimensions=True, strict_unused=True,
+    def __init__(self, name, parameters=(), ports=(), analog_ports=(),
+                 event_ports=(), analog_receive_ports=(),
+                 analog_reduce_ports=(), analog_send_ports=(),
+                 event_receive_ports=(), event_send_ports=(),
+                 regimes=(), aliases=(), state_variables=(), constants=(),
+                 validate=True, validate_dimensions=True, strict_unused=True,
                  **kwargs):
 
         ComponentClass.__init__(self, name=name, parameters=parameters,
                                 aliases=aliases, constants=constants)
-        regimes = normalise_parameter_as_list(regimes)
-        state_variables = normalise_parameter_as_list(state_variables)
-
         # Load the state variables as objects or strings:
+        state_variables = normalise_parameter_as_list(state_variables)
         sv_types = (basestring, StateVariable)
         sv_td = filter_discrete_types(state_variables, sv_types)
         sv_from_strings = [StateVariable(o, dimension=None)
                            for o in sv_td[basestring]]
         state_variables = sv_td[StateVariable] + sv_from_strings
+        self.add(*state_variables)
 
-        assert_no_duplicates(r.name for r in regimes)
-        assert_no_duplicates(s.name for s in state_variables)
+        self.add(*regimes)
 
-        self._regimes = dict((r.name, r) for r in regimes)
-        self._state_variables = dict((s.name, s) for s in state_variables)
+        # Combine various port arguments (there is redundancy due to backwards
+        # compatibility and convenience of use)
+        self.add(*ports)
+        self.add(*analog_ports)
+        self.add(*event_ports)
+        self.add(*analog_receive_ports)
+        self.add(*analog_reduce_ports)
+        self.add(*analog_send_ports)
+        self.add(*event_receive_ports)
+        self.add(*event_send_ports)
 
-        # Combine various port arguments into analog and event port lists.
-        # The original constructor just had analog_ports and event_ports, so
-        # they were retained for backwards compatibility and the other args
-        # were added to make it more forgiving.
-        if analog_ports is None:
-            analog_ports = []
-        if event_ports is None:
-            event_ports = []
-        for ports_arg in (ports, analog_receive_ports, analog_reduce_ports,
-                          analog_send_ports, event_receive_ports,
-                          event_send_ports):
-            if ports_arg is not None:
-                for port in ports_arg:
-                    if port.communicates == 'analog':
-                        analog_ports.append(port)
-                    elif port.communicates == 'event':
-                        event_ports.append(port)
-                    else:
-                        assert False, (
-                            "Unrecognised port communication '{}' for port {}"
-                            .format(port.communicates, port))
-
-        # Check there aren't any duplicates in the port and parameter names
-        assert_no_duplicates(p if isinstance(p, basestring) else p.name
-                             for p in chain(parameters if parameters else [],
-                                            analog_ports, event_ports))
-
-        self._analog_send_ports = dict((p.name, p) for p in analog_ports
-                                       if isinstance(p, AnalogSendPort))
-        self._analog_receive_ports = dict((p.name, p) for p in analog_ports
-                                          if isinstance(p, AnalogReceivePort))
-        self._analog_reduce_ports = dict((p.name, p) for p in analog_ports
-                                         if isinstance(p, AnalogReducePort))
+        # Run the Interface inferer to either check the explicitly provided
+        # members match the inferred or implicitly derive them.
 
         # EventPort, StateVariable and Parameter Inference:
         inferred_struct = DynamicsInterfaceInferer(self)
 
         # Check any supplied parameters match:
-        if parameters is not None:
+        if self.num_parameters:
             check_inferred_against_declared(
                 self._parameters.keys(), inferred_struct.parameter_names,
                 desc=("\nPlease check for references to missing "
                       "parameters in component class '{}'.\n"
                       .format(self.name)), strict_unused=strict_unused)
         else:
-            self._parameters = dict((n, Parameter(n))
-                                    for n in inferred_struct.parameter_names)
+            self.add(*(Parameter(n) for n in inferred_struct.parameter_names))
 
         # Check any supplied state_variables match:
         if self.num_state_variables:
@@ -179,50 +148,48 @@ class Dynamics(ComponentClass, DynamicPortsObject):
                       "variables in component class '{}'.\n"
                       .format(self.name)), strict_unused=False)
         else:
-            state_vars = dict((n, StateVariable(n)) for n in
-                              inferred_struct.state_variable_names)
-            self._state_variables = state_vars
+            self.add(*(StateVariable(n)
+                       for n in inferred_struct.state_variable_names))
 
         # Set and check event receive ports match inferred
-        self._event_receive_ports = dict((p.name, p) for p in event_ports
-                                         if isinstance(p, EventReceivePort))
-        if len(self._event_receive_ports):
+        if self.num_event_receive_ports:
             check_inferred_against_declared(
-                self._event_receive_ports.keys(),
+                self.event_receive_port_names,
                 inferred_struct.input_event_port_names,
                 desc=("\nPlease check OnEvents for references to missing "
                       "EventReceivePorts in component class '{}'.\n"
                       .format(self.name)))
         else:
             # Event ports not supplied, so lets use the inferred ones.
-            for pname in inferred_struct.input_event_port_names:
-                self._event_receive_ports[pname] = EventReceivePort(name=pname)
+            self.add(*(EventReceivePort(name=p)
+                       for p in inferred_struct.input_event_port_names))
 
         # Set and check event send ports match inferred
-        self._event_send_ports = dict(
-            (p.name, p) for p in event_ports if isinstance(p, EventSendPort))
-        if len(self._event_send_ports):
+        if self.num_event_send_ports:
             # FIXME: not all OutputEvents are necessarily exposed as Ports,
             # so really we should just check that all declared output event
             # ports are in the list of inferred ports, not that the declared
             # list is identical to the inferred one.
             check_inferred_against_declared(
-                self._event_send_ports.keys(),
+                self.event_send_port_names,
                 inferred_struct.event_out_port_names,
                 desc=("\nPlease check OutputEvent for references to missing "
                       "EventSendPorts in component class '{}'.\n"
                       .format(self.name)))
         else:
             # Event ports not supplied, so lets use the inferred ones.
-            for pname in inferred_struct.event_out_port_names:
-                self._event_send_ports[pname] = EventSendPort(name=pname)
-        # TODO: Add check for inferred analog ports??
-        self.annotations.set((VALIDATION, PY9ML_NS), DIMENSIONALITY,
-                             validate_dimensions)
+            self.add(*(EventSendPort(name=p)
+                       for p in inferred_struct.event_out_port_names))
+
+        # Bind transitions to target regimes
         for transition in self.all_transitions():
             transition.bind(self)
-        # Is the finished component_class valid?:
-        self.validate(**kwargs)
+        if validate:
+            # Is the finished component_class valid?:
+            self.validate(**kwargs)
+
+        self.annotations.set((VALIDATION, PY9ML_NS), DIMENSIONALITY,
+                             validate_dimensions)
 
     def rename_symbol(self, old_symbol, new_symbol):
         DynamicsRenameSymbol(self, old_symbol, new_symbol)
@@ -275,10 +242,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     @property
     def is_random(self):
         return DynamicsHasRandomProcess(self).found
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_componentclass(self, **kwargs)
 
     def is_linear(self, outputs=None):
         """

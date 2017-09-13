@@ -126,7 +126,7 @@ class C(AnnotatedNineMLObject, ContainerObject):
         AnnotatedNineMLObject.__init__(self)
         ContainerObject.__init__(self)
         self.name = name
-        self._es = dict((e.name, e) for e in es)
+        self.add(*es)
         self.f = f
         self.g = g
 
@@ -198,7 +198,7 @@ class Container(ContainerObject, DocumentLevelObject):
         self.name = name
         DocumentLevelObject.__init__(self)
         self.a = a
-        self._bs = dict((b.name, b) for b in bs)
+        self.add(*bs)
         self.c = c
         self.d = d
 

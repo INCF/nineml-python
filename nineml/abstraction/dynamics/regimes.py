@@ -31,10 +31,6 @@ class StateVariable(BaseALObject):
     nineml_attr = ('name',)
     nineml_child = {'dimension': Dimension}
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_statevariable(self, **kwargs)
-
     def __init__(self, name, dimension=None):
         """StateVariable Constructor
 
@@ -132,10 +128,6 @@ class TimeDerivative(ODE, BaseALObject):
     def str(self):
         return 'd-{}/dt := {}'.format(self.variable, self.rhs)
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_timederivative(self, **kwargs)
-
     @classmethod
     def from_str(cls, time_derivative_string):
         """Creates an TimeDerivative object from a string"""
@@ -204,12 +196,6 @@ class Regime(BaseALObject, ContainerObject):
         """
         Regime._n = Regime._n + 1
         return 'Regime%d' % Regime._n
-
-    # Visitation:
-    # -------------
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_regime(self, **kwargs)
 
     def __init__(self, *args, **kwargs):
         BaseALObject.__init__(self)

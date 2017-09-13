@@ -280,12 +280,6 @@ class C89_test(unittest.TestCase):
         self.assertEqual(str(expr.rhs), '1/2')
 
 
-class TestVisitor(object):
-
-    def visit(self, obj, **kwargs):
-        return obj.accept_visitor(self, **kwargs)
-
-
 # Testing Skeleton for class: ExpressionWithSimpleLHS
 class ExpressionWithSimpleLHS_test(unittest.TestCase):
 
@@ -318,64 +312,8 @@ class ExpressionWithSimpleLHS_test(unittest.TestCase):
         self.assertEqual(sorted(list(e.lhs_atoms)), sorted(['A']))
 
 
-class Alias_test(unittest.TestCase):
-
-    def test_accept_visitor(self):
-        # Signature: name(self, visitor, **kwargs)
-                # |VISITATION|
-
-        class AliasTestVisitor(TestVisitor):
-            def visit_alias(self, component, **kwargs):  # @UnusedVariable
-                return kwargs
-
-        c = Alias(name='V', rhs='0')
-        v = AliasTestVisitor()
-
-        self.assertEqual(
-            v.visit(c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-
-
-class StateAssignment_test(unittest.TestCase):
-
-    def test_accept_visitor(self):
-        # Signature: name(self, visitor, **kwargs)
-                # |VISITATION|
-
-        class StateAssignmentTestVisitor(TestVisitor):
-
-            def visit_stateassignment(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
-                return kwargs
-
-        c = StateAssignment(variable='V', rhs='0')
-        v = StateAssignmentTestVisitor()
-
-        self.assertEqual(
-            v.visit(c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-
-
 # Testing Skeleton for class: TimeDerivative
 class TimeDerivative_test(unittest.TestCase):
-
-    def test_accept_visitor(self):
-        # Signature: name(self, visitor, **kwargs)
-                # |VISITATION|
-
-        class TimeDerivativeTestVisitor(TestVisitor):
-
-            def visit_timederivative(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
-                return kwargs
-
-        c = TimeDerivative(variable='V', rhs='0')
-        v = TimeDerivativeTestVisitor()
-
-        self.assertEqual(
-            v.visit(c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
 
     def test_atoms(self):
         td = TimeDerivative(variable='X',
@@ -411,35 +349,6 @@ class TimeDerivative_test(unittest.TestCase):
         # independent_variable (dt)
         td.lhs_name_transform_inplace({'T': 'time'})
         self.assertEquals(td.independent_variable, 'time')
-
-
-class Constant_test(unittest.TestCase):
-
-    def setUp(self):
-        self.c = Constant(name="faraday", value=96485.3365, units=coulomb)
-
-    def test_accept_visitor(self):
-        # Signature: name(self, visitor, **kwargs)
-                # |VISITATION|
-
-        class ConstantTestVisitor(TestVisitor):
-
-            def visit_constant(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
-                return kwargs
-
-        v = ConstantTestVisitor()
-        self.assertEqual(
-            v.visit(self.c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-
-#     def test_xml_roundtrip(self):
-#         document = Document(coulomb)
-#         writer = XMLWriter(document, E)
-#         xml = self.c.accept_visitor(writer)
-#         loader = XMLLoader(document)
-#         c = loader.load_constant(xml)
-#         self.assertEqual(c, self.c, "Constant failed xml roundtrip")
 
 
 class MathUtils_test(unittest.TestCase):

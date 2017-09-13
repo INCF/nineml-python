@@ -74,10 +74,6 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
     def name(self):
         return self._name
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_alias(self, **kwargs)
-
     @classmethod
     def from_str(cls, alias_string):
         """Creates an Alias object from a string"""
@@ -150,10 +146,6 @@ class Constant(BaseALObject, ExpressionSymbol):
     def __repr__(self):
         return ("Constant(name={}, value={}, units={})"
                 .format(self.name, self.value, self.units))
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_constant(self, **kwargs)
 
     def name_transform_inplace(self, name_map):
         try:

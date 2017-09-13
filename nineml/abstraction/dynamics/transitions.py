@@ -54,10 +54,6 @@ class StateAssignment(BaseALObject, ExpressionWithSimpleLHS):
     def variable(self):
         return self.lhs
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_stateassignment(self, **kwargs)
-
     def __repr__(self):
         return "StateAssignment('{}', '{}')".format(self.variable, self.rhs)
 
@@ -92,10 +88,6 @@ class OutputEvent(BaseALObject):
 
     nineml_type = 'OutputEvent'
     nineml_attr = ('port_name',)
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_outputevent(self, **kwargs)
 
     def __init__(self, port_name):
         """
@@ -329,10 +321,6 @@ class OnEvent(Transition):
     nineml_type = "OnEvent"
     nineml_attr = (Transition.nineml_attr + ('src_port_name',))
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_onevent(self, **kwargs)
-
     def __init__(self, src_port_name, state_assignments=None,
                  output_events=None, target_regime_name=None):
         """
@@ -350,6 +338,9 @@ class OnEvent(Transition):
         self._port = None
         ensure_valid_identifier(self._src_port_name)
 
+    def __repr__(self):
+        return "OnEvent({})".format(self.src_port_name)
+
     @property
     def src_port_name(self):
         if self._port is not None:
@@ -364,9 +355,6 @@ class OnEvent(Transition):
             raise NineMLRuntimeError(
                 "OnEvent is not bound to a component class")
         return self._port
-
-    def __repr__(self):
-        return "OnEvent({})".format(self.src_port_name)
 
     @property
     def key(self):
@@ -398,10 +386,6 @@ class OnEvent(Transition):
 class Trigger(BaseALObject, Expression):
 
     nineml_type = 'Trigger'
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_trigger(self, **kwargs)
 
     def __init__(self, rhs):
         BaseALObject.__init__(self)
@@ -497,10 +481,6 @@ class OnCondition(Transition):
 
     nineml_type = "OnCondition"
     nineml_child = {'trigger': Trigger}
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_oncondition(self, **kwargs)
 
     def __init__(self, trigger, state_assignments=None,
                  output_events=None, target_regime_name=None):

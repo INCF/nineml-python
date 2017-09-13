@@ -175,10 +175,6 @@ class AnalogSendPort(AnalogPort, SendPort):
 
     nineml_type = 'AnalogSendPort'
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogsendport(self, **kwargs)
-
 
 class AnalogReceivePort(AnalogPort, ReceivePort):
     """AnalogReceivePort
@@ -191,10 +187,6 @@ class AnalogReceivePort(AnalogPort, ReceivePort):
 
     nineml_type = 'AnalogReceivePort'
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogreceiveport(self, **kwargs)
-
 
 class EventSendPort(EventPort, SendPort):
     """EventSendPort
@@ -206,10 +198,6 @@ class EventSendPort(EventPort, SendPort):
 
     nineml_type = 'EventSendPort'
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_eventsendport(self, **kwargs)
-
 
 class EventReceivePort(EventPort, ReceivePort):
     """EventReceivePort
@@ -220,10 +208,6 @@ class EventReceivePort(EventPort, ReceivePort):
     """
 
     nineml_type = 'EventReceivePort'
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_eventreceiveport(self, **kwargs)
 
 
 class AnalogReducePort(AnalogPort, ReceivePort):
@@ -248,10 +232,6 @@ class AnalogReducePort(AnalogPort, ReceivePort):
             raise NineMLRuntimeError(err)
         super(AnalogReducePort, self).__init__(name, dimension)
         self._operator = operator
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogreduceport(self, **kwargs)
 
     @property
     def operator(self):

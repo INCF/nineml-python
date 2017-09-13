@@ -28,7 +28,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     nineml_attr = ('name',)
     nineml_children = (Parameter, Alias, Constant)
 
-    def __init__(self, name, parameters=None, aliases=None, constants=None):
+    def __init__(self, name, parameters=(), aliases=(), constants=()):
         ensure_valid_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
@@ -36,21 +36,18 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
         ContainerObject.__init__(self)
 
         # Turn any strings in the parameter list into Parameters:
-        if parameters is None:
-            parameters = []
-        else:
-            param_types = (basestring, Parameter)
-            param_td = filter_discrete_types(parameters, param_types)
-            params_from_strings = [Parameter(s) for s in param_td[basestring]]
-            parameters = param_td[Parameter] + params_from_strings
-
-        aliases = normalise_parameter_as_list(aliases)
-        constants = normalise_parameter_as_list(constants)
+        param_types = (basestring, Parameter)
+        param_td = filter_discrete_types(parameters, param_types)
+        params_from_strings = [Parameter(s) for s in param_td[basestring]]
+        parameters = param_td[Parameter] + params_from_strings
 
         # Load the aliases as objects or strings:
+        aliases = normalise_parameter_as_list(aliases)
         alias_td = filter_discrete_types(aliases, (basestring, Alias))
         aliases_from_strs = [Alias.from_str(o) for o in alias_td[basestring]]
         aliases = alias_td[Alias] + aliases_from_strs
+
+        constants = normalise_parameter_as_list(constants)
 
         self.add(*parameters)
         self.add(*aliases)

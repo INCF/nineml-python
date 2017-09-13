@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import unittest
 from nineml.utils.comprehensive_example import (
     all_types, instances_of_all_types)
@@ -46,6 +47,8 @@ class TestAccessors(unittest.TestCase):
         This test checks to see whether they are internally consistent and of
         the right type
         """
+        from collections import defaultdict
+        non_ordered = defaultdict(set)
         for name, cls in all_types.iteritems():
             if cls.nineml_children:
                 for elem in instances_of_all_types[name].values():
@@ -54,6 +57,14 @@ class TestAccessors(unittest.TestCase):
                         names = sorted(elem._member_keys_iter(child_type))
                         members = sorted(elem._members_iter(child_type),
                                          key=lambda e: e.key)
+                        dct = elem._member_dict(child_type)
+                        try:
+                            self.assertIsInstance(
+                                dct, OrderedDict,
+                                "Dictionary for {} created in {} is not an "
+                                "OrderedDict ({})".format(child_type, cls, dct))
+                        except:
+                            non_ordered[cls].add(child_type)
                         accessor_members = [
                             elem._member_accessor(child_type)(n)
                             for n in names]
@@ -143,6 +154,8 @@ class TestAccessors(unittest.TestCase):
                         "of send ports"
                         .format(all_members, all_accessor_members,
                                 elem.key, name))
+        for cls, child_types in non_ordered.iteritems():
+            print "{}-{}".format(cls, child_types)
 
     def test_port_accessors(self):
         for cls_name in ('Dynamics', 'DynamicsProperties', 'MultiDynamics',

@@ -283,11 +283,10 @@ class MultiDynamics(Dynamics):
         # Create the structures unique to MultiDynamics
         # =====================================================================
         if isinstance(sub_components, dict):
-            self._sub_components = dict(
-                (name, SubDynamics(name, dyn))
-                for name, dyn in sub_components.iteritems())
+            self.add(*(SubDynamics(name, dyn)
+                       for name, dyn in sub_components.iteritems()))
         else:
-            self._sub_components = dict((d.name, d) for d in sub_components)
+            self.add(*sub_components)
         # =====================================================================
         # Save port exposurs into separate member dictionaries
         # =====================================================================
@@ -834,8 +833,7 @@ class _MultiRegime(Regime):
         """
         BaseALObject.__init__(self)
         ContainerObject.__init__(self)
-        self._sub_regimes = dict((r.sub_component.name, copy(r))
-                                 for r in sub_regimes)
+        self.add(*(copy(r) for r in sub_regimes))
         # Set the parent of the sub regimes to the multi regime to get hashing
         # of the generated namespace objects to work (i.e. equivalent
         # namespace objects generated from the property generators of the same

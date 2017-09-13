@@ -10,42 +10,6 @@ from nineml.exceptions import NineMLRuntimeError
 # Testing Skeleton for class: AnalogPort
 class AnalogPort_test(unittest.TestCase):
 
-    def test_Constructor(self):
-        pass
-
-    def test_accept_visitor(self):
-        # Check the Component is forwarding arguments:
-        class TestVisitor(object):
-
-            def visit(self, obj, **kwargs):
-                return obj.accept_visitor(self, **kwargs)
-
-            def visit_analogsendport(self, component, **kwargs):
-                return kwargs
-
-            def visit_analogreceiveport(self, component, **kwargs):
-                return kwargs
-
-            def visit_analogreduceport(self, component, **kwargs):
-                return kwargs
-
-        v = TestVisitor()
-
-        self.assertEqual(
-            v.visit(AnalogSendPort('V'), kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-        self.assertEqual(
-            v.visit(AnalogReceivePort('V'), kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-
-        self.assertEqual(
-            v.visit(AnalogReducePort('V', operator='+'), kwarg1='Hello',
-                    kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-
     def test_name(self):
         # Signature: name
                 # The name of the port, local to the current component
@@ -63,32 +27,6 @@ class AnalogPort_test(unittest.TestCase):
 
 
 class EventPort_test(unittest.TestCase):
-
-    def test_Constructor(self):
-        pass
-
-    def test_accept_visitor(self):
-        class TestVisitor(object):
-
-            def visit(self, obj, **kwargs):
-                return obj.accept_visitor(self, **kwargs)
-
-            def visit_eventsendport(self, component, **kwargs):
-                return kwargs
-
-            def visit_eventreceiveport(self, component, **kwargs):
-                return kwargs
-
-        v = TestVisitor()
-
-        self.assertEqual(
-            v.visit(EventSendPort('EV'), kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-        self.assertEqual(
-            v.visit(EventReceivePort('EV'), kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
 
     def test_name(self):
         self.assertEqual(EventReceivePort('A').name, 'A')

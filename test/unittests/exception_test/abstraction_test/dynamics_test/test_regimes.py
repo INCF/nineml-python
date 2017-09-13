@@ -130,8 +130,7 @@ class TestRegimeExceptions(unittest.TestCase):
                      self.name,
                      "', '".join(td.variable for td in time_derivatives))))
         # Store as a dictionary
-        self._time_derivatives = dict((td.variable, td)
-                                      for td in time_derivatives)
+        self.add(*time_derivatives)
 
         # We support passing in 'transitions', which is a list of both OnEvents
         # and OnConditions. So, lets filter this by type and add them

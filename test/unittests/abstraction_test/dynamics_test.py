@@ -12,30 +12,6 @@ from nineml.document import Document
 
 class ComponentClass_test(unittest.TestCase):
 
-    def test_Constructor(self):
-        pass
-
-    def test_accept_visitor(self):
-        # Signature: name(self, visitor, **kwargs)
-                # |VISITATION|
-        # Check the Component is forwarding arguments:
-
-        class TestVisitor(object):
-
-            def visit(self, obj, **kwargs):
-                return obj.accept_visitor(self, **kwargs)
-
-            def visit_componentclass(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
-                return kwargs
-
-        c = Dynamics(name='MyComponent')
-        v = TestVisitor()
-
-        self.assertEqual(
-            v.visit(c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-
     def test_aliases(self):
         # Signature: name
                 # Forwarding function to self.dynamics.aliases
@@ -661,24 +637,6 @@ class TestOn(unittest.TestCase):
 
 class OnCondition_test(unittest.TestCase):
 
-    def test_accept_visitor(self):
-
-        class TestVisitor(object):
-
-            def visit(self, obj, **kwargs):
-                return obj.accept_visitor(self, **kwargs)
-
-            def visit_oncondition(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
-                return kwargs
-
-        c = OnCondition(trigger='V>0')
-        v = TestVisitor()
-
-        self.assertEqual(
-            v.visit(c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-
     def test_trigger(self):
 
         invalid_triggers = ['true(',
@@ -777,24 +735,6 @@ class OnEvent_test(unittest.TestCase):
     def test_Constructor(self):
         pass
 
-    def test_accept_visitor(self):
-
-        class TestVisitor(object):
-
-            def visit(self, obj, **kwargs):
-                return obj.accept_visitor(self, **kwargs)
-
-            def visit_onevent(self, component, **kwargs):  # @UnusedVariable
-                return kwargs
-
-        c = OnEvent('SP')
-        v = TestVisitor()
-
-        self.assertEqual(
-            v.visit(c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
-
     def test_src_port_name(self):
 
         self.assertRaises(NineMLRuntimeError, OnEvent, '1MyEvent1 ')
@@ -809,26 +749,6 @@ class Regime_test(unittest.TestCase):
 
     def test_Constructor(self):
         pass
-
-    def test_accept_visitor(self):
-        # Signature: name(self, visitor, **kwargs)
-                # |VISITATION|
-
-        class TestVisitor(object):
-
-            def visit(self, obj, **kwargs):
-                return obj.accept_visitor(self, **kwargs)
-
-            def visit_regime(self, component, **kwargs):  # @UnusedVariable
-                return kwargs
-
-        c = Regime(name='R1')
-        v = TestVisitor()
-
-        self.assertEqual(
-            v.visit(c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
 
     def test_add_on_condition(self):
         # Signature: name(self, on_condition)
@@ -913,24 +833,6 @@ class Regime_test(unittest.TestCase):
 
 
 class StateVariable_test(unittest.TestCase):
-
-    def test_accept_visitor(self):
-
-        class TestVisitor(object):
-
-            def visit(self, obj, **kwargs):
-                return obj.accept_visitor(self, **kwargs)
-
-            def visit_statevariable(self, component, **kwargs):  # @UnusedVariable @IgnorePep8
-                return kwargs
-
-        c = StateVariable('R1')
-        v = TestVisitor()
-
-        self.assertEqual(
-            v.visit(c, kwarg1='Hello', kwarg2='Hello2'),
-            {'kwarg1': 'Hello', 'kwarg2': 'Hello2'}
-        )
 
     def test_name(self):
         # Signature: name

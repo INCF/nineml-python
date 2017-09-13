@@ -15,7 +15,6 @@ docstring goes here
 from ..componentclass import ComponentClass, Parameter
 from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
 import nineml.units as un
-from nineml.visitors import Cloner
 
 
 class ConnectionRule(ComponentClass):
@@ -29,7 +28,7 @@ class ConnectionRule(ComponentClass):
                       'Probabilistic', 'RandomFanIn',
                       'RandomFanOut')
 
-    def __init__(self, name, standard_library, parameters=None, **kwargs):  # @UnusedVariable @IgnorePep8
+    def __init__(self, name, standard_library, parameters=(), **kwargs):  # @UnusedVariable @IgnorePep8
         super(ConnectionRule, self).__init__(name, parameters)
         # Convert to lower case
         if (not standard_library.startswith(self.standard_library_basepath) or
@@ -45,10 +44,6 @@ class ConnectionRule(ComponentClass):
     @property
     def standard_library(self):
         return self._standard_library
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_componentclass(self, **kwargs)
 
     def rename_symbol(self, old_symbol, new_symbol):
         ConnectionRuleRenameSymbol(self, old_symbol, new_symbol)

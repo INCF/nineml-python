@@ -51,7 +51,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
                 (name, SubDynamics(name, dyn))
                 for name, dyn in sub_components.iteritems())
         else:
-            self._sub_components = dict((d.name, d) for d in sub_components)
+            self.add(*sub_components)
         self._analog_send_ports = {}
         self._analog_receive_ports = {}
         self._analog_reduce_ports = {}
