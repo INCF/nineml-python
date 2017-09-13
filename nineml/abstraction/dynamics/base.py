@@ -110,6 +110,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         state_variables = sv_td[StateVariable] + sv_from_strings
         self.add(*state_variables)
 
+        regimes = normalise_parameter_as_list(regimes)
         self.add(*regimes)
 
         # Combine various port arguments (there is redundancy due to backwards

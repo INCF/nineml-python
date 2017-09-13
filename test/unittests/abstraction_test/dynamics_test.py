@@ -80,14 +80,13 @@ class ComponentClass_test(unittest.TestCase):
             name='C1', aliases=['H := G + 1', 'G := H + 1'],
         )
 
-        # Referencing none existant symbols:
+        # Referencing none existent symbols:
         self.assertRaises(
             NineMLRuntimeError,
             Dynamics,
             name='C1',
             aliases=['H := G + I'],
-            parameters=[],
-            analog_ports=[],
+            parameters=['P1'],
         )
 
         # Invalid Names:

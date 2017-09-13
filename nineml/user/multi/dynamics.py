@@ -833,7 +833,10 @@ class _MultiRegime(Regime):
         """
         BaseALObject.__init__(self)
         ContainerObject.__init__(self)
-        self.add(*(copy(r) for r in sub_regimes))
+        # Need to make a shallow copy of the regimes in order to alter the
+        # '_parent' attribute to be this MultiRegime
+        self._sub_regimes = dict((r.sub_component.name, copy(r))
+                                 for r in sub_regimes)
         # Set the parent of the sub regimes to the multi regime to get hashing
         # of the generated namespace objects to work (i.e. equivalent
         # namespace objects generated from the property generators of the same
