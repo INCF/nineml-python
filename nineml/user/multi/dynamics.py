@@ -259,7 +259,7 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
 class MultiDynamics(Dynamics):
 
     nineml_type = 'MultiDynamics'
-    v1_nineml_type = None
+    nineml_type_v1 = None
     defining_attributes = (
         '_name', '_sub_components', '_analog_port_connections',
         '_event_port_connections', '_analog_send_ports',
@@ -1151,7 +1151,7 @@ class SubDynamicsProperties(BaseULObject):
 class MultiDynamicsProperties(DynamicsProperties):
 
     nineml_type = "MultiDynamicsProperties"
-    v1_nineml_type = None
+    nineml_type_v1 = None
     defining_attributes = ('_name', '_definition', '_sub_components')
     nineml_attr = ('name',)
     nineml_child = {'definition': None}

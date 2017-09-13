@@ -65,8 +65,8 @@ class BaseVisitor(object):
         return self._document
 
     def node_name(self, nineml_cls):
-        if (self.major_version == 1 and nineml_cls.v1_nineml_type is not None):
-            name = nineml_cls.v1_nineml_type
+        if (self.major_version == 1 and nineml_cls.nineml_type_v1 is not None):
+            name = nineml_cls.nineml_type_v1
         else:
             name = nineml_cls.nineml_type
         return name

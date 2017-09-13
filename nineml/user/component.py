@@ -154,7 +154,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         for the component_class's properties.
     """
     __metaclass__ = ABCMeta  # Abstract base class
-    v1_nineml_type = 'Component'
+    nineml_type_v1 = 'Component'
     defining_attributes = ('_name', '_definition', '_properties')
     nineml_attr = ('name',)
     nineml_children = (Property,)

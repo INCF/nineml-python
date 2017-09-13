@@ -28,7 +28,7 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     defining_attributes = ('_name', '_parameters', '_aliases', '_constants')
     class_to_member = {'Parameter': 'parameter', 'Alias': 'alias',
                        'Constant': 'constant'}
-    v1_nineml_type = 'ComponentClass'
+    nineml_type_v1 = 'ComponentClass'
     # New NineML types
     nineml_children = (Parameter, Alias, Constant)
     nineml_attr = ('name',)

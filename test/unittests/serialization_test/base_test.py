@@ -193,7 +193,7 @@ class F(AnnotatedNineMLObject, DocumentLevelObject):
 class Container(ContainerObject, DocumentLevelObject):
 
     nineml_type = 'Container'
-    v1_nineml_type = 'Cunfaener'
+    nineml_type_v1 = 'Cunfaener'
     defining_attributes = ('name', 'a', 'bs', 'c', 'd')
     nineml_attr = ('name', 'bs', 'd')
     nineml_children = (B,)
