@@ -442,10 +442,6 @@ class AnnotatedNineMLObject(BaseNineMLObject):
         else:
             clone._annotations = self._annotations.clone(memo, **kwargs)
 
-    def equals(self, other, **kwargs):
-        return (super(AnnotatedNineMLObject, self).equals(other, **kwargs) and
-                self.annotations_equal(other, **kwargs))
-
     @property
     def annotations(self):
         return self._annotations

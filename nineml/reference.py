@@ -75,22 +75,22 @@ class BaseReference(AnnotatedNineMLObject):
     def key(self):
         return (self._target.key +
                 self.url if self.url is not None else '')
-
-    def equals(self, other, **kwargs):
-        """
-        Parameters
-        ----------
-        other : BaseReference
-            The other object to determine equality with
-        ignore_none_urls : bool
-            A bit of a hack to ignore urls that are None (i.e. defined inline)
-            during unittesting.
-        """
-        if not isinstance(other, self.__class__):
-            return False
-        return (self._target == other._target and
-                self.url == other.url and
-                self.annotations_equal(other, **kwargs))
+# 
+#     def equals(self, other, **kwargs):
+#         """
+#         Parameters
+#         ----------
+#         other : BaseReference
+#             The other object to determine equality with
+#         ignore_none_urls : bool
+#             A bit of a hack to ignore urls that are None (i.e. defined inline)
+#             during unittesting.
+#         """
+#         if not isinstance(other, self.__class__):
+#             return False
+#         return (self._target == other._target and
+#                 self.url == other.url and
+#                 self.annotations_equal(other, **kwargs))
 
     def __hash__(self):
         return (hash(self.__class__) ^ hash(self._target.name) ^

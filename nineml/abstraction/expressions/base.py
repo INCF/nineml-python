@@ -68,14 +68,14 @@ class Expression(AnnotatedNineMLObject):
         super(Expression, self).__init__(**kwargs)
         self.rhs = rhs
 
-    def equals(self, other, **kwargs):
-        if not isinstance(other, Expression):
-            return False
-        try:
-            expr_eq = (sympy.expand(self.rhs - other.rhs) == 0)
-        except TypeError:
-            expr_eq = sympy.Equivalent(self.rhs, other.rhs) == sympy.true
-        return expr_eq and self.annotations_equal(other, **kwargs)
+#     def equals(self, other, **kwargs):
+#         if not isinstance(other, Expression):
+#             return False
+#         try:
+#             expr_eq = (sympy.expand(self.rhs - other.rhs) == 0)
+#         except TypeError:
+#             expr_eq = sympy.Equivalent(self.rhs, other.rhs) == sympy.true
+#         return expr_eq and self.annotations_equal(other, **kwargs)
 
     @property
     def rhs(self):
@@ -469,10 +469,10 @@ class ExpressionWithLHS(Expression):
     @property
     def lhs_atoms(self):
         raise NotImplementedError()
-
-    def equals(self, other, **kwargs):
-        return (super(ExpressionWithLHS, self).equals(other, **kwargs) and
-                self.lhs == other.lhs)
+# 
+#     def equals(self, other, **kwargs):
+#         return (super(ExpressionWithLHS, self).equals(other, **kwargs) and
+#                 self.lhs == other.lhs)
 
 
 class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):

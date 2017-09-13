@@ -74,7 +74,6 @@ class TestAnnotations(unittest.TestCase):
         annot.set(('Boo', PY9ML_NS), 'Mar', 'Wee', 'e', 4)
         annot.set(('Boo', PY9ML_NS), 'Mar', 'Waa', 'f', 5)
         annot.set(('Boo', PY9ML_NS), 'Mar', 'Waa', 'g', 6)
-        annot.find_mismatch(self.annot)
         self.assertEqual(annot, self.annot,
                          "Manual annotations do not match loaded "
                          "annotations:\n\n{}\nvs\n\n{}\n\nMismatch:\n{}"

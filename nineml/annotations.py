@@ -38,11 +38,9 @@ class BaseAnnotations(ContainerObject):
             self._branches = OrderedDefaultListDict()
             if branches is not None:
                 for i, branch in enumerate(branches):
-                    if branch.abs_index is not None:
-                        assert i == branch.abs_index
-                    else:
-                        assert branch.rel_index == len(
-                            self._branches[(branch.name, branch.ns)])
+                    branch._abs_index = i
+                    branch._rel_index = len(self._branches[(branch.name,
+                                                            branch.ns)])
                     self._branches[(branch.name, branch.ns)].append(branch)
 
     def _members_iter(self, child_type):
@@ -60,13 +58,18 @@ class BaseAnnotations(ContainerObject):
         return chain(*self._branches.itervalues())
 
     def branch(self, key_index):
-        name, ns, index = key_index
+        try:
+            name, ns, index = key_index
+        except:
+            raise
         try:
             return self._branches[(name, ns)][index]
         except (KeyError, IndexError):
             raise NineMLNameError(
                 "{} branch not present in annotations ({})"
-                .format(key_index, ", ".join(self.branch_keys)))
+                .format('{}-{}-{}'.format(*key_index),
+                        ", ".join('{}-{}-{}'.format(*k)
+                                  for k in self.branch_keys)))
 
     @property
     def num_branches(self):
@@ -81,14 +84,14 @@ class BaseAnnotations(ContainerObject):
         Returns true if there are no annotation branches.
         """
         return not self._branches
-
-    def equals(self, other, **kwargs):  # @UnusedVariable
-        try:
-            if self.nineml_type != other.nineml_type:
-                return False
-        except AttributeError:
-            return False
-        return self._branches == other._branches
+# 
+#     def equals(self, other, **kwargs):  # @UnusedVariable
+#         try:
+#             if self.nineml_type != other.nineml_type:
+#                 return False
+#         except AttributeError:
+#             return False
+#         return self._branches == other._branches
 
     def __iter__(self):
         return self._branches.iterkeys()
@@ -342,6 +345,10 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
                 rep += '\n' + b._repr(indent='  ')
         return rep
 
+    @property
+    def key(self):
+        return None
+
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
         return cls(cls._unserialize_branches(node, **options))
@@ -408,17 +415,8 @@ class _AnnotationsBranch(BaseAnnotations):
     defining_attributes = ('_branches', '_attr', '_name', '_ns', '_body')
     nineml_attr = ('attr', 'name', 'ns', 'abs_index', 'rel_index', 'body')
 
-    def __init__(self, name, ns, abs_index=None, rel_index=None, attr=None,
+    def __init__(self, name, ns, rel_index=None, abs_index=None, attr=None,
                  branches=None, body=None):
-        if abs_index is not None:
-            if rel_index is not None:
-                raise NineMLAnnotationsError(
-                    "Both relative and absolute indices can't be not None"
-                    "({} and {}) for elem {{{}}}{}".format(
-                        abs_index, rel_index, ns, name))
-        elif rel_index is None:
-            raise NineMLAnnotationsError(
-                "Both relative and absolute indices can't be None")
         super(_AnnotationsBranch, self).__init__(branches)
         if attr is None:
             attr = {}
@@ -466,19 +464,21 @@ class _AnnotationsBranch(BaseAnnotations):
 
     @property
     def key(self):
-        return (self._abs_index if self._abs_index is not None else
-                (self._name, self._ns, self._rel_index))
+        assert self._rel_index is not None
+        return (self._name, self._ns, self._rel_index)
 
     @property
     def sort_key(self):
-        return self._abs_index if self._abs_index is not None else self.key
+        index = self._abs_index if self._abs_index is not None else self.key
+        assert index is not None
+        return index
 
-    def equals(self, other, **kwargs):  # @UnusedVariable
-        return (super(_AnnotationsBranch, self).equals(other) and
-                self.name == other.name and
-                self.attr == other.attr and
-                self.body == other.body and
-                self.ns == other.ns)
+#     def equals(self, other, **kwargs):  # @UnusedVariable
+#         return (super(_AnnotationsBranch, self).equals(other) and
+#                 self.name == other.name and
+#                 self.attr == other.attr and
+#                 self.body == other.body and
+#                 self.ns == other.ns)
 
     def _repr(self, indent=''):
         rep = "{}{{{}}}{}:".format(indent, self.ns, self.name)

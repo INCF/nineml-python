@@ -86,6 +86,11 @@ class EqualityChecker(BaseDualVisitor):
         for sym in nineml_cls.dimension_symbols:
             self._check_attr(dim1, dim2, sym, nineml_cls)
 
+    def action__annotationsbranch(self, branch1, branch2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        for attr in nineml_cls.nineml_attr:
+            if attr != 'abs_index':
+                self._check_attr(branch1, branch2, attr, nineml_cls)
+
     def _check_rhs(self, expr1, expr2, nineml_cls):
         try:
             expr_eq = (sympy.expand(expr1.rhs - expr2.rhs) == 0)
