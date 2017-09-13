@@ -10,7 +10,7 @@ from ..dynamics import Initial
 from nineml.abstraction import (
     Alias, TimeDerivative, Regime, OnEvent, OnCondition, StateAssignment,
     Trigger, OutputEvent, StateVariable, Constant, Parameter)
-from nineml.exceptions import NineMLImmutableError, NineMLNameError
+from nineml.exceptions import NineMLImmutableError, NineMLNameError, name_error
 from nineml.abstraction.expressions import reserved_identifiers
 from nineml.base import BaseNineMLObject
 
@@ -112,11 +112,11 @@ class _NamespaceObject(BaseNineMLObject):
         """
         return (hash(self.sub_component) ^ hash(self._object) ^
                 hash(self._parent))
-
-    def equals(self, other, annotations_ns=[]):
-        return BaseNineMLObject.equals(
-            self, other, annotations_ns=annotations_ns,
-            defining_attributes=self._object.defining_attributes)
+# 
+#     def equals(self, other, annotations_ns=[]):
+#         return BaseNineMLObject.equals(
+#             self, other, annotations_ns=annotations_ns,
+#             defining_attributes=self._object.defining_attributes)
 
     @property
     def sub_component(self):
@@ -241,13 +241,18 @@ class _NamespaceTransition(_NamespaceNamed):
         return (_NamespaceOutputEvent(self.sub_component, oe, self)
                 for oe in self._object.output_events)
 
+    @name_error
     def state_assignment(self, name):
+        local_name, _ = split_namespace(name)
         return _NamespaceStateAssignment(
-            self.sub_component, self._object.state_assignment(name), self)
+            self.sub_component, self._object.state_assignment(local_name),
+            self)
 
+    @name_error
     def output_event(self, name):
+        local_name, _ = split_namespace(name)
         return _NamespaceOutputEvent(
-            self.sub_component, self._object.output_event(name), self)
+            self.sub_component, self._object.output_event(local_name), self)
 
     @property
     def num_state_assignments(self):
@@ -256,6 +261,14 @@ class _NamespaceTransition(_NamespaceNamed):
     @property
     def num_output_events(self):
         return self._object.num_output_events
+
+    @property
+    def state_assignment_variables(self):
+        return (sa.variable for sa in self.state_assignments)
+
+    @property
+    def output_event_port_names(self):
+        return (oe.port_name for oe in self.output_events)
 
 
 class _NamespaceOnEvent(_NamespaceTransition, OnEvent):
@@ -393,21 +406,35 @@ class _NamespaceRegime(_NamespaceNamed, Regime):
                 for oc in self._object.on_conditions)
 
     def time_derivative(self, name):
-        return _NamespaceTimeDerivative(self.sub_component,
-                                        self._object.time_derivative(name),
-                                        self)
+        local_name, _ = split_namespace(name)
+        return _NamespaceTimeDerivative(
+            self.sub_component, self._object.time_derivative(local_name),
+            self)
 
+    @name_error
     def alias(self, name):
-        return _NamespaceAlias(self.sub_component, self._object.alias(name),
-                               self)
+        local_name, _ = split_namespace(name)
+        return _NamespaceAlias(self.sub_component,
+                               self._object.alias(local_name), self)
 
-    def on_event(self, name):
+    @name_error
+    def on_event(self, src_port_name):
+        local_name, _ = split_namespace(src_port_name)
         return _NamespaceOnEvent(self.sub_component,
-                                 self._object.on_event(name), self)
+                                 self._object.on_event(local_name), self)
 
-    def on_condition(self, name):
+    @name_error
+    def on_condition(self, condition):
+        if not isinstance(condition, sympy.Basic):
+            condition = Trigger(condition).rhs
+        try:
+            local_on_condition = next(
+                oc for oc in self.on_conditions if oc.trigger.rhs == condition)
+        except StopIteration:
+            raise NineMLNameError(condition)
         return _NamespaceOnCondition(self.sub_component,
-                                     self._object.on_condition(name), self)
+                                     local_on_condition,
+                                     self)
 
     @property
     def num_time_derivatives(self):
@@ -424,3 +451,19 @@ class _NamespaceRegime(_NamespaceNamed, Regime):
     @property
     def num_on_conditions(self):
         return self._object.num_on_conditions
+
+    @property
+    def time_derivative_variables(self):
+        return (td.variable for td in self.time_derivatives)
+
+    @property
+    def alias_names(self):
+        return (a.name for a in self.aliases)
+
+    @property
+    def on_event_port_names(self):
+        return (oe.src_port_name for oe in self.on_events)
+
+    @property
+    def on_condition_triggers(self):
+        return (oc.trigger.rhs for oc in self.on_conditions)

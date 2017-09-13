@@ -201,9 +201,9 @@ class NineMLDualVisitKeysMismatchException(NineMLDualVisitException):
                 .format(self._format_contexts(self.contexts1, self.contexts2),
                         self.children_type.nineml_type,
                         sorted(self.obj1._member_keys_iter(
-                            self.children_type)),
+                               self.children_type), key=lambda k: str(k)),
                         sorted(self.obj2._member_keys_iter(
-                            self.children_type))))
+                               self.children_type), key=lambda k: str(k))))
 
 
 class NineMLDualVisitAnnotationsMismatchException(NineMLDualVisitException):

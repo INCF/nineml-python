@@ -587,5 +587,9 @@ class OnCondition(Transition):
                    output_events=node.children(OutputEvent, **options),
                    target_regime_name=target_regime)
 
+    @classmethod
+    def _children_keys_name(cls):
+        return 'on_condition_triggers'
+
 
 # import nineml.abstraction.dynamics.visitors.queriers

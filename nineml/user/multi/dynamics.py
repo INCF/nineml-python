@@ -876,8 +876,12 @@ class _MultiRegime(Regime):
     def num_sub_regimes(self):
         return len(self._sub_regimes)
 
+    @name_error
     def sub_regime(self, sub_component):
-        return self._sub_regimes[sub_component]
+        try:
+            return self._sub_regimes[sub_component]
+        except KeyError:
+            raise
 
     @property
     def name(self):
@@ -946,11 +950,11 @@ class _MultiRegime(Regime):
             yield _MultiOnCondition(group, self)
 
     def time_derivative(self, variable):
-        name, comp_name = split_namespace(variable)
-        return self.sub_regime(comp_name).time_derivative(name)
+        _, comp_name = split_namespace(variable)
+        return self.sub_regime(comp_name).time_derivative(variable)
 
     def alias(self, name):
-        name, comp_name = split_namespace(name)
+        _, comp_name = split_namespace(name)
         return self.sub_regime(comp_name).alias(name)
 
     def on_event(self, port_name):
@@ -984,7 +988,7 @@ class _MultiRegime(Regime):
 
     @property
     def on_condition_triggers(self):
-        return (oc.trigger for oc in self.on_conditions)
+        return (oc.trigger.rhs for oc in self.on_conditions)
 
     @property
     def num_time_derivatives(self):

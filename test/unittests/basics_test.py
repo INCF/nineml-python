@@ -246,7 +246,12 @@ class TestAccessors(unittest.TestCase):
                                                names))
                     self.assertEqual(num, flat_num)
                     self.assertEqual(names, flat_names)
-                    self.assertEqual(members, flat_members)
+                    self.assertEqual(
+                        members, flat_members,
+                        "Members don't match flat members:\n{}".format(
+                            '\n\n'.join(
+                                m.find_mismatch(f) for m, f in zip(
+                                    members, flat_members))))
                     if class_name == 'Dynamics' and accessor_name in (
                             'alias', 'constant', 'state_variable', 'regime'):
                         if accessor_name == 'regime':

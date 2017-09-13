@@ -249,11 +249,13 @@ class BaseDualVisitor(BaseVisitor):
                     isinstance(obj1, self.visit_as_class)):
                 nineml_cls = self.visit_as_class
             else:
-                nineml_cls = type(obj1)
-        if (not isinstance(obj1, nineml_cls) or
-                not isinstance(obj2, nineml_cls)):
-            raise NineMLDualVisitTypeException(
-                nineml_cls, obj1, obj2, self.contexts1, self.contexts2)
+                if isinstance(obj2, type(obj1)):
+                    nineml_cls = type(obj1)
+                elif isinstance(obj1, type(obj2)):
+                    nineml_cls = type(obj2)
+                else:
+                    raise NineMLDualVisitTypeException(
+                        nineml_cls, obj1, obj2, self.contexts1, self.contexts2)
         # Run the 'action_<obj-nineml_type>' method on the visited object
         action_result = self.action(obj1, obj2, nineml_cls=nineml_cls,
                                     **kwargs)
@@ -348,8 +350,13 @@ class BaseDualVisitor(BaseVisitor):
             raise NineMLDualVisitKeysMismatchException(
                 children_type, obj1, obj2, self.contexts1, self.contexts2)
         for key in keys1:
-            child1 = obj1._member_accessor(children_type)(key)
-            child2 = obj2._member_accessor(children_type)(key)
+            try:
+                child1 = obj1._member_accessor(children_type)(key)
+                child2 = obj2._member_accessor(children_type)(key)
+            except:
+                obj1._member_accessor(children_type)(key)
+                obj2._member_accessor(children_type)(key)
+                raise
             results._children[children_type][key] = self.visit(
                 child1, child2, nineml_cls=children_type, **kwargs)
         popped1 = self.contexts1.pop()
