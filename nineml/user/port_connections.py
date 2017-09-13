@@ -371,22 +371,6 @@ class BasePortConnection(BaseULObject):
                 send_port, port_type)
         return port_connection
 
-    def _clone_defining_attr(self, clone, memo, **kwargs):
-        clone._send_port_name = self._send_port_name
-        clone._receive_port_name = self._receive_port_name
-        clone._sender_role = self._sender_role
-        clone._sender_name = self._sender_name
-        clone._receiver_name = self._receiver_name
-        clone._receiver_role = self._receiver_role
-        clone._send_port = (self._send_port.clone(memo, **kwargs)
-                            if self._send_port is not None else None)
-        clone._receive_port = (self._receive_port.clone(memo, **kwargs)
-                               if self._receive_port is not None else None)
-        clone._sender = (self._sender.clone(memo, **kwargs)
-                         if self._sender is not None else None)
-        clone._receiver = (self._receiver.clone(memo, **kwargs)
-                           if self._receiver is not None else None)
-
 
 class AnalogPortConnection(BasePortConnection):
 

@@ -1,39 +1,9 @@
 import unittest
-from nineml.base import (
-    BaseNineMLObject)
 from nineml.utils.comprehensive_example import dynA
 from nineml.exceptions import (
     NineMLNameError, NineMLRuntimeError)
 from nineml.abstraction import Parameter
 import nineml.units as un
-
-# 
-# class TestExceptions(unittest.TestCase):
-# 
-#     def test_accessor_name_from_type_ninemlinvalidelementtypeexception(self):
-#         """
-#         line #: 537
-#         message: Could not get member attr for element of type '{}', available
-#         types are {}
-#         """
-#         self.assertRaises(
-#             NineMLInvalidElementTypeException,
-#             accessor_name_from_type,
-#             nineml_children=Dynamics.nineml_children,
-#             element_type=Trigger('a > b'))
-
-
-class TestBaseNineMLObjectExceptions(unittest.TestCase):
-
-    def test_accept_visitor_notimplementederror(self):
-        """
-        line #: 77
-        message: Derived class '{}' has not overriden accept_visitor method.
-        """
-        self.assertRaises(
-            NotImplementedError,
-            BaseNineMLObject().accept_visitor,
-            visitor=None)
 
 
 class TestDynamicPortsObjectExceptions(unittest.TestCase):

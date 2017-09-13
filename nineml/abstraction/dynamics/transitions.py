@@ -7,7 +7,6 @@ This file contains the definitions for the Events
 
 import sympy.solvers
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
-from nineml.base import _clone_attr
 from nineml.utils import ensure_valid_identifier
 from nineml.abstraction.componentclass import BaseALObject
 from nineml.abstraction.expressions import (
@@ -147,13 +146,6 @@ class OutputEvent(BaseALObject):
     def bind(self, component_class):
         self._port = component_class.event_send_port(self.port_name)
         self._port_name = None
-
-    def _clone_defining_attr(self, clone, memo, **kwargs):
-        if self._port is not None:
-            clone._port = self.port.clone(memo, **kwargs)
-        else:
-            clone._port = None
-        clone._port_name = self._port_name
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('port', self.port_name, **options)
@@ -326,17 +318,6 @@ class Transition(BaseALObject, ContainerObject):
         for output_event in self.output_events:
             output_event.bind(component_class)
 
-    def _clone_defining_attr(self, clone, memo, **kwargs):
-        clone._state_assignments = _clone_attr(self._state_assignments, memo,
-                                               **kwargs)
-        clone._output_events = _clone_attr(self._output_events, memo,
-                                           **kwargs)
-        clone._target_regime_name = self._target_regime_name
-        clone._target_regime = (self._target_regime.clone(memo, **kwargs)
-                                if self._target_regime is not None else None)
-        clone._source_regime = (self._source_regime.clone(memo, **kwargs)
-                                if self._source_regime is not None else None)
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('target_regime', self.target_regime.name, **options)
         node.children(self.state_assignments)
@@ -399,12 +380,6 @@ class OnEvent(Transition):
         super(OnEvent, self).bind(component_class)
         self._port = component_class.event_receive_port(self.src_port_name)
         self._src_port_name = None
-
-    def _clone_defining_attr(self, clone, memo, **kwargs):
-        super(OnEvent, self)._clone_defining_attr(clone, memo, **kwargs)
-        clone._src_port_name = self._src_port_name
-        clone._port = (self._port.clone(memo, **kwargs)
-                       if self._port is not None else None)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('port', self.src_port_name, **options)
@@ -562,10 +537,6 @@ class OnCondition(Transition):
     @property
     def sort_key(self):
         return self.trigger.sort_key
-
-    def _clone_defining_attr(self, clone, memo, **kwargs):
-        super(OnCondition, self)._clone_defining_attr(clone, memo, **kwargs)
-        clone._trigger = self._trigger
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.child(self.trigger, **options)

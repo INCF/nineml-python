@@ -2,7 +2,7 @@ from itertools import chain
 from .. import BaseULObject
 import sympy
 import operator
-from nineml.base import BaseNineMLObject, _clone_attr
+from nineml.base import BaseNineMLObject
 from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort, Alias)
@@ -145,11 +145,6 @@ class BasePortExposure(BaseULObject):
         self._parent = container
         self.port  # This will check to see whether the path to the port exists
 
-    def _clone_defining_attr(self, clone, memo, **kwargs):
-        super(BasePortExposure, self)._clone_defining_attr(clone, memo,
-                                                           **kwargs)
-        clone._parent = _clone_attr(self._parent, memo, **kwargs)
-
 
 class _BaseAnalogPortExposure(BasePortExposure):
 
@@ -182,9 +177,6 @@ class _PortExposureAlias(Alias):
     def __repr__(self):
         return "{}(name='{}', rhs='{}')".format(self.nineml_type,
                                                 self.lhs, self.rhs)
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        clone._exposure = self._exposure.clone(memo=memo, **kwargs)
 
 
 class _SendPortExposureAlias(_PortExposureAlias):
@@ -302,13 +294,6 @@ class _LocalAnalogPortConnections(Alias):
         raise NineMLImmutableError(
             "Cannot rename LHS of Alias '{}' because it is a local "
             "AnalogPortConnection".format(self.lhs))
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        clone._receive_port_name = self._receive_port_name
-        clone._receiver_name = self._receiver_name
-        clone._port_connections = [
-            pc.clone(memo=memo, **kwargs) for pc in self._port_connections]
-        clone._parent = self._parent.clone(memo=memo, **kwargs)
 
 
 import nineml.user.multi.dynamics  # @IgnorePep8

@@ -283,9 +283,6 @@ class BaseAnnotations(ContainerObject):
                 branch_node = type(node)(node.visitor, branch_elem)
                 branch.serialize_node(branch_node, **options)
 
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        self._clone_defining_attr(clone, memo, **kwargs)
-
     def _parse_key(self, key):
         """
         Prepend current enclosing NS onto key if not provided explicitly
@@ -347,10 +344,6 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable @IgnorePep8
         return cls(cls._unserialize_branches(node, **options))
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        self._clone_defining_attr(clone, memo, **kwargs)
-        clone._document = None
 
     def _parse_key(self, key):
         """
@@ -466,13 +459,6 @@ class _AnnotationsBranch(BaseAnnotations):
         index = self._abs_index if self._abs_index is not None else self.key
         assert index is not None
         return index
-
-#     def equals(self, other, **kwargs):  # @UnusedVariable
-#         return (super(_AnnotationsBranch, self).equals(other) and
-#                 self.name == other.name and
-#                 self.attr == other.attr and
-#                 self.body == other.body and
-#                 self.ns == other.ns)
 
     def _repr(self, indent=''):
         rep = "{}{{{}}}{}:".format(indent, self.ns, self.name)
@@ -592,9 +578,6 @@ class _AnnotationsBranch(BaseAnnotations):
         return cls(name, ns, abs_index=abs_index, attr=attr,
                    branches=cls._unserialize_branches(node, **options),
                    body=node.body(allow_empty=True))
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        self._clone_defining_attr(clone, memo, **kwargs)
 
 
 # Python-9ML library specific annotations

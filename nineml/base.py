@@ -223,33 +223,6 @@ class BaseNineMLObject(object):
             '_names' if hasattr(cls, 'name') else '_keys')
 
 
-def _clone_attr(attr, memo, **kwargs):
-    """Recursively clone an attribute"""
-    if attr is None or isinstance(attr, (basestring, float, int, bool,
-                                         sympy.Basic)):
-        clone = attr  # "primitive" type that doesn't need to be cloned
-    elif hasattr(attr, 'clone'):
-        clone = attr.clone(memo=memo, **kwargs)
-    elif isinstance(attr, defaultdict):
-        clone = type(attr)(attr.default_factory,
-                            ((k, _clone_attr(v, memo, **kwargs))
-                             for k, v in attr.iteritems()))
-    elif isinstance(attr, dict):
-        clone = type(attr)((k, _clone_attr(v, memo, **kwargs))
-                           for k, v in attr.iteritems())
-    elif isinstance(attr, Iterable):
-        try:
-            assert not isinstance(attr, Iterator)
-        except:
-            raise
-        clone = attr.__class__(_clone_attr(a, memo, **kwargs)
-                               for a in attr)
-    else:
-        assert False, "Unhandled attribute type {} ({})".format(type(attr),
-                                                                attr)
-    return clone
-
-
 class AnnotatedNineMLObject(BaseNineMLObject):
 
     def __init__(self, annotations=None):
@@ -258,14 +231,6 @@ class AnnotatedNineMLObject(BaseNineMLObject):
         else:
             assert isinstance(annotations, nineml.annotations.Annotations)
         self._annotations = annotations
-
-    def _copy_to_clone(self, clone, memo, exclude_annotations=False, **kwargs):
-        super(AnnotatedNineMLObject, self)._copy_to_clone(clone, memo,
-                                                          **kwargs)
-        if exclude_annotations:
-            clone._annotations = nineml.annotations.Annotations()
-        else:
-            clone._annotations = self._annotations.clone(memo, **kwargs)
 
     @property
     def annotations(self):
@@ -338,10 +303,6 @@ class DocumentLevelObject(BaseNineMLObject):
         Writes the top-level NineML object to file in XML.
         """
         nineml.write(fname, self, **kwargs)
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        super(DocumentLevelObject, self)._copy_to_clone(clone, memo, **kwargs)
-        clone._document = None
 
 
 class DynamicPortsObject(BaseNineMLObject):

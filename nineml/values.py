@@ -275,19 +275,6 @@ class ArrayValue(BaseValue):
 
     def is_array(self):
         return True
-# 
-#     def equals(self, other, **kwargs):
-#         try:
-#             if self.nineml_type != other.nineml_type:
-#                 return False
-#         except AttributeError:
-#             return False
-#         if len(self._values) != len(other._values):
-#             return False
-#         if not all(nearly_equal(s, o)
-#                    for s, o in izip(self._values, other._values)):
-#             return False
-#         return self.annotations_equal(other, **kwargs)
 
     def __iter__(self):
         return iter(self._values)
@@ -513,13 +500,6 @@ class ArrayValue(BaseValue):
         except AttributeError:
             return ArrayValue([v > other for v in self._values])
 
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        super(ArrayValue, self)._copy_to_clone(clone, memo, **kwargs)
-        if self._datafile is None:
-            clone._datafile = None
-        else:
-            clone._datafile = self.DataFile(*self._datafile)
-
 
 class RandomDistributionValue(BaseValue):
 
@@ -542,16 +522,6 @@ class RandomDistributionValue(BaseValue):
 
     def is_random(self):
         return True
-# 
-#     def equals(self, other, **kwargs):
-#         try:
-#             if self.nineml_type != other.nineml_type:
-#                 return False
-#         except AttributeError:
-#             return False
-#         if self.distribution != other.distribution:
-#             return False
-#         return self.annotations_equal(other, **kwargs)
 
     @property
     def distribution(self):
@@ -589,8 +559,3 @@ class RandomDistributionValue(BaseValue):
         distribution = node.child(nineml.RandomDistributionProperties,
                                   allow_ref=True, **options)
         return cls(distribution)
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        super(RandomDistributionValue, self)._copy_to_clone(clone, memo,
-                                                            **kwargs)
-        clone._generator = None

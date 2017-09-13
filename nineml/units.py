@@ -269,10 +269,6 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
         """Returns a Quantity that equal to the origin of this dimension"""
         return Quantity(0.0, Unit(self.name + 'SIUnit', self, power=0))
 
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        super(Dimension, self)._copy_to_clone(clone, memo, **kwargs)
-        clone._name = self._name
-
 
 class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     """
@@ -410,10 +406,6 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __rdiv__(self, other):
         return self.__rtruediv__(other)
-
-    def _copy_to_clone(self, clone, memo, **kwargs):
-        super(Unit, self)._copy_to_clone(clone, memo, **kwargs)
-        clone._name = self._name
 
 
 class Quantity(AnnotatedNineMLObject):
