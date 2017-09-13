@@ -29,23 +29,14 @@ class BaseNineMLObject(object):
     """
     Base class for all 9ML-type classes
     """
-    children = []
+
     nineml_type_v1 = None
     nineml_attr = ()
     nineml_child = {}
     nineml_children = ()
+    # Used to distinguish between objects that are created on the fly, such as
+    # those used to duck-type MultiDynamics objects with Dynamics objects
     temporary = False
-
-    def __eq__(self, other):
-        return self.equals(other)
-
-    def equals(self, other, **kwargs):
-        checker = EqualityChecker(**kwargs)
-        return checker.check(self, other, **kwargs)
-
-    def find_mismatch(self, other, **kwargs):
-        finder = MismatchFinder(**kwargs)
-        return finder.find(self, other, **kwargs)
 
     @classmethod
     def _sorted_values(self, container):
@@ -57,44 +48,21 @@ class BaseNineMLObject(object):
         return "{}(name='{}')".format(self.nineml_type, self.key)
 
     def __str__(self):
-        try:
-            return repr(self)
-        except:
-            raise
+        return repr(self)
+
+    def __eq__(self, other):
+        return self.equals(other)
 
     def __ne__(self, other):
         return not self == other
 
-    def get_children(self):
-        return chain(getattr(self, attr) for attr in self.children)
+    def equals(self, other, **kwargs):
+        checker = EqualityChecker(**kwargs)
+        return checker.check(self, other, **kwargs)
 
-    def accept_visitor(self, visitor):
-        raise NotImplementedError(
-            "Derived class '{}' has not overriden accept_visitor method."
-            .format(self.__class__.__name__))
-
-    @property
-    def key(self):
-        """
-        Key with which to uniquely identify the 9ML object from others in its
-        container
-        """
-        try:
-            return self.name
-        except AttributeError:
-            assert False, (
-                "{} class does not have a name and doesn't implement the 'key'"
-                " property".format(self.__class__.__name__))
-
-    @property
-    def sort_key(self):
-        """
-        Returns a key that can be used to sort the 9ML object with others in
-        its class. Typically the same as 'key' but in some classes such as
-        Triggers and OnConditions, which use the condition equation as a key
-        a string representation needs to be used instead.
-        """
-        return self.key
+    def find_mismatch(self, other, **kwargs):
+        finder = MismatchFinder(**kwargs)
+        return finder.find(self, other, **kwargs)
 
     def clone(self, cloner=None, **kwargs):
         """
@@ -112,6 +80,18 @@ class BaseNineMLObject(object):
         if cloner is None:
             cloner = Cloner(**kwargs)
         return cloner.clone(self, **kwargs)
+
+    def find(self, nineml_obj):
+        """
+        Finds the element within the container that equals the given
+        element
+
+        Parameters
+        ----------
+        nineml_obj : BaseNineMLObject
+            The object to find within the container
+        """
+        return ObjectFinder(nineml_obj, self).found
 
     def write(self, url, **kwargs):
         """
@@ -197,6 +177,29 @@ class BaseNineMLObject(object):
                 "'serialize_node (or serialize_body) not implemented for "
                 "'{}' class".format(cls.nineml_type))
 
+    @property
+    def key(self):
+        """
+        Key with which to uniquely identify the 9ML object from others in its
+        container
+        """
+        try:
+            return self.name
+        except AttributeError:
+            assert False, (
+                "{} class does not have a name and doesn't implement the 'key'"
+                " property".format(self.__class__.__name__))
+
+    @property
+    def sort_key(self):
+        """
+        Returns a key that can be used to sort the 9ML object with others in
+        its class. Typically the same as 'key' but in some classes such as
+        Triggers and OnConditions, which use the condition equation as a key
+        a string representation needs to be used instead.
+        """
+        return self.key
+
     @classmethod
     def _child_accessor_name(cls):
         return camel_caps_re.sub(r'\1_\2', cls.nineml_type).lower()
@@ -218,18 +221,6 @@ class BaseNineMLObject(object):
     def _children_keys_name(cls):
         return cls._child_accessor_name() + (
             '_names' if hasattr(cls, 'name') else '_keys')
-
-    def find(self, nineml_obj):
-        """
-        Finds the element within the container that equals the given
-        element
-
-        Parameters
-        ----------
-        nineml_obj : BaseNineMLObject
-            The object to find within the container
-        """
-        return ObjectFinder(nineml_obj, self).found
 
 
 def _clone_attr(attr, memo, **kwargs):

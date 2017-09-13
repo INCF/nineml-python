@@ -156,10 +156,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         self._analog_reduce_ports = dict((p.name, p) for p in analog_ports
                                          if isinstance(p, AnalogReducePort))
 
-        # Create dummy event ports to keep the visitors of
-        # the interface inferer happy
-#         self._event_receive_ports = self._event_send_ports = {}
-
         # EventPort, StateVariable and Parameter Inference:
         inferred_struct = DynamicsInterfaceInferer(self)
 
