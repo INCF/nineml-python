@@ -315,7 +315,9 @@ class BaseDualVisitor(BaseVisitor):
         self.contexts1.append(context1)
         self.contexts2.append(context2)
         if child1 is None and child2 is None:
-            return
+            self.contexts1.pop()
+            self.contexts2.pop()
+            return  # Both children are None so return
         elif child1 is None or child1 is None:
             raise NineMLDualVisitNoneChildException(
                 child1, child2, child_type, self.contexts1, label=1)

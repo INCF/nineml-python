@@ -1,14 +1,10 @@
 import sympy
 from itertools import izip, chain
-import re
 from .base import BaseDualVisitor
 from nineml.exceptions import (NineMLDualVisitException,
-                               NineMLDualVisitTypeException,
-                               NineMLDualVisitKeysMismatchException,
                                NineMLDualVisitValueException,
                                NineMLNotBoundException,
                                NineMLDualVisitAnnotationsMismatchException,
-                               NineMLDualVisitNoneChildException,
                                NineMLNameError)
 from nineml.utils import nearly_equal
 
@@ -27,28 +23,29 @@ class EqualityChecker(BaseDualVisitor):
         return True
 
     def action(self, obj1, obj2, nineml_cls, **kwargs):
-        try:
-            annotations_keys = set(chain(obj1.annotations.branch_keys,
-                                         obj2.annotations.branch_keys))
-            skip_annotations = False
-        except AttributeError:
-            skip_annotations = True
-        if not skip_annotations:
-            for key in annotations_keys:
-                if key[1] in self.annotations_ns:
-                    try:
-                        annot1 = obj1.annotations.branch(key)
-                    except NineMLNameError:
-                        raise NineMLDualVisitAnnotationsMismatchException(
-                            nineml_cls, obj1, obj2, key, self.contexts1,
-                            self.contexts2)
-                    try:
-                        annot2 = obj2.annotations.branch(key)
-                    except NineMLNameError:
-                        raise NineMLDualVisitAnnotationsMismatchException(
-                            nineml_cls, obj1, obj2, key, self.contexts1,
-                            self.contexts2)
-                    self.visit(annot1, annot2, **kwargs)
+        if self.annotations_ns:
+            try:
+                annotations_keys = set(chain(obj1.annotations.branch_keys,
+                                             obj2.annotations.branch_keys))
+                skip_annotations = False
+            except AttributeError:
+                skip_annotations = True
+            if not skip_annotations:
+                for key in annotations_keys:
+                    if key[1] in self.annotations_ns:
+                        try:
+                            annot1 = obj1.annotations.branch(key)
+                        except NineMLNameError:
+                            raise NineMLDualVisitAnnotationsMismatchException(
+                                nineml_cls, obj1, obj2, key, self.contexts1,
+                                self.contexts2)
+                        try:
+                            annot2 = obj2.annotations.branch(key)
+                        except NineMLNameError:
+                            raise NineMLDualVisitAnnotationsMismatchException(
+                                nineml_cls, obj1, obj2, key, self.contexts1,
+                                self.contexts2)
+                        self.visit(annot1, annot2, **kwargs)
         return super(EqualityChecker, self).action(obj1, obj2, nineml_cls,
                                                    **kwargs)
 
@@ -68,13 +65,19 @@ class EqualityChecker(BaseDualVisitor):
     def action_singlevalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         if not nearly_equal(val1.value, val2.value):
             raise NineMLDualVisitValueException(
-                'value', val1, val2, self.contexts1, self.contexts2)
+                'value', val1, val2, nineml_cls, self.contexts1,
+                self.contexts2)
 
     def action_arrayvalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        if not all(nearly_equal(s, o)
-                   for s, o in izip(val1.values, val1.values)):
+        if len(val1.values) != len(val2.values):
             raise NineMLDualVisitValueException(
-                'values', val1, val2, self.contexts1, self.contexts2)
+                'values', val1, val2, nineml_cls, self.contexts1,
+                self.contexts2)
+        if any(not nearly_equal(s, o)
+               for s, o in izip(val1.values, val2.values)):
+            raise NineMLDualVisitValueException(
+                'values', val1, val2, nineml_cls, self.contexts1,
+                self.contexts2)
 
     def action_unit(self, unit1, unit2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         # Ignore name
@@ -114,30 +117,17 @@ class EqualityChecker(BaseDualVisitor):
 class MismatchFinder(EqualityChecker):
 
     def find(self, obj1, obj2):
-        self.mismatch = ''
+        self.mismatch = []
         self.visit(obj1, obj2)
         assert not self.contexts1
         assert not self.contexts2
-        return self.mismatch
+        return '\n'.join(str(e) for e in self.mismatch)
 
     def visit(self, *args, **kwargs):
         try:
             super(MismatchFinder, self).visit(*args, **kwargs)
-        except NineMLDualVisitTypeException as e:
-            self.mismatch += (
-                "{} - types: [{}] | [{}] (expected={})\n"
-                .format(self._format_contexts(e.contexts1, e.contexts2),
-                        type(e.obj1), type(e.obj2), e.nineml_cls))
-        except NineMLDualVisitAnnotationsMismatchException as e:
-            self.mismatch += (
-                "{} - '{}' annotations: [{}] | [{}]\n"
-                .format(self._format_contexts(e.contexts1, e.contexts2),
-                        e.key, ', '.join(re.sub('\s', '', str(a))
-                                         for a in e.obj1.annotations.namespace(
-                                             e.key[1])),
-                        ', '.join(re.sub('\s', '', str(a))
-                                  for a in e.obj2.annotations.namespace(
-                                      e.key[1]))))
+        except NineMLDualVisitException as e:
+            self.mismatch.append(e)
 
     def _compare_child(self, obj1, obj2, nineml_cls, results, action_result,
                        child_name, child_type, **kwargs):
@@ -145,11 +135,8 @@ class MismatchFinder(EqualityChecker):
             super(MismatchFinder, self)._compare_child(
                 obj1, obj2, nineml_cls, results, action_result, child_name,
                 child_type, **kwargs)
-        except NineMLDualVisitNoneChildException as e:
-            self.mismatch += (
-                "{} - '{}' child: [{}] | [{}]\n"
-                .format(self._format_contexts(e.contexts1, e.contexts2),
-                        e.child_name, e.obj1, e.obj2))
+        except NineMLDualVisitException as e:
+            self.mismatch.append(e)
             self._pop_contexts()
 
     def _compare_children(self, obj1, obj2, nineml_cls, results, action_result,
@@ -158,55 +145,38 @@ class MismatchFinder(EqualityChecker):
             super(MismatchFinder, self)._compare_children(
                 obj1, obj2, nineml_cls, results, action_result, children_type,
                 **kwargs)
-        except NineMLDualVisitKeysMismatchException as e:
-            self.mismatch += (
-                "{} - {} keys: {} | {}\n"
-                .format(self._format_contexts(e.contexts1, e.contexts2),
-                        e.children_type.nineml_type,
-                        sorted(e.obj1._member_keys_iter(e.children_type)),
-                        sorted(e.obj2._member_keys_iter(e.children_type))))
+        except NineMLDualVisitException as e:
+            self.mismatch.append(e)
             self._pop_contexts()
 
     def _check_attr(self, obj1, obj2, attr_name, nineml_cls, **kwargs):
         try:
             super(MismatchFinder, self)._check_attr(
                 obj1, obj2, attr_name, nineml_cls, **kwargs)
-        except NineMLDualVisitValueException as e:
-            self.mismatch += (
-                "{} - '{}' attr: [{}] | [{}]\n"
-                .format(self._format_contexts(e.contexts1, e.contexts2,
-                                              obj1=e.obj1, obj2=e.obj2),
-                        e.attr_name,
-                        getattr(e.obj1, e.attr_name),
-                        getattr(e.obj2, e.attr_name)))
+        except NineMLDualVisitException as e:
+            self.mismatch.append(e)
 
     def _check_rhs(self, obj1, obj2, attr_name, **kwargs):
         try:
             super(MismatchFinder, self)._check_rhs(
                 obj1, obj2, attr_name, **kwargs)
-        except NineMLDualVisitValueException as e:
-            self.mismatch += (
-                "{} - '{}' attr: [{}] | [{}]\n"
-                .format(self._format_contexts(e.contexts1, e.contexts2,
-                                              obj1=e.obj1, obj2=e.obj2),
-                        e.attr_name,
-                        getattr(e.obj1, e.attr_name),
-                        getattr(e.obj2, e.attr_name)))
+        except NineMLDualVisitException as e:
+            self.mismatch.append(e)
+
+    def action_singlevalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        try:
+            super(MismatchFinder, self).action_singlevalue(
+                val1, val2, nineml_cls, **kwargs)
+        except NineMLDualVisitException as e:
+            self.mismatch.append(e)
+
+    def action_arrayvalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        try:
+            super(MismatchFinder, self).action_arrayvalue(
+                val1, val2, nineml_cls, **kwargs)
+        except NineMLDualVisitException as e:
+            self.mismatch.append(e)
 
     def _pop_contexts(self):
         self.contexts1.pop()
         self.contexts2.pop()
-
-    @classmethod
-    def _format_contexts(self, contexts1, contexts2, obj1=None, obj2=None):
-        l1 = [(type(c.parent).__name__, c.parent.key) for c in contexts1]
-        l2 = [(type(c.parent).__name__, c.parent.key) for c in contexts2]
-        if obj1 is not None:
-            l1.append((type(obj1).__name__, obj1.key))
-        if obj2 is not None:
-            l2.append((type(obj2).__name__, obj2.key))
-        out = '[' + '>'.join("{}('{}')".format(t, k) for t, k in l1) + ']'
-        if l2 != l1:
-            out += (' | [' + '>'.join("{}('{}')".format(t, k) for t, k in l2) +
-                    ']')
-        return out

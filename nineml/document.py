@@ -94,10 +94,13 @@ class Document(AnnotatedNineMLObject, dict):
                 if nineml_obj == self[nineml_obj.name]:
                     nineml_obj = self[nineml_obj.name]
                 else:
+                    nineml_obj.find_mismatch(self[nineml_obj.name])
                     raise NineMLNameError(
                         "Could not add '{}' as a different object with that "
-                        "name already exists in the document '{}'"
-                        .format(nineml_obj.name, self.url))
+                        "name already exists in the document '{}':\n{}"
+                        .format(nineml_obj.name, self.url,
+                                nineml_obj.find_mismatch(
+                                    self[nineml_obj.name])))
         elif nineml_obj.document is not None and not clone:
             raise NineMLRuntimeError(
                 "Attempting to add the same object '{}' {} to document"
@@ -223,30 +226,30 @@ class Document(AnnotatedNineMLObject, dict):
         if cloner is None:
             cloner = Cloner(**kwargs)
         return Document(*self.values(), clone=True, cloner=cloner, **kwargs)
-
-    def find_mismatch(self, other):
-        """
-        A function used to display where two documents differ (typically used
-        in unit test debugging)
-        """
-        result = 'Mismatch between documents: '
-        if self.nineml_type != other.nineml_type:
-            result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
-                       .format(self.nineml_type, other.nineml_type))
-        else:
-            for k, s in self.iteritems():
-                if k not in other:
-                    result += ("\n    {}(name='{}') is not present in second "
-                               "document".format(type(s).__name__, k))
-                elif s != other[k]:
-                    result += ("\n    {}(name='{}'):".format(type(s).__name__,
-                                                             k) +
-                               s.find_mismatch(other[k], '        '))
-            for k, o in other.iteritems():
-                if k not in self:
-                    result += ("\n    {}(name='{}') is not present in first "
-                               "document".format(type(o).__name__, k))
-        return result
+# 
+#     def find_mismatch(self, other):
+#         """
+#         A function used to display where two documents differ (typically used
+#         in unit test debugging)
+#         """
+#         result = 'Mismatch between documents: '
+#         if self.nineml_type != other.nineml_type:
+#             result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
+#                        .format(self.nineml_type, other.nineml_type))
+#         else:
+#             for k, s in self.iteritems():
+#                 if k not in other:
+#                     result += ("\n    {}(name='{}') is not present in second "
+#                                "document".format(type(s).__name__, k))
+#                 elif s != other[k]:
+#                     result += ("\n    {}(name='{}'):".format(type(s).__name__,
+#                                                              k) +
+#                                s.find_mismatch(other[k], '        '))
+#             for k, o in other.iteritems():
+#                 if k not in self:
+#                     result += ("\n    {}(name='{}') is not present in first "
+#                                "document".format(type(o).__name__, k))
+#         return result
 
     def as_network(self, name):
         populations = []

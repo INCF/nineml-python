@@ -32,10 +32,14 @@ class A(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __init__(self, name, x, y):
         AnnotatedNineMLObject.__init__(self)
-        self.name = name
+        self._name = name
         DocumentLevelObject.__init__(self)
         self.x = x
         self.y = y
+
+    @property
+    def name(self):
+        return self._name
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
@@ -69,8 +73,12 @@ class B(AnnotatedNineMLObject):
 
     def __init__(self, name, z):
         super(B, self).__init__()
-        self.name = name
+        self._name = name
         self.z = z
+
+    @property
+    def name(self):
+        return self._name
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
@@ -90,11 +98,14 @@ class E(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __init__(self, name, u, v):
         AnnotatedNineMLObject.__init__(self)
-        self.name = name
+        self._name = name
         DocumentLevelObject.__init__(self)
-        self.name = name
         self.u = u
         self.v = v
+
+    @property
+    def name(self):
+        return self._name
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)
@@ -194,9 +205,24 @@ class Container(ContainerObject, DocumentLevelObject):
         self.name = name
         DocumentLevelObject.__init__(self)
         self.a = a
-        self.bs = bs
+        self._bs = dict((b.name, b) for b in bs)
         self.c = c
         self.d = d
+
+    @property
+    def num_bs(self):
+        return (self._bs)
+
+    @property
+    def b_names(self):
+        return self._bs.iterkeys()
+
+    def b(self, name):
+        self._bs[name]
+
+    @property
+    def bs(self):
+        return self._bs.itervalues()
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)

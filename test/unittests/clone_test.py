@@ -56,8 +56,13 @@ class TestCloners(unittest.TestCase):
                                      .format(obj, obj.find_mismatch(clone)))
                 except:
                     obj.find_mismatch(clone)
-                self.assertNotEqual(obj, prev_obj,
-                                    "{} matches previous obj {} incorrectly")
+                try:
+                    self.assertNotEqual(obj, prev_obj,
+                                        "{} matches previous obj {} incorrectly"
+                                        .format(obj, prev_obj))
+                except:
+                    obj.equals(prev_obj)
+                    raise
                 prev_obj = obj
 
 
