@@ -161,10 +161,10 @@ class DimensionalityComponentValidator(BaseVisitor):
         before inferring dimensions from derived expressions
         """
 
-        def __init__(self, component_class, visit_as_class, **kwargs):
+        def __init__(self, component_class, as_class, **kwargs):
             BaseVisitor.__init__(self)
             self._dimensions = {}
-            self.visit_as_class = visit_as_class
+            self.as_class = as_class
             self.visit(component_class, **kwargs)
 
         def default_action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable
@@ -186,7 +186,7 @@ class DimensionalityComponentValidator(BaseVisitor):
         BaseVisitor.__init__(self)
         self.component_class = component_class
         self._dimensions = self.DeclaredDimensionsVisitor(
-            component_class, self.visit_as_class, **kwargs).dimensions
+            component_class, self.as_class, **kwargs).dimensions
         self._recursion_count = 0
         self.visit(component_class)
 
@@ -227,7 +227,7 @@ class DimensionalityComponentValidator(BaseVisitor):
                         "\n".join(
                             str(e) for e in self.component_class.elements(
                                 child_types=(
-                                    self.visit_as_class.nineml_children)))
+                                    self.as_class.nineml_children)))
                     ))
             self._recursion_count += 1
             dims = self._flatten_dims(expr, element)
@@ -322,7 +322,7 @@ class DimensionalityComponentValidator(BaseVisitor):
         # Get the state variable or alias associated with the analog send
         # port
         element = self.component_class.element(
-            port.name, child_types=self.visit_as_class.nineml_children)
+            port.name, child_types=self.as_class.nineml_children)
         try:
             if element.dimension != port.dimension:
                 raise NineMLDimensionError(self._construct_error_message(

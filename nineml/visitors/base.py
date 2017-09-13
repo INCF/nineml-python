@@ -31,7 +31,7 @@ class BaseVisitor(object):
 
     """
 
-    visit_as_class = None
+    as_class = None
 
     class Context(object):
         "The context within which the current element is situated"
@@ -127,9 +127,9 @@ class BaseVisitor(object):
         # explicitly provided. This allows classes to be visited as if they
         # were base classes (e.g. Dynamics instead of MultiDynamics)
         if nineml_cls is None:
-            if (self.visit_as_class is not None and
-                    isinstance(obj, self.visit_as_class)):
-                nineml_cls = self.visit_as_class
+            if (self.as_class is not None and
+                    isinstance(obj, self.as_class)):
+                nineml_cls = self.as_class
             else:
                 nineml_cls = type(obj)
         # Run the 'action_<obj-nineml_type>' method on the visited object
@@ -245,9 +245,9 @@ class BaseDualVisitor(BaseVisitor):
         # explicitly provided. This allows classes to be visited as if they
         # were base classes (e.g. Dynamics instead of MultiDynamics)
         if nineml_cls is None:
-            if (self.visit_as_class is not None and
-                    isinstance(obj1, self.visit_as_class)):
-                nineml_cls = self.visit_as_class
+            if (self.as_class is not None and
+                    isinstance(obj1, self.as_class)):
+                nineml_cls = self.as_class
             else:
                 if isinstance(obj2, type(obj1)):
                     nineml_cls = type(obj1)

@@ -202,7 +202,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return DynamicsRequiredDefinitions(self, expressions)
 
     def flatten(self, name=None, **kwargs):  # @UnusedVariable
-        flattened = Cloner(visit_as_class=Dynamics, **kwargs).visit(
+        flattened = Cloner(as_class=Dynamics, **kwargs).visit(
             self, **kwargs).post_action
         if name is not None:
             flattened._name = name

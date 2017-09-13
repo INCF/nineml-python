@@ -11,11 +11,11 @@ class Cloner(BaseVisitor):
     creates a copy of the object
     """
 
-    def __init__(self, visit_as_class=None, exclude_annotations=False,
+    def __init__(self, as_class=None, exclude_annotations=False,
                  clone_definitions=None, document=None,
                  random_seeds=False, **kwargs):  # @UnusedVariable @IgnorePep8
         super(Cloner, self).__init__()
-        self.visit_as_class = visit_as_class
+        self.as_class = as_class
         self.memo = {}
         self.exclude_annotations = exclude_annotations
         self.document = document

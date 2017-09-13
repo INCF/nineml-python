@@ -4,4 +4,4 @@ from ..base import Dynamics
 
 class BaseDynamicsVisitor(BaseVisitor):
 
-    visit_as_class = Dynamics
+    as_class = Dynamics

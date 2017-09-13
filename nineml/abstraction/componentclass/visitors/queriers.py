@@ -170,7 +170,7 @@ class ComponentDimensionResolver(BaseVisitor):
 
     @property
     def base_nineml_children(self):
-        return self.visit_as_class.nineml_children
+        return self.as_class.nineml_children
 
     def dimension_of(self, element):
         if isinstance(element, basestring):
