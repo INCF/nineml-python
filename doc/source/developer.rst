@@ -28,17 +28,31 @@ couple class attributes that need to be present in the deriving classes,
 ``nineml_type``
 ^^^^^^^^^^^^^^^
 
-``nineml_type`` is a string containing the name of the
-corresponding NineML type in the `NineML specification`_. If the name differs
-between v1 and v2 of the specification the ``v1_nineml_type`` should also be
-defined to hold the corresponding type in the v1 syntax.
+``nineml_type`` should be a string containing the name of the
+corresponding NineML type in the `NineML specification`_.
+
+``nineml_type_v1``
+^^^^^^^^^^^^^^^^^^
+
+If the nineml_type differs between v1 and v2 of the specification,
+``nineml_type_v1`` should also be defined to hold the name of the type
+in the v1 syntax.
 
 ``nineml_attr``
 ^^^^^^^^^^^^^^^
 
-``nineml_attr`` is a tuple of strings, listing the attributes of
-the given NineML-type class that contain data (both attributes and child
-objects) that are part of the `NineML specification`_. 
+``nineml_attr`` should be a tuple of strings, listing the "basic-type"
+attributes of the given NineML-type class (i.e. the ones that aren't
+NineML-types themselves such as ``str``, ``int``, ``float``, etc...)
+that are part of the `NineML specification`_. 
+
+``nineml_child``
+^^^^^^^^^^^^^^^^
+
+``nineml_child`` should be a dictionary, which lists the names of the
+NineML-type child attributes in the class along with a mapping to their
+expected class. If the the child attribute can be one of several NineML-type
+classes then the attribute should map to None.
 
 AnnotatedObject
 ~~~~~~~~~~~~~~~
@@ -79,18 +93,16 @@ accessor method following the conventions
 *<lowercase-child-type>*:
     An accessor that takes the name (or key) of a child and returns the child.
 
-``class_to_member``
+
+``nineml_children``
 ^^^^^^^^^^^^^^^^^^^
 
-Container classes must also have a ``class_to_member`` dictionary attribute
-that maps the name of the child type to the name of the accessor method i.e.
+``nineml_children`` should be a tuple listing the NineML-type classes that
+can be children of the class.
 
-.. code-block:: python
-    
-    class AContainerClass(ContainerObject):
-
-        class_to_member = {'AChildType': 'achildtype',
-                           'AnotherChildType': 'anotherchildtype'}
+.. note:
+    ``classproperty`` decorators can be used to avoid circular definitions.
+    See the ``BaseAnnotations`` class.
 
 
 DocumentLevelObject
