@@ -1,5 +1,5 @@
 import unittest
-from nineml.utils.testing.comprehensive import dynA, dynB
+from nineml.utils.comprehensive_example import dynA, dynB
 
 
 class TestFindElement(unittest.TestCase):

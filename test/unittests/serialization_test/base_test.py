@@ -15,7 +15,7 @@ F_ANNOT_ATTR = 'an_annotation_attr_name'
 F_ANNOT_VAL = 'an_annotation_value'
 
 
-logger = logging.getLogger('lib9ml')
+logger = logging.getLogger('NineML')
 logger.setLevel(logging.ERROR)
 handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(message)s')

@@ -14,7 +14,7 @@ from nineml.serialization.xml import ElementMaker
 import logging
 import sys
 
-logger = logging.getLogger('lib9ml')
+logger = logging.getLogger('NineML')
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter(

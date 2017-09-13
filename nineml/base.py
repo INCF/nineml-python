@@ -9,6 +9,7 @@ from nineml.exceptions import (
     NineMLSerializationError)
 from .visitors.cloner import Cloner
 from .visitors.queriers import ObjectFinder
+from .visitors.equality import EqualityChecker, MismatchFinder
 
 
 def sort_key(elem):
@@ -38,84 +39,92 @@ class BaseNineMLObject(object):
     def __eq__(self, other):
         return self.equals(other)
 
-    def equals(self, other, defining_attributes=None, **kwargs):
-        """
-        Check for equality between 9ML objects.
+    def equals(self, other, **kwargs):
+        checker = EqualityChecker(**kwargs)
+        return checker.check(self, other, **kwargs)
 
-        Parameters
-        ----------
-        defining_attributes : list(str)
-            Overrides list of attributes to include in the check. If None, uses
-            class member of same name
-        annotations_ns : list(str)
-            List of annotation namespaces to check for in equality check
-
-        Returns
-        -------
-        equality : bool
-            Whether the two 9ML objects are equal
-        """
-        # Not equal if of different types
-        try:
-            if self.nineml_type != other.nineml_type:
-                return False
-        except AttributeError:
-            return False
-        # If defining attributes aren't passed explicitly use the ones for the
-        # current class
-        if defining_attributes is None:
-            defining_attributes = self.defining_attributes
-        # Check if any attribute in the defining attributes doesn't match and
-        # if so return False
-        for name in defining_attributes:
-            try:
-                # Attempt to compare attributes directly
-                self_elem = getattr(self, name)
-                other_elem = getattr(other, name)
-            except AttributeError:
-                # If one or both of self and other are extended classes use the
-                # associated property with the same name as the attribute minus
-                # the leading '_'.
-                assert name.startswith('_')
-                self_elem = getattr(self, name[1:])
-                other_elem = getattr(other, name[1:])
-            # Convert iterators to list of sorted values so they can be
-            # compared
-            if isinstance(self_elem, Iterator):
-                assert isinstance(other_elem, Iterator)
-                self_elem = sorted(self_elem, key=sort_key)
-                other_elem = sorted(other_elem, key=sort_key)
-            if isinstance(self_elem, BaseNineMLObject):
-                if not self_elem.equals(other_elem, **kwargs):
-                    self_elem.equals(other_elem, **kwargs)
-                    return False
-            elif isinstance(self_elem, dict):
-                try:
-                    if set(self_elem.keys()) != set(other_elem.keys()):
-                        return False
-                except AttributeError:
-                    return False
-                for k, v in self_elem.iteritems():
-                    try:
-                        if not v.equals(other_elem[k], **kwargs):
-                            return False
-                    except AttributeError:
-                        if v != other_elem[k]:
-                            return False
-            elif isinstance(self_elem, list):
-                if len(self_elem) != len(other_elem):
-                    return False
-                try:
-                    if not all(s.equals(o, **kwargs)
-                               for s, o in izip(self_elem, other_elem)):
-                        return False
-                except AttributeError:
-                    if self_elem != other_elem:
-                        return False
-            else:
-                if self_elem != other_elem:
-                    return False
-        return True
+    def find_mismatch(self, other, **kwargs):
+        finder = MismatchFinder(**kwargs)
+        return finder.find(self, other, **kwargs)
+    
+#     def equals(self, other, defining_attributes=None, **kwargs):
+#         """
+#         Check for equality between 9ML objects.
+# 
+#         Parameters
+#         ----------
+#         defining_attributes : list(str)
+#             Overrides list of attributes to include in the check. If None, uses
+#             class member of same name
+#         annotations_ns : list(str)
+#             List of annotation namespaces to check for in equality check
+# 
+#         Returns
+#         -------
+#         equality : bool
+#             Whether the two 9ML objects are equal
+#         """
+#         # Not equal if of different types
+#         try:
+#             if self.nineml_type != other.nineml_type:
+#                 return False
+#         except AttributeError:
+#             return False
+#         # If defining attributes aren't passed explicitly use the ones for the
+#         # current class
+#         if defining_attributes is None:
+#             defining_attributes = self.defining_attributes
+#         # Check if any attribute in the defining attributes doesn't match and
+#         # if so return False
+#         for name in defining_attributes:
+#             try:
+#                 # Attempt to compare attributes directly
+#                 self_elem = getattr(self, name)
+#                 other_elem = getattr(other, name)
+#             except AttributeError:
+#                 # If one or both of self and other are extended classes use the
+#                 # associated property with the same name as the attribute minus
+#                 # the leading '_'.
+#                 assert name.startswith('_')
+#                 self_elem = getattr(self, name[1:])
+#                 other_elem = getattr(other, name[1:])
+#             # Convert iterators to list of sorted values so they can be
+#             # compared
+#             if isinstance(self_elem, Iterator):
+#                 assert isinstance(other_elem, Iterator)
+#                 self_elem = sorted(self_elem, key=sort_key)
+#                 other_elem = sorted(other_elem, key=sort_key)
+#             if isinstance(self_elem, BaseNineMLObject):
+#                 if not self_elem.equals(other_elem, **kwargs):
+#                     self_elem.equals(other_elem, **kwargs)
+#                     return False
+#             elif isinstance(self_elem, dict):
+#                 try:
+#                     if set(self_elem.keys()) != set(other_elem.keys()):
+#                         return False
+#                 except AttributeError:
+#                     return False
+#                 for k, v in self_elem.iteritems():
+#                     try:
+#                         if not v.equals(other_elem[k], **kwargs):
+#                             return False
+#                     except AttributeError:
+#                         if v != other_elem[k]:
+#                             return False
+#             elif isinstance(self_elem, list):
+#                 if len(self_elem) != len(other_elem):
+#                     return False
+#                 try:
+#                     if not all(s.equals(o, **kwargs)
+#                                for s, o in izip(self_elem, other_elem)):
+#                         return False
+#                 except AttributeError:
+#                     if self_elem != other_elem:
+#                         return False
+#             else:
+#                 if self_elem != other_elem:
+#                     return False
+#         return True
 
     @classmethod
     def _sorted_values(self, container):
@@ -143,92 +152,92 @@ class BaseNineMLObject(object):
             "Derived class '{}' has not overriden accept_visitor method."
             .format(self.__class__.__name__))
 
-    def find_mismatch(self, other, indent='    '):
-        """
-        A method for displaying where two NineML objects differ. Used in
-        debugging and error messages.
-        """
-        if not indent:
-            result = ("Mismatch between '{}' types:"
-                      .format(self.nineml_type))
-        else:
-            result = ''
-        try:
-            if self.nineml_type != other.nineml_type:
-                result += ("mismatch in nineml_type, self:'{}' and other:'{}' "
-                           "({} and {})"
-                           .format(self.nineml_type, other.nineml_type,
-                                   self, other))
-            else:
-                for attr_name in self.defining_attributes:
-                    self_attr = getattr(self, attr_name)
-                    other_attr = getattr(other, attr_name)
-                    if isinstance(self_attr, Iterator):
-                        assert isinstance(other_attr, Iterator)
-                        self_attr = sorted(self_attr, key=sort_key)
-                        other_attr = sorted(other_attr, key=sort_key)
-                    if self_attr != other_attr:
-                        result += "\n{}Attribute '{}': ".format(indent,
-                                                                attr_name)
-                        result += self._unwrap_mismatch(self_attr, other_attr,
-                                                        indent + '  ')
-        except AttributeError:
-            if type(self) != type(other):
-                result += ("mismatch in type self:{} and other:{} "
-                           "({} and {})".format(type(self).__name__,
-                                                type(other).__name__, self,
-                                                other))
-            elif self != other:
-                result += ("self:{} != other:{}"
-                           .format(self, other))
-        return result
-
-    @classmethod
-    def _unwrap_mismatch(cls, s, o, indent):
-        result = ''
-        if isinstance(s, BaseNineMLObject):
-            result += s.find_mismatch(o, indent=indent + '    ')
-        elif isinstance(s, dict):
-            s_keys = set(s.keys())
-            o_keys = set(o.keys())
-            if s_keys != o_keys:
-                result += (
-                    "keys do not match:\n{}  self:{}\n{}  other:{}".format(
-                        indent, ", ".join(
-                            "'{}'".format(k)
-                            if isinstance(k, basestring)
-                            else str(k) for k in sorted(s_keys,
-                                                        key=hash_non_str)),
-                        indent, ", ".join(
-                            "'{}'".format(k)
-                            if isinstance(k, basestring)
-                            else str(k) for k in sorted(o_keys,
-                                                        key=hash_non_str))))
-            else:
-                for k in s:
-                    if s[k] != o[k]:
-                        result += "\n{}Key '{}':".format(indent + '    ', k)
-                        result += cls._unwrap_mismatch(s[k], o[k],
-                                                       indent + '  ')
-        elif isinstance(s, list):
-            if len(s) != len(o):
-                result += ('differ in length (self:{} to other:{})'
-                           .format(len(s), len(o)))
-            else:
-                for i, (s_elem, o_elem) in enumerate(zip(s, o)):
-                    if s_elem != o_elem:
-                        result += "\n{}Index {}:".format(indent + '    ', i)
-                        result += cls._unwrap_mismatch(s_elem, o_elem,
-                                                       indent + '    ')
-        else:
-            if type(s) != type(o):
-                result += ("mismatch in type self:{} != other:{} "
-                           "({} and {})".format(
-                               type(s).__name__, type(o).__name__,
-                               s, o))
-            else:
-                result += "self:{} != other:{}".format(s, o)
-        return result
+#     def find_mismatch(self, other, indent='    '):
+#         """
+#         A method for displaying where two NineML objects differ. Used in
+#         debugging and error messages.
+#         """
+#         if not indent:
+#             result = ("Mismatch between '{}' types:"
+#                       .format(self.nineml_type))
+#         else:
+#             result = ''
+#         try:
+#             if self.nineml_type != other.nineml_type:
+#                 result += ("mismatch in nineml_type, self:'{}' and other:'{}' "
+#                            "({} and {})"
+#                            .format(self.nineml_type, other.nineml_type,
+#                                    self, other))
+#             else:
+#                 for attr_name in self.defining_attributes:
+#                     self_attr = getattr(self, attr_name)
+#                     other_attr = getattr(other, attr_name)
+#                     if isinstance(self_attr, Iterator):
+#                         assert isinstance(other_attr, Iterator)
+#                         self_attr = sorted(self_attr, key=sort_key)
+#                         other_attr = sorted(other_attr, key=sort_key)
+#                     if self_attr != other_attr:
+#                         result += "\n{}Attribute '{}': ".format(indent,
+#                                                                 attr_name)
+#                         result += self._unwrap_mismatch(self_attr, other_attr,
+#                                                         indent + '  ')
+#         except AttributeError:
+#             if type(self) != type(other):
+#                 result += ("mismatch in type self:{} and other:{} "
+#                            "({} and {})".format(type(self).__name__,
+#                                                 type(other).__name__, self,
+#                                                 other))
+#             elif self != other:
+#                 result += ("self:{} != other:{}"
+#                            .format(self, other))
+#         return result
+# 
+#     @classmethod
+#     def _unwrap_mismatch(cls, s, o, indent):
+#         result = ''
+#         if isinstance(s, BaseNineMLObject):
+#             result += s.find_mismatch(o, indent=indent + '    ')
+#         elif isinstance(s, dict):
+#             s_keys = set(s.keys())
+#             o_keys = set(o.keys())
+#             if s_keys != o_keys:
+#                 result += (
+#                     "keys do not match:\n{}  self:{}\n{}  other:{}".format(
+#                         indent, ", ".join(
+#                             "'{}'".format(k)
+#                             if isinstance(k, basestring)
+#                             else str(k) for k in sorted(s_keys,
+#                                                         key=hash_non_str)),
+#                         indent, ", ".join(
+#                             "'{}'".format(k)
+#                             if isinstance(k, basestring)
+#                             else str(k) for k in sorted(o_keys,
+#                                                         key=hash_non_str))))
+#             else:
+#                 for k in s:
+#                     if s[k] != o[k]:
+#                         result += "\n{}Key '{}':".format(indent + '    ', k)
+#                         result += cls._unwrap_mismatch(s[k], o[k],
+#                                                        indent + '  ')
+#         elif isinstance(s, list):
+#             if len(s) != len(o):
+#                 result += ('differ in length (self:{} to other:{})'
+#                            .format(len(s), len(o)))
+#             else:
+#                 for i, (s_elem, o_elem) in enumerate(zip(s, o)):
+#                     if s_elem != o_elem:
+#                         result += "\n{}Index {}:".format(indent + '    ', i)
+#                         result += cls._unwrap_mismatch(s_elem, o_elem,
+#                                                        indent + '    ')
+#         else:
+#             if type(s) != type(o):
+#                 result += ("mismatch in type self:{} != other:{} "
+#                            "({} and {})".format(
+#                                type(s).__name__, type(o).__name__,
+#                                s, o))
+#             else:
+#                 result += "self:{} != other:{}".format(s, o)
+#         return result
 
     @property
     def key(self):

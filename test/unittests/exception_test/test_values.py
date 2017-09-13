@@ -1,6 +1,6 @@
 import unittest
 from nineml.values import ArrayValue
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLValueError, NineMLRuntimeError)
 from nineml.document import Document
 from lxml.builder import ElementMaker

@@ -17,7 +17,8 @@ from nineml.abstraction import BaseALObject, ComponentClass
 import nineml.units as un
 from nineml.base import (
     ContainerObject, DocumentLevelObject, DynamicPortsObject)
-from nineml.utils import ensure_valid_identifier, normalise_parameter_as_list
+from nineml.utils import ensure_valid_identifier
+from nineml.utils.iterables import normalise_parameter_as_list
 # from nineml import units as un
 from nineml.annotations import VALIDATION, DIMENSIONALITY
 from nineml.abstraction import (

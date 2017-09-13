@@ -1,7 +1,7 @@
 import unittest
 from nineml.abstraction.connectionrule.base import (
     ConnectionRule)
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLRuntimeError)
 
 

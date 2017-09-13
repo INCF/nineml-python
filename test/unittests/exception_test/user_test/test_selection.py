@@ -1,6 +1,6 @@
 import unittest
 from nineml.user.selection import (Concatenate, combined_port_accessor, combined_port_accessor)
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLNameError)
 
 

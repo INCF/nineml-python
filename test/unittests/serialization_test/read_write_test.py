@@ -3,7 +3,7 @@ import tempfile
 import os
 from nineml import read, write
 from nineml import DynamicsProperties
-from nineml.utils.testing.comprehensive import dynA, dynB
+from nineml.utils.comprehensive_example import dynA, dynB
 
 
 class TestReadWrite(unittest.TestCase):

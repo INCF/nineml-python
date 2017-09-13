@@ -3,7 +3,7 @@ from itertools import groupby
 import unittest
 import random
 import nineml.units as un
-from nineml.utils.testing.comprehensive import conA
+from nineml.utils.comprehensive_example import conA
 from nineml.abstraction.connectionrule import (
     all_to_all_connection_rule, one_to_one_connection_rule,
     explicit_connection_rule, probabilistic_connection_rule,

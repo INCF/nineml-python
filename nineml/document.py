@@ -6,7 +6,7 @@ from logging import getLogger
 from nineml.visitors import Cloner
 
 
-logger = getLogger('lib9ml')
+logger = getLogger('NineML')
 
 
 def write_order_key(nineml_obj):

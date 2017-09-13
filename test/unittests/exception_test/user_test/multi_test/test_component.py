@@ -1,7 +1,7 @@
 import unittest
 from nineml.user.multi.dynamics import (
     MultiDynamics, _MultiRegime, _MultiTransition, SubDynamicsProperties)
-from nineml.utils.testing.comprehensive import (
+from nineml.utils.comprehensive_example import (
     multiDynPropA, multiDynA, dynD, dynE)
 from nineml.exceptions import (NineMLNameError, NineMLRuntimeError)
 from nineml.user.multi.port_exposures import AnalogReceivePortExposure

@@ -1,7 +1,7 @@
 import unittest
 from nineml.user.component import Definition
 from nineml.user.dynamics import DynamicsProperties
-from nineml.utils.testing.comprehensive import (
+from nineml.utils.comprehensive_example import (
     dynA, dynB, doc1, dynPropA)
 from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLNameError, NineMLRuntimeError)

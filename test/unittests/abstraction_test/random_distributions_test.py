@@ -1,7 +1,7 @@
 from __future__ import division
 import unittest
 import nineml.units as un
-from nineml.utils.testing.comprehensive import ranDistrA
+from nineml.utils.comprehensive_example import ranDistrA
 
 
 class RandomDistributionVisitorTests(unittest.TestCase):

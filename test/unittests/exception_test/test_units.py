@@ -1,6 +1,6 @@
 import unittest
 from nineml.units import (Dimension, Unit, Quantity)
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLDimensionError, NineMLNameError,
                                NineMLRuntimeError)
 import nineml.units as un

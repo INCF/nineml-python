@@ -3,7 +3,7 @@ import unittest
 from nineml import Document
 from nineml.user.port_connections import (AnalogPortConnection,
                                           EventPortConnection)
-from nineml.utils.testing.comprehensive import projD
+from nineml.utils.comprehensive_example import projD
 
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',

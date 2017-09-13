@@ -8,13 +8,14 @@ This file contains the definitions for the Events
 import sympy.solvers
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from nineml.base import _clone_attr
-from nineml.utils import ensure_valid_identifier, filter_discrete_types
+from nineml.utils import ensure_valid_identifier
 from nineml.abstraction.componentclass import BaseALObject
 from nineml.abstraction.expressions import (
     Expression, ExpressionWithSimpleLHS, t)
 from nineml.exceptions import NineMLRuntimeError, name_error
 from nineml.base import ContainerObject
-from nineml.utils import normalise_parameter_as_list
+from nineml.utils.iterables import (normalise_parameter_as_list,
+                                    filter_discrete_types)
 from nineml.exceptions import NineMLNoSolutionException
 
 

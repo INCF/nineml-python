@@ -1,6 +1,6 @@
 import unittest
 from nineml.user.multi.namespace import (_NamespaceExpression, split_namespace, split_multi_regime_name)
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLNameError, NineMLImmutableError)
 
 

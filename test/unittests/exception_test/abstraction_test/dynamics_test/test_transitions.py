@@ -1,6 +1,6 @@
 import unittest
 from nineml.abstraction.dynamics.transitions import (Trigger, Transition, OutputEvent, OnEvent)
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLNoSolutionException, NineMLInvalidElementTypeException, NineMLRuntimeError)
 
 

@@ -7,7 +7,7 @@ from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
 from operator import (
     add, sub, mul, truediv, div, pow, floordiv, mod, neg, iadd, idiv,
     ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.comprehensive_example import instances_of_all_types
 import numpy as np  # This is only imported here in the test as it is not dependency
 from sympy import sympify, Basic as SympyBaseClass, Symbol
 from nineml.abstraction.expressions import Expression, Alias

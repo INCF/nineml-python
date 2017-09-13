@@ -253,7 +253,7 @@ class BaseDualVisitor(BaseVisitor):
         if (not isinstance(obj1, nineml_cls) or
                 not isinstance(obj2, nineml_cls)):
             raise NineMLDualVisitTypeException(
-                obj1, obj2, nineml_cls, self.contexts1, label=1)
+                nineml_cls, obj1, obj2, self.contexts1, self.contexts2)
         # Run the 'action_<obj-nineml_type>' method on the visited object
         action_result = self.action(obj1, obj2, nineml_cls=nineml_cls,
                                     **kwargs)

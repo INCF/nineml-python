@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 from nineml.document import Document
-from nineml.utils.testing.comprehensive import (
+from nineml.utils.comprehensive_example import (
     instances_of_all_types, doc1, conPropB1)
 from nineml.exceptions import (NineMLNameError, NineMLRuntimeError)
 # from tempfile import mkdtemp

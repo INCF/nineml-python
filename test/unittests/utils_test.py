@@ -1,14 +1,16 @@
-import warnings
 import unittest
 import types
 import numbers
 import sys
 
-from nineml.utils import (check_inferred_against_declared, expect_single,
-                          flatten_first_level, invert_dictionary,
-                          assert_no_duplicates, restore_sys_path, safe_dict,
-                          safe_dictionary_merge, filter_expect_single,
-                          filter_by_type, filter_discrete_types)
+from nineml.utils import (check_inferred_against_declared,
+                          assert_no_duplicates, restore_sys_path)
+from nineml.utils.iterables import (
+    expect_single,
+    flatten_first_level, invert_dictionary,
+    safe_dict,
+    safe_dictionary_merge, filter_expect_single,
+    filter_by_type, filter_discrete_types)
 from nineml.exceptions import NineMLRuntimeError
 
 

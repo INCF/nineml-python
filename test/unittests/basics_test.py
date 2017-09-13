@@ -1,5 +1,5 @@
 import unittest
-from nineml.utils.testing.comprehensive import (
+from nineml.utils.comprehensive_example import (
     all_types, instances_of_all_types)
 from nineml.abstraction.ports import SendPortBase
 from nineml.base import pluralise

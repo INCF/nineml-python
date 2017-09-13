@@ -1,6 +1,6 @@
 import unittest
 from nineml.abstraction import Dynamics, ConnectionRule, RandomDistribution
-from nineml.utils.testing.comprehensive import instances_of_all_types
+from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.visitors.cloner import Cloner
 
 

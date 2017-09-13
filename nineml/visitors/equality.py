@@ -27,9 +27,14 @@ class EqualityChecker(BaseDualVisitor):
         return True
 
     def action(self, obj1, obj2, nineml_cls, **kwargs):
-        if hasattr(obj1, 'annotations'):
-            for key in set(chain(obj1.annotations.branch_keys,
-                                 obj2.annotations.branch_keys)):
+        try:
+            annotations_keys = set(chain(obj1.annotations.branch_keys,
+                                         obj2.annotations.branch_keys))
+            skip_annotations = False
+        except AttributeError:
+            skip_annotations = True
+        if not skip_annotations:
+            for key in annotations_keys:
                 if key[1] in self.annotations_ns:
                     try:
                         annot1 = obj1.annotations.branch(key)
@@ -44,8 +49,6 @@ class EqualityChecker(BaseDualVisitor):
                             nineml_cls, obj1, obj2, key, self.contexts1,
                             self.contexts2)
                     self.visit(annot1, annot2, **kwargs)
-        else:
-            assert not hasattr(obj2, 'annotations')
         return super(EqualityChecker, self).action(obj1, obj2, nineml_cls,
                                                    **kwargs)
 
@@ -57,10 +60,10 @@ class EqualityChecker(BaseDualVisitor):
                 self._check_attr(obj1, obj2, attr_name, nineml_cls)
 
     def action_reference(self, ref1, ref2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._check_attr(ref1, ref2, 'url')
+        self._check_attr(ref1, ref2, 'url', nineml_cls)
 
     def action_definition(self, def1, def2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._check_attr(def1, def2, 'url')
+        self._check_attr(def1, def2, 'url', nineml_cls)
 
     def action_singlevalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         if not nearly_equal(val1.value, val2.value):

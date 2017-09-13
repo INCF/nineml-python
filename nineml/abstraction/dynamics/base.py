@@ -7,7 +7,8 @@ components definitions of interface and dynamics
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.exceptions import NineMLRuntimeError, name_error
-from nineml.utils import normalise_parameter_as_list, filter_discrete_types
+from nineml.utils.iterables import (
+    normalise_parameter_as_list, filter_discrete_types)
 from nineml.visitors import Cloner
 from itertools import chain
 from nineml.abstraction.componentclass import (

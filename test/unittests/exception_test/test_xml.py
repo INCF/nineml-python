@@ -1,6 +1,6 @@
 import unittest
 from itertools import chain
-from nineml.utils.testing.comprehensive import (doc1, dynPropA)
+from nineml.utils.comprehensive_example import (doc1, dynPropA)
 from nineml.exceptions import (
     NineMLXMLAttributeError, NineMLXMLBlockError, NineMLRuntimeError)
 from nineml.user import Projection, Population, Definition, DynamicsProperties

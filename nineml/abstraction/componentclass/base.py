@@ -10,9 +10,10 @@ This module provides the base class for these.
 from abc import ABCMeta
 from .. import BaseALObject
 from nineml.base import ContainerObject
-from nineml.utils import (
-    filter_discrete_types, ensure_valid_identifier,
+from nineml.utils.iterables import (
+    filter_discrete_types,
     normalise_parameter_as_list)
+from nineml.utils import ensure_valid_identifier
 from ..expressions import Alias, Constant
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import name_error
