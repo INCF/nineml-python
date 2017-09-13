@@ -5,7 +5,8 @@ import weakref
 from urllib import urlopen
 import contextlib
 from nineml.exceptions import (
-    NineMLSerializationError, NineMLIOError, NineMLReloadDocumentException)
+    NineMLSerializationError, NineMLIOError, NineMLReloadDocumentException,
+    NineMLSerializerNotImportedError)
 
 DEFAULT_VERSION = 1
 DEFAULT_FORMAT = 'xml'  # see nineml.serialization format_to_serializer.keys()
@@ -123,7 +124,7 @@ def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @Rese
                 .format(format, url,
                         "', '".join(format_to_unserializer.keys())))
         if Unserializer is None:
-            raise NineMLSerializationError(
+            raise NineMLSerializerNotImportedError(
                 "Cannot write to '{}' as {} serializer cannot be imported. "
                 "Please check the required dependencies are correctly "
                 "installed".format(url, format))
@@ -177,7 +178,7 @@ def write(url, *nineml_objects, **kwargs):
             "Unrecognised format '{}' in url '{}', can be one of '{}'"
             .format(format, url, "', '".join(format_to_serializer.keys())))
     if Serializer is None:
-        raise NineMLSerializationError(
+        raise NineMLSerializerNotImportedError(
             "Cannot write to '{}' as {} serializer cannot be "
             "imported. Please check the required dependencies are correctly "
             "installed".format(url, format))

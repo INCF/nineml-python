@@ -59,6 +59,10 @@ class NineMLSerializationError(NineMLRuntimeError):
     pass
 
 
+class NineMLSerializerNotImportedError(NineMLSerializationError):
+    pass
+
+
 class NineMLMissingSerializationError(NineMLSerializationError):
     pass
 

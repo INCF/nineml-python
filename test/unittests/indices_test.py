@@ -1,66 +1,79 @@
 import unittest
 from nineml.abstraction import (
-    Parameter, Dynamics, Alias, EventSendPort, AnalogSendPort, StateVariable,
-    Regime, TimeDerivative, OnCondition, OutputEvent)
-from nineml import Document
-import nineml.units as un
+    Parameter, Dynamics, Alias, StateVariable,
+    Regime, TimeDerivative, OnCondition)
+from nineml.serialization import ext_to_format
+from nineml.exceptions import NineMLSerializerNotImportedError
+import logging
+import sys
+import nineml
+from tempfile import mkstemp
 
 
-class TestAnnotations(unittest.TestCase):
+logger = logging.getLogger('NineML')
+logger.setLevel(logging.ERROR)
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
-    def test_indices_annotations(self):
-        a = Dynamics(
-            name='a',
-            parameters=[Parameter('P1'), Parameter('P2'), Parameter('P3')],
-            ports=[AnalogSendPort('ASP1'), AnalogSendPort('ASP2'),
-                   EventSendPort('ESP1'), EventSendPort('ESP2'),
-                   EventSendPort('ESP3')],
-            state_variables=[StateVariable('SV3'),
-                             StateVariable('SV1'),
-                             StateVariable('SV2')],
-            regimes=[Regime(name='R1',
+
+class TestPreserveIndices(unittest.TestCase):
+
+    def setUp(self):
+        self.parameters = ['P4', 'P1', 'P3', 'P5', 'P2']
+        self.state_variables = ['SV3', 'SV5', 'SV4', 'SV2', 'SV1']
+        self.regimes = ['R2', 'R3', 'R1']
+        self.time_derivatives = {'R1': ['SV5', 'SV1', 'SV4', 'SV3', 'SV2'],
+                                 'R2': ['SV2', 'SV4'],
+                                 'R3': ['SV4', 'SV2', 'SV1']}
+        self.aliases = ['A4', 'A3', 'A1', 'A2']
+
+        # Create a dynamics object with elements in a particular order
+        self.d = Dynamics(
+            name='d',
+            parameters=[Parameter(p) for p in self.parameters],
+            state_variables=[StateVariable(sv) for sv in self.state_variables],
+            regimes=[Regime(name=r,
                             time_derivatives=[
-                                TimeDerivative('SV2', 'SV2/t'),
-                                TimeDerivative('SV1', 'SV2/t')],
+                                TimeDerivative(td, '{}/t'.format(td))
+                                for td in self.time_derivatives[r]],
                             transitions=[
-                                OnCondition('SV1 > P1',
-                                            output_events=[
-                                                OutputEvent('ESP2'),
-                                                OutputEvent('ESP1')]),
-                                OnCondition('SV2 < P2 + P3',
-                                            output_events=[
-                                                OutputEvent('ESP3')],
-                                            target_regime_name='R2')]),
-                     Regime(name='R2',
-                            time_derivatives=[
-                                TimeDerivative('SV3', 'SV3/t')],
-                            transitions=[
-                                OnCondition('SV3 > 100',
-                                            output_events=[
-                                                OutputEvent('ESP3'),
-                                                OutputEvent('ESP2')],
-                                            target_regime_name='R1')])],
-            aliases=[Alias('ASP1', 'SV1+SV2'),
-                     Alias('ASP2', 'SV2+SV3')])
+                                OnCondition(
+                                    'SV1 > P5',
+                                    target_regime_name=self.regimes[
+                                        self.regimes.index(r) - 1])])
+                     for r in self.regimes],
+            aliases=[Alias(a, 'P{}'.format(i + 1))
+                     for i, a in enumerate(self.aliases)])
+
+    def test_clone(self):
+        clone_d = self.d.clone()
+        self._test_indices(clone_d)
+
+    def test_serialization(self):
+        for ext in ext_to_format:
+            fname = mkstemp(suffix=ext)[1]
+            try:
+                self.d.write(fname)
+            except NineMLSerializerNotImportedError:
+                continue
+            reread_d = nineml.read(fname)['d']
+            self._test_indices(reread_d)
+
+    def _test_indices(self, dyn):
         # Set indices of parameters in non-ascending order so that they
         # can be differentiated from indices on read.
-        a.index_of(a.parameter('P1'))
-        a.index_of(a.parameter('P3'))
-        a.index_of(a.parameter('P2'))
-        a.index_of(a.event_send_port('ESP2'))
-        a.index_of(a.event_send_port('ESP1'))
-        doc = Document(un.dimensionless)
-        serialised = a.serialize(document=doc, save_indices=True,
-                                 version=self.version)
-        re_a = Dynamics.unserialize(serialised, format='xml',
-                                    version=self.version, document=doc)
-        self.assertEqual(re_a.index_of(re_a.parameter('P1')),
-                         a.index_of(a.parameter('P1')))
-        self.assertEqual(re_a.index_of(re_a.parameter('P2')),
-                         a.index_of(a.parameter('P2')))
-        self.assertEqual(re_a.index_of(re_a.parameter('P3')),
-                         a.index_of(a.parameter('P3')))
-        self.assertEqual(re_a.index_of(re_a.event_send_port('ESP1')),
-                         a.index_of(a.event_send_port('ESP1')))
-        self.assertEqual(re_a.index_of(re_a.event_send_port('ESP2')),
-                         a.index_of(a.event_send_port('ESP2')))
+        for i, p in enumerate(self.parameters):
+            self.assertEqual(dyn.index_of(dyn.parameter(p)), i)
+        for i, sv in enumerate(self.state_variables):
+            self.assertEqual(dyn.index_of(dyn.state_variable(sv)), i)
+        for i, r in enumerate(self.regimes):
+            self.assertEqual(dyn.index_of(dyn.regime(r)), i)
+        for r, tds in self.time_derivatives.iteritems():
+            regime = dyn.regime(r)
+            for i, td in enumerate(tds):
+                self.assertEquals(
+                    regime.index_of(regime.time_derivative(td)), i)
+        for i, a in enumerate(self.aliases):
+            self.assertEqual(dyn.index_of(dyn.alias(a)), i)

@@ -1,7 +1,6 @@
 import unittest
 import logging
 import sys
-import pickle
 from tempfile import mkstemp
 from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
