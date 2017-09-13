@@ -44,7 +44,6 @@ class Expression(AnnotatedNineMLObject):
         The expression in string or Sympy_ form
     """
 
-    defining_attributes = ('_rhs',)
     nineml_attr = ('rhs',)
 
     # Regular expression for extracting function names from strings (i.e. a
@@ -481,7 +480,6 @@ class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):
     That is, a single symbol, for example 's = t+1'
     """
 
-    defining_attributes = ('_name', '_rhs')
     nineml_attr = ('name', 'rhs')
 
     def __init__(self, lhs, rhs, assign_to_reserved=False):
@@ -518,18 +516,14 @@ class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):
 
 
 class ODE(ExpressionWithLHS):
-
-    """ An ordinary, first order differential equation.
-
-        .. note::
-
-            These should not be created directly, this class is
-            used as base class for ``TimeDerivative``
-
     """
+    An ordinary, first order differential equation.
 
-    defining_attributes = ('_rhs', '_independent_variable',
-                           '_dependent_variable')
+    .. note::
+
+        These should not be created directly, this class is
+        used as base class for ``TimeDerivative``
+    """
 
     def __init__(self, dependent_variable, independent_variable, rhs):
         ExpressionWithLHS.__init__(self, rhs)

@@ -18,12 +18,13 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
     """
 
     nineml_type = 'Dimension'
+    nineml_attr = ('name', 'm', 'l', 't', 'i', 'n', 'k', 'j')
+
     dimension_symbols = ('m', 'l', 't', 'i', 'n', 'k', 'j')
     dimension_names = ('mass', 'length', 'time', 'current', 'amount',
                        'temperature', 'luminous_intensity')
     SI_units = ('kg', 'm', 's', 'A', 'mol', 'K', 'cd')
-    defining_attributes = ('_dims',)
-    nineml_attr = ('name', 'm', 'l', 't', 'i', 'n', 'k', 'j')
+
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
     def __init__(self, name, dimensions=None, **kwargs):
@@ -279,7 +280,6 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     """
 
     nineml_type = 'Unit'
-    defining_attributes = ('_dimension', '_power', '_offset')
     nineml_attr = ('name', 'power', 'offset')
     nineml_child = {'dimension': Dimension}
 
@@ -428,7 +428,6 @@ class Quantity(AnnotatedNineMLObject):
     numbers, e.g. a RandomDistribution instance.
     """
     nineml_type = 'Quantity'
-    defining_attributes = ("_value", "_units")
     nineml_child = {'value': None,
                     'units': Unit}
 

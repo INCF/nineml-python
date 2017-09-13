@@ -7,8 +7,6 @@ from nineml.visitors import Cloner
 class RandomDistribution(ComponentClass):
 
     nineml_type = 'RandomDistribution'
-    defining_attributes = ('_name', '_parameters', '_standard_library',
-                           '_aliases', '_constants')
     nineml_attr = ComponentClass.nineml_attr + ('standard_library',)
 
     standard_library_basepath = 'http://www.uncertml.org/distributions/'

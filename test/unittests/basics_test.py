@@ -47,7 +47,7 @@ class TestAccessors(unittest.TestCase):
         the right type
         """
         for name, cls in all_types.iteritems():
-            if hasattr(cls, 'class_to_member'):
+            if hasattr(cls, 'nineml_children'):
                 for elem in instances_of_all_types[name].values():
                     for child_type in cls.nineml_children:
                         num = elem._num_members(child_type)

@@ -87,20 +87,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     For examples
     """
     nineml_type = 'Dynamics'
-    defining_attributes = (ComponentClass.defining_attributes +
-                           ('_analog_send_ports', '_analog_receive_ports',
-                            '_analog_reduce_ports', '_event_send_ports',
-                            '_event_receive_ports', '_regimes',
-                            '_state_variables'))
-    class_to_member = dict(
-        tuple(ComponentClass.class_to_member.iteritems()) +
-        (('AnalogSendPort', 'analog_send_port'),
-         ('AnalogReceivePort', 'analog_receive_port'),
-         ('AnalogReducePort', 'analog_reduce_port'),
-         ('EventSendPort', 'event_send_port'),
-         ('EventReceivePort', 'event_receive_port'),
-         ('Regime', 'regime'),
-         ('StateVariable', 'state_variable')))
     nineml_children = (StateVariable, AnalogSendPort, AnalogReceivePort,
                        AnalogReducePort, EventSendPort, EventReceivePort,
                        Regime) + ComponentClass.nineml_children

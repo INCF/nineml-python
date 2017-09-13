@@ -26,7 +26,6 @@ logger.addHandler(handler)
 class A(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'A'
-    defining_attributes = ('name', 'x', 'y')
     nineml_attr = ('name', 'x', 'y')
     default_x = 5
 
@@ -68,7 +67,6 @@ class A(AnnotatedNineMLObject, DocumentLevelObject):
 class B(AnnotatedNineMLObject):
 
     nineml_type = 'B'
-    defining_attributes = ('name', 'z',)
     nineml_attr = ('name', 'z',)
 
     def __init__(self, name, z):
@@ -93,7 +91,6 @@ class B(AnnotatedNineMLObject):
 class E(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'E'
-    defining_attributes = ('name', 'u', 'v')
     nineml_attr = ('name', 'u', 'v')
 
     def __init__(self, name, u, v):
@@ -122,9 +119,7 @@ class E(AnnotatedNineMLObject, DocumentLevelObject):
 class C(AnnotatedNineMLObject, ContainerObject):
 
     nineml_type = 'C'
-    defining_attributes = ('name', '_es', 'f', 'g')
     nineml_attr = ('name', 'f', 'g')
-    class_to_member = {'E': 'e'}
     nineml_children = (E,)
 
     def __init__(self, name, es, f, g):
@@ -167,7 +162,6 @@ class C(AnnotatedNineMLObject, ContainerObject):
 class F(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'F'
-    defining_attributes = ('name', 'w', 'r')
     nineml_attr = ('name', 'w', 'r')
 
     def __init__(self, name, w, r):
@@ -194,7 +188,6 @@ class Container(ContainerObject, DocumentLevelObject):
 
     nineml_type = 'Container'
     nineml_type_v1 = 'Cunfaener'
-    defining_attributes = ('name', 'a', 'bs', 'c', 'd')
     nineml_attr = ('name', 'bs', 'd')
     nineml_children = (B,)
     nineml_child = {'a': A,

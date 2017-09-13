@@ -44,7 +44,6 @@ _DummyNamespaceRegime = collections.namedtuple('_DummyNamespaceRegime',
 class SubDynamics(BaseULObject, DynamicPortsObject):
 
     nineml_type = 'SubDynamics'
-    defining_attributes = ('_name', '_component_class')
     nineml_attr = ('name',)
     nineml_child = {'component_class': None}
 
@@ -260,11 +259,6 @@ class MultiDynamics(Dynamics):
 
     nineml_type = 'MultiDynamics'
     nineml_type_v1 = None
-    defining_attributes = (
-        '_name', '_sub_components', '_analog_port_connections',
-        '_event_port_connections', '_analog_send_ports',
-        '_analog_receive_ports', '_analog_reduce_ports', '_event_send_ports',
-        '_event_receive_ports')
     nineml_children = (SubDynamics, AnalogPortConnection, EventPortConnection,
                        AnalogSendPortExposure, AnalogReceivePortExposure,
                        AnalogReducePortExposure, EventSendPortExposure,
@@ -887,23 +881,6 @@ class _MultiRegime(Regime):
     def name(self):
         return make_regime_name(self._sub_regimes)
 
-    def lookup_member_dict(self, element):
-        """
-        Looks up the appropriate member dictionary for objects of type element
-        """
-        dct_name = self.lookup_members_name(element)
-        comp_name = MultiDynamics.split_namespace(element.key)[1]
-        return getattr(self.sub_regime(comp_name), dct_name)
-
-    @property
-    def all_member_dicts(self):
-        return chain(*[
-            (getattr(r, n) for n in r.class_to_member.itervalues())
-            for r in self.sub_regimes])
-
-    # Member Properties:
-    # ------------------
-
     @property
     def time_derivatives(self):
         return chain(*[r.time_derivatives for r in self.sub_regimes])
@@ -1045,7 +1022,6 @@ class _MultiRegime(Regime):
 class SubDynamicsProperties(BaseULObject):
 
     nineml_type = 'SubDynamicsProperties'
-    defining_attributes = ('_name', '_component')
     nineml_attr = ('name',)
     nineml_child = {'component': None}
 
@@ -1152,7 +1128,6 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     nineml_type = "MultiDynamicsProperties"
     nineml_type_v1 = None
-    defining_attributes = ('_name', '_definition', '_sub_components')
     nineml_attr = ('name',)
     nineml_child = {'definition': None}
     nineml_children = (SubDynamicsProperties,)

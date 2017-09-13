@@ -37,9 +37,10 @@ class Document(AnnotatedNineMLObject, dict):
         Annotations to add to the document
     """
 
-    defining_attributes = ('elements',)
     nineml_type = 'NineML'
 
+    # Defines a consistent order that the different document-level types are
+    # written to file. 
     write_order = ('Network', 'Population', 'Projection', 'Selection',
                    'ComponentArray', 'EventConnectionGroup',
                    'AnalogConnectionGroup', 'Dynamics', 'ConnectionRule',

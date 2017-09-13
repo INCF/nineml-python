@@ -34,7 +34,6 @@ class Port(BaseALObject):
     """
     __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
-    defining_attributes = ('_name',)
     nineml_attr = ('name',)
 
     def __init__(self, name):
@@ -71,7 +70,6 @@ class DimensionedPort(Port, ExpressionSymbol):
     Analog and Property ports).
     """
 
-    defining_attributes = ('_name', '_dimension')
     nineml_attr = ('name',)
     nineml_child = {'dimension': Dimension}
 
@@ -239,7 +237,6 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     """
     nineml_type = 'AnalogReducePort'
     mode = "reduce"
-    defining_attributes = ('_name', '_dimension', '_operator')
     nineml_attr = ('name', 'operator')
     nineml_child = {'dimension': Dimension}
     _operator_map = {'add': '+', '+': '+', }

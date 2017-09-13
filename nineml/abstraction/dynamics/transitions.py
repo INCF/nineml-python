@@ -92,7 +92,6 @@ class OutputEvent(BaseALObject):
     """
 
     nineml_type = 'OutputEvent'
-    defining_attributes = ('port_name',)
     nineml_attr = ('port_name',)
 
     def accept_visitor(self, visitor, **kwargs):
@@ -167,10 +166,8 @@ class OutputEvent(BaseALObject):
 
 class Transition(BaseALObject, ContainerObject):
 
-    defining_attributes = ('_state_assignments', '_output_events',
-                           'target_regime_name')
-    nineml_children = (StateAssignment, OutputEvent)
     nineml_attr = ('target_regime_name',)
+    nineml_children = (StateAssignment, OutputEvent)
 
     def __init__(self, state_assignments=None, output_events=None,
                  target_regime_name=None):
@@ -351,7 +348,6 @@ class Transition(BaseALObject, ContainerObject):
 class OnEvent(Transition):
 
     nineml_type = "OnEvent"
-    defining_attributes = (Transition.defining_attributes + ('src_port_name',))
     nineml_attr = (Transition.nineml_attr + ('src_port_name',))
 
     def accept_visitor(self, visitor, **kwargs):
@@ -527,7 +523,6 @@ class Trigger(BaseALObject, Expression):
 class OnCondition(Transition):
 
     nineml_type = "OnCondition"
-    defining_attributes = (Transition.defining_attributes + ('_trigger',))
     nineml_child = {'trigger': Trigger}
 
     def accept_visitor(self, visitor, **kwargs):

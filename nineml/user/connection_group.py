@@ -16,8 +16,6 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
 
     __metaclass__ = ABCMeta
 
-    defining_attributes = ('_name', '_source', '_destination', '_source_port',
-                           '_destination_port', '_connectivity', '_delay')
     nineml_attr = ('name', 'source_port', 'destination_port')
     nineml_child = {'source': ComponentArray,
                     'destination': ComponentArray,

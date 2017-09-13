@@ -21,8 +21,6 @@ from nineml.visitors import Cloner
 class ConnectionRule(ComponentClass):
 
     nineml_type = 'ConnectionRule'
-    defining_attributes = ('_name', '_parameters', '_standard_library',
-                           '_aliases', '_constants')
     nineml_attr = ComponentClass.nineml_attr + ('standard_library',)
 
     standard_library_basepath = 'http://nineml.net/9ML/1.0/connectionrules/'

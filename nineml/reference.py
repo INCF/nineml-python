@@ -24,7 +24,6 @@ class BaseReference(AnnotatedNineMLObject):
         the target object is assumed to be in the reference document
     """
 
-    defining_attributes = ('url', '_target')
     nineml_child = {'target': None}
 
     def __init__(self, target=None, name=None, url=None, document=None):
@@ -75,22 +74,6 @@ class BaseReference(AnnotatedNineMLObject):
     def key(self):
         return (self._target.key +
                 self.url if self.url is not None else '')
-# 
-#     def equals(self, other, **kwargs):
-#         """
-#         Parameters
-#         ----------
-#         other : BaseReference
-#             The other object to determine equality with
-#         ignore_none_urls : bool
-#             A bit of a hack to ignore urls that are None (i.e. defined inline)
-#             during unittesting.
-#         """
-#         if not isinstance(other, self.__class__):
-#             return False
-#         return (self._target == other._target and
-#                 self.url == other.url and
-#                 self.annotations_equal(other, **kwargs))
 
     def __hash__(self):
         return (hash(self.__class__) ^ hash(self._target.name) ^
@@ -144,12 +127,6 @@ class Reference(BaseReference):
 
     """
     nineml_type = "Reference"
-
-#     def clone(self, **kwargs):  # @UnusedVariable
-#         # Typically won't be called unless Reference is created and referenced
-#         # explicitly as the referenced object themselves is typically referred
-#         # to in the containing container.
-#         return copy(self)
 
 
 import nineml  # @IgnorePep8

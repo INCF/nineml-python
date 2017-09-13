@@ -499,7 +499,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
         # Get the state variable or alias associated with the analog send
         # port
         element = self.component_class.element(
-            port.name, self.visit_as_class.class_to_member)
+            port.name, self.visit_as_class.nineml_children)
         try:
             if element.dimension != port.dimension:
         """

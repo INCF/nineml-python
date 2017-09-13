@@ -21,7 +21,6 @@ class Parameter(BaseALObject):
     """
 
     nineml_type = 'Parameter'
-    defining_attributes = ('_name', '_dimension')
     nineml_attr = ('name',)
     nineml_child = {'dimension': Dimension}
 

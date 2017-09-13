@@ -61,11 +61,9 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
             plasticity dynamics
     """
     nineml_type = "Projection"
-    defining_attributes = ('_name', '_pre', '_post', '_connectivity',
-                           '_response', '_plasticity', '_delay',
-                           '_analog_port_connections',
-                           '_event_port_connections')
     nineml_attr = ('name',)
+    # The child attributes that hold dynamics must be None because they can
+    # either be Dynamics or MultiDynamics classes.
     nineml_child = {'pre': None,
                     'post': None,
                     'connectivity': None,
@@ -73,6 +71,7 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
                     'plasticity': None,
                     'delay': Quantity}
     nineml_children = (AnalogPortConnection, EventPortConnection)
+
     _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
     def __init__(self, name, pre, post, response, delay, connectivity=None,

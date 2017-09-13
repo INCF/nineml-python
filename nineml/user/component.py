@@ -52,7 +52,6 @@ class Property(BaseULObject):
     numbers, e.g. a RandomDistribution instance.
     """
     nineml_type = "Property"
-    defining_attributes = ('_name', '_quantity')
     nineml_attr = ('name',)
     nineml_child = {'quantity': Quantity}
 
@@ -155,7 +154,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     """
     __metaclass__ = ABCMeta  # Abstract base class
     nineml_type_v1 = 'Component'
-    defining_attributes = ('_name', '_definition', '_properties')
     nineml_attr = ('name',)
     nineml_children = (Property,)
     nineml_child = {'definition': None}

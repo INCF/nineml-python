@@ -28,7 +28,6 @@ class StateVariable(BaseALObject):
     """
 
     nineml_type = 'StateVariable'
-    defining_attributes = ('_name', '_dimension')
     nineml_attr = ('name',)
     nineml_child = {'dimension': Dimension}
 
@@ -194,8 +193,6 @@ class Regime(BaseALObject, ContainerObject):
     """
 
     nineml_type = 'Regime'
-    defining_attributes = ('_time_derivatives', '_on_events', '_on_conditions',
-                           '_name', '_aliases')
     nineml_attr = ('name',)
     nineml_children = (TimeDerivative, OnEvent, OnCondition, Alias)
 

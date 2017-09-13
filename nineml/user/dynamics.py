@@ -37,8 +37,6 @@ class DynamicsProperties(Component, DynamicPortsObject):
         for the component_class's state variables.
     """
     nineml_type = 'DynamicsProperties'
-    defining_attributes = ('_name', '_definition', '_properties',
-                           '_initial_values', 'initial_regime')
     nineml_children = Component.nineml_children + (Initial,)
 
     def __init__(self, name, definition, properties={}, initial_values={},

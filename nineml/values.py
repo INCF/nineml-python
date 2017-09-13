@@ -97,7 +97,6 @@ class SingleValue(BaseValue):
     numbers, e.g. a RandomDistribution instance.
     """
     nineml_type = "SingleValue"
-    defining_attributes = ("_value",)
     nineml_attr = ('value',)
 
     def __init__(self, value):
@@ -118,16 +117,6 @@ class SingleValue(BaseValue):
     def __iter__(self):
         """Infinitely iterate the same value"""
         return itertools.repeat(self._value)
-# 
-#     def equals(self, other, **kwargs):
-#         try:
-#             if self.nineml_type != other.nineml_type:
-#                 return False
-#         except AttributeError:
-#             return False
-#         if not nearly_equal(self._value, other._value):
-#             return False
-#         return self.annotations_equal(other, **kwargs)
 
     def __len__(self):
         return 0
@@ -254,8 +243,8 @@ class SingleValue(BaseValue):
 class ArrayValue(BaseValue):
 
     nineml_type = "ArrayValue"
-    defining_attributes = ("_values",)
     nineml_attr = ('values',)
+
     DataFile = collections.namedtuple('DataFile', 'url mimetype, columnName')
 
     def __init__(self, values, datafile=None):
@@ -535,7 +524,6 @@ class ArrayValue(BaseValue):
 class RandomDistributionValue(BaseValue):
 
     nineml_type = "RandomDistributionValue"
-    defining_attributes = ("_distribution",)
     nineml_child = {'distribution': None}
 
     def __init__(self, distribution):

@@ -15,7 +15,6 @@ from nineml.utils import ensure_valid_identifier
 
 class BasePortExposure(BaseULObject):
 
-    defining_attributes = ('_name', '_port_name', '_sub_component_name')
     nineml_attr = ('name', 'port_name', 'sub_component_name')
     nineml_child = {}
 

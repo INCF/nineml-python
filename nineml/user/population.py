@@ -22,7 +22,6 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
         parameterisation).
     """
     nineml_type = "Population"
-    defining_attributes = ('_name', '_size', '_cell')
     nineml_attr = ('name', 'size')
     nineml_child = {'cell': None}
 

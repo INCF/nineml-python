@@ -112,11 +112,6 @@ class _NamespaceObject(BaseNineMLObject):
         """
         return (hash(self.sub_component) ^ hash(self._object) ^
                 hash(self._parent))
-# 
-#     def equals(self, other, annotations_ns=[]):
-#         return BaseNineMLObject.equals(
-#             self, other, annotations_ns=annotations_ns,
-#             defining_attributes=self._object.defining_attributes)
 
     @property
     def sub_component(self):

@@ -24,14 +24,9 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     """Base class for ComponentClasses in different 9ML modules."""
 
     __metaclass__ = ABCMeta  # Abstract base class
-
-    defining_attributes = ('_name', '_parameters', '_aliases', '_constants')
-    class_to_member = {'Parameter': 'parameter', 'Alias': 'alias',
-                       'Constant': 'constant'}
     nineml_type_v1 = 'ComponentClass'
-    # New NineML types
-    nineml_children = (Parameter, Alias, Constant)
     nineml_attr = ('name',)
+    nineml_children = (Parameter, Alias, Constant)
 
     def __init__(self, name, parameters=None, aliases=None, constants=None):
         ensure_valid_identifier(name)

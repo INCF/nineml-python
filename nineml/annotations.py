@@ -28,6 +28,10 @@ class BaseAnnotations(ContainerObject):
 
     @classproperty
     def nineml_children(self):
+        """
+        This needs to be a classproperty rather than a class attribute to
+        avoid a circular definition of BaseAnnotations
+        """
         return (_AnnotationsBranch,)
 
     def __init__(self, branches=None):
@@ -84,14 +88,6 @@ class BaseAnnotations(ContainerObject):
         Returns true if there are no annotation branches.
         """
         return not self._branches
-# 
-#     def equals(self, other, **kwargs):  # @UnusedVariable
-#         try:
-#             if self.nineml_type != other.nineml_type:
-#                 return False
-#         except AttributeError:
-#             return False
-#         return self._branches == other._branches
 
     def __iter__(self):
         return self._branches.iterkeys()
@@ -332,7 +328,6 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
     """
 
     nineml_type = 'Annotations'
-    defining_attributes = ('_branches',)
 
     def __init__(self, branches=None):
         BaseAnnotations.__init__(self, branches=branches)
@@ -412,7 +407,6 @@ class _AnnotationsBranch(BaseAnnotations):
     """
 
     nineml_type = '_AnnotationsBranch'
-    defining_attributes = ('_branches', '_attr', '_name', '_ns', '_body')
     nineml_attr = ('attr', 'name', 'ns', 'abs_index', 'rel_index', 'body')
 
     def __init__(self, name, ns, rel_index=None, abs_index=None, attr=None,

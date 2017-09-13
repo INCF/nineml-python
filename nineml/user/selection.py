@@ -41,7 +41,6 @@ def combined_ports_property(population_property):
 class Item(BaseULObject):
 
     nineml_type = 'Item'
-    defining_attributes = ('_index', '_population')
     nineml_attr = ('index',)
     nineml_child = {'population': None}
 
@@ -84,7 +83,6 @@ class Concatenate(BaseULObject, ContainerObject):
     """
 
     nineml_type = 'Concatenate'
-    defining_attributes = ('_items',)
     nineml_children = (Item,)
 
     def __init__(self, items, **kwargs):
@@ -162,7 +160,6 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
             selection. Only :class:`Concatenate` is currently supported.
     """
     nineml_type = "Selection"
-    defining_attributes = ('_name', '_operation')
     nineml_attr = ('name',)
     nineml_child = {'operation': Concatenate}
 
@@ -289,7 +286,8 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
 #     Network.
 #     """
 #     nineml_type = "Selection"
-#     defining_attributes = ("_name", "_condition")
+#     nineml_attr = ("name",)
+#     nineml_child = {"condition": None}
 #
 #     def __init__(self, name, condition):
 #         """
@@ -382,8 +380,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
 #
 # class Operator(BaseULObject):
 #     super(Property, self).__init__()
-#     defining_attributes = ("_operands",)
-#     children = ("operands",)
+#     nineml_children = (Operand,)
 #
 #     def __init__(self, *operands):
 #         self.operands = operands

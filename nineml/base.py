@@ -485,8 +485,8 @@ class ContainerObject(BaseNineMLObject):
     An abstract base class for handling the manipulation of member objects
     (which are stored in dictionaries that can be detected by member type).
 
-    Deriving classes are expected to have the 'class_to_member' class
-    attribute
+    Deriving classes are expected to have the 'nineml_children' class
+    attribute listing the classes of the children in the container.
     """
 
     def __init__(self):
@@ -660,13 +660,6 @@ class ContainerObject(BaseNineMLObject):
         raise NineMLRuntimeError(
             "Could not find index {} for '{}'".format(
                 index, (child_type if key is None else key)))
-
-    # =========================================================================
-    # Each member nineml_type is associated with a member accessor by the
-    # class attribute 'class_to_member' dictionary. From this name accessors
-    # for the set of members of this type, and their names and length, can be
-    # derrived from the stereotypical naming structure used
-    # =========================================================================
 
     def _get_indices_dict(self, key, child_type):
         if key is None:

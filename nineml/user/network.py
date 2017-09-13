@@ -32,11 +32,6 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         An iterable containing the selections contained in the network.
     """
     nineml_type = "Network"
-    defining_attributes = ('_name', "_populations", "_projections",
-                           "_selections")
-    class_to_member = {'Population': 'population',
-                       'Projection': 'projection',
-                       'Selection': 'selection'}
     nineml_children = (Population, Projection, Selection)
     nineml_attr = ('name',)
 
