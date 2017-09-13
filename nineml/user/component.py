@@ -195,7 +195,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                              "'Prototype' element or url pointing to a "
                              "dynamics class")
         self._definition = definition
-        self._properties = {}
         if isinstance(properties, dict):
             properties = (Property(name, qty)
                           for name, qty in properties.iteritems())

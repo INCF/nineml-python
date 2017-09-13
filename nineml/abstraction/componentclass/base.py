@@ -35,10 +35,6 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
         DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
 
-        self._parameters = {}
-        self._aliases = {}
-        self._constants = {}
-
         # Turn any strings in the parameter list into Parameters:
         if parameters is None:
             parameters = []

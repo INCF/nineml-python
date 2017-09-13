@@ -108,8 +108,6 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
             self._connectivity = connectivity_class(
                 connection_rule_properties, pre.size, post.size, **kwargs)
         self._delay = delay
-        self._analog_port_connections = {}
-        self._event_port_connections = {}
         if port_connections is None:
             port_connections = []
         if analog_port_connections is None:

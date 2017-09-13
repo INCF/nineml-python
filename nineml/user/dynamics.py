@@ -47,7 +47,6 @@ class DynamicsProperties(Component, DynamicPortsObject):
         if isinstance(initial_values, dict):
             initial_values = (Initial(name, qty)
                               for name, qty in initial_values.iteritems())
-        self._initial_values = {}
         self.add(*initial_values)
         if check_initial_values:
             self.check_initial_values()

@@ -288,13 +288,6 @@ class MultiDynamics(Dynamics):
                 for name, dyn in sub_components.iteritems())
         else:
             self._sub_components = dict((d.name, d) for d in sub_components)
-        self._analog_send_port_exposures = {}
-        self._analog_receive_port_exposures = {}
-        self._analog_reduce_port_exposures = {}
-        self._event_send_port_exposures = {}
-        self._event_receive_port_exposures = {}
-        self._analog_port_connections = {}
-        self._event_port_connections = {}
         # =====================================================================
         # Save port exposurs into separate member dictionaries
         # =====================================================================
@@ -1148,7 +1141,6 @@ class MultiDynamicsProperties(DynamicsProperties):
             sub_components = [
                 SubDynamicsProperties(n, p)
                 for n, p in sub_components.iteritems()]
-        self._sub_components = {}
         self.add(*sub_components)
         if definition is None:
             # This is just until the user layer is split into structure and

@@ -490,6 +490,7 @@ class ContainerObject(BaseNineMLObject):
     """
 
     def __init__(self):
+        self._indices = defaultdict(dict)
         for children_type in self.nineml_children:
             setattr(self, children_type._children_dict_name(),
                     OrderedDict())

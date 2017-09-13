@@ -203,10 +203,8 @@ class Transition(BaseALObject, ContainerObject):
         sa_type_dict = filter_discrete_types(state_assignments, sa_types)
         sa_from_str = [StateAssignment.from_str(o)
                        for o in sa_type_dict[basestring]]
-        self._state_assignments = {}
-        self.add(*(sa_type_dict[StateAssignment] + sa_from_str))
 
-        self._output_events = {}
+        self.add(*(sa_type_dict[StateAssignment] + sa_from_str))
         self.add(*normalise_parameter_as_list(output_events))
 
         self._target_regime_name = target_regime_name

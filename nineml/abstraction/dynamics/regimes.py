@@ -228,11 +228,6 @@ class Regime(BaseALObject, ContainerObject):
             self._name = name.strip()
             ensure_valid_identifier(self._name)
 
-        self._time_derivatives = {}
-        self._on_events = {}
-        self._on_conditions = {}
-        self._aliases = {}
-
         # Get Time derivatives from args or kwargs
         kw_tds = normalise_parameter_as_list(
             kwargs.get('time_derivatives', None))

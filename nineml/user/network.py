@@ -44,9 +44,6 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
-        self._populations = {}
-        self._projections = {}
-        self._selections = {}
         self.add(*populations)
         self.add(*projections)
         self.add(*selections)
