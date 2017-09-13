@@ -53,6 +53,8 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
         self.add(*aliases)
         self.add(*constants)
 
+        self._dimension_resolver = None
+
     @property
     def name(self):
         """Returns the name of the component"""

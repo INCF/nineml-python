@@ -44,25 +44,12 @@ class TestCloners(unittest.TestCase):
                 if hasattr(clone, 'validate'):
                     clone.validate()
                 self.assertNotEqual(id(clone), id(obj))
-                obj_keys = set(obj.__dict__.keys())
-                clone_keys = set(clone.__dict__.keys())
-                self.assertEqual(
-                    obj_keys, clone_keys,
-                    "Not all attributes were copied to clone ({}) of {}"
-                    .format("', '".join(obj_keys - clone_keys), obj))
-                try:
-                    self.assertEqual(obj, clone,
-                                     "Clone of {} does not match original:\n{}"
-                                     .format(obj, obj.find_mismatch(clone)))
-                except:
-                    obj.find_mismatch(clone)
-                try:
-                    self.assertNotEqual(obj, prev_obj,
-                                        "{} matches previous obj {} incorrectly"
-                                        .format(obj, prev_obj))
-                except:
-                    obj.equals(prev_obj)
-                    raise
+                self.assertEqual(obj, clone,
+                                 "Clone of {} does not match original:\n{}"
+                                 .format(obj, obj.find_mismatch(clone)))
+                self.assertNotEqual(obj, prev_obj,
+                                    "{} matches previous obj {} incorrectly"
+                                    .format(obj, prev_obj))
                 prev_obj = obj
 
 

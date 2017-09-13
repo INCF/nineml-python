@@ -55,12 +55,9 @@ class ConnectionRule(ComponentClass):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
     def dimension_of(self, element):
-        try:
-            resolver = self._dimension_resolver
-        except AttributeError:  # If dimension resolver hasn't been set
-            resolver = ConnectionRuleDimensionResolver(self)
-            self._dimension_resolver = resolver
-        return resolver.dimension_of(element)
+        if self._dimension_resolver is None:
+            self._dimension_resolver = ConnectionRuleDimensionResolver(self)
+        return self._dimension_resolver.dimension_of(element)
 
     def validate(self, **kwargs):
         ConnectionRuleValidator.validate_componentclass(self, **kwargs)

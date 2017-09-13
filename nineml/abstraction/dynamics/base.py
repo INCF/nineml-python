@@ -209,12 +209,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return flattened
 
     def dimension_of(self, element):
-        try:
-            resolver = self._dimension_resolver
-        except AttributeError:
-            resolver = DynamicsDimensionResolver(self)
-            self._dimension_resolver = resolver
-        return resolver.dimension_of(element)
+        if self._dimension_resolver is None:
+            self._dimension_resolver = DynamicsDimensionResolver(self)
+        return self._dimension_resolver.dimension_of(element)
 
     def substitute_aliases(self):
         """

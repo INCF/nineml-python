@@ -42,12 +42,10 @@ class RandomDistribution(ComponentClass):
         return RandomDistributionRequiredDefinitions(self, expressions)
 
     def dimension_of(self, element):
-        try:
-            resolver = self._dimension_resolver
-        except AttributeError:
-            resolver = RandomDistributionDimensionResolver(self)
-            self._dimension_resolver = resolver
-        return resolver.dimension_of(element)
+        if self._dimension_resolver is None:
+            self._dimension_resolver = RandomDistributionDimensionResolver(
+                self)
+        return self._dimension_resolver.dimension_of(element)
 
     def validate(self, **kwargs):
         RandomDistributionValidator.validate_componentclass(self, **kwargs)
