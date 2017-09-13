@@ -1,8 +1,8 @@
-from itertools import chain, izip
+from itertools import chain
 import re
 # from copy import copy
 import operator
-from collections import defaultdict, Iterator, Iterable
+from collections import defaultdict, Iterator, Iterable, OrderedDict
 import sympy
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException,
@@ -490,7 +490,10 @@ class ContainerObject(BaseNineMLObject):
     """
 
     def __init__(self):
-        self._indices = defaultdict(dict)
+        for children_type in self.nineml_children:
+            setattr(self, children_type._children_dict_name(),
+                    OrderedDict())
+
         self._parent = None  # Used to link up the the containing document
 
     def add(self, *elements):
