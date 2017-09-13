@@ -14,7 +14,7 @@ from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.values import SingleValue
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLRuntimeError, name_error
 
 
 V1_DELAY_VALUE_TYPES = ('SingleValue', 'ArrayValue', 'ExternalArrayValue',
@@ -163,9 +163,11 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
     def delay(self):
         return self._delay
 
+    @name_error
     def analog_port_connection(self, name):
         return self._analog_port_connections[name]
 
+    @name_error
     def event_port_connection(self, name):
         return self._event_port_connections[name]
 

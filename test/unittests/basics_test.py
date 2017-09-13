@@ -47,7 +47,7 @@ class TestAccessors(unittest.TestCase):
         the right type
         """
         for name, cls in all_types.iteritems():
-            if hasattr(cls, 'nineml_children'):
+            if cls.nineml_children:
                 for elem in instances_of_all_types[name].values():
                     for child_type in cls.nineml_children:
                         num = elem._num_members(child_type)
@@ -77,11 +77,6 @@ class TestAccessors(unittest.TestCase):
                                 len(names)))
                         # Check all names are strings and don't contain
                         # duplicates
-                        self.assertTrue(
-                            all(isinstance(n, basestring) for n in names),
-                            "Not all names of {} in '{} {} were strings "
-                            "({})".format(child_type.nineml_type, elem.key,
-                                          name, names))
                         self.assertEqual(
                             len(names), len(set(names)),
                             "Duplicate names found in {} members of '{}' {} "
@@ -105,9 +100,13 @@ class TestAccessors(unittest.TestCase):
                     total_num = elem.num_elements()
                     all_keys = list(elem.element_keys())
                     all_members = sorted(elem.elements())
-                    all_accessor_members = sorted(
-                        elem.element(n, include_send_ports=True)
-                        for n in all_keys)
+                    try:
+                        all_accessor_members = sorted(
+                            elem.element(n, include_send_ports=True)
+                            for n in all_keys)
+                    except:
+                        elem.element(all_keys[0], include_send_ports=True)
+                        raise
                     self.assertIsInstance(
                         total_num, int,
                         ("num_elements did not return an integer ({})"
@@ -119,10 +118,6 @@ class TestAccessors(unittest.TestCase):
                             total_num, len(all_members)))
                     # Check all all_keys are strings and don't contain
                     # duplicates
-                    self.assertTrue(
-                        all(isinstance(n, basestring) for n in all_keys),
-                        "Not all element names in '{} {} were strings "
-                        "('{}')".format(elem.key, name, all_keys))
                     self.assertEqual(
                         len(all_keys), len(set(all_keys)),
                         "Duplicate element names found in '{}' {} "

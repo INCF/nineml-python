@@ -33,10 +33,10 @@ corresponding NineML type in the `NineML specification`_. If the name differs
 between v1 and v2 of the specification the ``v1_nineml_type`` should also be
 defined to hold the corresponding type in the v1 syntax.
 
-``defining_attributes``
-^^^^^^^^^^^^^^^^^^^^^^^
+``nineml_attr``
+^^^^^^^^^^^^^^^
 
-``defining_attributes`` is a tuple of strings, listing the attributes of
+``nineml_attr`` is a tuple of strings, listing the attributes of
 the given NineML-type class that contain data (both attributes and child
 objects) that are part of the `NineML specification`_. 
 
