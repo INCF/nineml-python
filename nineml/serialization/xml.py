@@ -31,7 +31,8 @@ class XMLSerializer(BaseSerializer):
     supports_bodies = True
 
     def __init__(self, version=DEFAULT_VERSION, document=None, **kwargs):  # @UnusedVariable @IgnorePep8
-        super(XMLSerializer, self).__init__(version=version, document=document)
+        super(XMLSerializer, self).__init__(version=version, document=document,
+                                            **kwargs)
 
     def create_elem(self, name, parent, namespace=None, **options):  # @UnusedVariable @IgnorePep8
         elem = self.E(namespace)(name)

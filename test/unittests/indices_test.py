@@ -55,7 +55,7 @@ class TestPreserveIndices(unittest.TestCase):
         for ext in ext_to_format:
             fname = mkstemp(suffix=ext)[1]
             try:
-                self.d.write(fname)
+                self.d.write(fname, register=False, preserve_order=True)
             except NineMLSerializerNotImportedError:
                 continue
             reread_d = nineml.read(fname + '#d')
