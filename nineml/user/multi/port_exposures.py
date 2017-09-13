@@ -163,6 +163,8 @@ class _BaseAnalogPortExposure(BasePortExposure):
 
 class _PortExposureAlias(Alias):
 
+    temporary = True
+
     def __init__(self, exposure):
         self._exposure = exposure
 
@@ -247,6 +249,8 @@ class EventReceivePortExposure(BasePortExposure, EventReceivePort):
 
 class _LocalAnalogPortConnections(Alias):
 
+    temporary = True
+
     def __init__(self, receive_port, receiver, port_connections, parent):
         BaseNineMLObject.__init__(self)
         self._receive_port_name = receive_port
@@ -294,6 +298,3 @@ class _LocalAnalogPortConnections(Alias):
         raise NineMLImmutableError(
             "Cannot rename LHS of Alias '{}' because it is a local "
             "AnalogPortConnection".format(self.lhs))
-
-
-import nineml.user.multi.dynamics  # @IgnorePep8

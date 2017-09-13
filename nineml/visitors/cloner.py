@@ -1,6 +1,5 @@
 from .base import BaseVisitor
 from copy import copy
-import nineml
 from nineml.exceptions import (
     NineMLNotBoundException, NineMLInvalidElementTypeException,
     NineMLRuntimeError)
