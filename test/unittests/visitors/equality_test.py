@@ -45,10 +45,10 @@ class TestFindMismatch(unittest.TestCase):
                          self._strip(h_mismatch),
                          '\nGenerated\n---\n{}\n\nReference\n---\n{}'
                          .format(finder.find(ref, H), h_mismatch))
-        self.assertEqual(self._strip(finder.find(ref, I)),
+        self.assertEqual(self._strip(ref.find_mismatch(I)),
                          self._strip(i_mismatch),
                          '\nGenerated\n---\n{}\n\nReference\n---\n{}'
-                         .format(finder.find(ref, I), i_mismatch))
+                         .format(ref.find_mismatch(I), i_mismatch))
 
     @classmethod
     def _strip(cls, string):
