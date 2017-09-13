@@ -441,10 +441,8 @@ class ContainerObject(BaseNineMLObject):
     """
 
     def __init__(self):
-        self._indices = defaultdict(dict)
         for children_type in self.nineml_children:
-            setattr(self, children_type._children_dict_name(),
-                    OrderedDict())
+            setattr(self, children_type._children_dict_name(), OrderedDict())
 
         self._parent = None  # Used to link up the the containing document
 
@@ -574,79 +572,77 @@ class ContainerObject(BaseNineMLObject):
         raise TypeError("{} containers are not iterable"
                          .format(type(self).__name__))
 
-    def index_of(self, element, key=None):
+    def index_of(self, element):
         """
-        Returns the index of an element amongst others of its type. The indices
-        are generated on demand but then remembered to allow them to be
-        referred to again. The `key` argument can be provided to manually
-        override the types with which the element is grouped, which allows the
-        indexing of elements within supersets of various types.
+        Returns the index of an element amongst others of its type.
 
         This function can be useful during code-generation from 9ML, where the
         name of an element can be replaced with a unique integer value (and
         referenced elsewhere in the code).
         """
+        return list(self._member_keys_iter(element)).index(element.key)
 
-        dct = self._get_indices_dict(key, type(element))
-        try:
-            index = dct[element]
-        except KeyError:
-            # Get the first index ascending from 0 not in the set
-            try:
-                index = next(iter(sorted(
-                    set(xrange(len(dct))).difference(dct.itervalues()))))
-            except StopIteration:
-                index = len(dct)
-            dct[element] = index
-        return index
-
-    def from_index(self, index, child_type, key=None):
+    def from_index(self, index, child_type):
         """
         The inverse of the index_of method for retrieving an object from its
         index
         """
-        try:
-            dct = self._get_indices_dict(key, child_type)
-            for elem, i in dct.iteritems():
-                if i == index:
-                    return elem
-        except KeyError:
-            pass
-        raise NineMLRuntimeError(
-            "Could not find index {} for '{}'".format(
-                index, (child_type if key is None else key)))
-
-    def _get_indices_dict(self, key, child_type):
-        if key is None:
-            if child_type not in self.nineml_children:
-                raise NineMLInvalidElementTypeException(
-                    "{} is not a valid child type for container {} (valid "
-                    " types are {}). Please use explicit key"
-                    .format(child_type.__name__, self,
-                            ", ".join(t.__name__
-                                      for t in self.nineml_children)))
-            key = child_type._child_accessor_name()
-        return self._indices[key]
-
-    def all_indices(self):
-        for key, dct in self._indices.iteritems():
-            for elem, index in dct.iteritems():
-                yield key, elem, index
+        return list(self._members_iter(child_type))[index]
 
     def _member_accessor(self, child_type):
-        return getattr(self, child_type._child_accessor_name())
+        try:
+            return getattr(self, child_type._child_accessor_name())
+        except AttributeError:
+            if child_type not in self.nineml_children:
+                raise NineMLInvalidElementTypeException(
+                    "{} does not have children of type {}"
+                    .format(self, child_type))
+            else:
+                raise
 
     def _members_iter(self, child_type):
-        return getattr(self, child_type._children_iter_name())
+        try:
+            return getattr(self, child_type._children_iter_name())
+        except AttributeError:
+            if child_type not in self.nineml_children:
+                raise NineMLInvalidElementTypeException(
+                    "{} does not have children of type {}"
+                    .format(self, child_type))
+            else:
+                raise
 
     def _member_keys_iter(self, child_type):
-        return getattr(self, child_type._children_keys_name())
+        try:
+            return getattr(self, child_type._children_keys_name())
+        except AttributeError:
+            if child_type not in self.nineml_children:
+                raise NineMLInvalidElementTypeException(
+                    "{} does not have children of type {}"
+                    .format(self, child_type))
+            else:
+                raise
 
     def _num_members(self, child_type):
-        return getattr(self, child_type._num_children_name())
+        try:
+            return getattr(self, child_type._num_children_name())
+        except AttributeError:
+            if child_type not in self.nineml_children:
+                raise NineMLInvalidElementTypeException(
+                    "{} does not have children of type {}"
+                    .format(self, child_type))
+            else:
+                raise
 
     def _member_dict(self, child_type):
-        return getattr(self, child_type._children_dict_name())
+        try:
+            return getattr(self, child_type._children_dict_name())
+        except AttributeError:
+            if child_type not in self.nineml_children:
+                raise NineMLInvalidElementTypeException(
+                    "{} does not have children of type {}"
+                    .format(self, child_type))
+            else:
+                raise
 
     @property
     def parent(self):

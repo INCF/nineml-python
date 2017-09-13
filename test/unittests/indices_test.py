@@ -58,7 +58,7 @@ class TestPreserveIndices(unittest.TestCase):
                 self.d.write(fname)
             except NineMLSerializerNotImportedError:
                 continue
-            reread_d = nineml.read(fname)['d']
+            reread_d = nineml.read(fname + '#d')
             self._test_indices(reread_d)
 
     def _test_indices(self, dyn):

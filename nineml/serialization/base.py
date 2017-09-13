@@ -202,21 +202,6 @@ class BaseSerializer(BaseVisitor):
                                     not options.get('no_annotations', False))
             except AttributeError:
                 save_annotations = False
-#             save_indices = (isinstance(nineml_object, ContainerObject) and
-#                             options.get('save_indices', False))
-#             if save_annotations:
-#                 # Make a clone of the annotations and add save_indices
-#                 annotations = nineml_object.annotations.clone()
-#             else:
-#                 annotations = Annotations()
-#             if save_indices:
-#                 # Copy all indices to annotations
-#                 for key, elem, index in nineml_object.all_indices():
-#                     index_annot = annotations.add((INDEX_TAG, PY9ML_NS))
-#                     index_annot.set(INDEX_KEY_ATTR, key)
-#                     index_annot.set(INDEX_NAME_ATTR, elem.key)
-#                     index_annot.set(INDEX_INDEX_ATTR, index)
-#                 save_annotations = True
             if save_annotations:
                 self.visit(nineml_object.annotations, parent=serial_elem,
                            **options)
@@ -566,8 +551,6 @@ class BaseUnserializer(BaseVisitor):
             raise NineMLSerializationError(
                 "The body of {} node ({}) has not been processed".format(
                     nineml_object, node.unprocessed_body))
-        # Set saved indices
-        self._set_saved_indices(nineml_object, annotations)
         # Add annotations to nineml object
         nineml_object._annotations = annotations
         return nineml_object
@@ -857,19 +840,6 @@ class BaseUnserializer(BaseVisitor):
         """
         options['validate_dims'] = annotations.get(
             (VALIDATION, PY9ML_NS), DIMENSIONALITY, default='True') == 'True'
-
-    def _set_saved_indices(self, nineml_object, annotations):
-        """
-        Extract saved indices from annotations and save them in container
-        object.
-        """
-        if (INDEX_TAG, PY9ML_NS) in annotations:
-            for ind in annotations.pop((INDEX_TAG, PY9ML_NS)):
-                key = ind.get(INDEX_KEY_ATTR)
-                name = ind.get(INDEX_NAME_ATTR)
-                index = ind.get(INDEX_INDEX_ATTR)
-                nineml_object._indices[
-                    key][getattr(nineml_object, key)(name)] = int(index)
 
     def _get_v1_component_class_type(self, elem):
         """

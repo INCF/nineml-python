@@ -54,7 +54,6 @@ class Cloner(BaseVisitor):
             results = super(Cloner, self).visit(obj, nineml_cls=nineml_cls,
                                                 **kwargs)
             clone = results.post_action
-            self.copy_index(obj, clone)
             if (hasattr(obj, 'annotations') and not self.exclude_annotations):
                 clone._annotations = self.visit(obj.annotations,
                                                 **kwargs).post_action

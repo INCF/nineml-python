@@ -118,7 +118,5 @@ class MemberContainer_test(unittest.TestCase):
                          r1.index_of(r1.time_derivative('SV2')))
         sa = (self.b.regime('R2').on_condition('SV3 < 0.001')
               .state_assignment('SV3'))
-        self.assertEqual(self.b.index_of(sa, key='StateAssignments'),
-                         self.b.index_of(sa, key='StateAssignments'))
         self.assertRaises(NineMLInvalidElementTypeException,
                           self.b.index_of, sa)
