@@ -46,23 +46,22 @@ class BaseVisitor2(object):
         # Add the container object to the list of scopes
         for child_name, child_type in nineml_cls.nineml_child.iteritems():
             self.visit_child(child_name, child_type, obj,
-                             parent_cls=nineml_cls,
-                             parent_result=result, **kwargs)
+                             nineml_cls, result, **kwargs)
         # Visit children of the object
         for children_type in nineml_cls.nineml_children:
-            self.visit_children(children_type, obj,
-                                parent_cls=nineml_cls,
-                                parent_result=result,
+            self.visit_children(children_type, obj, nineml_cls, result,
                                 **kwargs)
         return result
 
-    def visit_child(self, child_name, child_type, parent, **kwargs):
+    def visit_child(self, child_name, child_type, parent, parent_cls=None,  # @UnusedVariable @IgnorePep8
+                    parent_result=None, **kwargs):  # @UnusedVariable
         child = getattr(parent, child_name)
         if child is None:
             return None  # e.g. Projection.plasticity
         return self.visit(child, nineml_cls=child_type, **kwargs)
 
-    def visit_children(self, children_type, parent, **kwargs):
+    def visit_children(self, children_type, parent, parent_cls=None,  # @UnusedVariable @IgnorePep8
+                       parent_result=None, **kwargs):  # @UnusedVariable
         results = []
         for child in parent._members_iter(children_type):
             results.append(self.visit(child, nineml_cls=children_type,
@@ -202,16 +201,18 @@ class BaseDualVisitor2(BaseVisitor2):
                 self._raise_type_exception(obj1, obj2)
         return nineml_cls
 
-    def visit_child(self, child_name, child_type, parent1, parent2, **kwargs):
+    def visit_child(self, child_name, child_type, parent1, parent2,
+                    parent_cls=None, parent_result=None, **kwargs):  # @UnusedVariable @IgnorePep8
         child1 = getattr(parent1, child_name)
         child2 = getattr(parent2, child_name)
         if child1 is None and child2 is None:
             return None  # Both children are None so return
         elif child1 is None or child1 is None:
-            self._raise_none_child_exception(self, child1, child2, child_name)
+            self._raise_none_child_exception(self, child_name, child1, child2)
         return self.visit(child1, child2, nineml_cls=child_type, **kwargs)
 
-    def visit_children(self, children_type, parent1, parent2, **kwargs):
+    def visit_children(self, children_type, parent1, parent2,
+                       parent_cls=None, parent_result=None, **kwargs):  # @UnusedVariable @IgnorePep8
         results = []
         keys1 = set(parent1._member_keys_iter(children_type))
         keys2 = set(parent2._member_keys_iter(children_type))
@@ -243,7 +244,7 @@ class BaseDualVisitor2(BaseVisitor2):
     def _raise_type_exception(self, obj1, obj2):
         raise NineMLDualVisitException()
 
-    def _raise_none_child_exception(self, child1, child2, child_name):
+    def _raise_none_child_exception(self, child_name, child1, child2):
         raise NineMLDualVisitException()
 
     def _raise_keys_mismatch_exception(self, children_type, obj1, obj2):
@@ -281,11 +282,13 @@ class DualWithContextMixin(object):
     def visit_child(self, child_name, child_type, parent1, parent2,
                     parent_cls, parent_result, **kwargs):
         # Create the context around the visit of the attribute
-        context1 = self.Context(parent1, parent_cls, parent_result, child_name)
-        context2 = self.Context(parent2, parent_cls, parent_result, child_name)
+        context1 = Context(parent1, parent_cls, parent_result, child_name,
+                           None)
+        context2 = Context(parent2, parent_cls, parent_result, child_name,
+                           None)
         self.contexts1.append(context1)
         self.contexts2.append(context2)
-        result = BaseDualVisitor.visit_child(
+        result = BaseDualVisitor2.visit_child(
             self, child_name, child_type, parent1, parent2,
             parent_cls=parent_cls, parent_result=parent_result, **kwargs)
         popped1 = self.contexts1.pop()
@@ -304,11 +307,11 @@ class DualWithContextMixin(object):
             dct2 = parent2._member_dict(children_type)
         except (NineMLInvalidElementTypeException, AttributeError):
             dct2 = None  # If children_type is a base class of the obj
-        context1 = self.Context(parent1, parent_cls, parent_result, dct=dct1)
-        context2 = self.Context(parent2, parent_cls, parent_result, dct=dct2)
+        context1 = Context(parent1, parent_cls, parent_result, None, dct1)
+        context2 = Context(parent2, parent_cls, parent_result, None, dct2)
         self.contexts1.append(context1)
         self.contexts2.append(context2)
-        results = BaseDualVisitor.visit_children(
+        results = BaseDualVisitor2.visit_children(
             self, children_type, parent1, parent2, parent_cls, parent_result,
             **kwargs)
         popped1 = self.contexts1.pop()

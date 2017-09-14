@@ -1,15 +1,18 @@
 import sympy
 from itertools import izip, chain
-from .base import BaseDualVisitor
+from .base import BaseDualVisitor2, DualWithContextMixin
 from nineml.exceptions import (NineMLDualVisitException,
                                NineMLDualVisitValueException,
+                               NineMLDualVisitTypeException,
+                               NineMLDualVisitKeysMismatchException,
+                               NineMLDualVisitNoneChildException,
                                NineMLNotBoundException,
                                NineMLDualVisitAnnotationsMismatchException,
                                NineMLNameError)
 from nineml.utils import nearly_equal
 
 
-class EqualityChecker(BaseDualVisitor):
+class EqualityChecker(BaseDualVisitor2):
 
     def __init__(self, annotations_ns=[], **kwargs):  # @UnusedVariable
         super(EqualityChecker, self).__init__()
@@ -36,15 +39,13 @@ class EqualityChecker(BaseDualVisitor):
                         try:
                             annot1 = obj1.annotations.branch(key)
                         except NineMLNameError:
-                            raise NineMLDualVisitAnnotationsMismatchException(
-                                nineml_cls, obj1, obj2, key, self.contexts1,
-                                self.contexts2)
+                            self._raise_annotations_exception(
+                                nineml_cls, obj1, obj2, key)
                         try:
                             annot2 = obj2.annotations.branch(key)
                         except NineMLNameError:
-                            raise NineMLDualVisitAnnotationsMismatchException(
-                                nineml_cls, obj1, obj2, key, self.contexts1,
-                                self.contexts2)
+                            self._raise_annotations_exception(
+                                nineml_cls, obj1, obj2, key)
                         self.visit(annot1, annot2, **kwargs)
         return super(EqualityChecker, self).action(obj1, obj2, nineml_cls,
                                                    **kwargs)
@@ -64,20 +65,14 @@ class EqualityChecker(BaseDualVisitor):
 
     def action_singlevalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         if not nearly_equal(val1.value, val2.value):
-            raise NineMLDualVisitValueException(
-                'value', val1, val2, nineml_cls, self.contexts1,
-                self.contexts2)
+            self._raise_value_exception('value', val1, val2, nineml_cls)
 
     def action_arrayvalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         if len(val1.values) != len(val2.values):
-            raise NineMLDualVisitValueException(
-                'values', val1, val2, nineml_cls, self.contexts1,
-                self.contexts2)
+            self._raise_value_exception('values', val1, val2, nineml_cls)
         if any(not nearly_equal(s, o)
                for s, o in izip(val1.values, val2.values)):
-            raise NineMLDualVisitValueException(
-                'values', val1, val2, nineml_cls, self.contexts1,
-                self.contexts2)
+            self._raise_value_exception('values', val1, val2, nineml_cls)
 
     def action_unit(self, unit1, unit2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         # Ignore name
@@ -100,21 +95,27 @@ class EqualityChecker(BaseDualVisitor):
         except TypeError:
             expr_eq = sympy.Equivalent(expr1.rhs, expr2.rhs) == sympy.true
         if not expr_eq:
-            raise NineMLDualVisitValueException(
-                'rhs', expr1, expr2, nineml_cls, self.contexts1,
-                self.contexts2)
+            self._raise_value_exception('rhs', expr1, expr2, nineml_cls)
 
     def _check_attr(self, obj1, obj2, attr_name, nineml_cls):
         try:
             if getattr(obj1, attr_name) != getattr(obj2, attr_name):
-                raise NineMLDualVisitValueException(
-                    attr_name, obj1, obj2, nineml_cls, self.contexts1,
-                    self.contexts2)
+                self._raise_value_exception(attr_name, obj1, obj2, nineml_cls)
         except NineMLNotBoundException:
             pass
 
+    def _raise_annotations_exception(self, nineml_cls, obj1, obj2, key):
+        raise NineMLDualVisitException()
 
-class MismatchFinder(EqualityChecker):
+    def _raise_value_exception(self, attr_name, obj1, obj2, nineml_cls):
+        raise NineMLDualVisitException()
+
+
+class MismatchFinder(DualWithContextMixin, EqualityChecker):
+
+    def __init__(self, **kwargs):
+        EqualityChecker.__init__(self, **kwargs)
+        DualWithContextMixin.__init__(self)
 
     def find(self, obj1, obj2):
         self.mismatch = []
@@ -129,21 +130,21 @@ class MismatchFinder(EqualityChecker):
         except NineMLDualVisitException as e:
             self.mismatch.append(e)
 
-    def _compare_child(self, obj1, obj2, nineml_cls, results, action_result,
-                       child_name, child_type, **kwargs):
+    def visit_child(self, child_name, child_type, parent1, parent2,
+                    parent_cls, parent_result, **kwargs):
         try:
-            super(MismatchFinder, self)._compare_child(
-                obj1, obj2, nineml_cls, results, action_result, child_name,
-                child_type, **kwargs)
+            super(MismatchFinder, self).visit_child(
+                child_name, child_type, parent1, parent2, parent_cls,
+                parent_result, **kwargs)
         except NineMLDualVisitException as e:
             self.mismatch.append(e)
             self._pop_contexts()
 
-    def _compare_children(self, obj1, obj2, nineml_cls, results, action_result,
-                          children_type, **kwargs):
+    def visit_children(self, children_type, parent1, parent2,
+                       parent_cls, parent_result, **kwargs):
         try:
-            super(MismatchFinder, self)._compare_children(
-                obj1, obj2, nineml_cls, results, action_result, children_type,
+            super(MismatchFinder, self).visit_children(
+                children_type, parent1, parent2, parent_cls, parent_result,
                 **kwargs)
         except NineMLDualVisitException as e:
             self.mismatch.append(e)
@@ -176,6 +177,26 @@ class MismatchFinder(EqualityChecker):
                 val1, val2, nineml_cls, **kwargs)
         except NineMLDualVisitException as e:
             self.mismatch.append(e)
+
+    def _raise_annotations_exception(self, nineml_cls, obj1, obj2, key):
+        raise NineMLDualVisitAnnotationsMismatchException(
+            nineml_cls, obj1, obj2, key, self.contexts1, self.contexts2)
+
+    def _raise_value_exception(self, attr_name, obj1, obj2, nineml_cls):
+        raise NineMLDualVisitValueException(
+            attr_name, obj1, obj2, nineml_cls, self.contexts1, self.contexts2)
+
+    def _raise_type_exception(self, nineml_cls, obj1, obj2):
+        raise NineMLDualVisitTypeException(
+            nineml_cls, obj1, obj2, self.contexts1, self.contexts2)
+
+    def _raise_none_child_exception(self, child_name, child1, child2):
+        raise NineMLDualVisitNoneChildException(
+            child_name, child1, child2, self.contexts1, self.contexts2)
+
+    def _raise_keys_mismatch_exception(self, children_type, obj1, obj2):
+        raise NineMLDualVisitKeysMismatchException(
+            children_type, obj1, obj2, self.contexts1, self.contexts2)
 
     def _pop_contexts(self):
         self.contexts1.pop()
