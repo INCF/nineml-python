@@ -62,7 +62,8 @@ class TestAccessors(unittest.TestCase):
                             self.assertIsInstance(
                                 dct, OrderedDict,
                                 "Dictionary for {} created in {} is not an "
-                                "OrderedDict ({})".format(child_type, cls, dct))
+                                "OrderedDict ({})".format(child_type, cls,
+                                                          dct))
                         except:
                             non_ordered[cls].add(child_type)
                         accessor_members = [

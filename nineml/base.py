@@ -5,7 +5,7 @@ import operator
 from collections import defaultdict, OrderedDict
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException,
-    NineMLSerializationError)
+    NineMLSerializationError, NineMLNotBoundException)
 from .visitors.cloner import Cloner
 from .visitors.queriers import ObjectFinder
 from .visitors.equality import EqualityChecker, MismatchFinder
@@ -24,6 +24,10 @@ def hash_non_str(key):
 camel_caps_re = re.compile(r'([a-z])([A-Z])')
 
 
+def unreduce(cls, kwargs):
+    return cls(**kwargs)
+
+
 class BaseNineMLObject(object):
     """
     Base class for all 9ML-type classes
@@ -33,8 +37,9 @@ class BaseNineMLObject(object):
     nineml_attr = ()
     nineml_child = {}
     nineml_children = ()
-    # Used to distinguish between objects that are created on the fly, such as
-    # those used to duck-type MultiDynamics objects with Dynamics objects
+    # Used to distinguish between permanent objects and those that are created
+    # on the fly, such as the ones used to duck-type MultiDynamics objects with
+    # Dynamics objects
     temporary = False
     # Specifies whether a serialized object has a "body" (i.e. in XML)
     has_serial_body = False
@@ -56,6 +61,23 @@ class BaseNineMLObject(object):
 
     def __ne__(self, other):
         return not self == other
+
+    def __reduce__(self):
+        if self.temporary:
+            return object.__reduce__(self)
+        else:
+            kwargs = {}
+            for attr_name in self.nineml_attr:
+                try:
+                    kwargs[attr_name] = getattr(self, attr_name)
+                except NineMLNotBoundException:
+                    kwargs[attr_name] = None
+            for child_name in self.nineml_child:
+                    kwargs[child_name] = getattr(self, child_name)
+            for child_type in self.nineml_children:
+                kwargs[child_type._children_iter_name()] = list(
+                    getattr(self, child_type._children_iter_name()))
+            return unreduce, (self.__class__, kwargs), None
 
     def equals(self, other, **kwargs):
         checker = EqualityChecker(**kwargs)
