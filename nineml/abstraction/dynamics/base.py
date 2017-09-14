@@ -182,11 +182,9 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             self.add(*(EventSendPort(name=p)
                        for p in inferred_struct.event_out_port_names))
 
-        # Bind transitions to target regimes
-        for transition in self.all_transitions():
-            transition.bind(self)
+        self.bind()
+
         if validate:
-            # Is the finished component_class valid?:
             self.validate(**kwargs)
 
         self.annotations.set((VALIDATION, PY9ML_NS), DIMENSIONALITY,
@@ -225,12 +223,19 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def overridden_in_regimes(self, alias):
         return (r for r in self.regimes if alias.name in r.alias_names)
 
+    def bind(self):
+        # Bind transitions to target regimes
+        for transition in self.all_transitions():
+            transition.bind(self)
+
+        # Bind transition target regimes
+        self._resolve_transition_regimes()
+
     def validate(self, validate_dimensions=None, **kwargs):
         if validate_dimensions is None:
             validate_dimensions = (
                 self.annotations.get((VALIDATION, PY9ML_NS), DIMENSIONALITY,
                                      default='True') == 'True')
-        self._resolve_transition_regimes()
         DynamicsValidator.validate_componentclass(self, validate_dimensions,
                                                   **kwargs)
 

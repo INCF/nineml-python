@@ -208,8 +208,9 @@ class Transition(BaseALObject, ContainerObject):
         """
         if self._target_regime is None:
             raise NineMLRuntimeError(
-                "Target regime ({}) has not been set (use 'validate()' "
-                "of Dynamics first)."
+                "Target regime ({}) has not been set ("
+                "'_resolve_transition_regimes' needs to be called on "
+                "containing Dynamics object first)."
                 .format(self.target_regime_name))
         return self._target_regime
 
@@ -234,8 +235,9 @@ class Transition(BaseALObject, ContainerObject):
         """
         if self._source_regime is None:
             raise NineMLRuntimeError(
-                "Source regime has not been set (use 'validate()' "
-                "of Dynamics first)."
+                "Source regime ({}) has not been set ("
+                "'_resolve_transition_regimes' needs to be called on "
+                "containing Dynamics object first)."
                 .format(self.target_regime_name))
         return self._source_regime
 

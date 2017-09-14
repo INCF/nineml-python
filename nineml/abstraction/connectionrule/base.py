@@ -28,7 +28,8 @@ class ConnectionRule(ComponentClass):
                       'Probabilistic', 'RandomFanIn',
                       'RandomFanOut')
 
-    def __init__(self, name, standard_library, parameters=(), **kwargs):  # @UnusedVariable @IgnorePep8
+    def __init__(self, name, standard_library, parameters=(),
+                 validate=True, **kwargs):  # @UnusedVariable @IgnorePep8
         super(ConnectionRule, self).__init__(name, parameters)
         # Convert to lower case
         if (not standard_library.startswith(self.standard_library_basepath) or
@@ -40,6 +41,8 @@ class ConnectionRule(ComponentClass):
                     "', '".join(self.standard_library_basepath + t
                                 for t in self.standard_types)))
         self._standard_library = standard_library
+        if validate:
+            self.validate(**kwargs)
 
     @property
     def standard_library(self):

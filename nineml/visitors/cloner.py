@@ -1,8 +1,6 @@
 from .base import BaseVisitor
 from copy import copy
-from nineml.exceptions import (
-    NineMLNotBoundException, NineMLInvalidElementTypeException,
-    NineMLRuntimeError)
+from nineml.exceptions import NineMLNotBoundException, NineMLRuntimeError
 
 
 class Cloner(BaseVisitor):
@@ -13,9 +11,10 @@ class Cloner(BaseVisitor):
 
     def __init__(self, as_class=None, exclude_annotations=False,
                  clone_definitions=None, document=None,
-                 random_seeds=False, **kwargs):  # @UnusedVariable @IgnorePep8
+                 random_seeds=False, validate=True, **kwargs):  # @UnusedVariable @IgnorePep8
         super(Cloner, self).__init__()
         self.as_class = as_class
+        self.validate = validate
         self.memo = {}
         self.exclude_annotations = exclude_annotations
         self.document = document
@@ -79,6 +78,8 @@ class Cloner(BaseVisitor):
         for child_type in nineml_cls.nineml_children:
             init_args[child_type._children_iter_name()] = [
                 r.post_action for r in results.children_results(child_type)]
+        if hasattr(nineml_cls, 'validate') and not self.validate:
+            init_args['validate'] = False
         results.post_action = nineml_cls(**init_args)
 
     def post_action_definition(self, definition, results, nineml_cls,

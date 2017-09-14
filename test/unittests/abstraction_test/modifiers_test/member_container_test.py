@@ -61,8 +61,8 @@ class MemberContainer_test(unittest.TestCase):
 
     def test_add(self):
         # Copy templates
-        a = copy(self.a)
-        b = copy(self.b)
+        a = self.a.clone()
+        b = self.b.clone()
         # Add missing items
         a.add(Alias('A4', 'SV1^3 + SV2^-3'))
         a.add(StateVariable('SV3'))
@@ -73,6 +73,7 @@ class MemberContainer_test(unittest.TestCase):
             state_assignments=[StateAssignment('SV3', 1)]))
         a.add(Parameter('P3'))
         a.add(AnalogSendPort('SV3'))
+        a.bind()
         a.validate()
         self.assertEqual(b, a,
                          "Did not transform 'a' into 'b':\n {}"

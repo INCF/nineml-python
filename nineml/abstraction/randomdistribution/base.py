@@ -16,7 +16,8 @@ class RandomDistribution(ComponentClass):
                       'multinomial', 'negative-binomial', 'normal',
                       'pareto', 'poisson', 'uniform', 'weibull')
 
-    def __init__(self, name, standard_library, parameters=(), **kwargs):  # @UnusedVariable @IgnorePep8
+    def __init__(self, name, standard_library, parameters=(),
+                 validate=True, **kwargs):  # @UnusedVariable @IgnorePep8
         super(RandomDistribution, self).__init__(name, parameters)
         if (not standard_library.startswith(self.standard_library_basepath) or
                 standard_library[self._base_len:] not in self.standard_types):
@@ -27,6 +28,8 @@ class RandomDistribution(ComponentClass):
                     "', '".join(self.standard_library_basepath + t
                                 for t in self.standard_types)))
         self._standard_library = standard_library
+        if validate:
+            self.validate(**kwargs)
 
     @property
     def standard_library(self):
