@@ -83,11 +83,3 @@ class Connectivity_test(unittest.TestCase):
         num_conns = len(list(connectivity.connections()))
         self.assertAlmostEqual(num_conns / size ** 2, p, 2)
 
-
-class ConnectionRuleVisitorTests(unittest.TestCase):
-
-    def test_basic_visitors(self):
-        param = conA.parameter('number')
-        self.assertEqual(conA.dimension_of(param), un.dimensionless)
-        self.assertTrue(conA.find(param) is param)
-        self.assertEqual(conA.all_expressions, [])

@@ -109,8 +109,9 @@ class NineMLStopVisitException(NineMLException):
 
 class NineMLFoundElementException(NineMLStopVisitException):
 
-    def __init__(self, element):
-        self.element = element
+    def __init__(self, object, context):
+        self.object = object
+        self.context = context
 
 
 class NineMLRandomDistributionDelayException(NineMLException):

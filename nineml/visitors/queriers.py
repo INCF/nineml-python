@@ -1,8 +1,8 @@
-from .base import BaseVisitor
+from .base import BaseVisitorWithContext
 from nineml.exceptions import NineMLFoundElementException
 
 
-class ObjectFinder(BaseVisitor):
+class ObjectFinder(BaseVisitorWithContext):
 
     def __init__(self, ref_obj, container):
         super(ObjectFinder, self).__init__()
@@ -11,7 +11,7 @@ class ObjectFinder(BaseVisitor):
         try:
             self.visit(container)
         except NineMLFoundElementException as e:
-            self._found = e.element
+            self._found = e
 
     @property
     def found(self):
@@ -19,4 +19,4 @@ class ObjectFinder(BaseVisitor):
 
     def action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable
         if obj == self.ref_obj:
-            raise NineMLFoundElementException(obj)
+            raise NineMLFoundElementException(obj, self.context)
