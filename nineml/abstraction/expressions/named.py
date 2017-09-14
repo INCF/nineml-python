@@ -107,6 +107,9 @@ class Constant(BaseALObject, ExpressionSymbol):
     nineml_attr = ('name', 'value')
     nineml_child = {'units': Unit}
 
+    # Specify that serialized constants have bodies in v1
+    has_serial_body = 'v1'
+
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)
         self._name = name

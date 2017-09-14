@@ -6,10 +6,9 @@ from nineml.exceptions import (
     NineMLUnexpectedMultipleSerializationError, NineMLNameError)
 import nineml
 from nineml.reference import Reference
-from nineml.base import ContainerObject, DocumentLevelObject
+from nineml.base import DocumentLevelObject
 from nineml.annotations import (
-    Annotations, INDEX_TAG, INDEX_KEY_ATTR, INDEX_NAME_ATTR, INDEX_INDEX_ATTR,
-    PY9ML_NS, VALIDATION, DIMENSIONALITY)
+    Annotations, PY9ML_NS, VALIDATION, DIMENSIONALITY)
 from . import DEFAULT_VERSION, NINEML_BASE_NS
 
 

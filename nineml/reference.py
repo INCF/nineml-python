@@ -26,6 +26,9 @@ class BaseReference(AnnotatedNineMLObject):
 
     nineml_child = {'target': None}
 
+    # Specify that serialized references have bodies in v1
+    has_serial_body = 'v1'
+
     def __init__(self, target=None, name=None, url=None, document=None):
         super(BaseReference, self).__init__()
         if target is not None:

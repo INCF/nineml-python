@@ -402,6 +402,9 @@ class _AnnotationsBranch(BaseAnnotations):
     nineml_type = '_AnnotationsBranch'
     nineml_attr = ('attr', 'name', 'ns', 'abs_index', 'rel_index', 'body')
 
+    # Specify that serialized annotations can have bodies
+    has_serial_body = True
+
     def __init__(self, name, ns, rel_index=None, abs_index=None, attr=None,
                  branches=None, body=None):
         super(_AnnotationsBranch, self).__init__(branches)

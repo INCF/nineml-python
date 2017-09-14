@@ -36,6 +36,8 @@ class BaseNineMLObject(object):
     # Used to distinguish between objects that are created on the fly, such as
     # those used to duck-type MultiDynamics objects with Dynamics objects
     temporary = False
+    # Specifies whether a serialized object has a "body" (i.e. in XML)
+    has_serial_body = False
 
     @classmethod
     def _sorted_values(self, container):

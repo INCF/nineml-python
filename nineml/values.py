@@ -6,13 +6,11 @@ import contextlib
 import collections
 import sympy
 import itertools
-from itertools import izip
 from operator import itemgetter
 import numpy
 import nineml
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
-from nineml.utils import nearly_equal
 
 # =============================================================================
 # Operator argument decorators
@@ -98,6 +96,8 @@ class SingleValue(BaseValue):
     """
     nineml_type = "SingleValue"
     nineml_attr = ('value',)
+
+    has_serial_body = 'only'
 
     def __init__(self, value):
         super(SingleValue, self).__init__()
