@@ -299,32 +299,33 @@ class AddToDocumentVisitor(BaseVisitorWithContext):
         obj : BaseNineMLObject
             The object to add the document if is DocumentLevelObject
         """
-        if (isinstance(obj, DocumentLevelObject) and (obj.document is None or
-                                                      self.add_bound)):
+        if (isinstance(obj, DocumentLevelObject) and (
+                self.add_bound or obj.document is None)):
             if obj.name in dict.iterkeys(self.document):
                 doc_obj = self.document[obj.name]
-                orig_doc = obj._document
-                try:
-                    # Set document of object to current document before
-                    # checking for equality with document already in document
-                    obj._document = self.document
-                    if obj == doc_obj:
-                        if obj is not doc_obj and self.context is not None:
-                            if self.context.attr_name is not None:
-                                setattr(self.context.parent,
-                                        '_' + self.context.attr_name, doc_obj)
-                            elif self.context.dct is not None:
-                                del self.context.dct[obj.name]
-                                self.context.dct[doc_obj.name] = doc_obj
-                    else:
-                        raise NineMLRuntimeError(
-                            "Cannot add {} '{}' to the document {} as it "
-                            "clashes with existing (potentially nested) {}."
-                            .format(obj.nineml_type, obj.name,
-                                    self.document.url,
-                                    self.document[obj.name].nineml_type))
-                finally:
-                    obj._document = orig_doc  # Reset doc to previous state
+                if obj is doc_obj:
+                    return obj  # Object is already in document
+                if obj.equals(doc_obj, check_urls=False):
+                    # If the object is nested in another object, replace
+                    # it in the nesting object with the equivalent object in
+                    # the document
+                    if self.context is not None:
+                        if self.context.attr_name is not None:
+                            # If object is a child of the nesting object
+                            setattr(self.context.parent,
+                                    '_' + self.context.attr_name, doc_obj)
+                        elif self.context.dct is not None:
+                            # If the object is one of a set of children in the
+                            # nesting container object
+                            del self.context.dct[obj.name]
+                            self.context.dct[doc_obj.name] = doc_obj
+                else:
+                    raise NineMLRuntimeError(
+                        "Cannot add {} '{}' to the document {} as it "
+                        "clashes with existing (potentially nested) {}."
+                        .format(obj.nineml_type, obj.name,
+                                self.document.url,
+                                self.document[obj.name].nineml_type))
                 obj = doc_obj
             else:
                 dict.__setitem__(self.document, obj.name, obj)

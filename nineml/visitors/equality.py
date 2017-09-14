@@ -14,9 +14,10 @@ from nineml.utils import nearly_equal
 
 class EqualityChecker(BaseDualVisitor):
 
-    def __init__(self, annotations_ns=[], **kwargs):  # @UnusedVariable
+    def __init__(self, annotations_ns=[], check_urls=True, **kwargs):  # @UnusedVariable
         super(EqualityChecker, self).__init__()
         self.annotations_ns = annotations_ns
+        self.check_urls = check_urls
 
     def check(self, obj1, obj2, **kwargs):
         try:
@@ -58,10 +59,12 @@ class EqualityChecker(BaseDualVisitor):
                 self._check_attr(obj1, obj2, attr_name, nineml_cls)
 
     def action_reference(self, ref1, ref2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._check_attr(ref1, ref2, 'url', nineml_cls)
+        if self.check_urls:
+            self._check_attr(ref1, ref2, 'url', nineml_cls)
 
     def action_definition(self, def1, def2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        self._check_attr(def1, def2, 'url', nineml_cls)
+        if self.check_urls:
+            self._check_attr(def1, def2, 'url', nineml_cls)
 
     def action_singlevalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         if not nearly_equal(val1.value, val2.value):
