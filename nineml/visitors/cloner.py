@@ -1,9 +1,9 @@
-from .base import BaseVisitor
+from .base import BaseChildResultsVisitor
 from copy import copy
 from nineml.exceptions import NineMLNotBoundException, NineMLRuntimeError
 
 
-class Cloner(BaseVisitor):
+class Cloner(BaseChildResultsVisitor):
     """
     A Cloner visitor that visits any NineML object (except Documents) and
     creates a copy of the object
@@ -13,7 +13,7 @@ class Cloner(BaseVisitor):
                  clone_definitions=None, document=None,
                  random_seeds=False, validate=True, **kwargs):  # @UnusedVariable @IgnorePep8
         super(Cloner, self).__init__()
-        self.as_class = as_class
+        self.as_class = as_class if as_class is not None else type(None)
         self.validate = validate
         self.memo = {}
         self.exclude_annotations = exclude_annotations
@@ -32,14 +32,19 @@ class Cloner(BaseVisitor):
         self.refs = []
 
     def clone(self, obj, **kwargs):
-        results = self.visit(obj, **kwargs)
-        return results.post_action
+        return self.visit(obj, **kwargs)
 
     def visit(self, obj, nineml_cls=None, **kwargs):
-        # Temporary objects generated when flattening a MultiDynamics object
-        # (e.g. _NamespaceObject, _MultiRegime, MultiTransition), which can't
-        # be referenced by their memory position as the memory is freed after
-        # they go out of scope, are not saved in # the memo.
+        """
+        Before using the inherit visit method, the 'memo' cache is checked
+        for previously cloned objects by this cloner. This avoids problems
+        with circular references.
+
+        NB: Temporary objects generated when flattening a MultiDynamics object
+        (e.g. _NamespaceObject, _MultiRegime, MultiTransition), which can't
+        be referenced by their memory position as the memory is freed after
+        they go out of scope, are not saved in # the memo.
+        """
         if obj.temporary:
             assert nineml_cls is not None
             id_ = None
@@ -47,22 +52,19 @@ class Cloner(BaseVisitor):
             id_ = id(obj)
         try:
             # See if the attribute has already been cloned in memo
-            results = self.Results(None, self.memo[id_])
+            clone = self.memo[id_]
         except KeyError:
-            results = super(Cloner, self).visit(obj, nineml_cls=nineml_cls,
-                                                **kwargs)
-            clone = results.post_action
+            clone = super(Cloner, self).visit(obj, nineml_cls=nineml_cls,
+                                              **kwargs)
+            # Clone annotations if they are present
             if (hasattr(obj, 'annotations') and not self.exclude_annotations):
-                clone._annotations = self.visit(obj.annotations,
-                                                **kwargs).post_action
+                clone._annotations = self.visit(obj.annotations, **kwargs)
             if not obj.temporary:
                 self.memo[id_] = clone
-        return results
+        return clone
 
-    def action(self, obj, nineml_cls, **kwargs):
-        pass
-
-    def default_post_action(self, obj, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+    def default_action(self, obj, nineml_cls, child_results,
+                       children_results, **kwargs):  # @UnusedVariable @IgnorePep8
         init_args = {}
         for attr_name in nineml_cls.nineml_attr:
             try:
@@ -71,48 +73,46 @@ class Cloner(BaseVisitor):
                 init_args[attr_name] = None
         for child_name in nineml_cls.nineml_child:
             try:
-                init_args[child_name] = results.child_result(
-                    child_name).post_action
+                init_args[child_name] = child_results[child_name]
             except KeyError:
                 init_args[child_name] = None
         for child_type in nineml_cls.nineml_children:
-            init_args[child_type._children_iter_name()] = [
-                r.post_action for r in results.children_results(child_type)]
+            init_args[child_type._children_iter_name()] = children_results[
+                child_type]
         if hasattr(nineml_cls, 'validate') and not self.validate:
             init_args['validate'] = False
-        results.post_action = nineml_cls(**init_args)
+        return nineml_cls(**init_args)
 
-    def post_action_definition(self, definition, results, nineml_cls,
-                               **kwargs):  # @UnusedVariable
+    def action_definition(self, definition, nineml_cls, child_results,
+                          children_results, **kwargs):  # @UnusedVariable
         if self.clone_definitions == 'all' or (
             self.clone_definitions == 'local' and
                 definition._target.document is self.document):
-            target = results.child_result('target').post_action
+            target = child_results['target']
         else:
             target = definition.target
         clone = nineml_cls(target=target)
         self.refs.append(clone)
-        results.post_action = clone
+        return clone
 
-    def post_action__connectivity(self, connectivity, results, nineml_cls,
-                                  **kwargs):
+    def action__connectivity(self, connectivity, nineml_cls, child_results,
+                             children_results, **kwargs):  # @UnusedVariable
         if self.random_seeds:
             random_seed = connectivity._seed
         else:
             random_seed = None
         clone = nineml_cls(
-            results.child_result('rule_properties').post_action,
+            child_results['rule_properties'],
             random_seed=random_seed,
             source_size=connectivity.source_size,
             destination_size=connectivity.destination_size,
             **kwargs)
-        results.post_action = clone
         return clone
 
-    def post_action_reference(self, reference, results, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_reference(self, reference, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         """
         Typically won't be called unless Reference is created and referenced
         explicitly as the referenced object themselves is typically referred
         to in the containing container.
         """
-        results.post_action = copy(reference)
+        return copy(reference)
