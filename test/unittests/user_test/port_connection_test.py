@@ -16,12 +16,14 @@ class TestPortConnection(unittest.TestCase):
         pc1 = AnalogPortConnection('response', 'destination', 'iSyn', 'iExt')
         document = Document()
         xml = pc1.serialize(format='xml', version=2, document=document)
-        pc2 = AnalogPortConnection.unserialize(xml, format='xml', version=2, document=document)
+        pc2 = AnalogPortConnection.unserialize(xml, format='xml', version=2,
+                                               document=document)
         self.assertEquals(pc1, pc2,
                           "XML round trip failed for AnalogPortConnection")
         pc1 = EventPortConnection('response', 'destination', 'iSyn', 'iExt')
         xml = pc1.serialize(format='xml', version=2, document=document)
-        pc2 = EventPortConnection.unserialize(xml, format='xml', version=2, document=document)
+        pc2 = EventPortConnection.unserialize(xml, format='xml', version=2,
+                                              document=document)
         self.assertEquals(pc1, pc2,
                           "XML round trip failed for AnalogPortConnection")
 

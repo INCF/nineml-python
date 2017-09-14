@@ -5,7 +5,7 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 from nineml.exceptions import NineMLRuntimeError, NineMLNameError
-from nineml.visitors import BaseVisitor
+from nineml.visitors import BaseVisitor, BasePreAndPostVisitorWithContext
 from nineml.abstraction.expressions import Expression
 
 
@@ -75,7 +75,7 @@ class ComponentRenameSymbol(BaseVisitor):
         pass
 
 
-class ComponentSubstituteAliases(BaseVisitor):
+class ComponentSubstituteAliases(BasePreAndPostVisitorWithContext):
     """
     Substitutes all references to aliases in expressions with their RHS,
     so that all expressions are defined interms of inputs to the (e.g. analog
@@ -146,4 +146,7 @@ class ComponentSubstituteAliases(BaseVisitor):
         return self.substitute(alias)
 
     def default_action(self, obj, nineml_cls, **kwargs):
+        pass
+
+    def default_post_action(self, *args, **kwargs):
         pass

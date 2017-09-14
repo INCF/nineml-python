@@ -6,6 +6,7 @@ from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
 from nineml.serialization import format_to_serializer, format_to_unserializer
+from nineml.exceptions import name_error
 
 
 F_ANNOT_NS = 'http:/a.domain.org'
@@ -129,6 +130,7 @@ class C(AnnotatedNineMLObject, ContainerObject):
         self.f = f
         self.g = g
 
+    @name_error
     def e(self, name):
         return self._es[name]
 
@@ -209,8 +211,9 @@ class Container(ContainerObject, DocumentLevelObject):
     def b_names(self):
         return self._bs.iterkeys()
 
+    @name_error
     def b(self, name):
-        self._bs[name]
+        return self._bs[name]
 
     @property
     def bs(self):

@@ -1,4 +1,5 @@
-from nineml.visitors import BaseVisitor
+from nineml.visitors.base import BaseVisitorWithContext
+from nineml.visitors.equality import MismatchFinder
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
@@ -40,7 +41,7 @@ class Document(AnnotatedNineMLObject, dict):
     nineml_type = 'NineML'
 
     # Defines a consistent order that the different document-level types are
-    # written to file. 
+    # written to file.
     write_order = ('Network', 'Population', 'Projection', 'Selection',
                    'ComponentArray', 'EventConnectionGroup',
                    'AnalogConnectionGroup', 'Dynamics', 'ConnectionRule',
@@ -227,30 +228,18 @@ class Document(AnnotatedNineMLObject, dict):
         if cloner is None:
             cloner = Cloner(**kwargs)
         return Document(*self.values(), clone=True, cloner=cloner, **kwargs)
-# 
-#     def find_mismatch(self, other):
-#         """
-#         A function used to display where two documents differ (typically used
-#         in unit test debugging)
-#         """
-#         result = 'Mismatch between documents: '
-#         if self.nineml_type != other.nineml_type:
-#             result += ("mismatch in nineml_type, self:'{}' and other:'{}'"
-#                        .format(self.nineml_type, other.nineml_type))
-#         else:
-#             for k, s in self.iteritems():
-#                 if k not in other:
-#                     result += ("\n    {}(name='{}') is not present in second "
-#                                "document".format(type(s).__name__, k))
-#                 elif s != other[k]:
-#                     result += ("\n    {}(name='{}'):".format(type(s).__name__,
-#                                                              k) +
-#                                s.find_mismatch(other[k], '        '))
-#             for k, o in other.iteritems():
-#                 if k not in self:
-#                     result += ("\n    {}(name='{}') is not present in first "
-#                                "document".format(type(o).__name__, k))
-#         return result
+
+    def find_mismatch(self, other, **kwargs):
+        finder = MismatchFinder(**kwargs)
+        s_names = sorted(self.keys())
+        o_names = sorted(other.keys())
+        if s_names != o_names:
+            return ("[] - element names: {} | {}"
+                    .format(s_names, o_names))
+        mismatch = ''
+        for name in s_names:
+            mismatch += finder.find(self[name], other[name], **kwargs)
+        return mismatch
 
     def as_network(self, name):
         populations = []
@@ -278,7 +267,7 @@ class Document(AnnotatedNineMLObject, dict):
         return self._url
 
 
-class AddToDocumentVisitor(BaseVisitor):
+class AddToDocumentVisitor(BaseVisitorWithContext):
     """
     Traverses any 9ML object and adds any "unbound" objects to the document (or
     optionally clones of bound), i.e. objects that currently don't belong to
@@ -321,7 +310,12 @@ class AddToDocumentVisitor(BaseVisitor):
                     obj._document = self.document
                     if obj == doc_obj:
                         if obj is not doc_obj and self.context is not None:
-                            self.context.replace(obj, doc_obj)
+                            if self.context.attr_name is not None:
+                                setattr(self.context.parent,
+                                        '_' + self.context.attr_name, doc_obj)
+                            elif self.context.dct is not None:
+                                del self.context.dct[obj.name]
+                                self.context.dct[doc_obj.name] = doc_obj
                     else:
                         raise NineMLRuntimeError(
                             "Cannot add {} '{}' to the document {} as it "

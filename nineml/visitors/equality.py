@@ -1,6 +1,6 @@
 import sympy
 from itertools import izip, chain
-from .base import BaseDualVisitor2, DualWithContextMixin
+from .base import BaseDualVisitor, DualWithContextMixin
 from nineml.exceptions import (NineMLDualVisitException,
                                NineMLDualVisitValueException,
                                NineMLDualVisitTypeException,
@@ -12,7 +12,7 @@ from nineml.exceptions import (NineMLDualVisitException,
 from nineml.utils import nearly_equal
 
 
-class EqualityChecker(BaseDualVisitor2):
+class EqualityChecker(BaseDualVisitor):
 
     def __init__(self, annotations_ns=[], **kwargs):  # @UnusedVariable
         super(EqualityChecker, self).__init__()

@@ -13,7 +13,7 @@ import sympy
 from sympy import sympify
 from nineml.base import SendPortBase
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
-from nineml.visitors import BaseVisitor
+from nineml.visitors import BaseVisitor, BaseVisitorWithContext
 
 
 class AliasesAreNotRecursiveComponentValidator(BaseVisitor):
@@ -151,7 +151,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
         pass
 
 
-class DimensionalityComponentValidator(BaseVisitor):
+class DimensionalityComponentValidator(BaseVisitorWithContext):
 
     _RECURSION_MAX = 450
 
@@ -183,7 +183,7 @@ class DimensionalityComponentValidator(BaseVisitor):
             return self._dimensions
 
     def __init__(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        BaseVisitor.__init__(self)
+        BaseVisitorWithContext.__init__(self)
         self.component_class = component_class
         self._dimensions = self.DeclaredDimensionsVisitor(
             component_class, self.as_class, **kwargs).dimensions
@@ -201,15 +201,14 @@ class DimensionalityComponentValidator(BaseVisitor):
             for context in reversed(self.contexts):
                 try:
                     element = context.parent.element(
-                        name, child_types=context.nineml_children)
+                        name, child_types=context.parent_cls.nineml_children)
                 except KeyError:
                     pass
             if element is None:
                 raise NineMLRuntimeError(
                     "Did not find '{}' in '{}' dynamics class (scopes: {})"
                     .format(name, self.component_class.name,
-                            list(
-                                reversed([c.parent for c in self.contexts]))))
+                            list(reversed([c.parent for c in self.contexts]))))
         try:
             expr = element.rhs
         except AttributeError:  # for basic sympy expressions

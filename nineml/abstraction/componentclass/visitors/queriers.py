@@ -4,7 +4,7 @@ from sympy import sympify
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions.elementary.piecewise import ExprCondPair
 from ...expressions import reserved_identifiers
-from nineml.visitors import BaseVisitor
+from nineml.visitors import BaseVisitor, BaseVisitorWithContext
 from nineml.units import Dimension
 from nineml.abstraction.ports import SendPortBase
 from nineml.abstraction.expressions import Expression
@@ -149,7 +149,7 @@ class ComponentExpressionExtractor(BaseVisitor):
         pass
 
 
-class ComponentDimensionResolver(BaseVisitor):
+class ComponentDimensionResolver(BaseVisitorWithContext):
     """
     Used to calculate the unit dimension of elements within a component class
     """
@@ -211,7 +211,7 @@ class ComponentDimensionResolver(BaseVisitor):
         for context in reversed(self.contexts):
             try:
                 element = context.parent.element(
-                    name, child_types=context.nineml_children)
+                    name, child_types=context.parent_cls.nineml_children)
             except KeyError:
                 pass
         if element is None:
