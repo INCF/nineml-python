@@ -24,10 +24,6 @@ def hash_non_str(key):
 camel_caps_re = re.compile(r'([a-z])([A-Z])')
 
 
-def unreduce(cls, kwargs):
-    return cls(**kwargs)
-
-
 class BaseNineMLObject(object):
     """
     Base class for all 9ML-type classes
@@ -61,23 +57,6 @@ class BaseNineMLObject(object):
 
     def __ne__(self, other):
         return not self == other
-
-    def __reduce__(self):
-        if self.temporary:
-            return object.__reduce__(self)
-        else:
-            kwargs = {}
-            for attr_name in self.nineml_attr:
-                try:
-                    kwargs[attr_name] = getattr(self, attr_name)
-                except NineMLNotBoundException:
-                    kwargs[attr_name] = None
-            for child_name in self.nineml_child:
-                    kwargs[child_name] = getattr(self, child_name)
-            for child_type in self.nineml_children:
-                kwargs[child_type._children_iter_name()] = list(
-                    getattr(self, child_type._children_iter_name()))
-            return unreduce, (self.__class__, kwargs), None
 
     def equals(self, other, **kwargs):
         checker = EqualityChecker(**kwargs)
