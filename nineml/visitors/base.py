@@ -205,6 +205,10 @@ class BaseDualVisitor(BaseVisitor):
     Generic visitor base class that visits two 9ML objects side-by-side
     """
 
+    def __init__(self, allow_flatten=False, **kwargs):  # @UnusedVariable
+        super(BaseDualVisitor, self).__init__()
+        self.allow_flatten = allow_flatten
+
     def visit(self, obj1, obj2, nineml_cls=None, **kwargs):
         # Use the class of the object to visit the object as if one is not
         # explicitly provided. This allows classes to be visited as if they
@@ -225,6 +229,11 @@ class BaseDualVisitor(BaseVisitor):
         return result
 
     def _get_nineml_cls(self, obj1, obj2, nineml_cls):
+        try:
+            if obj1.nineml_type != obj2.nineml_type and not self.allow_flatten:
+                self._raise_type_exception(obj1, obj2)
+        except AttributeError:
+            self._raise_type_exception(obj1, obj2)
         if nineml_cls is None:
             if isinstance(obj1, self.as_class):
                 nineml_cls = self.as_class
