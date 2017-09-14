@@ -25,7 +25,6 @@ class ComponentRenameSymbol(BaseVisitor):
         self.rhs_changes = []
         self.port_changes = []
 
-        component_class.assign_indices()
         self.visit(component_class)
         component_class.validate()
 
@@ -41,7 +40,6 @@ class ComponentRenameSymbol(BaseVisitor):
     def _update_dicts(self, *dicts):
         for d in dicts:
             # Can't use "pythonic" try/except because I want it to work for
-            # defaultdicts (i.e. '_indices' dicts) as well
             assert isinstance(d, dict)
             if self.old_symbol_name in d:
                 d[self.new_symbol_name] = d.pop(self.old_symbol_name)
@@ -72,26 +70,6 @@ class ComponentRenameSymbol(BaseVisitor):
         if constant.name == self.old_symbol_name:
             self.note_lhs_changed(constant)
             constant.name_transform_inplace(self.namemap)
-
-    def default_action(self, obj, nineml_cls, **kwargs):
-        pass
-
-
-class ComponentAssignIndices(BaseVisitor):
-
-    """
-    Forces the generation of indices for all commonly index elements of the
-    component class
-    """
-
-    def __init__(self, component_class):
-        super(ComponentAssignIndices, self).__init__()
-        self.component_class = component_class
-        self.visit(component_class)
-
-    def action_componentclass(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        for elem in component_class.elements():
-            component_class.index_of(elem)
 
     def default_action(self, obj, nineml_cls, **kwargs):
         pass

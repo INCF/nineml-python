@@ -115,14 +115,3 @@ class Cloner(BaseVisitor):
         to in the containing container.
         """
         results.post_action = copy(reference)
-
-    def copy_index(self, obj, clone):
-        """
-        Attempt to copy index if present in parent container
-        """
-        try:
-            index = self.context.parent.index_of(obj)
-            self.context.parent_result.post_action._indices[
-                obj._child_accessor_name()][clone] = index
-        except (AttributeError, NineMLInvalidElementTypeException):
-            pass

@@ -195,9 +195,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def rename_symbol(self, old_symbol, new_symbol):
         DynamicsRenameSymbol(self, old_symbol, new_symbol)
 
-    def assign_indices(self):
-        DynamicsAssignIndices(self)
-
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
@@ -532,7 +529,6 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             constants=node.children(Constant, parent_elem=dyn_elem, **options))
 
 # Import visitor modules and those which import visitor modules
-from .regimes import StateVariable, Regime  # @IgnorePep8
 from .visitors.validators import DynamicsValidator  # @IgnorePep8
 from .visitors.queriers import (DynamicsRequiredDefinitions,  # @IgnorePep8
                                 DynamicsExpressionExtractor,
@@ -541,5 +537,4 @@ from .visitors.queriers import (DynamicsRequiredDefinitions,  # @IgnorePep8
                                 DynamicsIsLinear,
                                 DynamicsInterfaceInferer)
 from .visitors.modifiers import (  # @IgnorePep8
-    DynamicsRenameSymbol, DynamicsAssignIndices, DynamicsSubstituteAliases)
-# , DynamicsFlattener)
+    DynamicsRenameSymbol, DynamicsSubstituteAliases)

@@ -8,8 +8,7 @@ This file contains utility classes for modifying components.
 import sympy
 from .base import BaseDynamicsVisitor
 from ...componentclass.visitors.modifiers import (
-    ComponentRenameSymbol, ComponentAssignIndices,
-    ComponentSubstituteAliases)
+    ComponentRenameSymbol, ComponentSubstituteAliases)
 
 
 class DynamicsRenameSymbol(ComponentRenameSymbol,
@@ -94,25 +93,6 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
             on_event._target_regime._name = self.new_symbol_name
         on_event._update_member_key(
             self.old_symbol_name, self.new_symbol_name)
-
-
-class DynamicsAssignIndices(ComponentAssignIndices,
-                            BaseDynamicsVisitor):
-
-    def action_dynamics(self, dynamics, **kwargs):
-        return self.action_componentclass(dynamics, **kwargs)
-
-    def action_regime(self, regime, **kwargs):  # @UnusedVariable @IgnorePep8
-        for elem in regime.elements():
-            regime.index_of(elem)
-
-    def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
-        for elem in on_condition.elements():
-            on_condition.index_of(elem)
-
-    def action_onevent(self, on_event, **kwargs):  # @UnusedVariable
-        for elem in on_event.elements():
-            on_event.index_of(elem)
 
 
 class DynamicsSubstituteAliases(ComponentSubstituteAliases,

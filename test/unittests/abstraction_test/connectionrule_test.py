@@ -89,6 +89,5 @@ class ConnectionRuleVisitorTests(unittest.TestCase):
     def test_basic_visitors(self):
         param = conA.parameter('number')
         self.assertEqual(conA.dimension_of(param), un.dimensionless)
-        conA.assign_indices()  # Doesn't actually do anything at this stage
         self.assertTrue(conA.find(param) is param)
         self.assertEqual(conA.all_expressions, [])

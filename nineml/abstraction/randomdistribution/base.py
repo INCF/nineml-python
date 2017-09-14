@@ -35,9 +35,6 @@ class RandomDistribution(ComponentClass):
     def rename_symbol(self, old_symbol, new_symbol):
         RandomDistributionRenameSymbol(self, old_symbol, new_symbol)
 
-    def assign_indices(self):
-        RandomDistributionAssignIndices(self)
-
     def required_for(self, expressions):
         return RandomDistributionRequiredDefinitions(self, expressions)
 
@@ -92,8 +89,7 @@ class RandomDistribution(ComponentClass):
             standard_library=standard_library,
             parameters=node.children(Parameter, **options))
 
-from .visitors.modifiers import(  # @IgnorePep8
-    RandomDistributionRenameSymbol, RandomDistributionAssignIndices)
+from .visitors.modifiers import RandomDistributionRenameSymbol  # @IgnorePep8
 from .visitors.queriers import (RandomDistributionRequiredDefinitions,  # @IgnorePep8
                                 RandomDistributionExpressionExtractor,
                                 RandomDistributionDimensionResolver)

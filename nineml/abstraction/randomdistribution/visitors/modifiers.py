@@ -5,20 +5,12 @@ This file contains utility classes for modifying components.
 :license: BSD-3, see LICENSE for details.
 """
 
-from ...componentclass.visitors.modifiers import (
-    ComponentRenameSymbol, ComponentAssignIndices)
+from ...componentclass.visitors.modifiers import ComponentRenameSymbol
 from .base import BaseRandomDistributionVisitor
 
 
 class RandomDistributionRenameSymbol(ComponentRenameSymbol,
                                      BaseRandomDistributionVisitor):
-
-    def action_randomdistribution(self, randomdistribution, **kwargs):
-        return self.action_componentclass(randomdistribution, **kwargs)
-
-
-class RandomDistributionAssignIndices(ComponentAssignIndices,
-                                      BaseRandomDistributionVisitor):
 
     def action_randomdistribution(self, randomdistribution, **kwargs):
         return self.action_componentclass(randomdistribution, **kwargs)

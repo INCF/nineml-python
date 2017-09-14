@@ -48,9 +48,6 @@ class ConnectionRule(ComponentClass):
     def rename_symbol(self, old_symbol, new_symbol):
         ConnectionRuleRenameSymbol(self, old_symbol, new_symbol)
 
-    def assign_indices(self):
-        ConnectionRuleAssignIndices(self)
-
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
@@ -116,8 +113,7 @@ class ConnectionRule(ComponentClass):
                                  'RandomFanOut')
 
 
-from .visitors.modifiers import (  # @IgnorePep8
-    ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
+from .visitors.modifiers import ConnectionRuleRenameSymbol  # @IgnorePep8
 from .visitors.queriers import (  # @IgnorePep8
     ConnectionRuleRequiredDefinitions,
     ConnectionRuleExpressionExtractor, ConnectionRuleDimensionResolver)
