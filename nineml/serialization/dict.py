@@ -2,7 +2,9 @@ from nineml.exceptions import NineMLSerializationNotSupportedError
 from itertools import izip, repeat, chain
 from . import NINEML_BASE_NS
 from collections import OrderedDict
-from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
+from nineml.document import Document
+from nineml.serialization.base import (
+    BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR)
 from nineml.exceptions import (
     NineMLMissingSerializationError, NineMLNameError, NineMLSerializationError)
 

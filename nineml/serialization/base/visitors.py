@@ -9,7 +9,7 @@ from nineml.base import DocumentLevelObject
 from nineml.annotations import (
     Annotations, PY9ML_NS, VALIDATION, DIMENSIONALITY)
 from .. import DEFAULT_VERSION, NINEML_BASE_NS
-from .nodes import NodeToSerialize, NodeToUnserialize
+from nineml.serialization.base.nodes import NodeToSerialize, NodeToUnserialize
 
 
 # Regex's used in 9ML version string parsing
@@ -129,7 +129,7 @@ class BaseSerializer(BaseVisitor):
         super(BaseSerializer, self).__init__(version, document)
         self._root = self.create_root()
 
-    def serialize(self, **options):
+    def serialize(self, nineml_obj=None, **options):
         """
         Serializes the document provided to the __init__ method
 
@@ -138,9 +138,14 @@ class BaseSerializer(BaseVisitor):
         options : dict(str, object)
             Serialization format-specific options for the method
         """
-        self.document.serialize_node(
-            NodeToSerialize(self, self.root), **options)
-        return self.root
+        if nineml_obj is None:
+            self.document.serialize_node(
+                NodeToSerialize(self, self.root), **options)
+            serialized = self.root
+        else:
+            serialized = self.create_root(nineml_obj)
+            self.visit(nineml_obj, parent=serialized, **options)
+        return serialized
 
     def visit(self, nineml_object, parent=None, reference=None,
               multiple=False, **options):

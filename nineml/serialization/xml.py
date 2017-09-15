@@ -4,7 +4,7 @@ from lxml.builder import ElementMaker
 from nineml.document import Document
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError)
-from .base import BaseSerializer, BaseUnserializer
+from nineml.serialization.base import BaseSerializer, BaseUnserializer
 from nineml.exceptions import NineMLNameError
 from . import DEFAULT_VERSION
 

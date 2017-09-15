@@ -7,7 +7,8 @@ from itertools import chain, izip, repeat
 from nineml.exceptions import (NineMLSerializationError,
                                NineMLSerializationNotSupportedError,
                                NineMLMissingSerializationError)
-from .base import BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR
+from nineml.serialization.base import (
+    BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR)
 from nineml.exceptions import NineMLNameError
 
 # Specifies whether a given group represents multiple child elements (i.e. a
