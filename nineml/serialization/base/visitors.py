@@ -230,7 +230,7 @@ class BaseSerializer(BaseVisitor):
 
     @abstractmethod
     def create_elem(self, name, parent, multiple=False, namespace=None,
-                    **options):
+                    with_body=False, **options):
         """
         Creates a serial element within the parent element (in the root element
         if parent is None).
@@ -244,6 +244,9 @@ class BaseSerializer(BaseVisitor):
         multiple : bool
             Whether to allow for multiple elements of the same type (important
             for formats such as JSON and YAML which save them in lists)
+        with_body : bool
+            Whether or not to create an element with a 'body' (important for
+            HDF5 where a dataset is created instead of a group)
         namespace : str
             The namespace of the element. For formats that don't support
             namespaces (e.g. JSON, YAML, HDF5) this is stored in a special
