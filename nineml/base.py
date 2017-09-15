@@ -2,10 +2,9 @@ from itertools import chain
 import re
 # from copy import copy
 import operator
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException,
-    NineMLSerializationError, NineMLNotBoundException)
+    NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException)
 from .visitors.cloner import Cloner
 from .visitors.queriers import ObjectFinder
 from .visitors.equality import EqualityChecker, MismatchFinder
@@ -130,7 +129,7 @@ class BaseNineMLObject(object):
         return nineml.serialize(self, **kwargs)
 
     @classmethod
-    def unserialize(cls, serial_elem, format, **kwargs):  # @ReservedAssignment
+    def unserialize(cls, serial_elem, format, version, **kwargs):  # @ReservedAssignment
         """
         Unserializes a serial element to the given NineML class
 
@@ -150,34 +149,8 @@ class BaseNineMLObject(object):
             A serial element of containing the document to read local
             references from
         """
-        return nineml.unserialize(serial_elem, cls, format=format, **kwargs)
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        """
-        A generic serialize_node for classes that only implement
-        the serialize_body method (e.g. SingleValue). All other classes should
-        override this method.
-        """
-        try:
-            node.body(self.serialize_body(**options), **options)
-        except AttributeError:
-            raise NineMLSerializationError(
-                "'serialize_node (or serialize_body) not implemented for "
-                "'{}' class".format(self.nineml_type))
-
-    @classmethod
-    def unserialize_node(cls, node, **options):  # @UnusedVariable
-        """
-        A generic unserialize_node for classes that only implement the
-        unserialize_body method (e.g. SingleValue). All other classes should
-        override this method.
-        """
-        try:
-            return cls.unserialize_body(node.body(**options), **options)
-        except AttributeError:
-            raise NineMLSerializationError(
-                "'serialize_node (or serialize_body) not implemented for "
-                "'{}' class".format(cls.nineml_type))
+        return nineml.unserialize(serial_elem, cls, format=format,
+                                  version=version, **kwargs)
 
     @property
     def key(self):

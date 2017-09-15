@@ -318,10 +318,8 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
             node.visitor.get_attr(delay_elem, 'units', **options)]
         try:
             # Attempt to get SingleValue, written as an attribute
-            value = SingleValue.unserialize_body(
-                node.visitor.get_attr(delay_elem,
-                                      SingleValue.nineml_type, **options),
-                **options)
+            value = SingleValue(node.visitor.get_attr(
+                delay_elem, SingleValue.nineml_type, **options))
         except KeyError:
             # Otherwise get SingleValue, ArrayValue or RandomDistributionValue
             # written as a child

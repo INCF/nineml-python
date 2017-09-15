@@ -133,12 +133,12 @@ class SingleValue(BaseValue):
     def inverse(self):
         return SingleValue(1.0 / self._value)
 
-    def serialize_body(self, **options):  # @UnusedVariable
-        return self.value
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.body(self.value, **options)
 
     @classmethod
-    def unserialize_body(cls, body, **options):  # @UnusedVariable
-        return cls(float(body))
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(node.body(dtype=float, **options))
 
     # =========================================================================
     # Magic methods to allow the SingleValue to be treated like a

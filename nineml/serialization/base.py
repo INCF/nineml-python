@@ -98,6 +98,17 @@ class BaseVisitor(object):
                 return False
         return equal
 
+    def flat_body(self, nineml_cls):
+        return (
+            not self.supports_bodies and nineml_cls.has_serial_body == 'only')
+
+    def has_body(self, nineml_cls):
+        if nineml_cls.has_serial_body == 'v1':
+            has_body = self.major_version == 1
+        else:
+            has_body = bool(nineml_cls.has_serial_body)
+        return has_body
+
 
 # =============================================================================
 # Serialization
@@ -986,10 +997,11 @@ class NodeToSerialize(BaseNode):
             serial_elem = self._serial_elem
         # If the visitor doesn't support body content (i.e. all but XML) and
         # the nineml_object can be flattened into a single attribute
-        if (hasattr(nineml_object, 'serialize_body') and
-                not self.visitor.supports_bodies):
+        if self.visitor.flat_body(nineml_object):
+            mock_node = MockNodeToSerialize()
+            nineml_object.serialize_node(mock_node, **options)
             self.visitor.set_attr(serial_elem, nineml_object.nineml_type,
-                                  nineml_object.serialize_body(**options))
+                                  mock_node.body)
             child_elem = None
         else:
             child_elem = self.visitor.visit(
@@ -1046,7 +1058,8 @@ class NodeToSerialize(BaseNode):
         """
         if in_body and self.visitor.supports_bodies:
             attr_elem = self.visitor.create_elem(
-                name, parent=self._serial_elem, multiple=False, **options)
+                name, parent=self._serial_elem, multiple=False,
+                with_body=True, **options)
             self.visitor.set_body(attr_elem, value, **options)
         else:
             self.visitor.set_attr(self._serial_elem, name, value, **options)
@@ -1155,12 +1168,11 @@ class NodeToUnserialize(BaseNode):
         # classes that are serialized to a single body element in formats that
         # support body content, i.e. XML, such as SingleValue)
         for nineml_cls in name_map.itervalues():
-            if (hasattr(nineml_cls, 'unserialize_body') and
-                    not self.visitor.supports_bodies):
+            if self.visitor.flat_body(nineml_cls):
                 try:
-                    child = nineml_cls.unserialize_body(
-                        self.visitor.get_attr(
-                            parent_elem, nineml_cls.nineml_type, **options))
+                    mock_node = MockNodeToUnSerialize(self.visitor.get_attr(
+                        parent_elem, nineml_cls.nineml_type, **options))
+                    child = nineml_cls.unserialize_node(mock_node, **options)
                     self.unprocessed_attr.discard(nineml_cls.nineml_type)
                     return child
                 except KeyError:
@@ -1349,6 +1361,21 @@ class NodeToUnserialize(BaseNode):
         except TypeError:
             nineml_classes = [nineml_classes]
         return dict((self.visitor.node_name(c), c) for c in nineml_classes)
+
+
+class MockNodeToSerialize(object):
+
+    def body(self, body, **options):  # @UnusedVariable
+        self.body = body
+
+
+class MockNodeToUnSerialize(object):
+
+    def __init__(self, body):
+        self._body = body
+
+    def body(self, dtype=str, **options):  # @UnusedVariable
+        return dtype(self._body)
 
 
 from nineml.document import Document, AddToDocumentVisitor  # @IgnorePep8

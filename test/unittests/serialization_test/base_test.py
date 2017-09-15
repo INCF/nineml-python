@@ -6,7 +6,7 @@ from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
 from nineml.serialization import format_to_serializer, format_to_unserializer
-from nineml.exceptions import name_error
+from nineml.exceptions import name_error, NineMLSerializationNotSupportedError
 
 
 F_ANNOT_NS = 'http:/a.domain.org'
@@ -116,50 +116,6 @@ class E(AnnotatedNineMLObject, DocumentLevelObject):
                    node.attr('v', dtype=int))
 
 
-class C(AnnotatedNineMLObject, ContainerObject):
-
-    nineml_type = 'C'
-    nineml_attr = ('name', 'f', 'g')
-    nineml_children = (E,)
-
-    def __init__(self, name, es, f, g):
-        AnnotatedNineMLObject.__init__(self)
-        ContainerObject.__init__(self)
-        self.name = name
-        self.add(*es)
-        self.f = f
-        self.g = g
-
-    @name_error
-    def e(self, name):
-        return self._es[name]
-
-    @property
-    def es(self):
-        return self._es.itervalues()
-
-    @property
-    def e_names(self):
-        return self._es.iterkeys()
-
-    @property
-    def num_es(self):
-        return len(self._es)
-
-    def serialize_node(self, node, **options):  # @UnusedVariable
-        node.attr('name', self.name)
-        node.children(self.es, reference=True)
-        node.child(self.f, reference=False)
-        node.attr('g', self.g)
-
-    @classmethod
-    def unserialize_node(cls, node, **options):  # @UnusedVariable
-        return cls(node.attr('name'),
-                   node.children(E, allow_ref=True),
-                   node.child(F),
-                   node.attr('g', dtype=float))
-
-
 class F(AnnotatedNineMLObject, DocumentLevelObject):
 
     nineml_type = 'F'
@@ -185,6 +141,96 @@ class F(AnnotatedNineMLObject, DocumentLevelObject):
                    node.attr('r', dtype=int))
 
 
+class C(AnnotatedNineMLObject, ContainerObject):
+
+    nineml_type = 'C'
+    nineml_attr = ('name', 't')
+    nineml_child = {'f': F}
+    nineml_children = (E,)
+
+    def __init__(self, name, es, f, t):
+        AnnotatedNineMLObject.__init__(self)
+        ContainerObject.__init__(self)
+        self.name = name
+        self.add(*es)
+        self.f = f
+        self.t = t
+
+    @name_error
+    def e(self, name):
+        return self._es[name]
+
+    @property
+    def es(self):
+        return self._es.itervalues()
+
+    @property
+    def e_names(self):
+        return self._es.iterkeys()
+
+    @property
+    def num_es(self):
+        return len(self._es)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name)
+        node.children(self.es, reference=True)
+        node.child(self.f, reference=False)
+        node.attr('t', self.t)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(node.attr('name'),
+                   node.children(E, allow_ref=True),
+                   node.child(F),
+                   node.attr('t', dtype=float))
+
+
+class G(AnnotatedNineMLObject):
+
+    nineml_type = 'G'
+    nineml_attr = ('value',)
+
+    has_serial_body = 'only'
+
+    def __init__(self, value):
+        AnnotatedNineMLObject.__init__(self)
+        self._value = value
+
+    def __repr__(self):
+        return 'G({})'.format(self.value)
+
+    @property
+    def value(self):
+        return self._value
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.body(self.value, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(node.body(dtype=float, **options))
+
+
+class H(AnnotatedNineMLObject):
+
+    nineml_type = 'H'
+    nineml_child = {'g': G}
+
+    def __init__(self, g):
+        self.g = g
+
+    def __repr__(self):
+        return 'H({})'.format(self.g)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self.g, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(node.child(G))
+
+
 class Container(ContainerObject, DocumentLevelObject):
 
     nineml_type = 'Container'
@@ -192,9 +238,10 @@ class Container(ContainerObject, DocumentLevelObject):
     nineml_attr = ('name', 'bs', 'd')
     nineml_children = (B,)
     nineml_child = {'a': A,
-                    'c': C}
+                    'c': C,
+                    'g': G}
 
-    def __init__(self, name, a, bs, c, d):
+    def __init__(self, name, a, bs, c, d, g):
         ContainerObject.__init__(self)
         self.name = name
         DocumentLevelObject.__init__(self)
@@ -202,6 +249,7 @@ class Container(ContainerObject, DocumentLevelObject):
         self.add(*bs)
         self.c = c
         self.d = d
+        self.g = g
 
     @property
     def num_bs(self):
@@ -225,6 +273,7 @@ class Container(ContainerObject, DocumentLevelObject):
         node.children(self.bs)
         node.child(self.c, within='CTag')
         node.attr('d', self.d)
+        node.child(self.g)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
@@ -232,7 +281,8 @@ class Container(ContainerObject, DocumentLevelObject):
                    a=node.child(A, n=1, allow_ref=True),
                    bs=node.children(B, n='*'),
                    c=node.child(C, n=1, within='CTag'),
-                   d=node.attr('d'))
+                   d=node.attr('d'),
+                   g=node.child('g'))
 
 
 class_map = {'Container': Container,
@@ -257,8 +307,9 @@ class TestSerialization(unittest.TestCase):
                     E('another_E', 3, 4),
                     E('yet_another_E', 5, 6)],
                 f=f,
-                g=4.7),
-            d='wee')
+                t=4.7),
+            d='wee',
+            g=G(22.0))
 
     def test_roundtrip(self):
         for version in (2, 1):
@@ -292,3 +343,18 @@ class TestSerialization(unittest.TestCase):
                     serial_str, format=format, version=version)
                 self.assertTrue(new_a.equals(a, annot_ns=[F_ANNOT_NS]),
                                 new_a.find_mismatch(a))
+
+    def test_flat_body(self):
+        h = H(G(1.0))
+        for format in format_to_serializer:  # @ReservedAssignment
+            if format in h_strs:
+                h_str = h.serialize(to_str=True, format=format, fname=None)
+                new_h = H.unserialize(h_str, format, version=1.0)
+                self.assertEqual(h, new_h)
+                self.assertEqual(h_str, h_strs[format])
+
+
+h_strs = {
+    'xml': '<H xmlns="http://nineml.net/9ML/1.0"><G>1.0</G></H>',
+    'yaml': 'NineML: {G: 1.0}\n',
+    'json': '{"NineML": {"G": 1.0}}'}

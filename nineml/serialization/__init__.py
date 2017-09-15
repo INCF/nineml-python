@@ -219,7 +219,7 @@ def serialize(nineml_object, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # 
                 " serialize ({})".format(document, nineml_object))
         document = nineml_object
     Serializer = format_to_serializer[format]
-    serializer = Serializer(version=version, document=document)
+    serializer = Serializer(version=version, document=document, **kwargs)
     serial_elem = serializer.visit(nineml_object, **kwargs)
     if to_str:
         serialized = serializer.to_str(serial_elem, **kwargs)
