@@ -129,7 +129,7 @@ class BaseSerializer(BaseVisitor):
         super(BaseSerializer, self).__init__(version, document)
         self._root = self.create_root()
 
-    def serialize(self, nineml_obj=None, **options):
+    def serialize(self, **options):
         """
         Serializes the document provided to the __init__ method
 
@@ -138,13 +138,9 @@ class BaseSerializer(BaseVisitor):
         options : dict(str, object)
             Serialization format-specific options for the method
         """
-        if nineml_obj is None:
-            self.document.serialize_node(
-                NodeToSerialize(self, self.root), **options)
-            serialized = self.root
-        else:
-            serialized = self.create_root(nineml_obj)
-            self.visit(nineml_obj, parent=serialized, **options)
+        self.document.serialize_node(
+            NodeToSerialize(self, self.root), **options)
+        serialized = self.root
         return serialized
 
     def visit(self, nineml_object, parent=None, reference=None,

@@ -282,7 +282,7 @@ class Container(ContainerObject, DocumentLevelObject):
                    bs=node.children(B, n='*'),
                    c=node.child(C, n=1, within='CTag'),
                    d=node.attr('d'),
-                   g=node.child('g'))
+                   g=node.child(G))
 
 
 class_map = {'Container': Container,
@@ -346,7 +346,7 @@ class TestSerialization(unittest.TestCase):
 
     def test_flat_body(self):
         h = H(G(1.0))
-        for format in ('yaml',):  # format_to_serializer:  # @ReservedAssignment
+        for format in format_to_serializer:  # @ReservedAssignment
             if format in h_strs:
                 h_str = h.serialize(to_str=True, format=format, fname=None)
                 new_h = H.unserialize(h_str, format, version=1.0)

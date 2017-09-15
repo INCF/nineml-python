@@ -139,7 +139,7 @@ class XMLUnserializer(BaseUnserializer):
                 .format(name, e))
         return xml.getroot()
 
-    def from_str(self, string):
+    def from_str(self, string, **options):  # @UnusedVariable
         try:
             return etree.fromstring(string)
         except etree.LxmlError as e:

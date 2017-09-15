@@ -222,9 +222,13 @@ def serialize(nineml_object, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # 
     serializer = Serializer(version=version, document=document, **kwargs)
     serial_elem = serializer.visit(nineml_object, **kwargs)
     if to_str:
-        serialized = serializer.to_str(serial_elem, **kwargs)
+        serialized = serializer.to_str(serial_elem,
+                                        nineml_type=nineml_object.nineml_type,
+                                        **kwargs)
     else:
-        serialized = serial_elem
+        serialized = serializer.to_elem(serial_elem,
+                                        nineml_type=nineml_object.nineml_type,
+                                        **kwargs)
     return serialized
 
 
@@ -255,7 +259,12 @@ def unserialize(serial_elem, nineml_cls, format, version,  # @ReservedAssignment
     unserializer = Unserializer(version=version, root=root,
                                 url=url, document=document)
     if isinstance(serial_elem, basestring):
-        serial_elem = unserializer.from_str(serial_elem, **kwargs)
+        serial_elem = unserializer.from_str(serial_elem,
+                                            nineml_type=nineml_cls.nineml_type,
+                                            **kwargs)
+    else:
+        serial_elem = unserializer.from_elem(
+            serial_elem, nineml_type=nineml_cls.nineml_type, **kwargs)
     return unserializer.visit(serial_elem, nineml_cls, **kwargs)
 
 

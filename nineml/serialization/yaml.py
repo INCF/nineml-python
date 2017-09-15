@@ -26,10 +26,11 @@ class YAMLSerializer(DictSerializer):
     """
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
-        yaml.dump(self.to_elem(serial_elem), stream=file, Dumper=Dumper)
+        yaml.dump(self.to_elem(serial_elem, **options), stream=file,
+                  Dumper=Dumper)
 
     def to_str(self, serial_elem, **options):  # @UnusedVariable  @IgnorePep8
-        return yaml.dump(self.to_elem(serial_elem), Dumper=Dumper)
+        return yaml.dump(self.to_elem(serial_elem, **options), Dumper=Dumper)
 
 
 class YAMLUnserializer(DictUnserializer):
@@ -38,7 +39,7 @@ class YAMLUnserializer(DictUnserializer):
     """
 
     def from_file(self, file, **options):  # @ReservedAssignment @UnusedVariable @IgnorePep8
-        return self.from_elem(yaml.load(file, Loader=Loader))
+        return self.from_elem(yaml.load(file, Loader=Loader), **options)
 
     def from_str(self, string, **options):  # @UnusedVariable
-        return self.from_elem(yaml.load(string, Loader=Loader))
+        return self.from_elem(yaml.load(string, Loader=Loader), **options)

@@ -13,11 +13,11 @@ class PickleSerializer(DictSerializer):
     """
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
-        pkl.dump(self.to_elem(serial_elem), file,
+        pkl.dump(self.to_elem(serial_elem, **options), file,
                  options.get('protocol', DEFAULT_PROTOCOL))
 
     def to_str(self, serial_elem, **options):  # @UnusedVariable  @IgnorePep8
-        return pkl.dumps(self.to_elem(serial_elem),
+        return pkl.dumps(self.to_elem(serial_elem, **options),
                          options.get('protocol', DEFAULT_PROTOCOL))
 
 
@@ -27,7 +27,7 @@ class PickleUnserializer(DictUnserializer):
     """
 
     def from_file(self, file, **options):  # @ReservedAssignment @UnusedVariable @IgnorePep8
-        return self.from_elem(pkl.load(file))
+        return self.from_elem(pkl.load(file), **options)
 
     def from_str(self, string, **options):  # @UnusedVariable
-        return self.from_elem(pkl.loads(string))
+        return self.from_elem(pkl.loads(string), **options)
