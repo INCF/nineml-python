@@ -16,7 +16,7 @@ class DictSerializer(BaseSerializer):
     """
 
     def create_elem(self, name, parent, namespace=None, multiple=False,  # @UnusedVariable @IgnorePep8
-                    with_body=False, **options):  # @UnusedVariable
+                    **options):  # @UnusedVariable
         elem = OrderedDict()
         if multiple:
             if name not in parent:

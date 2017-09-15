@@ -31,27 +31,20 @@ class HDF5Serializer(BaseSerializer):
         super(HDF5Serializer, self).__init__(**kwargs)
 
     def create_elem(self, name, parent, namespace=None, multiple=False,
-                    with_body=False, body_dtype=None, **options):  # @UnusedVariable @IgnorePep8
+                    **options):  # @UnusedVariable @IgnorePep8
         if multiple:
             if name not in parent:
                 parent.create_group(name)
                 parent[name].attrs[MULT_ATTR] = True
             # Add a new group named by the next available index
             new_index = len(parent[name])
-            if with_body:
-                elem = parent[name].create_dataset(str(new_index),
-                                                   dtype=body_dtype)
-            else:
-                elem = parent[name].create_group(str(new_index))
+            elem = parent[name].create_group(str(new_index))
         else:
             if name in parent:
                 raise NineMLSerializationError(
                     "'{}' already exists in parent ({}) when creating "
                     "singleton element".format(name, parent))
-            if with_body:
-                elem = parent.create_dataset(name, dtype=body_dtype)
-            else:
-                elem = parent.create_group(name)
+            elem = parent.create_group(name)
             elem.attrs[MULT_ATTR] = False
         if namespace is not None:
             elem.attrs[NS_ATTR] = namespace

@@ -137,8 +137,7 @@ class NodeToSerialize(BaseNode):
         """
         if in_body and self.visitor.supports_bodies:
             attr_elem = self.visitor.create_elem(
-                name, parent=self._serial_elem, multiple=False,
-                with_body=True, **options)
+                name, parent=self._serial_elem, multiple=False, **options)
             self.visitor.set_body(attr_elem, value, **options)
         else:
             self.visitor.set_attr(self._serial_elem, name, value, **options)
