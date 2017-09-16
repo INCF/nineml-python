@@ -6,7 +6,6 @@ from nineml.abstraction import (
 from nineml import units as un
 from nineml.abstraction.expressions import (
     ExpressionWithSimpleLHS)
-from nineml.units import coulomb
 import sympy
 from nineml.abstraction.expressions.utils import (
     is_single_symbol, str_expr_replacement)

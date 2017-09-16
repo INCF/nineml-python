@@ -1,4 +1,5 @@
 from __future__ import division
+from __future__ import unicode_literals
 from past.utils import old_div
 from nineml import units as un
 from nineml import abstraction as al, user as ul

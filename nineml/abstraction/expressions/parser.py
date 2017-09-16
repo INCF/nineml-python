@@ -1,10 +1,12 @@
 from __future__ import division
+from __future__ import unicode_literals
 from builtins import zip
 from builtins import str
 from builtins import next
 from builtins import range
 from past.builtins import basestring
 from builtins import object
+import sys
 from itertools import chain
 import sympy
 from sympy.parsing.sympy_parser import (
@@ -23,6 +25,14 @@ from .base import (
 #                                    'random.poisson', 'random.exponential'))
 
 
+def sympy_func(func_name):
+    if sys.version_info > (3, 0):
+        func = sympy.Function(func_name)
+    else:
+        func = sympy.Function(bytes(func_name))
+    return func
+
+
 class Parser(object):
     # Escape all objects in sympy namespace that aren't defined in NineML
     # by predefining them as symbol names to avoid naming conflicts when
@@ -30,7 +40,7 @@ class Parser(object):
     _to_escape = (set(dir(sympy)) -
                   set(chain(builtin_constants, builtin_functions)))
     _valid_funcs = set((sympy.And, sympy.Or, sympy.Not)) | builtin_functions
-    _func_to_op_map = {sympy.Function('pow'): operator.pow}
+    _func_to_op_map = {sympy_func('pow'): operator.pow}
     _valid_identifier_re = re.compile(r'^[a-zA-Z_]\w*$')
     _escape_random_re = re.compile(r'(?<!\w)random\.(\w+)(?!\w)')
     _unescape_random_re = re.compile(r'(?<!\w)random_(\w+)_(?!\w)')
@@ -49,11 +59,11 @@ class Parser(object):
                    '<': 1, '<=': 1, '==': 1, '=': 1}
     _whitespace_re = re.compile(r'\s+')
     inline_randoms_dict = {
-        'random_uniform_': sympy.Function('random_uniform_'),
-        'random_binomial_': sympy.Function('random_binomial_'),
-        'random_poisson_': sympy.Function('random_poisson_'),
-        'random_exponential_': sympy.Function('random_exponential_'),
-        'random_normal_': sympy.Function('random_normal_')}
+        'random_uniform_': sympy_func('random_uniform_'),
+        'random_binomial_': sympy_func('random_binomial_'),
+        'random_poisson_': sympy_func('random_poisson_'),
+        'random_exponential_': sympy_func('random_exponential_'),
+        'random_normal_': sympy_func('random_normal_')}
 
     def __init__(self):
         self.escaped_names = None
@@ -155,7 +165,7 @@ class Parser(object):
     def _postprocess(self, expr):
         # Replace 'pow' functions with sympy '**'
         if isinstance(expr, sympy.Basic):
-            expr = expr.replace(sympy.Function('pow'), lambda b, e: b ** e)
+            expr = expr.replace(sympy_func('pow'), lambda b, e: b ** e)
             # Convert symbol names that were escaped to avoid clashes with in-
             # built Sympy functions back to their original form
             while self.escaped_names:

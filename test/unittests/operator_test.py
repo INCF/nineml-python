@@ -1,4 +1,5 @@
 from __future__ import division
+from __future__ import unicode_literals
 from builtins import zip
 from builtins import next
 from builtins import range

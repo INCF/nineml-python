@@ -185,27 +185,18 @@ class Document(AnnotatedNineMLObject, dict):
     def nineml_types(self):
         return (e.name for e in self.elements)
 
-    def itervalues(self):
+    def values(self):
         self._load_all()
         return dict.itervalues(self)
 
-    def values(self):
-        return list(self.values())
-
-    def iteritems(self):
+    def items(self):
         self._load_all()
         return dict.iteritems(self)
 
-    def items(self):
-        return list(self.items())
-
-    def iterkeys(self):
+    def keys(self):
         return (iter(self._unserializer.keys())
                 if self._unserializer is not None else
                 iter(super(Document, self).keys()))
-
-    def keys(self):
-        return list(self.keys())
 
     def _load_all(self):
         """
@@ -228,7 +219,8 @@ class Document(AnnotatedNineMLObject, dict):
         """
         if cloner is None:
             cloner = Cloner(**kwargs)
-        return Document(*list(self.values()), clone=True, cloner=cloner, **kwargs)
+        return Document(*list(self.values()), clone=True, cloner=cloner,
+                        **kwargs)
 
     def find_mismatch(self, other, **kwargs):
         finder = MismatchFinder(**kwargs)

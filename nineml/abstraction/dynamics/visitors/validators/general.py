@@ -5,6 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from __future__ import division
+from __future__ import unicode_literals
 from past.utils import old_div
 from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError

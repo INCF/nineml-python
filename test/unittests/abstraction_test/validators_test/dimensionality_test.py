@@ -1,4 +1,5 @@
 from __future__ import division
+from __future__ import unicode_literals
 import unittest
 from nineml.abstraction import (
     Parameter, Constant, Dynamics, Regime, On, OutputEvent, StateVariable,

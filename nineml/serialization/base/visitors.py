@@ -561,11 +561,8 @@ class BaseUnserializer(with_metaclass(ABCMeta, BaseVisitor)):
     def url(self):
         return self._url
 
-    def iterkeys(self):
-        return iter(self._doc_elems.keys())
-
     def keys(self):
-        return list(self.keys())
+        return iter(self._doc_elems.keys())
 
     @property
     def root(self):

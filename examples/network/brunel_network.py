@@ -12,6 +12,7 @@ June 2014
 """
 
 from __future__ import division
+from __future__ import unicode_literals
 from nineml.user import (
     DynamicsProperties, Population, RandomDistributionProperties,
     Projection, ConnectionRuleProperties, AnalogPortConnection,

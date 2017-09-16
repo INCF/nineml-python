@@ -6,6 +6,7 @@ This file defines mathematical classes and derived classes
 """
 from __future__ import division
 from __future__ import unicode_literals
+from __future__ import unicode_literals
 from builtins import str
 from builtins import object
 from itertools import chain

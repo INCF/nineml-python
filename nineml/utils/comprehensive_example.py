@@ -5,6 +5,7 @@ comprehensive testing over all 9ML elements
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
+from __future__ import unicode_literals
 from past.builtins import basestring
 from past.utils import old_div
 import pkgutil
@@ -154,7 +155,8 @@ dynD = Dynamics(
            EventReceivePort('ERP1')],
     parameters=[Parameter('P1', dimension=un.time),
                 Parameter('P2', dimension=un.voltage),
-                Parameter('P3', dimension=old_div(un.voltage, (un.time * un.current)))]
+                Parameter('P3', dimension=old_div(un.voltage,
+                                                  (un.time * un.current)))]
 )
 
 dynE = Dynamics(

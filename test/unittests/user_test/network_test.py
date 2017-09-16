@@ -10,6 +10,7 @@ backend.
 
 """
 from __future__ import division
+from __future__ import unicode_literals
 import os.path
 import unittest
 from nineml.abstraction import ConnectionRule
