@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,
     NineMLUnexpectedMultipleSerializationError)
@@ -245,7 +247,7 @@ class NodeToUnserialize(BaseNode):
         # Check to see if the child has been flattened into an attribute (for
         # classes that are serialized to a single body element in formats that
         # support body content, i.e. XML, such as SingleValue)
-        for nineml_cls in name_map.itervalues():
+        for nineml_cls in name_map.values():
             if self.visitor.flat_body(nineml_cls):
                 try:
                     mock_node = MockNodeToUnSerialize(self.visitor.get_attr(
@@ -266,7 +268,7 @@ class NodeToUnserialize(BaseNode):
             if ref_elem is not None:
                 ref = self.visitor.visit(ref_elem, Reference, **options)
                 if any(isinstance(ref.target, c)
-                       for c in name_map.itervalues()):
+                       for c in name_map.values()):
                     child = ref.target
                 self.unprocessed_children.discard(Reference.nineml_type)
         # If there were no valid references to the child element look for
@@ -279,7 +281,7 @@ class NodeToUnserialize(BaseNode):
                             ('{} of '.format(within)
                              if within is not None else ''), self.name))
             child_elems = []
-            for nineml_type, cls in name_map.iteritems():
+            for nineml_type, cls in name_map.items():
                 try:
                     child_elems.append(
                         (cls,
@@ -339,7 +341,7 @@ class NodeToUnserialize(BaseNode):
                 if self.visitor.node_name(type(ref.target)) in name_map:
                     children.append(ref.target)
                     self.unprocessed_children.discard(ref_node_name)
-        for nineml_type, nineml_cls in name_map.iteritems():
+        for nineml_type, nineml_cls in name_map.items():
             for child_elem in self.visitor.get_children(
                     parent_elem, nineml_type, **options):
                 children.append(self.visitor.visit(child_elem, nineml_cls,

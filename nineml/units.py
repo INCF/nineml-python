@@ -1,5 +1,8 @@
 # encoding: utf-8
 from __future__ import division
+from builtins import next
+from builtins import zip
+from builtins import str
 import re
 import operator
 from sympy import Symbol
@@ -249,7 +252,7 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
                 powers[str(expr)] = 1
         name_num = []
         name_den = []
-        for sym, p in powers.iteritems():
+        for sym, p in powers.items():
             name = self.dimension_names[next(
                 i for i, s in enumerate(self.dimension_symbols) if s == sym)]
             if abs(p) > 1:
@@ -617,7 +620,7 @@ class Quantity(AnnotatedNineMLObject):
                 powers = dict(
                     (cls._pq_si_to_dim[type(u).__name__], p)
                     for u, p in
-                    qty.units.simplified._dimensionality.iteritems())
+                    qty.units.simplified._dimensionality.items())
                 dimension = Dimension(unit_name + 'Dimension', **powers)
                 units = Unit(
                     unit_name, dimension=dimension,

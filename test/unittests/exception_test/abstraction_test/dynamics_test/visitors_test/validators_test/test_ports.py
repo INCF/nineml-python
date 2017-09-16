@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.dynamics.visitors.validators.ports import (OutputAnalogPortsDynamicsValidator, EventPortsDynamicsValidator)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -25,7 +26,7 @@ class TestOutputAnalogPortsDynamicsValidatorExceptions(unittest.TestCase):
             if ap not in self.available_symbols:
         """
 
-        outputanalogportsdynamicsvalidator = next(instances_of_all_types['OutputAnalogPortsDynamicsValidator'].itervalues())
+        outputanalogportsdynamicsvalidator = next(iter(instances_of_all_types['OutputAnalogPortsDynamicsValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             outputanalogportsdynamicsvalidator.__init__,
@@ -62,7 +63,7 @@ class TestEventPortsDynamicsValidatorExceptions(unittest.TestCase):
             if output_event not in self.event_send_ports:
         """
 
-        eventportsdynamicsvalidator = next(instances_of_all_types['EventPortsDynamicsValidator'].itervalues())
+        eventportsdynamicsvalidator = next(iter(instances_of_all_types['EventPortsDynamicsValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             eventportsdynamicsvalidator.__init__,
@@ -104,7 +105,7 @@ class TestEventPortsDynamicsValidatorExceptions(unittest.TestCase):
             if input_event not in self.event_receive_ports:
         """
 
-        eventportsdynamicsvalidator = next(instances_of_all_types['EventPortsDynamicsValidator'].itervalues())
+        eventportsdynamicsvalidator = next(iter(instances_of_all_types['EventPortsDynamicsValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             eventportsdynamicsvalidator.__init__,
@@ -153,7 +154,7 @@ class TestEventPortsDynamicsValidatorExceptions(unittest.TestCase):
             if port_name not in self.output_events:
         """
 
-        eventportsdynamicsvalidator = next(instances_of_all_types['EventPortsDynamicsValidator'].itervalues())
+        eventportsdynamicsvalidator = next(iter(instances_of_all_types['EventPortsDynamicsValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             eventportsdynamicsvalidator.__init__,
@@ -209,7 +210,7 @@ class TestEventPortsDynamicsValidatorExceptions(unittest.TestCase):
             if port_name not in self.input_events:
         """
 
-        eventportsdynamicsvalidator = next(instances_of_all_types['EventPortsDynamicsValidator'].itervalues())
+        eventportsdynamicsvalidator = next(iter(instances_of_all_types['EventPortsDynamicsValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             eventportsdynamicsvalidator.__init__,

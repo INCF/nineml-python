@@ -4,6 +4,8 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from builtins import str
+from past.builtins import basestring
 from nineml.exceptions import NineMLRuntimeError, NineMLDimensionError
 from nineml.abstraction.expressions.utils import is_valid_lhs_target
 from nineml.abstraction.expressions import reserved_identifiers, Expression
@@ -35,7 +37,7 @@ class AliasesAreNotRecursiveComponentValidator(BaseVisitor):
             return len(unresolved) != 0
 
         def get_resolved_aliases():
-            return [alias for alias in unresolved_aliases.values()
+            return [alias for alias in list(unresolved_aliases.values())
                     if not alias_contains_unresolved_symbols(alias)]
 
         while(unresolved_aliases):
@@ -48,7 +50,7 @@ class AliasesAreNotRecursiveComponentValidator(BaseVisitor):
                 raise NineMLRuntimeError(
                     "Unable to resolve all aliases, you may have a recursion "
                     "issue. Remaining Aliases: {}".format(
-                        ','.join(unresolved_aliases.keys())))
+                        ','.join(list(unresolved_aliases.keys()))))
 
     def default_action(self, obj, nineml_cls, **kwargs):
         pass
@@ -223,7 +225,7 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
                     "'{}' is not defined.\nDefined symbols:\n{}"
                     "\n\nElements:\n{}".format(
                         expr, "\n".join(
-                            str(e) for e in self._dimensions.iterkeys()),
+                            str(e) for e in self._dimensions.keys()),
                         "\n".join(
                             str(e) for e in self.component_class.elements(
                                 child_types=(

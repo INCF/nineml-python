@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.user.connectionrule import Connectivity
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -21,7 +22,7 @@ class TestBaseConnectivityExceptions(unittest.TestCase):
                 source_size != destination_size):
         """
 
-        baseconnectivity = next(instances_of_all_types['BaseConnectivity'].itervalues())
+        baseconnectivity = next(iter(instances_of_all_types['BaseConnectivity'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             baseconnectivity.__init__,

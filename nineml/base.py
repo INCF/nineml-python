@@ -1,3 +1,5 @@
+from past.builtins import basestring
+from builtins import object
 from itertools import chain
 import re
 # from copy import copy
@@ -43,7 +45,7 @@ class BaseNineMLObject(object):
     @classmethod
     def _sorted_values(self, container):
         if isinstance(container, dict):
-            container = dict.itervalues()
+            container = iter(dict.values())
         return sorted(container)
 
     def __repr__(self):

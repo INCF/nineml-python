@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLXMLBlockError)
@@ -21,7 +22,7 @@ class TestRandomDistributionXMLLoaderExceptions(unittest.TestCase):
             if lib_elem.getchildren():
         """
 
-        randomdistributionxmlloader = next(instances_of_all_types['RandomDistributionXMLLoader'].itervalues())
+        randomdistributionxmlloader = next(iter(instances_of_all_types['RandomDistributionXMLLoader'].values()))
         self.assertRaises(
             NineMLXMLBlockError,
             randomdistributionxmlloader.load_randomdistributionclass,

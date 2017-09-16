@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.randomdistribution.base import (RandomDistribution)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -22,7 +23,7 @@ class TestRandomDistributionExceptions(unittest.TestCase):
                 standard_library[self._base_len:] not in self.standard_types):
         """
 
-        randomdistribution = next(instances_of_all_types['RandomDistribution'].itervalues())
+        randomdistribution = next(iter(instances_of_all_types['RandomDistribution'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             randomdistribution.__init__,

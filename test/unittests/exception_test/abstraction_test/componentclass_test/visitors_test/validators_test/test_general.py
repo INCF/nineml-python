@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.componentclass.visitors.validators.general import (DimensionalityComponentValidator, CheckNoLHSAssignmentsToMathsNamespaceComponentValidator, AliasesAreNotRecursiveComponentValidator, NoUnresolvedSymbolsComponentValidator)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -32,7 +33,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
             if element is None:
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             dimensionalitycomponentvalidator._get_dimensions,
@@ -65,7 +66,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
             if exp_dims != 1:
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._flatten_dims,
@@ -106,7 +107,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
                                              sympy.numbers.NegativeOne)):
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._flatten_dims,
@@ -159,7 +160,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
                 elif arg_dims - dims != 0:
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._flatten_dims,
@@ -221,7 +222,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
             if lhs_dims - rhs_dims != 0:
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._flatten_dims,
@@ -292,7 +293,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
                 if dims != 0 and dims != 1:  # FIXME: allow dimless until bool params @IgnorePep8
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._flatten_dims,
@@ -370,7 +371,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
                 if arg_dims != 1:
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._flatten_dims,
@@ -459,7 +460,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
         else:
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NotImplementedError,
             dimensionalitycomponentvalidator._flatten_dims,
@@ -478,7 +479,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
         if dimension - sympify(reference) != 0:
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._compare_dimensionality,
@@ -504,7 +505,7 @@ class TestDimensionalityComponentValidatorExceptions(unittest.TestCase):
             if element.dimension != port.dimension:
         """
 
-        dimensionalitycomponentvalidator = next(instances_of_all_types['DimensionalityComponentValidator'].itervalues())
+        dimensionalitycomponentvalidator = next(iter(instances_of_all_types['DimensionalityComponentValidator'].values()))
         self.assertRaises(
             NineMLDimensionError,
             dimensionalitycomponentvalidator._check_send_port,
@@ -528,7 +529,7 @@ class TestCheckNoLHSAssignmentsToMathsNamespaceComponentValidatorExceptions(unit
             err = 'Symbol: %s found on left-hand-side of an equation'
         """
 
-        checknolhsassignmentstomathsnamespacecomponentvalidator = next(instances_of_all_types['CheckNoLHSAssignmentsToMathsNamespaceComponentValidator'].itervalues())
+        checknolhsassignmentstomathsnamespacecomponentvalidator = next(iter(instances_of_all_types['CheckNoLHSAssignmentsToMathsNamespaceComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             checknolhsassignmentstomathsnamespacecomponentvalidator.check_lhssymbol_is_valid,
@@ -567,7 +568,7 @@ class TestAliasesAreNotRecursiveComponentValidatorExceptions(unittest.TestCase):
             else:
         """
 
-        aliasesarenotrecursivecomponentvalidator = next(instances_of_all_types['AliasesAreNotRecursiveComponentValidator'].itervalues())
+        aliasesarenotrecursivecomponentvalidator = next(iter(instances_of_all_types['AliasesAreNotRecursiveComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             aliasesarenotrecursivecomponentvalidator.action_dynamics,
@@ -602,7 +603,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
                 if rhs_atom not in self.available_symbols:
         """
 
-        nounresolvedsymbolscomponentvalidator = next(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].itervalues())
+        nounresolvedsymbolscomponentvalidator = next(iter(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             nounresolvedsymbolscomponentvalidator.__init__,
@@ -643,7 +644,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
                         rhs_atom not in reserved_identifiers):
         """
 
-        nounresolvedsymbolscomponentvalidator = next(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].itervalues())
+        nounresolvedsymbolscomponentvalidator = next(iter(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             nounresolvedsymbolscomponentvalidator.__init__,
@@ -693,7 +694,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
                         rhs_atom not in reserved_identifiers):
         """
 
-        nounresolvedsymbolscomponentvalidator = next(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].itervalues())
+        nounresolvedsymbolscomponentvalidator = next(iter(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             nounresolvedsymbolscomponentvalidator.__init__,
@@ -711,7 +712,7 @@ class TestNoUnresolvedSymbolsComponentValidatorExceptions(unittest.TestCase):
         if symbol in self.available_symbols:
         """
 
-        nounresolvedsymbolscomponentvalidator = next(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].itervalues())
+        nounresolvedsymbolscomponentvalidator = next(iter(instances_of_all_types['NoUnresolvedSymbolsComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             nounresolvedsymbolscomponentvalidator.add_symbol,

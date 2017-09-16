@@ -2,6 +2,8 @@
 A collection of objects that are not part of the offical 9ML specification but
 can be used as shorthand when drafting 9ML models in Python.
 """
+from builtins import str
+from past.builtins import basestring
 from nineml.utils.iterables import filter_discrete_types
 from nineml.exceptions import NineMLRuntimeError
 from nineml.abstraction.dynamics.transitions import (

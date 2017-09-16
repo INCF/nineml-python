@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import next
 import unittest
 from nineml.abstraction.dynamics.transitions import (Trigger, Transition, OutputEvent, OnEvent)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -142,7 +143,7 @@ class TestTransitionExceptions(unittest.TestCase):
         if self._target_regime is None:
         """
 
-        transition = next(instances_of_all_types['Transition'].itervalues())
+        transition = next(iter(instances_of_all_types['Transition'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(transition.target_regime)
 
@@ -166,7 +167,7 @@ class TestTransitionExceptions(unittest.TestCase):
         if self._source_regime is None:
         """
 
-        transition = next(instances_of_all_types['Transition'].itervalues())
+        transition = next(iter(instances_of_all_types['Transition'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(transition.source_regime)
 
@@ -186,7 +187,7 @@ class TestTransitionExceptions(unittest.TestCase):
         else:
         """
 
-        transition = next(instances_of_all_types['Transition'].itervalues())
+        transition = next(iter(instances_of_all_types['Transition'].values()))
         self.assertRaises(
             NineMLInvalidElementTypeException,
             transition.add,
@@ -208,7 +209,7 @@ class TestTransitionExceptions(unittest.TestCase):
         else:
         """
 
-        transition = next(instances_of_all_types['Transition'].itervalues())
+        transition = next(iter(instances_of_all_types['Transition'].values()))
         self.assertRaises(
             NineMLInvalidElementTypeException,
             transition.remove,
@@ -229,7 +230,7 @@ class TestOutputEventExceptions(unittest.TestCase):
         if self._port is None:
         """
 
-        outputevent = next(instances_of_all_types['OutputEvent'].itervalues())
+        outputevent = next(iter(instances_of_all_types['OutputEvent'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(outputevent.port)
 
@@ -248,7 +249,7 @@ class TestOnEventExceptions(unittest.TestCase):
         if self._port is None:
         """
 
-        onevent = next(instances_of_all_types['OnEvent'].itervalues())
+        onevent = next(iter(instances_of_all_types['OnEvent'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(onevent.port)
 

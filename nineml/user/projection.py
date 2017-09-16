@@ -1,4 +1,6 @@
 # encoding: utf-8
+from builtins import str
+from past.builtins import basestring
 from itertools import chain
 from . import BaseULObject
 from nineml.exceptions import (
@@ -171,19 +173,19 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
 
     @property
     def analog_port_connections(self):
-        return self._analog_port_connections.itervalues()
+        return iter(self._analog_port_connections.values())
 
     @property
     def event_port_connections(self):
-        return self._event_port_connections.itervalues()
+        return iter(self._event_port_connections.values())
 
     @property
     def analog_port_connection_names(self):
-        return self._analog_port_connections.iterkeys()
+        return iter(self._analog_port_connections.keys())
 
     @property
     def event_port_connection_names(self):
-        return self._event_port_connections.iterkeys()
+        return iter(self._event_port_connections.keys())
 
     @property
     def num_analog_port_connections(self):
@@ -410,4 +412,4 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
     version1_nodes = ('Source', 'Destination', 'Response', 'Plasticity')
     v1tov2 = {'Source': 'pre', 'Destination': 'post',
               'Plasticity': 'plasticity', 'Response': 'response'}
-    v2tov1 = dict((v, k) for k, v in v1tov2.iteritems())
+    v2tov1 = dict((v, k) for k, v in v1tov2.items())

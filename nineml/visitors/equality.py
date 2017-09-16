@@ -1,5 +1,7 @@
+from builtins import str
+from builtins import zip
 import sympy
-from itertools import izip, chain
+from itertools import chain
 from .base import BaseDualVisitor, DualWithContextMixin
 from nineml.exceptions import (NineMLDualVisitException,
                                NineMLDualVisitValueException,
@@ -74,7 +76,7 @@ class EqualityChecker(BaseDualVisitor):
         if len(val1.values) != len(val2.values):
             self._raise_value_exception('values', val1, val2, nineml_cls)
         if any(not nearly_equal(s, o)
-               for s, o in izip(val1.values, val2.values)):
+               for s, o in zip(val1.values, val2.values)):
             self._raise_value_exception('values', val1, val2, nineml_cls)
 
     def action_unit(self, unit1, unit2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8

@@ -1,3 +1,4 @@
+from builtins import str
 from nineml.visitors.base import BaseVisitorWithContext
 from nineml.visitors.equality import MismatchFinder
 from nineml.exceptions import (
@@ -158,7 +159,7 @@ class Document(AnnotatedNineMLObject, dict):
                 raise NineMLNameError(
                     "'{}' was not found in the NineML document {} (elements in"
                     " the document were '{}').".format(
-                        name, self.url or '', "', '".join(self.iterkeys())))
+                        name, self.url or '', "', '".join(iter(self.keys()))))
         return nineml_obj
 
     def __setitem__(self, name, nineml_obj):
@@ -174,11 +175,11 @@ class Document(AnnotatedNineMLObject, dict):
         elif self._unserializer is None:
             return False
         else:
-            return name in self._unserializer.keys()
+            return name in list(self._unserializer.keys())
 
     @property
     def elements(self):
-        return self.itervalues()
+        return iter(self.values())
 
     @property
     def nineml_types(self):
@@ -189,22 +190,22 @@ class Document(AnnotatedNineMLObject, dict):
         return dict.itervalues(self)
 
     def values(self):
-        return list(self.itervalues())
+        return list(self.values())
 
     def iteritems(self):
         self._load_all()
         return dict.iteritems(self)
 
     def items(self):
-        return list(self.iteritems())
+        return list(self.items())
 
     def iterkeys(self):
-        return (self._unserializer.iterkeys()
+        return (iter(self._unserializer.keys())
                 if self._unserializer is not None else
-                super(Document, self).iterkeys())
+                iter(super(Document, self).keys()))
 
     def keys(self):
-        return list(self.iterkeys())
+        return list(self.keys())
 
     def _load_all(self):
         """
@@ -227,7 +228,7 @@ class Document(AnnotatedNineMLObject, dict):
         """
         if cloner is None:
             cloner = Cloner(**kwargs)
-        return Document(*self.values(), clone=True, cloner=cloner, **kwargs)
+        return Document(*list(self.values()), clone=True, cloner=cloner, **kwargs)
 
     def find_mismatch(self, other, **kwargs):
         finder = MismatchFinder(**kwargs)

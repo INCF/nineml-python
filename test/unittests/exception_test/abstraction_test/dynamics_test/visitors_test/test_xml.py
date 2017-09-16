@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLXMLBlockError)
@@ -23,7 +24,7 @@ class TestDynamicsXMLLoaderExceptions(unittest.TestCase):
             if any(blocks[block_name] for block_name in version1_main):
         """
 
-        dynamicsxmlloader = next(instances_of_all_types['DynamicsXMLLoader'].itervalues())
+        dynamicsxmlloader = next(iter(instances_of_all_types['DynamicsXMLLoader'].values()))
         self.assertRaises(
             NineMLXMLBlockError,
             dynamicsxmlloader.load_dynamics,

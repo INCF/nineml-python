@@ -1,3 +1,4 @@
+from builtins import object
 import unittest
 from nineml.exceptions import (name_error)
 from nineml.utils.comprehensive_example import instances_of_all_types

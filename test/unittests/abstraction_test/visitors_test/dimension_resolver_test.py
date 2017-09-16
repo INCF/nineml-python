@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 import unittest
 from nineml.abstraction import (
     Dynamics, Regime, Alias, Parameter, AnalogReceivePort)
@@ -21,8 +23,8 @@ class DynamicsRequiredDefinitions_test(unittest.TestCase):
             parameters=[Parameter('P1', dimension=un.voltage),
                         Parameter('P2', dimension=un.resistance),
                         Parameter('P3', dimension=un.charge),
-                        Parameter('P4', dimension=un.length / un.current ** 2),
-                        Parameter('P5', dimension=un.current ** 2 / un.length)]
+                        Parameter('P4', dimension=old_div(un.length, un.current ** 2)),
+                        Parameter('P5', dimension=old_div(un.current ** 2, un.length))]
         )
 
     def test_dimension_resolutions(self):

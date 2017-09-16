@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLXMLBlockError)
@@ -34,7 +35,7 @@ class TestComponentClassXMLLoaderExceptions(unittest.TestCase):
                 if tag not in block_names:
         """
 
-        componentclassxmlloader = next(instances_of_all_types['ComponentClassXMLLoader'].itervalues())
+        componentclassxmlloader = next(iter(instances_of_all_types['ComponentClassXMLLoader'].values()))
         self.assertRaises(
             NineMLXMLBlockError,
             componentclassxmlloader._load_blocks,

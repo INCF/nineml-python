@@ -46,7 +46,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
             name=name, definition=definition, properties=properties)
         if isinstance(initial_values, dict):
             initial_values = (Initial(name, qty)
-                              for name, qty in initial_values.iteritems())
+                              for name, qty in initial_values.items())
         self.add(*initial_values)
         if check_initial_values:
             self.check_initial_values()
@@ -106,7 +106,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
                 for n in set(chain(self._initial_values,
                                    comp.initial_value_names)))
         else:
-            return self._initial_values.itervalues()
+            return iter(self._initial_values.values())
 
     @name_error
     def initial_value(self, name):
@@ -162,7 +162,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
         if isinstance(self.definition, Prototype):
             return (p.name for p in self.initial_values)
         else:
-            return self._initial_values.iterkeys()
+            return iter(self._initial_values.keys())
 
     @property
     def num_initial_values(self):
@@ -183,14 +183,14 @@ class DynamicsProperties(Component, DynamicPortsObject):
         this instance (i.e. not the prototype)
         """
         if local:
-            return chain(self._properties.itervalues(),
-                         self._initial_values.itervalues())
+            return chain(iter(self._properties.values()),
+                         iter(self._initial_values.values()))
         else:
             return ContainerObject.elements(self)
 
     def serialize_node(self, node, **options):
         super(DynamicsProperties, self).serialize_node(node, **options)
-        node.children(self._initial_values.itervalues(), **options)
+        node.children(iter(self._initial_values.values()), **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):

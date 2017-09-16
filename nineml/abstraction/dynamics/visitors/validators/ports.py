@@ -46,14 +46,14 @@ class EventPortsDynamicsValidator(BaseDynamicsVisitor):
                     .format(input_event))
 
         # Check that each EventSendPort emits at least one output event
-        for port_name in self.event_send_ports.keys():
+        for port_name in list(self.event_send_ports.keys()):
             if port_name not in self.output_events:
                 raise NineMLRuntimeError(
                     "Unable to find events generated for '{}' in '{}'"
                     .format(port_name, component_class.name))
 
         # Check that each Event port emits/recieves at least one
-        for port_name in self.event_receive_ports.keys():
+        for port_name in list(self.event_receive_ports.keys()):
             if port_name not in self.input_events:
                 raise NineMLRuntimeError(
                     "Unable to find event transitions triggered by '{}' in "

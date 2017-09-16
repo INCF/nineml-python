@@ -5,6 +5,8 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
+from builtins import str
+from past.builtins import basestring
 import sympy.solvers
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from nineml.utils import ensure_valid_identifier
@@ -277,7 +279,7 @@ class Transition(BaseALObject, ContainerObject):
 
     @property
     def state_assignments(self):
-        return self._state_assignments.itervalues()
+        return iter(self._state_assignments.values())
 
     @name_error
     def state_assignment(self, variable):
@@ -285,7 +287,7 @@ class Transition(BaseALObject, ContainerObject):
 
     @property
     def state_assignment_variables(self):
-        return self._state_assignments.iterkeys()
+        return iter(self._state_assignments.keys())
 
     @property
     def state_assignment_keys(self):
@@ -293,7 +295,7 @@ class Transition(BaseALObject, ContainerObject):
 
     @property
     def output_event_port_names(self):
-        return self._output_events.iterkeys()
+        return iter(self._output_events.keys())
 
     @property
     def output_event_keys(self):
@@ -302,7 +304,7 @@ class Transition(BaseALObject, ContainerObject):
     @property
     def output_events(self):
         """|Events| that happen when this transitions occurs"""
-        return self._output_events.itervalues()
+        return iter(self._output_events.values())
 
     @name_error
     def output_event(self, port):

@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.expressions.parser import (Parser)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -29,7 +30,7 @@ class TestParserExceptions(unittest.TestCase):
         else:
         """
 
-        parser = next(instances_of_all_types['Parser'].itervalues())
+        parser = next(iter(instances_of_all_types['Parser'].values()))
         self.assertRaises(
             TypeError,
             parser.parse,
@@ -59,7 +60,7 @@ class TestParserExceptions(unittest.TestCase):
         except Exception, e:
         """
 
-        parser = next(instances_of_all_types['Parser'].itervalues())
+        parser = next(iter(instances_of_all_types['Parser'].values()))
         self.assertRaises(
             NineMLMathParseError,
             parser._parse_expr,

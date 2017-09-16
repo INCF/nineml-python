@@ -1,3 +1,4 @@
+from past.builtins import basestring
 from itertools import chain
 from .. import BaseULObject
 import sympy

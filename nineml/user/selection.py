@@ -1,3 +1,4 @@
+from builtins import str
 from operator import and_
 from collections import OrderedDict
 from . import BaseULObject
@@ -121,12 +122,12 @@ class Concatenate(BaseULObject, ContainerObject):
     @property
     def item_keys(self):
         """Return a list of the items in the concatenation."""
-        return self._items.iterkeys()
+        return iter(self._items.keys())
 
     @property
     def items(self):
         """Return a list of the items in the concatenation."""
-        return self._items.itervalues()
+        return iter(self._items.values())
 
     @property
     def populations(self):

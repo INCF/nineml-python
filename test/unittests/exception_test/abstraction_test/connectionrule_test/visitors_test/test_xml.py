@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLXMLBlockError)
@@ -21,7 +22,7 @@ class TestConnectionRuleXMLLoaderExceptions(unittest.TestCase):
             if lib_elem.getchildren():
         """
 
-        connectionrulexmlloader = next(instances_of_all_types['ConnectionRuleXMLLoader'].itervalues())
+        connectionrulexmlloader = next(iter(instances_of_all_types['ConnectionRuleXMLLoader'].values()))
         self.assertRaises(
             NineMLXMLBlockError,
             connectionrulexmlloader.load_connectionruleclass,

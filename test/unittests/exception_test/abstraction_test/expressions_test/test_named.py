@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.expressions.named import (Alias, Constant)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -50,7 +51,7 @@ class TestConstantExceptions(unittest.TestCase):
             else:
         """
 
-        constant = next(instances_of_all_types['Constant'].itervalues())
+        constant = next(iter(instances_of_all_types['Constant'].values()))
         self.assertRaises(
             NineMLDimensionError,
             constant.__init__,

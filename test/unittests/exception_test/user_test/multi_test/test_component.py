@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.user.multi.dynamics import (
     MultiDynamics, _MultiRegime, _MultiTransition, SubDynamicsProperties)
@@ -109,7 +110,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
                                  AnalogReceivePort):
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             multidynamics.__init__,
@@ -134,7 +135,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
         except (ValueError, AttributeError):
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.analog_port_connection,
@@ -161,7 +162,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
         except KeyError:
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.analog_port_connection,
@@ -181,7 +182,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
         except (ValueError, AttributeError):
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.event_port_connection,
@@ -208,7 +209,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
         except KeyError:
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.event_port_connection,
@@ -246,7 +247,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
                 except StopIteration:
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.alias,
@@ -275,7 +276,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
                 else:
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.constant,
@@ -309,7 +310,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
             except NineMLNameError:
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.constant,
@@ -331,7 +332,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
         if len(sub_regime_names) != len(self._sub_component_keys):
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.regime,
@@ -355,7 +356,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
         except StopIteration:
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLNameError,
             multidynamics.analog_receive_port_exposure,
@@ -378,7 +379,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
                 if port not in chain(exposed_ports, connected_ports):
         """
 
-        multidynamics = next(instances_of_all_types['MultiDynamics'].itervalues())
+        multidynamics = next(iter(instances_of_all_types['MultiDynamics'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             multidynamics.validate)
@@ -401,7 +402,7 @@ class Test_MultiRegimeExceptions(unittest.TestCase):
         if not sub_on_events:
         """
 
-        _multiregime = next(instances_of_all_types['_MultiRegime'].itervalues())
+        _multiregime = next(iter(instances_of_all_types['_MultiRegime'].values()))
         self.assertRaises(
             KeyError,
             _multiregime.on_event,
@@ -421,7 +422,7 @@ class Test_MultiRegimeExceptions(unittest.TestCase):
         if not sub_conds:
         """
 
-        _multiregime = next(instances_of_all_types['_MultiRegime'].itervalues())
+        _multiregime = next(iter(instances_of_all_types['_MultiRegime'].values()))
         self.assertRaises(
             KeyError,
             _multiregime.on_condition,
@@ -448,7 +449,7 @@ class Test_MultiTransitionExceptions(unittest.TestCase):
             if namespace in self._sub_transitions:
         """
 
-        _multitransition = next(instances_of_all_types['_MultiTransition'].itervalues())
+        _multitransition = next(iter(instances_of_all_types['_MultiTransition'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             _multitransition.__init__,
@@ -470,7 +471,7 @@ class Test_MultiTransitionExceptions(unittest.TestCase):
         except StopIteration:
         """
 
-        _multitransition = next(instances_of_all_types['_MultiTransition'].itervalues())
+        _multitransition = next(iter(instances_of_all_types['_MultiTransition'].values()))
         self.assertRaises(
             NineMLNameError,
             _multitransition.state_assignment,
@@ -489,7 +490,7 @@ class Test_MultiTransitionExceptions(unittest.TestCase):
         if exposure.port not in self._sub_output_event_ports:
         """
 
-        _multitransition = next(instances_of_all_types['_MultiTransition'].itervalues())
+        _multitransition = next(iter(instances_of_all_types['_MultiTransition'].values()))
         self.assertRaises(
             NineMLNameError,
             _multitransition.output_event,
@@ -511,7 +512,7 @@ class TestSubDynamicsPropertiesExceptions(unittest.TestCase):
         if comp_name != self.name:
         """
 
-        subdynamicsproperties = next(instances_of_all_types['SubDynamicsProperties'].itervalues())
+        subdynamicsproperties = next(iter(instances_of_all_types['SubDynamicsProperties'].values()))
         self.assertRaises(
             KeyError,
             subdynamicsproperties.initial_value,
@@ -530,7 +531,7 @@ class TestSubDynamicsPropertiesExceptions(unittest.TestCase):
         if comp_name != self.name:
         """
 
-        subdynamicsproperties = next(instances_of_all_types['SubDynamicsProperties'].itervalues())
+        subdynamicsproperties = next(iter(instances_of_all_types['SubDynamicsProperties'].values()))
         self.assertRaises(
             KeyError,
             subdynamicsproperties.property,

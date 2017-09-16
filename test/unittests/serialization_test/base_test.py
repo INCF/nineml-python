@@ -162,11 +162,11 @@ class C(AnnotatedNineMLObject, ContainerObject):
 
     @property
     def es(self):
-        return self._es.itervalues()
+        return iter(self._es.values())
 
     @property
     def e_names(self):
-        return self._es.iterkeys()
+        return iter(self._es.keys())
 
     @property
     def num_es(self):
@@ -257,7 +257,7 @@ class Container(ContainerObject, DocumentLevelObject):
 
     @property
     def b_names(self):
-        return self._bs.iterkeys()
+        return iter(self._bs.keys())
 
     @name_error
     def b(self, name):
@@ -265,7 +265,7 @@ class Container(ContainerObject, DocumentLevelObject):
 
     @property
     def bs(self):
-        return self._bs.itervalues()
+        return iter(self._bs.values())
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name)

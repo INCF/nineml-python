@@ -6,6 +6,7 @@ components definitions of interface and dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from past.builtins import basestring
 from nineml.exceptions import NineMLRuntimeError, name_error
 from nineml.utils.iterables import (
     normalise_parameter_as_list, filter_discrete_types)
@@ -133,7 +134,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         # Check any supplied parameters match:
         if self.num_parameters:
             check_inferred_against_declared(
-                self._parameters.keys(), inferred_struct.parameter_names,
+                list(self._parameters.keys()), inferred_struct.parameter_names,
                 desc=("\nPlease check for references to missing "
                       "parameters in component class '{}'.\n"
                       .format(self.name)), strict_unused=strict_unused)
@@ -303,37 +304,37 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     @property
     def analog_send_ports(self):
         """Returns an iterator over the local |AnalogSendPort| objects"""
-        return self._analog_send_ports.itervalues()
+        return iter(self._analog_send_ports.values())
 
     @property
     def analog_receive_ports(self):
         """Returns an iterator over the local |AnalogReceivePort| objects"""
-        return self._analog_receive_ports.itervalues()
+        return iter(self._analog_receive_ports.values())
 
     @property
     def analog_reduce_ports(self):
         """Returns an iterator over the local |AnalogReducePort| objects"""
-        return self._analog_reduce_ports.itervalues()
+        return iter(self._analog_reduce_ports.values())
 
     @property
     def event_send_ports(self):
         """Returns an iterator over the local |EventSendPort| objects"""
-        return self._event_send_ports.itervalues()
+        return iter(self._event_send_ports.values())
 
     @property
     def event_receive_ports(self):
         """Returns an iterator over the local |EventReceivePort| objects"""
-        return self._event_receive_ports.itervalues()
+        return iter(self._event_receive_ports.values())
 
     @property
     def regimes(self):
         """Forwarding function to self._regimes"""
-        return self._regimes.itervalues()
+        return iter(self._regimes.values())
 
     @property
     def state_variables(self):
         """Forwarding function to self._state_variables"""
-        return self._state_variables.itervalues()
+        return iter(self._state_variables.values())
 
     @name_error
     def regime(self, name):
@@ -365,11 +366,11 @@ class Dynamics(ComponentClass, DynamicPortsObject):
 
     @property
     def regime_names(self):
-        return self._regimes.iterkeys()
+        return iter(self._regimes.keys())
 
     @property
     def state_variable_names(self):
-        return self._state_variables.iterkeys()
+        return iter(self._state_variables.keys())
 
     @property
     def port_names(self):
@@ -391,27 +392,27 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     @property
     def analog_send_port_names(self):
         """Returns an iterator over the local |AnalogSendPort| names"""
-        return self._analog_send_ports.iterkeys()
+        return iter(self._analog_send_ports.keys())
 
     @property
     def analog_receive_port_names(self):
         """Returns an iterator over the local |AnalogReceivePort| names"""
-        return self._analog_receive_ports.iterkeys()
+        return iter(self._analog_receive_ports.keys())
 
     @property
     def analog_reduce_port_names(self):
         """Returns an iterator over the local |AnalogReducePort| names"""
-        return self._analog_reduce_ports.iterkeys()
+        return iter(self._analog_reduce_ports.keys())
 
     @property
     def event_send_port_names(self):
         """Returns an iterator over the local |EventSendPort| names"""
-        return self._event_send_ports.iterkeys()
+        return iter(self._event_send_ports.keys())
 
     @property
     def event_receive_port_names(self):
         """Returns an iterator over the local |EventReceivePort| names"""
-        return self._event_receive_ports.iterkeys()
+        return iter(self._event_receive_ports.keys())
 
     @property
     def all_expressions(self):

@@ -1,4 +1,6 @@
 from __future__ import print_function
+from builtins import zip
+from builtins import str
 from collections import OrderedDict
 import unittest
 from nineml.utils.comprehensive_example import (
@@ -24,11 +26,11 @@ class TestAccessors(unittest.TestCase):
                           'src_port_name')
 
     def test_nineml_attr(self):
-        for name, cls in all_types.iteritems():
+        for name, cls in all_types.items():
             if cls == Document:
                 continue
             for attr_name in cls.nineml_attr:
-                for elem in instances_of_all_types[name].itervalues():
+                for elem in instances_of_all_types[name].values():
                     # Test that the attribute listed in nineml_attr is
                     # accessible
                     try:
@@ -50,9 +52,9 @@ class TestAccessors(unittest.TestCase):
         """
         from collections import defaultdict
         non_ordered = defaultdict(set)
-        for name, cls in all_types.iteritems():
+        for name, cls in all_types.items():
             if cls.nineml_children:
-                for elem in instances_of_all_types[name].values():
+                for elem in list(instances_of_all_types[name].values()):
                     for child_type in cls.nineml_children:
                         num = elem._num_members(child_type)
                         names = sorted(elem._member_keys_iter(child_type))
@@ -156,7 +158,7 @@ class TestAccessors(unittest.TestCase):
                         "of send ports"
                         .format(all_members, all_accessor_members,
                                 elem.key, name))
-        for cls, child_types in non_ordered.iteritems():
+        for cls, child_types in non_ordered.items():
             print("{}-{}".format(cls, child_types))
 
     def test_port_accessors(self):
@@ -164,7 +166,7 @@ class TestAccessors(unittest.TestCase):
                          'MultiDynamicsProperties', 'Population', 'Selection',
                          'SubDynamics'):
             cls = all_types[cls_name]
-            for elem in instances_of_all_types[cls_name].values():
+            for elem in list(instances_of_all_types[cls_name].values()):
                 for prefix in ('', 'receive_', 'send_', 'analog_', 'event_',
                                'analog_receive_', 'event_receive_',
                                'analog_reduce_'):
@@ -204,7 +206,7 @@ class TestAccessors(unittest.TestCase):
             (('Dynamics', 'MultiDynamics', 'component_class'),
              ('DynamicsProperties', 'MultiDynamicsProperties', 'component'))):
             cls = all_types[class_name]
-            for elem in instances_of_all_types[mutli_class_name].values():
+            for elem in list(instances_of_all_types[mutli_class_name].values()):
                 if elem.key == 'multiDynPropB_dynamics':
                     regimes = list(elem.regimes)
                     regimes[0].on_conditions
@@ -301,8 +303,8 @@ class TestAccessors(unittest.TestCase):
 class TestRepr(unittest.TestCase):
 
     def test_repr(self):
-        for name, elems in instances_of_all_types.iteritems():
-            for elem in elems.itervalues():
+        for name, elems in instances_of_all_types.items():
+            for elem in elems.values():
                 if name == 'NineMLDocument':
                     self.assertTrue(repr(elem).startswith('Document'))
                 elif not name == 'Quantity':

@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.units import (Dimension, Unit, Quantity)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -90,7 +91,7 @@ class TestQuantityExceptions(unittest.TestCase):
         message: Cannot get item from random distribution
         """
 
-        random_value = next(instances_of_all_types['RandomDistributionValue'].itervalues())
+        random_value = next(iter(instances_of_all_types['RandomDistributionValue'].values()))
         qty = Quantity(random_value, un.ms)
         self.assertRaises(
             NineMLRuntimeError,

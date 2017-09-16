@@ -1,3 +1,4 @@
+from past.builtins import basestring
 from copy import copy
 import sympy
 from sympy import sympify

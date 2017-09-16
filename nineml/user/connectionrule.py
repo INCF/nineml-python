@@ -1,12 +1,15 @@
+from builtins import zip
+from builtins import range
 import sys
 from itertools import chain, product
 import math
 from abc import ABCMeta, abstractmethod
-from itertools import izip, repeat
+from itertools import repeat
 from random import Random, randint
 from nineml.base import BaseNineMLObject
 from nineml.exceptions import NineMLRuntimeError
 from nineml.user.component import Component
+from future.utils import with_metaclass
 
 
 class ConnectionRuleProperties(Component):
@@ -27,13 +30,11 @@ class ConnectionRuleProperties(Component):
         return self.component_class.lib_type
 
 
-class BaseConnectivity(BaseNineMLObject):
+class BaseConnectivity(with_metaclass(ABCMeta, BaseNineMLObject)):
     """
     An abstract base classes for instances of connectivity
     (i.e. connection-rule + properties + random seed)
     """
-
-    __metaclass__ = ABCMeta
 
     nineml_attr = ('source_size', 'destination_size')
     nineml_child = {'rule_properties': ConnectionRuleProperties}
@@ -155,15 +156,15 @@ class Connectivity(BaseConnectivity):
         return conn
 
     def _all_to_all(self):  # @UnusedVariable
-        return product(xrange(self._source_size),
-                       xrange(self._destination_size))
+        return product(range(self._source_size),
+                       range(self._destination_size))
 
     def _one_to_one(self):  # @UnusedVariable
         assert self._source_size == self._destination_size
-        return ((i, i) for i in xrange(self._source_size))
+        return ((i, i) for i in range(self._source_size))
 
     def _explicit_connection_list(self):  # @UnusedVariable
-        return izip(
+        return zip(
             self._rule_properties.property('sourceIndices').value.values,
             self._rule_properties.property('destinationIndices').value.values)
 
@@ -173,27 +174,27 @@ class Connectivity(BaseConnectivity):
         rng = self._rng_cls(self._seed)
         p = float(self._rule_properties.property('probability').value)
         # Get an iterator over all of the source dest pairs to test
-        return chain(*(((s, d) for d in xrange(self._destination_size)
+        return chain(*(((s, d) for d in range(self._destination_size)
                         if rng.random() < p)
-                       for s in xrange(self._source_size)))
+                       for s in range(self._source_size)))
 
     def _random_fan_in(self):  # @UnusedVariable
         N = int(self._rule_properties.property('number').value)
         rng = self._rng_cls(self._seed)
         return chain(*(
-            izip((int(math.floor(rng.random() * self._source_size))
-                  for _ in xrange(N)),
+            zip((int(math.floor(rng.random() * self._source_size))
+                  for _ in range(N)),
                  repeat(d))
-            for d in xrange(self._destination_size)))
+            for d in range(self._destination_size)))
 
     def _random_fan_out(self):  # @UnusedVariable
         N = int(self._rule_properties.property('number').value)
         rng = self._rng_cls(self._seed)
         return chain(*(
-            izip(repeat(s),
+            zip(repeat(s),
                  (int(math.floor(rng.random() * self._destination_size))
-                  for _ in xrange(N)))
-            for s in xrange(self._source_size)))
+                  for _ in range(N)))
+            for s in range(self._source_size)))
 
     @property
     def key(self):

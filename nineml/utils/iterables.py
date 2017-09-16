@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from builtins import zip
+from past.builtins import basestring
 import itertools
 import collections
 from .validation import assert_no_duplicates
@@ -176,13 +178,13 @@ def invert_dictionary(dct):
     It checks to make sure that no values are duplicated before converting.
     """
 
-    for v in dct.values():
+    for v in list(dct.values()):
         if not _is_hashable(v):
             err = "Can't invert a dictionary containing unhashable keys"
             raise NineMLRuntimeError(err)
 
-    assert_no_duplicates(dct.values())
-    return dict(zip(dct.values(), dct.keys()))
+    assert_no_duplicates(list(dct.values()))
+    return dict(list(zip(list(dct.values()), list(dct.keys()))))
 
 
 def flatten_first_level(nested_list):
@@ -225,8 +227,8 @@ def safe_dictionary_merge(dictionaries):
     NineMLRuntimeError: Key Collision while merging dictionarys
 
     """
-    kv_pairs = list(itertools.chain(*[d.iteritems() for d in dictionaries]))
-    keys, _ = zip(*kv_pairs)
+    kv_pairs = list(itertools.chain(*[iter(d.items()) for d in dictionaries]))
+    keys, _ = list(zip(*kv_pairs))
     assert_no_duplicates(keys, 'Key collision while merging dictionarys')
     return dict(kv_pairs)
 

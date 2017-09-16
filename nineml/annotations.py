@@ -1,3 +1,6 @@
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 from itertools import chain
 from operator import attrgetter
 from nineml.utils import OrderedDefaultListDict
@@ -49,7 +52,7 @@ class BaseAnnotations(ContainerObject):
 
     def _members_iter(self, child_type):
         assert child_type is _AnnotationsBranch
-        return chain(*self._branches.itervalues())
+        return chain(*iter(self._branches.values()))
 
     def __len__(self):
         return len(self._branches)
@@ -59,7 +62,7 @@ class BaseAnnotations(ContainerObject):
 
     @property
     def branches(self):
-        return chain(*self._branches.itervalues())
+        return chain(*iter(self._branches.values()))
 
     def branch(self, key_index):
         try:
@@ -90,16 +93,16 @@ class BaseAnnotations(ContainerObject):
         return not self._branches
 
     def __iter__(self):
-        return self._branches.iterkeys()
+        return iter(self._branches.keys())
 
     def __contains__(self, key):
         return self._parse_key(key) in self._branches
 
     def has_namespace(self, ns):
-        return ns in set(ns for _, ns in self._branches.iterkeys())
+        return ns in set(ns for _, ns in self._branches.keys())
 
     def namespace(self, namespace):
-        return (b for (k, ns), b in self._branches.iteritems()
+        return (b for (k, ns), b in self._branches.items()
                 if ns == namespace)
 
     def __getitem__(self, key):
@@ -270,7 +273,7 @@ class BaseAnnotations(ContainerObject):
 
     def _sub_branches_serialize(self, **kwargs):
         members = []
-        for key_branches in self._branches.itervalues():
+        for key_branches in self._branches.values():
             for branch in key_branches:
                 members.append(branch.serialize(**kwargs))
         return members
@@ -332,7 +335,7 @@ class Annotations(BaseAnnotations, DocumentLevelObject):
 
     def __repr__(self):
         rep = "Annotations:"
-        for key_branch in self._branches.itervalues():
+        for key_branch in self._branches.values():
             for b in key_branch:
                 rep += '\n' + b._repr(indent='  ')
         return rep
@@ -467,7 +470,7 @@ class _AnnotationsBranch(BaseAnnotations):
         rep = "{}{{{}}}{}:".format(indent, self.ns, self.name)
         for attr, val in self.attr_items():
             rep += '\n{}{}={}'.format(indent + '  ', attr, val)
-        for key_branches in self._branches.itervalues():
+        for key_branches in self._branches.values():
             for branch in key_branches:
                 rep += '\n' + branch._repr(indent=indent + '  ')
         if self.body is not None:
@@ -475,13 +478,13 @@ class _AnnotationsBranch(BaseAnnotations):
         return rep
 
     def attr_values(self):
-        return self._attr.itervalues()
+        return iter(self._attr.values())
 
     def attr_keys(self):
-        return self._attr.iterkeys()
+        return iter(self._attr.keys())
 
     def attr_items(self):
-        return self._attr.iteritems()
+        return iter(self._attr.items())
 
     def set(self, key, *args):
         """
@@ -571,7 +574,7 @@ class _AnnotationsBranch(BaseAnnotations):
         super(_AnnotationsBranch, self).serialize_node(node, **options)
         if self.body is not None:
             node.body(self.body)
-        for key, val in self._attr.iteritems():
+        for key, val in self._attr.items():
             node.attr(key, val)
 
     @classmethod

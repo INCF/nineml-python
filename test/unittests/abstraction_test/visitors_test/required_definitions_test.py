@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from itertools import chain
 from nineml.abstraction.dynamics import (

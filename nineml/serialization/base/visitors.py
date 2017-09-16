@@ -1,3 +1,8 @@
+from builtins import zip
+from builtins import str
+from builtins import next
+from past.builtins import basestring
+from builtins import object
 import os.path
 import re
 from abc import ABCMeta, abstractmethod
@@ -10,6 +15,7 @@ from nineml.annotations import (
     Annotations, PY9ML_NS, VALIDATION, DIMENSIONALITY)
 from .. import DEFAULT_VERSION, NINEML_BASE_NS
 from nineml.serialization.base.nodes import NodeToSerialize, NodeToUnserialize
+from future.utils import with_metaclass
 
 
 # Regex's used in 9ML version string parsing
@@ -18,12 +24,10 @@ version_re = re.compile(r'(\d+)\.(\d+)')
 nineml_version_re = re.compile(r'{}([\d\.]+)/?'.format(NINEML_BASE_NS))
 
 
-class BaseVisitor(object):
+class BaseVisitor(with_metaclass(ABCMeta, object)):
     """
     Base class for BaseSerializer and BaseUnserializer
     """
-
-    __metaclass__ = ABCMeta
 
     # A flag to determine whether the serialization form supports element
     # bodies, which is only true of XML amongst the supported formats at this
@@ -106,7 +110,7 @@ class BaseVisitor(object):
 # =============================================================================
 
 
-class BaseSerializer(BaseVisitor):
+class BaseSerializer(with_metaclass(ABCMeta, BaseVisitor)):
     """
     Abstract base class for all serializer classes
 
@@ -118,8 +122,6 @@ class BaseSerializer(BaseVisitor):
         Document to serialize or use as a reference when serializing members
         of it
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, version=DEFAULT_VERSION, document=None,
                  preserve_order=False, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -385,7 +387,7 @@ class BaseSerializer(BaseVisitor):
         return url
 
 
-class BaseUnserializer(BaseVisitor):
+class BaseUnserializer(with_metaclass(ABCMeta, BaseVisitor)):
     """
     Abstract base class for all unserializer classes
 
@@ -407,8 +409,6 @@ class BaseUnserializer(BaseVisitor):
         Document to serialize or use as a reference when unserializing elements
         of it
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, root, version=None, url=None, class_map=None, # @ReservedAssignment @IgnorePep8
                  document=None):
@@ -497,7 +497,7 @@ class BaseUnserializer(BaseVisitor):
                 "'{}' was not found in the NineML document {} (elements in "
                 "the document were '{}').".format(
                     name, self.url or '',
-                    "', '".join(self._doc_elems.iterkeys())))
+                    "', '".join(iter(self._doc_elems.keys()))))
         nineml_object = self.visit(serial_elem, nineml_cls, **options)
         AddToDocumentVisitor(self.document, **options).visit(nineml_object,
                                                              **options)
@@ -562,10 +562,10 @@ class BaseUnserializer(BaseVisitor):
         return self._url
 
     def iterkeys(self):
-        return self._doc_elems.iterkeys()
+        return iter(self._doc_elems.keys())
 
     def keys(self):
-        return list(self.iterkeys())
+        return list(self.keys())
 
     @property
     def root(self):

@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.values import ArrayValue
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -19,7 +20,7 @@ class TestArrayValueExceptions(unittest.TestCase):
         message: Values provided to ArrayValue ({}) could not be converted to a
         """
 
-        for val in instances_of_all_types['ArrayValue'].itervalues():
+        for val in instances_of_all_types['ArrayValue'].values():
             self.assertRaises(
                 NineMLValueError,
                 val.__init__,
@@ -76,7 +77,7 @@ class TestArrayValueExceptions(unittest.TestCase):
         line #: 321
         message: ArrayValues cannot be converted to a single float
         """
-        for val in instances_of_all_types['ArrayValue'].itervalues():
+        for val in instances_of_all_types['ArrayValue'].values():
             self.assertRaises(
                 TypeError,
                 float,
@@ -91,7 +92,7 @@ class TestRandomDistributionValueExceptions(unittest.TestCase):
         message: RandomDistributionValues cannot be converted to a single float
         """
 
-        randomvalue = next(instances_of_all_types['RandomDistributionValue'].itervalues())
+        randomvalue = next(iter(instances_of_all_types['RandomDistributionValue'].values()))
         self.assertRaises(
             TypeError,
             float,
@@ -103,7 +104,7 @@ class TestRandomDistributionValueExceptions(unittest.TestCase):
         message: Generator not set for RandomDistributionValue '{}'
         """
 
-        randomvalue = next(instances_of_all_types['RandomDistributionValue'].itervalues())
+        randomvalue = next(iter(instances_of_all_types['RandomDistributionValue'].values()))
         gen = iter(randomvalue)
         self.assertRaises(
             NineMLRuntimeError,
@@ -116,7 +117,7 @@ class TestRandomDistributionValueExceptions(unittest.TestCase):
         message:
         """
 
-        randomvalue = next(instances_of_all_types['RandomDistributionValue'].itervalues())
+        randomvalue = next(iter(instances_of_all_types['RandomDistributionValue'].values()))
         self.assertRaises(
             NotImplementedError,
             randomvalue.inverse)

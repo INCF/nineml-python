@@ -1,3 +1,4 @@
+from builtins import zip
 from abc import ABCMeta, abstractmethod
 from . import BaseULObject
 from nineml.abstraction.connectionrule import (
@@ -10,11 +11,10 @@ from nineml.abstraction.ports import (
 from nineml.user.component_array import ComponentArray
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import NineMLRuntimeError
+from future.utils import with_metaclass
 
 
-class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
-
-    __metaclass__ = ABCMeta
+class BaseConnectionGroup(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentLevelObject), {}))):
 
     nineml_attr = ('name', 'source_port', 'destination_port')
     nineml_child = {'source': ComponentArray,
@@ -98,19 +98,19 @@ class BaseConnectionGroup(BaseULObject, DocumentLevelObject):
         else:
             if (port_conn.sender_role == 'pre' and
                     port_conn.receiver_role == 'post'):
-                source_inds, dest_inds = zip(*projection.connections())
+                source_inds, dest_inds = list(zip(*projection.connections()))
             elif (port_conn.sender_role == 'post' and
                   port_conn.receiver_role == 'pre'):
-                source_inds, dest_inds = zip(*(
-                    (d, s) for s, d in projection.connections()))
+                source_inds, dest_inds = list(zip(*(
+                    (d, s) for s, d in projection.connections())))
             elif port_conn.sender_role == 'pre':
-                source_inds, dest_inds = zip(*(
+                source_inds, dest_inds = list(zip(*(
                     (s, i) for i, (s, _) in enumerate(
-                        sorted(projection.connections()))))
+                        sorted(projection.connections())))))
             elif port_conn.receiver_role == 'post':
-                source_inds, dest_inds = zip(*(
+                source_inds, dest_inds = list(zip(*(
                     (i, d) for i, (_, d) in enumerate(
-                        sorted(projection.connections()))))
+                        sorted(projection.connections())))))
             else:
                 assert False
             conn_props = ConnectionRuleProperties(

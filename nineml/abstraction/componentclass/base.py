@@ -7,6 +7,8 @@ This module provides the base class for these.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from builtins import next
+from past.builtins import basestring
 from abc import ABCMeta
 from .. import BaseALObject
 from nineml.base import ContainerObject
@@ -18,12 +20,11 @@ from ..expressions import Alias, Constant
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import name_error
 from ..base import Parameter  # @IgnorePep8
+from future.utils import with_metaclass
 
 
-class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
+class ComponentClass(with_metaclass(ABCMeta, type('NewBase', (BaseALObject, DocumentLevelObject, ContainerObject), {}))):
     """Base class for ComponentClasses in different 9ML modules."""
-
-    __metaclass__ = ABCMeta  # Abstract base class
     nineml_type_v1 = 'ComponentClass'
     nineml_attr = ('name',)
     nineml_children = (Parameter, Alias, Constant)
@@ -79,15 +80,15 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
     @property
     def parameters(self):
         """Returns an iterator over the local |Parameter| objects"""
-        return self._parameters.itervalues()
+        return iter(self._parameters.values())
 
     @property
     def aliases(self):
-        return self._aliases.itervalues()
+        return iter(self._aliases.values())
 
     @property
     def constants(self):
-        return self._constants.itervalues()
+        return iter(self._constants.values())
 
     @name_error
     def parameter(self, name):
@@ -103,15 +104,15 @@ class ComponentClass(BaseALObject, DocumentLevelObject, ContainerObject):
 
     @property
     def parameter_names(self):
-        return self._parameters.iterkeys()
+        return iter(self._parameters.keys())
 
     @property
     def alias_names(self):
-        return self._aliases.iterkeys()
+        return iter(self._aliases.keys())
 
     @property
     def constant_names(self):
-        return self._constants.iterkeys()
+        return iter(self._constants.keys())
 
     @property
     def dimensions(self):

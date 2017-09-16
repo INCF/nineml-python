@@ -5,6 +5,7 @@ This file contains the ConnectionRuleValidator class for validating component
 :license: BSD-3, see LICENSE for details.
 """
 
+from builtins import object
 from nineml.visitors.validators import NoDuplicatedObjectsValidator
 from .general import (
     AliasesAreNotRecursiveConnectionRuleValidator,

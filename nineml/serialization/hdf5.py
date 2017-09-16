@@ -1,9 +1,11 @@
+from builtins import str
+from builtins import zip
 import h5py
 from . import NINEML_BASE_NS
 from tempfile import mkstemp
 import contextlib
 import nineml
-from itertools import chain, izip, repeat
+from itertools import chain, repeat
 from nineml.exceptions import (NineMLSerializationError,
                                NineMLSerializationNotSupportedError,
                                NineMLMissingSerializationError)
@@ -102,12 +104,12 @@ class HDF5Unserializer(BaseUnserializer):
             raise NineMLSerializationError(
                 "'{}' is not a multiple element within {}"
                 .format(nineml_type, parent))
-        return children.itervalues()
+        return iter(children.values())
 
     def get_all_children(self, parent, **options):  # @UnusedVariable
         return chain(
-            ((n, e) for n, e in parent.iteritems() if not e.attrs[MULT_ATTR]),
-            *(izip(repeat(n), e.itervalues()) for n, e in parent.iteritems()
+            ((n, e) for n, e in parent.items() if not e.attrs[MULT_ATTR]),
+            *(zip(repeat(n), iter(e.values())) for n, e in parent.items()
               if e.attrs[MULT_ATTR]))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
@@ -120,7 +122,7 @@ class HDF5Unserializer(BaseUnserializer):
             return None
 
     def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
-        return serial_elem.attrs.iterkeys()
+        return iter(serial_elem.attrs.keys())
 
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable
         try:

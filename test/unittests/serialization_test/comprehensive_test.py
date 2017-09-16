@@ -9,7 +9,7 @@ from nineml.utils.comprehensive_example import (
 from nineml.serialization import ext_to_format, format_to_serializer
 
 
-format_to_ext = dict((v, k) for k, v in ext_to_format.iteritems())  # @UndefinedVariable @IgnorePep8
+format_to_ext = dict((v, k) for k, v in ext_to_format.items())  # @UndefinedVariable @IgnorePep8
 
 
 class TestComprehensiveSerialization(TestCase):
@@ -28,7 +28,7 @@ class TestComprehensiveSerialization(TestCase):
             if version == 1.0:
                 docs = v1_safe_docs
             else:
-                docs = instances_of_all_types['NineML'].values()
+                docs = list(instances_of_all_types['NineML'].values())
             for format in format_to_serializer:  # @ReservedAssignment
                 try:
                     ext = format_to_ext[format]

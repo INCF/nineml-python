@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.dynamics.regimes import (TimeDerivative, Regime)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -66,7 +67,7 @@ class TestRegimeExceptions(unittest.TestCase):
                 err = 'Unexpected Arg: %s' % arg
         """
 
-        regime = next(instances_of_all_types['Regime'].itervalues())
+        regime = next(iter(instances_of_all_types['Regime'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             regime.__init__)
@@ -150,7 +151,7 @@ class TestRegimeExceptions(unittest.TestCase):
             if not isinstance(alias, Alias):
         """
 
-        regime = next(instances_of_all_types['Regime'].itervalues())
+        regime = next(iter(instances_of_all_types['Regime'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             regime.__init__)

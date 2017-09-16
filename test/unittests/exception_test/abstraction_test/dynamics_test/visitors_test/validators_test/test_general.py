@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.dynamics.visitors.validators.general import (RegimeGraphDynamicsValidator, TimeDerivativesAreDeclaredDynamicsValidator, StateAssignmentsAreOnStateVariablesDynamicsValidator)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -31,7 +32,7 @@ class TestRegimeGraphDynamicsValidatorExceptions(unittest.TestCase):
             if len(connected) < len(self.regimes):
         """
 
-        regimegraphdynamicsvalidator = next(instances_of_all_types['RegimeGraphDynamicsValidator'].itervalues())
+        regimegraphdynamicsvalidator = next(iter(instances_of_all_types['RegimeGraphDynamicsValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             regimegraphdynamicsvalidator.__init__,
@@ -58,7 +59,7 @@ class TestTimeDerivativesAreDeclaredDynamicsValidatorExceptions(unittest.TestCas
             if td not in self.sv_declared:
         """
 
-        timederivativesaredeclareddynamicsvalidator = next(instances_of_all_types['TimeDerivativesAreDeclaredDynamicsValidator'].itervalues())
+        timederivativesaredeclareddynamicsvalidator = next(iter(instances_of_all_types['TimeDerivativesAreDeclaredDynamicsValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             timederivativesaredeclareddynamicsvalidator.__init__,
@@ -85,7 +86,7 @@ class TestStateAssignmentsAreOnStateVariablesDynamicsValidatorExceptions(unittes
             if sa not in self.sv_declared:
         """
 
-        stateassignmentsareonstatevariablesdynamicsvalidator = next(instances_of_all_types['StateAssignmentsAreOnStateVariablesDynamicsValidator'].itervalues())
+        stateassignmentsareonstatevariablesdynamicsvalidator = next(iter(instances_of_all_types['StateAssignmentsAreOnStateVariablesDynamicsValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             stateassignmentsareonstatevariablesdynamicsvalidator.__init__,

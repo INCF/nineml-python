@@ -4,6 +4,8 @@ This file defines the Port classes used in NineML
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from builtins import str
+from builtins import object
 from abc import ABCMeta
 from . import BaseALObject
 from nineml.units import dimensionless
@@ -12,9 +14,10 @@ from nineml.exceptions import NineMLRuntimeError
 from .expressions import ExpressionSymbol
 from nineml.base import SendPortBase  # A work around to avoid circular imports
 from nineml.units import Dimension
+from future.utils import with_metaclass
 
 
-class Port(BaseALObject):
+class Port(with_metaclass(ABCMeta, BaseALObject)):
 
     """
     Base class for |AnalogSendPorts|, |AnalogReceivePorts|,
@@ -32,7 +35,6 @@ class Port(BaseALObject):
     single |AnalogSendPort| and |EventSendPort| respectively.
 
     """
-    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
     nineml_attr = ('name',)
 
@@ -63,7 +65,7 @@ class Port(BaseALObject):
         return cls(name=node.attr('name', **options))
 
 
-class DimensionedPort(Port, ExpressionSymbol):
+class DimensionedPort(with_metaclass(ABCMeta, type('NewBase', (Port, ExpressionSymbol), {}))):
     """DimensionedPort
 
     A |DimensionedPort| is the base class for ports with dimensions (e.g.
@@ -72,8 +74,6 @@ class DimensionedPort(Port, ExpressionSymbol):
 
     nineml_attr = ('name',)
     nineml_child = {'dimension': Dimension}
-
-    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
     def __init__(self, name, dimension=None):
         super(DimensionedPort, self).__init__(name)
@@ -226,7 +226,7 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     _operator_map = {'add': '+', '+': '+', }
 
     def __init__(self, name, dimension=None, operator='+'):
-        if operator not in self._operator_map.keys():
+        if operator not in list(self._operator_map.keys()):
             err = ("%s('%s')" + "specified undefined operator: '%s'") %\
                   (self.__class__.__name__, name, str(operator))
             raise NineMLRuntimeError(err)

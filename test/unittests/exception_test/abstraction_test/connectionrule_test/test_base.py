@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.connectionrule.base import (
     ConnectionRule)
@@ -24,7 +25,7 @@ class TestConnectionRuleExceptions(unittest.TestCase):
                 standard_library[self._base_len:] not in self.standard_types):
         """
 
-        connectionrule = next(instances_of_all_types['ConnectionRule'].itervalues())
+        connectionrule = next(iter(instances_of_all_types['ConnectionRule'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             connectionrule.__init__,

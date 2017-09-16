@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.componentclass.visitors.validators.names import (LocalNameConflictsComponentValidator, DimensionNameConflictsComponentValidator)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -18,7 +19,7 @@ class TestLocalNameConflictsComponentValidatorExceptions(unittest.TestCase):
         if symbol in self.symbols:
         """
 
-        localnameconflictscomponentvalidator = next(instances_of_all_types['LocalNameConflictsComponentValidator'].itervalues())
+        localnameconflictscomponentvalidator = next(iter(instances_of_all_types['LocalNameConflictsComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             localnameconflictscomponentvalidator.check_conflicting_symbol,
@@ -44,7 +45,7 @@ class TestDimensionNameConflictsComponentValidatorExceptions(unittest.TestCase):
                                self.dimensions[dimension.name]))
         """
 
-        dimensionnameconflictscomponentvalidator = next(instances_of_all_types['DimensionNameConflictsComponentValidator'].itervalues())
+        dimensionnameconflictscomponentvalidator = next(iter(instances_of_all_types['DimensionNameConflictsComponentValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             dimensionnameconflictscomponentvalidator.check_conflicting_dimension,

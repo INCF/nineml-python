@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.ports import (AnalogReducePort)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -20,7 +21,7 @@ class TestAnalogReducePortExceptions(unittest.TestCase):
                   (self.__class__.__name__, name, str(operator))
         """
 
-        analogreduceport = next(instances_of_all_types['AnalogReducePort'].itervalues())
+        analogreduceport = next(iter(instances_of_all_types['AnalogReducePort'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             analogreduceport.__init__,

@@ -1,4 +1,5 @@
 # encoding: utf-8
+from past.builtins import basestring
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
@@ -13,6 +14,7 @@ from nineml.document import Document
 from nineml.base import (
     DocumentLevelObject, ContainerObject)
 from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
+from future.utils import with_metaclass
 
 
 class Definition(BaseReference):
@@ -129,7 +131,7 @@ class Property(BaseULObject):
         self.quantity._units = units
 
 
-class Component(BaseULObject, DocumentLevelObject, ContainerObject):
+class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentLevelObject, ContainerObject), {}))):
     """
     Base class for model components.
 
@@ -152,7 +154,6 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         a dictionary containing (value,units) pairs or a
         for the component_class's properties.
     """
-    __metaclass__ = ABCMeta  # Abstract base class
     nineml_type_v1 = 'Component'
     nineml_attr = ('name',)
     nineml_children = (Property,)
@@ -197,7 +198,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         self._definition = definition
         if isinstance(properties, dict):
             properties = (Property(name, qty)
-                          for name, qty in properties.iteritems())
+                          for name, qty in properties.items())
         self.add(*properties)
         self.check_properties()
 
@@ -314,7 +315,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
         node.child(self._definition, **options)
-        node.children(self._properties.itervalues(), **options)
+        node.children(iter(self._properties.values()), **options)
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
@@ -325,7 +326,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @property
     def used_units(self):
-        return set(p.units for p in self.properties.itervalues())
+        return set(p.units for p in self.properties.values())
 
     def write(self, url, **kwargs):
         """
@@ -354,7 +355,7 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         this instance (i.e. not the prototype)
         """
         if local:
-            return self._properties.itervalues()
+            return iter(self._properties.values())
         else:
             return ContainerObject.elements(self)
 
@@ -364,11 +365,11 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
         All the properties that are defined in this component rather than its
         prototype
         """
-        return self._properties.itervalues()
+        return iter(self._properties.values())
 
     @property
     def local_property_names(self):
-        return self._properties.itervalues()
+        return iter(self._properties.values())
 
     @property
     def num_local_properties(self):
@@ -390,14 +391,14 @@ class Component(BaseULObject, DocumentLevelObject, ContainerObject):
                 self._properties[p.name] if p.name in self._properties else p
                 for p in self.definition.component.properties)
         else:
-            return self._properties.itervalues()
+            return iter(self._properties.values())
 
     @property
     def property_names(self):
         if isinstance(self.definition, Prototype):
             return (p.name for p in self.properties)
         else:
-            return self._properties.iterkeys()
+            return iter(self._properties.keys())
 
     @property
     def num_properties(self):

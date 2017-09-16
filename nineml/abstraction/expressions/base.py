@@ -5,6 +5,9 @@ This file defines mathematical classes and derived classes
 :license: BSD-3, see LICENSE for details.
 """
 from __future__ import division
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 from itertools import chain
 from copy import deepcopy
 import sympy
@@ -51,13 +54,13 @@ class Expression(AnnotatedNineMLObject):
     _func_re = re.compile(r'([\w\.]+) *\(')  # Match identifier followed by (
     _strip_parens_re = re.compile(r'^\(+(\w+)\)+$')  # Match if enclosed by ()
     _random_map = dict((str(v), Parser.unescape_random_namespace(k))
-                       for k, v in Parser.inline_randoms_dict.iteritems())
+                       for k, v in Parser.inline_randoms_dict.items())
     # The inline randoms are not actually unescaped back to their "random.*"
     # format, and are instead retained in their escaped format "random_*_",
     # but this needs to be included into the cfunc_map to avoid
     # "//Not Supported in C being prepended to the c string
     _cfunc_map = dict([(str(v), str(v))
-                       for k, v in Parser.inline_randoms_dict.iteritems()] +
+                       for k, v in Parser.inline_randoms_dict.items()] +
                       [('abs', 'fabs')])
     _rationals_re = re.compile(r'(?<!\w)([\d\.]+)\L/(?<!\w)([\d\.]+)L')
     _multiple_whitespace_re = re.compile(r'\s+')
@@ -189,7 +192,7 @@ class Expression(AnnotatedNineMLObject):
                             "Incorrect arguments provided to expression ('{}')"
                             ": '{}'\n".format(
                                 "', '".join(self.rhs_symbol_names),
-                                "', '".join(kwargs.keys())))
+                                "', '".join(list(kwargs.keys()))))
                 else:
                     try:
                         val = self.rhs.evalf(subs=kwargs)
@@ -198,7 +201,7 @@ class Expression(AnnotatedNineMLObject):
                             "Incorrect arguments provided to expression '{}'"
                             ": '{}' (expected '{}')\n".format(
                                 self.rhs,
-                                "', '".join(kwargs.keys()),
+                                "', '".join(list(kwargs.keys())),
                                 "', '".join(self.rhs_symbol_names)))
                     try:
                         val = float(val)
@@ -234,7 +237,7 @@ class Expression(AnnotatedNineMLObject):
         """Replace atoms on the RHS with values in the name_map"""
         return self.rhs.xreplace(dict(
             (Parser().parse(old), Parser().parse(new))
-            for old, new in name_map.iteritems()))
+            for old, new in name_map.items()))
 
     def subs(self, old, new):
         "Substitute 'old' expression for 'new' in the rhs of the expression"
@@ -253,7 +256,7 @@ class Expression(AnnotatedNineMLObject):
         Replaces names and function names. Deprecated
         """
         expr_str = str(self.rhs_substituted(name_map))
-        for old, new in funcname_map.iteritems():
+        for old, new in funcname_map.items():
             expr_str = re.sub(r'(?<!\w)({})\('.format(old), new, expr_str)
         expr_str = expr_str.replace('**', '^')
         return expr_str

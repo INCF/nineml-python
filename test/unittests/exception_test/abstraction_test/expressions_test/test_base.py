@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import next
 import unittest
 from nineml.abstraction.expressions.base import (ExpressionWithLHS, ExpressionWithSimpleLHS, Expression)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -18,7 +19,7 @@ class TestExpressionWithLHSExceptions(unittest.TestCase):
     def lhs_name_transform_inplace(self, name_map):
         """
 
-        expressionwithlhs = next(instances_of_all_types['ExpressionWithLHS'].itervalues())
+        expressionwithlhs = next(iter(instances_of_all_types['ExpressionWithLHS'].values()))
         self.assertRaises(
             NotImplementedError,
             expressionwithlhs.lhs_name_transform_inplace,
@@ -35,7 +36,7 @@ class TestExpressionWithLHSExceptions(unittest.TestCase):
     def lhs_atoms(self):
         """
 
-        expressionwithlhs = next(instances_of_all_types['ExpressionWithLHS'].itervalues())
+        expressionwithlhs = next(iter(instances_of_all_types['ExpressionWithLHS'].values()))
         with self.assertRaises(NotImplementedError):
             print(expressionwithlhs.lhs_atoms)
 
@@ -56,7 +57,7 @@ class TestExpressionWithSimpleLHSExceptions(unittest.TestCase):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
         """
 
-        expressionwithsimplelhs = next(instances_of_all_types['ExpressionWithSimpleLHS'].itervalues())
+        expressionwithsimplelhs = next(iter(instances_of_all_types['ExpressionWithSimpleLHS'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             expressionwithsimplelhs.__init__,
@@ -81,7 +82,7 @@ class TestExpressionWithSimpleLHSExceptions(unittest.TestCase):
             err = 'Invalid LHS target: %s' % lhs
         """
 
-        expressionwithsimplelhs = next(instances_of_all_types['ExpressionWithSimpleLHS'].itervalues())
+        expressionwithsimplelhs = next(iter(instances_of_all_types['ExpressionWithSimpleLHS'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             expressionwithsimplelhs.__init__,
@@ -115,7 +116,7 @@ class TestExpressionExceptions(unittest.TestCase):
                     except Exception:
         """
 
-        expression = next(instances_of_all_types['Expression'].itervalues())
+        expression = next(iter(instances_of_all_types['Expression'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(expression.rhs_as_python_func())
 
@@ -151,7 +152,7 @@ class TestExpressionExceptions(unittest.TestCase):
                     except Exception:
         """
 
-        expression = next(instances_of_all_types['Expression'].itervalues())
+        expression = next(iter(instances_of_all_types['Expression'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(expression.rhs_as_python_func())
 
@@ -200,7 +201,7 @@ class TestExpressionExceptions(unittest.TestCase):
                         except Exception:
         """
 
-        expression = next(instances_of_all_types['Expression'].itervalues())
+        expression = next(iter(instances_of_all_types['Expression'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(expression.rhs_as_python_func())
 

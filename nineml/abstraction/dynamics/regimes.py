@@ -4,6 +4,7 @@ This file contains the main classes for defining dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from past.builtins import basestring
 from itertools import chain
 import re
 import sympy
@@ -294,22 +295,22 @@ class Regime(BaseALObject, ContainerObject):
             defined, they are assumed to be zero in this regime.
 
         """
-        return self._time_derivatives.itervalues()
+        return iter(self._time_derivatives.values())
 
     @property
     def on_events(self):
         """Returns all the transitions out of this regime trigger by events"""
-        return self._on_events.itervalues()
+        return iter(self._on_events.values())
 
     @property
     def on_conditions(self):
         """Returns all the transitions out of this regime trigger by
         conditions"""
-        return self._on_conditions.itervalues()
+        return iter(self._on_conditions.values())
 
     @property
     def aliases(self):
-        return self._aliases.itervalues()
+        return iter(self._aliases.values())
 
     @name_error
     def time_derivative(self, variable):
@@ -331,7 +332,7 @@ class Regime(BaseALObject, ContainerObject):
 
     @property
     def time_derivative_variables(self):
-        return self._time_derivatives.iterkeys()
+        return iter(self._time_derivatives.keys())
 
     @property
     def time_derivative_keys(self):
@@ -339,7 +340,7 @@ class Regime(BaseALObject, ContainerObject):
 
     @property
     def on_event_port_names(self):
-        return self._on_events.iterkeys()
+        return iter(self._on_events.keys())
 
     @property
     def on_event_keys(self):
@@ -347,7 +348,7 @@ class Regime(BaseALObject, ContainerObject):
 
     @property
     def on_condition_triggers(self):
-        return self._on_conditions.iterkeys()
+        return iter(self._on_conditions.keys())
 
     @property
     def on_condition_keys(self):
@@ -355,7 +356,7 @@ class Regime(BaseALObject, ContainerObject):
 
     @property
     def alias_names(self):
-        return self._aliases.iterkeys()
+        return iter(self._aliases.keys())
 
     @property
     def transitions(self):

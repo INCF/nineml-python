@@ -8,7 +8,7 @@ from nineml.visitors.cloner import Cloner
 class TestCloners(unittest.TestCase):
 
     def test_dynamics(self):
-        for dyn in instances_of_all_types[Dynamics.nineml_type].itervalues():
+        for dyn in instances_of_all_types[Dynamics.nineml_type].values():
             clone = dyn.clone()
             self.assertNotEqual(id(dyn), id(clone))
             self.assertEqual(dyn, clone,
@@ -17,7 +17,7 @@ class TestCloners(unittest.TestCase):
 
     def test_connection_rule(self):
         for cr in instances_of_all_types[
-                ConnectionRule.nineml_type].itervalues():
+                ConnectionRule.nineml_type].values():
             clone = cr.clone()
             self.assertNotEqual(id(cr), id(clone))
             self.assertEqual(cr, clone,
@@ -26,7 +26,7 @@ class TestCloners(unittest.TestCase):
 
     def test_random_distribution(self):
         for rd in instances_of_all_types[
-                RandomDistribution.nineml_type].itervalues():
+                RandomDistribution.nineml_type].values():
             clone = rd.clone()
             self.assertNotEqual(id(rd), id(clone))
             self.assertEqual(rd, clone,
@@ -36,8 +36,8 @@ class TestCloners(unittest.TestCase):
     def test_instances_of_all_types(self):
         prev_obj = None
         cloner = Cloner()
-        for objs in instances_of_all_types.itervalues():
-            for obj in objs.itervalues():
+        for objs in instances_of_all_types.values():
+            for obj in objs.values():
                 # Skip temporary objects
                 if type(obj).__name__.startswith('_'):
                     continue

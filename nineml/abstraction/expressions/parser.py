@@ -1,5 +1,11 @@
 from __future__ import division
-from itertools import chain, izip
+from builtins import zip
+from builtins import str
+from builtins import next
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from itertools import chain
 import sympy
 from sympy.parsing.sympy_parser import (
     parse_expr as sympy_parse, standard_transformations, convert_xor)
@@ -120,7 +126,7 @@ class Parser(object):
             result.append((toknum, tokval))
         new_result = []
         # Loop through pairwise combinations
-        pair_iterator = izip(result[:-1], result[1:])
+        pair_iterator = zip(result[:-1], result[1:])
         for (toknum, tokval), (next_toknum, next_tokval) in pair_iterator:
             # Handle trivial corner cases where the logical identities
             # (i.e. True and False) are immediately negated
@@ -198,7 +204,7 @@ class Parser(object):
         """Checks if the provided Sympy function is a valid 9ML function"""
         if (isinstance(expr, sympy.Function) and
                 str(type(expr)) not in chain(
-                    cls._valid_funcs, cls.inline_randoms_dict.iterkeys())):
+                    cls._valid_funcs, iter(cls.inline_randoms_dict.keys()))):
             raise NineMLMathParseError(
                 "'{}' is a valid function in Sympy but not in 9ML"
                 .format(type(expr)))
@@ -217,7 +223,7 @@ class Parser(object):
 
     @classmethod
     def inline_random_distributions(cls):
-        return cls.inline_randoms_dict.itervalues()
+        return iter(cls.inline_randoms_dict.values())
 
     @classmethod
     def _parse_relationals(cls, expr_string, escape='__'):
@@ -285,7 +291,7 @@ class Parser(object):
                     while level_operators:
                         # Sort in order of precedence
                         prec = [cls._precedence[o] for o in level_operators]
-                        i = sorted(range(len(prec)), key=prec.__getitem__)[0]
+                        i = sorted(list(range(len(prec))), key=prec.__getitem__)[0]
                         # Pop first operator
                         operator = level_operators.pop(i)
                         arg1, arg2 = (level_operands.pop(i),

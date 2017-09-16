@@ -71,27 +71,27 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
 
     @property
     def populations(self):
-        return self._populations.itervalues()
+        return iter(self._populations.values())
 
     @property
     def projections(self):
-        return self._projections.itervalues()
+        return iter(self._projections.values())
 
     @property
     def selections(self):
-        return self._selections.itervalues()
+        return iter(self._selections.values())
 
     @property
     def population_names(self):
-        return self._populations.iterkeys()
+        return iter(self._populations.keys())
 
     @property
     def projection_names(self):
-        return self._projections.iterkeys()
+        return iter(self._projections.keys())
 
     @property
     def selection_names(self):
-        return self._selections.iterkeys()
+        return iter(self._selections.keys())
 
     @property
     def num_populations(self):
@@ -191,7 +191,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
             (BaseConnectionGroup.from_port_connection(pc, p, component_arrays)
              for pc in p.port_connections)
             for p in self.projections)))
-        return component_arrays.values(), connection_groups
+        return list(component_arrays.values()), connection_groups
 
     def scale(self, scale):
         """

@@ -1,3 +1,4 @@
+from builtins import object
 from collections import OrderedDict, namedtuple
 from nineml.exceptions import (
     NineMLInvalidElementTypeException,
@@ -41,7 +42,7 @@ class BaseVisitor(object):
         # Run the 'action_<obj-nineml_type>' method on the visited object
         result = self.action(obj, nineml_cls=nineml_cls, **kwargs)
         # Add the container object to the list of scopes
-        for child_name, child_type in nineml_cls.nineml_child.iteritems():
+        for child_name, child_type in nineml_cls.nineml_child.items():
             self.visit_child(child_name, child_type, obj,
                              nineml_cls, result, **kwargs)
         # Visit children of the object
@@ -128,7 +129,7 @@ class BaseChildResultsVisitor(BaseVisitor):
         nineml_cls = self._get_nineml_cls(obj, nineml_cls)
         # Add the container object to the list of scopes
         child_results = {}
-        for child_name, child_type in nineml_cls.nineml_child.iteritems():
+        for child_name, child_type in nineml_cls.nineml_child.items():
             child_results[child_name] = self.visit_child(
                 child_name, child_type, obj, nineml_cls, **kwargs)
         # Visit children of the object
@@ -217,7 +218,7 @@ class BaseDualVisitor(BaseVisitor):
         # Run the 'action_<obj-nineml_type>' method on the visited object
         result = self.action(obj1, obj2, nineml_cls=nineml_cls, **kwargs)
         # Add the container object to the list of scopes
-        for child_name, child_type in nineml_cls.nineml_child.iteritems():
+        for child_name, child_type in nineml_cls.nineml_child.items():
             self.visit_child(child_name, child_type, obj1, obj2,
                              parent_cls=nineml_cls, parent_result=result,
                              **kwargs)

@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.dynamics.base import (Dynamics)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -32,7 +33,7 @@ class TestDynamicsExceptions(unittest.TestCase):
                         self.regime(target)
         """
 
-        dynamics = next(instances_of_all_types['Dynamics'].itervalues())
+        dynamics = next(iter(instances_of_all_types['Dynamics'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             dynamics._resolve_transition_regimes)

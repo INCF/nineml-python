@@ -1,3 +1,4 @@
+from builtins import str
 import unittest
 from nineml.abstraction import (
     Expression, Alias, StateAssignment, TimeDerivative, AnalogReducePort,

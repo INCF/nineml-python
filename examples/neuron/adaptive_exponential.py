@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from nineml import units as un
 from nineml import abstraction as al, user as ul
 
@@ -39,7 +41,7 @@ def create_adaptive_exponential():
             al.Parameter('trefractory', un.time),
             al.Parameter('tspike', un.time),
             al.Parameter('tau_w', un.time),
-            al.Parameter('a', un.dimensionless / un.voltage),
+            al.Parameter('a', old_div(un.dimensionless, un.voltage)),
             al.Parameter('b')],
         state_variables=[
             al.StateVariable('V', un.voltage),

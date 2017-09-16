@@ -1,3 +1,7 @@
+from builtins import next
+from builtins import str
+from builtins import zip
+from past.builtins import basestring
 from itertools import chain
 import collections
 from copy import copy
@@ -5,7 +9,7 @@ from .. import BaseULObject
 import sympy
 import operator
 from operator import attrgetter
-from itertools import product, groupby, izip, repeat
+from itertools import product, groupby, repeat
 from nineml.user import DynamicsProperties, Definition
 from nineml.annotations import PY9ML_NS
 # from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
@@ -285,7 +289,7 @@ class MultiDynamics(Dynamics):
         # =====================================================================
         if isinstance(sub_components, dict):
             self.add(*(SubDynamics(name, dyn)
-                       for name, dyn in sub_components.iteritems()))
+                       for name, dyn in sub_components.items()))
         else:
             self.add(*sub_components)
         # =====================================================================
@@ -354,11 +358,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def sub_components(self):
-        return self._sub_components.itervalues()
+        return iter(self._sub_components.values())
 
     @property
     def sub_component_names(self):
-        return self._sub_components.iterkeys()
+        return iter(self._sub_components.keys())
 
     @property
     def num_sub_components(self):
@@ -370,11 +374,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def event_port_connections(self):
-        return self._event_port_connections.itervalues()
+        return iter(self._event_port_connections.values())
 
     @property
     def event_port_connection_names(self):
-        return self._event_port_connections.iterkeys()
+        return iter(self._event_port_connections.keys())
 
     @property
     def num_event_port_connections(self):
@@ -386,11 +390,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_port_connections(self):
-        return self._analog_port_connections.itervalues()
+        return iter(self._analog_port_connections.values())
 
     @property
     def analog_port_connection_names(self):
-        return self._analog_port_connections.iterkeys()
+        return iter(self._analog_port_connections.keys())
 
     @property
     def num_analog_port_connections(self):
@@ -402,11 +406,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def event_receive_port_exposures(self):
-        return self._event_receive_port_exposures.itervalues()
+        return iter(self._event_receive_port_exposures.values())
 
     @property
     def event_receive_port_exposure_names(self):
-        return self._event_receive_port_exposures.iterkeys()
+        return iter(self._event_receive_port_exposures.keys())
 
     @property
     def num_event_receive_port_exposures(self):
@@ -418,11 +422,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def event_send_port_exposures(self):
-        return self._event_send_port_exposures.itervalues()
+        return iter(self._event_send_port_exposures.values())
 
     @property
     def event_send_port_exposure_names(self):
-        return self._event_send_port_exposures.iterkeys()
+        return iter(self._event_send_port_exposures.keys())
 
     @property
     def num_event_send_port_exposures(self):
@@ -434,11 +438,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_reduce_port_exposures(self):
-        return self._analog_reduce_port_exposures.itervalues()
+        return iter(self._analog_reduce_port_exposures.values())
 
     @property
     def analog_reduce_port_exposure_names(self):
-        return self._analog_reduce_port_exposures.iterkeys()
+        return iter(self._analog_reduce_port_exposures.keys())
 
     @property
     def num_analog_reduce_port_exposures(self):
@@ -450,11 +454,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_receive_port_exposures(self):
-        return self._analog_receive_port_exposures.itervalues()
+        return iter(self._analog_receive_port_exposures.values())
 
     @property
     def analog_receive_port_exposure_names(self):
-        return self._analog_receive_port_exposures.iterkeys()
+        return iter(self._analog_receive_port_exposures.keys())
 
     @property
     def num_analog_receive_port_exposures(self):
@@ -466,11 +470,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_send_port_exposures(self):
-        return self._analog_send_port_exposures.itervalues()
+        return iter(self._analog_send_port_exposures.values())
 
     @property
     def analog_send_port_exposure_names(self):
-        return self._analog_send_port_exposures.iterkeys()
+        return iter(self._analog_send_port_exposures.keys())
 
     @property
     def num_analog_send_port_exposures(self):
@@ -482,11 +486,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def event_receive_ports(self):
-        return self._event_receive_port_exposures.itervalues()
+        return iter(self._event_receive_port_exposures.values())
 
     @property
     def event_receive_port_names(self):
-        return self._event_receive_port_exposures.iterkeys()
+        return iter(self._event_receive_port_exposures.keys())
 
     @property
     def num_event_receive_ports(self):
@@ -498,11 +502,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def event_send_ports(self):
-        return self._event_send_port_exposures.itervalues()
+        return iter(self._event_send_port_exposures.values())
 
     @property
     def event_send_port_names(self):
-        return self._event_send_port_exposures.iterkeys()
+        return iter(self._event_send_port_exposures.keys())
 
     @property
     def num_event_send_ports(self):
@@ -514,11 +518,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_reduce_ports(self):
-        return self._analog_reduce_port_exposures.itervalues()
+        return iter(self._analog_reduce_port_exposures.values())
 
     @property
     def analog_reduce_port_names(self):
-        return self._analog_reduce_port_exposures.iterkeys()
+        return iter(self._analog_reduce_port_exposures.keys())
 
     @property
     def num_analog_reduce_ports(self):
@@ -530,11 +534,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_receive_ports(self):
-        return self._analog_receive_port_exposures.itervalues()
+        return iter(self._analog_receive_port_exposures.values())
 
     @property
     def analog_receive_port_names(self):
-        return self._analog_receive_port_exposures.iterkeys()
+        return iter(self._analog_receive_port_exposures.keys())
 
     @property
     def num_analog_receive_ports(self):
@@ -546,11 +550,11 @@ class MultiDynamics(Dynamics):
 
     @property
     def analog_send_ports(self):
-        return self._analog_send_port_exposures.itervalues()
+        return iter(self._analog_send_port_exposures.values())
 
     @property
     def analog_send_port_names(self):
-        return self._analog_send_port_exposures.iterkeys()
+        return iter(self._analog_send_port_exposures.keys())
 
     @property
     def num_analog_send_ports(self):
@@ -607,7 +611,7 @@ class MultiDynamics(Dynamics):
         # We need to insert a 0-valued constant for each internal reduce port
         # that doesn't receive any connections
         unused_reduce_ports = (
-            set(chain(*(izip(repeat(sc.name), sc.analog_reduce_ports)
+            set(chain(*(zip(repeat(sc.name), sc.analog_reduce_ports)
                         for sc in self.sub_components))) -
             set(self._connected_reduce_ports()))
         return chain(
@@ -726,7 +730,7 @@ class MultiDynamics(Dynamics):
                     "', '".join(self._sub_component_keys)))
         return self._create_multi_regime(
             self.sub_component(sc_n).regime(append_namespace(r_n, sc_n))
-            for sc_n, r_n in izip(self._sub_component_keys, sub_regime_names))
+            for sc_n, r_n in zip(self._sub_component_keys, sub_regime_names))
 
     @property
     def num_parameters(self):
@@ -855,11 +859,11 @@ class _MultiRegime(Regime):
 
     @property
     def sub_regimes(self):
-        return self._sub_regimes.itervalues()
+        return iter(self._sub_regimes.values())
 
     @property
     def sub_components(self):
-        return self._sub_regimes.iterkeys()
+        return iter(self._sub_regimes.keys())
 
     @property
     def num_sub_regimes(self):
@@ -1142,7 +1146,7 @@ class MultiDynamicsProperties(DynamicsProperties):
         if isinstance(sub_components, dict):
             sub_components = [
                 SubDynamicsProperties(n, p)
-                for n, p in sub_components.iteritems()]
+                for n, p in sub_components.items()]
         self.add(*sub_components)
         if definition is None:
             # This is just until the user layer is split into structure and
@@ -1182,7 +1186,7 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     @property
     def sub_components(self):
-        return self._sub_components.itervalues()
+        return iter(self._sub_components.values())
 
     @property
     def port_exposures(self):
@@ -1206,7 +1210,7 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     @property
     def sub_component_names(self):
-        return self._sub_components.iterkeys()
+        return iter(self._sub_components.keys())
 
     @property
     def port_exposure_names(self):
@@ -1270,7 +1274,7 @@ class MultiDynamicsProperties(DynamicsProperties):
     def initial_regime(self):
         return make_regime_name(dict(
             (name, _DummyNamespaceRegime(scp.initial_regime))
-            for name, scp in self._sub_components.iteritems()))
+            for name, scp in self._sub_components.items()))
 
     @property
     def properties(self):
@@ -1329,20 +1333,20 @@ class _MultiTransition(BaseALObject, ContainerObject):
         sub_regimes = copy(self._parent._sub_regimes)
         sub_regimes.update(
             (k, t.target_regime)
-            for k, t in self._sub_transitions.iteritems())
+            for k, t in self._sub_transitions.items())
         return self._parent._parent._create_multi_regime(
-            sub_regimes.itervalues())
+            iter(sub_regimes.values()))
 
     @property
     def target_regime_name(self):
         sub_regime_names = copy(self._parent._sub_regimes)
         sub_regime_names.update(
-            (k, t.target_regime) for k, t in self._sub_transitions.iteritems())
+            (k, t.target_regime) for k, t in self._sub_transitions.items())
         return make_regime_name(sub_regime_names)
 
     @property
     def sub_transitions(self):
-        return self._sub_transitions.itervalues()
+        return iter(self._sub_transitions.values())
 
     def sub_transition(self, sub_component):
         return next(t for t in self._sub_transitions
@@ -1350,7 +1354,7 @@ class _MultiTransition(BaseALObject, ContainerObject):
 
     @property
     def sub_transition_namespaces(self):
-        return self._sub_transitions.iterkeys()
+        return iter(self._sub_transitions.keys())
 
     @property
     def state_assignments(self):

@@ -4,6 +4,8 @@ docstring needed
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from __future__ import division
+from past.utils import old_div
 from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
 from nineml.utils import assert_no_duplicates
@@ -191,7 +193,7 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
         dimension = self._get_dimensions(timederivative)
         sv = self.component_class.state_variable(timederivative.variable)
         self._compare_dimensionality(
-            dimension, sv.dimension / un.time, timederivative,
+            dimension, old_div(sv.dimension, un.time), timederivative,
             'time derivative of ' + sv.name)
 
     def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8

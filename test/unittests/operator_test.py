@@ -1,3 +1,8 @@
+from __future__ import division
+from builtins import zip
+from builtins import next
+from builtins import range
+from past.utils import old_div
 import unittest
 from string import ascii_lowercase
 from itertools import chain, cycle, repeat
@@ -31,7 +36,7 @@ dimensions = [getattr(un, d) for d in dir(un)
 quantities = [un.Quantity(v, u) for v, u in zip(
     chain(single_values, array_values), cycle(units))]
 
-named_expressions = sorted(chain(*(instances_of_all_types[t].values()
+named_expressions = sorted(chain(*(list(instances_of_all_types[t].values())
                                  for t in ('Alias', 'StateAssignment'))))
 logical_expressions = sorted(instances_of_all_types['Trigger'].values())
 anonymous_expressions = sorted(
@@ -117,8 +122,8 @@ class TestValues(unittest.TestCase):
                         np_array_val = abs(np_array_val)
                         np_val = abs(np_val)
                         val = abs(val) + 0.001
-                        val = val / 10. ** round(math.log10(val))
-                        val_scale = np_val.max() / 10.0
+                        val = old_div(val, 10. ** round(math.log10(val)))
+                        val_scale = old_div(np_val.max(), 10.0)
                         array_val = array_val * val_scale
                         np_array_val = np_array_val * val_scale
                         np_val = np_val * val_scale
@@ -254,7 +259,7 @@ class TestValues(unittest.TestCase):
                         np_val = abs(np_val)
                     else:
                         val = round(val)
-                    val = abs(val) / 10. ** round(math.log10(abs(val)))
+                    val = old_div(abs(val), 10. ** round(math.log10(abs(val))))
                 elif op in div_ops and float(val) == 0.0:
                     val = SingleValue(0.1)
                 vv_result = op(array_val, val)
@@ -453,7 +458,7 @@ class TestUnits(unittest.TestCase):
                 val = int(next(val_iter) * 10)
                 # Scale the value close to 10 to avoid overflow errors
                 if val != 0.0:
-                    val = val / 10 ** round(np.log10(abs(val)))
+                    val = old_div(val, 10 ** round(np.log10(abs(val))))
                 dim = np_dim = int(val)
             else:
                 dim = next(dim_iter)
@@ -483,7 +488,7 @@ class TestUnits(unittest.TestCase):
                 val = int(next(val_iter) * 10)
                 # Scale the value close to 10 to avoid overflow errors
                 if val != 0:
-                    val = int(val / 10 ** round(np.log10(abs(val))))
+                    val = int(old_div(val, 10 ** round(np.log10(abs(val)))))
                 unit = dim = power = val
             else:
                 unit = next(unit_iter)
@@ -533,7 +538,7 @@ class TestQuantities(unittest.TestCase):
                     val = int(next(val_iter) * 10)
                     # Scale the value close to 10 to avoid overflow errors
                     if val != 0:
-                        val = int(val / 10 ** round(np.log10(abs(val))))
+                        val = int(old_div(val, 10 ** round(np.log10(abs(val)))))
                     qty = val
                     units = op(result.units, qty)
                     len_val = 0
@@ -603,9 +608,9 @@ class TestQuantities(unittest.TestCase):
     def test_value_op_unit(self):
         self.assertEqual(10.0 * un.s, un.Quantity(10.0, un.s))
         self.assertEqual(un.s * 10.0, un.Quantity(10.0, un.s))
-        self.assertEqual(10.0 / un.s, un.Quantity(10.0, un.Hz))
-        self.assertEqual(un.s / 10.0, un.Quantity(0.1, un.s))
+        self.assertEqual(old_div(10.0, un.s), un.Quantity(10.0, un.Hz))
+        self.assertEqual(old_div(un.s, 10.0), un.Quantity(0.1, un.s))
         self.assertEqual(SingleValue(10.0) * un.s, un.Quantity(10.0, un.s))
         self.assertEqual(un.s * SingleValue(10.0), un.Quantity(10.0, un.s))
-        self.assertEqual(SingleValue(10.0) / un.s, un.Quantity(10.0, un.Hz))
-        self.assertEqual(un.s / SingleValue(10.0), un.Quantity(0.1, un.s))
+        self.assertEqual(old_div(SingleValue(10.0), un.s), un.Quantity(10.0, un.Hz))
+        self.assertEqual(old_div(un.s, SingleValue(10.0)), un.Quantity(0.1, un.s))

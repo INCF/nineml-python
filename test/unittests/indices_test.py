@@ -70,7 +70,7 @@ class TestPreserveIndices(unittest.TestCase):
             self.assertEqual(dyn.index_of(dyn.state_variable(sv)), i)
         for i, r in enumerate(self.regimes):
             self.assertEqual(dyn.index_of(dyn.regime(r)), i)
-        for r, tds in self.time_derivatives.iteritems():
+        for r, tds in self.time_derivatives.items():
             regime = dyn.regime(r)
             for i, td in enumerate(tds):
                 self.assertEquals(

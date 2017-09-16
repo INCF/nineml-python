@@ -1,5 +1,6 @@
+from builtins import zip
 from nineml.exceptions import NineMLSerializationNotSupportedError
-from itertools import izip, repeat, chain
+from itertools import repeat, chain
 from . import NINEML_BASE_NS
 from collections import OrderedDict
 from nineml.document import Document
@@ -89,8 +90,8 @@ class DictUnserializer(BaseUnserializer):
 
     def get_all_children(self, parent, **options):  # @UnusedVariable
         return chain(
-            ((n, e) for n, e in parent.iteritems() if isinstance(e, dict)),
-            *(izip(repeat(n), e) for n, e in parent.iteritems()
+            ((n, e) for n, e in parent.items() if isinstance(e, dict)),
+            *(zip(repeat(n), e) for n, e in parent.items()
               if isinstance(e, list)))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
@@ -116,7 +117,7 @@ class DictUnserializer(BaseUnserializer):
         return body
 
     def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
-        return (n for n, e in serial_elem.iteritems()
+        return (n for n, e in serial_elem.items()
                 if not self._is_child(e) and n not in (BODY_ATTR, NS_ATTR))
 
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable

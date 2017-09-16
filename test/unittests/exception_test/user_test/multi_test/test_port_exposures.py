@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import next
 import unittest
 from nineml.user.multi.port_exposures import (_BaseAnalogPortExposure, _LocalAnalogPortConnections, BasePortExposure)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -18,7 +19,7 @@ class Test_BaseAnalogPortExposureExceptions(unittest.TestCase):
     def lhs_name_transform_inplace(self, name_map):
         """
 
-        _baseanalogportexposure = next(instances_of_all_types['_BaseAnalogPortExposure'].itervalues())
+        _baseanalogportexposure = next(iter(instances_of_all_types['_BaseAnalogPortExposure'].values()))
         self.assertRaises(
             NineMLImmutableError,
             _baseanalogportexposure.lhs_name_transform_inplace,
@@ -35,7 +36,7 @@ class Test_BaseAnalogPortExposureExceptions(unittest.TestCase):
     def set_dimension(self, dimension):
         """
 
-        _baseanalogportexposure = next(instances_of_all_types['_BaseAnalogPortExposure'].itervalues())
+        _baseanalogportexposure = next(iter(instances_of_all_types['_BaseAnalogPortExposure'].values()))
         self.assertRaises(
             NineMLImmutableError,
             _baseanalogportexposure.set_dimension,
@@ -55,7 +56,7 @@ class Test_LocalAnalogPortConnectionsExceptions(unittest.TestCase):
     def lhs_name_transform_inplace(self, name_map):
         """
 
-        _localanalogportconnections = next(instances_of_all_types['_LocalAnalogPortConnections'].itervalues())
+        _localanalogportconnections = next(iter(instances_of_all_types['_LocalAnalogPortConnections'].values()))
         self.assertRaises(
             NineMLImmutableError,
             _localanalogportconnections.lhs_name_transform_inplace,
@@ -76,7 +77,7 @@ class TestBasePortExposureExceptions(unittest.TestCase):
         if self._sub_component is None:
         """
 
-        baseportexposure = next(instances_of_all_types['BasePortExposure'].itervalues())
+        baseportexposure = next(iter(instances_of_all_types['BasePortExposure'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportexposure.sub_component)
 
@@ -92,7 +93,7 @@ class TestBasePortExposureExceptions(unittest.TestCase):
         if self._port is None:
         """
 
-        baseportexposure = next(instances_of_all_types['BasePortExposure'].itervalues())
+        baseportexposure = next(iter(instances_of_all_types['BasePortExposure'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportexposure.port)
 

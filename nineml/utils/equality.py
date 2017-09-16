@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import zip
 import re
 import math
 import itertools
@@ -64,4 +65,4 @@ def xml_equal(xml1, xml2, indent='', annotations=False):
                                  for c in children2)))
         return False
     return all(xml_equal(c1, c2, indent=indent + '    ')
-               for c1, c2 in itertools.izip(children1, children2))
+               for c1, c2 in zip(children1, children2))

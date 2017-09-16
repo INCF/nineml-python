@@ -1,3 +1,4 @@
+from builtins import str
 import re
 from lxml import etree
 from lxml.builder import ElementMaker
@@ -121,7 +122,7 @@ class XMLUnserializer(BaseUnserializer):
         return body
 
     def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
-        return serial_elem.attrib.keys()
+        return list(serial_elem.attrib.keys())
 
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable
         return extract_xmlns(serial_elem.tag)

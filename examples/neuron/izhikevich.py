@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from nineml import units as un
 from nineml import abstraction as al, user as ul, Document
 from nineml.xml import etree, E
@@ -25,15 +27,15 @@ def create_izhikevich():
         al.Parameter('a', un.per_time),
         al.Parameter('b', un.per_time),
         al.Parameter('c', un.voltage),
-        al.Parameter('d', un.voltage / un.time),
+        al.Parameter('d', old_div(un.voltage, un.time)),
         al.Parameter('C_m', un.capacitance),
-        al.Parameter('alpha', un.dimensionless / (un.voltage * un.time)),
+        al.Parameter('alpha', old_div(un.dimensionless, (un.voltage * un.time))),
         al.Parameter('beta', un.per_time),
-        al.Parameter('zeta', un.voltage / un.time)]
+        al.Parameter('zeta', old_div(un.voltage, un.time))]
 
     state_variables = [
         al.StateVariable('V', un.voltage),
-        al.StateVariable('U', un.voltage / un.time)]
+        al.StateVariable('U', old_div(un.voltage, un.time))]
 
     c1 = al.Dynamics(
         name="Izhikevich",
@@ -55,9 +57,9 @@ def create_izhikevich_fast_spiking():
         name='IzhikevichFastSpiking',
         parameters=[
             al.Parameter('a', un.per_time),
-            al.Parameter('b', un.conductance / (un.voltage ** 2)),
+            al.Parameter('b', old_div(un.conductance, (un.voltage ** 2))),
             al.Parameter('c', un.voltage),
-            al.Parameter('k', un.conductance / un.voltage),
+            al.Parameter('k', old_div(un.conductance, un.voltage)),
             al.Parameter('Vr', un.voltage),
             al.Parameter('Vt', un.voltage),
             al.Parameter('Vb', un.voltage),

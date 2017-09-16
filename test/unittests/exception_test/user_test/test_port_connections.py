@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import next
 import unittest
 from nineml.user.port_connections import (EventPortConnection, BasePortConnection, AnalogPortConnection)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -19,7 +20,7 @@ class TestEventPortConnectionExceptions(unittest.TestCase):
         if not isinstance(self.send_port, EventSendPort):
         """
 
-        eventportconnection = next(instances_of_all_types['EventPortConnection'].itervalues())
+        eventportconnection = next(iter(instances_of_all_types['EventPortConnection'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             eventportconnection._check_ports)
@@ -40,7 +41,7 @@ class TestEventPortConnectionExceptions(unittest.TestCase):
         if not isinstance(self.receive_port, EventReceivePort):
         """
 
-        eventportconnection = next(instances_of_all_types['EventPortConnection'].itervalues())
+        eventportconnection = next(iter(instances_of_all_types['EventPortConnection'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             eventportconnection._check_ports)
@@ -88,7 +89,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
             if sender_name is not None:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
@@ -144,7 +145,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         elif sender_name is None:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
@@ -205,7 +206,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
             if receiver_name is not None:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
@@ -271,7 +272,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         elif receiver_name is None:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             baseportconnection.__init__,
@@ -294,7 +295,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if not self.is_bound():
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportconnection.sender)
 
@@ -310,7 +311,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if not self.is_bound():
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportconnection.receiver)
 
@@ -326,7 +327,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if not self.is_bound():
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportconnection.send_port)
 
@@ -342,7 +343,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if not self.is_bound():
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportconnection.receive_port)
 
@@ -358,7 +359,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if self._sender_role is None:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportconnection.sender_role)
 
@@ -374,7 +375,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if self._receiver_role is None:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportconnection.receiver_role)
 
@@ -390,7 +391,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if self._sender_name is None:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportconnection.sender_name)
 
@@ -406,7 +407,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         if self._receiver_name is None:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         with self.assertRaises(NineMLRuntimeError):
             print(baseportconnection.receiver_name)
 
@@ -435,7 +436,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         except NineMLNameError:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         self.assertRaises(
             NineMLNameError,
             baseportconnection.bind,
@@ -474,7 +475,7 @@ class TestBasePortConnectionExceptions(unittest.TestCase):
         except NineMLNameError:
         """
 
-        baseportconnection = next(instances_of_all_types['BasePortConnection'].itervalues())
+        baseportconnection = next(iter(instances_of_all_types['BasePortConnection'].values()))
         self.assertRaises(
             NineMLNameError,
             baseportconnection.bind,
@@ -617,7 +618,7 @@ class TestAnalogPortConnectionExceptions(unittest.TestCase):
         if not isinstance(self.send_port, AnalogSendPort):
         """
 
-        analogportconnection = next(instances_of_all_types['AnalogPortConnection'].itervalues())
+        analogportconnection = next(iter(instances_of_all_types['AnalogPortConnection'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             analogportconnection._check_ports)
@@ -639,7 +640,7 @@ class TestAnalogPortConnectionExceptions(unittest.TestCase):
                                               AnalogReducePort)):
         """
 
-        analogportconnection = next(instances_of_all_types['AnalogPortConnection'].itervalues())
+        analogportconnection = next(iter(instances_of_all_types['AnalogPortConnection'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             analogportconnection._check_ports)
@@ -665,7 +666,7 @@ class TestAnalogPortConnectionExceptions(unittest.TestCase):
         if self.send_port.dimension != self.receive_port.dimension:
         """
 
-        analogportconnection = next(instances_of_all_types['AnalogPortConnection'].itervalues())
+        analogportconnection = next(iter(instances_of_all_types['AnalogPortConnection'].values()))
         self.assertRaises(
             NineMLDimensionError,
             analogportconnection._check_ports)

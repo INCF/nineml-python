@@ -4,6 +4,9 @@ comprehensive testing over all 9ML elements
 """
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import division
+from past.builtins import basestring
+from past.utils import old_div
 import pkgutil
 from collections import defaultdict
 from itertools import chain
@@ -145,13 +148,13 @@ dynD = Dynamics(
     constants=[Constant('C1', -67.0 * un.Mohm)],
     aliases=[Alias('A1', Expression('SV1 / C1'))],
     ports=[AnalogSendPort('A1', dimension=un.current),
-           AnalogReducePort('ADP1', dimension=un.voltage / un.time),
+           AnalogReducePort('ADP1', dimension=old_div(un.voltage, un.time)),
            AnalogReceivePort('ARP1', dimension=un.current),
            EventSendPort('ESP1'),
            EventReceivePort('ERP1')],
     parameters=[Parameter('P1', dimension=un.time),
                 Parameter('P2', dimension=un.voltage),
-                Parameter('P3', dimension=un.voltage / (un.time * un.current))]
+                Parameter('P3', dimension=old_div(un.voltage, (un.time * un.current)))]
 )
 
 dynE = Dynamics(
@@ -543,7 +546,7 @@ def add_with_sub_elements(element):
     else:
         # If element is a dictionary or list
         try:
-            sub_elem_iter = element.itervalues()
+            sub_elem_iter = iter(element.values())
         except AttributeError:
             try:
                 sub_elem_iter = iter(element)
@@ -568,7 +571,7 @@ annotations = Annotations()
 annotations.set(('cat1', 'NS_1'), 'key1', 'value1')
 annotations.set(('cat2', 'NS_2'), 'key2', 'value2')
 instances_of_all_types[Annotations.nineml_type]['example'] = annotations
-for elem in doc1.itervalues():
+for elem in doc1.values():
     add_with_sub_elements(elem)
 # Add remaining elements that are not picked up by recursive
 # search
@@ -590,7 +593,7 @@ for importer, modname, ispkg in pkgutil.walk_packages(
         # so I swapped for the less elegant one below
         # module = importer.find_module(modname).load_module(modname)
         exec('import {} as module'.format(modname))
-        for cls in module.__dict__.itervalues():  # @UndefinedVariable
+        for cls in module.__dict__.values():  # @UndefinedVariable
             if (isinstance(cls, type) and cls.__module__ == module.__name__): # @UndefinedVariable @IgnorePep8
                 try:
                     if not cls.nineml_type.startswith('_'):
@@ -599,8 +602,8 @@ for importer, modname, ispkg in pkgutil.walk_packages(
                     pass  # Not a nineml type
 
 
-_all_class_names = set(all_types.iterkeys())
-_all_instance_names = set(instances_of_all_types.iterkeys())
+_all_class_names = set(all_types.keys())
+_all_instance_names = set(instances_of_all_types.keys())
 
 assert not (_all_class_names - _all_instance_names), (
     "Not all 9ML elements are in comprehensive example document, '{}',"

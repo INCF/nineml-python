@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from nineml.abstraction.dynamics.visitors.validators.names import (RegimeAliasMatchesBaseScopeValidator)
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -18,7 +19,7 @@ class TestRegimeAliasMatchesBaseScopeValidatorExceptions(unittest.TestCase):
         if alias.name not in self.component_class.alias_names:
         """
 
-        regimealiasmatchesbasescopevalidator = next(instances_of_all_types['RegimeAliasMatchesBaseScopeValidator'].itervalues())
+        regimealiasmatchesbasescopevalidator = next(iter(instances_of_all_types['RegimeAliasMatchesBaseScopeValidator'].values()))
         self.assertRaises(
             NineMLRuntimeError,
             regimealiasmatchesbasescopevalidator.action_alias,

@@ -1,7 +1,11 @@
 from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import str
 from .base import AnnotatedNineMLObject
 from abc import ABCMeta
-from urllib import urlopen
+from urllib.request import urlopen
 import contextlib
 import collections
 import sympy
@@ -11,6 +15,7 @@ import numpy
 import nineml
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
+from future.utils import with_metaclass
 
 # =============================================================================
 # Operator argument decorators
@@ -65,9 +70,7 @@ def parse_float_operand(op_method):
 # =============================================================================
 
 
-class BaseValue(AnnotatedNineMLObject):
-
-    __metaclass__ = ABCMeta
+class BaseValue(with_metaclass(ABCMeta, AnnotatedNineMLObject)):
 
     def is_array(self):
         return False
@@ -335,7 +338,7 @@ class ArrayValue(BaseValue):
                     float(node.visitor.get_attr(elem, 'value', **options))))
                 node.unprocessed_children.discard('ArrayValueRow')
             sorted_rows = sorted(rows, key=itemgetter(0))
-            indices, values = zip(*sorted_rows)
+            indices, values = list(zip(*sorted_rows))
             if indices[0] < 0:
                 raise NineMLSerializationError(
                     "Negative indices found in array rows")

@@ -3,6 +3,9 @@ A module containing wrappers for abstraction layer elements that
 append the namespace of a sub component to every identifier to avoid
 name clashes in the global scope
 """
+from builtins import next
+from builtins import str
+from builtins import object
 import re
 import sympy
 from ..component import Property
@@ -81,7 +84,7 @@ def split_delay_trigger_name(name):
 
 
 def make_regime_name(sub_regimes_dict):
-    sorted_keys = sorted(sub_regimes_dict.iterkeys())
+    sorted_keys = sorted(sub_regimes_dict.keys())
     return '___'.join(
         multiple_underscore_re.sub(r'\1__', sub_regimes_dict[k].relative_name)
         for k in sorted_keys)
@@ -159,7 +162,9 @@ class _NamespaceExpression(_NamespaceObject):
 
     @property
     def rhs(self):
-        """Return copy of rhs with all free symols suffixed by the namespace"""
+        """
+        Return copy of rhs with all free symbols suffixed by the namespace
+        """
         try:
             return self._object.rhs.xreplace(dict(
                 (s, sympy.Symbol(append_namespace(s, self.sub_component.name)))

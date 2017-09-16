@@ -1,3 +1,4 @@
+from past.builtins import basestring
 from . import BaseULObject
 from abc import ABCMeta, abstractmethod
 import nineml.units as un
@@ -7,11 +8,10 @@ from nineml.exceptions import (
 from nineml.abstraction.ports import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort)
+from future.utils import with_metaclass
 
 
-class BasePortConnection(BaseULObject):
-
-    __metaclass__ = ABCMeta
+class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
 
     nineml_attr = ('send_port_name', 'receive_port_name',
                     'sender_role', 'receiver_role',

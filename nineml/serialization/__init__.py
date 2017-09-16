@@ -1,8 +1,11 @@
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import basestring
 import os.path
 import re
 import time
 import weakref
-from urllib import urlopen
+from urllib.request import urlopen
 import contextlib
 from nineml.exceptions import (
     NineMLSerializationError, NineMLIOError, NineMLReloadDocumentException,
@@ -122,7 +125,7 @@ def read(url, relative_to=None, reload=False, register=True, **kwargs):  # @Rese
             raise NineMLSerializationError(
                 "Unrecognised format '{}' in url '{}', can be one of '{}'"
                 .format(format, url,
-                        "', '".join(format_to_unserializer.keys())))
+                        "', '".join(list(format_to_unserializer.keys()))))
         if Unserializer is None:
             raise NineMLSerializerNotImportedError(
                 "Cannot write to '{}' as {} serializer cannot be imported. "
@@ -176,7 +179,7 @@ def write(url, *nineml_objects, **kwargs):
     except KeyError:
         raise NineMLSerializationError(
             "Unrecognised format '{}' in url '{}', can be one of '{}'"
-            .format(format, url, "', '".join(format_to_serializer.keys())))
+            .format(format, url, "', '".join(list(format_to_serializer.keys()))))
     if Serializer is None:
         raise NineMLSerializerNotImportedError(
             "Cannot write to '{}' as {} serializer cannot be "

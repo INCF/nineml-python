@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from nineml import abstraction as al, user as ul, Document
 from nineml import units as un
 from nineml.xml import E, etree
@@ -57,22 +59,22 @@ def create_hodgkin_huxley():
         al.Parameter('celsius', un.temperature),
         al.Parameter('qfactor', un.temperature),
         al.Parameter('tendegrees', un.temperature),
-        al.Parameter('m_alpha_A', un.dimensionless / (un.time * un.voltage)),
+        al.Parameter('m_alpha_A', old_div(un.dimensionless, (un.time * un.voltage))),
         al.Parameter('m_alpha_V0', un.voltage),
         al.Parameter('m_alpha_K', un.voltage),
-        al.Parameter('m_beta_A', un.dimensionless / un.time),
+        al.Parameter('m_beta_A', old_div(un.dimensionless, un.time)),
         al.Parameter('m_beta_V0', un.voltage),
         al.Parameter('m_beta_K', un.voltage),
-        al.Parameter('h_alpha_A', un.dimensionless / un.time),
+        al.Parameter('h_alpha_A', old_div(un.dimensionless, un.time)),
         al.Parameter('h_alpha_V0', un.voltage),
         al.Parameter('h_alpha_K', un.voltage),
-        al.Parameter('h_beta_A', un.dimensionless / un.time),
+        al.Parameter('h_beta_A', old_div(un.dimensionless, un.time)),
         al.Parameter('h_beta_V0', un.voltage),
         al.Parameter('h_beta_K', un.voltage),
-        al.Parameter('n_alpha_A', un.dimensionless / (un.time * un.voltage)),
+        al.Parameter('n_alpha_A', old_div(un.dimensionless, (un.time * un.voltage))),
         al.Parameter('n_alpha_V0', un.voltage),
         al.Parameter('n_alpha_K', un.voltage),
-        al.Parameter('n_beta_A', un.dimensionless / un.time),
+        al.Parameter('n_beta_A', old_div(un.dimensionless, un.time)),
         al.Parameter('n_beta_V0', un.voltage),
         al.Parameter('n_beta_K', un.voltage)]
 
@@ -106,7 +108,7 @@ def parameterise_hodgkin_huxley(definition=None):
                     ul.Property('qfactor', 6.3 * un.degC),
                     ul.Property('tendegrees', 10.0 * un.degC),
                     ul.Property('m_alpha_A', -0.1,
-                                un.unitless / (un.ms * un.mV)),
+                                old_div(un.unitless, (un.ms * un.mV))),
                     ul.Property('m_alpha_V0', -40.0 * un.mV),
                     ul.Property('m_alpha_K', 10.0 * un.mV),
                     ul.Property('m_beta_A', 4.0 * un.per_ms),
@@ -119,7 +121,7 @@ def parameterise_hodgkin_huxley(definition=None):
                     ul.Property('h_beta_V0', -35.0 * un.mV),
                     ul.Property('h_beta_K', 10.0 * un.mV),
                     ul.Property('n_alpha_A', -0.01,
-                                un.unitless / (un.ms * un.mV)),
+                                old_div(un.unitless, (un.ms * un.mV))),
                     ul.Property('n_alpha_V0', -55.0 * un.mV),
                     ul.Property('n_alpha_K', 10.0 * un.mV),
                     ul.Property('n_beta_A', 0.125 * un.per_ms),
