@@ -1,3 +1,4 @@
+from __future__ import print_function
 from collections import OrderedDict
 import unittest
 from nineml.utils.comprehensive_example import (
@@ -156,7 +157,7 @@ class TestAccessors(unittest.TestCase):
                         .format(all_members, all_accessor_members,
                                 elem.key, name))
         for cls, child_types in non_ordered.iteritems():
-            print "{}-{}".format(cls, child_types)
+            print("{}-{}".format(cls, child_types))
 
     def test_port_accessors(self):
         for cls_name in ('Dynamics', 'DynamicsProperties', 'MultiDynamics',

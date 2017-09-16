@@ -125,7 +125,7 @@ class Connectivity(BaseConnectivity):
         super(Connectivity, self).__init__(
             rule_properties, source_size, destination_size)
         if random_seed is None:
-            random_seed = randint(0, sys.maxint)
+            random_seed = randint(0, sys.maxsize)
         self._seed = random_seed
         if rng_cls is None:
             rng_cls = Random

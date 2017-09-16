@@ -5,12 +5,13 @@ format.
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from __future__ import absolute_import
 from .base import BaseALObject, Parameter
-import dynamics
-import expressions
-import connectionrule
-import randomdistribution
-import ports
+from . import dynamics
+from . import expressions
+from . import connectionrule
+from . import randomdistribution
+from . import ports
 from .componentclass import ComponentClass
 from .expressions import Alias, Expression, Constant
 from .dynamics import (Dynamics, Regime,

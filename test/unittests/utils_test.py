@@ -358,12 +358,12 @@ class Testfilter_by_type(unittest.TestCase):
 
         # Slightly specical case for None:
         self.assertEqual(
-            filter_by_type(data, types.NoneType),
+            filter_by_type(data, type(None)),
             []
         )
 
         self.assertEqual(
-            filter_by_type(data, types.BooleanType),
+            filter_by_type(data, bool),
             []
         )
 
@@ -389,7 +389,7 @@ class Testfilter_discrete_types(unittest.TestCase):
 
         # Good Case:
         data = ['hello', 'world', 1, 2, 3]
-        types_ = [basestring, numbers.Number, types.BooleanType]
+        types_ = [basestring, numbers.Number, bool]
         filtered = filter_discrete_types(data, types_)
 
         self.assertEqual(filtered[basestring], ['hello', 'world'])

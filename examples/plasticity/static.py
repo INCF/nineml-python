@@ -1,3 +1,4 @@
+from __future__ import print_function
 from nineml import units as un, user as ul, abstraction as al, Document
 from nineml.xml import etree, E
 
@@ -41,11 +42,11 @@ if __name__ == '__main__':
 
     if args.mode == 'print':
         document = Document()
-        print etree.tostring(
+        print(etree.tostring(
             E.NineML(
                 create_static().to_xml(document),
                 parameterise_static().to_xml(document)),
-            encoding="UTF-8", pretty_print=True, xml_declaration=True)
+            encoding="UTF-8", pretty_print=True, xml_declaration=True))
     elif args.mode == 'compare':
         if ninemlcatalog is None:
             raise Exception(
@@ -58,7 +59,7 @@ if __name__ == '__main__':
             print ("Local version differs from catalog version:\n{}"
                    .format(mismatch))
         else:
-            print "Local version matches catalog version"
+            print("Local version matches catalog version")
     elif args.mode == 'save':
         if ninemlcatalog is None:
             raise Exception(
@@ -68,5 +69,5 @@ if __name__ == '__main__':
         params = parameterise_static(
             ninemlcatalog.load(catalog_path, dynamics.name))
         ninemlcatalog.save(params, catalog_path, params.name)
-        print "Saved '{}' and '{}' to catalog".format(dynamics.name,
-                                                      params.name)
+        print("Saved '{}' and '{}' to catalog".format(dynamics.name,
+                                                      params.name))

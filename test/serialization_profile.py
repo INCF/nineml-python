@@ -1,3 +1,4 @@
+from __future__ import print_function
 import shutil
 import os.path
 import tempfile
@@ -37,7 +38,7 @@ def function():
                              indent=2)
                 if print_serialized and format in printable:
                     with open(url) as f:
-                        print f.read()
+                        print(f.read())
                 reread_doc = nineml.read(url, reload=True)  # @UnusedVariable
 
     shutil.rmtree(_tmp_dir)

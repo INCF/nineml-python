@@ -1,3 +1,4 @@
+from __future__ import print_function
 import shutil
 import os.path
 import tempfile
@@ -41,7 +42,7 @@ class TestComprehensiveSerialization(TestCase):
                                  indent=2)
                     if self.print_serialized and format in self.printable:
                         with open(url) as f:
-                            print f.read()
+                            print(f.read())
                     reread_doc = nineml.read(url, reload=True)
                     self.assertTrue(doc.equals(reread_doc),
                                     doc.find_mismatch(reread_doc))

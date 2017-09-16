@@ -8,6 +8,7 @@ from nineml.exceptions import (
 from .visitors.cloner import Cloner
 from .visitors.queriers import ObjectFinder
 from .visitors.equality import EqualityChecker, MismatchFinder
+from functools import reduce
 
 
 def sort_key(elem):

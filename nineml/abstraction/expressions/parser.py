@@ -81,7 +81,7 @@ class Parser(object):
             expr = sympy_parse(
                 expr, transformations=([self] + self._sympy_transforms),
                 local_dict=self.inline_randoms_dict)
-        except Exception, e:
+        except Exception as e:
             raise NineMLMathParseError(
                 "Could not parse math-inline expression: "
                 "{}\n\n{}".format(expr, e))

@@ -14,6 +14,7 @@ from sympy import sympify
 from nineml.base import SendPortBase
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from nineml.visitors import BaseVisitor, BaseVisitorWithContext
+from functools import reduce
 
 
 class AliasesAreNotRecursiveComponentValidator(BaseVisitor):

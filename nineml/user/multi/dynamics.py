@@ -34,6 +34,7 @@ from .namespace import (
     _NamespaceInitial, _NamespaceOnCondition, append_namespace,
     split_namespace, make_regime_name, make_delay_trigger_name,
     split_multi_regime_name)
+from functools import reduce
 
 
 # Used to create initial regime name from sub-component initial regimes

@@ -8,6 +8,7 @@ from nineml.exceptions import NineMLNameError, NineMLRuntimeError
 from nineml.utils import ensure_valid_identifier
 from .component_array import ComponentArray
 from nineml.exceptions import name_error
+from functools import reduce
 
 
 def combined_port_accessor(population_accessor):

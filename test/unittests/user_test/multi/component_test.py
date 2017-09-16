@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os.path
 import unittest
 import sympy
@@ -87,7 +88,7 @@ class MultiDynamicsXML_test(unittest.TestCase):
         xml = Document(comp1, self.a, self.b).serialize(version=2)
         comp2 = XMLUnserializer(root=xml).unserialize()['test']
         if comp1 != comp2:
-            print comp2.find_mismatch(comp1)
+            print(comp2.find_mismatch(comp1))
         self.assertEquals(comp1, comp2)
 
 

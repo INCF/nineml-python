@@ -332,7 +332,7 @@ class BasePortConnection(BaseULObject):
             try:
                 sender_dynamicss = [container[sender].component_class]
                 init_kwargs['sender_name'] = sender
-            except (TypeError, KeyError), e:
+            except (TypeError, KeyError) as e:
                 raise NineMLRuntimeError(
                     "Did not find sender {} '{}' in '{}' container"
                     .format('name' if isinstance(e, KeyError) else 'role',
@@ -344,7 +344,7 @@ class BasePortConnection(BaseULObject):
             try:
                 container[receiver].component_class
                 init_kwargs['receiver_name'] = receiver
-            except (TypeError, KeyError), e:
+            except (TypeError, KeyError) as e:
                 raise NineMLRuntimeError(
                     "Did not find receiver {} '{}' in '{}' container"
                     .format('name' if isinstance(e, KeyError) else 'role',

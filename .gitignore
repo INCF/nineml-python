@@ -31,3 +31,4 @@ cover
 .sass-cache
 /_site
 .texlipse
+*.bak

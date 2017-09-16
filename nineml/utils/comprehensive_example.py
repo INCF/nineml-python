@@ -3,6 +3,7 @@ Contains an example document with every type 9ML element in it for use in
 comprehensive testing over all 9ML elements
 """
 from __future__ import absolute_import
+from __future__ import print_function
 import pkgutil
 from collections import defaultdict
 from itertools import chain
@@ -611,4 +612,4 @@ if __name__ == '__main__':
 #     t = list(r.transitions)[2]
 #     print list(list(t.sub_transitions)[0].output_events)
 #     print list(t.output_events)
-    print 'done'
+    print('done')

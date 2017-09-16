@@ -10,6 +10,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLDimensionError, NineMLValueError,
     NineMLSerializationError)
 from nineml.utils import ensure_valid_identifier
+from functools import reduce
 
 
 class Dimension(AnnotatedNineMLObject, DocumentLevelObject):

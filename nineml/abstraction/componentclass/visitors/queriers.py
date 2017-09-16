@@ -10,6 +10,7 @@ from nineml.abstraction.ports import SendPortBase
 from nineml.abstraction.expressions import Expression
 from nineml.exceptions import NineMLNameError
 import operator
+from functools import reduce
 
 
 class ComponentClassInterfaceInferer(BaseVisitor):

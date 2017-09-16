@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 from nineml.abstraction import Dynamics, ConnectionRule, RandomDistribution
 from nineml.utils.comprehensive_example import instances_of_all_types
@@ -61,25 +62,25 @@ if __name__ == '__main__':
         'SV1__e > P3__e')
     e = multi_dyn.sub_component('e').component_class
     e_port = e.event_send_port('ESP1')
-    print "id(e_port): {}".format(id(e_port))
+    print("id(e_port): {}".format(id(e_port)))
     pe = multi_dyn.event_send_port('ESP1__e')
     pe_port = pe.port
-    print "id(pe_port): {}".format(id(pe_port))
+    print("id(pe_port): {}".format(id(pe_port)))
     oe = oc.output_event('ESP1__e')
     oe_port = oe.port.port
-    print "id(oe_port): {}".format(id(oe_port))
+    print("id(oe_port): {}".format(id(oe_port)))
 
     # Clone
     multi_dyn_clone = multi_dyn.clone()
     e_clone = multi_dyn_clone.sub_component('e').component_class
     e_clone_port = e_clone.event_send_port('ESP1')
-    print "id(e_clone_port): {}".format(id(e_clone_port))
+    print("id(e_clone_port): {}".format(id(e_clone_port)))
     oc_clone = multi_dyn_clone.regime('R1___R1').on_condition(
         'SV1__e > P3__e')
     pe_clone = multi_dyn_clone.event_send_port('ESP1__e')
     pe_clone_port = pe_clone.port
-    print "id(pe_clone_port): {}".format(id(pe_clone_port))
+    print("id(pe_clone_port): {}".format(id(pe_clone_port)))
     oe_clone = oc_clone.output_event('ESP1__e')
     oe_clone_port = oe_clone.port.port
-    print "id(oe_clone_port): {}".format(id(oe_clone_port))
-    print oe
+    print("id(oe_clone_port): {}".format(id(oe_clone_port)))
+    print(oe)

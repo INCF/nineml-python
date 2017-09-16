@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 try:
     import cPickle as pkl
 except ImportError:
-    import pickle as pkl  # @UnusedImport
+    from . import pickle as pkl  # @UnusedImport
 from .dict import DictSerializer, DictUnserializer
 
 DEFAULT_PROTOCOL = -1  # Highest one available

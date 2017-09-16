@@ -11,6 +11,7 @@ from nineml.exceptions import (
     NineMLNameError)
 from .namespace import append_namespace
 from nineml.utils import ensure_valid_identifier
+from functools import reduce
 
 
 class BasePortExposure(BaseULObject):
