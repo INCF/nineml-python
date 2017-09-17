@@ -3,6 +3,7 @@ from builtins import zip
 import h5py
 from . import NINEML_BASE_NS
 from tempfile import mkstemp
+from past.builtins import basestring
 import contextlib
 import nineml
 from itertools import chain, repeat
@@ -58,7 +59,8 @@ class HDF5Serializer(BaseSerializer):
         return root
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        serial_elem.attrs[name] = value
+        serial_elem.attrs[name] = (bytes(value)
+                                   if isinstance(value, basestring) else value)
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
         self.set_attr(serial_elem, BODY_ATTR, value, **options)

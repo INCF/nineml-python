@@ -7,9 +7,8 @@ from past.utils import old_div
 import unittest
 from string import ascii_lowercase
 from itertools import chain, cycle, repeat
-import traceback
 import math
-from nineml.values import SingleValue, ArrayValue, RandomDistributionValue
+from nineml.values import SingleValue, ArrayValue
 from operator import (
     add, sub, mul, truediv, div, pow, floordiv, mod, neg, iadd, idiv,
     ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
@@ -539,7 +538,7 @@ class TestQuantities(unittest.TestCase):
                     val = int(next(val_iter) * 10)
                     # Scale the value close to 10 to avoid overflow errors
                     if val != 0:
-                        val = int(old_div(val, 10 ** round(np.log10(abs(val)))))
+                        val = val / 10 ** round(np.log10(abs(val)))
                     qty = val
                     units = op(result.units, qty)
                     len_val = 0
@@ -613,5 +612,5 @@ class TestQuantities(unittest.TestCase):
         self.assertEqual(old_div(un.s, 10.0), un.Quantity(0.1, un.s))
         self.assertEqual(SingleValue(10.0) * un.s, un.Quantity(10.0, un.s))
         self.assertEqual(un.s * SingleValue(10.0), un.Quantity(10.0, un.s))
-        self.assertEqual(old_div(SingleValue(10.0), un.s), un.Quantity(10.0, un.Hz))
-        self.assertEqual(old_div(un.s, SingleValue(10.0)), un.Quantity(0.1, un.s))
+        self.assertEqual(SingleValue(10.0), un.s) / un.Quantity(10.0, un.Hz)
+        self.assertEqual(un.s, SingleValue(10.0)) / un.Quantity(0.1, un.s) 
