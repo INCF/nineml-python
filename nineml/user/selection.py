@@ -1,4 +1,3 @@
-from builtins import str
 from operator import and_
 from collections import OrderedDict
 from . import BaseULObject

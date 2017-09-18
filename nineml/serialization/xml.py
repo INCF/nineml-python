@@ -1,4 +1,3 @@
-from builtins import str
 import re
 from lxml import etree
 from lxml.builder import ElementMaker

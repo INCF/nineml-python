@@ -1,4 +1,3 @@
-from builtins import str
 from nineml.visitors.base import BaseVisitorWithContext
 from nineml.visitors.equality import MismatchFinder
 from nineml.exceptions import (

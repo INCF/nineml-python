@@ -1,4 +1,3 @@
-from builtins import str
 from builtins import zip
 import h5py
 from . import NINEML_BASE_NS

@@ -1,4 +1,3 @@
-from builtins import str
 from builtins import zip
 import sympy
 from itertools import chain

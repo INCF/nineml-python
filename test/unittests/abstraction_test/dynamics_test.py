@@ -1,4 +1,3 @@
-from builtins import str
 import unittest
 from sympy import sympify
 from nineml.abstraction import (

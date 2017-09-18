@@ -1,4 +1,3 @@
-from builtins import str
 from builtins import object
 from nineml.exceptions import (
     NineMLSerializationError, NineMLMissingSerializationError,

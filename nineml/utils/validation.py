@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from builtins import next, str
+from builtins import next
 from past.builtins import basestring
 import re
 from ..exceptions import NineMLRuntimeError
