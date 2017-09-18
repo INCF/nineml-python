@@ -3,11 +3,6 @@ Contains an example document with every type 9ML element in it for use in
 comprehensive testing over all 9ML elements
 """
 from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from past.builtins import basestring
-from past.utils import old_div
 import pkgutil
 from collections import defaultdict
 from itertools import chain
@@ -149,14 +144,14 @@ dynD = Dynamics(
     constants=[Constant('C1', -67.0 * un.Mohm)],
     aliases=[Alias('A1', Expression('SV1 / C1'))],
     ports=[AnalogSendPort('A1', dimension=un.current),
-           AnalogReducePort('ADP1', dimension=old_div(un.voltage, un.time)),
+           AnalogReducePort('ADP1', dimension=(un.voltage / un.time)),
            AnalogReceivePort('ARP1', dimension=un.current),
            EventSendPort('ESP1'),
            EventReceivePort('ERP1')],
     parameters=[Parameter('P1', dimension=un.time),
                 Parameter('P2', dimension=un.voltage),
-                Parameter('P3', dimension=old_div(un.voltage,
-                                                  (un.time * un.current)))]
+                Parameter('P3', dimension=(un.voltage /
+                                           (un.time * un.current)))]
 )
 
 dynE = Dynamics(

@@ -103,9 +103,8 @@ class OutputEvent(BaseALObject):
 
         """
         super(OutputEvent, self).__init__()
-        self._port_name = port_name.strip()
+        self._port_name = validate_identifier(port_name)
         self._port = None
-        validate_identifier(self._port_name)
 
     @property
     def port_name(self):
@@ -193,7 +192,7 @@ class Transition(BaseALObject, ContainerObject):
         self.add(*(sa_type_dict[StateAssignment] + sa_from_str))
         self.add(*normalise_parameter_as_list(output_events))
 
-        self._target_regime_name = target_regime_name
+        self._target_regime_name = validate_identifier(target_regime_name)
         self._target_regime = None
         self._source_regime = None
 
@@ -338,9 +337,8 @@ class OnEvent(Transition):
         Transition.__init__(self, state_assignments=state_assignments,
                             output_events=output_events,
                             target_regime_name=target_regime_name)
-        self._src_port_name = src_port_name.strip()
+        self._src_port_name = validate_identifier(src_port_name)
         self._port = None
-        validate_identifier(self._src_port_name)
 
     def __repr__(self):
         return "OnEvent({})".format(self.src_port_name)

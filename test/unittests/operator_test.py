@@ -353,7 +353,7 @@ class TestExpressions(unittest.TestCase):
     def test_named_expression_operators(self):
         result = Alias('a', 'a + b')  # Arbitrary starting expression
         expr_iter = cycle(named_expressions)
-        alpha_iter = cycle(ascii_lowercase)
+        alpha_iter = cycle(set(str(ascii_lowercase)) - set('t'))
         for op in self.ops:
             if op in uniary_ops:
                 ss_result = op(Symbol(result.name))

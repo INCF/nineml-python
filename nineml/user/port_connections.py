@@ -9,6 +9,7 @@ from nineml.abstraction.ports import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort)
 from future.utils import with_metaclass
+from nineml.utils import validate_identifier
 
 
 class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
@@ -65,10 +66,10 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         assert isinstance(sender_name, (basestring, type(None)))
         assert isinstance(receiver_name, (basestring, type(None)))
         assert isinstance(receiver_role, (basestring, type(None)))
-        self._sender_role = sender_role
-        self._sender_name = sender_name
-        self._receiver_name = receiver_name
-        self._receiver_role = receiver_role
+        self._sender_role = str(sender_role)
+        self._sender_name = validate_identifier(sender_name)
+        self._receiver_name = validate_identifier(receiver_name)
+        self._receiver_role = str(receiver_role)
         # Initialise members that will hold the connected objects once they are
         # bound
         self._sender = None

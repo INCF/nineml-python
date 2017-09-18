@@ -16,6 +16,7 @@ from sympy.printing import ccode
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions.elementary.piecewise import ExprCondPair
 import re
+from nineml.utils import validate_identifier
 # import math_namespace
 from nineml.base import AnnotatedNineMLObject
 from nineml.exceptions import NineMLRuntimeError
@@ -483,7 +484,7 @@ class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):
         if not assign_to_reserved and not is_valid_lhs_target(lhs):
             err = 'Invalid LHS target: %s' % lhs
             raise NineMLRuntimeError(err)
-        self._name = lhs.strip()
+        self._name = validate_identifier(lhs)
 
     @property
     def name(self):
@@ -521,8 +522,8 @@ class ODE(ExpressionWithLHS):
     def __init__(self, dependent_variable, independent_variable, rhs):
         ExpressionWithLHS.__init__(self, rhs)
 
-        self._dependent_variable = dependent_variable
-        self._independent_variable = independent_variable
+        self._dependent_variable = validate_identifier(dependent_variable)
+        self._independent_variable = validate_identifier(independent_variable)
 
     def __repr__(self):
         return "ODE(d%s/d%s = %s)" % (self.dependent_variable,

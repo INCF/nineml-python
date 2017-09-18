@@ -70,6 +70,7 @@ def validate_identifier(name):
     if not isinstance(name, basestring):
         raise NineMLRuntimeError("'{}' identifier is not a string"
                                  .format(name))
+    name = name.strip()
     if valid_identifier_re.match(name) is None:
         raise NineMLRuntimeError(
             "Invalid identifier '{}'. Identifiers must start with an "

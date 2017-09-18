@@ -229,7 +229,7 @@ class AnalogReducePort(AnalogPort, ReceivePort):
                   (self.__class__.__name__, name, str(operator))
             raise NineMLRuntimeError(err)
         super(AnalogReducePort, self).__init__(name, dimension)
-        self._operator = operator
+        self._operator = str(operator)
 
     @property
     def operator(self):

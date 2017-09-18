@@ -40,7 +40,7 @@ class ConnectionRule(ComponentClass):
                     standard_library,
                     "', '".join(self.standard_library_basepath + t
                                 for t in self.standard_types)))
-        self._standard_library = standard_library
+        self._standard_library = str(standard_library)
         if validate:
             self.validate(**kwargs)
 
