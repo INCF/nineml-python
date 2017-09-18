@@ -62,7 +62,7 @@ class Expression(AnnotatedNineMLObject):
     _cfunc_map = dict([(str(v), str(v))
                        for k, v in Parser.inline_randoms_dict.items()] +
                       [('abs', 'fabs')])
-    _rationals_re = re.compile(r'(?<!\w)([\d\.]+)\L/(?<!\w)([\d\.]+)L')
+    _rationals_re = re.compile(r'(?<!\w)([\d\.]+)L/(?<!\w)([\d\.]+)L')
     _multiple_whitespace_re = re.compile(r'\s+')
     _ccode_print_warn_re = re.compile(r'// (?:Not supported in C:|abs)\n')
 

@@ -15,4 +15,7 @@ class TypesConnectionRuleValidator(TypesComponentValidator,
                                    BaseConnectionRuleVisitor):
 
     def action_connectionrule(self, connectionrule, **kwargs):  # @UnusedVariable @IgnorePep8
-        assert isinstance(connectionrule, ConnectionRule)
+        try:
+            assert isinstance(connectionrule, ConnectionRule)
+        except:
+            raise

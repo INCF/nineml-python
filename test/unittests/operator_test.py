@@ -9,7 +9,7 @@ from itertools import chain, cycle, repeat
 import math
 from nineml.values import SingleValue, ArrayValue
 from operator import (
-    add, sub, mul, truediv, div, pow, floordiv, mod, neg, iadd, idiv,
+    add, sub, mul, truediv, pow, floordiv, mod, neg, iadd, idiv,
     ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
 from nineml.utils.comprehensive_example import instances_of_all_types
 import numpy as np  # This is only imported here in the test as it is not dependency
@@ -42,18 +42,18 @@ anonymous_expressions = sorted(
     instances_of_all_types['TimeDerivative'].values())
 expressions = list(chain(named_expressions, anonymous_expressions))
 
-div_ops = (div, truediv, floordiv, mod, idiv, itruediv, ifloordiv, imod)
+div_ops = (truediv, floordiv, mod, idiv, itruediv, ifloordiv, imod)
 uniary_ops = [neg, abs, inv]
 
 
 class TestValues(unittest.TestCase):
 
     ops = [
-        floordiv, pow, truediv, sub, pow, neg, mod, add, pow, floordiv, div,
+        floordiv, pow, truediv, sub, pow, neg, mod, add, pow, floordiv,
         mod, mod, floordiv, truediv, truediv, abs, add, abs, pow,
-        neg, div, truediv, mul, mul, div, mod, mul, abs, abs, pow, neg,
-        add, floordiv, add, mul, truediv, sub, div, add, mod, neg, sub,
-        floordiv, sub, sub, neg, mul, abs, div]
+        neg, truediv, mul, mul, mod, mul, abs, abs, pow, neg,
+        add, floordiv, add, mul, truediv, sub, add, mod, neg, sub,
+        floordiv, sub, sub, neg, mul, abs]
 
     iops = [iadd, idiv, ifloordiv, imod, imul, ipow, isub, itruediv]
 
@@ -307,9 +307,9 @@ class TestValues(unittest.TestCase):
 class TestExpressions(unittest.TestCase):
 
     ops = [
-        pow, truediv, sub, pow, neg, add, pow, div, truediv, truediv, add, pow,
-        neg, div, truediv, mul, mul, div, mul, pow, neg, add, add, mul,
-        truediv, sub, div, add, neg, sub, sub, sub, neg, mul, div]
+        pow, truediv, sub, pow, neg, add, pow, truediv, truediv, add, pow,
+        neg, truediv, mul, mul, mul, pow, neg, add, add, mul,
+        truediv, sub, add, neg, sub, sub, sub, neg, mul]
     logical_ops = [and_, or_, inv, or_, inv, or_, and_]
     iops = [iadd, idiv, imul, ipow, isub, itruediv]
 
@@ -446,7 +446,7 @@ class TestExpressions(unittest.TestCase):
 
 class TestUnits(unittest.TestCase):
 
-    ops = [pow, mul, div, truediv, mul, truediv, pow, mul, div, div, pow]
+    ops = [pow, mul, truediv, mul, truediv, pow, mul, pow]
 
     def test_dimension_operators(self):
         result = un.dimensionless  # Arbitrary starting expression
@@ -514,9 +514,9 @@ class TestUnits(unittest.TestCase):
 class TestQuantities(unittest.TestCase):
 
     ops = [sub, sub, add, neg, truediv, mul, sub, mul, add, add, truediv, pow,
-           neg, neg, mul, add, pow, neg, abs, add, div, abs, div, pow, sub,
-           div, truediv, truediv, div, abs, neg, mul, abs, truediv, pow, sub,
-           div, mul, pow, abs]
+           neg, neg, mul, add, pow, neg, abs, add, abs, pow, sub,
+           truediv, truediv, abs, neg, mul, abs, truediv, pow, sub,
+           mul, pow, abs]
     matched_dim_ops = [add, sub]
 
     def test_quantities_operators(self):
