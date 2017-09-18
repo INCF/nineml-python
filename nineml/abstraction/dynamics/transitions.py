@@ -5,7 +5,6 @@ This file contains the definitions for the Events
 :license: BSD-3, see LICENSE for details.
 """
 
-from builtins import str
 from past.builtins import basestring
 import sympy.solvers
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse

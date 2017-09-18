@@ -2,7 +2,6 @@ from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
 from builtins import zip
-from builtins import str
 from .base import AnnotatedNineMLObject
 from abc import ABCMeta
 from urllib.request import urlopen

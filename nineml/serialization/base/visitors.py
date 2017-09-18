@@ -1,5 +1,4 @@
 from builtins import zip
-from builtins import str
 from builtins import next
 from past.builtins import basestring
 from builtins import object

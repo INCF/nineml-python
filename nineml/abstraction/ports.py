@@ -4,7 +4,6 @@ This file defines the Port classes used in NineML
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from builtins import str
 from builtins import object
 from abc import ABCMeta
 from . import BaseALObject

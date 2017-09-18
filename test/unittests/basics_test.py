@@ -1,6 +1,5 @@
 from __future__ import print_function
 from builtins import zip
-from builtins import str
 from collections import OrderedDict
 import unittest
 from nineml.utils.comprehensive_example import (

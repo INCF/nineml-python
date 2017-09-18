@@ -4,7 +4,6 @@ append the namespace of a sub component to every identifier to avoid
 name clashes in the global scope
 """
 from builtins import next
-from builtins import str
 from builtins import object
 import re
 import sympy

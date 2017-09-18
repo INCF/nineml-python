@@ -1,5 +1,4 @@
 # encoding: utf-8
-from builtins import str
 from past.builtins import basestring
 from itertools import chain
 from . import BaseULObject

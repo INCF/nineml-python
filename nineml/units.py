@@ -2,7 +2,6 @@
 from __future__ import division
 from builtins import next
 from builtins import zip
-from builtins import str
 import re
 import operator
 from sympy import Symbol
