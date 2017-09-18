@@ -612,5 +612,5 @@ class TestQuantities(unittest.TestCase):
         self.assertEqual(old_div(un.s, 10.0), un.Quantity(0.1, un.s))
         self.assertEqual(SingleValue(10.0) * un.s, un.Quantity(10.0, un.s))
         self.assertEqual(un.s * SingleValue(10.0), un.Quantity(10.0, un.s))
-        self.assertEqual(SingleValue(10.0), un.s) / un.Quantity(10.0, un.Hz)
-        self.assertEqual(un.s, SingleValue(10.0)) / un.Quantity(0.1, un.s) 
+        self.assertEqual(SingleValue(10.0) / un.s, un.Quantity(10.0, un.Hz))
+        self.assertEqual(un.s / SingleValue(10.0), un.Quantity(0.1, un.s))

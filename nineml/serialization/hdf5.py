@@ -63,7 +63,9 @@ class HDF5Serializer(BaseSerializer):
                                    if isinstance(value, basestring) else value)
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
-        self.set_attr(serial_elem, BODY_ATTR, value, **options)
+        self.set_attr(serial_elem, BODY_ATTR,
+                      (bytes(value)
+                       if isinstance(value, basestring) else value), **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
         if file.name != self._file.filename:
