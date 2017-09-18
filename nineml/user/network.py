@@ -9,7 +9,7 @@ from .selection import Selection
 from . import BaseULObject
 from nineml.exceptions import name_error
 from nineml.base import DocumentLevelObject, ContainerObject
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from .component_array import ComponentArray
 from .connection_group import BaseConnectionGroup
 from nineml.values import RandomDistributionValue
@@ -39,7 +39,7 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                  selections=[]):
         # better would be *items, then sort by type, taking the name from the
         # item
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)

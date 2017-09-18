@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from builtins import next
+from builtins import next, str
 from past.builtins import basestring
 import re
 from ..exceptions import NineMLRuntimeError
@@ -66,7 +66,7 @@ def assert_no_duplicates(lst, errmsg=None):
 valid_identifier_re = re.compile(r'[a-zA-Z](\w*[a-zA-Z0-9])?$')
 
 
-def ensure_valid_identifier(name):
+def validate_identifier(name):
     if not isinstance(name, basestring):
         raise NineMLRuntimeError("'{}' identifier is not a string"
                                  .format(name))
@@ -76,6 +76,7 @@ def ensure_valid_identifier(name):
             "alphabetic character, only contain alphnumeric and "
             "underscore characters, and end with a alphanumeric character "
             "i.e. not start or end with an underscore".format(name))
+    return str(name)
 
 valid_uri_re = re.compile(r'^(?:https?|file)://'  # http:// or https://
                           r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'

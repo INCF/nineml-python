@@ -13,7 +13,7 @@ from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from nineml.exceptions import (
     NineMLRuntimeError, NineMLDimensionError, NineMLValueError,
     NineMLSerializationError)
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from functools import reduce
 
 
@@ -33,7 +33,7 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
     def __init__(self, name, dimensions=None, **kwargs):
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         AnnotatedNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self)
@@ -285,7 +285,7 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     nineml_child = {'dimension': Dimension}
 
     def __init__(self, name, dimension, power, offset=0.0):
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         AnnotatedNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self)

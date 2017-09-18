@@ -9,7 +9,7 @@ from builtins import object
 from abc import ABCMeta
 from . import BaseALObject
 from nineml.units import dimensionless
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from nineml.exceptions import NineMLRuntimeError
 from .expressions import ExpressionSymbol
 from nineml.base import SendPortBase  # A work around to avoid circular imports
@@ -45,7 +45,7 @@ class Port(with_metaclass(ABCMeta, BaseALObject)):
         """
         super(Port, self).__init__()
         name = name.strip()
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
 
     @property

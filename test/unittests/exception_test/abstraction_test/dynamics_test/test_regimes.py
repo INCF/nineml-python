@@ -109,7 +109,7 @@ class TestRegimeExceptions(unittest.TestCase):
             self._name = 'default'
         else:
             self._name = name.strip()
-            ensure_valid_identifier(self._name)
+            validate_identifier(self._name)
         # Get Time derivatives from args or kwargs
         kw_tds = normalise_parameter_as_list(
             kwargs.get('time_derivatives', None))

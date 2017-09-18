@@ -15,7 +15,7 @@ from nineml.base import ContainerObject
 from nineml.utils.iterables import (
     filter_discrete_types,
     normalise_parameter_as_list)
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from ..expressions import Alias, Constant
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import name_error
@@ -30,7 +30,7 @@ class ComponentClass(with_metaclass(ABCMeta, type('NewBase', (BaseALObject, Docu
     nineml_children = (Parameter, Alias, Constant)
 
     def __init__(self, name, parameters=(), aliases=(), constants=()):
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
         DocumentLevelObject.__init__(self)

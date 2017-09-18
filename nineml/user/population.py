@@ -3,7 +3,7 @@ from . import BaseULObject
 from .dynamics import DynamicsProperties
 import nineml.user
 from nineml.base import DocumentLevelObject, DynamicPortsObject
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 
 
 class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
@@ -26,7 +26,7 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     nineml_child = {'cell': None}
 
     def __init__(self, name, size, cell):
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)

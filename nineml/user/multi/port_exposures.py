@@ -11,7 +11,7 @@ from nineml.exceptions import (
     NineMLNotBoundException, NineMLImmutableError, NineMLTargetMissingError,
     NineMLNameError)
 from .namespace import append_namespace
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from functools import reduce
 
 
@@ -29,7 +29,7 @@ class BasePortExposure(BaseULObject):
         if name is None:
             name = append_namespace(self.port_name, self.sub_component_name)
         else:
-            ensure_valid_identifier(name)
+            validate_identifier(name)
         self._name = name
         self._parent = None
 

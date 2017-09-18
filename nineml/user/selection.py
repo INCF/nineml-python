@@ -6,7 +6,7 @@ from nineml.base import (
     DocumentLevelObject, ContainerObject, DynamicPortsObject)
 from .population import Population
 from nineml.exceptions import NineMLNameError, NineMLRuntimeError
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from .component_array import ComponentArray
 from nineml.exceptions import name_error
 from functools import reduce
@@ -166,7 +166,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     nineml_child = {'operation': Concatenate}
 
     def __init__(self, name, operation, **kwargs):
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         BaseULObject.__init__(self, **kwargs)
         DocumentLevelObject.__init__(self)

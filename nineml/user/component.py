@@ -6,7 +6,7 @@ from nineml.exceptions import (
     NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error,
     NineMLValueError)
 from nineml.reference import BaseReference
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from ..abstraction import ComponentClass
 from nineml.units import Quantity
 from . import BaseULObject
@@ -167,7 +167,7 @@ class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentL
         properties, or create a prototype to another component_class that will
         be resolved later.
         """
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)

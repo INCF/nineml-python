@@ -39,7 +39,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
     def __init__(self, name, sub_components, port_connections=[],
                  port_exposures=[], validate_dimensions=True,
                  **kwargs):
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         BaseALObject.__init__(self)
         DocumentLevelObject.__init__(self)

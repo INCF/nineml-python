@@ -9,7 +9,7 @@ from builtins import str
 from past.builtins import basestring
 import sympy.solvers
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from nineml.abstraction.componentclass import BaseALObject
 from nineml.abstraction.expressions import (
     Expression, ExpressionWithSimpleLHS, t)
@@ -105,7 +105,7 @@ class OutputEvent(BaseALObject):
         super(OutputEvent, self).__init__()
         self._port_name = port_name.strip()
         self._port = None
-        ensure_valid_identifier(self._port_name)
+        validate_identifier(self._port_name)
 
     @property
     def port_name(self):
@@ -340,7 +340,7 @@ class OnEvent(Transition):
                             target_regime_name=target_regime_name)
         self._src_port_name = src_port_name.strip()
         self._port = None
-        ensure_valid_identifier(self._src_port_name)
+        validate_identifier(self._src_port_name)
 
     def __repr__(self):
         return "OnEvent({})".format(self.src_port_name)

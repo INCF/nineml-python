@@ -8,5 +8,5 @@ from .collections import OrderedDefaultListDict
 from .path import join_norm, restore_sys_path
 from .equality import nearly_equal, xml_equal
 from .validation import (
-    check_inferred_against_declared, ensure_valid_identifier,
+    check_inferred_against_declared, validate_identifier,
     assert_no_duplicates)

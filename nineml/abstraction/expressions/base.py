@@ -6,9 +6,9 @@ This file defines mathematical classes and derived classes
 """
 from __future__ import division
 from __future__ import unicode_literals
-from __future__ import unicode_literals
 from builtins import str
 from builtins import object
+from past.builtins import basestring
 from itertools import chain
 from copy import deepcopy
 import sympy
@@ -69,6 +69,8 @@ class Expression(AnnotatedNineMLObject):
 
     def __init__(self, rhs, **kwargs):
         super(Expression, self).__init__(**kwargs)
+        if isinstance(rhs, basestring):
+            rhs = str(rhs)  # Convert to unicode in Python 2.7
         self.rhs = rhs
 
     @property

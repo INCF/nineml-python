@@ -11,7 +11,7 @@ from .population import Population
 from .selection import Selection
 from .component import Quantity
 from nineml.base import DocumentLevelObject, ContainerObject
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
@@ -84,7 +84,7 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
         """
         Create a new projection.
         """
-        ensure_valid_identifier(name)
+        validate_identifier(name)
         self._name = name
         BaseULObject.__init__(self)
         ContainerObject.__init__(self)

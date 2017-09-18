@@ -1,6 +1,6 @@
 from ..base import AnnotatedNineMLObject
 import sympy
-from nineml.utils import ensure_valid_identifier
+from nineml.utils import validate_identifier
 from nineml.units import Dimension, dimensionless
 
 
@@ -31,7 +31,7 @@ class Parameter(BaseALObject):
         """
         super(Parameter, self).__init__()
         name = name.strip()
-        ensure_valid_identifier(name)
+        validate_identifier(name)
 
         self._name = name
         self._dimension = dimension if dimension is not None else dimensionless

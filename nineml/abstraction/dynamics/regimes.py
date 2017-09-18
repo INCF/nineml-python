@@ -8,7 +8,7 @@ from past.builtins import basestring
 from itertools import chain
 import re
 import sympy
-from nineml.utils import ensure_valid_identifier, assert_no_duplicates
+from nineml.utils import validate_identifier, assert_no_duplicates
 from nineml.utils.iterables import (filter_discrete_types,
                                     normalise_parameter_as_list)
 from nineml.exceptions import NineMLRuntimeError, name_error
@@ -41,7 +41,7 @@ class StateVariable(BaseALObject):
         self._name = name.strip()
         self._dimension = dimension if dimension is not None else dimensionless
         assert isinstance(self._dimension, Dimension)
-        ensure_valid_identifier(self._name)
+        validate_identifier(self._name)
 
     @property
     def name(self):
@@ -213,7 +213,7 @@ class Regime(BaseALObject, ContainerObject):
             self._name = 'default'
         else:
             self._name = name.strip()
-            ensure_valid_identifier(self._name)
+            validate_identifier(self._name)
 
         # Get Time derivatives from args or kwargs
         kw_tds = normalise_parameter_as_list(
