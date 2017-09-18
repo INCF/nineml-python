@@ -1,5 +1,4 @@
 from __future__ import division
-from __future__ import unicode_literals
 import unittest
 from lxml import etree
 from nineml.abstraction import (

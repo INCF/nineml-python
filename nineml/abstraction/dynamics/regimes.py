@@ -4,7 +4,6 @@ This file contains the main classes for defining dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from __future__ import unicode_literals
 from past.builtins import basestring
 from itertools import chain
 import re

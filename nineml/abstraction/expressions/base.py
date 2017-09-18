@@ -5,7 +5,6 @@ This file defines mathematical classes and derived classes
 :license: BSD-3, see LICENSE for details.
 """
 from __future__ import division
-from __future__ import unicode_literals
 from builtins import str
 from builtins import object
 from past.builtins import basestring
