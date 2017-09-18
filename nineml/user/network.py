@@ -39,7 +39,6 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
                  selections=[]):
         # better would be *items, then sort by type, taking the name from the
         # item
-        validate_identifier(name)
         self._name = validate_identifier(name)
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)

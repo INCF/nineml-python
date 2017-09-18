@@ -44,8 +44,6 @@ class Port(with_metaclass(ABCMeta, BaseALObject)):
         `name` -- The name of the port, as a `string`
         """
         super(Port, self).__init__()
-        name = name.strip()
-        validate_identifier(name)
         self._name = validate_identifier(name)
 
     @property

@@ -12,9 +12,13 @@ from nineml.user.component_array import ComponentArray
 from nineml.base import DocumentLevelObject
 from nineml.exceptions import NineMLRuntimeError
 from future.utils import with_metaclass
+from nineml.utils import validate_identifier
 
 
-class BaseConnectionGroup(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentLevelObject), {}))):
+class BaseConnectionGroup(
+        with_metaclass(ABCMeta,
+                       type('NewBase',
+                            (BaseULObject, DocumentLevelObject), {}))):
 
     nineml_attr = ('name', 'source_port', 'destination_port')
     nineml_child = {'source': ComponentArray,

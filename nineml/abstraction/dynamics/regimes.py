@@ -4,6 +4,7 @@ This file contains the main classes for defining dynamics
 :copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from __future__ import unicode_literals
 from past.builtins import basestring
 from itertools import chain
 import re
@@ -38,7 +39,7 @@ class StateVariable(BaseALObject):
         :param name:  The name of the state variable.
         """
         super(StateVariable, self).__init__()
-        self._name = validate_identifier(name).strip()
+        self._name = validate_identifier(name)
         self._dimension = dimension if dimension is not None else dimensionless
         assert isinstance(self._dimension, Dimension)
         validate_identifier(self._name)
@@ -212,7 +213,7 @@ class Regime(BaseALObject, ContainerObject):
         if name is None:
             self._name = 'default'
         else:
-            self._name = validate_identifier(name).strip()
+            self._name = validate_identifier(name)
             validate_identifier(self._name)
 
         # Get Time derivatives from args or kwargs

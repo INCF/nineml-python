@@ -26,7 +26,6 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     nineml_child = {'cell': None}
 
     def __init__(self, name, size, cell):
-        validate_identifier(name)
         self._name = validate_identifier(name)
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)

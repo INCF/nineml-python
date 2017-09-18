@@ -5,6 +5,7 @@ from nineml.exceptions import (
     NineMLUnexpectedMultipleSerializationError)
 from nineml.reference import Reference
 from nineml.annotations import Annotations
+from nineml.utils import validate_identifier
 
 
 class BaseNode(object):

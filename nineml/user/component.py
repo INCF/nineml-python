@@ -167,7 +167,6 @@ class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentL
         properties, or create a prototype to another component_class that will
         be resolved later.
         """
-        validate_identifier(name)
         self._name = validate_identifier(name)
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)

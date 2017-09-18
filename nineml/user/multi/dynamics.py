@@ -279,7 +279,6 @@ class MultiDynamics(Dynamics):
                  analog_reduce_port_exposures=None,
                  validate_dimensions=True,
                  **kwargs):
-        validate_identifier(name)
         self._name = validate_identifier(name)
         BaseALObject.__init__(self)
         DocumentLevelObject.__init__(self)
@@ -1134,7 +1133,6 @@ class MultiDynamicsProperties(DynamicsProperties):
     def __init__(self, name, sub_components, port_connections=[],
                  port_exposures=[], check_initial_values=False,
                  definition=None):
-        validate_identifier(name)
         self._name = validate_identifier(name)
         # Initiate inherited base classes
         BaseULObject.__init__(self)

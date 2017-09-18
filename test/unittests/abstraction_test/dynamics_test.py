@@ -800,8 +800,8 @@ class Regime_test(unittest.TestCase):
         self.assertRaises(NineMLRuntimeError, Regime, name='&Hello')
         self.assertRaises(NineMLRuntimeError, Regime, name='2Hello')
 
-        self.assertEqual(Regime(name=' Hello ').name, 'Hello')
-        self.assertEqual(Regime(name=' Hello2 ').name, 'Hello2')
+        self.assertEqual(Regime(name='Hello').name, 'Hello')
+        self.assertEqual(Regime(name='Hello2').name, 'Hello2')
 
     def test_time_derivatives(self):
         # Signature: name
@@ -841,8 +841,8 @@ class StateVariable_test(unittest.TestCase):
         self.assertRaises(NineMLRuntimeError, StateVariable, name='&Hello')
         self.assertRaises(NineMLRuntimeError, StateVariable, name='2Hello')
 
-        self.assertEqual(StateVariable(name=' Hello ').name, 'Hello')
-        self.assertEqual(StateVariable(name=' Hello2 ').name, 'Hello2')
+        self.assertEqual(StateVariable(name='Hello').name, 'Hello')
+        self.assertEqual(StateVariable(name='Hello2').name, 'Hello2')
 
 
 class Query_test(unittest.TestCase):

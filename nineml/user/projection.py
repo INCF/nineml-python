@@ -84,7 +84,6 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
         """
         Create a new projection.
         """
-        validate_identifier(name)
         self._name = validate_identifier(name)
         BaseULObject.__init__(self)
         ContainerObject.__init__(self)

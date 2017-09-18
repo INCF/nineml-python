@@ -3,6 +3,7 @@ from nineml.exceptions import NineMLRuntimeError
 from .. import BaseALObject
 from .base import ExpressionWithSimpleLHS, ExpressionSymbol, Expression
 from nineml.units import unitless, Unit, Quantity
+from nineml.utils import validate_identifier
 from nineml.exceptions import NineMLDimensionError
 
 

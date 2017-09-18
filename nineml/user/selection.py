@@ -166,7 +166,6 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     nineml_child = {'operation': Concatenate}
 
     def __init__(self, name, operation, **kwargs):
-        validate_identifier(name)
         self._name = validate_identifier(name)
         BaseULObject.__init__(self, **kwargs)
         DocumentLevelObject.__init__(self)

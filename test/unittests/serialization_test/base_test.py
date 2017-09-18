@@ -6,7 +6,8 @@ from nineml.base import (
     AnnotatedNineMLObject, DocumentLevelObject, ContainerObject)
 from nineml.document import Document
 from nineml.serialization import format_to_serializer, format_to_unserializer
-from nineml.exceptions import name_error, NineMLSerializationNotSupportedError
+from nineml.exceptions import name_error
+from nineml.utils import validate_identifier
 
 
 F_ANNOT_NS = 'http:/a.domain.org'

@@ -1,6 +1,7 @@
 from . import BaseULObject
 from nineml.base import DocumentLevelObject
 from nineml.user import DynamicsProperties, MultiDynamicsProperties
+from nineml.utils import validate_identifier
 
 
 class ComponentArray(BaseULObject, DocumentLevelObject):

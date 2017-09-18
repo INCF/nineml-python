@@ -30,9 +30,6 @@ class Parameter(BaseALObject):
         `name` -- The name of the parameter.
         """
         super(Parameter, self).__init__()
-        name = name.strip()
-        validate_identifier(name)
-
         self._name = validate_identifier(name)
         self._dimension = dimension if dimension is not None else dimensionless
         assert isinstance(self._dimension, Dimension), (

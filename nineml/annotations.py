@@ -3,7 +3,7 @@ from past.builtins import basestring
 from builtins import object
 from itertools import chain
 from operator import attrgetter
-from nineml.utils import OrderedDefaultListDict
+from nineml.utils import OrderedDefaultListDict, validate_identifier
 from nineml.base import DocumentLevelObject, ContainerObject
 import re
 from nineml.exceptions import (

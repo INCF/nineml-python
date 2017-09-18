@@ -33,7 +33,6 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
     def __init__(self, name, dimensions=None, **kwargs):
-        validate_identifier(name)
         self._name = validate_identifier(name)
         AnnotatedNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self)
@@ -285,7 +284,6 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     nineml_child = {'dimension': Dimension}
 
     def __init__(self, name, dimension, power, offset=0.0):
-        validate_identifier(name)
         self._name = validate_identifier(name)
         AnnotatedNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self)

@@ -28,8 +28,6 @@ class BasePortExposure(BaseULObject):
         self._port_name = port_name
         if name is None:
             name = append_namespace(self.port_name, self.sub_component_name)
-        else:
-            validate_identifier(name)
         self._name = validate_identifier(name)
         self._parent = None
 
