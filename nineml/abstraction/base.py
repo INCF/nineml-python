@@ -33,7 +33,7 @@ class Parameter(BaseALObject):
         name = name.strip()
         validate_identifier(name)
 
-        self._name = name
+        self._name = validate_identifier(name)
         self._dimension = dimension if dimension is not None else dimensionless
         assert isinstance(self._dimension, Dimension), (
             "dimension must be None or a nineml.Dimension instance")

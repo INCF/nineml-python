@@ -26,7 +26,7 @@ class BaseConnectionGroup(with_metaclass(ABCMeta, type('NewBase', (BaseULObject,
                  destination_port, delay, connectivity=None,
                  connection_rule_properties=None,
                  connectivity_class=Connectivity):
-        self._name = name
+        self._name = validate_identifier(name)
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)
         self._source = source

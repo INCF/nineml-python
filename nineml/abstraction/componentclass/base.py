@@ -31,7 +31,7 @@ class ComponentClass(with_metaclass(ABCMeta, type('NewBase', (BaseALObject, Docu
 
     def __init__(self, name, parameters=(), aliases=(), constants=()):
         validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
         BaseALObject.__init__(self)
         DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
@@ -63,7 +63,7 @@ class ComponentClass(with_metaclass(ABCMeta, type('NewBase', (BaseALObject, Docu
 
     @name.setter
     def name(self, name):
-        self._name = name
+        self._name = validate_identifier(name)
 
     @property
     def num_parameters(self):

@@ -27,7 +27,7 @@ class Population(BaseULObject, DocumentLevelObject, DynamicPortsObject):
 
     def __init__(self, name, size, cell):
         validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)
         self.size = size

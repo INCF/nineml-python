@@ -13,7 +13,7 @@ class ComponentArray(BaseULObject, DocumentLevelObject):
               'plasticity': '__pls'}
 
     def __init__(self, name, size, dynamics_properties):
-        self._name = name
+        self._name = validate_identifier(name)
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)
         self.size = size

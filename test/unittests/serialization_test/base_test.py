@@ -31,7 +31,7 @@ class A(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __init__(self, name, x, y):
         AnnotatedNineMLObject.__init__(self)
-        self._name = name
+        self._name = validate_identifier(name)
         DocumentLevelObject.__init__(self)
         self.x = x
         self.y = y
@@ -71,7 +71,7 @@ class B(AnnotatedNineMLObject):
 
     def __init__(self, name, z):
         super(B, self).__init__()
-        self._name = name
+        self._name = validate_identifier(name)
         self.z = z
 
     @property
@@ -95,7 +95,7 @@ class E(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __init__(self, name, u, v):
         AnnotatedNineMLObject.__init__(self)
-        self._name = name
+        self._name = validate_identifier(name)
         DocumentLevelObject.__init__(self)
         self.u = u
         self.v = v

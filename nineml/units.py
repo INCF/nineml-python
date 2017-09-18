@@ -34,7 +34,7 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __init__(self, name, dimensions=None, **kwargs):
         validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
         AnnotatedNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self)
         if dimensions is not None:
@@ -286,7 +286,7 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __init__(self, name, dimension, power, offset=0.0):
         validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
         AnnotatedNineMLObject.__init__(self)
         DocumentLevelObject.__init__(self)
         assert isinstance(dimension, Dimension)

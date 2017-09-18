@@ -112,7 +112,7 @@ class Constant(BaseALObject, ExpressionSymbol):
 
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)
-        self._name = name
+        self._name = validate_identifier(name)
         if isinstance(value, Quantity):
             if units is None:
                 self._value = float(value._value)

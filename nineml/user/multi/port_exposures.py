@@ -30,7 +30,7 @@ class BasePortExposure(BaseULObject):
             name = append_namespace(self.port_name, self.sub_component_name)
         else:
             validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
         self._parent = None
 
     def __hash__(self):

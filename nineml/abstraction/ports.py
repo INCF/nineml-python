@@ -46,7 +46,7 @@ class Port(with_metaclass(ABCMeta, BaseALObject)):
         super(Port, self).__init__()
         name = name.strip()
         validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
 
     @property
     def name(self):

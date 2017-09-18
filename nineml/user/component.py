@@ -61,7 +61,7 @@ class Property(BaseULObject):
         super(Property, self).__init__()
         assert isinstance(name, basestring)
         quantity = Quantity.parse(quantity)
-        self._name = name
+        self._name = validate_identifier(name)
         self._quantity = quantity
 
     def __iter__(self):
@@ -168,7 +168,7 @@ class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentL
         be resolved later.
         """
         validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
@@ -208,7 +208,7 @@ class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentL
 
     @name.setter
     def name(self, name):
-        self._name = name
+        self._name = validate_identifier(name)
 
     @abstractmethod
     def get_nineml_type(self):

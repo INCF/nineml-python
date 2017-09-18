@@ -164,7 +164,7 @@ class NodeToUnserialize(BaseNode):
     def __init__(self, visitor, serial_elem, name, check_unprocessed=True,
                  **options):
         super(NodeToUnserialize, self).__init__(visitor, serial_elem)
-        self._name = name
+        self._name = validate_identifier(name)
         if check_unprocessed:
             self.unprocessed_attr = set(
                 a for a in self.visitor.get_attr_keys(serial_elem, **options)

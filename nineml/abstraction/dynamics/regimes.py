@@ -38,7 +38,7 @@ class StateVariable(BaseALObject):
         :param name:  The name of the state variable.
         """
         super(StateVariable, self).__init__()
-        self._name = name.strip()
+        self._name = validate_identifier(name).strip()
         self._dimension = dimension if dimension is not None else dimensionless
         assert isinstance(self._dimension, Dimension)
         validate_identifier(self._name)
@@ -212,7 +212,7 @@ class Regime(BaseALObject, ContainerObject):
         if name is None:
             self._name = 'default'
         else:
-            self._name = name.strip()
+            self._name = validate_identifier(name).strip()
             validate_identifier(self._name)
 
         # Get Time derivatives from args or kwargs

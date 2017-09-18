@@ -56,7 +56,7 @@ class SubDynamics(BaseULObject, DynamicPortsObject):
         assert isinstance(name, basestring)
         assert isinstance(component_class, Dynamics)
         BaseULObject.__init__(self)
-        self._name = name
+        self._name = validate_identifier(name)
         self._component_class = component_class
 
     @property
@@ -280,7 +280,7 @@ class MultiDynamics(Dynamics):
                  validate_dimensions=True,
                  **kwargs):
         validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
         BaseALObject.__init__(self)
         DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
@@ -1026,7 +1026,7 @@ class SubDynamicsProperties(BaseULObject):
 
     def __init__(self, name, component):
         BaseULObject.__init__(self)
-        self._name = name
+        self._name = validate_identifier(name)
         self._component = component
 
     def __repr__(self):
@@ -1135,7 +1135,7 @@ class MultiDynamicsProperties(DynamicsProperties):
                  port_exposures=[], check_initial_values=False,
                  definition=None):
         validate_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
         # Initiate inherited base classes
         BaseULObject.__init__(self)
         DocumentLevelObject.__init__(self)

@@ -413,7 +413,7 @@ class _AnnotationsBranch(BaseAnnotations):
         super(_AnnotationsBranch, self).__init__(branches)
         if attr is None:
             attr = {}
-        self._name = name
+        self._name = validate_identifier(name)
         self._ns = ns
         self._abs_index = abs_index
         self._rel_index = rel_index
