@@ -192,7 +192,9 @@ class Transition(BaseALObject, ContainerObject):
         self.add(*(sa_type_dict[StateAssignment] + sa_from_str))
         self.add(*normalise_parameter_as_list(output_events))
 
-        self._target_regime_name = validate_identifier(target_regime_name)
+        self._target_regime_name = (
+            validate_identifier(target_regime_name)
+            if target_regime_name is not None else None)
         self._target_regime = None
         self._source_regime = None
 

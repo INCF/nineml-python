@@ -38,9 +38,9 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         BaseULObject.__init__(self)
         assert isinstance(send_port_name, basestring)
         assert isinstance(receive_port_name, basestring)
-        self._send_port_name = send_port_name
+        self._send_port_name = validate_identifier(send_port_name)
         self._send_port = None
-        self._receive_port_name = receive_port_name
+        self._receive_port_name = validate_identifier(receive_port_name)
         self._receive_port = None
         if sender_role is not None:
             if sender_name is not None:
@@ -48,7 +48,11 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
                     "Both 'sender_role' ({}) and 'sender_name' ({}) cannot"
                     " be provided to PortConnection __init__"
                     .format(sender_role, sender_name))
-        elif sender_name is None:
+            assert isinstance(sender_role, basestring)
+            sender_role = str(sender_role)
+        elif sender_name is not None:
+            sender_name = validate_identifier(sender_name)
+        else:
             raise NineMLRuntimeError(
                 "Either 'sender_role' or 'sender_name' must be "
                 "provided to PortConnection __init__")
@@ -58,18 +62,18 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
                     "Both 'receiver_role' ({}) and 'receiver_name' ({}) cannot"
                     " be provided to PortConnection __init__"
                     .format(receiver_role, receiver_name))
-        elif receiver_name is None:
+            assert isinstance(receiver_role, basestring)
+            receiver_role = str(receiver_role)
+        elif receiver_name is not None:
+            receiver_name = validate_identifier(receiver_name)
+        else:
             raise NineMLRuntimeError(
                 "Either 'receiver_role' or 'receiver_name' must be "
                 "provided to PortConnection __init__")
-        assert isinstance(sender_role, (basestring, type(None)))
-        assert isinstance(sender_name, (basestring, type(None)))
-        assert isinstance(receiver_name, (basestring, type(None)))
-        assert isinstance(receiver_role, (basestring, type(None)))
-        self._sender_role = str(sender_role)
-        self._sender_name = validate_identifier(sender_name)
-        self._receiver_name = validate_identifier(receiver_name)
-        self._receiver_role = str(receiver_role)
+        self._sender_role = sender_role
+        self._sender_name = sender_name
+        self._receiver_name = receiver_name
+        self._receiver_role = receiver_role
         # Initialise members that will hold the connected objects once they are
         # bound
         self._sender = None

@@ -131,14 +131,14 @@ class Expression(AnnotatedNineMLObject):
     @property
     def rhs_cstr(self):
         rhs = self.expand_integer_powers(self.rhs)
-        cstr = ccode(rhs, user_functions=self._cfunc_map)
+        cstr = str(ccode(bytes(rhs), user_functions=self._cfunc_map))
         cstr = self.strip_L_from_rationals(cstr)
         return cstr
 
     @property
     def rhs_xml(self):
         rhs = self.expand_integer_powers(self.rhs)
-        s = ccode(rhs, user_functions=self._random_map)
+        s = str(ccode(bytes(rhs), user_functions=self._random_map))
         s = self.strip_L_from_rationals(s)
         s = self._ccode_print_warn_re.sub('', s)
         s = self._multiple_whitespace_re.sub(' ', s)
