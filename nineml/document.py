@@ -186,16 +186,16 @@ class Document(AnnotatedNineMLObject, dict):
 
     def values(self):
         self._load_all()
-        return dict.itervalues(self)
+        return dict.values(self)
 
     def items(self):
         self._load_all()
-        return dict.iteritems(self)
+        return dict.items(self)
 
     def keys(self):
         return (iter(self._unserializer.keys())
                 if self._unserializer is not None else
-                iter(super(Document, self).keys()))
+                iter(dict.keys(self)))
 
     def _load_all(self):
         """
@@ -293,7 +293,7 @@ class AddToDocumentVisitor(BaseVisitorWithContext):
         """
         if (isinstance(obj, DocumentLevelObject) and (
                 self.add_bound or obj.document is None)):
-            if obj.name in dict.iterkeys(self.document):
+            if obj.name in self.document.keys():
                 doc_obj = self.document[obj.name]
                 if obj is doc_obj:
                     return obj  # Object is already in document

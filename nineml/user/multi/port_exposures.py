@@ -31,10 +31,6 @@ class BasePortExposure(BaseULObject):
         self._name = validate_identifier(name)
         self._parent = None
 
-    def __hash__(self):
-        return (hash(self._name) ^ hash(self._sub_component_name) ^
-                hash(self._port_name))
-
     def __repr__(self):
         return "{}(comp={}, port={})".format(
             self.nineml_type, self.sub_component_name, self.port_name)
@@ -168,6 +164,9 @@ class _PortExposureAlias(Alias):
     def __init__(self, exposure):
         self._exposure = exposure
 
+    def __hash__(self):
+        return hash(_PortExposureAlias) ^ hash(self._exposure)
+
     @property
     def name(self):
         return self.lhs
@@ -257,10 +256,6 @@ class _LocalAnalogPortConnections(Alias):
         self._receiver_name = receiver
         self._port_connections = port_connections
         self._parent = parent
-
-    def __hash__(self):
-        return (hash(self._receive_port_name) ^ hash(self._receiver_name) ^
-                hash(self._parent))
 
     @property
     def receive_port_name(self):

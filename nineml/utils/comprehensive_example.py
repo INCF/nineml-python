@@ -3,6 +3,7 @@ Contains an example document with every type 9ML element in it for use in
 comprehensive testing over all 9ML elements
 """
 from __future__ import absolute_import
+from past.builtins import basestring
 import pkgutil
 from collections import defaultdict
 from itertools import chain

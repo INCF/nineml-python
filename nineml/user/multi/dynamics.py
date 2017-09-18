@@ -6,7 +6,7 @@ import collections
 from copy import copy
 from .. import BaseULObject
 import sympy
-import operator
+from collections import defaultdict
 from operator import attrgetter
 from itertools import product, groupby, repeat
 from nineml.user import DynamicsProperties, Definition
@@ -16,7 +16,7 @@ from nineml.exceptions import (
     NineMLRuntimeError, NineMLNameError, name_error)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
-from nineml.abstraction import BaseALObject, ComponentClass
+from nineml.abstraction import BaseALObject
 import nineml.units as un
 from nineml.base import (
     ContainerObject, DocumentLevelObject, DynamicPortsObject)
@@ -37,7 +37,6 @@ from .namespace import (
     _NamespaceInitial, _NamespaceOnCondition, append_namespace,
     split_namespace, make_regime_name, make_delay_trigger_name,
     split_multi_regime_name)
-from functools import reduce
 
 
 # Used to create initial regime name from sub-component initial regimes
@@ -778,11 +777,6 @@ class MultiDynamics(Dynamics):
             ((pc.receiver_name, pc.receive_port)
              for pc in self.analog_port_connections))
 
-    def clone(self, **kwargs):
-        # Avoid "Cloner" visitor method that Dynamics uses to clone and use
-        # the method defined in BaseNineMLObject instead
-        return ComponentClass.clone(self, **kwargs)
-
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)
         node.children(self.sub_components, **options)
@@ -849,12 +843,6 @@ class _MultiRegime(Regime):
             sub_regime._parent = self
         self._parent = parent
 
-    def __hash__(self):
-        # Since a new MultiRegime will be created each time it is accessed from
-        # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
-        # with equivalence between the same MultiRegime
-        return hash(self.name) ^ hash(self._parent)
-
     @property
     def sub_regimes(self):
         return iter(self._sub_regimes.values())
@@ -918,9 +906,10 @@ class _MultiRegime(Regime):
                 yield _MultiOnCondition([_DelayedOnEvent(output_event)], self)
         # Group on conditions by their trigger condition and return as an
         # _MultiOnCondition
-        key = attrgetter('trigger')  # Group key for on conditions @IgnorePep8
-        for _, group in groupby(sorted(self._all_sub_on_conds, key=key),
-                                key=key):
+        trigger_groups = defaultdict(list)
+        for oc in self._all_sub_on_conds:
+            trigger_groups[oc.trigger.rhs].append(oc)
+        for group in trigger_groups.values():
             yield _MultiOnCondition(group, self)
 
     def time_derivative(self, variable):
@@ -1317,14 +1306,6 @@ class _MultiTransition(BaseALObject, ContainerObject):
             self._sub_transitions[namespace] = chained_event
         self._parent = parent
 
-    def __hash__(self):
-        # Since a new MultiRegime will be created each time it is accessed from
-        # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
-        # with equivalence between the same MultiRegime
-        return (reduce(operator.xor,
-                       (hash(st) for st in self.sub_transitions)) ^
-                hash(self._parent))
-
     @property
     def target_regime(self):
         sub_regimes = copy(self._parent._sub_regimes)
@@ -1422,14 +1403,12 @@ class _MultiOnEvent(_MultiTransition, OnEvent):
                    for st in sub_transitions)
         _MultiTransition.__init__(self, sub_transitions, parent)
 
-    def __hash__(self):
-        # Since a new MultiRegime will be created each time it is accessed from
-        # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
-        # with equivalence between the same MultiRegime
-        return hash(self.src_port_name) ^ hash(self._parent)
-
     def __repr__(self):
         return '_MultiOnEvent({})'.format(self.src_port_name)
+
+    @property
+    def key(self):
+        return self.src_port_name
 
     @property
     def src_port_name(self):
@@ -1451,15 +1430,13 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
     def __repr__(self):
         return '_MultiOnCondition({})'.format(self.trigger.rhs)
 
-    def __hash__(self):
-        # Since a new MultiRegime will be created each time it is accessed from
-        # a MultiDynamics object, in order to use MultiRegimes in sets or dicts
-        # with equivalence between the same MultiRegime
-        return hash(self.trigger.rhs) ^ hash(self._parent)
-
     @property
     def trigger(self):
         return self._trigger
+
+    @property
+    def key(self):
+        return self.trigger.rhs
 
 
 class _ExposedOutputEvent(OutputEvent):

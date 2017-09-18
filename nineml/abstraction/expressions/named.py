@@ -132,9 +132,6 @@ class Constant(BaseALObject, ExpressionSymbol):
             self._units = units if units is not None else unitless
         assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
 
-    def __hash__(self):
-        return hash(self.name) ^ hash(self.value) ^ hash(self.units)
-
     @property
     def name(self):
         return self._name

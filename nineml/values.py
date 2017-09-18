@@ -129,9 +129,6 @@ class SingleValue(BaseValue):
     def __repr__(self):
         return "SingleValue(value={})".format(self.value)
 
-    def __hash__(self):
-        return hash(self.value)
-
     def inverse(self):
         return SingleValue(1.0 / self._value)
 
@@ -291,9 +288,6 @@ class ArrayValue(BaseValue):
         return "ArrayValue({}{})".format(
             ', '.join(str(v) for v in self._values[:5]),
             ('...' if len(self) >= 5 else ''))
-
-    def __hash__(self):
-        return hash(tuple(self.values))
 
     def inverse(self):
         try:

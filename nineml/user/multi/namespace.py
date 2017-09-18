@@ -105,15 +105,15 @@ class _NamespaceObject(BaseNineMLObject):
         self._object = element
         self._parent = parent
 
-    def __hash__(self):
-        """
-        Since namespace objects are created dynamically on the fly when
-        iterating over a container object, __hash__ is provided to allow them
-        to be placed within a dictionary or set object and be treated as if the
-        same object is being referenced each access
-        """
-        return (hash(self.sub_component) ^ hash(self._object) ^
-                hash(self._parent))
+#     def __hash__(self):
+#         """
+#         Since namespace objects are created dynamically on the fly when
+#         iterating over a container object, __hash__ is provided to allow them
+#         to be placed within a dictionary or set object and be treated as if the
+#         same object is being referenced each access
+#         """
+#         return (hash(self.sub_component) ^ hash(self._object) ^
+#                 hash(self._parent))
 
     @property
     def sub_component(self):

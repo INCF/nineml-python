@@ -93,9 +93,6 @@ class Property(BaseULObject):
     def units(self):
         return self.quantity.units
 
-    def __hash__(self):
-        return hash(self.name) ^ hash(self.quantity)
-
     def __repr__(self):
         units = self.units.name
         if u"µ" in units:

@@ -2,14 +2,13 @@ from __future__ import division
 from builtins import zip
 from builtins import next
 from builtins import range
-from past.utils import old_div
 import unittest
 from string import ascii_lowercase
 from itertools import chain, cycle, repeat
 import math
 from nineml.values import SingleValue, ArrayValue
 from operator import (
-    add, sub, mul, truediv, pow, floordiv, mod, neg, iadd, idiv,
+    add, sub, mul, truediv, pow, floordiv, mod, neg, iadd,
     ifloordiv, imod, imul, ipow, isub, itruediv, and_, or_, inv)
 from nineml.utils.comprehensive_example import instances_of_all_types
 import numpy as np  # This is only imported here in the test as it is not dependency
@@ -42,7 +41,7 @@ anonymous_expressions = sorted(
     instances_of_all_types['TimeDerivative'].values())
 expressions = list(chain(named_expressions, anonymous_expressions))
 
-div_ops = (truediv, floordiv, mod, idiv, itruediv, ifloordiv, imod)
+div_ops = (truediv, floordiv, mod, itruediv, ifloordiv, imod)
 uniary_ops = [neg, abs, inv]
 
 
@@ -55,7 +54,7 @@ class TestValues(unittest.TestCase):
         add, floordiv, add, mul, truediv, sub, add, mod, neg, sub,
         floordiv, sub, sub, neg, mul, abs]
 
-    iops = [iadd, idiv, ifloordiv, imod, imul, ipow, isub, itruediv]
+    iops = [iadd, ifloordiv, imod, imul, ipow, isub, itruediv]
 
     def test_conversions(self):
         for val in single_values:
@@ -121,8 +120,8 @@ class TestValues(unittest.TestCase):
                         np_array_val = abs(np_array_val)
                         np_val = abs(np_val)
                         val = abs(val) + 0.001
-                        val = old_div(val, 10. ** round(math.log10(val)))
-                        val_scale = old_div(np_val.max(), 10.0)
+                        val = val / 10. ** round(math.log10(val))
+                        val_scale = np_val.max() / 10.0
                         array_val = array_val * val_scale
                         np_array_val = np_array_val * val_scale
                         np_val = np_val * val_scale
@@ -258,7 +257,7 @@ class TestValues(unittest.TestCase):
                         np_val = abs(np_val)
                     else:
                         val = round(val)
-                    val = old_div(abs(val), 10. ** round(math.log10(abs(val))))
+                    val = abs(val) / 10. ** round(math.log10(abs(val)))
                 elif op in div_ops and float(val) == 0.0:
                     val = SingleValue(0.1)
                 vv_result = op(array_val, val)
@@ -311,7 +310,7 @@ class TestExpressions(unittest.TestCase):
         neg, truediv, mul, mul, mul, pow, neg, add, add, mul,
         truediv, sub, add, neg, sub, sub, sub, neg, mul]
     logical_ops = [and_, or_, inv, or_, inv, or_, and_]
-    iops = [iadd, idiv, imul, ipow, isub, itruediv]
+    iops = [iadd, imul, ipow, isub, itruediv]
 
     def test_anonymous_expression_operators(self):
         result = Expression('a + b')  # Arbitrary starting expression
@@ -457,7 +456,7 @@ class TestUnits(unittest.TestCase):
                 val = int(next(val_iter) * 10)
                 # Scale the value close to 10 to avoid overflow errors
                 if val != 0.0:
-                    val = old_div(val, 10 ** round(np.log10(abs(val))))
+                    val = val / 10 ** round(np.log10(abs(val)))
                 dim = np_dim = int(val)
             else:
                 dim = next(dim_iter)
@@ -487,7 +486,7 @@ class TestUnits(unittest.TestCase):
                 val = int(next(val_iter) * 10)
                 # Scale the value close to 10 to avoid overflow errors
                 if val != 0:
-                    val = int(old_div(val, 10 ** round(np.log10(abs(val)))))
+                    val = val / 10 ** round(np.log10(abs(val)))
                 unit = dim = power = val
             else:
                 unit = next(unit_iter)
@@ -607,8 +606,8 @@ class TestQuantities(unittest.TestCase):
     def test_value_op_unit(self):
         self.assertEqual(10.0 * un.s, un.Quantity(10.0, un.s))
         self.assertEqual(un.s * 10.0, un.Quantity(10.0, un.s))
-        self.assertEqual(old_div(10.0, un.s), un.Quantity(10.0, un.Hz))
-        self.assertEqual(old_div(un.s, 10.0), un.Quantity(0.1, un.s))
+        self.assertEqual(10.0 / un.s, un.Quantity(10.0, un.Hz))
+        self.assertEqual(un.s / 10.0, un.Quantity(0.1, un.s))
         self.assertEqual(SingleValue(10.0) * un.s, un.Quantity(10.0, un.s))
         self.assertEqual(un.s * SingleValue(10.0), un.Quantity(10.0, un.s))
         self.assertEqual(SingleValue(10.0) / un.s, un.Quantity(10.0, un.Hz))

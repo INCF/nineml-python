@@ -42,9 +42,6 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
                                for d in self.dimension_symbols)
         assert not len(kwargs), "Unrecognised kwargs ({})".format(kwargs)
 
-    def __hash__(self):
-        return hash(self._dims)
-
     def __ne__(self, other):
         return not (self == other)
 
@@ -290,9 +287,6 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
         self._power = power
         self._offset = offset
 
-    def __hash__(self):
-        return hash((self.power, self.offset, self.dimension))
-
     def __ne__(self, other):
         return not (self == other)
 
@@ -446,9 +440,6 @@ class Quantity(AnnotatedNineMLObject):
             raise Exception("Units ({}) must of type <Unit>".format(units))
         self._value = value
         self._units = units
-
-    def __hash__(self):
-        return hash(self.value) ^ hash(self.units)
 
     @property
     def key(self):

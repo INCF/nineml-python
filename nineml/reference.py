@@ -78,10 +78,6 @@ class BaseReference(AnnotatedNineMLObject):
         return (self._target.key +
                 self.url if self.url is not None else '')
 
-    def __hash__(self):
-        return (hash(self.__class__) ^ hash(self._target.name) ^
-                hash(self.url))
-
     def __repr__(self):
             return ('{}(name="{}"{})'
                     .format(self.__class__.__name__, self._target.name,

@@ -60,6 +60,13 @@ class BaseNineMLObject(object):
     def __ne__(self, other):
         return not self == other
 
+    def __hash__(self):
+        if self.temporary:
+            hsh = hash(self._parent) ^ hash(self.key)
+        else:
+            hsh = id(self)
+        return hsh
+
     def equals(self, other, **kwargs):
         checker = EqualityChecker(**kwargs)
         return checker.check(self, other, **kwargs)
