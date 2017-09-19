@@ -5,7 +5,7 @@ try:
     import pickle as pkl
 except ImportError:
     from . import pickle as pkl  # @UnusedImport
-from .dict import DictSerializer, DictUnserializer
+from .dict import DictSerializer, DictUnserializer  # @IgnorePep8
 
 DEFAULT_PROTOCOL = -1  # Highest one available
 

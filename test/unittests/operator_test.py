@@ -35,10 +35,13 @@ quantities = [un.Quantity(v, u) for v, u in zip(
     chain(single_values, array_values), cycle(units))]
 
 named_expressions = sorted(chain(*(list(instances_of_all_types[t].values())
-                                 for t in ('Alias', 'StateAssignment'))))
-logical_expressions = sorted(instances_of_all_types['Trigger'].values())
+                                 for t in ('Alias', 'StateAssignment'))),
+                           key=lambda e: e.key)
+logical_expressions = sorted(instances_of_all_types['Trigger'].values(),
+                             key=lambda e: str(e.key))
 anonymous_expressions = sorted(
-    instances_of_all_types['TimeDerivative'].values())
+    instances_of_all_types['TimeDerivative'].values(),
+    key=lambda e: e.key)
 expressions = list(chain(named_expressions, anonymous_expressions))
 
 div_ops = (truediv, floordiv, mod, itruediv, ifloordiv, imod)

@@ -3,7 +3,6 @@ import h5py
 from . import NINEML_BASE_NS
 from tempfile import mkstemp
 from io import IOBase
-from past.builtins import basestring
 import contextlib
 import nineml
 from itertools import chain, repeat
@@ -11,18 +10,18 @@ from nineml.exceptions import (NineMLSerializationError,
                                NineMLSerializationNotSupportedError,
                                NineMLMissingSerializationError)
 from nineml.serialization.base import (
-    BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR)
+    BaseSerializer, BaseUnserializer)
 from nineml.exceptions import NineMLNameError
-
-# Specifies whether a given group represents multiple child elements (i.e. a
-# list) or not
-MULT_ATTR = '@multiple'
 
 
 class HDF5Serializer(BaseSerializer):
     """
     A Serializer class that serializes to the HDF5 format
     """
+
+    # Specifies whether a given group represents multiple child elements (i.e.
+    # a list) or not
+    MULT_ATTR = '@multiple'
 
     def __init__(self, fname, **kwargs):  # @UnusedVariable @IgnorePep8 @ReservedAssignment
         if isinstance(fname, IOBase):
@@ -38,7 +37,7 @@ class HDF5Serializer(BaseSerializer):
         if multiple:
             if name not in parent:
                 parent.create_group(name)
-                parent[name].attrs[MULT_ATTR] = True
+                parent[name].attrs[self.MULT_ATTR] = True
             # Add a new group named by the next available index
             new_index = len(parent[name])
             elem = parent[name].create_group(str(new_index))
@@ -48,24 +47,22 @@ class HDF5Serializer(BaseSerializer):
                     "'{}' already exists in parent ({}) when creating "
                     "singleton element".format(name, parent))
             elem = parent.create_group(name)
-            elem.attrs[MULT_ATTR] = False
+            elem.attrs[self.MULT_ATTR] = False
         if namespace is not None:
-            elem.attrs[NS_ATTR] = namespace
+            elem.attrs[self.NS_ATTR] = namespace
         return elem
 
     def create_root(self, **options):  # @UnusedVariable
         root = self._file.create_group(nineml.Document.nineml_type)
-        root.attrs[NS_ATTR] = self.nineml_namespace
+        root.attrs[self.NS_ATTR] = self.nineml_namespace
         return root
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        serial_elem.attrs[name] = (bytes(value, 'utf-8')
-                                   if isinstance(value, basestring) else value)
+        serial_elem.attrs[name] = self.sanitize_str(value)
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
-        self.set_attr(serial_elem, BODY_ATTR,
-                      (bytes(value)
-                       if isinstance(value, basestring) else value), **options)
+        self.set_attr(serial_elem, self.BODY_ATTR,
+                      self.sanitize_str(value), **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
         if file.name != self._file.filename:
@@ -93,7 +90,7 @@ class HDF5Unserializer(BaseUnserializer):
         except KeyError:
             raise NineMLMissingSerializationError(
                 "{} doesn't have a '{}' child".format(parent, nineml_type))
-        if elem.attrs[MULT_ATTR]:
+        if elem.attrs[self.MULT_ATTR]:
             raise NineMLSerializationError(
                 "'{}' is a multiple element within {}"
                 .format(nineml_type, parent))
@@ -104,7 +101,7 @@ class HDF5Unserializer(BaseUnserializer):
             children = parent[nineml_type]
         except KeyError:
             return iter([])
-        if not children.attrs[MULT_ATTR]:
+        if not children.attrs[self.MULT_ATTR]:
             raise NineMLSerializationError(
                 "'{}' is not a multiple element within {}"
                 .format(nineml_type, parent))
@@ -112,16 +109,16 @@ class HDF5Unserializer(BaseUnserializer):
 
     def get_all_children(self, parent, **options):  # @UnusedVariable
         return chain(
-            ((n, e) for n, e in parent.items() if not e.attrs[MULT_ATTR]),
+            ((n, e) for n, e in parent.items() if not e.attrs[self.MULT_ATTR]),
             *(zip(repeat(n), iter(e.values())) for n, e in parent.items()
-              if e.attrs[MULT_ATTR]))
+              if e.attrs[self.MULT_ATTR]))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
-        return serial_elem.attrs[name]
+        return self.sanitize_str(serial_elem.attrs[name])
 
     def get_body(self, serial_elem, **options):  # @UnusedVariable
         try:
-            return serial_elem.attrs[BODY_ATTR]
+            return self.sanitize_str(serial_elem.attrs[self.BODY_ATTR])
         except KeyError:
             return None
 
@@ -130,7 +127,7 @@ class HDF5Unserializer(BaseUnserializer):
 
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable
         try:
-            ns = self.get_attr(serial_elem, NS_ATTR, **options)
+            ns = self.get_attr(serial_elem, self.NS_ATTR, **options)
         except NineMLNameError:
             ns = NINEML_BASE_NS + self.version
         return ns

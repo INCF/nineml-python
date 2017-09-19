@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from .dict import DictSerializer, DictUnserializer
 from collections import OrderedDict
+from .base.visitors import BaseVisitor, BaseSerializer
 import yaml
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
@@ -25,12 +26,31 @@ class YAMLSerializer(DictSerializer):
     A Serializer class that serializes to YAML
     """
 
+    NS_ATTR = BaseSerializer.sanitize_str(BaseVisitor.NS_ATTR)
+    BODY_ATTR = BaseSerializer.sanitize_str(BaseVisitor.BODY_ATTR)
+
+    def create_elem(self, name, parent, namespace=None, multiple=False,  # @UnusedVariable @IgnorePep8
+                    **options):
+        return super(YAMLSerializer, self).create_elem(
+            self.sanitize_str(name), parent,
+            namespace=self.sanitize_str(namespace),
+            multiple=multiple, **options)
+
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
         yaml.dump(self.to_elem(serial_elem, **options), stream=file,
                   Dumper=Dumper)
 
     def to_str(self, serial_elem, **options):  # @UnusedVariable  @IgnorePep8
         return yaml.dump(self.to_elem(serial_elem, **options), Dumper=Dumper)
+
+    def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
+        super(YAMLSerializer, self).set_attr(serial_elem, name,
+                                             self.sanitize_str(value),
+                                             **options)
+
+    def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
+        super(YAMLSerializer, self).set_body(
+            serial_elem, self.sanitize_str(value), **options)
 
 
 class YAMLUnserializer(DictUnserializer):
@@ -43,3 +63,11 @@ class YAMLUnserializer(DictUnserializer):
 
     def from_str(self, string, **options):  # @UnusedVariable
         return self.from_elem(yaml.load(string, Loader=Loader), **options)
+
+    def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
+        return self.sanitize_str(super(YAMLUnserializer, self).get_attr(
+            serial_elem, name, **options))
+
+    def get_body(self, serial_elem, **options):  # @UnusedVariable
+        return self.sanitize_str(super(YAMLUnserializer, self).get_body(
+            serial_elem, **options))

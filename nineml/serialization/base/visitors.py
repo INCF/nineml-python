@@ -1,6 +1,7 @@
 from builtins import zip
 from builtins import next
 from past.builtins import basestring
+from future.utils import native_str_to_bytes, bytes_to_native_str
 from io import IOBase
 from builtins import object
 import os.path
@@ -28,6 +29,15 @@ class BaseVisitor(with_metaclass(ABCMeta, object)):
     """
     Base class for BaseSerializer and BaseUnserializer
     """
+
+    # The name of the attribute used to represent the "namespace" of the
+    # element in formats that don't support namespaces explicitly.
+    NS_ATTR = '@namespace'
+
+    # The name of the attribute used to represent the "body" of the element in
+    # formats that don't support element bodies. NB: Body elements should be
+    # phased out in later 9ML versions to avoid this.
+    BODY_ATTR = '@body'
 
     # A flag to determine whether the serialization form supports element
     # bodies, which is only true of XML amongst the supported formats at this
@@ -385,6 +395,11 @@ class BaseSerializer(with_metaclass(ABCMeta, BaseVisitor)):
         else:
             url = False
         return url
+
+    @classmethod
+    def sanitize_str(cls, value):
+        return (native_str_to_bytes(value)
+                if isinstance(value, basestring) else value)
 
 
 class BaseUnserializer(with_metaclass(ABCMeta, BaseVisitor)):
@@ -913,6 +928,11 @@ class BaseUnserializer(with_metaclass(ABCMeta, BaseVisitor)):
         else:
             assert False
         return cls
+
+    @classmethod
+    def sanitize_str(cls, value):
+        return (bytes_to_native_str(value)
+                if isinstance(value, basestring) else value)
 
 
 from nineml.document import Document, AddToDocumentVisitor  # @IgnorePep8

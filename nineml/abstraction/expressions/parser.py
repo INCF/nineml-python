@@ -4,6 +4,7 @@ from builtins import next
 from builtins import range
 from past.builtins import basestring
 from builtins import object
+from future.utils import native_str_to_bytes
 import sys
 from itertools import chain
 import sympy
@@ -27,7 +28,7 @@ def sympy_func(func_name):
     if sys.version_info > (3, 0):
         func = sympy.Function(func_name)
     else:
-        func = sympy.Function(bytes(func_name))
+        func = sympy.Function(native_str_to_bytes(func_name))
     return func
 
 

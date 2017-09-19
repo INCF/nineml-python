@@ -5,7 +5,7 @@ from . import NINEML_BASE_NS
 from collections import OrderedDict
 from nineml.document import Document
 from nineml.serialization.base import (
-    BaseSerializer, BaseUnserializer, BODY_ATTR, NS_ATTR)
+    BaseSerializer, BaseUnserializer)
 from nineml.exceptions import (
     NineMLMissingSerializationError, NineMLNameError, NineMLSerializationError)
 
@@ -30,7 +30,7 @@ class DictSerializer(BaseSerializer):
                     "singleton element".format(name, parent))
             parent[name] = elem
         if namespace is not None:
-            self.set_attr(elem, NS_ATTR, namespace, **options)
+            self.set_attr(elem, self.NS_ATTR, namespace, **options)
         return elem
 
     def create_root(self, **options):  # @UnusedVariable
@@ -40,7 +40,7 @@ class DictSerializer(BaseSerializer):
         serial_elem[name] = value
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
-        self.set_attr(serial_elem, BODY_ATTR, value, **options)
+        self.set_attr(serial_elem, self.BODY_ATTR, value, **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
         raise NineMLSerializationNotSupportedError(
@@ -111,18 +111,19 @@ class DictUnserializer(BaseUnserializer):
 
     def get_body(self, serial_elem, **options):  # @UnusedVariable
         try:
-            body = self.get_attr(serial_elem, BODY_ATTR)
+            body = self.get_attr(serial_elem, self.BODY_ATTR)
         except NineMLNameError:
             body = None
         return body
 
     def get_attr_keys(self, serial_elem, **options):  # @UnusedVariable
         return (n for n, e in serial_elem.items()
-                if not self._is_child(e) and n not in (BODY_ATTR, NS_ATTR))
+                if not self._is_child(e) and n not in (self.BODY_ATTR,
+                                                       self.NS_ATTR))
 
     def get_namespace(self, serial_elem, **options):  # @UnusedVariable
         try:
-            ns = self.get_attr(serial_elem, NS_ATTR, **options)
+            ns = self.get_attr(serial_elem, self.NS_ATTR, **options)
         except NineMLNameError:
             ns = NINEML_BASE_NS + self.version
         return ns

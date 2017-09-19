@@ -1,4 +1,5 @@
 import re
+from future.utils import native_str_to_bytes, bytes_to_native_str
 from lxml import etree
 from lxml.builder import ElementMaker
 from nineml.document import Document
@@ -63,9 +64,10 @@ class XMLSerializer(BaseSerializer):
 
     def to_str(self, serial_elem, pretty_print=False,  # @ReservedAssignment @IgnorePep8
                xml_declaration=False, encoding='UTF-8', **kwargs):  # @UnusedVariable  @IgnorePep8
-        return etree.tostring(serial_elem, encoding=encoding,
-                              pretty_print=pretty_print,
-                              xml_declaration=xml_declaration)
+        return bytes_to_native_str(
+            etree.tostring(serial_elem, encoding=encoding,
+                           pretty_print=pretty_print,
+                           xml_declaration=xml_declaration))
 
     def to_elem(self, serial_elem, **options):  # @UnusedVariable
         return serial_elem
@@ -141,10 +143,10 @@ class XMLUnserializer(BaseUnserializer):
 
     def from_str(self, string, **options):  # @UnusedVariable
         try:
-            return etree.fromstring(bytes(string, 'utf-8'))
+            return etree.fromstring(native_str_to_bytes(string))
         except etree.LxmlError as e:
             raise NineMLSerializationError(
-                "Could not parse XML string '{}': \n{}".format(file, e))
+                "Could not parse XML string '{}': \n{}".format(string, e))
 
     def from_elem(self, serial_elem, **options):  # @UnusedVariable
         return serial_elem

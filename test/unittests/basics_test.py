@@ -113,14 +113,12 @@ class TestAccessors(unittest.TestCase):
                                     accessor_members, elem.key, name))
                     total_num = elem.num_elements()
                     all_keys = list(elem.element_keys())
-                    all_members = sorted(elem.elements())
-                    try:
-                        all_accessor_members = sorted(
-                            elem.element(n, include_send_ports=True)
-                            for n in all_keys)
-                    except:
-                        elem.element(all_keys[0], include_send_ports=True)
-                        raise
+                    all_members = sorted(elem.elements(),
+                                         key=lambda e: str(e.key))
+                    all_accessor_members = sorted(
+                        (elem.element(n, include_send_ports=True)
+                         for n in all_keys),
+                        key=lambda e: str(e.key))
                     self.assertIsInstance(
                         total_num, int,
                         ("num_elements did not return an integer ({})"
@@ -171,10 +169,11 @@ class TestAccessors(unittest.TestCase):
                                'analog_reduce_'):
                     num = getattr(elem, 'num_{}ports'.format(prefix))
                     names = list(getattr(elem, '{}port_names'.format(prefix)))
-                    members = sorted(getattr(elem, '{}ports'.format(prefix)))
+                    members = sorted(getattr(elem, '{}ports'.format(prefix)),
+                                     key=lambda e: e.key)
                     accessor_members = sorted(
-                        getattr(elem, '{}port'.format(prefix))(n)
-                        for n in names)
+                        (getattr(elem, '{}port'.format(prefix))(n)
+                         for n in names), key=lambda p: str(p.key))
                     # Check num_* matches number of members and names
                     self.assertEqual(
                         len(members), num,

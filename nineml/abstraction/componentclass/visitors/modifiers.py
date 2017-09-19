@@ -113,16 +113,16 @@ class ComponentSubstituteAliases(BasePreAndPostVisitorWithContext):
         assert isinstance(expr, Expression)
         # Get key to store the expression under. Aliases that are not part of
         # a regime use a key == None
-        cache_key = self.context_key(expr.key)
+#         cache_key = self.context_key(expr.key)
         try:
-            rhs = self.cache[cache_key]
+            rhs = self.cache[expr.id]
         except KeyError:
             for sym in list(expr.rhs_symbols):
                 # Substitute all alias symbols with their RHS expresssions
                 if str(sym) in self.component_class.alias_names:
                     alias = self.get_alias(str(sym))
                     expr.subs(sym, self.substitute(alias))
-            self.cache[cache_key] = rhs = expr.rhs
+            self.cache[expr.id] = rhs = expr.rhs
         except TypeError:
             raise
         return rhs
