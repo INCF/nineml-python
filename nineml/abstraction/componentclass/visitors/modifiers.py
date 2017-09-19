@@ -111,9 +111,6 @@ class ComponentSubstituteAliases(BasePreAndPostVisitorWithContext):
             An expression object to substitute alias symbols in
         """
         assert isinstance(expr, Expression)
-        # Get key to store the expression under. Aliases that are not part of
-        # a regime use a key == None
-#         cache_key = self.context_key(expr.key)
         try:
             rhs = self.cache[expr.id]
         except KeyError:
@@ -123,8 +120,6 @@ class ComponentSubstituteAliases(BasePreAndPostVisitorWithContext):
                     alias = self.get_alias(str(sym))
                     expr.subs(sym, self.substitute(alias))
             self.cache[expr.id] = rhs = expr.rhs
-        except TypeError:
-            raise
         return rhs
 
     def get_alias(self, name):

@@ -186,9 +186,6 @@ class WithContextMixin(object):
             context = None
         return context
 
-    def context_key(self, key):
-        return tuple([c.parent.id for c in self.contexts] + [key])
-
 
 class BaseVisitorWithContext(WithContextMixin, BaseVisitor):
 
