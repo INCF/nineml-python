@@ -34,15 +34,15 @@ on the data format chosen (see Formats_).
 Formats
 -------
 
-There are currently six supported formats for serialization with the NineML
-Python library: XML_, YAML_, JSON_, HDF5_, `Python Pickle`_ and Python
-dictionary (the JSON_, YAML_ and `Python Pickle`_ formats are derived from the
+There are currently five supported formats for serialization with the NineML
+Python library: XML_, YAML_, JSON_, HDF5_, and Python
+dictionary (the JSON_ and YAML_ formats are derived from the
 Python dictionary serializer). Noting that the serialization module is written
 in a modular way that can support additional hierarchical formats if required
 by deriving the ``BaseSerializer`` and ``BaseUnserializer`` classes.
 
 Depending on the format used, NineML can be serialized to file, string or
-standard Python objects (i.e dictionary or pickled dictionary).
+standard Python objects (i.e dictionary).
 
 +-------------------+------+--------+--------+
 | Format            | File | String | Object |
@@ -54,8 +54,6 @@ standard Python objects (i.e dictionary or pickled dictionary).
 | YAML_             | X    | X      |        |
 +-------------------+------+--------+--------+
 | HDF5_             | X    |        |        |
-+-------------------+------+--------+--------+
-| `Python Pickle`_  | X    |        | X      |
 +-------------------+------+--------+--------+
 | Python dictionary |      |        | X      |
 +-------------------+------+--------+--------+
@@ -108,7 +106,6 @@ None:
 .. _YAML: http://yaml.org
 .. _HDF5: http://www.hdfgroup.org/HDF5/
 .. _JSON: http://www.json.org/
-.. _`Python Pickle`: https://docs.python.org/3/library/pickle.html
 .. _`Serialization Section`: http://nineml-spec.readthedocs.io/latest/serialization
 .. _`NineML specification`: http://nineml.net/specification/
 .. _`NineML catalog`: http://github.com/INCF/nineml-catalog
