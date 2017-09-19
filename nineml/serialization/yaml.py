@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from future.utils import native_str_to_bytes, bytes_to_native_str, PY3
 from .dict import DictSerializer, DictUnserializer
 from collections import OrderedDict
-from .base.visitors import BaseVisitor, BaseSerializer
 import yaml
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
@@ -27,39 +26,28 @@ class YAMLSerializer(DictSerializer):
     A Serializer class that serializes to YAML
     """
 
-    NS_ATTR = BaseSerializer.sanitize_str(BaseVisitor.NS_ATTR)
-    BODY_ATTR = BaseSerializer.sanitize_str(BaseVisitor.BODY_ATTR)
-
-    def create_elem(self, name, parent, namespace=None, multiple=False,  # @UnusedVariable @IgnorePep8
-                    **options):
-        return super(YAMLSerializer, self).create_elem(
-            native_str_to_bytes(name), parent, namespace=namespace,
-            multiple=multiple, **options)
-
-    def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
-        yaml.dump(self.to_elem(serial_elem, **options), stream=file,
+    def to_file(self, serial_elem, file, **options):
+        yaml.dump(self._prepare_dict(serial_elem, **options), stream=file,
                   Dumper=Dumper)
 
-    def to_str(self, serial_elem, **options):  # @UnusedVariable  @IgnorePep8
-        return yaml.dump(self.to_elem(serial_elem, **options), Dumper=Dumper)
+    def to_str(self, serial_elem, **options):
+        return yaml.dump(self._prepare_dict(serial_elem, **options),
+                         Dumper=Dumper)
 
-    def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        super(YAMLSerializer, self).set_attr(serial_elem, name,
-                                             self.sanitize_str(value),
-                                             **options)
-
-    def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
-        super(YAMLSerializer, self).set_body(
-            serial_elem, self.sanitize_str(value), **options)
+    def _prepare_dict(self, elem_dict, **options):
+        elem_dict = self.to_elem(elem_dict, **options)
+        if PY3:
+            elem_dict = self.convert_to_bytes(elem_dict)
+        return elem_dict
 
     @classmethod
-    def convert_to_bytes(cls, serial_elem):
+    def convert_to_bytes(cls, elem_dict):
         if isinstance(cls, str):
-            serial_elem = native_str_to_bytes(serial_elem)
-        elif isinstance(serial_elem, OrderedDict):
-            serial_elem = OrderedDict(
-                (n, cls.convert_to_bytes(e)) for n, e in serial_elem.items())
-        return serial_elem
+            elem_dict = native_str_to_bytes(elem_dict)
+        elif isinstance(elem_dict, OrderedDict):
+            elem_dict = OrderedDict(
+                (n, cls.convert_to_bytes(e)) for n, e in elem_dict.items())
+        return elem_dict
 
 
 class YAMLUnserializer(DictUnserializer):
@@ -67,24 +55,17 @@ class YAMLUnserializer(DictUnserializer):
     A Unserializer class that unserializes YAML
     """
 
-    def from_file(self, file, **options):  # @ReservedAssignment @UnusedVariable @IgnorePep8
-        return self.from_elem(yaml.load(file, Loader=Loader), **options)
+    def from_file(self, file, **options):
+        return self._finalise_dict(yaml.load(file, Loader=Loader), **options)
 
-    def from_str(self, string, **options):  # @UnusedVariable
-        return self.from_elem(yaml.load(string, Loader=Loader), **options)
+    def from_str(self, string, **options):
+        return self._finalise_dict(yaml.load(string, Loader=Loader), **options)
 
-    def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
-        return self.sanitize_str(super(YAMLUnserializer, self).get_attr(
-            serial_elem, name, **options))
-
-    def get_body(self, serial_elem, **options):  # @UnusedVariable
-        return self.sanitize_str(super(YAMLUnserializer, self).get_body(
-            serial_elem, **options))
-
-    def get_all_children(self, parent, **options):  # @UnusedVariable
-        return ((bytes_to_native_str(t), e)
-                for t, e in super(YAMLUnserializer, self).get_all_children(
-                    parent, **options))
+    def _finalise_dict(self, elem_dict, **options):
+        elem_dict = self.from_elem(elem_dict, **options)
+        if PY3:
+            elem_dict = self.convert_from_bytes(elem_dict)
+        return elem_dict
 
     @classmethod
     def convert_from_bytes(cls, serial_elem):

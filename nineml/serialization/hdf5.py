@@ -19,10 +19,6 @@ class HDF5Serializer(BaseSerializer):
     A Serializer class that serializes to the HDF5 format
     """
 
-    # Specifies whether a given group represents multiple child elements (i.e.
-    # a list) or not
-    MULT_ATTR = '@multiple'
-
     def __init__(self, fname, **kwargs):  # @UnusedVariable @IgnorePep8 @ReservedAssignment
         if isinstance(fname, IOBase):
             # Close the file and reopen with the h5py File object
@@ -114,7 +110,10 @@ class HDF5Unserializer(BaseUnserializer):
               if e.attrs[self.MULT_ATTR]))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
-        return self.sanitize_str(serial_elem.attrs[name])
+        try:
+            return self.sanitize_str(serial_elem.attrs[name])
+        except:
+            raise
 
     def get_body(self, serial_elem, **options):  # @UnusedVariable
         try:

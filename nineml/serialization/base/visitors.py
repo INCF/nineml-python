@@ -39,6 +39,10 @@ class BaseVisitor(with_metaclass(ABCMeta, object)):
     # phased out in later 9ML versions to avoid this.
     BODY_ATTR = '@body'
 
+    # Specifies whether a given group represents multiple child elements (i.e.
+    # a list) or not
+    MULT_ATTR = '@multiple'
+
     # A flag to determine whether the serialization form supports element
     # bodies, which is only true of XML amongst the supported formats at this
     # stage.
