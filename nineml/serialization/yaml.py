@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from future.utils import native_str_to_bytes, bytes_to_native_str
+from future.utils import native_str_to_bytes, bytes_to_native_str, PY3
 from .dict import DictSerializer, DictUnserializer
 from collections import OrderedDict
 from .base.visitors import BaseVisitor, BaseSerializer
@@ -52,6 +52,15 @@ class YAMLSerializer(DictSerializer):
         super(YAMLSerializer, self).set_body(
             serial_elem, self.sanitize_str(value), **options)
 
+    @classmethod
+    def convert_to_bytes(cls, serial_elem):
+        if isinstance(cls, str):
+            serial_elem = native_str_to_bytes(serial_elem)
+        elif isinstance(serial_elem, OrderedDict):
+            serial_elem = OrderedDict(
+                (n, cls.convert_to_bytes(e)) for n, e in serial_elem.items())
+        return serial_elem
+
 
 class YAMLUnserializer(DictUnserializer):
     """
@@ -76,3 +85,12 @@ class YAMLUnserializer(DictUnserializer):
         return ((bytes_to_native_str(t), e)
                 for t, e in super(YAMLUnserializer, self).get_all_children(
                     parent, **options))
+
+    @classmethod
+    def convert_from_bytes(cls, serial_elem):
+        if isinstance(cls, str):
+            serial_elem = bytes_to_native_str(serial_elem)
+        elif isinstance(serial_elem, OrderedDict):
+            serial_elem = OrderedDict(
+                (n, cls.convert_from_bytes(e)) for n, e in serial_elem.items())
+        return serial_elem
