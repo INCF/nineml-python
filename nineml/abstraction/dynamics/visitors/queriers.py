@@ -53,7 +53,7 @@ class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
                                   BaseDynamicsVisitor):
 
     def __init__(self, component_class, expressions):
-        self.state_variables = set()
+        self.state_variables = []
         ComponentRequiredDefinitions.__init__(self, component_class,
                                               expressions)
 
@@ -71,7 +71,7 @@ class DynamicsRequiredDefinitions(ComponentRequiredDefinitions,
 
     def action_statevariable(self, statevariable, **kwargs):  # @UnusedVariable
         if self._is_required(statevariable):
-            self.state_variables.add(statevariable)
+            self.state_variables.append(statevariable)
 
     @property
     def state_variable_names(self):

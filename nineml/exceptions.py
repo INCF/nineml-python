@@ -107,10 +107,18 @@ class NineMLStopVisitException(NineMLException):
     pass
 
 
+class NineMLDuplicateObjectError(NineMLStopVisitException):
+
+    def __init__(self, obj, context1, context2):
+        self.object = obj
+        self.context1 = context1
+        self.context2 = context2
+
+
 class NineMLFoundElementException(NineMLStopVisitException):
 
-    def __init__(self, object, context):
-        self.object = object
+    def __init__(self, obj, context):
+        self.object = obj
         self.context = context
 
 

@@ -116,7 +116,7 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
         self.visit(component_class)
         self.connected = set()
         if self.regimes:
-            first_regime = next(itervalues(self.regimes))
+            first_regime = next(iter(itervalues(self.regimes)))
             # Recursively add all regimes connected to the first regime
             self._add_connected_regimes_recursive(first_regime)
             if len(self.connected) < len(self.regimes):

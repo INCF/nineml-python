@@ -1346,7 +1346,7 @@ class _MultiTransition(BaseALObject, ContainerObject):
         return (
             _ExposedOutputEvent(pe)
             for pe in self._parent._parent.event_send_ports
-            if pe.port in self._sub_output_event_ports)
+            if pe.port.id in self._sub_output_event_port_ids())
 
     def state_assignment(self, variable):
         try:
@@ -1359,7 +1359,7 @@ class _MultiTransition(BaseALObject, ContainerObject):
 
     def output_event(self, name):
         exposure = self._parent._parent.event_send_port(name)
-        if exposure.port not in self._sub_output_event_ports:
+        if exposure.port.id not in self._sub_output_event_port_ids():
             raise NineMLNameError(
                 "Output event for '{}' port is not present in transition"
                 .format(name))
@@ -1381,10 +1381,10 @@ class _MultiTransition(BaseALObject, ContainerObject):
     def output_event_port_names(self):
         return (oe.port_name for oe in self.output_events)
 
-    @property
-    def _sub_output_event_ports(self):
-        return set(oe.port for oe in chain(*[t.output_events
-                                             for t in self.sub_transitions]))
+    def _sub_output_event_port_ids(self):
+        return set(
+            oe.port.id
+            for oe in chain(*[t.output_events for t in self.sub_transitions]))
 
 
 class _MultiOnEvent(_MultiTransition, OnEvent):

@@ -1,17 +1,20 @@
-from .base import BaseVisitor
-from nineml.utils import assert_no_duplicates
+from .base import BaseVisitorWithContext
+from nineml.exceptions import NineMLDuplicateObjectError
 
 
-class NoDuplicatedObjectsValidator(BaseVisitor):
+class NoDuplicatedObjectsValidator(BaseVisitorWithContext):
 
     def __init__(self, nineml_obj, **kwargs):  # @UnusedVariable
-        BaseVisitor.__init__(self)
-        self.all_objects = list()
+        BaseVisitorWithContext.__init__(self)
+        self.all_objects = {}
         self.visit(nineml_obj)
-        assert_no_duplicates(self.all_objects)
 
     def default_action(self, nineml_obj, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.all_objects.append(nineml_obj)
+        if not nineml_obj.temporary:
+            if nineml_obj.id in self.all_objects:
+                raise NineMLDuplicateObjectError(
+                    nineml_obj, self.context, self.all_objects[nineml_obj.id])
+            self.all_objects[nineml_obj.id] = self.context
 
     def action_dimension(self, dimension, **kwargs):
         pass
