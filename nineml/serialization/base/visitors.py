@@ -833,6 +833,8 @@ class BaseUnserializer(with_metaclass(ABCMeta, BaseVisitor)):
                 raise NineMLSerializationError(
                     "Unrecognised element type '{}' found in document"
                     .format(nineml_type))
+        except TypeError:
+            pass
         return nineml_cls
 
     def _extract_annotations(self, serial_elem, **options):
