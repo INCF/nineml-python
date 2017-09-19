@@ -32,7 +32,7 @@ class YAMLSerializer(DictSerializer):
                   Dumper=Dumper)
 
     def to_str(self, serial_elem, **options):
-        return yaml.dump(self._prepare_dict(serial_elem, **options),
+        return yaml.dump(self.to_elem(serial_elem, **options),
                          Dumper=Dumper)
 
     def _prepare_dict(self, elem_dict, **options):
@@ -67,12 +67,14 @@ class YAMLUnserializer(DictUnserializer):
         return self._finalise_dict(yaml.load(file, Loader=Loader), **options)
 
     def from_str(self, string, **options):
-        return self._finalise_dict(yaml.load(string, Loader=Loader), **options)
+        return self.from_elem(yaml.load(string, Loader=Loader), **options)
 
-    def _finalise_dict(self, elem_dict, **options):
-        elem_dict = self.from_elem(
-            elem_dict, nineml_type=native_str_to_bytes(Document.nineml_type),
-            **options)
+    def _finalise_dict(self, elem_dict, nineml_type=None, **options):
+        if nineml_type is None:
+            nineml_type = Document.nineml_type
+        nineml_type = native_str_to_bytes(nineml_type)
+        elem_dict = self.from_elem(elem_dict, nineml_type=nineml_type,
+                                   **options)
         if PY3:
             elem_dict = self.convert_from_bytes(elem_dict)
         return elem_dict
