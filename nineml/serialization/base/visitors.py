@@ -1,7 +1,6 @@
 from builtins import zip
 from builtins import next
 from past.builtins import basestring
-from future.utils import native_str_to_bytes, bytes_to_native_str
 from io import IOBase
 from builtins import object
 import os.path
@@ -401,9 +400,8 @@ class BaseSerializer(with_metaclass(ABCMeta, BaseVisitor)):
         return url
 
     @classmethod
-    def sanitize_str(cls, value):
-        return (native_str_to_bytes(value)
-                if isinstance(value, basestring) else value)
+    def open_file(cls, url):
+        return open(url, 'wb')
 
 
 class BaseUnserializer(with_metaclass(ABCMeta, BaseVisitor)):
@@ -934,11 +932,6 @@ class BaseUnserializer(with_metaclass(ABCMeta, BaseVisitor)):
         else:
             assert False
         return cls
-
-    @classmethod
-    def sanitize_str(cls, value):
-        return (bytes_to_native_str(value)
-                if isinstance(value, basestring) else value)
 
 
 from nineml.document import Document, AddToDocumentVisitor  # @IgnorePep8

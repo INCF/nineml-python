@@ -29,6 +29,10 @@ class JSONSerializer(DictSerializer):
                           cls=cls, indent=indent, separators=separators,
                           default=default, sort_keys=sort_keys)
 
+    @classmethod
+    def open_file(cls, url):
+        return open(url, 'w')
+
 
 class JSONUnserializer(DictUnserializer):
     """

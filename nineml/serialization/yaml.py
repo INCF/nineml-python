@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from future.utils import native_str_to_bytes, bytes_to_native_str, PY3
 from .dict import DictSerializer, DictUnserializer
 from collections import OrderedDict
+from nineml.document import Document
 import yaml
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
@@ -41,13 +42,20 @@ class YAMLSerializer(DictSerializer):
         return elem_dict
 
     @classmethod
-    def convert_to_bytes(cls, elem_dict):
-        if isinstance(cls, str):
-            elem_dict = native_str_to_bytes(elem_dict)
-        elif isinstance(elem_dict, OrderedDict):
-            elem_dict = OrderedDict(
-                (n, cls.convert_to_bytes(e)) for n, e in elem_dict.items())
-        return elem_dict
+    def convert_to_bytes(cls, elem):
+        if isinstance(elem, str):
+            elem = native_str_to_bytes(elem)
+        elif isinstance(elem, list):
+            elem = [cls.convert_to_bytes(e) for e in elem]
+        elif isinstance(elem, dict):
+            elem = OrderedDict(
+                (native_str_to_bytes(n), cls.convert_to_bytes(e))
+                for n, e in elem.items())
+        return elem
+
+    @classmethod
+    def open_file(cls, url):
+        return open(url, 'w')
 
 
 class YAMLUnserializer(DictUnserializer):
@@ -62,16 +70,21 @@ class YAMLUnserializer(DictUnserializer):
         return self._finalise_dict(yaml.load(string, Loader=Loader), **options)
 
     def _finalise_dict(self, elem_dict, **options):
-        elem_dict = self.from_elem(elem_dict, **options)
+        elem_dict = self.from_elem(
+            elem_dict, nineml_type=native_str_to_bytes(Document.nineml_type),
+            **options)
         if PY3:
             elem_dict = self.convert_from_bytes(elem_dict)
         return elem_dict
 
     @classmethod
-    def convert_from_bytes(cls, serial_elem):
-        if isinstance(cls, str):
-            serial_elem = bytes_to_native_str(serial_elem)
-        elif isinstance(serial_elem, OrderedDict):
-            serial_elem = OrderedDict(
-                (n, cls.convert_from_bytes(e)) for n, e in serial_elem.items())
-        return serial_elem
+    def convert_from_bytes(cls, elem):
+        if isinstance(elem, bytes):
+            elem = bytes_to_native_str(elem)
+        elif isinstance(elem, list):
+            elem = [cls.convert_from_bytes(e) for e in elem]
+        elif isinstance(elem, dict):
+            elem = OrderedDict(
+                (bytes_to_native_str(n), cls.convert_from_bytes(e))
+                for n, e in elem.items())
+        return elem

@@ -179,13 +179,14 @@ def write(url, *nineml_objects, **kwargs):
     except KeyError:
         raise NineMLSerializationError(
             "Unrecognised format '{}' in url '{}', can be one of '{}'"
-            .format(format, url, "', '".join(list(format_to_serializer.keys()))))
+            .format(format, url,
+                    "', '".join(list(format_to_serializer.keys()))))
     if Serializer is None:
         raise NineMLSerializerNotImportedError(
             "Cannot write to '{}' as {} serializer cannot be "
             "imported. Please check the required dependencies are correctly "
             "installed".format(url, format))
-    with open(url, 'wb') as file:  # @ReservedAssignment
+    with Serializer.open_file(url) as file:  # @ReservedAssignment
         # file is passed to the serializer for serializations that store
         # elements dynamically, such as HDF5
         serializer = Serializer(document=document, fname=file, **kwargs)

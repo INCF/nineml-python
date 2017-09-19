@@ -54,11 +54,10 @@ class HDF5Serializer(BaseSerializer):
         return root
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        serial_elem.attrs[name] = self.sanitize_str(value)
+        serial_elem.attrs[name] = value
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8
-        self.set_attr(serial_elem, self.BODY_ATTR,
-                      self.sanitize_str(value), **options)
+        self.set_attr(serial_elem, self.BODY_ATTR, value, **options)
 
     def to_file(self, serial_elem, file, **options):  # @UnusedVariable  @IgnorePep8 @ReservedAssignment
         if file.name != self._file.filename:
@@ -110,14 +109,11 @@ class HDF5Unserializer(BaseUnserializer):
               if e.attrs[self.MULT_ATTR]))
 
     def get_attr(self, serial_elem, name, **options):  # @UnusedVariable
-        try:
-            return self.sanitize_str(serial_elem.attrs[name])
-        except:
-            raise
+        return serial_elem.attrs[name]
 
     def get_body(self, serial_elem, **options):  # @UnusedVariable
         try:
-            return self.sanitize_str(serial_elem.attrs[self.BODY_ATTR])
+            return serial_elem.attrs[self.BODY_ATTR]
         except KeyError:
             return None
 
