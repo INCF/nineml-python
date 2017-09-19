@@ -185,7 +185,7 @@ def write(url, *nineml_objects, **kwargs):
             "Cannot write to '{}' as {} serializer cannot be "
             "imported. Please check the required dependencies are correctly "
             "installed".format(url, format))
-    with open(url, 'w') as file:  # @ReservedAssignment
+    with open(url, 'wb') as file:  # @ReservedAssignment
         # file is passed to the serializer for serializations that store
         # elements dynamically, such as HDF5
         serializer = Serializer(document=document, fname=file, **kwargs)

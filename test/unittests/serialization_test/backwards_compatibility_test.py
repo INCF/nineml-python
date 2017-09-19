@@ -8,10 +8,12 @@ from nineml.serialization.xml import (
 class TestBackwardsCompatibility(unittest.TestCase):
 
     def test_backwards_compatibility(self):
-        full_v1_xml = etree.fromstring(version1)
-        full_v2_xml = etree.fromstring(version2)
-        v1_doc = XMLUnserializer(root=etree.fromstring(version1)).unserialize()
-        v2_doc = XMLUnserializer(root=etree.fromstring(version2)).unserialize()
+        full_v1_xml = etree.fromstring(bytes(version1, 'utf-8'))
+        full_v2_xml = etree.fromstring(bytes(version2, 'utf-8'))
+        v1_doc = XMLUnserializer(
+            root=etree.fromstring(bytes(version1, 'utf-8'))).unserialize()
+        v2_doc = XMLUnserializer(
+            root=etree.fromstring(bytes(version2, 'utf-8'))).unserialize()
         v1_doc._url = './dummy.xml'
         v2_doc._url = './dummy.xml'
         # Ensure all elements are loaded

@@ -141,7 +141,7 @@ class XMLUnserializer(BaseUnserializer):
 
     def from_str(self, string, **options):  # @UnusedVariable
         try:
-            return etree.fromstring(string)
+            return etree.fromstring(bytes(string, 'utf-8'))
         except etree.LxmlError as e:
             raise NineMLSerializationError(
                 "Could not parse XML string '{}': \n{}".format(file, e))

@@ -2,6 +2,7 @@ from builtins import zip
 import h5py
 from . import NINEML_BASE_NS
 from tempfile import mkstemp
+from io import IOBase
 from past.builtins import basestring
 import contextlib
 import nineml
@@ -24,7 +25,7 @@ class HDF5Serializer(BaseSerializer):
     """
 
     def __init__(self, fname, **kwargs):  # @UnusedVariable @IgnorePep8 @ReservedAssignment
-        if isinstance(fname, file):
+        if isinstance(fname, IOBase):
             # Close the file and reopen with the h5py File object
             file_ = fname
             fname = file_.name
@@ -58,7 +59,7 @@ class HDF5Serializer(BaseSerializer):
         return root
 
     def set_attr(self, serial_elem, name, value, **options):  # @UnusedVariable
-        serial_elem.attrs[name] = (bytes(value)
+        serial_elem.attrs[name] = (bytes(value, 'utf-8')
                                    if isinstance(value, basestring) else value)
 
     def set_body(self, serial_elem, value, **options):  # @UnusedVariable @IgnorePep8

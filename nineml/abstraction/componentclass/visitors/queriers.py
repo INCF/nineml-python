@@ -53,11 +53,11 @@ class ComponentRequiredDefinitions(BaseVisitor):
         BaseVisitor.__init__(self)
         # Expression can either be a single expression or an iterable of
         # expressions
-        self.parameters = set()
-        self.ports = set()
-        self.constants = set()
-        self.random_variables = set()
-        self.expressions = list()
+        self.parameters = []
+        self.ports = []
+        self.constants = []
+        self.random_variables = []
+        self.expressions = []
         self._required_stack = []
         self._push_required_symbols(expressions)
         self.component_class = component_class
@@ -89,19 +89,19 @@ class ComponentRequiredDefinitions(BaseVisitor):
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         if self._is_required(parameter):
-            self.parameters.add(parameter)
+            self.parameters.append(parameter)
 
     def action_analogreceiveport(self, port, **kwargs):  # @UnusedVariable
         if self._is_required(port):
-            self.ports.add(port)
+            self.ports.append(port)
 
     def action_analogreduceport(self, port, **kwargs):  # @UnusedVariable
         if self._is_required(port):
-            self.ports.add(port)
+            self.ports.append(port)
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
         if self._is_required(constant):
-            self.constants.add(constant)
+            self.constants.append(constant)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if (self._is_required(alias) and

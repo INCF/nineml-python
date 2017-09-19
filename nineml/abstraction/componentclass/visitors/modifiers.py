@@ -123,6 +123,8 @@ class ComponentSubstituteAliases(BasePreAndPostVisitorWithContext):
                     alias = self.get_alias(str(sym))
                     expr.subs(sym, self.substitute(alias))
             self.cache[cache_key] = rhs = expr.rhs
+        except TypeError:
+            raise
         return rhs
 
     def get_alias(self, name):

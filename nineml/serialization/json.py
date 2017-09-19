@@ -10,25 +10,24 @@ class JSONSerializer(DictSerializer):
 
     def to_file(self, serial_elem, file, skipkeys=False, ensure_ascii=True, #   @IgnorePep8 @ReservedAssignment
                 check_circular=True, allow_nan=True, cls=None, indent=None,
-                separators=None, encoding='utf-8', default=None,
+                separators=None, default=None,
                 sort_keys=False, **options):  # @UnusedVariable
         json.dump(self.to_elem(serial_elem, **options), file,
                   skipkeys=skipkeys,
                   ensure_ascii=ensure_ascii, check_circular=check_circular,
                   allow_nan=allow_nan, cls=cls, indent=indent,
-                  separators=separators, encoding=encoding, default=default,
+                  separators=separators, default=default,
                   sort_keys=sort_keys)
 
     def to_str(self, serial_elem, skipkeys=False, ensure_ascii=True,
                 check_circular=True, allow_nan=True, cls=None, indent=None,
-                separators=None, encoding='utf-8', default=None,
+                separators=None, default=None,
                 sort_keys=False, **options):  # @UnusedVariable  @IgnorePep8
         return json.dumps(self.to_elem(serial_elem, **options),
                           skipkeys=skipkeys, ensure_ascii=ensure_ascii,
                           check_circular=check_circular, allow_nan=allow_nan,
                           cls=cls, indent=indent, separators=separators,
-                          encoding=encoding, default=default,
-                          sort_keys=sort_keys)
+                          default=default, sort_keys=sort_keys)
 
 
 class JSONUnserializer(DictUnserializer):
