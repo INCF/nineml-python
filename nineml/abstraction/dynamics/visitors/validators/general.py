@@ -6,6 +6,7 @@ docstring needed
 """
 from __future__ import division
 from past.utils import old_div
+from future.utils import itervalues
 from collections import defaultdict
 from nineml.exceptions import NineMLRuntimeError
 from nineml.utils import assert_no_duplicates
@@ -111,10 +112,13 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
         BaseDynamicsVisitor.__init__(self)
         self.connected_regimes_from_regime = defaultdict(set)
         self.component_class = component_class
+        self.regimes = {}
         self.visit(component_class)
         self.connected = set()
         if self.regimes:
-            self._add_connected_regimes_recursive(self.regimes[0])
+            first_regime = next(itervalues(self.regimes))
+            # Recursively add all regimes connected to the first regime
+            self._add_connected_regimes_recursive(first_regime)
             if len(self.connected) < len(self.regimes):
                 # FIXME: This should probably be a warning not an error
                 raise NineMLRuntimeError(
@@ -129,21 +133,19 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
             elif len(self.connected) > len(self.regimes):
                 assert False
 
-    def action_dynamics(self, component_class, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.regimes = list(component_class.regimes)
-
     def action_regime(self, regime, **kwargs):  # @UnusedVariable
+        self.regimes[regime.id] = regime
         for transition in regime.transitions:
-            self.connected_regimes_from_regime[regime].add(
-                transition.target_regime)
-            self.connected_regimes_from_regime[transition.target_regime].add(
-                regime)
+            self.connected_regimes_from_regime[regime.id].add(
+                transition.target_regime.id)
+            self.connected_regimes_from_regime[
+                transition.target_regime.id].add(regime.id)
 
     def _add_connected_regimes_recursive(self, regime):  # @IgnorePep8
-        self.connected.add(regime)
-        for r in self.connected_regimes_from_regime[regime]:
-            if r not in self.connected:
-                self._add_connected_regimes_recursive(r)
+        self.connected.add(regime.id)
+        for id_ in self.connected_regimes_from_regime[regime.id]:
+            if id_ not in self.connected:
+                self._add_connected_regimes_recursive(self.regimes[id_])
 
     def default_action(self, obj, nineml_cls, **kwargs):
         pass

@@ -60,12 +60,24 @@ class BaseNineMLObject(object):
     def __ne__(self, other):
         return not self == other
 
-    def __hash__(self):
+    @property
+    def id(self):
+        """
+        An ID used to distinguish two objects from each other.
+
+        If a "non-temporary" object (i.e. not a namespace escaped object
+        generated on the fly to duck type with a base class, such as
+        _MultiRegime, _NamespaceParameter, etc...) then this method returns
+        the address of the object in memory.
+
+        If a temporary object, this is the ID of its parent combined with
+        its class type and unique key
+        """
         if self.temporary:
-            hsh = hash(self._parent) ^ hash(self.key)
+            id_ = self._parent.id ^ hash(type(self)) ^ hash(self.key)
         else:
-            hsh = id(self)
-        return hsh
+            id_ = id(self)
+        return id_
 
     def equals(self, other, **kwargs):
         checker = EqualityChecker(**kwargs)
@@ -139,7 +151,7 @@ class BaseNineMLObject(object):
         return nineml.serialize(self, **kwargs)
 
     @classmethod
-    def unserialize(cls, serial_elem, format, version, **kwargs):  # @ReservedAssignment
+    def unserialize(cls, serial_elem, format, version, **kwargs):  # @ReservedAssignment @IgnorePep8
         """
         Unserializes a serial element to the given NineML class
 

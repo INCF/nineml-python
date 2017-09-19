@@ -293,7 +293,11 @@ class AddToDocumentVisitor(BaseVisitorWithContext):
         """
         if (isinstance(obj, DocumentLevelObject) and (
                 self.add_bound or obj.document is None)):
-            if obj.name in self.document.keys():
+            # Need to use dictionary keys method instead of document one
+            # to be able to add objects that are being lazily added by the
+            # unserializer whos keys appear in self.document.keys() (but not
+            # dict.keys(self.document)).
+            if obj.name in dict.keys(self.document):
                 doc_obj = self.document[obj.name]
                 if obj is doc_obj:
                     return obj  # Object is already in document

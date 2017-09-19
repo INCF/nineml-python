@@ -172,11 +172,11 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
         def default_action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable
             if not isinstance(obj, SendPortBase):
                 try:
-                    self._dimensions[obj] = sympify(obj.dimension)
+                    self._dimensions[obj.id] = sympify(obj.dimension)
                 except AttributeError:
                     # If element doesn't have dimension attribute
                     try:
-                        self._dimensions[obj] = sympify(obj.units.dimension)
+                        self._dimensions[obj.id] = sympify(obj.units.dimension)
                     except AttributeError:
                         pass  # If element doesn't have units attribute
 
@@ -216,7 +216,7 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
         except AttributeError:  # for basic sympy expressions
             expr = element
         try:
-            dims = self._dimensions[element]
+            dims = self._dimensions[element.id]
             self._recursion_count = 0
         except (KeyError, AttributeError):  # for derived dimensions
             if self._recursion_count > self._RECURSION_MAX:
@@ -232,7 +232,7 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
                     ))
             self._recursion_count += 1
             dims = self._flatten_dims(expr, element)
-            self._dimensions[element] = dims
+            self._dimensions[element.id] = dims
         return dims
 
     def _flatten_dims(self, expr, element):

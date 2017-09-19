@@ -1,18 +1,16 @@
 from past.builtins import basestring
 from itertools import chain
+from nineml.base import BaseNineMLObject
 from .. import BaseULObject
 import sympy
-import operator
-from nineml.base import BaseNineMLObject
 from nineml.abstraction import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
-    EventReceivePort, Alias)
+    EventReceivePort, Alias, OutputEvent)
 from nineml.exceptions import (
     NineMLNotBoundException, NineMLImmutableError, NineMLTargetMissingError,
     NineMLNameError)
 from .namespace import append_namespace
 from nineml.utils import validate_identifier
-from functools import reduce
 
 
 class BasePortExposure(BaseULObject):
@@ -164,8 +162,10 @@ class _PortExposureAlias(Alias):
     def __init__(self, exposure):
         self._exposure = exposure
 
-    def __hash__(self):
-        return hash(_PortExposureAlias) ^ hash(self._exposure)
+    @property
+    def _parent(self):
+        "To get the 'id' property in BaseNineMLObject to work"
+        return self._exposure
 
     @property
     def name(self):
@@ -246,50 +246,22 @@ class EventReceivePortExposure(BasePortExposure, EventReceivePort):
     nineml_type = 'EventReceivePortExposure'
 
 
-class _LocalAnalogPortConnections(Alias):
+class _ExposedOutputEvent(OutputEvent):
 
     temporary = True
 
-    def __init__(self, receive_port, receiver, port_connections, parent):
-        BaseNineMLObject.__init__(self)
-        self._receive_port_name = receive_port
-        self._receiver_name = receiver
-        self._port_connections = port_connections
-        self._parent = parent
-
-    @property
-    def receive_port_name(self):
-        return self._receive_port_name
-
-    @property
-    def receiver_name(self):
-        return self._receiver_name
-
-    @property
-    def port_connections(self):
-        return iter(self._port_connections)
-
-    @property
-    def name(self):
-        return self.lhs
+    def __init__(self, port_exposure):
+        BaseNineMLObject.__init__()
+        self._port_exposure = port_exposure
 
     @property
     def key(self):
-        # Required for duck-typing
-        return self.name
+        return self.port_name
 
     @property
-    def lhs(self):
-        return append_namespace(self.receive_port_name, self.receiver_name)
+    def port_name(self):
+        return self._port_exposure.name
 
     @property
-    def rhs(self):
-        return reduce(
-            operator.add,
-            (sympy.Symbol(pc.sender.append_namespace(pc.send_port_name))
-             for pc in self.port_connections), 0)
-
-    def lhs_name_transform_inplace(self, name_map):
-        raise NineMLImmutableError(
-            "Cannot rename LHS of Alias '{}' because it is a local "
-            "AnalogPortConnection".format(self.lhs))
+    def port(self):
+        return self._port_exposure

@@ -257,7 +257,8 @@ class TestValues(unittest.TestCase):
                         np_val = abs(np_val)
                     else:
                         val = round(val)
-                    val = abs(val) / 10. ** round(math.log10(abs(val)))
+                    if val != 0.0:
+                        val = abs(val) / 10. ** round(math.log10(abs(val)))
                 elif op in div_ops and float(val) == 0.0:
                     val = SingleValue(0.1)
                 vv_result = op(array_val, val)

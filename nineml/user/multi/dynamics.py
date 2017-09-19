@@ -25,16 +25,20 @@ from nineml.utils.iterables import normalise_parameter_as_list
 # from nineml import units as un
 from nineml.annotations import VALIDATION, DIMENSIONALITY
 from nineml.abstraction import (
-    Dynamics, Regime, StateVariable, OnEvent, OnCondition, OutputEvent,
-    StateAssignment, Trigger, Constant)
+    Dynamics, Regime, StateVariable, OnEvent, OnCondition,
+    Constant)
 from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
     AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
+    _ExposedOutputEvent)
+from .port_connections import (
+    _DelayedOnEvent, _UnconnectedAnalogReducePort,
+    _DelayedOnEventStateVariable, _DelayedOnEventStateAssignment,
     _LocalAnalogPortConnections)
 from .namespace import (
     _NamespaceAlias, _NamespaceRegime, _NamespaceStateVariable,
     _NamespaceConstant, _NamespaceParameter, _NamespaceProperty,
-    _NamespaceInitial, _NamespaceOnCondition, append_namespace,
+    _NamespaceInitial, append_namespace,
     split_namespace, make_regime_name, make_delay_trigger_name,
     split_multi_regime_name)
 
@@ -590,18 +594,21 @@ class MultiDynamics(Dynamics):
         are treated simply as aliases in the flattened representation, with
         all aliases defined in the sub components
         """
-        return chain(
-            (p.alias for p in chain(self.analog_send_ports,
-                                    self.analog_receive_ports,
-                                    self.analog_reduce_ports)
-             if p.name != p.local_port_name),
-            (_LocalAnalogPortConnections(
+        port_exposure_aliases = (
+            p.alias for p in chain(self.analog_send_ports,
+                                   self.analog_receive_ports,
+                                   self.analog_reduce_ports)
+            if p.name != p.local_port_name)
+        local_port_connections = (
+            _LocalAnalogPortConnections(
                 receive_port=p, receiver=r,
                 port_connections=list(pcs), parent=self)
-             for (r, p), pcs in groupby(sorted(self.analog_port_connections,
+            for (r, p), pcs in groupby(sorted(self.analog_port_connections,
                                                key=attrgetter('receive_key')),
-                                        key=attrgetter('receive_key'))),
-            *(sc.aliases for sc in self.sub_components))
+                                        key=attrgetter('receive_key')))
+        return chain(port_exposure_aliases,
+                     local_port_connections,
+                     *(sc.aliases for sc in self.sub_components))
 
     @property
     def constants(self):
@@ -611,20 +618,22 @@ class MultiDynamics(Dynamics):
             set(chain(*(zip(repeat(sc.name), sc.analog_reduce_ports)
                         for sc in self.sub_components))) -
             set(self._connected_reduce_ports()))
-        return chain(
-            (Constant(append_namespace(port.name, sub_comp_name), 0.0,
-                                       port.dimension.origin.units)
-             for sub_comp_name, port in unused_reduce_ports),
-            *[sc.constants for sc in self.sub_components])
+        unused_reduce_port_constants = (
+            _UnconnectedAnalogReducePort(port, sub_component)
+            for sub_comp_name, port in unused_reduce_ports
+            for sc in self.sub_components)
+        return chain(unused_reduce_port_constants,
+                     *[sc.constants for sc in self.sub_components])
 
     @property
     def state_variables(self):
         # All statevariables in all subcomponents mapped into the container
         # namespace, plus state variables used to trigger local event
         # connections after a delays
-        return chain((StateVariable(make_delay_trigger_name(pc),
-                                    dimension=un.time)
-                      for pc in self.nonzero_delay_event_port_connections),
+        delayed_on_event_vars = (
+            _DelayedOnEventStateVariable(pc)
+            for pc in self.nonzero_delay_event_port_connections)
+        return chain(delayed_on_event_vars,
                      *(sc.state_variables for sc in self.sub_components))
 
     @property
@@ -659,8 +668,11 @@ class MultiDynamics(Dynamics):
         return self.sub_component(comp_name).parameter(name)
 
     def state_variable(self, name):
-        _, comp_name = split_namespace(name)
-        return self.sub_component(comp_name).state_variable(name)
+        try:
+            _, comp_name = split_namespace(name)
+            return self.sub_component(comp_name).state_variable(name)
+        except KeyError:
+            raise
 
     def alias(self, name):
         try:
@@ -772,9 +784,9 @@ class MultiDynamics(Dynamics):
 
     def _connected_reduce_ports(self):
         return chain(
-            ((pe.sub_component.name, pe.port)
+            ((pe.sub_component, pe.port)
              for pe in self.analog_reduce_ports),
-            ((pc.receiver_name, pc.receive_port)
+            ((pc.receiver, pc.receive_port)
              for pc in self.analog_port_connections))
 
     def serialize_node(self, node, **options):  # @UnusedVariable
@@ -1340,10 +1352,8 @@ class _MultiTransition(BaseALObject, ContainerObject):
         # state-assignments of delay triggers for output events connected to
         # local event port connections with non-zero delay
         return chain(
-            (StateAssignment(make_delay_trigger_name(pc),
-                             't + {}'.format(pc.delay))
-             for pc in
-                 self._parent._parent.nonzero_delay_event_port_connections
+            (_DelayedOnEventStateAssignment(pc) for pc in (
+                self._parent._parent.nonzero_delay_event_port_connections)
              if pc.port in self._sub_output_event_ports),
             *[t.state_assignments for t in self.sub_transitions])
 
@@ -1437,40 +1447,3 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
     @property
     def key(self):
         return self.trigger.rhs
-
-
-class _ExposedOutputEvent(OutputEvent):
-
-    temporary = True
-
-    def __init__(self, port_exposure):
-        self._port_exposure = port_exposure
-
-    @property
-    def key(self):
-        return self.port_name
-
-    @property
-    def port_name(self):
-        return self._port_exposure.name
-
-    @property
-    def port(self):
-        return self._port_exposure
-
-
-class _DelayedOnEvent(_NamespaceOnCondition):
-    """
-    OnEvents that are triggered by delayed local connections are represented
-    by OnConditions, which are triggered by a "delay trigger" state variable
-    being passed by the simulation time 't'
-    """
-
-    def __init__(self, on_event, port_connection):
-        self._sub_component = on_event,
-        self._port_connection = port_connection
-
-    @property
-    def trigger(self):
-        state_var = make_delay_trigger_name(self._port_connection)
-        return Trigger('t > {}'.format(state_var))
