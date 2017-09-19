@@ -10,8 +10,8 @@ from nineml.abstraction import (
     Dynamics, Regime, AnalogReceivePort, AnalogReducePort, OutputEvent,
     AnalogSendPort, On, StateAssignment, Constant)
 from nineml.user.dynamics import DynamicsProperties
-from nineml.user.multi.port_exposures import (
-    _LocalAnalogPortConnections, _ReceivePortExposureAlias)
+from nineml.user.multi.port_exposures import _ReceivePortExposureAlias
+from nineml.user.multi.port_connections import _LocalAnalogPortConnections
 
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',

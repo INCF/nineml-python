@@ -251,7 +251,7 @@ class _ExposedOutputEvent(OutputEvent):
     temporary = True
 
     def __init__(self, port_exposure):
-        BaseNineMLObject.__init__()
+        BaseNineMLObject.__init__(self)
         self._port_exposure = port_exposure
 
     @property

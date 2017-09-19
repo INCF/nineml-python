@@ -1,7 +1,9 @@
 from __future__ import print_function
 from builtins import next
 import unittest
-from nineml.user.multi.port_exposures import (_BaseAnalogPortExposure, _LocalAnalogPortConnections, BasePortExposure)
+from nineml.user.multi.port_exposures import (_BaseAnalogPortExposure,
+                                              BasePortExposure)
+from nineml.user.multi.port_connections import _LocalAnalogPortConnections
 from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLImmutableError, NineMLRuntimeError)
 

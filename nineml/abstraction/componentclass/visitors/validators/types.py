@@ -25,7 +25,10 @@ class TypesComponentValidator(BaseVisitor):
         assert isinstance(alias, Alias)
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable
-        assert isinstance(constant, Constant)
+        try:
+            assert isinstance(constant, Constant)
+        except:
+            raise
 
     def action_dimension(self, dimension, **kwargs):  # @UnusedVariable
         assert isinstance(dimension, Dimension)

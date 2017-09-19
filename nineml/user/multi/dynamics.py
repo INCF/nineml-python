@@ -8,7 +8,7 @@ from .. import BaseULObject
 import sympy
 from collections import defaultdict
 from operator import attrgetter
-from itertools import product, groupby, repeat
+from itertools import product, groupby
 from nineml.user import DynamicsProperties, Definition
 from nineml.annotations import PY9ML_NS
 # from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
@@ -25,8 +25,7 @@ from nineml.utils.iterables import normalise_parameter_as_list
 # from nineml import units as un
 from nineml.annotations import VALIDATION, DIMENSIONALITY
 from nineml.abstraction import (
-    Dynamics, Regime, StateVariable, OnEvent, OnCondition,
-    Constant)
+    Dynamics, Regime, OnEvent, OnCondition)
 from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
     AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
@@ -39,8 +38,7 @@ from .namespace import (
     _NamespaceAlias, _NamespaceRegime, _NamespaceStateVariable,
     _NamespaceConstant, _NamespaceParameter, _NamespaceProperty,
     _NamespaceInitial, append_namespace,
-    split_namespace, make_regime_name, make_delay_trigger_name,
-    split_multi_regime_name)
+    split_namespace, make_regime_name, split_multi_regime_name)
 
 
 # Used to create initial regime name from sub-component initial regimes
@@ -594,11 +592,15 @@ class MultiDynamics(Dynamics):
         are treated simply as aliases in the flattened representation, with
         all aliases defined in the sub components
         """
+        # Add an alias to map analog port exposures to the local port in the
+        # the sub-component
         port_exposure_aliases = (
             p.alias for p in chain(self.analog_send_ports,
                                    self.analog_receive_ports,
                                    self.analog_reduce_ports)
             if p.name != p.local_port_name)
+        # Add aliases mapping local port connections between ports in
+        # different sub-components
         local_port_connections = (
             _LocalAnalogPortConnections(
                 receive_port=p, receiver=r,
@@ -606,6 +608,7 @@ class MultiDynamics(Dynamics):
             for (r, p), pcs in groupby(sorted(self.analog_port_connections,
                                                key=attrgetter('receive_key')),
                                         key=attrgetter('receive_key')))
+        # Chain all the aliases together
         return chain(port_exposure_aliases,
                      local_port_connections,
                      *(sc.aliases for sc in self.sub_components))
@@ -614,14 +617,16 @@ class MultiDynamics(Dynamics):
     def constants(self):
         # We need to insert a 0-valued constant for each internal reduce port
         # that doesn't receive any connections
-        unused_reduce_ports = (
-            set(chain(*(zip(repeat(sc.name), sc.analog_reduce_ports)
-                        for sc in self.sub_components))) -
-            set(self._connected_reduce_ports()))
-        unused_reduce_port_constants = (
-            _UnconnectedAnalogReducePort(port, sub_component)
-            for sub_comp_name, port in unused_reduce_ports
-            for sc in self.sub_components)
+        connected_reduce_port_ids = list(chain(
+            ((pe.port.id, pe.sub_component.id)
+             for pe in self.analog_reduce_port_exposures),
+            ((pc.receive_port.id, pc.receiver.id)
+             for pc in self.analog_port_connections)))
+        unused_reduce_port_constants = chain(
+            *((_UnconnectedAnalogReducePort(p, sc)
+               for p in sc.analog_reduce_ports
+               if (p.id, sc.id) not in connected_reduce_port_ids)
+              for sc in self.sub_components))
         return chain(unused_reduce_port_constants,
                      *[sc.constants for sc in self.sub_components])
 
@@ -667,62 +672,39 @@ class MultiDynamics(Dynamics):
         _, comp_name = split_namespace(name)
         return self.sub_component(comp_name).parameter(name)
 
+    @name_error
     def state_variable(self, name):
         try:
             _, comp_name = split_namespace(name)
             return self.sub_component(comp_name).state_variable(name)
         except KeyError:
-            raise
+            try:
+                return next(sv for sv in self.state_variables
+                            if sv.name == name)
+            except StopIteration:
+                raise KeyError(name)
 
+    @name_error
     def alias(self, name):
         try:
-            local, comp_name = split_namespace(name)
-            port_conns = [pc for pc in self.analog_port_connections
-                          if pc.receive_key == (comp_name, local)]
-            if port_conns:
-                # An alias that is actually a local analog port connection
-                alias = _LocalAnalogPortConnections(
-                    local, comp_name, port_conns, self)
-            else:
-                # An alias of a sub component
-                alias = self.sub_component(comp_name).alias(name)
+            _, comp_name = split_namespace(name)
+            return self.sub_component(comp_name).alias(name)
         except KeyError:
             try:
-                alias = self.analog_send_port(name).alias
-            except KeyError:
-                try:
-                    alias = next(
-                        p.alias for p in chain(self.analog_receive_ports,
-                                               self.analog_reduce_ports)
-                        if p.alias.lhs == name and p.local_port_name != p.name)
-                except StopIteration:
-                    raise NineMLNameError(
-                        "Could not find alias corresponding to '{}' in "
-                        "sub-components or port connections/exposures"
-                        .format(name))
-        return alias
+                return next(a for a in self.aliases if a.name == name)
+            except StopIteration:
+                raise KeyError(name)
 
+    @name_error
     def constant(self, name):
-        port_name, comp_name = split_namespace(name)
-        sub_component = self.sub_component(comp_name)
         try:
-            return sub_component.constant(name)
-        except NineMLNameError:
+            _, comp_name = split_namespace(name)
+            return self.sub_component(comp_name).constant(name)
+        except KeyError:
             try:
-                reduce_port = sub_component.analog_reduce_port(port_name)
-                if ((sub_component.name, reduce_port) not in
-                        self._connected_reduce_ports()):
-                    return Constant(
-                        name, 0.0, reduce_port.dimension.origin.units)
-                else:
-                    raise NineMLNameError(
-                        "'{}' corresponds to a AnalogReduce port, but one that"
-                        "is used and so is represented by an Alias instead of"
-                        "a Constant in '{}'".format(port_name, comp_name))
-            except NineMLNameError:
-                raise NineMLNameError(
-                    "Could not find Constant '{}' in '{}"
-                    .format(name, self.name))
+                return next(c for c in self.constants if c.name == name)
+            except StopIteration:
+                raise KeyError(name)
 
     def regime(self, name):
         try:
@@ -937,7 +919,7 @@ class _MultiRegime(Regime):
         sub_on_events = [oe for oe in self._all_sub_on_events
                          if oe.src_port_name == port_exposure.local_port_name]
         if not sub_on_events:
-            raise KeyError(
+            raise NineMLNameError(
                 "No OnEvent for receive port '{}'".format(port_name))
         return _MultiOnEvent(port_exposure, sub_on_events, self)
 
@@ -945,7 +927,7 @@ class _MultiRegime(Regime):
         sub_conds = [oc for oc in self._all_sub_on_conds
                      if oc.trigger.rhs == sympy.sympify(condition)]
         if not sub_conds:
-            raise KeyError(
+            raise NineMLNameError(
                 "No OnCondition with trigger condition '{}'".format(condition))
         return _MultiOnCondition(sub_conds, self)
 
@@ -1351,11 +1333,12 @@ class _MultiTransition(BaseALObject, ContainerObject):
         # All state assignments within the sub_transitions plus
         # state-assignments of delay triggers for output events connected to
         # local event port connections with non-zero delay
-        return chain(
-            (_DelayedOnEventStateAssignment(pc) for pc in (
+        delayed_on_event_assignments = (
+            _DelayedOnEventStateAssignment(pc) for pc in (
                 self._parent._parent.nonzero_delay_event_port_connections)
-             if pc.port in self._sub_output_event_ports),
-            *[t.state_assignments for t in self.sub_transitions])
+            if pc.port in self._sub_output_event_ports)
+        return chain(delayed_on_event_assignments,
+                     *[t.state_assignments for t in self.sub_transitions])
 
     @property
     def output_events(self):
