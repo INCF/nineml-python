@@ -1,13 +1,13 @@
 from future import standard_library
 standard_library.install_aliases()
-from past.builtins import basestring
-import os.path
-import re
-import time
-import weakref
-from urllib.request import urlopen
-import contextlib
-from nineml.exceptions import (
+from past.builtins import basestring  # @IgnorePep8
+import os.path  # @IgnorePep8
+import re  # @IgnorePep8
+import time  # @IgnorePep8
+import weakref  # @IgnorePep8
+from urllib.request import urlopen  # @IgnorePep8
+import contextlib  # @IgnorePep8
+from nineml.exceptions import (  # @IgnorePep8
     NineMLSerializationError, NineMLIOError, NineMLReloadDocumentException,
     NineMLSerializerNotImportedError)
 
@@ -28,7 +28,6 @@ UNCERTML_NS = "http://www.uncertml.org/2.0"
 import nineml  # @IgnorePep8
 from .dict import DictSerializer, DictUnserializer  # @IgnorePep8
 from .json import JSONSerializer, JSONUnserializer  # @IgnorePep8
-from .pickle import PickleSerializer, PickleUnserializer  # @IgnorePep8
 try:
     from .xml import XMLSerializer, XMLUnserializer
 except ImportError:
@@ -47,15 +46,13 @@ ext_to_format = {
     '.xml': 'xml',
     '.yml': 'yaml',
     '.h5': 'hdf5',
-    '.json': 'json',
-    '.pkl': 'pickle'}
+    '.json': 'json'}
 
 format_to_serializer = {
     'xml': XMLSerializer,
     'dict': DictSerializer,
     'yaml': YAMLSerializer,
     'json': JSONSerializer,
-    'pickle': PickleSerializer,
     'hdf5': HDF5Serializer}
 
 
@@ -64,7 +61,6 @@ format_to_unserializer = {
     'dict': DictUnserializer,
     'yaml': YAMLUnserializer,
     'json': JSONUnserializer,
-    'pickle': PickleUnserializer,
     'hdf5': HDF5Unserializer}
 
 
