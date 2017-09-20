@@ -375,25 +375,23 @@ class DynamicPortsObject(BaseNineMLObject):
 
     @property
     def num_send_ports(self):
-        return self.num_analog_send_ports + self.num_event_send_ports
+        return len(list(self.send_ports))
 
     @property
     def num_receive_ports(self):
-        return (self.num_analog_receive_ports + self.num_analog_reduce_ports +
-                self.num_event_receive_ports)
+        return len(list(self.receive_ports))
 
     @property
     def num_analog_ports(self):
-        return (self.num_analog_receive_ports + self.num_analog_send_ports +
-                self.num_analog_reduce_ports)
+        return len(list(self.analog_ports))
 
     @property
     def num_event_ports(self):
-        return (self.num_event_receive_ports + self.num_event_send_ports)
+        return len(list(self.event_ports))
 
     @property
     def num_ports(self):
-        return self.num_send_ports + self.num_receive_ports
+        return len(list(self.ports))
 
     @property
     def analog_ports(self):

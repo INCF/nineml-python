@@ -2,7 +2,9 @@ from __future__ import absolute_import
 from builtins import zip
 from past.builtins import basestring
 import itertools
+from functools import reduce
 import collections
+from operator import attrgetter
 from .validation import assert_no_duplicates
 from ..exceptions import NineMLRuntimeError
 from nineml.base import ContainerObject
@@ -42,7 +44,7 @@ def expect_single(lst, errmsg=None):
 
     """
 
-    if not _is_iterable(lst):
+    if not _is_iterable(lst) and not isinstance(lst, basestring):
         raise NineMLRuntimeError('Object not iterable')
     if issubclass(lst.__class__, (dict)):
         err = "Dictionary passed to expect_single. This could be ambiguous"
@@ -207,7 +209,7 @@ def flatten_first_level(nested_list):
         raise NineMLRuntimeError(err)
 
     for nl in nested_list:
-        if not _is_iterable(nl):
+        if not _is_iterable(nl) and not isinstance(nested_list, basestring):
             err = 'flatten_first_level() expects all arguments to be iterable'
             raise NineMLRuntimeError(err)
 
@@ -243,6 +245,23 @@ def _is_hashable(obj):
         return True
     except:
         return False
+
+
+def unique_by_id(lst):
+    """
+    Gets a list of unique 9ML objects using their 'id' property. Similar to a
+    set but can handle temporary objects as well.
+
+    Typically used in unittests.
+    """
+    id_map = {}
+    for obj in lst:
+        id_map[obj.id] = obj
+    return sorted(id_map.values(), key=attrgetter('sort_key'))
+
+
+def unique_by_eq(lst):
+    return reduce(lambda l, x: l.append(x) or l if x not in l else l, lst, [])
 
 
 def ensure_iterable(expected_list):

@@ -175,11 +175,15 @@ class TestAccessors(unittest.TestCase):
                         (getattr(elem, '{}port'.format(prefix))(n)
                          for n in names), key=lambda p: str(p.key))
                     # Check num_* matches number of members and names
-                    self.assertEqual(
-                        len(members), num,
-                        "num_{}ports did not return the same length ({}) as "
-                        "the number of members ({})".format(prefix, num,
-                                                            len(members)))
+                    try:
+                        self.assertEqual(
+                            len(members), num,
+                            "num_{}ports did not return the same length ({}) as "
+                            "the number of members ({})".format(prefix, num,
+                                                                len(members)))
+                    except:
+                        elem.num_ports
+                        raise
                     self.assertEqual(
                         len(names), num,
                         "num_{}ports did not return the same length ({}) as "

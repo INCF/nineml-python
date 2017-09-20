@@ -8,6 +8,7 @@ from nineml.abstraction import (
 import nineml.units as un
 from nineml.exceptions import NineMLMathParseError, NineMLRuntimeError
 from nineml.document import Document
+from nineml.utils.iterables import unique_by_id
 
 
 class ComponentClass_test(unittest.TestCase):
@@ -536,12 +537,12 @@ class ComponentClass_test(unittest.TestCase):
         self.assertEquals(len(list(r3.transitions)), 2)
         self.assertEquals(len(list(r4.transitions)), 1)
 
-        target_regimes = lambda r: set([tr.target_regime
-                                        for tr in r.transitions])
-        self.assertEquals(target_regimes(r1), set([r2, r3]))
-        self.assertEquals(target_regimes(r2), set([r3]))
-        self.assertEquals(target_regimes(r3), set([r3, r4]))
-        self.assertEquals(target_regimes(r4), set([r4]))
+        def target_regimes(regime):
+            return unique_by_id(t.target_regime for t in regime.transitions)
+        self.assertEquals(target_regimes(r1), [r2, r3])
+        self.assertEquals(target_regimes(r2), [r3])
+        self.assertEquals(target_regimes(r3), [r3, r4])
+        self.assertEquals(target_regimes(r4), [r4])
 
     def test_all_expressions(self):
         a = Dynamics(
@@ -761,11 +762,11 @@ class Regime_test(unittest.TestCase):
         # The source regime for this transition will be set as this regime.
 
         r = Regime(name='R1')
-        self.assertEquals(set(r.on_conditions), set())
+        self.assertEquals(unique_by_id(r.on_conditions), [])
         r.add(OnCondition('sp1>0'))
-        self.assertEquals(len(set(r.on_conditions)), 1)
-        self.assertEquals(len(set(r.on_events)), 0)
-        self.assertEquals(len(set(r.transitions)), 1)
+        self.assertEquals(len(unique_by_id(r.on_conditions)), 1)
+        self.assertEquals(len(unique_by_id(r.on_events)), 0)
+        self.assertEquals(len(unique_by_id(r.transitions)), 1)
 
     def test_add_on_event(self):
         # Signature: name(self, on_event)
@@ -778,11 +779,11 @@ class Regime_test(unittest.TestCase):
         # The source regime for this transition will be set as this regime.
         # from nineml.abstraction.component.dynamics import Regime
         r = Regime(name='R1')
-        self.assertEquals(set(r.on_events), set())
+        self.assertEquals(unique_by_id(r.on_events), [])
         r.add(OnEvent('sp'))
-        self.assertEquals(len(set(r.on_events)), 1)
-        self.assertEquals(len(set(r.on_conditions)), 0)
-        self.assertEquals(len(set(r.transitions)), 1)
+        self.assertEquals(len(unique_by_id(r.on_events)), 1)
+        self.assertEquals(len(unique_by_id(r.on_conditions)), 0)
+        self.assertEquals(len(unique_by_id(r.transitions)), 1)
 
     def test_get_next_name(self):
         # Signature: name(cls)

@@ -1,20 +1,20 @@
 from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
-from builtins import zip
-from .base import AnnotatedNineMLObject
-from abc import ABCMeta
-from urllib.request import urlopen
-import contextlib
-import collections
-import sympy
-import itertools
-from operator import itemgetter
-import numpy
-import nineml
-from nineml.exceptions import (
+from builtins import zip  # @IgnorePep8
+from .base import AnnotatedNineMLObject  # @IgnorePep8
+from abc import ABCMeta  # @IgnorePep8
+from urllib.request import urlopen  # @IgnorePep8
+import contextlib  # @IgnorePep8
+import collections  # @IgnorePep8
+import sympy  # @IgnorePep8
+import itertools  # @IgnorePep8
+from operator import itemgetter  # @IgnorePep8
+import numpy  # @IgnorePep8
+import nineml  # @IgnorePep8
+from nineml.exceptions import (  # @IgnorePep8
     NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
-from future.utils import with_metaclass
+from future.utils import with_metaclass  # @IgnorePep8
 
 # =============================================================================
 # Operator argument decorators
@@ -183,6 +183,9 @@ class SingleValue(BaseValue):
 
     def __div__(self, num):
         return self.__truediv__(num)
+
+    def __round__(self):
+        return SingleValue(round(self._value))
 
     @parse_left_operand
     def __radd__(self, num):

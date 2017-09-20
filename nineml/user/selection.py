@@ -8,7 +8,8 @@ from nineml.exceptions import NineMLNameError, NineMLRuntimeError
 from nineml.utils import validate_identifier
 from .component_array import ComponentArray
 from nineml.exceptions import name_error
-from functools import reduce
+from itertools import chain
+from collections import defaultdict
 
 
 def combined_port_accessor(population_accessor):
@@ -33,9 +34,15 @@ def combined_port_accessor(population_accessor):
 
 def combined_ports_property(population_property):
     def combined_property(self):
-        combined = reduce(and_, (set(population_property.__get__(p))
-                                 for p in self.populations))
-        return iter(combined)
+        port_groups = defaultdict(list)
+        for port in chain(*(population_property.__get__(p)
+                            for p in self.populations)):
+            port_groups[port.name].append(port)
+        # Return ports that appear in all populations in the selection and have
+        # the same dimension
+        return (grp[0] for grp in port_groups.values()
+                if (len(grp) == self.num_populations and
+                    all(p == grp[0] for p in grp)))
     return property(combined_property)
 
 
@@ -137,6 +144,21 @@ class Concatenate(BaseULObject, ContainerObject):
         return (it.population for it in self.items)
 
     @property
+    def population_names(self):
+        return (p.name for p in self.populations)
+
+    @property
+    def num_populations(self):
+        return len(self._items)
+
+    @name_error
+    def population(self, name):
+        try:
+            return (p for p in self.populations if p.name == name)
+        except StopIteration:
+            raise KeyError(name)
+
+    @property
     def num_items(self):
         """Return a list of the items in the concatenation."""
         return len(self._items)
@@ -199,6 +221,17 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
     @property
     def populations(self):
         return self.operation.populations
+
+    @property
+    def population_names(self):
+        return self.operation.population_names
+
+    @property
+    def num_populations(self):
+        return self.operation.num_populations
+
+    def population(self, name):
+        return self.operation.population(name)
 
     @property
     def component_classes(self):
