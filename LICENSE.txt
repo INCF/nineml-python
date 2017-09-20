@@ -1,4 +1,4 @@
-Python lib9ml is licensed under the "BSD 3 License":
+The NineML Python Library is licensed under the "BSD 3 License":
 
 
 Copyright (C) 2017 Authors (see AUTHORS). All Rights Reserved.
