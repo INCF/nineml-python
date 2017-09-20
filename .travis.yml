@@ -1,7 +1,10 @@
 language: python
 sudo: false
-python:
-  - "2.7"
+matrix:
+    include:
+        - python: 2.7
+        - python: 3.3
+        - python: 3.6
 addons:
   apt:
     packages:
