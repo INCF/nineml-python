@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from io import IOBase
+from future.utils import PY3
 from os.path import normpath, join
 import sys
 
@@ -20,3 +22,10 @@ def restore_sys_path(func):
         finally:
             sys.path = oldpath
     return newfunc
+
+
+def is_file_handle(handle):
+    if PY3:
+        return isinstance(handle, IOBase)
+    else:
+        return isinstance(handle, file)

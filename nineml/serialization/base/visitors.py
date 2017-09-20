@@ -1,8 +1,8 @@
 from builtins import zip
 from builtins import next
 from past.builtins import basestring
-from io import IOBase
 from builtins import object
+from future.utils import with_metaclass
 import os.path
 import re
 from abc import ABCMeta, abstractmethod
@@ -15,7 +15,7 @@ from nineml.annotations import (
     Annotations, PY9ML_NS, VALIDATION, DIMENSIONALITY)
 from .. import DEFAULT_VERSION, NINEML_BASE_NS
 from nineml.serialization.base.nodes import NodeToSerialize, NodeToUnserialize
-from future.utils import with_metaclass
+from nineml.utils import is_file_handle
 
 
 # Regex's used in 9ML version string parsing
@@ -437,7 +437,7 @@ class BaseUnserializer(with_metaclass(ABCMeta, BaseVisitor)):
         # Get root elem either from kwarg or file handle
         if hasattr(root, 'url'):
             self._root = self.from_urlfile(root)
-        if isinstance(root, IOBase):
+        elif is_file_handle(root):
             self._root = self.from_file(root)
         elif isinstance(root, basestring):
             self._root = self.from_str(root)

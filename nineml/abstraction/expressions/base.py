@@ -68,8 +68,6 @@ class Expression(AnnotatedNineMLObject):
 
     def __init__(self, rhs, **kwargs):
         super(Expression, self).__init__(**kwargs)
-        if isinstance(rhs, basestring):
-            rhs = str(rhs)  # Convert to unicode in Python 2.7
         self.rhs = rhs
 
     @property

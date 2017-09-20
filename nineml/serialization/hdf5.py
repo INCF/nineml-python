@@ -2,7 +2,6 @@ from builtins import zip
 import h5py
 from . import NINEML_BASE_NS
 from tempfile import mkstemp
-from io import IOBase
 import contextlib
 import nineml
 from itertools import chain, repeat
@@ -12,6 +11,7 @@ from nineml.exceptions import (NineMLSerializationError,
 from nineml.serialization.base import (
     BaseSerializer, BaseUnserializer)
 from nineml.exceptions import NineMLNameError
+from nineml.utils import is_file_handle
 
 
 class HDF5Serializer(BaseSerializer):
@@ -20,7 +20,7 @@ class HDF5Serializer(BaseSerializer):
     """
 
     def __init__(self, fname, **kwargs):  # @UnusedVariable @IgnorePep8 @ReservedAssignment
-        if isinstance(fname, IOBase):
+        if is_file_handle(fname):
             # Close the file and reopen with the h5py File object
             file_ = fname
             fname = file_.name
