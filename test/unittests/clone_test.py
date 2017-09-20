@@ -3,6 +3,7 @@ import unittest
 from nineml.abstraction import Dynamics, ConnectionRule, RandomDistribution
 from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.visitors.cloner import Cloner
+from nineml.units import Unit, Dimension
 
 
 class TestCloners(unittest.TestCase):
@@ -48,9 +49,11 @@ class TestCloners(unittest.TestCase):
                 self.assertEqual(obj, clone,
                                  "Clone of {} does not match original:\n{}"
                                  .format(obj, obj.find_mismatch(clone)))
-                self.assertNotEqual(obj, prev_obj,
-                                    "{} matches previous obj {} incorrectly"
-                                    .format(obj, prev_obj))
+                if not isinstance(obj, (Unit, Dimension)):
+                    self.assertNotEqual(
+                        obj, prev_obj,
+                        ("{} matches previous obj {} incorrectly"
+                         .format(obj, prev_obj)))
                 prev_obj = obj
 
 

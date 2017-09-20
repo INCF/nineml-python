@@ -25,7 +25,7 @@ from nineml.utils.iterables import normalise_parameter_as_list
 # from nineml import units as un
 from nineml.annotations import VALIDATION, DIMENSIONALITY
 from nineml.abstraction import (
-    Dynamics, Regime, OnEvent, OnCondition)
+    Dynamics, Regime, OnEvent, OnCondition, StateAssignment)
 from .port_exposures import (
     EventReceivePortExposure, EventSendPortExposure, AnalogReducePortExposure,
     AnalogReceivePortExposure, AnalogSendPortExposure, BasePortExposure,
@@ -1337,25 +1337,29 @@ class _MultiTransition(BaseALObject, ContainerObject):
             _DelayedOnEventStateAssignment(pc) for pc in (
                 self._parent._parent.nonzero_delay_event_port_connections)
             if pc.port in self._sub_output_event_ports)
-        return chain(delayed_on_event_assignments,
-                     *[t.state_assignments for t in self.sub_transitions])
+        sub_trans_assigns = (
+            _MultiStateAssignment(sa, self)
+            for sa in chain(*(
+                t.state_assignments for t in self.sub_transitions)))
+        return chain(delayed_on_event_assignments, sub_trans_assigns)
+
+    def state_assignment(self, variable):
+        try:
+            return _MultiStateAssignment(
+                next(sa for sa in self.state_assignments
+                     if sa.variable == variable), self)
+        except StopIteration:
+            raise NineMLNameError(
+                "State assignment '{}' is not present in transition '{}'"
+                .format(variable, self.key))
 
     @property
     def output_events(self):
         # Return all output events that are exposed by port exposures
         return (
-            _ExposedOutputEvent(pe)
+            _ExposedOutputEvent(pe, self)
             for pe in self._parent._parent.event_send_ports
             if pe.port.id in self._sub_output_event_port_ids())
-
-    def state_assignment(self, variable):
-        try:
-            return next(sa for sa in self.state_assignments
-                        if sa.variable == variable)
-        except StopIteration:
-            raise NineMLNameError(
-                "State assignment '{}' is not present in transition '{}'"
-                .format(variable, self.key))
 
     def output_event(self, name):
         exposure = self._parent._parent.event_send_port(name)
@@ -1363,7 +1367,7 @@ class _MultiTransition(BaseALObject, ContainerObject):
             raise NineMLNameError(
                 "Output event for '{}' port is not present in transition"
                 .format(name))
-        return _ExposedOutputEvent(exposure)
+        return _ExposedOutputEvent(exposure, self)
 
     @property
     def num_state_assignments(self):
@@ -1430,3 +1434,24 @@ class _MultiOnCondition(_MultiTransition, OnCondition):
     @property
     def key(self):
         return self.trigger.rhs
+
+
+class _MultiStateAssignment(StateAssignment):
+    """
+    Wraps a namespace state-assignment and sets its parent to the appropriate
+    multi-transition
+    """
+
+    temporary = True
+
+    def __init__(self, state_assignment, parent):
+        self._state_assignment = state_assignment
+        self._parent = parent
+
+    @property
+    def name(self):
+        return self._state_assignment.name
+
+    @property
+    def rhs(self):
+        return self._state_assignment.rhs

@@ -195,9 +195,9 @@ class MismatchFinder(DualWithContextMixin, EqualityChecker):
         raise NineMLDualVisitValueException(
             attr_name, obj1, obj2, nineml_cls, self.contexts1, self.contexts2)
 
-    def _raise_type_exception(self, nineml_cls, obj1, obj2):
+    def _raise_type_exception(self, obj1, obj2):
         raise NineMLDualVisitTypeException(
-            nineml_cls, obj1, obj2, self.contexts1, self.contexts2)
+            obj1, obj2, self.contexts1, self.contexts2)
 
     def _raise_none_child_exception(self, child_name, child1, child2):
         raise NineMLDualVisitNoneChildException(

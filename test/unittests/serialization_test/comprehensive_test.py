@@ -35,7 +35,11 @@ class TestComprehensiveSerialization(TestCase):
                 except KeyError:
                     continue  # ones that can't be written to file (e.g. dict)
                 for i, document in enumerate(docs):
-                    doc = document.clone()
+                    try:
+                        doc = document.clone()
+                    except:
+                        document.clone()
+                        raise
                     url = os.path.join(
                         self._tmp_dir, 'test{}v{}{}'.format(i, version, ext))
                     nineml.write(url, doc, format=format, version=version,

@@ -152,17 +152,17 @@ class NineMLDualVisitException(NineMLException):
 
 class NineMLDualVisitTypeException(NineMLDualVisitException):
 
-    def __init__(self, nineml_cls, obj1, obj2, contexts1, contexts2):
-        self.nineml_cls = nineml_cls
+    def __init__(self, obj1, obj2, contexts1, contexts2):
         self.obj1 = obj1
         self.obj2 = obj2
         self.contexts1 = tuple(contexts1)
         self.contexts2 = tuple(contexts2)
 
     def __str__(self):
-        return ("{} - types: [{}] | [{}] (expected={})"
+        return ("{} - types: [{}({})] | [{}({})]"
                 .format(self._format_contexts(self.contexts1, self.contexts2),
-                        type(self.obj1), type(self.obj2), self.nineml_cls))
+                        self.obj1.nineml_type, type(self.obj1),
+                        self.obj2.nineml_type, type(self.obj2)))
 
 
 class NineMLDualVisitNoneChildException(NineMLDualVisitException):

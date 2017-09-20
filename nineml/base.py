@@ -74,7 +74,14 @@ class BaseNineMLObject(object):
         its class type and unique key
         """
         if self.temporary:
-            id_ = self._parent.id ^ hash(type(self)) ^ hash(self.key)
+            # Create a unique string from the id of the parent (which should
+            # be anchored in the memory location of a "non-temporary" object)
+            # plus the name of the type and its key.
+            try:
+                parent_id = hex(self._parent.id)
+            except TypeError:
+                parent_id = self._parent.id  # Temporary object ID
+            id_ = parent_id + type(self).__name__ + str(self.key)
         else:
             id_ = id(self)
         return id_

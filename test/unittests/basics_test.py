@@ -59,7 +59,7 @@ class TestAccessors(unittest.TestCase):
                         names = sorted(elem._member_keys_iter(child_type),
                                        key=lambda k: str(k))
                         members = sorted(elem._members_iter(child_type),
-                                         key=lambda e: e.key)
+                                         key=lambda e: str(e.key))
                         dct = elem._member_dict(child_type)
                         try:
                             self.assertIsInstance(
