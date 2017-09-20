@@ -184,9 +184,6 @@ class SingleValue(BaseValue):
     def __div__(self, num):
         return self.__truediv__(num)
 
-    def __round__(self):
-        return SingleValue(round(self._value))
-
     @parse_left_operand
     def __radd__(self, num):
         return self.__add__(num)
