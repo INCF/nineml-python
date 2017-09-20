@@ -16,7 +16,7 @@ from nineml.utils import nearly_equal
 class EqualityChecker(BaseDualVisitor):
 
     def __init__(self, annotations_ns=[], check_urls=True, **kwargs):  # @UnusedVariable @IgnorePep8
-        super(EqualityChecker, self).__init__()
+        super(EqualityChecker, self).__init__(**kwargs)
         self.annotations_ns = annotations_ns
         self.check_urls = check_urls
 

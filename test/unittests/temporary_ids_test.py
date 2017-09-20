@@ -16,8 +16,9 @@ class IDsVisitor(BaseVisitorWithContext):
 
     def find(self, element):
         self.ids = []
+        self.temp_mem_address = set()
         self.visit(element)
-        return self.ids
+        return self.ids, self.temp_mem_address
 
     def default_action(self, obj, **kwargs):  # @UnusedVariable
         if obj.id in self.ids:
@@ -28,6 +29,8 @@ class IDsVisitor(BaseVisitorWithContext):
             print('{}: {}, {} [{}]'.format(obj.id, type(obj).__name__, obj,
                                            self.context_str()))
         self.ids.append(obj.id)
+        if obj.temporary:
+            self.temp_mem_address.add(id(obj))
 
     def context_str(self):
         return '>'.join('{}({})'.format(c.parent_cls.__name__, c.parent.key)
@@ -46,13 +49,14 @@ class TestTemporaryIDs(unittest.TestCase):
         visitor = IDsVisitor(Dynamics, print_all=False)
         for multi_dyn in instances_of_all_types[
                 MultiDynamics.nineml_type].values():
-            first_ids = visitor.find(multi_dyn)
+            first_ids, first_mem_addresses = visitor.find(multi_dyn)
             # Create an array to take up memory slots and make it unlikely that
             # two temporary objects will be in the same place in memory
             dummy_array = np.empty(100000)
-            second_ids = visitor.find(multi_dyn)
+            second_ids, second_mem_addresses = visitor.find(multi_dyn)
             self.assertEqual(first_ids, second_ids,
                              "IDs of objects changed between first and second "
                              "visit. There probably is something wrong with "
                              "the 'id' property of a temporary object (e.g. "
                              "it is not marked as temporary")
+            self.assertNotEqual(first_mem_addresses, second_mem_addresses)
