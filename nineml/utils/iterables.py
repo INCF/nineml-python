@@ -43,8 +43,11 @@ def expect_single(lst, errmsg=None):
     RuntimeError: Aggh
 
     """
-
-    if not _is_iterable(lst) and not isinstance(lst, basestring):
+    if isinstance(lst, basestring):
+        raise NineMLRuntimeError(
+            "A string rather than a list/tuple was provided to expect_single "
+            "({})".format(lst))
+    if not _is_iterable(lst):
         raise NineMLRuntimeError('Object not iterable')
     if issubclass(lst.__class__, (dict)):
         err = "Dictionary passed to expect_single. This could be ambiguous"
@@ -209,10 +212,10 @@ def flatten_first_level(nested_list):
         raise NineMLRuntimeError(err)
 
     for nl in nested_list:
-        if not _is_iterable(nl) and not isinstance(nested_list, basestring):
-            err = 'flatten_first_level() expects all arguments to be iterable'
-            raise NineMLRuntimeError(err)
-
+        if not _is_iterable(nl) or isinstance(nl, basestring):
+            raise NineMLRuntimeError(
+                "flatten_first_level() expects all arguments to be iterable "
+                "and not strings ({})".format(nested_list))
     return list(itertools.chain(*nested_list))
 
 

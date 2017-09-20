@@ -1,4 +1,3 @@
-from operator import and_
 from collections import OrderedDict
 from . import BaseULObject
 from nineml.base import (
@@ -282,7 +281,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
 
     @property
     def num_analog_receive_ports(self):
-        return len(list(self.analog_reduce_ports))
+        return len(list(self.analog_receive_ports))
 
     @property
     def analog_reduce_port_names(self):
@@ -298,7 +297,7 @@ class Selection(BaseULObject, DocumentLevelObject, DynamicPortsObject):
 
     @property
     def num_event_send_ports(self):
-        return len(list(self.event_receive_ports))
+        return len(list(self.event_send_ports))
 
     @property
     def event_receive_port_names(self):
