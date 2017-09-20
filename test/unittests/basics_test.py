@@ -56,7 +56,8 @@ class TestAccessors(unittest.TestCase):
                 for elem in list(instances_of_all_types[name].values()):
                     for child_type in cls.nineml_children:
                         num = elem._num_members(child_type)
-                        names = sorted(elem._member_keys_iter(child_type))
+                        names = sorted(elem._member_keys_iter(child_type),
+                                       key=lambda k: str(k))
                         members = sorted(elem._members_iter(child_type),
                                          key=lambda e: e.key)
                         dct = elem._member_dict(child_type)

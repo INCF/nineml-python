@@ -103,10 +103,15 @@ class EqualityChecker(BaseDualVisitor):
 
     def _check_attr(self, obj1, obj2, attr_name, nineml_cls):
         try:
-            if getattr(obj1, attr_name) != getattr(obj2, attr_name):
-                self._raise_value_exception(attr_name, obj1, obj2, nineml_cls)
+            attr1 = getattr(obj1, attr_name)
         except NineMLNotBoundException:
-            pass
+            attr1 = None
+        try:
+            attr2 = getattr(obj2, attr_name)
+        except NineMLNotBoundException:
+            attr2 = None
+        if attr1 != attr2:
+            self._raise_value_exception(attr_name, obj1, obj2, nineml_cls)
 
     def _raise_annotations_exception(self, nineml_cls, obj1, obj2, key):
         raise NineMLDualVisitException()

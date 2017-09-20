@@ -39,7 +39,7 @@ class TestCloners(unittest.TestCase):
         for objs in instances_of_all_types.values():
             for obj in objs.values():
                 # Skip temporary objects
-                if type(obj).__name__.startswith('_'):
+                if obj.temporary:
                     continue
                 clone = obj.clone(cloner=cloner)
                 if hasattr(clone, 'validate'):
