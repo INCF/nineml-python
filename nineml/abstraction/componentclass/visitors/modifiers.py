@@ -110,6 +110,10 @@ class ComponentSubstituteAliases(BasePreAndPostVisitorWithContext):
         nineml_obj : Expression
             An expression object to substitute alias symbols in
         """
+        if expr.temporary:
+            raise NineMLRuntimeError(
+                "Attempting to substitute aliases using temporary object "
+                "{}({})".format(type(expr).__name__, expr))
         assert isinstance(expr, Expression)
         try:
             rhs = self.cache[expr.id]

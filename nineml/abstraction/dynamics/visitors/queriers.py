@@ -132,12 +132,10 @@ class DynamicsIsLinear(BaseDynamicsVisitor):
         port is not relevant.
     """
 
-    def __init__(self, dynamics, outputs=None):
-        super(DynamicsIsLinear, self).__init__()
-        self._result = True
+    def is_linear(self, dynamics, outputs=None):
         self.outputs = (set(dynamics.analog_send_port_names)
                         if outputs is None else outputs)
-        substituted = dynamics.clone()
+        substituted = dynamics.flatten()
         DynamicsSubstituteAliases(substituted)
         self.input_and_states = [
             sympy.Symbol(i) for i in chain(
@@ -147,21 +145,20 @@ class DynamicsIsLinear(BaseDynamicsVisitor):
         try:
             self.visit(substituted)
         except NineMLStopVisitException:
-            pass
-
-    @property
-    def result(self):
-        return self._result
+            linear = False
+        else:
+            linear = True
+        return linear
 
     def action_dynamics(self, dynamics, **kwargs):  # @UnusedVariable
         # Dynamics are piecewise
         if dynamics.num_regimes > 1:
-            self._report_nonlinear()
+            raise NineMLStopVisitException()
 
     def action_oncondition(self, on_condition, **kwargs):  # @UnusedVariable
         # Dynamics are piecewise
         if on_condition.num_state_assignments:
-            self._report_nonlinear()
+            raise NineMLStopVisitException()
 
     def action_stateassignment(self, state_assignment, **kwargs):  # @UnusedVariable @IgnorePep8
         self._check_linear(state_assignment)
@@ -183,11 +180,7 @@ class DynamicsIsLinear(BaseDynamicsVisitor):
 
     def _check_linear(self, expr):
         if not self._is_linear(expr):
-            self._report_nonlinear()
-
-    def _report_nonlinear(self):
-        self._result = False
-        raise NineMLStopVisitException()
+            raise NineMLStopVisitException()
 
     def default_action(self, obj, nineml_cls, **kwargs):
         pass

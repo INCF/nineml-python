@@ -45,11 +45,7 @@ class Cloner(BaseChildResultsVisitor):
         be referenced by their memory position as the memory is freed after
         they go out of scope, are not saved in # the memo.
         """
-        if obj.temporary:
-            assert nineml_cls is not None
-            id_ = None
-        else:
-            id_ = id(obj)
+        id_ = None if obj.temporary else id(obj)
         try:
             # See if the attribute has already been cloned in memo
             clone = self.memo[id_]

@@ -47,6 +47,7 @@ class Expression(AnnotatedNineMLObject):
         The expression in string or Sympy_ form
     """
 
+    nineml_type = '_Expression'
     nineml_attr = ('rhs',)
 
     # Regular expression for extracting function names from strings (i.e. a

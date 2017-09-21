@@ -255,7 +255,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
             not checked for linearity (presumably as they are not connected).
             If outputs is None all expressions are checked.
         """
-        return DynamicsIsLinear(self, outputs=outputs).result
+        return DynamicsIsLinear().is_linear(self, outputs=outputs)
 
     def is_flat(self):
         return True
