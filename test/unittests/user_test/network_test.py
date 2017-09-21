@@ -3,7 +3,7 @@
 Test of the 9ML components for the Brunel (2000) network model
 by simulating a network of three neurons.
 
-This script imports a Python lib9ml network description from
+This script imports a Python NineML Python network description from
 "brunel_network_components_test.py", exports it as XML, and then
 runs a simulation using the pyNN.nineml module with the NEURON
 backend.

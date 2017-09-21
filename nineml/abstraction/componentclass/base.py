@@ -4,7 +4,7 @@ Each 9ML abstraction layer module will define its own ComponentClass class.
 
 This module provides the base class for these.
 
-:copyright: Copyright 2010-2017 by the Python lib9ML team, see AUTHORS.
+:copyright: Copyright 2010-2017 by the NineML Python team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
 from builtins import next

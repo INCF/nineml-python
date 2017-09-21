@@ -1,7 +1,7 @@
 """
 This file contains the main classes for defining dynamics
 
-:copyright: Copyright 2010-2017 by the Python lib9ML team, see AUTHORS.
+:copyright: Copyright 2010-2017 by the NineML Python team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
 from past.builtins import basestring

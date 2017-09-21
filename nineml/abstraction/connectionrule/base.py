@@ -9,7 +9,7 @@ docstring goes here
 .. moduleauthor:: Mikael Djurfeldt <mikael.djurfeldt@incf.org>
 .. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
 
-:copyright: Copyright 2010-2017 by the Python lib9ML team, see AUTHORS.
+:copyright: Copyright 2010-2017 by the NineML Python team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
 from ..componentclass import ComponentClass, Parameter
