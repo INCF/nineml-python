@@ -132,7 +132,9 @@ class Constant(BaseALObject, ExpressionSymbol):
             self._units = units if units is not None else unitless
         if not isinstance(self._units, Unit):
             raise NineMLRuntimeError(
-                "'units' needs to be a Unit obj ({}).".format(self._units))
+                "'units' in '{}' constant needs to be a Unit obj ({}). "
+                "Supplied arguments were ({}, {}, {}).".format(
+                    self._units, name, value, units))
 
     @property
     def name(self):
