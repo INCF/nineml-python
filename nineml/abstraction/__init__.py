@@ -2,7 +2,7 @@
 Python module for reading and writing 9ML abstraction layer files in XML
 format.
 
-:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:copyright: Copyright 2010-2017 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
 from __future__ import absolute_import

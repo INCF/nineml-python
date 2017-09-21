@@ -1,7 +1,7 @@
 """
 This file contains the DynamicsValidator class for validating component
 
-:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:copyright: Copyright 2010-2017 by the Python lib9ML team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
 from builtins import object
