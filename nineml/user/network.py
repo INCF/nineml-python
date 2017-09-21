@@ -178,13 +178,13 @@ class Network(BaseULObject, DocumentLevelObject, ContainerObject):
         """
         component_arrays = dict((ca.name, ca) for ca in chain(
             (ComponentArray(p.name + ComponentArray.suffix['post'], len(p),
-                            p.cell)
+                            p.cell.flatten())
              for p in self.populations),
             (ComponentArray(p.name + ComponentArray.suffix['response'], len(p),
-                            p.response)
+                            p.response.flatten())
              for p in self.projections),
             (ComponentArray(p.name + ComponentArray.suffix['plasticity'],
-                            len(p), p.plasticity)
+                            len(p), p.plasticity.flatten())
              for p in self.projections if p.plasticity is not None)))
         connection_groups = list(chain(*(
             (BaseConnectionGroup.from_port_connection(pc, p, component_arrays)

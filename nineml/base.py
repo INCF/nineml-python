@@ -94,7 +94,7 @@ class BaseNineMLObject(object):
         finder = MismatchFinder(**kwargs)
         return finder.find(self, other, **kwargs)
 
-    def clone(self, cloner=None, **kwargs):
+    def clone(self, cloner=None, name=None, **kwargs):
         """
         General purpose clone operation, which copies the attributes used
         to define equality between 9ML objects. Other attributes, such as
@@ -104,12 +104,20 @@ class BaseNineMLObject(object):
 
         Parameters
         ----------
+        cloner : Cloner
+            A Cloner instance to be used to clone the object with. If None,
+            a new instance is created using the **kwargs
+        name : str
+            A new name for the clone. If none the original name is kept.
         exclude_annotations : bool
             Flags that annotations should be omitted from the clone
         """
         if cloner is None:
             cloner = Cloner(**kwargs)
-        return cloner.clone(self, **kwargs)
+        clone = cloner.clone(self, **kwargs)
+        if name is not None:
+            clone._name = name
+        return clone
 
     def find(self, nineml_obj):
         """

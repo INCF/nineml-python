@@ -197,11 +197,8 @@ class Dynamics(ComponentClass, DynamicPortsObject):
     def required_for(self, expressions):
         return DynamicsRequiredDefinitions(self, expressions)
 
-    def flatten(self, name=None, **kwargs):  # @UnusedVariable
-        flattened = Cloner(as_class=Dynamics, **kwargs).visit(self, **kwargs)
-        if name is not None:
-            flattened._name = name
-        return flattened
+    def flatten(self, name=None, **kwargs):
+        return self.clone(name=name, **kwargs)
 
     def dimension_of(self, element):
         if self._dimension_resolver is None:

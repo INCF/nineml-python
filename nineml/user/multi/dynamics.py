@@ -348,6 +348,11 @@ class MultiDynamics(Dynamics):
                 .format(self.name, ', '.join(str(sc)
                                              for sc in self.sub_components)))
 
+    def flatten(self, name=None, **kwargs):
+        if name is None:
+            name = self.name + '___flat'
+        return self.clone(name=name, as_class=Dynamics, **kwargs)
+
     def is_flat(self):
         return False
 
@@ -1154,10 +1159,12 @@ class MultiDynamicsProperties(DynamicsProperties):
 
     def flatten(self, name=None):
         if name is None:
-            name = self.name
+            name = self.name + '__flat'
+            cc_name = None
+        else:
+            cc_name = name + '__dynamics'
         return DynamicsProperties(
-            name, self.component_class.flatten(
-                name=self.component_class.name + '_flat'),
+            name, self.component_class.flatten(name=cc_name),
             properties=self.properties, initial_values=self.initial_values)
 
     @property

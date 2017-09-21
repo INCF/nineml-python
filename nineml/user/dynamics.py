@@ -60,6 +60,9 @@ class DynamicsProperties(Component, DynamicPortsObject):
         """
         return iter([self.component_class])
 
+    def flatten(self, name=None):
+        return self.clone(name=name, clone_definitions=True)
+
     def get_nineml_type(self):
         return self.nineml_type
 
