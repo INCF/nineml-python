@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from ...base import ComponentClass, Parameter
+from ...base import Parameter
 from nineml.abstraction.expressions import Alias, Constant
 from nineml.visitors import BaseVisitor
 from nineml.units import Dimension, Unit
