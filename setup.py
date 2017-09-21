@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="nineml",
-    version="0.1.0",
+    version="1.0rc1",
     packages=find_packages(),
     # add your name here if you contribute to the code
     author="Andrew P. Davison, Thomas G. Close, Mike Hull, Eilif Muller",
