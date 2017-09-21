@@ -22,8 +22,8 @@ class Document(AnnotatedNineMLObject, dict):
     """
     Loads and stores all top-level elements in a NineML file (i.e. any element
     that is able to sit directly within <NineML>...</NineML> tags). All
-    elements are stored initially but only converted to NineML Python objects on
-    demand so it doesn't matter which order they appear in the NineML file.
+    elements are stored initially but only converted to NineML Python objects
+    on demand so it doesn't matter which order they appear in the NineML file.
 
     Parameters
     ----------
