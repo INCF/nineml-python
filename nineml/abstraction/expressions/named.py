@@ -134,7 +134,7 @@ class Constant(BaseALObject, ExpressionSymbol):
             raise NineMLRuntimeError(
                 "'units' in '{}' constant needs to be a Unit obj ({}). "
                 "Supplied arguments were ({}, {}, {}).".format(
-                    self._units, name, value, units))
+                    self.name, self._units, name, value, units))
 
     @property
     def name(self):
