@@ -22,10 +22,16 @@ setup(
                  'Natural Language :: English',
                  'Operating System :: OS Independent',
                  'Programming Language :: Python :: 2',
+                 'Programming Language :: Python :: 2.7',
+                 'Programming Language :: Python :: 3',
+                 'Programming Language :: Python :: 3.4',
+                 'Programming Language :: Python :: 3.5',
+                 'Programming Language :: Python :: 3.6',
                  'Topic :: Scientific/Engineering'],
-    install_requires=['lxml',
-                      'future',
-                      'pyyaml',
-                      'sympy>=1.1'],  # NB: sympy 1.0 has a bug in ccode, which is fixed in the master branch 30/7/16
+    install_requires=['lxml>=3.7.3',
+                      'future>=0.16.0',
+                      'h5py>=2.7.0',
+                      'pyyaml>=3.1',
+                      'sympy>=1.1'],
     tests_require=['nose', 'numpy']
 )
