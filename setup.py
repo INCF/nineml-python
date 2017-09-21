@@ -10,7 +10,8 @@ setup(
     author="Andrew P. Davison, Thomas G. Close, Mike Hull, Eilif Muller",
     author_email="nineml-users@incf.org",
     description=(
-        "A tool for reading, writing and generally working with 9ML files."),
+        "A tool for reading, writing and generally working with 9ML objects "
+        "and files."),
     long_description=open("README.rst").read(),
     license="BSD 3 License",
     keywords="computational neuroscience modeling interoperability XML",
