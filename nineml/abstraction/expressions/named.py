@@ -130,7 +130,8 @@ class Constant(BaseALObject, ExpressionSymbol):
         else:
             self._value = float(value)
             self._units = units if units is not None else unitless
-        assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
+        assert isinstance(self._units, Unit), (
+            "'units' needs to be a Unit obj ({}).".format(self._units))
 
     @property
     def name(self):
