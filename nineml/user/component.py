@@ -282,13 +282,13 @@ class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentL
         diff_a = properties.difference(parameters)
         diff_b = parameters.difference(properties)
         if diff_a:
-            msg.append("User properties of '{}' ({}) contain the following "
-                       "parameters that are not present in the definition of "
-                       "'{}' ({}): {}\n\n".format(
+            msg.append("User properties of '{}' (url: {}) contain the "
+                       "following parameters that are not present in the "
+                       "definition of '{}' ({}): {}\n\n".format(
                            self.name, self.url, self.component_class.name,
                            self.component_class.url, ",".join(diff_a)))
         if diff_b:
-            msg.append("Definition of '{}' ({}) contains the following "
+            msg.append("Definition of '{}' (url: {}) contains the following "
                        "parameters that are not present in the user properties"
                        " of '{}' ({}): {}".format(
                            self.component_class.name, self.component_class.url,

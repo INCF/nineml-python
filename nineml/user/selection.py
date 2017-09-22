@@ -95,6 +95,7 @@ class Concatenate(BaseULObject, ContainerObject):
     def __init__(self, items, **kwargs):
         BaseULObject.__init__(self, **kwargs)
         ContainerObject.__init__(self, **kwargs)
+        items = list(items)
         if all(isinstance(it, Item) for it in items):
             indices = [it.index for it in items]
             if min(indices) < 0 or max(indices) > len(indices):
@@ -102,15 +103,14 @@ class Concatenate(BaseULObject, ContainerObject):
                     "Indices are not contiguous, have duplicates, or don't "
                     "start from 0 ({})"
                     .format(', '.join(str(i) for i in indices)))
-            self._items = OrderedDict((it.key, it) for it in items)
+            self.add(*items)
         elif any(isinstance(it, Item) for it in items):
             raise NineMLRuntimeError(
                 "Cannot mix Items and Populations/Selections in Concatenate "
                 "__init__ method ({})".format(', '.join(str(it)
                                                         for it in items)))
         else:
-            self._items = OrderedDict((str(i), Item(i, p))
-                                      for i, p in enumerate(items))
+            self.add(*(Item(i, p) for i, p in enumerate(items)))
 
     def __repr__(self):
         return "Concatenate({})".format(
