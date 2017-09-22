@@ -201,9 +201,12 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         return self.clone(name=name, **kwargs)
 
     def dimension_of(self, element):
-        if self._dimension_resolver is None:
-            self._dimension_resolver = DynamicsDimensionResolver(self)
-        return self._dimension_resolver.dimension_of(element)
+        try:
+            resolver = self._dimension_resolver
+        except AttributeError:
+            resolver = self._dimension_resolver = DynamicsDimensionResolver(
+                self)
+        return resolver.dimension_of(element)
 
     def substitute_aliases(self):
         """
