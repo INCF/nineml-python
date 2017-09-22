@@ -13,8 +13,9 @@ class NoDuplicatedObjectsValidator(BaseVisitorWithContext):
         if not nineml_obj.temporary:
             if nineml_obj.id in self.all_objects:
                 raise NineMLDuplicateObjectError(
-                    nineml_obj, self.context, self.all_objects[nineml_obj.id])
-            self.all_objects[nineml_obj.id] = self.context
+                    nineml_obj, tuple(self.contexts),
+                    self.all_objects[nineml_obj.id])
+            self.all_objects[nineml_obj.id] = tuple(self.contexts)
 
     def action_dimension(self, dimension, **kwargs):
         pass

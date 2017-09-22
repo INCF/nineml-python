@@ -114,6 +114,11 @@ class NineMLDuplicateObjectError(NineMLStopVisitException):
         self.context1 = context1
         self.context2 = context2
 
+    def __str__(self):
+        return ("{} found twice in object hierarchy:\n{}\n{}"
+                .format(self.object, format_context(self.context1),
+                        format_context(self.context2)))
+
 
 class NineMLFoundElementException(NineMLStopVisitException):
 
@@ -134,20 +139,7 @@ class NineMLNotBoundException(NineMLException):
 
 
 class NineMLDualVisitException(NineMLException):
-
-    @classmethod
-    def _format_contexts(self, contexts1, contexts2, obj1=None, obj2=None):
-        l1 = [(type(c.parent).__name__, c.parent.key) for c in contexts1]
-        l2 = [(type(c.parent).__name__, c.parent.key) for c in contexts2]
-        if obj1 is not None:
-            l1.append((type(obj1).__name__, obj1.key))
-        if obj2 is not None:
-            l2.append((type(obj2).__name__, obj2.key))
-        out = '[' + '>'.join("{}('{}')".format(t, k) for t, k in l1) + ']'
-        if l2 != l1:
-            out += (' | [' + '>'.join("{}('{}')".format(t, k) for t, k in l2) +
-                    ']')
-        return out
+    pass
 
 
 class NineMLDualVisitTypeException(NineMLDualVisitException):
@@ -160,7 +152,7 @@ class NineMLDualVisitTypeException(NineMLDualVisitException):
 
     def __str__(self):
         return ("{} - types: [{}({})] | [{}({})]"
-                .format(self._format_contexts(self.contexts1, self.contexts2),
+                .format(format_contexts(self.contexts1, self.contexts2),
                         self.obj1.nineml_type, type(self.obj1),
                         self.obj2.nineml_type, type(self.obj2)))
 
@@ -176,7 +168,7 @@ class NineMLDualVisitNoneChildException(NineMLDualVisitException):
 
     def __str__(self):
         return ("{} - '{}' child: [{}] | [{}]"
-                .format(self._format_contexts(self.contexts1, self.contexts2),
+                .format(format_contexts(self.contexts1, self.contexts2),
                         self.child_name, self.obj1, self.obj2))
 
 
@@ -193,7 +185,7 @@ class NineMLDualVisitValueException(NineMLDualVisitException):
 
     def __str__(self):
         return ("{} - '{}' attr: [{}] | [{}]"
-                .format(self._format_contexts(self.contexts1, self.contexts2,
+                .format(format_contexts(self.contexts1, self.contexts2,
                                               obj1=self.obj1, obj2=self.obj2),
                         self.attr_name,
                         getattr(self.obj1, self.attr_name),
@@ -211,7 +203,7 @@ class NineMLDualVisitKeysMismatchException(NineMLDualVisitException):
 
     def __str__(self):
         return ("{} - {} keys: {} | {}"
-                .format(self._format_contexts(self.contexts1, self.contexts2),
+                .format(format_contexts(self.contexts1, self.contexts2),
                         self.children_type.nineml_type,
                         sorted(self.obj1._member_keys_iter(
                                self.children_type), key=lambda k: str(k)),
@@ -232,7 +224,7 @@ class NineMLDualVisitAnnotationsMismatchException(NineMLDualVisitException):
 
     def __str__(self):
         return ("{} - '{}' annotations: [{}] | [{}]"
-                .format(self._format_contexts(self.contexts1, self.contexts2),
+                .format(format_contexts(self.contexts1, self.contexts2),
                         self.key,
                         ', '.join(re.sub('\s', '', str(a))
                                   for a in self.obj1.annotations.namespace(
@@ -240,6 +232,27 @@ class NineMLDualVisitAnnotationsMismatchException(NineMLDualVisitException):
                         ', '.join(re.sub('\s', '', str(a))
                                   for a in self.obj2.annotations.namespace(
                                       self.key[1]))))
+
+
+def format_context(contexts, obj=None):
+    l = [(type(c.parent).__name__, c.parent.key) for c in contexts]
+    if obj is not None:
+        l.append((type(obj).__name__, obj.key))
+    return '[' + '>'.join("{}('{}')".format(t, k) for t, k in l) + ']'
+
+
+def format_contexts(contexts1, contexts2, obj1=None, obj2=None):
+    l1 = [(type(c.parent).__name__, c.parent.key) for c in contexts1]
+    l2 = [(type(c.parent).__name__, c.parent.key) for c in contexts2]
+    if obj1 is not None:
+        l1.append((type(obj1).__name__, obj1.key))
+    if obj2 is not None:
+        l2.append((type(obj2).__name__, obj2.key))
+    out = '[' + '>'.join("{}('{}')".format(t, k) for t, k in l1) + ']'
+    if l2 != l1:
+        out += (' | [' + '>'.join("{}('{}')".format(t, k) for t, k in l2) +
+                ']')
+    return out
 
 
 def internal_error(s):
