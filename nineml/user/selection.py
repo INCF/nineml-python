@@ -111,6 +111,7 @@ class Concatenate(BaseULObject, ContainerObject):
                                                         for it in items)))
         else:
             self.add(*(Item(i, p) for i, p in enumerate(items)))
+        assert(self.num_items)
 
     def __repr__(self):
         return "Concatenate({})".format(
