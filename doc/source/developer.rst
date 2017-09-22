@@ -6,7 +6,8 @@ The structure NineML Python library aims to closely match the
 `NineML specification`_, with each NineML "layer" represented by a
 sub-package (i.e. ``nineml.abstraction`` and ``nineml.user``) and each NineML
 type mapping to a separate Python class, with the exception of some
-simple types that just contain a single element (e.g. Size, Pre, Post, etc...)
+simple types that just contain a single element (e.g. Size) or are used just to
+provide a name to a singleton child class (e.g. Pre, Post, etc...).
 
 Base classes
 ------------
@@ -30,37 +31,37 @@ These class attributes match the structure of the `NineML specification`_ and
 are used extensively within the visitor architecture (including
 serialization).  
 
-``nineml_type``
-^^^^^^^^^^^^^^^
+nineml_type
+^^^^^^^^^^^
 
 ``nineml_type`` should be a string containing the name of the
 corresponding NineML type in the `NineML specification`_.
 
-``nineml_type_v1``
-^^^^^^^^^^^^^^^^^^
+nineml_type_v1
+^^^^^^^^^^^^^^
 
 If the nineml_type differs between v1 and v2 of the specification,
 ``nineml_type_v1`` should also be defined to hold the name of the type
 in the v1 syntax.
 
-``nineml_attr``
-^^^^^^^^^^^^^^^
+nineml_attr
+^^^^^^^^^^^
 
 ``nineml_attr`` should be a tuple of strings, listing the
 attributes of the given NineML class that are part of the
 `NineML specification`_ and are not NineML types themselves, such as ``str``,
-``int``, ``float`` fields.
+``int`` and ``float`` fields.
 
-``nineml_child``
-^^^^^^^^^^^^^^^^
+nineml_child
+^^^^^^^^^^^^
 
-``nineml_child`` should be a dictionary, which lists the names of the
+``nineml_child`` should be a dictionary, which lists the names of singleton
 NineML child attributes in the class along with a mapping to their
 expected class. If the the child attribute can be one of several NineML
 classes then the attribute should map to None.
 
-``nineml_children``
-^^^^^^^^^^^^^^^^^^^
+nineml_children
+^^^^^^^^^^^^^^^
 
 ``nineml_children`` should be a tuple listing the NineML classes that
 are contained within the object as children sets (e.g. ``(Property, Initial)``
@@ -71,15 +72,33 @@ non-empty ``nineml_children`` it should derive from ``ContainerObject``.
     ``classproperty`` decorators can be used to define ``nineml_child`` and
     ``nineml_children`` class attributes to avoid circular definitions.
     See the ``BaseAnnotations`` class.
+    
+temporary
+^^^^^^^^^
+
+"Temporary" NineML objects are created when calling iterator properties and
+accessor methods of the ``MultiDynamics`` class that override corresponding in
+the ``Dynamics`` class, allowing ``MultiDynamics`` objects to duck-type (i.e.
+pretend to be) ``Dynamics`` objects. Such classes should override the
+``temporary`` class attribute and set it to ``True``. This prevents their
+address in memory being used to identify the object (e.g. in the cloner "memo"
+dictionary) as it since they are generated on the fly, this address will change
+between accesses.
+
+.. note::
+    The ``id`` property in BaseNineMLObject should always be used to check
+    whether two Python objects are the representing the same NineML object for
+    this reason.
+   
 
 AnnotatedObject
 ~~~~~~~~~~~~~~~
 
-The `NineML specification`_ states that all NineML objects can be annotated,
-(except ``Annotations`` objects themselves). Therefore, all NineML classes
-should derive from ``AnnotatedObject``, which itself derives from
-``BaseNineMLObject``. This provides the ``annotations`` attribute, which can
-provides access to any annotations associated with the object.
+The `NineML specification`_ states that all NineML objects can be annotated
+except ``Annotations`` objects themselves. Therefore, all bar ``Annotations``
+NineML classes should derive from ``AnnotatedObject``, which itself derives
+from ``BaseNineMLObject``. This provides the ``annotations`` attribute, which
+can provides access to any annotations associated with the object.
 
 ContainerObject
 ~~~~~~~~~~~~~~~
