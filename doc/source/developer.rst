@@ -190,7 +190,7 @@ BaseVisitorWithContext
 If contextual information is required, such as the parent container (and its
 parent, etc...) then the ``BaseVisitorWithContext`` can be derived instead. The
 immediate context is available via the ``context`` property and the context
-of all parent container via the ``contexts`` attribute.
+of all parent containers via the ``contexts`` attribute.
 
 
 BaseChildResultsVisitor
@@ -235,30 +235,29 @@ Base validators are implemented in the
 ``nineml.abstraction.componentclassvisitors.validators`` package with
 specializations for each component class type in the corresponding
 ``nineml.abstraction.<componentclass-type>.visitors.validators`` packages (at
-this stage only the ``Dynamics`` component class has specialized validators).
+this stage only the ``Dynamics`` component class has specialised validators).
 
 Serialization
 ~~~~~~~~~~~~~
 
 For serialization visitors to be able to serialize a NineML object it needs to
-define either ``serialize_node`` and ``unserialize_node`` methods.
+define both ``serialize_node`` and ``unserialize_node`` methods.
 
 ``serialize_node``/``unserialize_node``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Both ``serialize_node`` and ``unserialize_node`` take a single argument, which
-is a ``NodeToSerialize`` or ``NodeToUnSerialize`` node respectively. These
-nodes wrap a serial element of the given serialization format (e.g.
+Both ``serialize_node`` and ``unserialize_node`` take a single argument, a
+``NodeToSerialize`` or ``NodeToUnSerialize`` instance respectively. These
+node objects wrap a serial element of the given serialization format (e.g.
 ``lxml.etree._Element`` for the ``XMLSerializer``) and provide convenient
 methods for adding, or accessing, children, attributes and body elements to the
 node. 
 
 The node method calls then call format-specific method of the serialization
-visitor to un/serialize the NineML objects.  However, in some cases (
-particularly in some awkward v1.0 syntax), the serialization visitor needs to
-be accessed directly, which is available at ``node.visitor``.
+visitor to un/serialize the NineML objects.  However, in some cases
+(particularly in some awkward v1.0 syntax), the serialization visitor may need
+to be accessed directly, which is available at ``node.visitor``.
 
- 
 Both ``serialize_node`` and ``unserialize_node`` should accept arbitrary
 keyword arguments and pass them on to all calls made to methods of the nodes
 and the visitor directly. However, these arguments are not currently used by
