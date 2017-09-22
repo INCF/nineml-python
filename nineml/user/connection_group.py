@@ -4,7 +4,8 @@ from . import BaseULObject
 from nineml.abstraction.connectionrule import (
     explicit_connection_rule, one_to_one_connection_rule)
 from nineml.user.port_connections import EventPortConnection
-from nineml.user.connectionrule import ConnectionRuleProperties, Connectivity
+from nineml.user.connectionrule import (
+    ConnectionRuleProperties, Connectivity, BaseConnectivity)
 from nineml.units import Quantity
 from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
@@ -38,7 +39,7 @@ class BaseConnectionGroup(
         self._source_port = source_port
         self._destination_port = destination_port
         if connectivity is not None:
-            assert isinstance(connectivity, Connectivity)
+            assert isinstance(connectivity, BaseConnectivity)
             if connection_rule_properties is not None:
                 raise NineMLRuntimeError(
                     "Cannot provide both connectivty and "
