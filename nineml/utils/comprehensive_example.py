@@ -193,15 +193,18 @@ dynG = Dynamics(
     name='dynG',
     state_variables=[
         StateVariable('SV1', dimension=un.dimensionless)],
-    aliases=[Alias('A1', 'SV1 * C1')],
+    aliases=[Alias('A1', 'SV1 * C1'),
+             Alias('A2', 'A1 * P3 / P2')],
     event_ports=[
         EventReceivePort('ERP1')],
     analog_ports=[
         AnalogSendPort('SV1', dimension=un.dimensionless),
-        AnalogSendPort('A1', dimension=un.current)],
+        AnalogSendPort('A1', dimension=un.current),
+        AnalogSendPort('A2', dimension=un.voltage / un.time)],
     parameters=[
         Parameter('P1', dimension=un.dimensionless),
-        Parameter('P2', dimension=un.time)],
+        Parameter('P2', dimension=un.time),
+        Parameter('P3', dimension=un.resistance)],
     constants=[Constant('C1', 1.3 * un.nA)],
     regimes=[
         Regime(
@@ -281,7 +284,8 @@ dynPropG = DynamicsProperties(
     name='dynPropG',
     definition=dynG,
     properties={'P1': 8.8,
-                'P2': 2.3 * un.ms})
+                'P2': 2.3 * un.ms,
+                'P3': 55 * un.ohm})
 
 dynPropH = DynamicsProperties(
     name='dynPropH',
@@ -322,7 +326,9 @@ multiDynPropB = MultiDynamicsProperties(
         EventPortConnection('ESP1__e', 'ERP1',
                             sender_name='multiA', receiver_name='g'),
         AnalogPortConnection('SV1', 'ARP2',
-                             sender_name='g', receiver_name='c')],
+                             sender_name='g', receiver_name='c'),
+        AnalogPortConnection('A2', 'ADP1__d', sender_name='g',
+                             receiver_name='multiA')],
     port_exposures=[
         EventSendPortExposure('multiA', 'ESP1__e', name='ESP1'),
         EventReceivePortExposure('multiA', 'ERP1__d', name='ERP1'),
