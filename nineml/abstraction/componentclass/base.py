@@ -23,7 +23,9 @@ from ..base import Parameter  # @IgnorePep8
 from future.utils import with_metaclass
 
 
-class ComponentClass(with_metaclass(ABCMeta, type('NewBase', (BaseALObject, DocumentLevelObject, ContainerObject), {}))):
+class ComponentClass(with_metaclass(
+        ABCMeta, type('NewBase', (BaseALObject, DocumentLevelObject,
+                                  ContainerObject), {}))):
     """Base class for ComponentClasses in different 9ML modules."""
     nineml_type_v1 = 'ComponentClass'
     nineml_attr = ('name',)
@@ -34,6 +36,10 @@ class ComponentClass(with_metaclass(ABCMeta, type('NewBase', (BaseALObject, Docu
         BaseALObject.__init__(self)
         DocumentLevelObject.__init__(self)
         ContainerObject.__init__(self)
+
+        # Caches the dimension resolver so that it can be reused in subsequent
+        # calls
+        self._dimension_resolver = None
 
         # Turn any strings in the parameter list into Parameters:
         param_types = (basestring, Parameter)
@@ -53,7 +59,6 @@ class ComponentClass(with_metaclass(ABCMeta, type('NewBase', (BaseALObject, Docu
         self.add(*aliases)
         self.add(*constants)
 
-        self._dimension_resolver = None
 
     @property
     def name(self):

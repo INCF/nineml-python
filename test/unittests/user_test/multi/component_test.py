@@ -11,7 +11,8 @@ from nineml.abstraction import (
     AnalogSendPort, On, StateAssignment, Constant)
 from nineml.user.dynamics import DynamicsProperties
 from nineml.user.multi.port_exposures import _ReceivePortExposureAlias
-from nineml.user.multi.port_connections import _LocalAnalogPortConnections
+from nineml.user.multi.port_connections import (
+    _LocalAnalogReceivePortConnection, _LocalAnalogReducePortConnections)
 
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
@@ -161,7 +162,8 @@ class MultiDynamicsFlattening_test(unittest.TestCase):
                               'dIn2__b']))
         self.assertEqual(e.alias('C1__a').rhs, sympy.sympify('cp1__a'))
         self.assertIsInstance(e.alias('cIn1__a'), _ReceivePortExposureAlias)
-        self.assertIsInstance(e.alias('dIn1__b'), _LocalAnalogPortConnections)
+        self.assertIsInstance(e.alias('dIn1__b'),
+                              _LocalAnalogReceivePortConnection)
         self.assertEqual(set(e.state_variable_names),
                          set(['SV1__a', 'SV1__b']))
         self.assertEqual(e.state_variable('SV1__a').dimension,
