@@ -8,7 +8,7 @@ from .namespace import (
     _NamespaceOnCondition, make_delay_trigger_name)
 from nineml.abstraction import (
     Alias, Constant)
-from nineml.exceptions import NineMLImmutableError
+from nineml.exceptions import NineMLImmutableError, NineMLUsageError
 from .namespace import append_namespace
 from functools import reduce
 
@@ -93,28 +93,28 @@ class _DelayedOnEventStateAssignment(StateAssignment):
         return sympy.sympify('t + {}'.format(self._parent.delay))
 
 
-class _LocalAnalogPortConnections(Alias):
+class _LocalAnalogReceivePortConnection(Alias):
 
     temporary = True
 
-    def __init__(self, receive_port, receiver, port_connections, parent):
+    def __init__(self, receive_port, receiver, port_connection, parent):
         BaseNineMLObject.__init__(self)
-        self._receive_port_name = receive_port
-        self._receiver_name = receiver
-        self._port_connections = port_connections
+        self._port = receive_port
+        self._receiver = receiver
+        self._port_conn = port_connection
         self._parent = parent
 
     @property
-    def receive_port_name(self):
-        return self._receive_port_name
+    def port_name(self):
+        return self._port.name
 
     @property
     def receiver_name(self):
-        return self._receiver_name
+        return self._receiver.name
 
     @property
-    def port_connections(self):
-        return iter(self._port_connections)
+    def port_connection(self):
+        return self._port_conn
 
     @property
     def name(self):
@@ -127,16 +127,46 @@ class _LocalAnalogPortConnections(Alias):
 
     @property
     def lhs(self):
-        return append_namespace(self.receive_port_name, self.receiver_name)
+        return append_namespace(self.port_name, self.receiver_name)
 
     @property
     def rhs(self):
-        return reduce(
-            operator.add,
-            (sympy.Symbol(pc.sender.append_namespace(pc.send_port_name))
-             for pc in self.port_connections), 0)
+        return sympy.Symbol(self._port_conn.sender.append_namespace(
+            self._port_conn.send_port_name))
 
     def lhs_name_transform_inplace(self, name_map):
         raise NineMLImmutableError(
             "Cannot rename LHS of Alias '{}' because it is a local "
             "AnalogPortConnection".format(self.lhs))
+
+
+class _LocalAnalogReducePortConnections(_LocalAnalogReceivePortConnection):
+
+    temporary = True
+
+    def __init__(self, reduce_port, receiver, port_connections, parent,
+                 exposure=None):
+        BaseNineMLObject.__init__(self)
+        self._port = reduce_port
+        self._receiver = receiver
+        self._port_connections = port_connections
+        self._parent = parent
+        if exposure is not None and exposure.name == exposure.local_port_name:
+            raise NineMLUsageError(
+                "Must provide a unique name for analog reduce port exposure"
+                "'{}' as it is locally connected by {}".format(
+                    exposure.name, ', '.join(str(pc)
+                                             for pc in port_connections)))
+        self._exposure = exposure
+
+    @property
+    def port_connections(self):
+        return iter(self._port_connections)
+
+    @property
+    def rhs(self):
+        operands = [sympy.Symbol(pc.sender.append_namespace(pc.send_port_name))
+                    for pc in self.port_connections]
+        if self._exposure is not None:
+            operands.append(sympy.Symbol(self._exposure.name))
+        return reduce(self._port.python_op, operands)

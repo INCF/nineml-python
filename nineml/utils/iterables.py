@@ -10,7 +10,15 @@ from ..exceptions import NineMLRuntimeError
 from nineml.base import ContainerObject
 from logging import getLogger
 
+
 logger = getLogger('NineML')
+
+
+class OrderedDefaultListDict(collections.OrderedDict):
+
+    def __missing__(self, key):
+        self[key] = value = []
+        return value
 
 
 def expect_single(lst, errmsg=None):

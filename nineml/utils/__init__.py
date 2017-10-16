@@ -4,7 +4,6 @@ library.
 """
 from __future__ import absolute_import
 
-from .collections import OrderedDefaultListDict
 from .path import join_norm, restore_sys_path, is_file_handle
 from .equality import nearly_equal, xml_equal
 from .validation import (
