@@ -7,13 +7,14 @@ from copy import copy
 from .. import BaseULObject
 import sympy
 from collections import defaultdict
-from operator import attrgetter
-from itertools import product, groupby
+from itertools import product
+from nineml.abstraction import AnalogReceivePort, AnalogReducePort
 from nineml.user import DynamicsProperties, Definition
 from nineml.annotations import PY9ML_NS
+from nineml.utils.iterables import unique_by_id
 # from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, name_error)
+    NineMLRuntimeError, NineMLNameError, name_error, NineMLUsageError)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
@@ -33,7 +34,7 @@ from .port_exposures import (
 from .port_connections import (
     _DelayedOnEvent, _UnconnectedAnalogReducePort,
     _DelayedOnEventStateVariable, _DelayedOnEventStateAssignment,
-    _LocalAnalogPortConnections)
+    _LocalAnalogReceivePortConnection, _LocalAnalogReducePortConnections)
 from .namespace import (
     _NamespaceAlias, _NamespaceRegime, _NamespaceStateVariable,
     _NamespaceConstant, _NamespaceParameter, _NamespaceProperty,
@@ -593,58 +594,86 @@ class MultiDynamics(Dynamics):
     @property
     def aliases(self):
         """
-        Chains port connections to analog receive and reduce ports, which
-        are treated simply as aliases in the flattened representation, with
-        all aliases defined in the sub components
+        Adds aliases for analog port connections to analog ports, which
+        are treated simply as aliases in the flattened representation,
+        and renamed port exposures to the existing aliases in the
+        sub-components
         """
-        # Add an alias to map analog port exposures to the local port in the
-        # the sub-component
-        port_exposure_aliases = (
-            p.alias for p in chain(self.analog_send_ports,
-                                   self.analog_receive_ports,
-                                   self.analog_reduce_ports)
-            if p.name != p.local_port_name)
-        # Add aliases mapping local port connections between ports in
-        # different sub-components
-        local_port_connections = (
-            _LocalAnalogPortConnections(
-                receive_port=p, receiver=r,
-                port_connections=list(pcs), parent=self)
-            for (r, p), pcs in groupby(sorted(self.analog_port_connections,
-                                               key=attrgetter('receive_key')),
-                                        key=attrgetter('receive_key')))
-        # Chain all the aliases together
-        return chain(port_exposure_aliases,
-                     local_port_connections,
-                     *(sc.aliases for sc in self.sub_components))
+        # Yield all the "real" aliases in the sub-components
+        for sub_comp in self.sub_components:
+            for alias in sub_comp.aliases:
+                yield alias
+        # Yield the aliases used to make local analog port connections
+        connected_ports = defaultdict(list)
+        for port_conn in self.analog_port_connections:
+            connected_ports[port_conn.receive_port.id].append(port_conn)
+        connected_exposures = []  # Do not need to create a separate alias for
+        for port_conns in connected_ports.itervalues():
+            port = port_conns[0].receive_port
+            receiver = port_conns[0].receiver
+            # Check to see if receive port is also exposed
+            try:
+                exposure = next(
+                    e for e in chain(self.analog_receive_port_exposures,
+                                     self.analog_reduce_port_exposures)
+                    if e.port.id == port.id)
+                connected_exposures.append(exposure.id)
+            except StopIteration:
+                exposure = None
+            if isinstance(port, AnalogReducePort):
+                yield _LocalAnalogReducePortConnections(
+                    reduce_port=port, receiver=receiver,
+                    port_connections=port_conns, exposure=exposure,
+                    parent=self)
+            else:
+                assert isinstance(port, AnalogReceivePort)
+                if len(port_conns) > 1:
+                    raise NineMLUsageError(
+                        "Analog receive port '{}' cannot be connected to "
+                        "multiple port connections ".format(
+                            port.name,
+                            ', '.join(str(pc) for pc in port_conns)))
+                if exposure is not None:
+                    raise NineMLUsageError(
+                        "Analog receive port '{}' cannot be both exposed and "
+                        "locally connected. Use a reduce port instead."
+                        .format(port.name))
+                yield _LocalAnalogReceivePortConnection(
+                    receive_port=port, receiver=receiver,
+                    port_connection=port_conns[0], parent=self)
+        # Yield aliases used to map analog port exposures to the local port in
+        # the the sub-component
+        for exposure in chain(self.analog_send_port_exposures,
+                              self.analog_receive_port_exposures,
+                              self.analog_reduce_port_exposures):
+            if (exposure.name != exposure.local_port_name and
+                    exposure.id not in connected_exposures):
+                yield exposure.alias
 
     @property
     def constants(self):
-        # We need to insert a 0-valued constant for each internal reduce port
-        # that doesn't receive any connections
-        connected_reduce_port_ids = list(chain(
-            ((pe.port.id, pe.sub_component.id)
-             for pe in self.analog_reduce_port_exposures),
-            ((pc.receive_port.id, pc.receiver.id)
-             for pc in self.analog_port_connections)))
-        unused_reduce_port_constants = chain(
-            *((_UnconnectedAnalogReducePort(p, sc)
-               for p in sc.analog_reduce_ports
-               if (p.id, sc.id) not in connected_reduce_port_ids)
-              for sc in self.sub_components))
-        return chain(unused_reduce_port_constants,
-                     *[sc.constants for sc in self.sub_components])
+        connected_receive_port_ids = [
+            p.id for _, p in self._connected_analog_receive_ports()]
+        for sub_comp in self.sub_components:
+            for constant in sub_comp.constants:
+                yield constant
+            # We need to insert a 0-valued constant for each reduce port that
+            # isn't exposed and doesn't receive any connections
+            for reduce_port in sub_comp.analog_reduce_ports:
+                if reduce_port.id in connected_receive_port_ids:
+                    yield _UnconnectedAnalogReducePort(reduce_port, sub_comp)
 
     @property
     def state_variables(self):
         # All statevariables in all subcomponents mapped into the container
-        # namespace, plus state variables used to trigger local event
-        # connections after a delays
-        delayed_on_event_vars = (
-            _DelayedOnEventStateVariable(pc)
-            for pc in self.nonzero_delay_event_port_connections)
-        return chain(delayed_on_event_vars,
-                     *(sc.state_variables for sc in self.sub_components))
+        # namespace
+        for sub_comp in self.sub_components:
+            for state_variable in sub_comp.state_variables:
+                yield state_variable
+        # State variables used to trigger local event connections after a
+        # delay
+        for port_conn in self.nonzero_delay_event_port_connections:
+            yield _DelayedOnEventStateVariable(port_conn)
 
     @property
     def regimes(self):
@@ -769,12 +798,20 @@ class MultiDynamics(Dynamics):
                         .format(port.name, sub_component.name, self.name))
         super(MultiDynamics, self).validate(**kwargs)
 
-    def _connected_reduce_ports(self):
+    def _connected_analog_receive_ports(self):
         return chain(
             ((pe.sub_component, pe.port)
-             for pe in self.analog_reduce_ports),
+             for pe in chain(self.analog_reduce_ports,
+                             self.analog_receive_ports)),
             ((pc.receiver, pc.receive_port)
              for pc in self.analog_port_connections))
+
+    def internally_connected_analog_ports(self):
+        return unique_by_id(pc.receive_port
+                            for pc in self.analog_port_connections)
+
+    def is_exposed(self, port):
+        return port.id in (p.id for p in self.port_exposures)
 
     def serialize_node(self, node, **options):  # @UnusedVariable
         node.attr('name', self.name, **options)

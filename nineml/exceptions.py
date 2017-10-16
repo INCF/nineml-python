@@ -15,6 +15,10 @@ class NineMLRuntimeError(NineMLException):
     pass
 
 
+class NineMLUsageError(NineMLException):
+    pass
+
+
 class NineMLDimensionError(NineMLRuntimeError):
     pass
 

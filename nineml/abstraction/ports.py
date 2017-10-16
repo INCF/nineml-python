@@ -6,7 +6,9 @@ This file defines the Port classes used in NineML
 """
 from builtins import object
 from abc import ABCMeta
+import sympy
 from . import BaseALObject
+from operator import add
 from nineml.units import dimensionless
 from nineml.utils import validate_identifier
 from nineml.exceptions import NineMLRuntimeError
@@ -62,7 +64,9 @@ class Port(with_metaclass(ABCMeta, BaseALObject)):
         return cls(name=node.attr('name', **options))
 
 
-class DimensionedPort(with_metaclass(ABCMeta, type('NewBase', (Port, ExpressionSymbol), {}))):
+class DimensionedPort(
+        with_metaclass(ABCMeta,
+                       type('NewBase', (Port, ExpressionSymbol), {}))):
     """DimensionedPort
 
     A |DimensionedPort| is the base class for ports with dimensions (e.g.
@@ -221,6 +225,7 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     nineml_attr = ('name', 'operator')
     nineml_child = {'dimension': Dimension}
     _operator_map = {'add': '+', '+': '+', }
+    _to_python_operator = {'+': add}
 
     def __init__(self, name, dimension=None, operator='+'):
         if operator not in list(self._operator_map.keys()):
@@ -234,6 +239,10 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     def operator(self):
         return self._operator
 
+    @property
+    def python_op(self):
+        return self._to_python_operator[self.operator]
+
     def __repr__(self):
         classstring = self.__class__.__name__
         return ("{}('{}', dimension='{}', op='{}')"
@@ -243,6 +252,9 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     def serialize_node(self, node, **options):  # @UnusedVariable
         super(AnalogReducePort, self).serialize_node(node, **options)
         node.attr('operator', self.operator, **options)
+
+    def combine_symbols(self, *syms):
+        return reduce(add, (sympy.Symbol(s) for s in syms))
 
     @classmethod
     def unserialize_node(cls, node, **options):  # @UnusedVariable
