@@ -652,7 +652,7 @@ class MultiDynamics(Dynamics):
 
     @property
     def constants(self):
-        connected_receive_port_ids = [
+        connected_port_ids = [
             p.id for _, p in self._connected_analog_receive_ports()]
         for sub_comp in self.sub_components:
             for constant in sub_comp.constants:
@@ -660,7 +660,7 @@ class MultiDynamics(Dynamics):
             # We need to insert a 0-valued constant for each reduce port that
             # isn't exposed and doesn't receive any connections
             for reduce_port in sub_comp.analog_reduce_ports:
-                if reduce_port.id in connected_receive_port_ids:
+                if reduce_port.id not in connected_port_ids:
                     yield _UnconnectedAnalogReducePort(reduce_port, sub_comp)
 
     @property
@@ -801,8 +801,8 @@ class MultiDynamics(Dynamics):
     def _connected_analog_receive_ports(self):
         return chain(
             ((pe.sub_component, pe.port)
-             for pe in chain(self.analog_reduce_ports,
-                             self.analog_receive_ports)),
+             for pe in chain(self.analog_reduce_port_exposures,
+                             self.analog_receive_port_exposures)),
             ((pc.receiver, pc.receive_port)
              for pc in self.analog_port_connections))
 

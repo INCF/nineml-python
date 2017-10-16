@@ -99,14 +99,14 @@ class _LocalAnalogReceivePortConnection(Alias):
 
     def __init__(self, receive_port, receiver, port_connection, parent):
         BaseNineMLObject.__init__(self)
-        self._receive_port = receive_port
+        self._port = receive_port
         self._receiver = receiver
         self._port_conn = port_connection
         self._parent = parent
 
     @property
-    def receive_port_name(self):
-        return self._receive_port.name
+    def port_name(self):
+        return self._port.name
 
     @property
     def receiver_name(self):
@@ -127,7 +127,7 @@ class _LocalAnalogReceivePortConnection(Alias):
 
     @property
     def lhs(self):
-        return append_namespace(self.receive_port_name, self.receiver_name)
+        return append_namespace(self.port_name, self.receiver_name)
 
     @property
     def rhs(self):
@@ -147,7 +147,7 @@ class _LocalAnalogReducePortConnections(_LocalAnalogReceivePortConnection):
     def __init__(self, reduce_port, receiver, port_connections, parent,
                  exposure=None):
         BaseNineMLObject.__init__(self)
-        self._reduce_port = reduce_port
+        self._port = reduce_port
         self._receiver = receiver
         self._port_connections = port_connections
         self._parent = parent
@@ -160,10 +160,6 @@ class _LocalAnalogReducePortConnections(_LocalAnalogReceivePortConnection):
         self._exposure = exposure
 
     @property
-    def reduce_port_name(self):
-        return self._reduce_port
-
-    @property
     def port_connections(self):
         return iter(self._port_connections)
 
@@ -173,4 +169,4 @@ class _LocalAnalogReducePortConnections(_LocalAnalogReceivePortConnection):
                     for pc in self.port_connections]
         if self._exposure is not None:
             operands.append(sympy.Symbol(self._exposure.name))
-        return reduce(self._receive_port.python_op, operands)
+        return reduce(self._port.python_op, operands)
