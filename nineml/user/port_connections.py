@@ -228,7 +228,7 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
                               sender_role=self.sender_role,
                               receiver_role=self.receiver_role)
 
-    def expose_ports(self, role_map):
+    def expose_ports(self, role_map, name_suffix=None):
         """
         Create port exposures for the send and/or receive ports in the role
         map. Used when aggregating synapse and post-synaptic cell dynamics into
@@ -240,6 +240,8 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         role_map : dict(str,str)
             A dictionary containing maps from the port-connection role to sub-
             component name
+        name_suffix : str
+            Suffix to append to generated names
 
         Returns
         -------
@@ -251,12 +253,14 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         exposures = []
         try:
             exposures.append(nineml.user.multi.BasePortExposure.from_port(
-                self.send_port, role_map[self.sender_role]))
+                self.send_port, role_map[self.sender_role],
+                name_suffix=name_suffix))
         except KeyError:
             pass
         try:
             exposures.append(nineml.user.multi.BasePortExposure.from_port(
-                self.receive_port, role_map[self.receiver_role]))
+                self.receive_port, role_map[self.receiver_role],
+                name_suffix=name_suffix))
         except KeyError:
             pass
         return exposures
