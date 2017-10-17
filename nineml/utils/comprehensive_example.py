@@ -327,12 +327,16 @@ multiDynPropB = MultiDynamicsProperties(
                             sender_name='multiA', receiver_name='g'),
         AnalogPortConnection('SV1', 'ARP2',
                              sender_name='g', receiver_name='c'),
-        AnalogPortConnection('A2', 'ADP1__d', sender_name='g',
+        AnalogPortConnection('A2',
+                             'ADP1__d' + AnalogReducePortExposure.SUFFIX,
+                             sender_name='g',
                              receiver_name='multiA')],
     port_exposures=[
         EventSendPortExposure('multiA', 'ESP1__e', name='ESP1'),
         EventReceivePortExposure('multiA', 'ERP1__d', name='ERP1'),
-        AnalogReducePortExposure('multiA', 'ADP1__d', name='ADP1'),
+        AnalogReducePortExposure(
+            'multiA',
+            'ADP1__d' + AnalogReducePortExposure.SUFFIX, name='ADP1'),
         AnalogSendPortExposure('g', 'SV1', name='ASP1'),
         AnalogReceivePortExposure('c', 'ARP1', name='ARP1'),
         AnalogReceivePortExposure('multiA', 'ARP1__d', name='ARP2')])

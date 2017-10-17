@@ -8,6 +8,7 @@ from nineml.exceptions import (
 from nineml.abstraction.ports import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
     EventReceivePort)
+import nineml.user.multi
 from future.utils import with_metaclass
 from nineml.utils import validate_identifier
 
@@ -201,8 +202,8 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
 
     def append_namespace_from_roles(self, role_map):
         """
-        Test the appending of role names to port_connection ports for
-        use in the creation of MultiDynamics objects
+        Appends role names to port_connection ports for use in the creation of
+        MultiDynamics objects
 
         Parameters
         ----------
@@ -217,14 +218,19 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
             appended with the namespace of the sub-component the
             sender/receiver maps to
         """
-        send_port = nineml.user.append_namespace(
+        send_port_name = nineml.user.append_namespace(
             self.send_port_name, role_map[self.sender_role])
-        receive_port = nineml.user.append_namespace(
+        receive_port_name = nineml.user.append_namespace(
             self.receive_port_name, role_map[self.receiver_role])
+        # An additional suffix is appended to the names given to reduce ports
+        # to allow internal connections to the alias
+        if isinstance(self.receive_port, AnalogReducePort):
+            receive_port_name += (
+                nineml.user.multi.AnalogReducePortExposure.SUFFIX)
         # Return a new port connection with the role namespace appended to the
         # port names.
-        return self.__class__(send_port_name=send_port,
-                              receive_port_name=receive_port,
+        return self.__class__(send_port_name=send_port_name,
+                              receive_port_name=receive_port_name,
                               sender_role=self.sender_role,
                               receiver_role=self.receiver_role)
 

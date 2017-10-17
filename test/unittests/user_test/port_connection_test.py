@@ -4,6 +4,11 @@ from nineml import Document
 from nineml.user.port_connections import (AnalogPortConnection,
                                           EventPortConnection)
 from nineml.utils.comprehensive_example import projD
+from nineml import units as un
+from nineml.abstraction.ports import (
+    EventSendPort, EventReceivePort, AnalogSendPort, AnalogReceivePort,
+    AnalogReducePort)
+from nineml.user.multi.port_exposures import AnalogReducePortExposure
 
 
 examples_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..',
@@ -41,6 +46,25 @@ class TestPortConnection(unittest.TestCase):
             receive_port_name='ARP1',
             sender_role='response',
             receiver_role='post')
+        adpc = AnalogPortConnection(
+            send_port_name='SV1',
+            receive_port_name='ADP1',
+            sender_role='response',
+            receiver_role='post')
+        # Manually bind the port connections and senders to avoid check
+        # that they are bound.
+        epc._receive_port = EventReceivePort('ERP1')
+        epc._send_port = EventSendPort('ESP1')
+        apc._receive_port = AnalogReceivePort('ARP1', dimension=un.voltage)
+        apc._send_port = AnalogSendPort('SV1', dimension=un.voltage)
+        adpc._receive_port = AnalogReducePort('ADP1', dimension=un.voltage)
+        adpc._send_port = AnalogSendPort('SV1', dimension=un.voltage)
+        epc._receiver = True
+        epc._sender = True
+        apc._receiver = True
+        apc._sender = True
+        adpc._receiver = True
+        adpc._sender = True
         # Test the creation of a new port connection with the original
         # port connection roles mapped to names of sub-components
         internal_epc = epc.assign_names_from_roles(role2name)
@@ -53,6 +77,11 @@ class TestPortConnection(unittest.TestCase):
         self.assertEqual(internal_apc.receive_port_name, 'ARP1')
         self.assertEqual(internal_apc.sender_name, 'psr')
         self.assertEqual(internal_apc.receiver_name, 'post_cell')
+        internal_adpc = adpc.assign_names_from_roles(role2name)
+        self.assertEqual(internal_adpc.send_port_name, 'SV1')
+        self.assertEqual(internal_adpc.receive_port_name, 'ADP1')
+        self.assertEqual(internal_adpc.sender_name, 'psr')
+        self.assertEqual(internal_adpc.receiver_name, 'post_cell')
         # Test the appending of role names to port_connection ports for
         # use in the creation of multi-dynamics
         external_epc = epc.append_namespace_from_roles(role2name)
@@ -61,6 +90,11 @@ class TestPortConnection(unittest.TestCase):
         external_apc = apc.append_namespace_from_roles(role2name)
         self.assertEqual(external_apc.send_port_name, 'SV1__psr')
         self.assertEqual(external_apc.receive_port_name, 'ARP1__post_cell')
+        external_adpc = adpc.append_namespace_from_roles(role2name)
+        self.assertEqual(external_adpc.send_port_name, 'SV1__psr')
+        self.assertEqual(external_adpc.receive_port_name,
+                         'ADP1__post_cell' +
+                         AnalogReducePortExposure.SUFFIX)
         # Bind the port connections to the projection "container" and then
         # call expose_ports to create port exposures for each of the
         # terminals

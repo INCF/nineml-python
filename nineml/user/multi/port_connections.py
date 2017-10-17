@@ -1,4 +1,3 @@
-import operator
 import sympy
 from nineml.base import BaseNineMLObject
 import nineml.units as un
@@ -151,13 +150,13 @@ class _LocalAnalogReducePortConnections(_LocalAnalogReceivePortConnection):
         self._receiver = receiver
         self._port_connections = port_connections
         self._parent = parent
+        self._exposure = exposure
         if exposure is not None and exposure.name == exposure.local_port_name:
             raise NineMLUsageError(
-                "Must provide a unique name for analog reduce port exposure"
+                "Must provide a unique name for analog reduce port exposure "
                 "'{}' as it is locally connected by {}".format(
                     exposure.name, ', '.join(str(pc)
                                              for pc in port_connections)))
-        self._exposure = exposure
 
     @property
     def port_connections(self):
