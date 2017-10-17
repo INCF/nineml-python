@@ -608,7 +608,7 @@ class MultiDynamics(Dynamics):
         for port_conn in self.analog_port_connections:
             connected_ports[port_conn.receive_port.id].append(port_conn)
         connected_exposures = []  # Do not need to create a separate alias for
-        for port_conns in connected_ports.itervalues():
+        for port_conns in connected_ports.values():
             port = port_conns[0].receive_port
             receiver = port_conns[0].receiver
             # Check to see if receive port is also exposed
