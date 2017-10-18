@@ -81,7 +81,7 @@ class BaseNineMLObject(object):
                 parent_id = hex(self._parent.id)
             except TypeError:
                 parent_id = self._parent.id  # Temporary object ID
-            id_ = parent_id + type(self).__name__ + str(self.key)
+            id_ = parent_id + type(self).__name__ + '_' + str(self.key)
         else:
             id_ = id(self)
         return id_
