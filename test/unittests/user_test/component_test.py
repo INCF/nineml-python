@@ -2,7 +2,7 @@ import os.path
 import unittest
 from nineml import read, Document
 from nineml.serialization.xml import XMLUnserializer
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from nineml.user import Property
 from nineml import Unit, Dimension
 
@@ -39,7 +39,7 @@ from nineml import Unit, Dimension
 #         self.assertEquals(document1, document2, mismatch)
 # 
 #     def test_mismatch_dimension(self):
-#         with self.assertRaises(NineMLRuntimeError):
+#         with self.assertRaises(NineMLUsageError):
 #             read(os.path.join(examples_dir, 'HodgkinHuxleyBadUnits.xml'))
 # 
 # 

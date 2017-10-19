@@ -1,7 +1,7 @@
 import unittest
 from nineml.user.multi.dynamics import MultiDynamics
 from nineml.utils.comprehensive_example import dynD, dynE
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from nineml.user.multi.port_exposures import AnalogReceivePortExposure
 from nineml.user.multi.dynamics import SubDynamics
 
@@ -16,7 +16,7 @@ class TestMultiDynamicsExceptions(unittest.TestCase):
         d = SubDynamics('d', dynD)
         e = SubDynamics('e', dynE)
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             MultiDynamics,
             name='multiDyn',
             sub_components=[d, e],

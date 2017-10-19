@@ -9,7 +9,7 @@ import sympy
 import math
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLDimensionError, NineMLValueError,
+    NineMLUsageError, NineMLDimensionError, NineMLValueError,
     NineMLSerializationError)
 from nineml.utils import validate_identifier
 from functools import reduce
@@ -232,7 +232,7 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
         if expr == 1:
             return dimensionless
         elif not isinstance(expr, sympy.Basic):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Cannot convert '{}' dimension, must be 1 or sympy expression"
                 .format(expr))
         powers = {}
@@ -354,7 +354,7 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
         "self * other"
         try:
             if (self.offset != 0 or other.offset != 0):
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Can't multiply units with nonzero offsets ({} and {})"
                     .format(self, other))
             return Unit(Dimension.make_name([self.name, other.name]),
@@ -367,7 +367,7 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
         "self / expr"
         try:
             if (self.offset != 0 or other.offset != 0):
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Can't divide units with nonzero offsets ({} and {})"
                     .format(self, other))
             return Unit(Dimension.make_name([self.name], [other.name]),
@@ -383,7 +383,7 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     def __pow__(self, power):
         "self ** expr"
         if self.offset != 0:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Can't raise units to power with nonzero offsets ({})"
                 .format(self))
         return Unit(Dimension.make_name([self.name], power=power),
@@ -466,7 +466,7 @@ class Quantity(AnnotatedNineMLObject):
         elif self.value.is_single():
             return self._value.value * self.units
         else:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Cannot get item from random distribution")
 
     def set_units(self, units):
@@ -621,7 +621,7 @@ class Quantity(AnnotatedNineMLObject):
                     try:
                         value = ArrayValue(qty)
                     except NineMLValueError:
-                        raise NineMLRuntimeError(
+                        raise NineMLUsageError(
                             "Cannot convert '{}' to nineml.Quantity (can only "
                             "convert quantities.Quantity and numeric objects)"
                             .format(qty))

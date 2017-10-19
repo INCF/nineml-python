@@ -1,7 +1,7 @@
 from nineml.visitors.base import BaseVisitorWithContext
 from nineml.visitors.equality import MismatchFinder
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError)
+    NineMLUsageError, NineMLNameError)
 from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
 from logging import getLogger
 from nineml.visitors import Cloner
@@ -86,7 +86,7 @@ class Document(AnnotatedNineMLObject, dict):
             Keyword arguments passed to the clone method
         """
         if not isinstance(nineml_obj, DocumentLevelObject):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Cannot add {} element to document as it is not a \"document"
                 "-level\" object".format(nineml_obj))
         if nineml_obj.name in self:
@@ -104,7 +104,7 @@ class Document(AnnotatedNineMLObject, dict):
                                 nineml_obj.find_mismatch(
                                     self[nineml_obj.name])))
         elif nineml_obj.document is not None and not clone:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Attempting to add the same object '{}' {} to document"
                 " '{}' document when it is already in another "
                 "document, '{}' and 'clone' kwarg is False"
@@ -120,7 +120,7 @@ class Document(AnnotatedNineMLObject, dict):
 
     def remove(self, nineml_obj, ignore_missing=False):
         if not isinstance(nineml_obj, DocumentLevelObject):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Could not remove {} from document as it is not a document "
                 "level NineML object ('{}') ".format(nineml_obj.key,
                                                      nineml_obj.nineml_type))
@@ -163,7 +163,7 @@ class Document(AnnotatedNineMLObject, dict):
 
     def __setitem__(self, name, nineml_obj):
         if nineml_obj.name != name:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Cannot set {} to a different name ('{}') within document "
                 "({})".format(nineml_obj, name, self.url))
         self.add(nineml_obj)
@@ -316,7 +316,7 @@ class AddToDocumentVisitor(BaseVisitorWithContext):
                             del self.context.dct[obj.name]
                             self.context.dct[doc_obj.name] = doc_obj
                 else:
-                    raise NineMLRuntimeError(
+                    raise NineMLUsageError(
                         "Cannot add {} '{}' to the document {} as it "
                         "clashes with existing (potentially nested) {}."
                         .format(obj.nineml_type, obj.name,

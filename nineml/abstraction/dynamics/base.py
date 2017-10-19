@@ -7,7 +7,7 @@ components definitions of interface and dynamics
 :license: BSD-3, see LICENSE for details.
 """
 from past.builtins import basestring
-from nineml.exceptions import NineMLRuntimeError, name_error
+from nineml.exceptions import NineMLUsageError, name_error
 from nineml.utils.iterables import (
     normalise_parameter_as_list, filter_discrete_types)
 from nineml.visitors import Cloner
@@ -464,7 +464,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
                         target = self.regime(target)  # Lookup by name
                     except KeyError:
                         self.regime(target)
-                        raise NineMLRuntimeError(
+                        raise NineMLUsageError(
                             "Can't find regime '{}' referenced from '{}' "
                             "transition".format(trans.target_regime,
                                                 trans.key))

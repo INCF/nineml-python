@@ -12,7 +12,7 @@ from nineml.utils import validate_identifier
 from nineml.abstraction.componentclass import BaseALObject
 from nineml.abstraction.expressions import (
     Expression, ExpressionWithSimpleLHS, t)
-from nineml.exceptions import NineMLRuntimeError, name_error
+from nineml.exceptions import NineMLUsageError, name_error
 from nineml.base import ContainerObject
 from nineml.utils.iterables import (normalise_parameter_as_list,
                                     filter_discrete_types)
@@ -117,7 +117,7 @@ class OutputEvent(BaseALObject):
     @property
     def port(self):
         if self._port is None:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Cannot access port as output event has not been bound")
         return self._port
 
@@ -209,7 +209,7 @@ class Transition(BaseALObject, ContainerObject):
         ``set_source_regime``
         """
         if self._target_regime is None:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Target regime ({}) has not been set ("
                 "'_resolve_transition_regimes' needs to be called on "
                 "containing Dynamics object first)."
@@ -236,7 +236,7 @@ class Transition(BaseALObject, ContainerObject):
         ``set_source_regime``
         """
         if self._source_regime is None:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Source regime ({}) has not been set ("
                 "'_resolve_transition_regimes' needs to be called on "
                 "containing Dynamics object first)."
@@ -355,7 +355,7 @@ class OnEvent(Transition):
     @property
     def port(self):
         if self._port is None:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "OnEvent is not bound to a component class")
         return self._port
 

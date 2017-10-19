@@ -2,7 +2,7 @@ import unittest
 from itertools import chain
 from nineml.utils.comprehensive_example import (doc1, dynPropA)
 from nineml.exceptions import (
-    NineMLXMLAttributeError, NineMLXMLBlockError, NineMLRuntimeError)
+    NineMLXMLAttributeError, NineMLXMLBlockError, NineMLUsageError)
 from nineml.user import Projection, Population, Definition, DynamicsProperties
 from nineml.reference import Reference
 
@@ -15,7 +15,7 @@ from nineml.reference import Reference
 #         message: Unrecognised 9ML version {} (1.0
 #         """
 #         self.assertRaises(
-#             NineMLRuntimeError,
+#             NineMLUsageError,
 #             get_element_maker,
 #             version=-1.0)
 # 

@@ -11,7 +11,7 @@ import sympy
 from nineml.utils import validate_identifier, assert_no_duplicates
 from nineml.utils.iterables import (filter_discrete_types,
                                     normalise_parameter_as_list)
-from nineml.exceptions import NineMLRuntimeError, name_error
+from nineml.exceptions import NineMLUsageError, name_error
 from ..expressions import ODE
 from .. import BaseALObject
 from nineml.units import dimensionless, Dimension
@@ -140,7 +140,7 @@ class TimeDerivative(ODE, BaseALObject):
         match = tdre.match(time_derivative_string)
         if not match:
             err = "Unable to load time derivative: %s" % time_derivative_string
-            raise NineMLRuntimeError(err)
+            raise NineMLUsageError(err)
         variable = match.groupdict()['dependent_var']
         rhs = match.groupdict()['rhs']
         return TimeDerivative(variable=variable, rhs=rhs)
@@ -206,7 +206,7 @@ class Regime(BaseALObject, ContainerObject):
         for arg in kwargs:
             if arg not in valid_kwargs:
                 err = 'Unexpected Arg: %s' % arg
-                raise NineMLRuntimeError(err)
+                raise NineMLUsageError(err)
 
         name = kwargs.get('name', None)
         if name is None:

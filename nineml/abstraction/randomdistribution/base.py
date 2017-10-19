@@ -1,5 +1,5 @@
 from ..componentclass import ComponentClass
-from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
+from nineml.exceptions import NineMLUsageError, NineMLSerializationError
 from .. import Parameter
 
 
@@ -21,7 +21,7 @@ class RandomDistribution(ComponentClass):
         super(RandomDistribution, self).__init__(name, parameters)
         if (not standard_library.startswith(self.standard_library_basepath) or
                 standard_library[self._base_len:] not in self.standard_types):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Unrecognised random distribution library path '{}'. "
                 "Available options are '{}'".format(
                     standard_library,

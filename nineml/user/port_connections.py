@@ -3,7 +3,7 @@ from . import BaseULObject
 from abc import ABCMeta, abstractmethod
 import nineml.units as un
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLDimensionError,
+    NineMLUsageError, NineMLNameError, NineMLDimensionError,
     NineMLNotBoundException)
 from nineml.abstraction.ports import (
     AnalogSendPort, AnalogReceivePort, AnalogReducePort, EventSendPort,
@@ -45,7 +45,7 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         self._receive_port = None
         if sender_role is not None:
             if sender_name is not None:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Both 'sender_role' ({}) and 'sender_name' ({}) cannot"
                     " be provided to PortConnection __init__"
                     .format(sender_role, sender_name))
@@ -54,12 +54,12 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         elif sender_name is not None:
             sender_name = validate_identifier(sender_name)
         else:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Either 'sender_role' or 'sender_name' must be "
                 "provided to PortConnection __init__")
         if receiver_role is not None:
             if receiver_name is not None:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Both 'receiver_role' ({}) and 'receiver_name' ({}) cannot"
                     " be provided to PortConnection __init__"
                     .format(receiver_role, receiver_name))
@@ -68,7 +68,7 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         elif receiver_name is not None:
             receiver_name = validate_identifier(receiver_name)
         else:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Either 'receiver_role' or 'receiver_name' must be "
                 "provided to PortConnection __init__")
         self._sender_role = sender_role
@@ -104,25 +104,25 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
     @property
     def sender(self):
         if not self.is_bound():
-            raise NineMLRuntimeError("Ports have not been bound")
+            raise NineMLUsageError("Ports have not been bound")
         return self._sender
 
     @property
     def receiver(self):
         if not self.is_bound():
-            raise NineMLRuntimeError("Ports have not been bound")
+            raise NineMLUsageError("Ports have not been bound")
         return self._receiver
 
     @property
     def send_port(self):
         if not self.is_bound():
-            raise NineMLRuntimeError("Ports have not been bound")
+            raise NineMLUsageError("Ports have not been bound")
         return self._send_port
 
     @property
     def receive_port(self):
         if not self.is_bound():
-            raise NineMLRuntimeError("Ports have not been bound")
+            raise NineMLUsageError("Ports have not been bound")
         return self._receive_port
 
     @property
@@ -344,7 +344,7 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
                 sender_dynamicss = [container[sender].component_class]
                 init_kwargs['sender_name'] = sender
             except (TypeError, KeyError) as e:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Did not find sender {} '{}' in '{}' container"
                     .format('name' if isinstance(e, KeyError) else 'role',
                             receiver, container.name))
@@ -356,7 +356,7 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
                 container[receiver].component_class
                 init_kwargs['receiver_name'] = receiver
             except (TypeError, KeyError) as e:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Did not find receiver {} '{}' in '{}' container"
                     .format('name' if isinstance(e, KeyError) else 'role',
                             receiver, container.name))
@@ -366,7 +366,7 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
             if port_type is None:
                 port_type = pt
             elif port_type != pt:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Mismatching port types for '{}' port in populations in "
                     "Selection '{}'".format(send_port, container.name))
         if port_type in ('AnalogSendPort', 'AnalogSendPortExposure'):
@@ -390,12 +390,12 @@ class AnalogPortConnection(BasePortConnection):
 
     def _check_ports(self):
         if not isinstance(self.send_port, AnalogSendPort):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Send port '{}' must be an AnalogSendPort to be connected with"
                 " an AnalogPortConnection".format(self.send_port.name))
         if not isinstance(self.receive_port, (AnalogReceivePort,
                                               AnalogReducePort)):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Send port '{}' must be an AnalogSendPort to be connected with"
                 " an AnalogPortConnection".format(self.receive_port.name))
         if self.send_port.dimension != self.receive_port.dimension:
@@ -414,11 +414,11 @@ class EventPortConnection(BasePortConnection):
 
     def _check_ports(self):
         if not isinstance(self.send_port, EventSendPort):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Send port '{}' must be an EventSendPort to be connected with"
                 " an EventPortConnection".format(self.send_port.name))
         if not isinstance(self.receive_port, EventReceivePort):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Send port '{}' must be an EventSendPort to be connected with"
                 " an EventPortConnection".format(self.receive_port.name))
 

@@ -13,7 +13,7 @@ from operator import itemgetter  # @IgnorePep8
 import numpy  # @IgnorePep8
 import nineml  # @IgnorePep8
 from nineml.exceptions import (  # @IgnorePep8
-    NineMLRuntimeError, NineMLValueError, NineMLSerializationError)
+    NineMLUsageError, NineMLValueError, NineMLSerializationError)
 from future.utils import with_metaclass  # @IgnorePep8
 
 # =============================================================================
@@ -528,7 +528,7 @@ class RandomDistributionValue(BaseValue):
 
     def __iter__(self):
         if self._generator is None:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Generator not set for RandomDistributionValue '{}'"
                 .format(self))
         yield self._generator()

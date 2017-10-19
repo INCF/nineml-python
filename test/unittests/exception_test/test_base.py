@@ -1,7 +1,7 @@
 import unittest
 from nineml.utils.comprehensive_example import dynA
 from nineml.exceptions import (
-    NineMLNameError, NineMLRuntimeError)
+    NineMLNameError, NineMLUsageError)
 from nineml.abstraction import Parameter
 import nineml.units as un
 
@@ -36,7 +36,7 @@ class TestContainerObjectExceptions(unittest.TestCase):
         an existing element of the same name
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             dynA.add,
             Parameter('P1', un.dimensionless))
 
@@ -48,7 +48,7 @@ class TestContainerObjectExceptions(unittest.TestCase):
         """
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             dynA.remove,
             Parameter('boogiewoogie', un.dimensionless))
 

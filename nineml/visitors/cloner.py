@@ -1,6 +1,6 @@
 from .base import BaseChildResultsVisitor
 from copy import copy
-from nineml.exceptions import NineMLNotBoundException, NineMLRuntimeError
+from nineml.exceptions import NineMLNotBoundException, NineMLUsageError
 
 
 class Cloner(BaseChildResultsVisitor):
@@ -24,7 +24,7 @@ class Cloner(BaseChildResultsVisitor):
             else:
                 clone_definitions = 'all'
         elif clone_definitions == 'local' and document is None:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "'document' kwarg must be provided if clone_definitions is "
                 " set to 'local'")
         self.clone_definitions = clone_definitions

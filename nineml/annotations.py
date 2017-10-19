@@ -7,7 +7,7 @@ from nineml.utils import validate_identifier
 from nineml.base import DocumentLevelObject, ContainerObject
 import re
 from nineml.exceptions import (
-    NineMLAnnotationsError, NineMLRuntimeError, NineMLNameError)
+    NineMLAnnotationsError, NineMLUsageError, NineMLNameError)
 
 
 class classproperty(object):
@@ -301,7 +301,7 @@ class BaseAnnotations(ContainerObject):
         elif len(key) == 2:
             name, ns = key
         else:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Annotations key can either be a string, 2-tuple or 3-tuple, "
                 "{} given".format(key))
         return name, ns
@@ -504,7 +504,7 @@ class _AnnotationsBranch(BaseAnnotations):
         if len(args) == 1:
             self._attr[key] = str(args[0])
         elif not args:
-            raise NineMLRuntimeError("No value was provided to set of '{}' "
+            raise NineMLUsageError("No value was provided to set of '{}' "
                                      "in annotations branch '{}'"
                                      .format(key, self.name))
         else:

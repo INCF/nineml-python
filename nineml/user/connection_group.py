@@ -11,7 +11,7 @@ from nineml.abstraction.ports import (
     SendPort, ReceivePort, EventPort, AnalogPort, Port)
 from nineml.user.component_array import ComponentArray
 from nineml.base import DocumentLevelObject
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from future.utils import with_metaclass
 from nineml.utils import validate_identifier
 
@@ -41,7 +41,7 @@ class BaseConnectionGroup(
         if connectivity is not None:
             assert isinstance(connectivity, BaseConnectivity)
             if connection_rule_properties is not None:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Cannot provide both connectivty and "
                     "connection_rule_properties as kwargs to projection class")
             self._connectivity = connectivity

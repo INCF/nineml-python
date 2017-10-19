@@ -3,7 +3,7 @@ import tempfile
 from nineml.document import Document
 from nineml.utils.comprehensive_example import (
     instances_of_all_types, doc1, conPropB1)
-from nineml.exceptions import (NineMLNameError, NineMLRuntimeError)
+from nineml.exceptions import (NineMLNameError, NineMLUsageError)
 # from tempfile import mkdtemp
 import os.path
 from nineml.abstraction.dynamics import Trigger
@@ -30,7 +30,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #         """
 # 
 #         self.assertRaises(
-#             NineMLRuntimeError,
+#             NineMLUsageError,
 #             read_xml,
 #             url='http://this_is_a_bad_url.html',
 #             relative_to='/a_file.xml')
@@ -44,7 +44,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #         with open(bad_xml_path, 'w') as f:
 #             f.write("this file doesn't contain xml")
 #         self.assertRaises(
-#             NineMLRuntimeError,
+#             NineMLUsageError,
 #             read_xml,
 #             url=bad_xml_path,
 #             relative_to='/a_file.xml')
@@ -67,7 +67,7 @@ class TestDocumentExceptions(unittest.TestCase):
         level NineML object' ('{}')
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             doc1.add,
             nineml_obj=Trigger('a > b'))
 
@@ -95,7 +95,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #         doc1 = instances_of_all_types[Document.nineml_type]['doc1']
 #         doc2 = Document()
 #         self.assertRaises(
-#             NineMLRuntimeError,
+#             NineMLUsageError,
 #             doc2.add,
 #             element=doc1['dynA'])
 
@@ -106,7 +106,7 @@ class TestDocumentExceptions(unittest.TestCase):
         level NineML object ('{}')
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             doc1.remove,
             nineml_obj=Trigger('a > b'))
 
@@ -148,7 +148,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #                       name="B"))
 #         document = Uxml(root=xml).unserialize()
 #         self.assertRaises(
-#             NineMLRuntimeError,
+#             NineMLUsageError,
 #             document._load_elem_from_xml,
 #             unloaded=super(Document, document).__getitem__('A'))
 
@@ -171,7 +171,7 @@ class TestDocumentExceptions(unittest.TestCase):
                 1.0 * un.Unit(dimension=un.dimensionless, power=1,
                               name='U'))})
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Document, a, b)
 
     def test_standardize_units_ninemlruntimeerror2(self):
@@ -193,7 +193,7 @@ class TestDocumentExceptions(unittest.TestCase):
             regime=Regime(name='default'),
             aliases=['A1 := P1 * 2'])
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Document, a, b)
 # 
 #     def test_from_xml_ninemlxmlerror(self):
@@ -224,7 +224,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #         document-level object
 #         """
 #         self.assertRaises(
-#             NineMLRuntimeError,
+#             NineMLUsageError,
 #             Document.from_xml,
 #             element=Ev2(Trigger.nineml_type, 'a > b'))
 # 
@@ -295,7 +295,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #         tmp_dir = tempfile.mkdtemp()
 #         url = os.path.join(tmp_dir, 'a_url.xml')
 #         doc._url = url
-#         with self.assertRaises(NineMLRuntimeError):
+#         with self.assertRaises(NineMLUsageError):
 #             doc.url = None
 
 #     def test_url_ninemlruntimeerror2(self):
@@ -324,7 +324,7 @@ class TestDocumentExceptions(unittest.TestCase):
 #         tmp_dir = tempfile.mkdtemp()
 #         url = os.path.join(tmp_dir, 'a_url.xml')
 #         a._url = url
-#         with self.assertRaises(NineMLRuntimeError):
+#         with self.assertRaises(NineMLUsageError):
 #             b.url = url
 
 #     def test_url_ninemlruntimeerror3(self):
@@ -339,11 +339,11 @@ class TestDocumentExceptions(unittest.TestCase):
 #                     Parameter('P1', dimension=un.Dimension(name='D', t=1))],
 #                 regime=Regime(name='default'),
 #                 aliases=['A1 := P1 * 2']))
-#         with self.assertRaises(NineMLRuntimeError):
+#         with self.assertRaises(NineMLUsageError):
 #             doc.url = 1
-#         with self.assertRaises(NineMLRuntimeError):
+#         with self.assertRaises(NineMLUsageError):
 #             doc.url = '*;l22f23'
-#         with self.assertRaises(NineMLRuntimeError):
+#         with self.assertRaises(NineMLUsageError):
 #             doc.url = 'a_file.xml'  # Not relative file path
-#         with self.assertRaises(NineMLRuntimeError):
+#         with self.assertRaises(NineMLUsageError):
 #             doc.url = '.../a_file.xml'  # Not relative file path

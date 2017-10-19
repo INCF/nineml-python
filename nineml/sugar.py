@@ -4,7 +4,7 @@ can be used as shorthand when drafting 9ML models in Python.
 """
 from past.builtins import basestring
 from nineml.utils.iterables import filter_discrete_types
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from nineml.abstraction.dynamics.transitions import (
     OutputEvent, Trigger, StateAssignment, OnEvent, OnCondition)
 from nineml.abstraction.expressions.utils import is_single_symbol
@@ -42,7 +42,7 @@ def On(trigger, do=None, to=None):
     elif isinstance(trigger, Trigger):
         return DoOnCondition(condition=trigger, do=do, to=to)
     else:
-        raise NineMLRuntimeError(
+        raise NineMLUsageError(
             "Unexpected Type for On() trigger: {} {}".format(
                 type(trigger), str(trigger)))
 

@@ -3,7 +3,7 @@ from nineml.user.component import Definition
 from nineml.user.dynamics import DynamicsProperties
 from nineml.utils.comprehensive_example import dynA, dynB, dynPropA
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLNameError, NineMLRuntimeError)
+    NineMLUnitMismatchError, NineMLNameError, NineMLUsageError)
 from nineml.user import Property, Initial
 import nineml.units as un
 
@@ -17,7 +17,7 @@ class TestDefinitionExceptions(unittest.TestCase):
         component class
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Definition,
             dynA,
             url='http://nineml.net')
@@ -29,7 +29,7 @@ class TestDefinitionExceptions(unittest.TestCase):
         __init__, can either be one (the component class) or zero
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Definition,
             dynA,
             dynB)
@@ -42,7 +42,7 @@ class TestDynamicsPropertiesExceptions(unittest.TestCase):
         line #: 520
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             DynamicsProperties,
             name='dynPropA',
             definition=dynA,
@@ -62,7 +62,7 @@ class TestDynamicsPropertiesExceptions(unittest.TestCase):
         that of its definition in '{}', {}.
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             DynamicsProperties,
             name='dynPropA',
             definition=dynA,
@@ -139,7 +139,7 @@ class TestComponentExceptions(unittest.TestCase):
         line #: 248
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             DynamicsProperties,
             name='dynPropA',
             definition=dynA,
@@ -153,7 +153,7 @@ class TestComponentExceptions(unittest.TestCase):
                 'SV1': -1.7 * un.V,
                 'SV2': 8.1 * un.nA})
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             DynamicsProperties,
             name='dynPropA',
             definition=dynA,
@@ -166,7 +166,7 @@ class TestComponentExceptions(unittest.TestCase):
                 'SV2': 8.1 * un.nA},
             check_initial_values=True)
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             DynamicsProperties,
             name='dynPropA',
             definition=dynA,
@@ -186,7 +186,7 @@ class TestComponentExceptions(unittest.TestCase):
         of its definition in '{}', {}.
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             DynamicsProperties,
             name='dynPropA',
             definition=dynA,

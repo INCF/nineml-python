@@ -15,7 +15,7 @@ from nineml.abstraction.ports import EventReceivePort
 from .port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.values import SingleValue
-from nineml.exceptions import NineMLRuntimeError, name_error
+from nineml.exceptions import NineMLUsageError, name_error
 
 
 V1_DELAY_VALUE_TYPES = ('SingleValue', 'ArrayValue', 'ExternalArrayValue',
@@ -100,7 +100,7 @@ class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
         if connectivity is not None:
             assert isinstance(connectivity, Connectivity)
             if connection_rule_properties is not None:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Cannot provide both connectivty and "
                     "connection_rule_properties as kwargs to projection class")
             self._connectivity = connectivity

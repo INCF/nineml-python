@@ -7,7 +7,7 @@ from abc import ABCMeta, abstractmethod
 from itertools import repeat
 from random import Random, randint
 from nineml.base import BaseNineMLObject
-from nineml.exceptions import NineMLRuntimeError, NineMLUsageError
+from nineml.exceptions import NineMLUsageError, NineMLUsageError
 from nineml.user.component import Component
 from future.utils import with_metaclass
 
@@ -43,7 +43,7 @@ class BaseConnectivity(with_metaclass(ABCMeta, BaseNineMLObject)):
                  destination_size, **kwargs):  # @UnusedVariable
         if (rule_properties.lib_type == 'OneToOne' and
                 source_size != destination_size):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Cannot connect to populations of different sizes "
                 "({} and {}) with OneToOne connection rule"
                 .format(source_size, destination_size))

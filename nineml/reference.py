@@ -1,6 +1,6 @@
 import os
 from .base import AnnotatedNineMLObject
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from nineml.base import DocumentLevelObject
 
 
@@ -35,7 +35,7 @@ class BaseReference(AnnotatedNineMLObject):
             assert isinstance(target, DocumentLevelObject)
             self._target = target
             if name is not None or url is not None or document is not None:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "'name', 'url' and 'document' kwargs cannot be used in "
                     "conjunction with 'target'")
         else:
@@ -44,7 +44,7 @@ class BaseReference(AnnotatedNineMLObject):
             if url is not None and url != document_url:
                 if url.startswith('.'):
                     if document_url is None:
-                        raise NineMLRuntimeError(
+                        raise NineMLUsageError(
                             "Must supply a document with a non-None URL that "
                             "is being referenced from if definition is a "
                             "relative URL string, '{}'".format(url))

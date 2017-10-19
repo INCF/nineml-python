@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from itertools import chain
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from ..base import BaseDynamicsVisitor
 
 
@@ -33,7 +33,7 @@ class EventPortsDynamicsValidator(BaseDynamicsVisitor):
         # send mode:
         for output_event in self.output_events:
             if output_event not in self.event_send_ports:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Can't find port definition matching OutputEvent: {}"
                     .format(output_event))
 
@@ -41,21 +41,21 @@ class EventPortsDynamicsValidator(BaseDynamicsVisitor):
         # recv/reduce mode:
         for input_event in self.input_events:
             if input_event not in self.event_receive_ports:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Can't find port definition matching input event: {}"
                     .format(input_event))
 
         # Check that each EventSendPort emits at least one output event
         for port_name in list(self.event_send_ports.keys()):
             if port_name not in self.output_events:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Unable to find events generated for '{}' in '{}'"
                     .format(port_name, component_class.name))
 
         # Check that each Event port emits/recieves at least one
         for port_name in list(self.event_receive_ports.keys()):
             if port_name not in self.input_events:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Unable to find event transitions triggered by '{}' in "
                     "'{}'".format(port_name, component_class.name))
 
@@ -94,7 +94,7 @@ class OutputAnalogPortsDynamicsValidator(BaseDynamicsVisitor):
         self.visit(component_class)
         for ap in self.output_analogports:
             if ap not in self.available_symbols:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Unable to find an Alias or State variable for "
                     "analog-port '{}' (available '{}')"
                     .format(ap, "', '".join(self.available_symbols)))

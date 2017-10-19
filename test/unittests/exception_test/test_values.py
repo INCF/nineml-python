@@ -2,7 +2,7 @@ from builtins import next
 import unittest
 from nineml.values import ArrayValue
 from nineml.utils.comprehensive_example import instances_of_all_types
-from nineml.exceptions import (NineMLValueError, NineMLRuntimeError)
+from nineml.exceptions import (NineMLValueError, NineMLUsageError)
 from nineml.document import Document
 from lxml.builder import ElementMaker
 from nineml.serialization import NINEML_NS
@@ -34,7 +34,7 @@ class TestArrayValueExceptions(unittest.TestCase):
         element = E(ArrayValue.nineml_type,
                     E('ArrayValueRow', '1.0', index='-1'))
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             ArrayValue.unserialize,
             serial_elem=element,
             format='xml',
@@ -50,7 +50,7 @@ class TestArrayValueExceptions(unittest.TestCase):
                     E('ArrayValueRow', '1.0', index='0'),
                     E('ArrayValueRow', '2.0', index='0'))
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             ArrayValue.unserialize,
             serial_elem=element,
             format='xml',
@@ -65,7 +65,7 @@ class TestArrayValueExceptions(unittest.TestCase):
         element = E(ArrayValue.nineml_type,
                     E('ArrayValueRow', '1.0', index='2'))
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             ArrayValue.unserialize,
             serial_elem=element,
             format='xml',
@@ -107,7 +107,7 @@ class TestRandomDistributionValueExceptions(unittest.TestCase):
         randomvalue = next(iter(instances_of_all_types['RandomDistributionValue'].values()))
         gen = iter(randomvalue)
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             next,
             gen)
 

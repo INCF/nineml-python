@@ -1,5 +1,5 @@
 from ..base import AnnotatedNineMLObject
-# from nineml.exceptions import NineMLRuntimeError, NineMLNameError
+# from nineml.exceptions import NineMLUsageError, NineMLNameError
 # from nineml.reference import Reference
 
 

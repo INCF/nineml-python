@@ -17,7 +17,7 @@ import re
 from nineml.utils import validate_identifier
 # import math_namespace
 from nineml.base import AnnotatedNineMLObject
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 
 
 builtin_constants = set(['true', 'false', 'True', 'False'])
@@ -189,7 +189,7 @@ class Expression(AnnotatedNineMLObject):
                     try:
                         val = self.rhs.subs(kwargs)
                     except Exception:
-                        raise NineMLRuntimeError(
+                        raise NineMLUsageError(
                             "Incorrect arguments provided to expression ('{}')"
                             ": '{}'\n".format(
                                 "', '".join(self.rhs_symbol_names),
@@ -198,7 +198,7 @@ class Expression(AnnotatedNineMLObject):
                     try:
                         val = self.rhs.evalf(subs=kwargs)
                     except Exception:
-                        raise NineMLRuntimeError(
+                        raise NineMLUsageError(
                             "Incorrect arguments provided to expression '{}'"
                             ": '{}' (expected '{}')\n".format(
                                 self.rhs,
@@ -212,7 +212,7 @@ class Expression(AnnotatedNineMLObject):
                             locals_dict.update(str_to_npfunc_map)
                             val = eval(str(val), {}, locals_dict)
                         except Exception:
-                            raise NineMLRuntimeError(
+                            raise NineMLUsageError(
                                 "Could not evaluate expression: {}"
                                 .format(self.rhs_str))
             return val
@@ -477,10 +477,10 @@ class ExpressionWithSimpleLHS(ExpressionSymbol, ExpressionWithLHS):
         ExpressionWithLHS.__init__(self, rhs)
         if not is_single_symbol(lhs):
             err = 'Expecting a single symbol on the LHS; got: %s' % lhs
-            raise NineMLRuntimeError(err)
+            raise NineMLUsageError(err)
         if not assign_to_reserved and not is_valid_lhs_target(lhs):
             err = 'Invalid LHS target: %s' % lhs
-            raise NineMLRuntimeError(err)
+            raise NineMLUsageError(err)
         self._name = validate_identifier(lhs)
 
     @property

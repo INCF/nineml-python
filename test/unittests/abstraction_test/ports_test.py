@@ -4,7 +4,7 @@ import unittest
 from nineml.abstraction import (
     AnalogReceivePort, AnalogReducePort, AnalogSendPort, EventReceivePort,
     EventSendPort)
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 
 
 # Testing Skeleton for class: AnalogPort
@@ -22,7 +22,7 @@ class AnalogPort_test(unittest.TestCase):
                 # The reduction operation of the port, if it is a 'reduce' port
         # from nineml.abstraction.component.ports import AnalogPort
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             AnalogReducePort, 'V', operator='-')
 
 

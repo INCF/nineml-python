@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from builtins import next
 from past.builtins import basestring
 import re
-from ..exceptions import NineMLRuntimeError
+from ..exceptions import NineMLUsageError
 
 
 def check_inferred_against_declared(declared, inferred, desc='',
@@ -25,7 +25,7 @@ def check_inferred_against_declared(declared, inferred, desc='',
         if strict_unused:
             errmsg += ("\nDeclared elements not inferred: {}"
                        .format(sorted(decl_set - inf_set)))
-        raise NineMLRuntimeError(errmsg)
+        raise NineMLUsageError(errmsg)
 
 
 def assert_no_duplicates(lst, errmsg=None):
@@ -35,7 +35,7 @@ def assert_no_duplicates(lst, errmsg=None):
     list to a set and comparing the lengths. (This means that we cannot compare
     sequences containing unhashable types, like dictionaries and lists).
 
-    It raises an `NineMLRuntimeError` if the lengths are not equal.
+    It raises an `NineMLUsageError` if the lengths are not equal.
     """
     # Ensure it is a list not a generator
     lst = list(lst)
@@ -57,7 +57,7 @@ def assert_no_duplicates(lst, errmsg=None):
         if errmsg is None:
             errmsg = ("Unxpected duplications:\n{}\nFound in list:\n {}"
                       .format(repr(duplicates), repr(lst)))
-        raise NineMLRuntimeError(errmsg)
+        raise NineMLUsageError(errmsg)
 
 
 # Matches strings starting with an alphabetic character and ending with an
@@ -68,11 +68,11 @@ valid_identifier_re = re.compile(r'[a-zA-Z](\w*[a-zA-Z0-9])?$')
 
 def validate_identifier(name):
     if not isinstance(name, basestring):
-        raise NineMLRuntimeError("'{}' identifier is not a string"
+        raise NineMLUsageError("'{}' identifier is not a string"
                                  .format(name))
     name = name.strip()
     if valid_identifier_re.match(name) is None:
-        raise NineMLRuntimeError(
+        raise NineMLUsageError(
             "Invalid identifier '{}'. Identifiers must start with an "
             "alphabetic character, only contain alphnumeric and "
             "underscore characters, and end with a alphanumeric character "

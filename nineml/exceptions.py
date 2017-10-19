@@ -11,55 +11,51 @@ class NineMLException(Exception):
     pass
 
 
-class NineMLRuntimeError(NineMLException):
-    pass
-
-
 class NineMLUsageError(NineMLException):
     pass
 
 
-class NineMLDimensionError(NineMLRuntimeError):
+class NineMLDimensionError(NineMLUsageError):
     pass
 
 
-class NineMLMathParseError(ValueError, NineMLRuntimeError):
+class NineMLMathParseError(ValueError, NineMLUsageError):
     pass
 
 
-class NineMLUnitMismatchError(ValueError, NineMLRuntimeError):
+class NineMLUnitMismatchError(ValueError, NineMLUsageError):
     pass
 
 
-class NineMLNameError(KeyError, NineMLRuntimeError):
+class NineMLNameError(KeyError, NineMLUsageError):
     pass
 
 
-class NineMLValueError(ValueError, NineMLRuntimeError):
+class NineMLValueError(ValueError, NineMLUsageError):
     pass
 
 
-class NineMLTypeError(TypeError, NineMLRuntimeError):
+class NineMLTypeError(TypeError, NineMLUsageError):
     pass
 
 
-class NineMLInvalidElementTypeException(TypeError, NineMLRuntimeError):
+class NineMLInvalidElementTypeException(TypeError, NineMLUsageError):
     pass
 
 
-class NineMLImmutableError(NineMLRuntimeError):
+class NineMLImmutableError(NineMLUsageError):
     pass
 
 
-class NineMLTargetMissingError(NineMLRuntimeError):
+class NineMLTargetMissingError(NineMLUsageError):
     pass
 
 
-class NineMLXMLError(NineMLRuntimeError):
+class NineMLXMLError(NineMLUsageError):
     pass
 
 
-class NineMLSerializationError(NineMLRuntimeError):
+class NineMLSerializationError(NineMLUsageError):
     pass
 
 
@@ -71,7 +67,7 @@ class NineMLMissingSerializationError(NineMLSerializationError):
     pass
 
 
-class NineMLSerializationNotSupportedError(NineMLRuntimeError):
+class NineMLSerializationNotSupportedError(NineMLUsageError):
     pass
 
 
@@ -79,7 +75,7 @@ class NineMLUnexpectedMultipleSerializationError(NineMLSerializationError):
     pass
 
 
-class NineMLAnnotationsError(NineMLRuntimeError):
+class NineMLAnnotationsError(NineMLUsageError):
     pass
 
 
@@ -99,7 +95,7 @@ class NineMLNoSolutionException(NineMLException):
     pass
 
 
-class NineMLIOError(NineMLRuntimeError):
+class NineMLIOError(NineMLUsageError):
     pass
 
 

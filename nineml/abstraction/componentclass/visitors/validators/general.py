@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from past.builtins import basestring
-from nineml.exceptions import NineMLRuntimeError, NineMLDimensionError
+from nineml.exceptions import NineMLUsageError, NineMLDimensionError
 from nineml.abstraction.expressions.utils import is_valid_lhs_target
 from nineml.abstraction.expressions import reserved_identifiers, Expression
 from nineml.base import BaseNineMLObject
@@ -46,7 +46,7 @@ class AliasesAreNotRecursiveComponentValidator(BaseVisitor):
                     del unresolved_aliases[r.lhs]
 
             else:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Unable to resolve all aliases, you may have a recursion "
                     "issue. Remaining Aliases: {}".format(
                         ','.join(list(unresolved_aliases.keys()))))
@@ -77,7 +77,7 @@ class NoUnresolvedSymbolsComponentValidator(BaseVisitor):
                 if rhs_atom in reserved_identifiers:
                     continue
                 if rhs_atom not in self.available_symbols:
-                    raise NineMLRuntimeError(
+                    raise NineMLUsageError(
                         "Unresolved Symbol in Alias: {} [{}]"
                         .format(rhs_atom, alias))
 
@@ -86,7 +86,7 @@ class NoUnresolvedSymbolsComponentValidator(BaseVisitor):
             for rhs_atom in timederivative.rhs_symbol_names:
                 if (rhs_atom not in self.available_symbols and
                         rhs_atom not in reserved_identifiers):
-                    raise NineMLRuntimeError(
+                    raise NineMLUsageError(
                         "Unresolved Symbol in Time Derivative: {} [{}]"
                         .format(rhs_atom, timederivative))
 
@@ -95,13 +95,13 @@ class NoUnresolvedSymbolsComponentValidator(BaseVisitor):
             for rhs_atom in state_assignment.rhs_symbol_names:
                 if (rhs_atom not in self.available_symbols and
                         rhs_atom not in reserved_identifiers):
-                    raise NineMLRuntimeError(
+                    raise NineMLUsageError(
                         'Unresolved Symbol in Assignment: {} [{}]'
                         .format(rhs_atom, state_assignment))
 
     def add_symbol(self, symbol):
         if symbol in self.available_symbols:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Duplicate Symbol '{}' found".format(symbol))
         self.available_symbols.append(symbol)
 
@@ -138,7 +138,7 @@ class CheckNoLHSAssignmentsToMathsNamespaceComponentValidator(
 
         if not is_valid_lhs_target(symbol):
             err = 'Symbol: %s found on left-hand-side of an equation'
-            raise NineMLRuntimeError(err)
+            raise NineMLUsageError(err)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable
         self.check_lhssymbol_is_valid(parameter.name)
@@ -207,7 +207,7 @@ class DimensionalityComponentValidator(BaseVisitorWithContext):
                 except KeyError:
                     pass
             if element is None:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Did not find '{}' in '{}' dynamics class (scopes: {})"
                     .format(name, self.component_class.name,
                             list(reversed([c.parent for c in self.contexts]))))
