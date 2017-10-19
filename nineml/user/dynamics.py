@@ -1,7 +1,7 @@
 from itertools import chain
 from nineml.user.component import Property, Component, Prototype, Definition
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, name_error, NineMLUnitMismatchError)
+    NineMLUsageError, NineMLNameError, name_error, NineMLUnitMismatchError)
 from nineml.base import (
     ContainerObject, DynamicPortsObject)
 
@@ -71,13 +71,13 @@ class DynamicsProperties(Component, DynamicPortsObject):
             try:
                 initial_value = self.initial_value(var.name)
             except KeyError:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Initial value not specified for {}".format(var.name))
             initial_units = initial_value.units
             initial_dimension = initial_units.dimension
             var_dimension = var.dimension
             if initial_dimension != var_dimension:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Dimensions for '{}' initial value, {}, in '{}' don't "
                     "match that of its definition in '{}', {}."
                     .format(var.name, initial_dimension, self.name,
@@ -135,7 +135,7 @@ class DynamicsProperties(Component, DynamicPortsObject):
             regime_name = max(self.component_class.regimes,
                               key=lambda x: x.num_time_derivatives).name
         elif regime_name not in self.component_class.regime_names:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Specified initial regime, '{}', is not a name of a regime in "
                 "'{}' Dynamics class (available '{}')"
                 .format(regime_name, self.component_class.name,

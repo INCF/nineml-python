@@ -6,7 +6,7 @@ from functools import reduce
 import collections
 from operator import attrgetter
 from .validation import assert_no_duplicates
-from ..exceptions import NineMLRuntimeError
+from ..exceptions import NineMLUsageError
 from nineml.base import ContainerObject
 from logging import getLogger
 
@@ -38,10 +38,10 @@ def expect_single(lst, errmsg=None):
     1
 
     >>> expect_single( [] ) #doctest: +SKIP
-    NineMLRuntimeError: expect_single() recieved an iterable of length: 0
+    NineMLUsageError: expect_single() recieved an iterable of length: 0
 
     >>> expect_single( [None,None] ) #doctest: +SKIP
-    NineMLRuntimeError: expect_single() recieved an iterable of length: 2
+    NineMLUsageError: expect_single() recieved an iterable of length: 2
 
     >>> expect_single( [], lambda: raise_exception( RuntimeError('Aggh') ) #doctest: +SKIP  # @IgnorePep8
     RuntimeError: Aggh
@@ -52,15 +52,15 @@ def expect_single(lst, errmsg=None):
 
     """
     if isinstance(lst, basestring):
-        raise NineMLRuntimeError(
+        raise NineMLUsageError(
             "A string rather than a list/tuple was provided to expect_single "
             "({})".format(lst))
     if not _is_iterable(lst):
-        raise NineMLRuntimeError('Object not iterable')
+        raise NineMLUsageError('Object not iterable')
     if issubclass(lst.__class__, (dict)):
         err = "Dictionary passed to expect_single. This could be ambiguous"
         err += "\nIf this is what you intended, please explicity pass '.keys' "
-        raise NineMLRuntimeError(err)
+        raise NineMLUsageError(err)
 
     lst = list(lst)
 
@@ -73,7 +73,7 @@ def expect_single(lst, errmsg=None):
         errmsg = 'expect_single() recieved an iterable of length: %d'.format(
             len(lst))
         errmsg += '\n  - List Contents:{}\n'.format(lst)
-    raise NineMLRuntimeError(errmsg)
+    raise NineMLUsageError(errmsg)
 
 
 def _filter(lst, func=None):
@@ -194,7 +194,7 @@ def invert_dictionary(dct):
     for v in list(dct.values()):
         if not _is_hashable(v):
             err = "Can't invert a dictionary containing unhashable keys"
-            raise NineMLRuntimeError(err)
+            raise NineMLUsageError(err)
 
     assert_no_duplicates(list(dct.values()))
     return dict(list(zip(list(dct.values()), list(dct.keys()))))
@@ -213,15 +213,15 @@ def flatten_first_level(nested_list):
     if isinstance(nested_list, basestring):
         err = "Shouldn't pass a string to flatten_first_level."
         err += "Use list(str) instead"
-        raise NineMLRuntimeError(err)
+        raise NineMLUsageError(err)
 
     if not _is_iterable(nested_list):
         err = 'flatten_first_level() expects an iterable'
-        raise NineMLRuntimeError(err)
+        raise NineMLUsageError(err)
 
     for nl in nested_list:
         if not _is_iterable(nl) or isinstance(nl, basestring):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "flatten_first_level() expects all arguments to be iterable "
                 "and not strings ({})".format(nested_list))
     return list(itertools.chain(*nested_list))
@@ -237,7 +237,7 @@ def safe_dictionary_merge(dictionaries):
     {1: 'One', 2: 'Two', 3: 'Three'}
 
     >>> safe_dictionary_merge( [ {1:'One',2:'Two'},{3:'Three',1:'One'} ] ) #doctest: +NORMALIZE_WHITESPACE +IGNORE_EXCEPTION_DETAIL +SKIP
-    NineMLRuntimeError: Key Collision while merging dictionarys
+    NineMLUsageError: Key Collision while merging dictionarys
 
     """
     kv_pairs = list(itertools.chain(*[iter(d.items()) for d in dictionaries]))
@@ -306,8 +306,8 @@ def safe_dict(vals):
     for k, v in vals:
         if k in vals:
             err = 'safe_dict() failed with duplicated keys: %s' % k
-            raise NineMLRuntimeError(err)
+            raise NineMLUsageError(err)
         d[k] = v
     if len(vals) != len(d):
-        raise NineMLRuntimeError('Duplicate keys given')
+        raise NineMLUsageError('Duplicate keys given')
     return d

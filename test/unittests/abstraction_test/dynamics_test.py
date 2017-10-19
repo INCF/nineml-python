@@ -6,7 +6,7 @@ from nineml.abstraction import (
     OutputEvent, EventReceivePort, Constant, StateVariable, Parameter,
     OnCondition, OnEvent, Trigger)
 import nineml.units as un
-from nineml.exceptions import NineMLMathParseError, NineMLRuntimeError
+from nineml.exceptions import NineMLMathParseError, NineMLUsageError
 from nineml.document import Document
 from nineml.utils.iterables import unique_by_id
 
@@ -53,37 +53,37 @@ class ComponentClass_test(unittest.TestCase):
         # Invalid Construction:
         # Invalid Valid String:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics, name='C1', aliases=['H=0']
         )
 
         # Duplicate Alias Names:
         Dynamics(name='C1', aliases=['H:=0', 'G:=1'])
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics, name='C1', aliases=['H:=0', 'H:=1']
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics, name='C1', aliases=['H:=0', Alias('H', '1')]
         )
 
         # Self referential aliases:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1', aliases=['H := H +1'],
         )
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1', aliases=['H := G + 1', 'G := H + 1'],
         )
 
         # Referencing none existent symbols:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1',
             aliases=['H := G + I'],
@@ -92,30 +92,30 @@ class ComponentClass_test(unittest.TestCase):
 
         # Invalid Names:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1', aliases=['H.2 := 0'],
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1', aliases=['2H := 0'],
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1', aliases=['E(H) := 0'],
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1', aliases=['tanh := 0'],
         )
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1', aliases=['t := 0'],
         )
@@ -179,7 +179,7 @@ class ComponentClass_test(unittest.TestCase):
 
         # Duplicate Port Names:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1',
             aliases=['A:=1'],
@@ -188,7 +188,7 @@ class ComponentClass_test(unittest.TestCase):
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1',
             aliases=['A:=1'],
@@ -196,7 +196,7 @@ class ComponentClass_test(unittest.TestCase):
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1',
             aliases=['A:=1'],
@@ -204,12 +204,12 @@ class ComponentClass_test(unittest.TestCase):
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             lambda: Dynamics(name='C1', analog_ports=[AnalogReceivePort('1')])
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             lambda: Dynamics(name='C1', analog_ports=[AnalogReceivePort('?')])
         )
 
@@ -222,7 +222,7 @@ class ComponentClass_test(unittest.TestCase):
             analog_ports=[AnalogSendPort('A')])
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='C1',
             aliases=['A:=1'],
@@ -293,7 +293,7 @@ class ComponentClass_test(unittest.TestCase):
 
         # Mismatch between inferred and actual parameters
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics, name='cl', parameters=['a'])
 
         # Single parameter inference from an alias block
@@ -322,7 +322,7 @@ class ComponentClass_test(unittest.TestCase):
             ['Vt', 'a', 'b', 'c', 'd', 'e', 'f'])
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='cl',
             aliases=['A:=a+e', 'B:=a+pi+b'],
@@ -393,7 +393,7 @@ class ComponentClass_test(unittest.TestCase):
 
         # Duplicate Names:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics, name='cl',
             regimes=[
                 Regime('dX/dt=1/t',
@@ -419,7 +419,7 @@ class ComponentClass_test(unittest.TestCase):
                        aliases=[Alias('A', '8 / t')])])
         self.assertEqual(a.regime('r2').alias('A'), Alias('A', '8 / t'))
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='a',
             regimes=[
@@ -456,7 +456,7 @@ class ComponentClass_test(unittest.TestCase):
             set(['X', 'V']))
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='cl',
             aliases=['A:=a+e', 'B:=a+pi+b'],
@@ -468,7 +468,7 @@ class ComponentClass_test(unittest.TestCase):
 
         # Shouldn't pick up 'e' as a parameter:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dynamics,
             name='cl',
             aliases=['A:=a+e', 'B:=a+pi+b'],
@@ -737,9 +737,9 @@ class OnEvent_test(unittest.TestCase):
 
     def test_src_port_name(self):
 
-        self.assertRaises(NineMLRuntimeError, OnEvent, '1MyEvent1 ')
-        self.assertRaises(NineMLRuntimeError, OnEvent, 'MyEvent1 2')
-        self.assertRaises(NineMLRuntimeError, OnEvent, 'MyEvent1* ')
+        self.assertRaises(NineMLUsageError, OnEvent, '1MyEvent1 ')
+        self.assertRaises(NineMLUsageError, OnEvent, 'MyEvent1 2')
+        self.assertRaises(NineMLUsageError, OnEvent, 'MyEvent1* ')
 
         self.assertEquals(OnEvent(' MyEvent1 ').src_port_name, 'MyEvent1')
         self.assertEquals(OnEvent(' MyEvent2').src_port_name, 'MyEvent2')
@@ -797,8 +797,8 @@ class Regime_test(unittest.TestCase):
 
     def test_name(self):
 
-        self.assertRaises(NineMLRuntimeError, Regime, name='&Hello')
-        self.assertRaises(NineMLRuntimeError, Regime, name='2Hello')
+        self.assertRaises(NineMLUsageError, Regime, name='&Hello')
+        self.assertRaises(NineMLUsageError, Regime, name='2Hello')
 
         self.assertEqual(Regime(name='Hello').name, 'Hello')
         self.assertEqual(Regime(name='Hello2').name, 'Hello2')
@@ -823,12 +823,12 @@ class Regime_test(unittest.TestCase):
 
         # Defining a time derivative twice:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Regime, 'dX/dt=1', 'dX/dt=2')
 
         # Assigning to a value:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Regime, 'X=1')
 
 
@@ -838,8 +838,8 @@ class StateVariable_test(unittest.TestCase):
         # Signature: name
                 # No Docstring
 
-        self.assertRaises(NineMLRuntimeError, StateVariable, name='&Hello')
-        self.assertRaises(NineMLRuntimeError, StateVariable, name='2Hello')
+        self.assertRaises(NineMLUsageError, StateVariable, name='&Hello')
+        self.assertRaises(NineMLUsageError, StateVariable, name='2Hello')
 
         self.assertEqual(StateVariable(name='Hello').name, 'Hello')
         self.assertEqual(StateVariable(name='Hello2').name, 'Hello2')

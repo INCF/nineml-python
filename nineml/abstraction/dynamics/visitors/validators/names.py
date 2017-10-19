@@ -8,7 +8,7 @@ from nineml.utils import assert_no_duplicates
 from ....componentclass.visitors.validators import (
     LocalNameConflictsComponentValidator,
     DimensionNameConflictsComponentValidator)
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from ..base import BaseDynamicsVisitor
 
 
@@ -78,7 +78,7 @@ class RegimeAliasMatchesBaseScopeValidator(BaseDynamicsVisitor):
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         if alias.name not in self.component_class.alias_names:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Alias '{}' in regime scope does not match any in the base "
                 "scope of the Dynamics class '{}'"
                 .format(alias.name,

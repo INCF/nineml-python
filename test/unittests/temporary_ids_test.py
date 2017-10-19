@@ -4,7 +4,7 @@ from nineml.visitors.base import BaseVisitorWithContext
 from nineml.abstraction.dynamics import Dynamics
 from nineml.user.multi import MultiDynamics
 from nineml.utils.comprehensive_example import instances_of_all_types
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 
 
 class IDsVisitor(BaseVisitorWithContext):
@@ -22,7 +22,7 @@ class IDsVisitor(BaseVisitorWithContext):
 
     def default_action(self, obj, **kwargs):  # @UnusedVariable
         if obj.id in self.ids:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "ID of {} {} ({}) already seen [{}]".format(
                     type(obj).__name__, obj, obj.id, self.context_str()))
         if self.print_all:

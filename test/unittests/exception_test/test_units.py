@@ -3,7 +3,7 @@ import unittest
 from nineml.units import (Dimension, Unit, Quantity)
 from nineml.utils.comprehensive_example import instances_of_all_types
 from nineml.exceptions import (NineMLDimensionError, NineMLNameError,
-                               NineMLRuntimeError)
+                               NineMLUsageError)
 import nineml.units as un
 # from nineml.document import Document
 # from nineml.values import SingleValue
@@ -17,7 +17,7 @@ class TestDimensionExceptions(unittest.TestCase):
         message: Cannot convert '{}' dimension, must be 1 or sympy expression
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Dimension.from_sympy,
             expr=2)
 
@@ -39,11 +39,11 @@ class TestUnitExceptions(unittest.TestCase):
         message: Can't multiply units with nonzero offsets ({} and {})
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             un.degC.__mul__,
             other=un.ms)
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             un.ms.__mul__,
             other=un.degC)
 
@@ -53,11 +53,11 @@ class TestUnitExceptions(unittest.TestCase):
         message: Can't divide units with nonzero offsets ({} and {})
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             un.degC.__truediv__,
             other=un.ms)
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             un.ms.__truediv__,
             other=un.degC)
 
@@ -67,7 +67,7 @@ class TestUnitExceptions(unittest.TestCase):
         message: Can't raise units to power with nonzero offsets ({})
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             un.degC.__pow__,
             power=None)
 
@@ -94,7 +94,7 @@ class TestQuantityExceptions(unittest.TestCase):
         random_value = next(iter(instances_of_all_types['RandomDistributionValue'].values()))
         qty = Quantity(random_value, un.ms)
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             qty.__getitem__,
             index=0)
 
@@ -166,7 +166,7 @@ class TestQuantityExceptions(unittest.TestCase):
         quantities.Quantity and numeric objects)
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             Quantity.parse,
             qty='a')
 

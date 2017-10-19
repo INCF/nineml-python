@@ -11,7 +11,7 @@ from . import BaseALObject
 from operator import add
 from nineml.units import dimensionless
 from nineml.utils import validate_identifier
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from .expressions import ExpressionSymbol
 from nineml.base import SendPortBase  # A work around to avoid circular imports
 from nineml.units import Dimension
@@ -94,7 +94,7 @@ class DimensionedPort(
         classstring = self.__class__.__name__
         try:
             dim_name = self.dimension.name
-        except NineMLRuntimeError:
+        except NineMLUsageError:
             dim_name = '<unknown>'
         return "{}('{}', dimension='{}')".format(classstring, self.name,
                                                  dim_name)
@@ -231,7 +231,7 @@ class AnalogReducePort(AnalogPort, ReceivePort):
         if operator not in list(self._operator_map.keys()):
             err = ("%s('%s')" + "specified undefined operator: '%s'") %\
                   (self.__class__.__name__, name, str(operator))
-            raise NineMLRuntimeError(err)
+            raise NineMLUsageError(err)
         super(AnalogReducePort, self).__init__(name, dimension)
         self._operator = str(operator)
 

@@ -1,5 +1,5 @@
 # import math_namespace
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from .. import BaseALObject
 from .base import ExpressionWithSimpleLHS, ExpressionSymbol, Expression
 from nineml.units import unitless, Unit, Quantity
@@ -80,7 +80,7 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
         """Creates an Alias object from a string"""
         if not cls.is_alias_str(alias_string):
             errmsg = "Invalid Alias: %s" % alias_string
-            raise NineMLRuntimeError(errmsg)
+            raise NineMLUsageError(errmsg)
 
         lhs, rhs = alias_string.split(':=')
         return Alias(name=lhs.strip(), rhs=rhs.strip())
@@ -131,7 +131,7 @@ class Constant(BaseALObject, ExpressionSymbol):
             self._value = float(value)
             self._units = units if units is not None else unitless
         if not isinstance(self._units, Unit):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "'units' in '{}' constant needs to be a Unit obj ({}). "
                 "Supplied arguments were ({}, {}, {}).".format(
                     self.name, self._units, name, value, units))

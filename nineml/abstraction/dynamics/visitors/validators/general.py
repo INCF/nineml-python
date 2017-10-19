@@ -8,7 +8,7 @@ from __future__ import division
 from past.utils import old_div
 from future.utils import itervalues
 from collections import defaultdict
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from nineml.utils import assert_no_duplicates
 from ....componentclass.visitors.validators import (
     AliasesAreNotRecursiveComponentValidator,
@@ -32,7 +32,7 @@ class TimeDerivativesAreDeclaredDynamicsValidator(BaseDynamicsVisitor):
         self.visit(component_class)
         for td in self.time_derivatives_used:
             if td not in self.sv_declared:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "StateVariable '{}' not declared".format(td))
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -59,7 +59,7 @@ class StateAssignmentsAreOnStateVariablesDynamicsValidator(
         self.visit(component_class)
         for sa in self.state_assignments_lhs:
             if sa not in self.sv_declared:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Not Assigning to state-variable: {}".format(sa))
 
     def action_statevariable(self, state_variable, **kwargs):  # @UnusedVariable @IgnorePep8
@@ -121,7 +121,7 @@ class RegimeGraphDynamicsValidator(BaseDynamicsVisitor):
             self._add_connected_regimes_recursive(first_regime)
             if len(self.connected) < len(self.regimes):
                 # FIXME: This should probably be a warning not an error
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Transition graph of {} contains islands: {} regimes "
                     "('{}') and {} connected ('{}'):\n\n{}".format(
                         component_class,

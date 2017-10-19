@@ -6,7 +6,7 @@ import re
 import operator
 from collections import OrderedDict
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, NineMLInvalidElementTypeException)
+    NineMLUsageError, NineMLNameError, NineMLInvalidElementTypeException)
 from .visitors.cloner import Cloner
 from .visitors.queriers import ObjectFinder
 from .visitors.equality import EqualityChecker, MismatchFinder
@@ -465,7 +465,7 @@ class ContainerObject(BaseNineMLObject):
         for element in elements:
             dct = self._member_dict(element)
             if element.key in dct:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Could not add '{}' {} to container as it clashes "
                     "with an existing element with the same key"
                     .format(element.key, type(element).__name__))
@@ -483,7 +483,7 @@ class ContainerObject(BaseNineMLObject):
             try:
                 del dct[element.key]
             except KeyError:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Could not remove '{}' from container as it was not "
                     "found in member dictionary (use 'ignore_missing' option "
                     "to ignore)".format(element.key))

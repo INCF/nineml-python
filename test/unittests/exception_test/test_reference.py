@@ -1,7 +1,7 @@
 import unittest
 from nineml.reference import (BaseReference)
 from nineml.document import Document
-from nineml.exceptions import (NineMLRuntimeError)
+from nineml.exceptions import (NineMLUsageError)
 
 
 class TestBaseReferenceExceptions(unittest.TestCase):
@@ -13,13 +13,13 @@ class TestBaseReferenceExceptions(unittest.TestCase):
         referenced from if definition is a relative URL string, '{}'
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             BaseReference,
             name='a_reference',
             document=None,
             url='./a_relative_url.xml')
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             BaseReference,
             name='a_reference',
             document=Document(),

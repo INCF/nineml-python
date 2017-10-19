@@ -3,7 +3,7 @@ from past.builtins import basestring
 from itertools import chain
 from abc import ABCMeta, abstractmethod
 from nineml.exceptions import (
-    NineMLUnitMismatchError, NineMLRuntimeError, NineMLNameError, name_error,
+    NineMLUnitMismatchError, NineMLUsageError, NineMLNameError, name_error,
     NineMLValueError)
 from nineml.reference import BaseReference
 from nineml.utils import validate_identifier
@@ -172,7 +172,7 @@ class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentL
             if "#" in definition:
                 defn_url, name = definition.split("#")
             else:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Must provide name of class using '#' syntax when "
                     "providing definition as url string ('{}')"
                     .format(definition))
@@ -295,14 +295,14 @@ class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentL
                            self.name, self.url, ",".join(diff_b)))
         if msg:
             # need a more specific type of Exception
-            raise NineMLRuntimeError(". ".join(msg))
+            raise NineMLUsageError(". ".join(msg))
         # Check dimensions match
         for param in self.component_class.parameters:
             prop_units = self.property(param.name).units
             prop_dimension = prop_units.dimension
             param_dimension = param.dimension
             if prop_dimension != param_dimension:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Dimensions for '{}' property, {}, in '{}' don't match "
                     "that of its definition in '{}', {}."
                     .format(param.name, prop_dimension, self.name,

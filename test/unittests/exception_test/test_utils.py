@@ -1,6 +1,6 @@
 import unittest
 from nineml.utils.iterables import expect_single
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 
 
 class TestExceptions(unittest.TestCase):
@@ -11,14 +11,14 @@ class TestExceptions(unittest.TestCase):
         message: Object not iterable
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             expect_single,
             lst=[])
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             expect_single,
             lst=[1, 2])
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             expect_single,
             lst=1)

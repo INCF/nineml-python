@@ -5,7 +5,7 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from nineml.visitors import BaseVisitor
 
 
@@ -29,7 +29,7 @@ class LocalNameConflictsComponentValidator(BaseVisitor):
 
     def check_conflicting_symbol(self, symbol):
         if symbol in self.symbols:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Duplication of symbol found: {}".format(symbol))
         self.symbols.append(symbol)
 
@@ -63,7 +63,7 @@ class DimensionNameConflictsComponentValidator(BaseVisitor):
                        "dimensions ('{}', '{}')"
                        .format(dimension.name, dimension,
                                self.dimensions[dimension.name]))
-                raise NineMLRuntimeError(err)
+                raise NineMLUsageError(err)
         except KeyError:
             self.dimensions[dimension.name] = dimension
 

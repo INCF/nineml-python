@@ -4,7 +4,7 @@ This file contains utility classes for modifying components.
 :copyright: Copyright 2010-2017 by the NineML Python team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from nineml.exceptions import NineMLRuntimeError, NineMLNameError
+from nineml.exceptions import NineMLUsageError, NineMLNameError
 from nineml.visitors import BaseVisitor, BasePreAndPostVisitorWithContext
 from nineml.abstraction.expressions import Expression
 
@@ -111,7 +111,7 @@ class ComponentSubstituteAliases(BasePreAndPostVisitorWithContext):
             An expression object to substitute alias symbols in
         """
         if expr.temporary:
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Attempting to substitute aliases using temporary object "
                 "{}({})".format(type(expr).__name__, expr))
         assert isinstance(expr, Expression)
@@ -135,7 +135,7 @@ class ComponentSubstituteAliases(BasePreAndPostVisitorWithContext):
             except (NineMLNameError, AttributeError):
                 continue
         if alias is None:
-            raise NineMLRuntimeError("Did not find alias '{}' in any "
+            raise NineMLUsageError("Did not find alias '{}' in any "
                                      "context".format(name))
         return alias
 

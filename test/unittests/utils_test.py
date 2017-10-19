@@ -12,7 +12,7 @@ from nineml.utils.iterables import (
     safe_dict,
     safe_dictionary_merge, filter_expect_single,
     filter_by_type, filter_discrete_types)
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 
 
 class Testcheck_inferred_against_declared(unittest.TestCase):
@@ -22,13 +22,13 @@ class Testcheck_inferred_against_declared(unittest.TestCase):
                 # No Docstring
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             check_inferred_against_declared,
             [1, 2, 3, 4, 5],
             [1, 2, 3, 4],
         )
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             check_inferred_against_declared,
             ['some', 'funny', 'order', 'in', 'extra'],
             ['some', 'funny', 'order', 'in'],
@@ -86,46 +86,46 @@ class Testfilter_expect_single(unittest.TestCase):
             'John Smith'
         )
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_expect_single, ['Rob Black', 'Tim Jones'], func=find_smith,
         )
 
         # No Objects:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_expect_single, [], func=lambda x: None,
         )
 
         # Only a single None
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_expect_single, [None], func=lambda x: x == None,
         )
 
         # Duplicate objects:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_expect_single, [None, None], func=lambda x: x == None,
         )
 
         # Duplicate objects:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_expect_single, [False, False], func=lambda x: x == None,
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_expect_single, [True, True], func=lambda x: x == None,
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_expect_single, [1, 2, 3, 4, 5, 4, 3, 2, 1], func=lambda x: x == 2,
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_expect_single, ['1', '2', '3', '4', '3', '2', '1'], func=lambda x: x == '2',
         )
 
@@ -158,7 +158,7 @@ class Testexpect_single(unittest.TestCase):
         #
         # :param error_func: An exception object or a callable. ``error_func`` will be
         #     raised or called in case there is not exactly one element in ``lst``. If
-        #     ``error_func`` is ``None``, a ``NineMLRuntimeError`` exception will be
+        #     ``error_func`` is ``None``, a ``NineMLUsageError`` exception will be
         #     raised.
         #
         #
@@ -173,10 +173,10 @@ class Testexpect_single(unittest.TestCase):
         # 1
         #
         # >>> expect_single( [] ) #doctest: +SKIP
-        # NineMLRuntimeError: expect_single() recieved an iterable of length: 0
+        # NineMLUsageError: expect_single() recieved an iterable of length: 0
         #
         # >>> expect_single( [None,None] ) #doctest: +SKIP
-        # NineMLRuntimeError: expect_single() recieved an iterable of length: 2
+        # NineMLUsageError: expect_single() recieved an iterable of length: 2
         #
         # >>> expect_single( [], lambda: raise_exception( RuntimeError('Aggh') ) #doctest: +SKIP
         # RuntimeError: Aggh
@@ -187,25 +187,25 @@ class Testexpect_single(unittest.TestCase):
 
 
         # Empty Objects should raise:
-        self.assertRaises(NineMLRuntimeError, expect_single, [])
-        self.assertRaises(NineMLRuntimeError, expect_single, tuple())
-        self.assertRaises(NineMLRuntimeError, expect_single, set())
+        self.assertRaises(NineMLUsageError, expect_single, [])
+        self.assertRaises(NineMLUsageError, expect_single, tuple())
+        self.assertRaises(NineMLUsageError, expect_single, set())
 
         # Dictionaries should raise:
-        self.assertRaises(NineMLRuntimeError, expect_single, {})
-        self.assertRaises(NineMLRuntimeError, expect_single, {1: None})
-        self.assertRaises(NineMLRuntimeError, expect_single, {1: None, 2: True})
+        self.assertRaises(NineMLUsageError, expect_single, {})
+        self.assertRaises(NineMLUsageError, expect_single, {1: None})
+        self.assertRaises(NineMLUsageError, expect_single, {1: None, 2: True})
 
         # Strings should raise:
-        self.assertRaises(NineMLRuntimeError, expect_single, "")
-        self.assertRaises(NineMLRuntimeError, expect_single, "A")
-        self.assertRaises(NineMLRuntimeError, expect_single, "AA")
+        self.assertRaises(NineMLUsageError, expect_single, "")
+        self.assertRaises(NineMLUsageError, expect_single, "A")
+        self.assertRaises(NineMLUsageError, expect_single, "AA")
 
         # Two items should raise:
-        self.assertRaises(NineMLRuntimeError, expect_single, [None, None])
-        self.assertRaises(NineMLRuntimeError, expect_single, [True, False])
-        self.assertRaises(NineMLRuntimeError, expect_single, [True, True])
-        self.assertRaises(NineMLRuntimeError, expect_single, ["Hello", "World"])
+        self.assertRaises(NineMLUsageError, expect_single, [None, None])
+        self.assertRaises(NineMLUsageError, expect_single, [True, False])
+        self.assertRaises(NineMLUsageError, expect_single, [True, True])
+        self.assertRaises(NineMLUsageError, expect_single, ["Hello", "World"])
 
         # Some good cases:
         self.assertEqual(expect_single([None]), None)
@@ -243,10 +243,10 @@ class Testflatten_first_level(unittest.TestCase):
             [1, ['a', 'b'], 2, 3, 4, ['c', 'd'], 5, 6]
         )
 
-        self.assertRaises(NineMLRuntimeError, flatten_first_level, [None])
-        self.assertRaises(NineMLRuntimeError, flatten_first_level, ['abbn'])
-        self.assertRaises(NineMLRuntimeError, flatten_first_level, [True])
-        self.assertRaises(NineMLRuntimeError, flatten_first_level, [None, None])
+        self.assertRaises(NineMLUsageError, flatten_first_level, [None])
+        self.assertRaises(NineMLUsageError, flatten_first_level, ['abbn'])
+        self.assertRaises(NineMLUsageError, flatten_first_level, [True])
+        self.assertRaises(NineMLUsageError, flatten_first_level, [None, None])
 
 
 # Testing Skeleton for function:
@@ -288,18 +288,18 @@ class Testinvert_dictionary(unittest.TestCase):
 
         # Bad cases (Duplicates in values):
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             invert_dictionary, {'RED': 1, 'BLUE': 1},
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             invert_dictionary, {True: None, False: None},
         )
 
         # Unhashable values:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             invert_dictionary, {True: None, False: {1: None}},
         )
 
@@ -314,17 +314,17 @@ class Testassert_no_duplicates(unittest.TestCase):
                 # This function checks that a list contains no duplicates, by casting the list
                 # to a set and comparing the lengths.
                 #
-                # It raises an `NineMLRuntimeError` if the lengths are not equal.
+                # It raises an `NineMLUsageError` if the lengths are not equal.
 
 
         # Duplication
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             assert_no_duplicates, [1, 2, 3, 4, 4],
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             assert_no_duplicates, ['1', '2', '3', '4', '4'],
         )
 
@@ -398,7 +398,7 @@ class Testfilter_discrete_types(unittest.TestCase):
 
         # Not all objects covered by listed classes:
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             filter_discrete_types, data, [basestring]
         )
 
@@ -453,7 +453,7 @@ class Testsafe_dict(unittest.TestCase):
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             safe_dict,
             [[1, 'One'], [2, 'Two'], [3, 'Three'], [1, 'One'], [4, 'Four']]
         )
@@ -473,7 +473,7 @@ class Testsafe_dictionary_merge(unittest.TestCase):
         # {1: 'One', 2: 'Two', 3: 'Three'}
         #
         # >>> safe_dictionary_merge( [ {1:'One',2:'Two'},{3:'Three',1:'One'} ] ) #doctest: +NORMALIZE_WHITESPACE +IGNORE_EXCEPTION_DETAIL +SKIP
-        # NineMLRuntimeError: Key Collision while merging dictionarys
+        # NineMLUsageError: Key Collision while merging dictionarys
 
         self.assertEqual(
             safe_dictionary_merge([{1: 'One'}, {2: 'Two'}]),
@@ -485,7 +485,7 @@ class Testsafe_dictionary_merge(unittest.TestCase):
         )
 
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             safe_dictionary_merge,
             [{1: 'One'}, {2: 'Two', 3: 'Three', 1: 'One'}, {4: 'Four'}]
         )

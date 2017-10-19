@@ -1,6 +1,6 @@
 import unittest
 from nineml.sugar import On
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 
 
 class TestExceptions(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestExceptions(unittest.TestCase):
         message: Unexpected Type for On() trigger: {} {}
         """
         self.assertRaises(
-            NineMLRuntimeError,
+            NineMLUsageError,
             On,
             trigger=1.0,
             do=None,

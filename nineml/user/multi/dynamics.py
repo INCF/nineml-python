@@ -14,7 +14,7 @@ from nineml.annotations import PY9ML_NS
 from nineml.utils.iterables import unique_by_id
 # from nineml.abstraction.dynamics.visitors.cloner import DynamicsCloner
 from nineml.exceptions import (
-    NineMLRuntimeError, NineMLNameError, name_error, NineMLUsageError)
+    NineMLUsageError, NineMLNameError, name_error, NineMLUsageError)
 from ..port_connections import (
     AnalogPortConnection, EventPortConnection, BasePortConnection)
 from nineml.abstraction import BaseALObject
@@ -791,7 +791,7 @@ class MultiDynamics(Dynamics):
         for sub_component in self.sub_components:
             for port in sub_component.component_class.analog_receive_ports:
                 if port not in chain(exposed_ports, connected_ports):
-                    raise NineMLRuntimeError(
+                    raise NineMLUsageError(
                         "Analog receive port '{}' in sub component '{}' was "
                         "not connected via a port-connection or exposed via a "
                         "port-exposure in MultiDynamics object '{}'"
@@ -1338,7 +1338,7 @@ class _MultiTransition(BaseALObject, ContainerObject):
         for chained_event in parent.daisy_chained_on_events(sub_transitions):
             namespace = chained_event.sub_component.name
             if namespace in self._sub_transitions:
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Transition loop with non-zero delay found in on-event "
                     "chain beggining with {}".format(chained_event.key))
             self._sub_transitions[namespace] = chained_event

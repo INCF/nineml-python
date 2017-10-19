@@ -3,7 +3,7 @@ from . import BaseULObject
 from nineml.base import (
     DocumentLevelObject, ContainerObject, DynamicPortsObject)
 from .population import Population
-from nineml.exceptions import NineMLNameError, NineMLRuntimeError
+from nineml.exceptions import NineMLNameError, NineMLUsageError
 from nineml.utils import validate_identifier
 from .component_array import ComponentArray
 from nineml.exceptions import name_error
@@ -99,13 +99,13 @@ class Concatenate(BaseULObject, ContainerObject):
         if all(isinstance(it, Item) for it in items):
             indices = [it.index for it in items]
             if min(indices) < 0 or max(indices) > len(indices):
-                raise NineMLRuntimeError(
+                raise NineMLUsageError(
                     "Indices are not contiguous, have duplicates, or don't "
                     "start from 0 ({})"
                     .format(', '.join(str(i) for i in indices)))
             self.add(*items)
         elif any(isinstance(it, Item) for it in items):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Cannot mix Items and Populations/Selections in Concatenate "
                 "__init__ method ({})".format(', '.join(str(it)
                                                         for it in items)))

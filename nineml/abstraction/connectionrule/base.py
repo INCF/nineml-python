@@ -13,7 +13,7 @@ docstring goes here
 :license: BSD-3, see LICENSE for details.
 """
 from ..componentclass import ComponentClass, Parameter
-from nineml.exceptions import NineMLRuntimeError, NineMLSerializationError
+from nineml.exceptions import NineMLUsageError, NineMLSerializationError
 import nineml.units as un
 
 
@@ -34,7 +34,7 @@ class ConnectionRule(ComponentClass):
         # Convert to lower case
         if (not standard_library.startswith(self.standard_library_basepath) or
                 standard_library[self._base_len:] not in self.standard_types):
-            raise NineMLRuntimeError(
+            raise NineMLUsageError(
                 "Unrecognised connection rule library path '{}'. "
                 "Available options are '{}'".format(
                     standard_library,
