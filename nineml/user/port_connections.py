@@ -226,7 +226,7 @@ class BasePortConnection(with_metaclass(ABCMeta, BaseULObject)):
         # to allow internal connections to the alias
         if isinstance(self.receive_port, AnalogReducePort):
             receive_port_name += (
-                nineml.user.multi.AnalogReducePortExposure.NAME_SUFFIX)
+                nineml.user.multi.AnalogReducePortExposure.SUFFIX)
         # Return a new port connection with the role namespace appended to the
         # port names.
         return self.__class__(send_port_name=send_port_name,

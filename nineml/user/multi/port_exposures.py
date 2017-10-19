@@ -77,7 +77,9 @@ class BasePortExposure(BaseULObject):
         except NineMLNameError:
             raise NineMLTargetMissingError(
                 "Did not find port '{}' in sub-component '{}', target port "
-                "may have been moved after the '{}' port-exposure was bound.")
+                "may have been moved after the '{}' port-exposure was bound."
+                .format(self.port_name, self.sub_component,
+                        self.port_name))
 
     @property
     def sub_component_name(self):
@@ -244,7 +246,7 @@ class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
 class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
 
     nineml_type = 'AnalogReducePortExposure'
-    NAME_SUFFIX = '__reduce'
+    SUFFIX = '__reduce'
 
     def _default_name(self):
         """
@@ -253,7 +255,7 @@ class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
         without needing to rename the namespace-mapped variable name.
         """
         return super(AnalogReducePortExposure,
-                     self)._default_name() + self.NAME_SUFFIX
+                     self)._default_name() + self.SUFFIX
 
     @property
     def alias(self):
