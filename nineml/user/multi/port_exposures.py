@@ -8,7 +8,7 @@ from nineml.abstraction import (
     EventReceivePort, Alias, OutputEvent)
 from nineml.exceptions import (
     NineMLNotBoundException, NineMLImmutableError, NineMLTargetMissingError,
-    NineMLNameError, NineMLUsageError)
+    NineMLNameError)
 from .namespace import append_namespace
 from nineml.utils import validate_identifier
 
@@ -32,23 +32,16 @@ class BasePortExposure(BaseULObject):
     nineml_attr = ('name', 'port_name', 'sub_component_name')
     nineml_child = {}
 
-    def __init__(self, sub_component_name, port_name, name=None,
-                 name_suffix=None):
+    def __init__(self, sub_component_name, port_name, name=None):
         super(BasePortExposure, self).__init__()
         assert isinstance(sub_component_name, basestring)
         self._sub_component_name = sub_component_name
         assert isinstance(port_name, basestring)
         self._port_name = port_name
-        if name is None:
-            name = append_namespace(self.port_name, self.sub_component_name)
-            if name_suffix is not None:
-                name += name_suffix
-        elif name_suffix is not None:
-            raise NineMLUsageError(
-                "Cannot supply both 'name' ({}) and 'name_suffix' ({}) args"
-                .format(name, name_suffix))
-        self._name = validate_identifier(name)
         self._parent = None
+        if name is None:
+            name = self._default_name()
+        self._name = validate_identifier(name)
 
     def __repr__(self):
         return "{}(comp={}, port={}, name={})".format(
@@ -70,6 +63,9 @@ class BasePortExposure(BaseULObject):
             raise NineMLTargetMissingError(
                 "Did not find sub-component '{}' the target sub-component "
                 "may have been moved after the '{}' port-exposure was bound.")
+
+    def _default_name(self):
+        return append_namespace(self.port_name, self.sub_component_name)
 
     @property
     def port(self):
@@ -123,27 +119,27 @@ class BasePortExposure(BaseULObject):
                              component_name=component_name)
 
     @classmethod
-    def from_port(cls, port, component_name, name=None, name_suffix=None):
+    def from_port(cls, port, component_name, name=None):
         if isinstance(port, AnalogSendPort):
             exposure = AnalogSendPortExposure(
                 name=name, sub_component_name=component_name,
-                port_name=port.name, name_suffix=name_suffix)
+                port_name=port.name)
         elif isinstance(port, AnalogReceivePort):
             exposure = AnalogReceivePortExposure(
                 name=name, sub_component_name=component_name,
-                port_name=port.name, name_suffix=name_suffix)
+                port_name=port.name)
         elif isinstance(port, AnalogReducePort):
             exposure = AnalogReducePortExposure(
                 name=name, sub_component_name=component_name,
-                port_name=port.name, name_suffix=name_suffix)
+                port_name=port.name)
         elif isinstance(port, EventSendPort):
             exposure = EventSendPortExposure(
                 name=name, sub_component_name=component_name,
-                port_name=port.name, name_suffix=name_suffix)
+                port_name=port.name)
         elif isinstance(port, EventReceivePort):
             exposure = EventReceivePortExposure(
                 name=name, sub_component_name=component_name,
-                port_name=port.name, name_suffix=name_suffix)
+                port_name=port.name)
         else:
             assert False
         return exposure
@@ -248,6 +244,16 @@ class AnalogReceivePortExposure(_BaseAnalogPortExposure, AnalogReceivePort):
 class AnalogReducePortExposure(_BaseAnalogPortExposure, AnalogReducePort):
 
     nineml_type = 'AnalogReducePortExposure'
+    NAME_SUFFIX = '__reduce'
+
+    def _default_name(self):
+        """
+        The default name for a reduce port exposure has an additional suffix so
+        that internal connections can be combined with external connections
+        without needing to rename the namespace-mapped variable name.
+        """
+        return super(AnalogReducePortExposure,
+                     self)._default_name() + self.NAME_SUFFIX
 
     @property
     def alias(self):

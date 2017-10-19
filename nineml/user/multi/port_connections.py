@@ -1,4 +1,3 @@
-import operator
 import sympy
 from nineml.base import BaseNineMLObject
 import nineml.units as un
