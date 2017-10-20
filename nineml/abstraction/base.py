@@ -54,6 +54,9 @@ class Parameter(BaseALObject):
                 .format(self.name,
                         ', dimension={}'.format(self.dimension.name)))
 
+    def __hash__(self):
+        return hash(self._name) ^ hash(self._dimension)
+
     def _sympy_(self):
         return sympy.Symbol(self.name)
 
