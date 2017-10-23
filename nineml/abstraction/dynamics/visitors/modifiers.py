@@ -28,7 +28,7 @@ class DynamicsRenameSymbol(ComponentRenameSymbol,
             self.old_symbol_name, self.new_symbol_name)
         # Update the on condition trigger keys, which can't be updated via
         # the _update_member_key method
-        for trigger in regime.on_condition_triggers:
+        for trigger in list(regime.on_condition_triggers):
             if sympy.Symbol(self.old_symbol_name) in trigger.free_symbols:
                 new_trigger = trigger.xreplace(
                     {sympy.Symbol(self.old_symbol_name):
