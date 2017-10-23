@@ -33,3 +33,4 @@ cover
 .texlipse
 *.bak
 __pycache__
+*.swp
