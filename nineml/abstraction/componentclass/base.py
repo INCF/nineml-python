@@ -59,7 +59,6 @@ class ComponentClass(with_metaclass(
         self.add(*aliases)
         self.add(*constants)
 
-
     @property
     def name(self):
         """Returns the name of the component"""

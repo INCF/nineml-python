@@ -51,9 +51,6 @@ class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
                                for n, p in zip(self.dimension_symbols,
                                                self._dims))))
 
-    def __hash__(self):
-        return hash(self._dims)
-
     def __str__(self):
         return self.name
 
@@ -301,9 +298,6 @@ class Unit(AnnotatedNineMLObject, DocumentLevelObject):
 
     def __str__(self):
         return self.name
-
-    def __hash__(self):
-        return self._power ^ hash(self._offset) ^ hash(self._dimension)
 
     def to_SI_units_str(self):
         if self.offset != 0.0:
