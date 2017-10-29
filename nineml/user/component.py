@@ -128,7 +128,9 @@ class Property(BaseULObject):
         self.quantity._units = units
 
 
-class Component(with_metaclass(ABCMeta, type('NewBase', (BaseULObject, DocumentLevelObject, ContainerObject), {}))):
+class Component(with_metaclass(
+        ABCMeta, type('NewBase', (BaseULObject, DocumentLevelObject,
+                                  ContainerObject), {}))):
     """
     Base class for model components.
 

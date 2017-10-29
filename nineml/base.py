@@ -9,7 +9,7 @@ from nineml.exceptions import (
     NineMLUsageError, NineMLNameError, NineMLInvalidElementTypeException)
 from .visitors.cloner import Cloner
 from .visitors.queriers import ObjectFinder
-from .visitors.equality import EqualityChecker, MismatchFinder
+from .visitors.equality import EqualityChecker, Hasher, MismatchFinder
 from functools import reduce
 
 
@@ -56,6 +56,9 @@ class BaseNineMLObject(object):
 
     def __eq__(self, other):
         return self.equals(other)
+
+    def __hash__(self):
+        return Hasher().hash(self)
 
     def __ne__(self, other):
         return not self == other

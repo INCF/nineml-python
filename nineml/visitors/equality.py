@@ -1,7 +1,8 @@
 from builtins import zip
+import math
 import sympy
 from itertools import chain
-from .base import BaseDualVisitor, DualWithContextMixin
+from .base import BaseVisitor, BaseDualVisitor, DualWithContextMixin
 from nineml.exceptions import (NineMLDualVisitException,
                                NineMLDualVisitValueException,
                                NineMLDualVisitTypeException,
@@ -10,15 +11,18 @@ from nineml.exceptions import (NineMLDualVisitException,
                                NineMLNotBoundException,
                                NineMLDualVisitAnnotationsMismatchException,
                                NineMLNameError)
-from nineml.utils import nearly_equal
+
+NEARLY_EQUAL_PLACES_DEFAULT = 15
 
 
 class EqualityChecker(BaseDualVisitor):
 
-    def __init__(self, annotations_ns=[], check_urls=True, **kwargs):  # @UnusedVariable @IgnorePep8
+    def __init__(self, annotations_ns=[], check_urls=True,
+                 nearly_equal_places=NEARLY_EQUAL_PLACES_DEFAULT, **kwargs):  # @UnusedVariable @IgnorePep8
         super(EqualityChecker, self).__init__(**kwargs)
         self.annotations_ns = annotations_ns
         self.check_urls = check_urls
+        self.nearly_equal_places = nearly_equal_places
 
     def check(self, obj1, obj2, **kwargs):
         try:
@@ -68,13 +72,13 @@ class EqualityChecker(BaseDualVisitor):
             self._check_attr(def1, def2, 'url', nineml_cls)
 
     def action_singlevalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
-        if not nearly_equal(val1.value, val2.value):
+        if self._not_nearly_equal(val1.value, val2.value):
             self._raise_value_exception('value', val1, val2, nineml_cls)
 
     def action_arrayvalue(self, val1, val2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         if len(val1.values) != len(val2.values):
             self._raise_value_exception('values', val1, val2, nineml_cls)
-        if any(not nearly_equal(s, o)
+        if any(self._not_nearly_equal(s, o)
                for s, o in zip(val1.values, val2.values)):
             self._raise_value_exception('values', val1, val2, nineml_cls)
 
@@ -118,6 +122,84 @@ class EqualityChecker(BaseDualVisitor):
 
     def _raise_value_exception(self, attr_name, obj1, obj2, nineml_cls):
         raise NineMLDualVisitException()
+
+    def _not_nearly_equal(self, float1, float2):
+        """
+        Determines whether two floating point numbers are nearly equal (to
+        within reasonable rounding errors
+        """
+        mantissa1, exp1 = math.frexp(float1)
+        mantissa2, exp2 = math.frexp(float2)
+        return not ((round(mantissa1, self.nearly_equal_places) ==
+                     round(mantissa2, self.nearly_equal_places)) and
+                    exp1 == exp2)
+
+
+class Hasher(BaseVisitor):
+
+    seed = 0x9e3779b97f4a7c17
+
+    def __init__(self, nearly_equal_places=NEARLY_EQUAL_PLACES_DEFAULT,
+                 **kwargs):  # @UnusedVariable @IgnorePep8
+        super(Hasher, self).__init__(**kwargs)
+        self.nearly_equal_places = nearly_equal_places
+
+    def hash(self, nineml_obj):
+        self._hash = None
+        self.visit(nineml_obj)
+        return self._hash
+
+    def default_action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        for attr_name in nineml_cls.nineml_attr:
+            if attr_name == 'rhs':  # need to use Sympy equality checking
+                self._hash_rhs(obj.rhs)
+            else:
+                self._hash_attr(getattr(obj, attr_name))
+
+    def _hash_attr(self, attr):
+        attr_hash = hash(attr)
+        if self._hash is None:
+            self._hash = attr_hash
+        else:
+            # The rationale behind this equation is explained here
+            # https://stackoverflow.com/questions/5889238/why-is-xor-the-default-way-to-combine-hashes
+            self._hash ^= (attr_hash + self.seed + (self._hash << 6) +
+                           (self._hash >> 2))
+
+    def action_reference(self, ref, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._hash_attr(ref.url)
+
+    def action_definition(self, defn, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._hash_attr(defn.url)
+
+    def action_singlevalue(self, val, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        self._hash_value(val.value)
+
+    def action_arrayvalue(self, val, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        for v in val.values:
+            self._hash_value(v)
+
+    def _hash_rhs(self, rhs, nineml_cls, **kwargs):  # @UnusedVariable
+        try:
+            rhs = sympy.expand(rhs)
+        except TypeError:
+            pass
+        self._hash_attr(rhs)
+
+    def action_unit(self, unit, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        # Ignore name
+        self._hash_attr(unit.power)
+        self._hash_attr(unit.offset)
+
+    def action_dimension(self, dim, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+        for sym in nineml_cls.dimension_symbols:
+            self._hash_attr(getattr(dim, sym))
+
+    def _hash_value(self, val):
+        mantissa, exp = math.frexp(val)
+        rounded_val = math.ldexp(round(mantissa, self.nearly_equal_places),
+                                 exp)
+        self._hash_attr(rounded_val)
 
 
 class MismatchFinder(DualWithContextMixin, EqualityChecker):
