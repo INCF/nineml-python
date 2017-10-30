@@ -191,9 +191,9 @@ class Hasher(BaseVisitor):
         self._hash_attr(unit.power)
         self._hash_attr(unit.offset)
 
-    def action_dimension(self, dim1, dim2, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
+    def action_dimension(self, dim, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         for sym in nineml_cls.dimension_symbols:
-            self._hash_attr(getattr(dim1, sym))
+            self._hash_attr(getattr(dim, sym))
 
     def _hash_value(self, val):
         mantissa, exp = math.frexp(val)
