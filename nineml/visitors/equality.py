@@ -151,10 +151,13 @@ class Hasher(BaseVisitor):
 
     def default_action(self, obj, nineml_cls, **kwargs):  # @UnusedVariable @IgnorePep8
         for attr_name in nineml_cls.nineml_attr:
-            if attr_name == 'rhs':  # need to use Sympy equality checking
-                self._hash_rhs(obj.rhs)
-            else:
-                self._hash_attr(getattr(obj, attr_name))
+            try:
+                if attr_name == 'rhs':  # need to use Sympy equality checking
+                    self._hash_rhs(obj.rhs)
+                else:
+                    self._hash_attr(getattr(obj, attr_name))
+            except NineMLNotBoundException:
+                continue
 
     def _hash_attr(self, attr):
         attr_hash = hash(attr)
