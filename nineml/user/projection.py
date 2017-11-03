@@ -1,386 +1,413 @@
 # encoding: utf-8
-from . import BaseULObject
-from .component import resolve_reference, write_reference, Reference
-from nineml.xmlns import NINEML, E
-from nineml.annotations import read_annotations, annotate_xml
-from collections import defaultdict
-from nineml.user.component import Component
+from past.builtins import basestring
 from itertools import chain
-import nineml.user
-from .. import units as un
-from nineml.utils import expect_single, expect_none_or_single, check_tag
-from ..exceptions import NineMLRuntimeError
-from .values import SingleValue
+from . import BaseULObject
+from nineml.exceptions import (
+    NineMLMissingSerializationError, NineMLSerializationError)
+from .connectionrule import ConnectionRuleProperties, Connectivity
+from .dynamics import DynamicsProperties
+from .population import Population
+from .selection import Selection
 from .component import Quantity
-from nineml import DocumentLevelObject
-from nineml.exceptions import handle_xml_exceptions
+from nineml.base import DocumentLevelObject, ContainerObject
+from nineml.utils import validate_identifier
+from nineml.abstraction.ports import EventReceivePort
+from .port_connections import (
+    AnalogPortConnection, EventPortConnection, BasePortConnection)
+from nineml.values import SingleValue
+from nineml.exceptions import NineMLUsageError, name_error
 
 
-class Projection(BaseULObject, DocumentLevelObject):
+V1_DELAY_VALUE_TYPES = ('SingleValue', 'ArrayValue', 'ExternalArrayValue',
+                        'RandomDistributionValue')
+
+
+class Projection(BaseULObject, ContainerObject, DocumentLevelObject):
     """
     A collection of connections between two :class:`Population`\s.
 
-    **Arguments**:
-        *name*
+    Parameters
+    ----------
+        name : str
             a name for this projection.
-        *source*
+        pre : Population
             the presynaptic :class:`Population`.
-        *destination*
+        post : Population
             the postsynaptic :class:`Population`.
-        *response*
-            a `dynamics` :class:`Component` that defines the post-synaptic
-            response.
-        *plasticity*
-            a `dynamics` :class:`Component` that defines the plasticity
-            rule for the synaptic weight/efficacy.
-        *connectivity*
-            a `connection rule` :class:`Component` that defines
-            an algorithm for wiring up the neurons.
-        *delay*
-            a :class:`Delay` object specifying the delay of the connections.
-        *port_connections*
-            a list of :class:`PortConnection` tuples `(sender, receiver,
-            send_port, receive_port)` that define the connections between the 4
-            components of the projection, 'source', 'destination', 'response',
-            'plasticity'. 'sender' and 'receiver' must be one of these 4 names
-            and 'send_port' and 'receive_port' must each be the name of
-            one of the ports in the corresponding components.
-
-    **Attributes**:
-
-    Each of the arguments to the constructor is available as an attribute of
-    the same name.
-
+        response : DynamicsProperties
+            a :class:`DynamicsProperties` :class:`Component` that defines the
+            post-synaptic response.
+        plasticity : DynamicsProperties
+            a :class:`DynamicsProperties` :class:`Component` that defines the
+            plasticity rule for the synaptic weight/efficacy.
+        delay
+            a :class:`Quantity` object specifying the delay of the connections.
+        connectivity : Connectivity
+            a ` :class:`Connectivity` instance that defines
+            an instantiated connectivity from the algorithm defined by a
+            connection rule properties. Cannot be provided in conjunction with
+            `connection_rule_properties` parameter
+        connection_rule_properties : ConnectionRuleProperties
+            a :class:`ConnectionRuleProperties` that defines
+            an algorithm for wiring up the neurons. Cannot be provided in
+            conjunction with the `connectivity` parameter
+        port_connections : list(AnalogPortConnection | EventPortConnection)
+            A list of port connections between pre, post, response, plasticity
+            dynamics
+        analog_port_connections : list(AnalogPortConnection)
+            A list of analog port connections between pre, post, response,
+            plasticity dynamics
+        event_port_connections : list(EventPortConnection)
+            A list of event port connections between pre, post, response,
+            plasticity dynamics
     """
-    element_name = "Projection"
-    defining_attributes = ("name", "source", "destination", "connectivity",
-                           "response", "plasticity", "port_connections",
-                           "delay")
+    nineml_type = "Projection"
+    nineml_attr = ('name',)
+    # The child attributes that hold dynamics must be None because they can
+    # either be Dynamics or MultiDynamics classes.
+    nineml_child = {'pre': None,
+                    'post': None,
+                    'connectivity': None,
+                    'response': None,
+                    'plasticity': None,
+                    'delay': Quantity}
+    nineml_children = (AnalogPortConnection, EventPortConnection)
 
-    _component_roles = set(['source', 'destination', 'plasticity', 'response'])
+    _component_roles = set(['pre', 'post', 'plasticity', 'response'])
 
-    def __init__(self, name, source, destination, response,
-                 plasticity, connectivity, delay, port_connections, url=None):
+    def __init__(self, name, pre, post, response, delay, connectivity=None,
+                 connection_rule_properties=None,
+                 plasticity=None, port_connections=None,
+                 analog_port_connections=None, event_port_connections=None,
+                 connectivity_class=Connectivity, **kwargs):
         """
         Create a new projection.
         """
+        self._name = validate_identifier(name)
         BaseULObject.__init__(self)
-        DocumentLevelObject.__init__(self, url)
-        self.name = name
-        self.source = source
-        # When exporting to XML we use the reference instead of the object
-        # maintaing the original format of the XML.
-        if source.from_reference is None:
-            source.from_reference = Reference(source.name,
-                                               {source.name: source})
-        self.destination = destination
-        if destination.from_reference is None:
-            destination.from_reference = Reference(
-                destination.name, {destination.name: destination})
-        self.response = response
-        self.plasticity = plasticity
-        self.connectivity = connectivity
-        if isinstance(delay, tuple):
-            value, units = delay
-            delay = Delay(SingleValue(value), units)
-        self.delay = delay
-        self.port_connections = sorted(port_connections,
-                                       key=lambda x: (x._send_role,
-                                                      x._receive_role,
-                                                      x.send_port,
-                                                      x.receive_port))
-        for pc in self.port_connections:
-            pc.set_projection(self)
-        self._check_port_connections()
+        ContainerObject.__init__(self)
+        DocumentLevelObject.__init__(self)
+        assert isinstance(name, basestring)
+        assert isinstance(delay, Quantity)
+        assert isinstance(pre, (Population, Selection))
+        assert isinstance(post, (Population, Selection))
+        assert isinstance(response, DynamicsProperties)
+        assert isinstance(plasticity, (DynamicsProperties, type(None)))
+        self._pre = pre
+        self._post = post
+        self._response = response
+        self._plasticity = plasticity
+        if connectivity is not None:
+            assert isinstance(connectivity, Connectivity)
+            if connection_rule_properties is not None:
+                raise NineMLUsageError(
+                    "Cannot provide both connectivty and "
+                    "connection_rule_properties as kwargs to projection class")
+            self._connectivity = connectivity
+        else:
+            self._connectivity = connectivity_class(
+                connection_rule_properties, pre.size, post.size, **kwargs)
+        self._delay = delay
+        if port_connections is None:
+            port_connections = []
+        if analog_port_connections is None:
+            analog_port_connections = []
+        if event_port_connections is None:
+            event_port_connections = []
+        for port_connection in chain(port_connections,
+                                     event_port_connections,
+                                     analog_port_connections):
+            if isinstance(port_connection, tuple):
+                port_connection = BasePortConnection.from_tuple(
+                    port_connection, self)
+            port_connection.bind(self, to_roles=True)
+            self.add(port_connection)
+
+    def __len__(self):
+        return sum(1 for _ in self.connectivity.connections())
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def pre(self):
+        return self._pre
+
+    @property
+    def post(self):
+        return self._post
+
+    @property
+    def response(self):
+        return self._response
+
+    @property
+    def plasticity(self):
+        return self._plasticity
+
+    @property
+    def connectivity(self):
+        return self._connectivity
+
+    @property
+    def connection_rule_properties(self):
+        return self.connectivity.rule_properties
+
+    def connections(self):
+        return self.connectivity.connections()
+
+    @property
+    def delay(self):
+        return self._delay
+
+    @name_error
+    def analog_port_connection(self, name):
+        return self._analog_port_connections[name]
+
+    @name_error
+    def event_port_connection(self, name):
+        return self._event_port_connections[name]
+
+    @property
+    def analog_port_connections(self):
+        return iter(self._analog_port_connections.values())
+
+    @property
+    def event_port_connections(self):
+        return iter(self._event_port_connections.values())
+
+    @property
+    def analog_port_connection_names(self):
+        return iter(self._analog_port_connections.keys())
+
+    @property
+    def event_port_connection_names(self):
+        return iter(self._event_port_connections.keys())
+
+    @property
+    def num_analog_port_connections(self):
+        return len(self._analog_port_connections)
+
+    @property
+    def num_event_port_connections(self):
+        return len(self._event_port_connections)
+
+    @property
+    def port_connections(self):
+        return chain(self.analog_port_connections, self.event_port_connections)
+
+    def resample_connectivity(self, connectivity_class=None, **kwargs):
+        if connectivity_class is None:
+            connectivity_class = type(self.connectivity)
+        self._connectivity = connectivity_class(
+            self.connectivity.rule_properties, self.connectivity.source_size,
+            self.connectivity.destination_size, **kwargs)
 
     def __repr__(self):
-        return ('Projection(name="{}", source={}, destination={}, '
-                'connectivity={}, response={}{}, delay={}, '
-                'with {} port-connections)'
-                .format(self.name, repr(self.source), repr(self.destination),
+        return ('Projection(name="{}", pre={}, post={}, '
+                'connectivity={}, response={}{}, delay={},'
+                'event_port_connections=[{}], '
+                'analog_port_connections=[{}])'
+                .format(self.name, repr(self.pre), repr(self.post),
                         repr(self.connectivity), repr(self.response),
                         ('plasticity={}'.format(repr(self.plasticity))
                          if self.plasticity else ''), repr(self.delay),
-                        len(self.port_connections)))
+                        ', '.join(str(pc)
+                                  for pc in self.event_port_connections),
+                        ', '.join(str(pc)
+                                  for pc in self.analog_port_connections)))
 
-    def _check_port_connections(self):
-        for pc in self.port_connections:
-            if pc.send_port in (p.name
-                                for p in pc.send_class.analog_send_ports):
-                if (pc.receive_port not in
-                    (p.name
-                     for p in chain(pc.receive_class.analog_receive_ports,
-                                    pc.receive_class.analog_reduce_ports))):
-                    msg = ("No analog receive port named '{}' in {} component,"
-                           " '{}'.".format(pc.receive_port, pc._receive_role,
-                                           pc.receive_class.name))
-                    raise NineMLRuntimeError(msg)
-            elif pc.send_port in (p.name
-                                  for p in pc.send_class.event_send_ports):
-                if (pc.receive_port not in
-                     (p.name for p in pc.receive_class.event_receive_ports)):
-                    msg = ("No event receive port named '{}' in {} component, "
-                           "'{}'.".format(pc.receive_port, pc._receive_role,
-                                           pc.receive_class.name))
-                    raise NineMLRuntimeError(msg)
-            else:
-                msg = ("'{}' send port was not found in {} component, '{}'"
-                       .format(pc.send_port, pc._send_role,
-                               pc.send_class.name))
-                raise NineMLRuntimeError(msg)
-
-    def get_components(self):
+    def all_components(self):
         """
         Return a list of all components used by the projection.
         """
-        components = []
-        for name in ('connectivity', 'response', 'plasticity'):
-            component = getattr(self, name)
-            if component is not None:
-                components.append(component)
+        components = [self.connectivity.rule_properties, self.response]
+        if self.plasticity is not None:
+            components.append(self.plasticity)
         return components
 
     @property
     def attributes_with_units(self):
         return chain([self.delay],
-                     *[c.attributes_with_units for c in self.get_components()])
+                     *[c.attributes_with_units for c in self.components])
 
-    @write_reference
-    @annotate_xml
-    def to_xml(self):
-        pcs = defaultdict(list)
-        for pc in self.port_connections:
-            pcs[pc._receive_role].append(
-                E('From' + pc._send_role.capitalize(),
-                  send_port=pc.send_port, receive_port=pc.receive_port))
-        args = [E.Source(self.source.to_xml(), *pcs['source']),
-                E.Destination(self.destination.to_xml(), *pcs['destination']),
-                E.Connectivity(self.connectivity.to_xml()),
-                E.Response(self.response.to_xml(), *pcs['response'])]
-        if self.plasticity:
-            args.append(E.Plasticity(self.plasticity.to_xml(),
-                                     *pcs['plasticity']))
-        args.append(self.delay.to_xml())
-        return E(self.element_name, *args, name=self.name)
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.child(self.pre, reference=True, within='Pre', **options)
+        node.child(self.post, reference=True, within='Post', **options)
+        node.child(self.connectivity.rule_properties,
+                   within='Connectivity', **options)
+        node.child(self.response, within='Response', **options),
+        if self.plasticity is not None:
+            node.child(self.plasticity, within='Plasticity', **options)
+        node.child(self.delay, within='Delay', **options)
+        node.children(self.event_port_connections, **options)
+        node.children(self.analog_port_connections, **options)
 
     @classmethod
-    @resolve_reference
-    @read_annotations
-    @handle_xml_exceptions
-    def from_xml(cls, element, document):
-        check_tag(element, cls)
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
         # Get Name
-        name = element.attrib['name']
-        # Get Source
-        e = expect_single(element.findall(NINEML + 'Source'))
-        e = expect_single(e.findall(NINEML + 'Reference'))
-        source = nineml.user.Reference.from_xml(
-            e, document).user_object
-        # Get Destination
-        e = expect_single(element.findall(NINEML + 'Destination'))
-        e = expect_single(e.findall(NINEML + 'Reference'))
-        destination = nineml.user.Reference.from_xml(
-            e, document).user_object
-        # Get Response
-        e = element.find(NINEML + 'Response')
-        component = e.find(NINEML + 'Component')
-        if component is None:
-            component = e.find(NINEML + 'Reference')
-        response = Component.from_xml(component, document)
-        # Get Plasticity
-        e = expect_none_or_single(element.findall(NINEML + 'Plasticity'))
-        if e is not None:
-            component = e.find(NINEML + 'Component')
-            if component is None:
-                component = e.find(NINEML + 'Reference')
-            plasticity = Component.from_xml(component, document)
-        else:
-            plasticity = None
-        # Get Connectivity
-        e = element.find(NINEML + 'Connectivity')
-        component = e.find(NINEML + 'Component')
-        if component is None:
-            component = e.find(NINEML + 'Reference')
-        connectivity = Component.from_xml(component, document)
-        # Get Delay
-        delay = Delay.from_xml(
-            expect_single(element.findall(NINEML + 'Delay')), document)
-        # Get port connections by Loop through 'source', 'destination',
-        # 'response', 'plasticity' tags and extracting the "From*" elements
-        port_connections = []
-        for receive_role in cls._component_roles:
-            # Get element for component name
-            e = element.find(NINEML + receive_role.capitalize())
-            if e is not None:  # Plasticity is not required
-                # Loop through all incoming port connections and add them to
-                # list
-                for sender_role in cls._component_roles:
-                    pc_elems = e.findall(NINEML +
-                                         'From' + sender_role.capitalize())
-                    if sender_role == receive_role and pc_elems:
-                        msg = ("{} port connection receives from itself in "
-                               "Projection '{}'".format(name, name))
-                        raise NineMLRuntimeError(msg)
-                    if (sender_role is 'plasticity' and plasticity is None and
-                         len(pc_elems)):
-                        msg = ("{} port connection receives from plasticity, "
-                               "which wasn't provided for Projection '{}'"
-                               .format(receive_role, name))
-                        raise NineMLRuntimeError(msg)
-                    for pc in pc_elems:
-                        port_connections.append(
-                            PortConnection(sender_role, receive_role,
-                                           pc.get('send_port'),
-                                           pc.get('receive_port')))
-        return cls(name=element.attrib["name"],
-                   source=source,
-                   destination=destination,
+        name = node.attr('name', **options)
+        pre_within = 'Pre'
+        post_within = 'Post'
+        delay = node.child(Quantity, within='Delay', **options)
+        # Get Pre
+        pre = node.child(
+            (Population, Selection), allow_ref='only', within=pre_within,
+            **options)
+        post = node.child(
+            (Population, Selection), allow_ref='only', within=post_within,
+            **options)
+        response = node.child(DynamicsProperties, within='Response',
+                              allow_ref=True, **options)
+        plasticity = node.child(
+            DynamicsProperties, allow_ref=True, within='Plasticity',
+            allow_none=True, **options)
+        connection_rule_props = node.child(
+            ConnectionRuleProperties, within='Connectivity',
+            allow_ref=True, **options)
+        port_connections = node.children(
+            (AnalogPortConnection, EventPortConnection), **options)
+        return cls(name=name,
+                   pre=pre,
+                   post=post,
                    response=response,
                    plasticity=plasticity,
-                   connectivity=connectivity,
+                   connection_rule_properties=connection_rule_props,
                    delay=delay,
-                   port_connections=port_connections,
-                   url=document.url)
+                   port_connections=port_connections)
 
+    def serialize_node_v1(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        endpoints = {}
+        endpoints['pre'] = node.child(
+            self.pre, within='Source', reference=True, **options)
+        endpoints['post'] = node.child(
+            self.post, within='Destination', reference=True, **options)
+        node.child(self.connectivity.rule_properties,
+                   within='Connectivity', **options)
+        endpoints['response'] = node.child(
+            self.response, within='Response', **options)
+        if self.plasticity:
+            endpoints['plasticity'] = node.child(
+                self.plasticity, within='Plasticity', **options)
+        for pc in self.port_connections:
+            pc_elem = node.visitor.create_elem(
+                'From' + self.v2tov1[pc.sender_role],
+                parent=endpoints[pc.receiver_role], multiple=True)
+            node.visitor.set_attr(pc_elem, 'send_port', pc.send_port_name,
+                                  **options)
+            node.visitor.set_attr(pc_elem, 'receive_port',
+                                  pc.receive_port_name, **options)
+        delay_elem = node.child(self.delay._value, within='Delay',
+                                **options)
+        node.visitor.set_attr(delay_elem, 'units', self.delay.units.name,
+                              **options)
 
-class Delay(Quantity):
-    """
-    Representation of the connection delay.
-
-    **Arguments**:
-        *value*
-            a numerical value, array of such values, or a component which
-            generates such values (e.g. a random number generator). Allowed
-            types are :class:`int`, :class:`float`, :class:`SingleValue`,
-            :class:`ArrayValue', :class:`ExternalArrayValue`,
-            :class:`ComponentValue`.
-        *units*
-            a :class:`Unit` object representing the physical units of the
-            value.
-
-    Numerical values may either be numbers, or a component that generates
-    numbers, e.g. a RandomDistributionComponent instance.
-    """
-    element_name = 'Delay'
-
-    def __init__(self, value, units):
-        if units.dimension != un.time:
-            raise Exception("Units for delay must be of the time dimension "
-                            "(found {})".format(units))
-        Quantity.__init__(self, value, units)
-
-
-class PortConnection(object):
-    """
-    Specifies the connection of a send port with a receive port between two
-    :class:`Component`\s in a :class:`Projection`.
-
-    **Arguments**:
-        *sender*
-           one of 'source', 'destination', 'plasticity' or 'response'.
-        *receiver*
-            one of 'source', 'destination', 'plasticity' or 'response'.
-        *send_port*
-            the name of a send port in the sender component.
-        *receive_port*
-            the name of a receive or reduce port in the receiver component.
-    """
-
-    def __init__(self, sender, receiver, send_port, receive_port):
-        if sender not in Projection._component_roles:
-            raise Exception("Sender must be one of '{}'"
-                            .format("', '".join(Projection._component_roles)))
-        if receiver not in Projection._component_roles:
-            raise Exception("Receiver must be one of '{}'"
-                            .format("', '".join(Projection._component_roles)))
-        if sender == receiver:
-            raise Exception("Sender and Receiver cannot be the same ('{}')"
-                            .format(sender))
-        if not isinstance(send_port, basestring):
-            raise NineMLRuntimeError("invalid send port '{}'"
-                                     .format(send_port))
-        if not isinstance(receive_port, basestring):
-            raise NineMLRuntimeError("invalid receive port '{}'"
-                                     .format(receive_port))
-        self._send_role = sender
-        self._receive_role = receiver
-        self.send_port = send_port
-        self.receive_port = receive_port
-        self._projection = None
-
-    def __eq__(self, other):
-        return (self._send_role == other._send_role and
-                self._receive_role == other._receive_role and
-                self.send_port == other.send_port and
-                self.receive_port == other.receive_port)
-
-    def __repr__(self):
-        return ("PortConnection('{}', '{}', '{}', '{}')"
-                .format(self._send_role, self._receive_role, self.send_port,
-                        self.receive_port))
-
-    def __hash__(self):
-        return (hash(self._send_role) ^ hash(self._receive_role) ^
-                hash(self.send_port) ^ hash(self.receive_port))
-
-    def set_projection(self, projection):
-        """docstring"""
-        self._projection = projection
-
-    @property
-    def sender(self):
-        """The sending component."""
-        assert self._projection is not None, ("Projection not set on port "
-                                              "connection")
-        return getattr(self._projection, self._send_role)
-
-    @property
-    def receiver(self):
-        """The receiving component."""
-        assert self._projection is not None, ("Projection not set on port "
-                                              "connection")
-        return getattr(self._projection, self._receive_role)
-
-    @property
-    def send_class(self):
-        """The class of the sending component."""
-        return self._get_class(self.sender)
-
-    @property
-    def receive_class(self):
-        """The class of the receiving component."""
-        return self._get_class(self.receiver)
-
-    def _get_class(self, comp):
-        # Resolve ref
-        if isinstance(comp, nineml.user.Reference):
-            comp = comp.user_object
-        # Get component class
-        if isinstance(comp, nineml.user.Population):
-            comp_class = comp.cell.component_class
-        elif isinstance(comp, nineml.user.Component):
-            comp_class = comp.component_class
-        elif isinstance(comp, nineml.user.Selection):
-            # print ("Warning: port connections have not been checked for '{}'"
-            #        " Selection".format(comp.name))
-            # only implemented for Concatenate
-            def resolve(item):   # doing this here is a hack, I think
-                if isinstance(item, Reference):
-                    return item.user_object
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
+        # Get Name
+        name = node.attr('name', **options)
+        pre_within = 'Source'
+        post_within = 'Destination'
+        # Get Delay
+        delay_elem = node.visitor.get_child(node.serial_element, 'Delay')
+        node.unprocessed_children.remove('Delay')
+        units = node.document[
+            node.visitor.get_attr(delay_elem, 'units', **options)]
+        try:
+            # Attempt to get SingleValue, written as an attribute
+            value = SingleValue(node.visitor.get_attr(
+                delay_elem, SingleValue.nineml_type, **options))
+        except KeyError:
+            # Otherwise get SingleValue, ArrayValue or RandomDistributionValue
+            # written as a child
+            value_elem = None
+            nineml_type = None
+            for value_type in V1_DELAY_VALUE_TYPES:
+                try:
+                    value_elem = node.visitor.get_child(
+                        delay_elem, value_type, **options)
+                    if nineml_type is not None:
+                        raise NineMLSerializationError(
+                            "Double value elements ({} and {}) found in Delay"
+                            .format(value_type, nineml_type))
+                    nineml_type = value_type
+                except NineMLMissingSerializationError:
+                    continue
+            if value_elem is not None:
+                value = node.visitor.visit(
+                    value_elem,
+                    node.visitor.get_nineml_class(nineml_type, value_elem,
+                                                  assert_doc_level=False),
+                    **options)
+            else:
+                raise NineMLMissingSerializationError(
+                    "Did not find one of '{}' in Delay element"
+                    .format("', '".join(V1_DELAY_VALUE_TYPES)))
+        delay = Quantity(value, units)
+        # Get Pre
+        pre = node.child(
+            (Population, Selection), allow_ref='only', within=pre_within,
+            **options)
+        post = node.child(
+            (Population, Selection), allow_ref='only', within=post_within,
+            **options)
+        response = node.child(DynamicsProperties, within='Response',
+                              allow_ref=True, **options)
+        plasticity = node.child(
+            DynamicsProperties, allow_ref=True, within='Plasticity',
+            allow_none=True, **options)
+        connection_rule_props = node.child(
+            ConnectionRuleProperties, within='Connectivity',
+            allow_ref=True, **options)
+        port_connections = []
+        for receive_name in cls.version1_nodes:
+            try:
+                receive_elem = node.visitor.get_child(
+                    node.serial_element, receive_name, **options)
+            except NineMLMissingSerializationError:
+                if receive_name == 'Plasticity':
+                    continue  # Plasticity is optional
                 else:
-                    return item
-            comp_classes = {}
-            for item in comp.operation.items:
-                cc = resolve(item).cell.component_class
-                # here we use equality of component class names, should really
-                # use equality of component classes
-                comp_classes[cc.name] = cc
-            if len(comp_classes) > 1:
-                raise Exception(
-                    "Selection contains multiple component classes: {}"
-                    .format(comp_classes))
-            comp_class = comp_classes.values()[0]
-        else:
-            assert False, ("Invalid '{}' object in port connection"
-                           .format(type(comp)))
-        return comp_class
+                    raise
+            receiver = eval(cls.v1tov2[receive_name])
+            for elem_name, send_elem in node.visitor.get_all_children(
+                    receive_elem, **options):
+                if elem_name in ('Component', 'Reference'):
+                    continue
+                elif (not elem_name.startswith('From') or
+                      elem_name[4:] not in cls.version1_nodes):
+                    raise NineMLSerializationError(
+                        "Unrecognised element '{}' in {} element of "
+                        "'{}' projection"
+                        .format(elem_name, receive_name, name))
+                send_name = elem_name[4:]
+                send_port_name = node.visitor.get_attr(
+                    send_elem, 'send_port', **options)
+                receive_port_name = node.visitor.get_attr(
+                    send_elem, 'receive_port', **options)
+                receive_port = receiver.port(receive_port_name)
+                if isinstance(receive_port, EventReceivePort):
+                    pc_cls = EventPortConnection
+                else:
+                    pc_cls = AnalogPortConnection
+                port_connections.append(pc_cls(
+                    receiver_role=cls.v1tov2[receive_name],
+                    sender_role=cls.v1tov2[send_name],
+                    send_port_name=send_port_name,
+                    receive_port_name=receive_port_name))
+        return cls(name=name,
+                   pre=pre,
+                   post=post,
+                   response=response,
+                   plasticity=plasticity,
+                   connection_rule_properties=connection_rule_props,
+                   delay=delay,
+                   port_connections=port_connections)
+
+    version1_nodes = ('Source', 'Destination', 'Response', 'Plasticity')
+    v1tov2 = {'Source': 'pre', 'Destination': 'post',
+              'Plasticity': 'plasticity', 'Response': 'response'}
+    v2tov1 = dict((v, k) for k, v in v1tov2.items())

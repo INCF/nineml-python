@@ -1,9 +1,0 @@
-:mod:`nineml` 0.3.0 release notes
-=================================
-
-DATE
-
-This is the first public release of the Python :mod:`nineml` package, corresponding to the release of `version 1`_
-of the NineML specification.
-
-.. _`version 1`: http://nineml.net/specification/nineml_version1.pdf

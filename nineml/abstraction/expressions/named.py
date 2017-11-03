@@ -1,8 +1,10 @@
 # import math_namespace
-from nineml.exceptions import NineMLRuntimeError
+from nineml.exceptions import NineMLUsageError
 from .. import BaseALObject
-from .base import ExpressionWithSimpleLHS, ExpressionSymbol
-from nineml.units import unitless, Unit
+from .base import ExpressionWithSimpleLHS, ExpressionSymbol, Expression
+from nineml.units import unitless, Unit, Quantity
+from nineml.utils import validate_identifier
+from nineml.exceptions import NineMLDimensionError
 
 
 class Alias(BaseALObject, ExpressionWithSimpleLHS):
@@ -46,10 +48,10 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
 
     """
-    element_name = 'Alias'
-    defining_attributes = ('name', 'rhs')
+    nineml_type = 'Alias'
+    nineml_attr = ('name', 'rhs')
 
-    def __init__(self, lhs=None, rhs=None):
+    def __init__(self, name, rhs=None):
         """ Constructor for an Alias
 
         :param lhs: A `string` specifying the left-hand-side, i.e. the Alias
@@ -61,46 +63,78 @@ class Alias(BaseALObject, ExpressionWithSimpleLHS):
 
         """
         BaseALObject.__init__(self)
-        ExpressionWithSimpleLHS.__init__(self, lhs, rhs)
+        ExpressionWithSimpleLHS.__init__(self, name, rhs)
 
     def __repr__(self):
-        return "<Alias: %s := %s>" % (self.lhs, self.rhs)
+        return "Alias(name='{}', rhs='{}')".format(self.name, self.rhs)
+
+    def __str__(self):
+        return "{} := {}".format(self.name, self.rhs)
 
     @property
     def name(self):
         return self._name
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_alias(self, **kwargs)
 
     @classmethod
     def from_str(cls, alias_string):
         """Creates an Alias object from a string"""
         if not cls.is_alias_str(alias_string):
             errmsg = "Invalid Alias: %s" % alias_string
-            raise NineMLRuntimeError(errmsg)
+            raise NineMLUsageError(errmsg)
 
         lhs, rhs = alias_string.split(':=')
-        return Alias(lhs=lhs.strip(), rhs=rhs.strip())
+        return Alias(name=lhs.strip(), rhs=rhs.strip())
 
     @classmethod
     def is_alias_str(cls, alias_str):
         """ Returns True if the string could be an alias"""
         return ':=' in alias_str
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.lhs, **options)
+        node.attr('MathInline', self.rhs_xml, in_body=True, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        rhs = node.attr('MathInline', in_body=True, dtype=Expression,
+                        **options)
+        return cls(name=name, rhs=rhs)
+
 
 class Constant(BaseALObject, ExpressionSymbol):
 
-    element_name = 'Constant'
-    defining_attributes = ('name', 'value', 'units')
+    nineml_type = 'Constant'
+    nineml_attr = ('name', 'value')
+    nineml_child = {'units': Unit}
+
+    # Specify that serialized constants have bodies in v1
+    has_serial_body = 'v1'
 
     def __init__(self, name, value, units=None):
         BaseALObject.__init__(self)
-        self._name = name
-        self._value = float(value)
-        self._units = units if units is not None else unitless
-        assert isinstance(self._units, Unit), "'units' needs to be a Unit obj."
+        self._name = validate_identifier(name)
+        if isinstance(value, Quantity):
+            if units is None:
+                self._value = float(value._value)
+                self._units = value.units
+            elif units.dimension == value.units.dimension:
+                self._value = float(value._value * 10 ** (units.power -
+                                                          value.units.power))
+                self._units = units
+            else:
+                raise NineMLDimensionError(
+                    "Dimensions do not match between provided quantity ({}) "
+                    "and units ({})".format(value.units.dimension,
+                                            units.dimension))
+        else:
+            self._value = float(value)
+            self._units = units if units is not None else unitless
+        if not isinstance(self._units, Unit):
+            raise NineMLUsageError(
+                "'units' in '{}' constant needs to be a Unit obj ({}). "
+                "Supplied arguments were ({}, {}, {}).".format(
+                    self.name, self._units, name, value, units))
 
     @property
     def name(self):
@@ -118,10 +152,6 @@ class Constant(BaseALObject, ExpressionSymbol):
         return ("Constant(name={}, value={}, units={})"
                 .format(self.name, self.value, self.units))
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_constant(self, **kwargs)
-
     def name_transform_inplace(self, name_map):
         try:
             self.name = name_map[self.name]
@@ -132,3 +162,29 @@ class Constant(BaseALObject, ExpressionSymbol):
         assert self.units == units, \
             "Renaming units with ones that do not match"
         self._units = units
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.attr('units', self.units.name, **options)
+        node.attr('value', self.value, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(
+            name=node.attr('name', **options),
+            value=node.attr('value', dtype=float, **options),
+            units=node.visitor.document[
+                node.attr('units', **options)])
+
+    def serialize_node_v1(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
+        node.attr('units', self.units.name, **options)
+        node.body(self.value, **options)
+
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
+        return cls(
+            name=node.attr('name', **options),
+            value=node.body(dtype=float, **options),
+            units=node.visitor.document[
+                node.attr('units', **options)])

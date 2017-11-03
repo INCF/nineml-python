@@ -2,15 +2,18 @@
 NineML Python library
 =====================
 
-NineML_ is a language for describing the dynamics and connectivity of neuronal network
-simulations; in particular for large-scale simulations of many point neurons.
+NineML_ is a language for describing the dynamics and connectivity of neuronal
+network simulations; in particular for large-scale simulations of many point
+neurons.
 
-The language is defined as an object model, described in the `NineML specification`_,
-with a standardized serialization as XML, although other serializations are possible.
+The language is defined as an object model, described in the
+`NineML specification`_, with standardized serializations to XML, JSON, YAML
+and HDF5.
 
-This documentation describes the :py:mod:`nineml` Python package, which implements the
-NineML object model using Python classes, allowing models to be created, edited, introspected, etc.
-using Python, and then written to/read from the NineML XML format.
+This documentation describes the :py:mod:`nineml` Python package, which
+implements the NineML_ object model using Python classes, allowing models to be
+created, edited, introspected, etc. using Python, and then written to/read from
+the NineML_ XML format.
 
 Users' guide
 ------------
@@ -21,11 +24,13 @@ Users' guide
     motivation
     installation
     getting_started
-    examples/index
-    api_reference/index
-    annotations
-    getting_help
+    nineml_types
+    serialization
+    hierarchical
+    examples
+    api/index
     releases/index
+    getting_help
 
 Developers' guide
 -----------------
@@ -34,7 +39,7 @@ Developers' guide
     :maxdepth: 2
 
     contributing
-    implementation_reference
+    developer
 
 
 .. _NineML: http://nineml.net

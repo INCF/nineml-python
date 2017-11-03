@@ -1,6 +1,5 @@
 # requirements file for readthedocs.org
 lxml
-ply
-numpy
-quantities
--e lib9ml/python
+sympy
+numpydoc
+-e nineml-python/nineml
