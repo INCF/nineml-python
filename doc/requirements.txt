@@ -2,4 +2,4 @@
 lxml
 sympy
 numpydoc
--e lib9ml/nineml
+-e nineml-python/nineml
