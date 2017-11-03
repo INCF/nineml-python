@@ -1,4 +1,5 @@
 # requirements file for readthedocs.org
 lxml
 sympy
+numpydoc
 -e lib9ml/nineml
