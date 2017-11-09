@@ -107,6 +107,12 @@ class NineMLStopVisitException(NineMLException):
     pass
 
 
+class NineMLDontVisitChildrenException(NineMLException):
+
+    def __init__(self, result=None):
+        self.result = result
+
+
 class NineMLDuplicateObjectError(NineMLStopVisitException):
 
     def __init__(self, obj, context1, context2):

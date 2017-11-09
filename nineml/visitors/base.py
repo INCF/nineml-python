@@ -2,7 +2,7 @@ from builtins import object
 from collections import OrderedDict, namedtuple
 from nineml.exceptions import (
     NineMLInvalidElementTypeException,
-    NineMLDualVisitException)
+    NineMLDualVisitException, NineMLDontVisitChildrenException)
 
 
 class OrderedDefaultOrderedDictDict(OrderedDict):
@@ -40,15 +40,18 @@ class BaseVisitor(object):
         # were base classes (e.g. Dynamics instead of MultiDynamics)
         nineml_cls = self._get_nineml_cls(obj, nineml_cls)
         # Run the 'action_<obj-nineml_type>' method on the visited object
-        result = self.action(obj, nineml_cls=nineml_cls, **kwargs)
-        # Add the container object to the list of scopes
-        for child_name, child_type in nineml_cls.nineml_child.items():
-            self.visit_child(child_name, child_type, obj,
-                             nineml_cls, result, **kwargs)
-        # Visit children of the object
-        for children_type in nineml_cls.nineml_children:
-            self.visit_children(children_type, obj, nineml_cls, result,
-                                **kwargs)
+        try:
+            result = self.action(obj, nineml_cls=nineml_cls, **kwargs)
+            # Add the container object to the list of scopes
+            for child_name, child_type in nineml_cls.nineml_child.items():
+                self.visit_child(child_name, child_type, obj,
+                                 nineml_cls, result, **kwargs)
+            # Visit children of the object
+            for children_type in nineml_cls.nineml_children:
+                self.visit_children(children_type, obj, nineml_cls, result,
+                                    **kwargs)
+        except NineMLDontVisitChildrenException as e:
+            result = e.result
         return result
 
     def visit_child(self, child_name, child_type, parent, parent_cls=None,  # @UnusedVariable @IgnorePep8
