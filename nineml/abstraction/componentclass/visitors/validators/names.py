@@ -28,22 +28,26 @@ class LocalNameConflictsComponentValidator(BaseVisitor):
         self.visit(component_class)
 
     def check_conflicting_symbol(self, symbol):
+        symbol = symbol.lower()
         if symbol in self.symbols:
             raise NineMLUsageError(
-                "Duplication of symbol found: {}".format(symbol))
+                "Found duplication of '{}' symbol in {} "
+                "(Note that symbols must be case-insensitively unique despite "
+                "being case-sensitive in general)"
+                .format(symbol, self.component_class))
         self.symbols.append(symbol)
 
     def action_parameter(self, parameter, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(symbol=parameter.name)
+        self.check_conflicting_symbol(parameter.name)
 
     def action_alias(self, alias, **kwargs):  # @UnusedVariable
         # Exclude aliases defined within sub scopes (as they should match the
         # outer scope anyway)
         if alias in self.component_class.aliases:
-            self.check_conflicting_symbol(symbol=alias.lhs)
+            self.check_conflicting_symbol(alias.lhs)
 
     def action_constant(self, constant, **kwargs):  # @UnusedVariable @IgnorePep8
-        self.check_conflicting_symbol(symbol=constant.name)
+        self.check_conflicting_symbol(constant.name)
 
     def default_action(self, obj, nineml_cls, **kwargs):
         pass
