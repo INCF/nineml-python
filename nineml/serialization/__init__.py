@@ -7,6 +7,7 @@ import time  # @IgnorePep8
 import weakref  # @IgnorePep8
 from urllib.request import urlopen  # @IgnorePep8
 import contextlib  # @IgnorePep8
+from nineml.document import Document  # @IgnorePep8
 from nineml.exceptions import (  # @IgnorePep8
     NineMLSerializationError, NineMLIOError, NineMLReloadDocumentException,
     NineMLSerializerNotImportedError)
@@ -219,6 +220,8 @@ def serialize(nineml_object, format=DEFAULT_FORMAT, version=DEFAULT_VERSION,  # 
                 " serialize ({})".format(document, nineml_object))
         document = nineml_object
     Serializer = format_to_serializer[format]
+    if document is None:
+        document = Document(nineml_object)
     serializer = Serializer(version=version, document=document, **kwargs)
     serial_elem = serializer.visit(nineml_object, **kwargs)
     if to_str:
