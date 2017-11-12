@@ -5,7 +5,6 @@ docstring needed
 :license: BSD-3, see LICENSE for details.
 """
 from __future__ import division
-from past.utils import old_div
 from future.utils import itervalues
 from collections import defaultdict
 from nineml.exceptions import NineMLUsageError
@@ -195,7 +194,7 @@ class DimensionalityDynamicsValidator(DimensionalityComponentValidator,
         dimension = self._get_dimensions(timederivative)
         sv = self.component_class.state_variable(timederivative.variable)
         self._compare_dimensionality(
-            dimension, old_div(sv.dimension, un.time), timederivative,
+            dimension, sv.dimension / un.time, timederivative,
             'time derivative of ' + sv.name)
 
     def action_stateassignment(self, stateassignment, **kwargs):  # @UnusedVariable @IgnorePep8

@@ -182,7 +182,7 @@ class ComponentClass_test(unittest.TestCase):
             NineMLUsageError,
             Dynamics,
             name='C1',
-            aliases=['A:=1'],
+            aliases=['A1:=1'],
             analog_ports=[AnalogReducePort('B', operator='+'),
                           AnalogSendPort('B')]
         )
@@ -191,7 +191,7 @@ class ComponentClass_test(unittest.TestCase):
             NineMLUsageError,
             Dynamics,
             name='C1',
-            aliases=['A:=1'],
+            aliases=['A1:=1'],
             analog_ports=[AnalogSendPort('A'), AnalogSendPort('A')]
         )
 
@@ -199,7 +199,7 @@ class ComponentClass_test(unittest.TestCase):
             NineMLUsageError,
             Dynamics,
             name='C1',
-            aliases=['A:=1'],
+            aliases=['A1:=1'],
             analog_ports=[AnalogReceivePort('A'), AnalogReceivePort('A')]
         )
 
@@ -217,7 +217,7 @@ class ComponentClass_test(unittest.TestCase):
 
         # Check different names are OK:
         Dynamics(
-            name='C1', aliases=['A:=1'],
+            name='C1', aliases=['A1:=1'],
             event_ports=[EventReceivePort('A')],
             analog_ports=[AnalogSendPort('A')])
 
@@ -225,7 +225,7 @@ class ComponentClass_test(unittest.TestCase):
             NineMLUsageError,
             Dynamics,
             name='C1',
-            aliases=['A:=1'],
+            aliases=['A1:=1'],
             event_ports=[EventReceivePort('A')],
             analog_ports=[AnalogSendPort('A')]
         )
@@ -297,12 +297,12 @@ class ComponentClass_test(unittest.TestCase):
             Dynamics, name='cl', parameters=['a'])
 
         # Single parameter inference from an alias block
-        c = Dynamics(name='cl', aliases=['A:=a'])
+        c = Dynamics(name='cl', aliases=['A1:=a'])
         self.assertEqual(len(list(c.parameters)), 1)
         self.assertEqual(list(c.parameters)[0].name, 'a')
 
         # More complex inference:
-        c = Dynamics(name='cl', aliases=['A:=a+e', 'B:=a+pi+b'],
+        c = Dynamics(name='cl', aliases=['A1:=a+e', 'B1:=a+pi+b'],
                            constants=[Constant('pi', 3.141592653589793)])
         self.assertEqual(len(list(c.parameters)), 3)
         self.assertEqual(sorted([p.name for p in c.parameters]),
@@ -310,7 +310,7 @@ class ComponentClass_test(unittest.TestCase):
 
         # From State Assignments and Differential Equations, and Conditionals
         c = Dynamics(name='cl',
-                     aliases=['A:=a+e', 'B:=a+pi+b'],
+                     aliases=['A1:=a+e', 'B1:=a+pi+b'],
                      regimes=Regime('dX/dt = (6 + c + sin(d))/t',
                                     'dV/dt = 1.0/t',
                                     transitions=On('V>Vt',
@@ -325,7 +325,7 @@ class ComponentClass_test(unittest.TestCase):
             NineMLUsageError,
             Dynamics,
             name='cl',
-            aliases=['A:=a+e', 'B:=a+pi+b'],
+            aliases=['A1:=a+e', 'B1:=a+pi+b'],
             regimes=Regime('dX/dt = 6 + c + sin(d)',
                            'dV/dt = 1.0',
                            transitions=On('V>Vt', do=['X = X + f', 'V=0'])
@@ -447,7 +447,7 @@ class ComponentClass_test(unittest.TestCase):
         # From State Assignments and Differential Equations, and Conditionals
         c = Dynamics(
             name='cl',
-            aliases=['A:=a+e', 'B:=a+pi+b'],
+            aliases=['A1:=a+e', 'B1:=a+pi+b'],
             regimes=Regime('dX/dt = (6 + c + sin(d))/t',
                            'dV/dt = 1.0/t',
                            transitions=On('V>Vt', do=['X = X + f', 'V=0'])))
@@ -459,7 +459,7 @@ class ComponentClass_test(unittest.TestCase):
             NineMLUsageError,
             Dynamics,
             name='cl',
-            aliases=['A:=a+e', 'B:=a+pi+b'],
+            aliases=['A1:=a+e', 'B1:=a+pi+b'],
             regimes=Regime('dX/dt = 6 + c + sin(d)',
                            'dV/dt = 1.0',
                            transitions=On('V>Vt', do=['X = X + f', 'V=0'])
@@ -471,7 +471,7 @@ class ComponentClass_test(unittest.TestCase):
             NineMLUsageError,
             Dynamics,
             name='cl',
-            aliases=['A:=a+e', 'B:=a+pi+b'],
+            aliases=['A1:=a+e', 'B1:=a+pi+b'],
             regimes=Regime('dX/dt = 6 + c + sin(d)',
                            'dV/dt = 1.0',
                            transitions=On('V>Vt', do=['X = X + f', 'V=0'])
@@ -943,8 +943,8 @@ class Query_test(unittest.TestCase):
                            On('spikeinput3', do=OutputEvent('ev_port3'),
                               to='r1')])
             ],
-            aliases=['A:=0', 'C:=0'],
-            analog_ports=[AnalogSendPort('A'), AnalogReceivePort('B'),
+            aliases=['A1:=0', 'C:=0'],
+            analog_ports=[AnalogSendPort('A1'), AnalogReceivePort('B'),
                           AnalogSendPort('C')]
         )
 
@@ -953,7 +953,7 @@ class Query_test(unittest.TestCase):
 
         self.assertEquals(len(port_names), 8)
         self.assertEquals(set(port_names),
-                          set(['A', 'B', 'C', 'spikeinput1', 'spikeinput2',
+                          set(['A1', 'B', 'C', 'spikeinput1', 'spikeinput2',
                                'spikeinput3', 'ev_port2', 'ev_port3'])
                           )
 
