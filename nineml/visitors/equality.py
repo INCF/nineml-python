@@ -182,7 +182,7 @@ class Hasher(BaseVisitor):
         for v in val.values:
             self._hash_value(v)
 
-    def _hash_rhs(self, rhs, nineml_cls, **kwargs):  # @UnusedVariable
+    def _hash_rhs(self, rhs, **kwargs):  # @UnusedVariable
         try:
             rhs = sympy.expand(rhs)
         except TypeError:

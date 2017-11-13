@@ -213,7 +213,7 @@ class Dynamics(ComponentClass, DynamicPortsObject):
         all aliases removed that do not correspond directly to analog send
         ports
         """
-        substituted = self.clone()
+        substituted = self.clone(as_class=Dynamics)
         DynamicsSubstituteAliases(substituted)
         return substituted
 
