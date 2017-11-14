@@ -9,12 +9,10 @@ addons:
   apt:
     packages:
     - libhdf5-serial-dev 
-# command to install dependencies
 install:
   - pip install -r requirements.txt
   - pip install coveralls
   - pip install numpy
-# command to run tests, e.g. python setup.py test
 script:
   nosetests test/unittests --with-coverage --cover-package=nineml
 after_success:

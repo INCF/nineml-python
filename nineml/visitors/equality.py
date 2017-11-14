@@ -185,7 +185,7 @@ class Hasher(BaseVisitor):
     def _hash_rhs(self, rhs, **kwargs):  # @UnusedVariable
         try:
             rhs = sympy.expand(rhs)
-        except TypeError:
+        except:
             pass
         self._hash_attr(rhs)
 
