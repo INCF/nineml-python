@@ -462,9 +462,9 @@ class _AnnotationsBranch(BaseAnnotations):
 
     @property
     def sort_key(self):
-        index = self._abs_index if self._abs_index is not None else self.key
-        assert index is not None
-        return index
+        index = (self._abs_index
+                 if self._abs_index is not None else float('inf'))
+        return (index,) + self.key
 
     def _repr(self, indent=''):
         rep = "{}{{{}}}{}:".format(indent, self.ns, self.name)
