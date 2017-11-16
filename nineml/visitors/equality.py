@@ -211,7 +211,7 @@ class MismatchFinder(DualWithContextMixin, EqualityChecker):
         EqualityChecker.__init__(self, **kwargs)
         DualWithContextMixin.__init__(self)
 
-    def find(self, obj1, obj2):
+    def find(self, obj1, obj2, **kwargs):  # @UnusedVariable
         self.mismatch = []
         self.visit(obj1, obj2)
         assert not self.contexts1
