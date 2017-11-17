@@ -1,2 +1,6 @@
-lxml
-sympy
+lxml>=3.7.3
+pyyaml>=3.1
+h5py>=2.7.0
+future>=0.16.0
+sympy>=1.1
+numpydoc

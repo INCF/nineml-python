@@ -1,6 +1,6 @@
+from __future__ import division
 from nineml import units as un
 from nineml import abstraction as al, user as ul
-from nineml.xmlns import E, etree
 
 
 def create_adaptive_exponential():
@@ -66,69 +66,20 @@ def create_adaptive_exponential():
 def parameterise_adaptive_exponential(definition=None):
     if definition is None:
         definition = create_adaptive_exponential()
-    comp = ul.DynamicsComponent(
+    comp = ul.DynamicsProperties(
         name='SampleAdaptiveExpIntegrateAndFire',
         definition=definition,
-        properties=[ul.Property('C_m', 1, un.pF),
-                    ul.Property('g_L', 0.1, un.nS),
-                    ul.Property('E_L', -65, un.mV),
-                    ul.Property('Delta', 1, un.mV),
-                    ul.Property('V_T', -58, un.mV),
+        properties=[ul.Property('C_m', 1 * un.pF),
+                    ul.Property('g_L', 0.1 * un.nS),
+                    ul.Property('E_L', -65 * un.mV),
+                    ul.Property('Delta', 1 * un.mV),
+                    ul.Property('V_T', -58 * un.mV),
                     ul.Property('S', 0.1),
-                    ul.Property('tspike', 0.5, un.ms),
-                    ul.Property('trefractory', 0.25, un.ms),
-                    ul.Property('tau_w', 4, un.ms),
-                    ul.Property('a', 1, un.per_mV),
+                    ul.Property('tspike', 0.5 * un.ms),
+                    ul.Property('trefractory', 0.25 * un.ms),
+                    ul.Property('tau_w', 4 * un.ms),
+                    ul.Property('a', 1 * un.per_mV),
                     ul.Property('b', 2)],
-        initial_values=[ul.Initial('V', -70, un.mV),
-                        ul.Initial('w', 0.1, un.mV)])
+        initial_values=[ul.Initial('V', -70 * un.mV),
+                        ul.Initial('w', 0.1 * un.mV)])
     return comp
-
-
-if __name__ == '__main__':
-    import argparse
-    try:
-        import ninemlcatalog
-        catalog_path = 'neuron/AdaptiveExpIntegrateAndFire'
-    except ImportError:
-        ninemlcatalog = None
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', type=str, default='print',
-                        help=("The mode to run this script, can be 'print', "
-                              "'compare' or 'save', which correspond to "
-                              "printing the models, comparing the models with "
-                              "the version in the catalog, or overwriting the "
-                              "version in the catalog with this version "
-                              "respectively"))
-    args = parser.parse_args()
-
-    if args.mode == 'print':
-        print etree.tostring(
-            E.NineML(
-                create_adaptive_exponential().to_xml(),
-                parameterise_adaptive_exponential().to_xml()),
-            encoding="UTF-8", pretty_print=True, xml_declaration=True)
-    elif args.mode == 'compare':
-        if ninemlcatalog is None:
-            raise Exception(
-                "NineML catalog is not installed")
-        local_version = create_adaptive_exponential()
-        catalog_version = ninemlcatalog.load(catalog_path,
-                                               local_version.name)
-        mismatch = local_version.find_mismatch(catalog_version)
-        if mismatch:
-            print ("Local version differs from catalog version:\n{}"
-                   .format(mismatch))
-        else:
-            print "Local version matches catalog version"
-    elif args.mode == 'save':
-        if ninemlcatalog is None:
-            raise Exception(
-                "NineML catalog is not installed")
-        dynamics = create_adaptive_exponential()
-        ninemlcatalog.save(dynamics, catalog_path, dynamics.name)
-        params = parameterise_adaptive_exponential(
-            ninemlcatalog.load(catalog_path, dynamics.name))
-        ninemlcatalog.save(params, catalog_path, params.name)
-        print "Saved '{}' and '{}' to catalog".format(dynamics.name,
-                                                      params.name)

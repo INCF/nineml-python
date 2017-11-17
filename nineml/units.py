@@ -1,37 +1,46 @@
+# encoding: utf-8
 from __future__ import division
+from builtins import next
+from builtins import zip
 import re
 import operator
 from sympy import Symbol
-from nineml.xmlns import E
-from nineml import BaseNineMLObject, DocumentLevelObject
-from nineml.annotations import annotate_xml, read_annotations
-from nineml.exceptions import handle_xml_exceptions
+import sympy
+import math
+from nineml.base import AnnotatedNineMLObject, DocumentLevelObject
+from nineml.exceptions import (
+    NineMLUsageError, NineMLDimensionError, NineMLValueError,
+    NineMLSerializationError)
+from nineml.utils import validate_identifier
+from functools import reduce
 
 
-class Dimension(BaseNineMLObject, DocumentLevelObject):
+class Dimension(AnnotatedNineMLObject, DocumentLevelObject):
     """
     Defines the dimension used for quantity units
     """
 
-    element_name = 'Dimension'
-    dimension_names = ('m', 'l', 't', 'i', 'n', 'k', 'j')
-    SI_units = ('Kg', 'm', 's', 'A', 'mol', 'K', 'cd')
-    defining_attributes = ('_dims',)
+    nineml_type = 'Dimension'
+    nineml_attr = ('name', 'm', 'l', 't', 'i', 'n', 'k', 'j')
+
+    dimension_symbols = ('m', 'l', 't', 'i', 'n', 'k', 'j')
+    dimension_names = ('mass', 'length', 'time', 'current', 'amount',
+                       'temperature', 'luminous_intensity')
+    SI_units = ('kg', 'm', 's', 'A', 'mol', 'K', 'cd')
+
     _trailing_numbers_re = re.compile(r'(.*)(\d+)$')
 
     def __init__(self, name, dimensions=None, **kwargs):
-        BaseNineMLObject.__init__(self)
-        DocumentLevelObject.__init__(self, kwargs.pop('url', None))
-        self._name = name
+        self._name = validate_identifier(name)
+        AnnotatedNineMLObject.__init__(self)
+        DocumentLevelObject.__init__(self)
         if dimensions is not None:
             assert len(dimensions) == 7, "Incorrect dimension length"
             self._dims = tuple(dimensions)
         else:
-            self._dims = tuple(kwargs.pop(d, 0) for d in self.dimension_names)
+            self._dims = tuple(kwargs.pop(d, 0)
+                               for d in self.dimension_symbols)
         assert not len(kwargs), "Unrecognised kwargs ({})".format(kwargs)
-
-    def __hash__(self):
-        return hash(self._dims)
 
     def __ne__(self, other):
         return not (self == other)
@@ -39,8 +48,11 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     def __repr__(self):
         return ("Dimension(name='{}'{})".format(
             self.name, ''.join(' {}={}'.format(n, p) if p != 0 else ''
-                               for n, p in zip(self.dimension_names,
+                               for n, p in zip(self.dimension_symbols,
                                                self._dims))))
+
+    def __str__(self):
+        return self.name
 
     def __iter__(self):
         return iter(self._dims)
@@ -50,7 +62,7 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return self._name
 
     def power(self, name):
-        return self._dims[self.dimension_names.index(name)]
+        return self._dims[self.dimension_symbols.index(name)]
 
     def to_SI_units_str(self):
         numer = '*'.join('({}**{})'.format(si, p) if p > 1 else si
@@ -64,9 +76,13 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         Create a sympy expression by multiplying symbols representing each of
         the dimensions together
         """
-        return reduce(
-            operator.mul,
-            (Symbol(n) ** p for n, p in zip(self.dimension_names, self._dims)))
+        try:
+            return reduce(
+                operator.mul,
+                (Symbol(n) ** p
+                 for n, p in zip(self.dimension_symbols, self._dims)))
+        except:
+            raise
 
     @property
     def m(self):
@@ -124,35 +140,27 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
     def current(self):
         return self.i
 
-    @annotate_xml
-    def to_xml(self):
-        kwargs = {'name': self.name}
-        kwargs.update(dict(
-            (n, str(p))
-            for n, p in zip(self.dimension_names, self._dims) if abs(p) > 0))
-        return E(self.element_name, **kwargs)
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name)
+        for n, p in zip(self.dimension_symbols, self._dims):
+            if abs(p) > 0:
+                node.attr(n, p)
 
     @classmethod
-    @read_annotations
-    @handle_xml_exceptions
-    def from_xml(cls, element, document):
-        kwargs = dict(element.attrib)
-        name = kwargs.pop('name')
-        kwargs = dict((k, int(v)) for k, v in kwargs.items())
-        kwargs['url'] = document.url
-        return cls(name, **kwargs)
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        name = node.attr('name', **options)
+        # Get the attributes corresponding to the dimension symbols
+        dim_args = dict((s, node.attr(s, default=0, dtype=int, **options))
+                         for s in cls.dimension_symbols)
+        return cls(name, **dim_args)
 
     def __mul__(self, other):
         "self * other"
-        if other == 1:
-            other = dimensionless
         return Dimension(self.make_name([self.name, other.name]),
                          dimensions=tuple(s + o for s, o in zip(self, other)))
 
     def __truediv__(self, other):
         "self / expr"
-        if other == 1:
-            other = dimensionless
         return Dimension(self.make_name([self.name], [other.name]),
                          dimensions=tuple(s - o for s, o in zip(self, other)))
 
@@ -161,19 +169,8 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
         return Dimension(self.make_name([self.name], power=power),
                          dimensions=tuple(s * power for s in self))
 
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    def __rtruediv__(self, other):
-        if other == 1:
-            other = dimensionless
-        return other.__truediv__(self)
-
     def __div__(self, other):
         return self.__truediv__(other)
-
-    def __rdiv__(self, other):
-        return self.__rtruediv__(other)
 
     @classmethod
     def make_name(cls, products=[], divisors=[], power=1):
@@ -226,27 +223,69 @@ class Dimension(BaseNineMLObject, DocumentLevelObject):
             if len(numerator):
                 name += '_'
             name += 'per_' + '_'.join(sorted(denominator))
+        if not name:
+            name = 'dimensionless'
         return name
 
+    @classmethod
+    def from_sympy(self, expr):
+        if expr == 1:
+            return dimensionless
+        elif not isinstance(expr, sympy.Basic):
+            raise NineMLUsageError(
+                "Cannot convert '{}' dimension, must be 1 or sympy expression"
+                .format(expr))
+        powers = {}
+        stack = [expr]
+        while stack:
+            expr = stack.pop()
+            if isinstance(expr, sympy.Mul):
+                stack.extend(expr.args)
+            elif isinstance(expr, sympy.Pow):
+                powers[str(expr.args[0])] = expr.args[1]
+            else:
+                powers[str(expr)] = 1
+        name_num = []
+        name_den = []
+        for sym, p in powers.items():
+            name = self.dimension_names[next(
+                i for i, s in enumerate(self.dimension_symbols) if s == sym)]
+            if abs(p) > 1:
+                name += str(abs(p))
+            if p > 0:
+                name_num.append(name)
+            else:
+                name_den.append(name)
+        name = '_'.join(name_num)
+        if name_den:
+            if name:
+                name += '_'
+            name += 'per_' + '_'.join(name_den)
+        return Dimension(name, **powers)
 
-class Unit(BaseNineMLObject, DocumentLevelObject):
+    @property
+    def origin(self):
+        """Returns a Quantity that equal to the origin of this dimension"""
+        return Quantity(0.0, Unit(self.name + 'SIUnit', self, power=0))
+
+
+class Unit(AnnotatedNineMLObject, DocumentLevelObject):
     """
     Defines the units of a quantity
     """
 
-    element_name = 'Unit'
-    defining_attributes = ('_dimension', '_power', '_offset')
+    nineml_type = 'Unit'
+    nineml_attr = ('name', 'power', 'offset')
+    nineml_child = {'dimension': Dimension}
 
-    def __init__(self, name, dimension, power, offset=0.0, url=None):
-        BaseNineMLObject.__init__(self)
-        DocumentLevelObject.__init__(self, url)
-        self._name = name
+    def __init__(self, name, dimension, power, offset=0.0):
+        self._name = validate_identifier(name)
+        AnnotatedNineMLObject.__init__(self)
+        DocumentLevelObject.__init__(self)
+        assert isinstance(dimension, Dimension)
         self._dimension = dimension
         self._power = power
         self._offset = offset
-
-    def __hash__(self):
-        return hash((self.power, self.offset, self.dimension))
 
     def __ne__(self, other):
         return not (self == other)
@@ -257,19 +296,15 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
                         (", offset='{}'".format(self.offset)
                          if self.offset else '')))
 
+    def __str__(self):
+        return self.name
+
     def to_SI_units_str(self):
         if self.offset != 0.0:
             raise Exception("Cannot convert to SI units string as offset is "
                             "not zero ({})".format(self.offset))
         return (self.dimension.to_SI_units_str() +
                 ' * 10**({})'.format(self.power) if self.power else '')
-
-    def _sympy_(self):
-        """
-        Create a sympy expression by multiplying symbols representing each of
-        the dimensions together
-        """
-        return self.dimension._sympy_() * 10 ** self.power + self.offset
 
     @property
     def name(self):
@@ -300,48 +335,57 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
     def symbol(self):
         return self.name
 
-    @annotate_xml
-    def to_xml(self):
-        kwargs = {'symbol': self.name, 'dimension': self.dimension.name,
-                  'power': str(self.power)}
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('symbol', self.name)
+        node.attr('dimension', self.dimension.name)
+        node.attr('power', self.power)
         if self.offset:
-            kwargs['offset'] = str(self.offset)
-        return E(self.element_name,
-                 **kwargs)
+            node.attr('offset', self.offset)
 
     @classmethod
-    @read_annotations
-    @handle_xml_exceptions
-    def from_xml(cls, element, document):
-        name = element.attrib['symbol']
-        dimension = document[element.attrib['dimension']]
-        power = int(element.get('power', 0))
-        offset = float(element.attrib.get('name', 0.0))
-        return cls(name, dimension, power, offset=offset, url=document.url)
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        name = node.attr('symbol', **options)
+        dimension = node.document[node.attr('dimension', **options)]
+        power = node.attr('power', dtype=int, default=0, **options)
+        offset = node.attr('offset', dtype=float, default=0.0, **options)
+        return cls(name, dimension, power, offset=offset)
 
     def __mul__(self, other):
         "self * other"
-        if other == 1:
-            other = unitless
-        assert (self.offset == 0 and
-                other.offset == 0), "Can't multiply units with nonzero offsets"
-        return Unit(Dimension.make_name([self.name, other.name]),
-                    dimension=self.dimension * other.dimension,
-                    power=(self.power + other.power))
+        try:
+            if (self.offset != 0 or other.offset != 0):
+                raise NineMLUsageError(
+                    "Can't multiply units with nonzero offsets ({} and {})"
+                    .format(self, other))
+            return Unit(Dimension.make_name([self.name, other.name]),
+                        dimension=self.dimension * other.dimension,
+                        power=(self.power + other.power))
+        except AttributeError:
+            return Quantity(other, self)
 
     def __truediv__(self, other):
         "self / expr"
-        if other == 1:
-            other = unitless
-        assert (self.offset == 0 and
-                other.offset == 0), "Can't divide units with nonzero offsets"
-        return Unit(Dimension.make_name([self.name], [other.name]),
-                    dimension=self.dimension / other.dimension,
-                    power=(self.power - other.power))
+        try:
+            if (self.offset != 0 or other.offset != 0):
+                raise NineMLUsageError(
+                    "Can't divide units with nonzero offsets ({} and {})"
+                    .format(self, other))
+            return Unit(Dimension.make_name([self.name], [other.name]),
+                        dimension=self.dimension / other.dimension,
+                        power=(self.power - other.power))
+        except AttributeError:
+            if isinstance(other, (float, int)):
+                inverted = 1.0 / other
+            else:
+                inverted = other.inverse()
+            return Quantity(inverted, self)
 
     def __pow__(self, power):
         "self ** expr"
-        assert self.offset == 0, "Can't raise units with nonzero offsets"
+        if self.offset != 0:
+            raise NineMLUsageError(
+                "Can't raise units to power with nonzero offsets ({})"
+                .format(self))
         return Unit(Dimension.make_name([self.name], power=power),
                     dimension=(self.dimension ** power),
                     power=(self.power * power))
@@ -350,9 +394,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         return self.__mul__(other)
 
     def __rtruediv__(self, other):
-        if other == 1:
-            other = unitless
-        return other.__truediv__(self)
+        return Quantity(float(other), unitless / self)
 
     def __div__(self, other):
         return self.__truediv__(other)
@@ -361,6 +403,236 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
         return self.__rtruediv__(other)
 
 
+class Quantity(AnnotatedNineMLObject):
+
+    """
+    Representation of a numerical- or string-valued parameter.
+
+    A numerical parameter is a (name, value, units) triplet, a string parameter
+    is a (name, value) pair.
+
+    Numerical values may either be numbers, or a component_class that generates
+    numbers, e.g. a RandomDistribution instance.
+    """
+    nineml_type = 'Quantity'
+    nineml_child = {'value': None,
+                    'units': Unit}
+
+    def __init__(self, value, units=None):
+        super(Quantity, self).__init__()
+        if isinstance(value, Quantity):
+            if units is not None:
+                value = value.in_units(units)
+            else:
+                units = value.units
+                value = value.value
+        elif not isinstance(value, (SingleValue, ArrayValue,
+                                    RandomDistributionValue)):
+            try:
+                # Convert value from float
+                value = SingleValue(float(value))
+            except TypeError:
+                # Convert value from iterable
+                value = ArrayValue(value)
+        if units is None:
+            units = unitless
+        elif not isinstance(units, Unit):
+            raise Exception("Units ({}) must of type <Unit>".format(units))
+        self._value = value
+        self._units = units
+
+    @property
+    def key(self):
+        return self._value.key + '_' + self._units.name
+
+    def __iter__(self):
+        """For conveniently expanding quantities like a tuple"""
+        return iter((self.value, self.units))
+
+    def __float__(self):
+        return float(self.value)
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def units(self):
+        return self._units
+
+    def __getitem__(self, index):
+        if self.value.is_array():
+            return self._value.values[index] * self.units
+        elif self.value.is_single():
+            return self._value.value * self.units
+        else:
+            raise NineMLUsageError(
+                "Cannot get item from random distribution")
+
+    def set_units(self, units):
+        if units.dimension != self.units.dimension:
+            raise NineMLDimensionError(
+                "Can't change dimension of quantity from '{}' to '{}'"
+                .format(self.units.dimension, units.dimension))
+        self._value = self.in_units(units)
+        self._units = units
+
+    def in_units(self, units):
+        """
+        Returns a float value in terms of the given units (dimensions must be
+        equivalent)
+        """
+        if units.dimension != self.units.dimension:
+            raise NineMLDimensionError(
+                "Can't change convert quantity dimension from '{}' to '{}'"
+                .format(self.units.dimension, units.dimension))
+        return self.value * 10 ** (self.units.power - units.power)
+
+    def __repr__(self):
+        return '{} * {}'.format(
+            (self.value.value if isinstance(self.value, SingleValue)
+             else self.value), self.units)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.child(self._value, **options)
+        node.attr('units', self.units.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        value = node.child((SingleValue, ArrayValue, RandomDistributionValue),
+                           allow_ref=True, **options)
+        units_str = node.attr('units', **options)
+        try:
+            units = node.document[units_str]
+        except KeyError:
+            raise NineMLSerializationError(
+                "Did not find definition of '{}' units in the current "
+                "document.".format(units_str))
+        return cls(value=value, units=units)
+
+    def __add__(self, qty):
+        return Quantity(self.value + self._scaled_value(qty), self.units)
+
+    def __sub__(self, qty):
+        return Quantity(self.value - self._scaled_value(qty), self.units)
+
+    def __mul__(self, qty):
+        try:
+            return Quantity(self.value * qty.value, self.units * qty.units)
+        except AttributeError:
+            if isinstance(qty, (float, int)):
+                return Quantity(self.value * qty, self.units)
+            else:
+                return Quantity(self.value, self.units * qty)  # If qty is a Unit @IgnorePep8
+
+    def __truediv__(self, qty):
+        try:
+            return Quantity(self.value / qty.value, self.units / qty.units)
+        except AttributeError:
+            if isinstance(qty, float):
+                return Quantity(self.value / qty, self.units)
+            else:
+                return Quantity(self.value, self.units / qty)  # If qty is a Unit @IgnorePep8
+
+    def __div__(self, qty):
+        return self.__truediv__(qty)
+
+    def __pow__(self, power):
+        return Quantity(self.value ** power, self.units ** power)
+
+    def __radd__(self, qty):
+        return self.__add__(qty)
+
+    def __rsub__(self, qty):
+        return self._scaled_value(qty) - self._value
+
+    def __rmul__(self, qty):
+        return self.__mul__(qty)
+
+    def __rtruediv__(self, qty):
+        if isinstance(qty, (float, int)):
+            qty = qty * unitless
+        return qty.__truediv__(self)
+
+    def __rdiv__(self, qty):
+        return self.__rtruediv__(qty)
+
+    def __neg__(self):
+        return Quantity(-self._value, self.units)
+
+    def __abs__(self):
+        return Quantity(abs(self._value), self.units)
+
+    def __lt__(self, qty):
+        return self._value < self._scaled_value(qty)
+
+    def __le__(self, qty):
+        return self._value <= self._scaled_value(qty)
+
+    def __ge__(self, qty):
+        return self._value >= self._scaled_value(qty)
+
+    def __gt__(self, qty):
+        return self._value > self._scaled_value(qty)
+
+    def _scaled_value(self, qty):
+        try:
+            if qty.units.dimension != self.units.dimension:
+                raise NineMLDimensionError(
+                    "Cannot scale value as dimensions do not match ('{}' and "
+                    "'{}')".format(self.units.dimension.name,
+                                   qty.units.dimension.name))
+            return qty.value * 10 ** (self.units.power - qty.units.power)
+        except AttributeError:
+            if self.units == unitless:
+                return float(qty.value)
+            else:
+                raise NineMLDimensionError(
+                    "Can only add/subtract numbers from dimensionless "
+                    "quantities")
+
+    @classmethod
+    def parse(cls, qty):
+        """
+        Parses ints and floats as dimensionless quantities and
+        python-quantities Quantity objects into 9ML Quantity objects
+        """
+        if not isinstance(qty, cls):
+            # Assume it is a python quantities quantity and convert to
+            # 9ML quantity
+            try:
+                unit_name = str(qty.units).split()[1].replace(
+                    '/', '_per_').replace('**', '').replace('*', '_')
+                if unit_name.startswith('_per_'):
+                    unit_name = unit_name[1:]  # strip leading underscore
+                powers = dict(
+                    (cls._pq_si_to_dim[type(u).__name__], p)
+                    for u, p in
+                    qty.units.simplified._dimensionality.items())
+                dimension = Dimension(unit_name + 'Dimension', **powers)
+                units = Unit(
+                    unit_name, dimension=dimension,
+                    power=int(math.log10(float(qty.units.simplified))))
+                value = SingleValue(qty)
+            except AttributeError:
+                if isinstance(qty, (int, float)):
+                    value = SingleValue(qty)
+                else:
+                    try:
+                        value = ArrayValue(qty)
+                    except NineMLValueError:
+                        raise NineMLUsageError(
+                            "Cannot convert '{}' to nineml.Quantity (can only "
+                            "convert quantities.Quantity and numeric objects)"
+                            .format(qty))
+                units = unitless
+            qty = Quantity(value, units)
+        return qty
+
+    _pq_si_to_dim = {'UnitMass': 'm', 'UnitLength': 'l', 'UnitTime': 't',
+                     'UnitCurrent': 'i', 'UnitLuminousIntensity': 'j',
+                     'UnitSubstance': 'n', 'UnitTemperature': 'k'}
+
 # ----------------- #
 # Common dimensions #
 # ----------------- #
@@ -368,6 +640,7 @@ class Unit(BaseNineMLObject, DocumentLevelObject):
 time = Dimension(name="time", t=1)
 per_time = Dimension(name="per_time", t=-1)
 voltage = Dimension(name="voltage", m=1, l=2, t=-3, i=-1)
+velocity = Dimension(name="velocity", l=1, t=-1)
 per_voltage = Dimension(name="per_voltage", m=-1, l=-2, t=3, i=1)
 conductance = Dimension(name="conductance", m=-1, l=-2, t=3, i=2)
 conductanceDensity = Dimension(name="conductanceDensity", m=-1, l=-4, t=3, i=2)
@@ -399,6 +672,7 @@ rho_factor = Dimension(name="rho_factor", l=-1, n=1, i=-1, t=-1)
 dimensionless = Dimension(name="dimensionless")
 energy_per_temperature = Dimension(name="energy_per_temperature", m=1, l=2,
                                    t=-2, k=-1)
+luminous_intensity = Dimension(name="luminous_intensity", j=1)
 
 # ------------ #
 # Common units #
@@ -407,6 +681,7 @@ energy_per_temperature = Dimension(name="energy_per_temperature", m=1, l=2,
 s = Unit(name="s", dimension=time, power=0)
 per_s = Unit(name="per_s", dimension=per_time, power=0)
 Hz = Unit(name="Hz", dimension=per_time, power=0)
+kHz = Unit(name="kHz", dimension=per_time, power=3)
 ms = Unit(name="ms", dimension=time, power=-3)
 per_ms = Unit(name="per_ms", dimension=per_time, power=3)
 m = Unit(name="m", dimension=length, power=0)
@@ -471,7 +746,12 @@ mol_per_m_per_A_per_s = Unit(name="mol_per_m_per_A_per_s",
                              dimension=rho_factor, power=0)
 unitless = Unit(name="unitless", dimension=dimensionless, power=0)
 coulomb = Unit(name="coulomb", dimension=current_per_time, power=0)
+cd = Unit(name="cd", dimension=luminous_intensity, power=0)
+kg_per_coulomb = Unit(name="kg_per_coulomb", dimension=mass_per_charge,
+                      power=0)
+cm_per_s = Unit(name="cm_per_s", dimension=velocity, power=-2)
+pF_per_nA = Unit(name='pF_per_nA', dimension=voltage / time, power=-6)
 
-if __name__ == '__main__':
-    print 1 / voltage
-    print (current / voltage) ** -3
+
+from nineml.values import (  # @IgnorePep8
+    SingleValue, ArrayValue, RandomDistributionValue)

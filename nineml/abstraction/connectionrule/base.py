@@ -9,63 +9,154 @@ docstring goes here
 .. moduleauthor:: Mikael Djurfeldt <mikael.djurfeldt@incf.org>
 .. moduleauthor:: Dragan Nikolic <dnikolic@incf.org>
 
-:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:copyright: Copyright 2010-2017 by the NineML Python team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
-from ..componentclass import ComponentClass, MainBlock
-
-
-class ConnectionRuleBlock(MainBlock):
-
-    element_name = 'ConnectionRuleComponent'
-    defining_attributes = ('standard_library',)
-
-    def __init__(self, standard_library):
-        super(ConnectionRuleBlock, self).__init__()
-        self.standard_library = standard_library
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_connectionruleblock(self, **kwargs)
+from ..componentclass import ComponentClass, Parameter
+from nineml.exceptions import NineMLUsageError, NineMLSerializationError
+import nineml.units as un
 
 
 class ConnectionRule(ComponentClass):
 
-    defining_attributes = ('name', '_parameters', '_main_block')
+    nineml_type = 'ConnectionRule'
+    nineml_attr = ComponentClass.nineml_attr + ('standard_library',)
 
-    def __init__(self, name, connectionruleblock, parameters=None, url=None):
-        super(ConnectionRule, self).__init__(
-            name, parameters, main_block=connectionruleblock, url=url)
+    standard_library_basepath = 'http://nineml.net/9ML/1.0/connectionrules/'
+    _base_len = len(standard_library_basepath)
+    standard_types = ('AllToAll', 'OneToOne', 'Explicit',
+                      'Probabilistic', 'RandomFanIn',
+                      'RandomFanOut')
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_componentclass(self, **kwargs)
+    def __init__(self, name, standard_library, parameters=(),
+                 validate=True, **kwargs):  # @UnusedVariable @IgnorePep8
+        super(ConnectionRule, self).__init__(name, parameters)
+        # Convert to lower case
+        if (not standard_library.startswith(self.standard_library_basepath) or
+                standard_library[self._base_len:] not in self.standard_types):
+            raise NineMLUsageError(
+                "Unrecognised connection rule library path '{}'. "
+                "Available options are '{}'".format(
+                    standard_library,
+                    "', '".join(self.standard_library_basepath + t
+                                for t in self.standard_types)))
+        self._standard_library = str(standard_library)
+        if validate:
+            self.validate(**kwargs)
 
-    def __copy__(self, memo=None):  # @UnusedVariable
-        return ConnectionRuleCloner().visit(self)
+    @property
+    def standard_library(self):
+        return self._standard_library
 
     def rename_symbol(self, old_symbol, new_symbol):
         ConnectionRuleRenameSymbol(self, old_symbol, new_symbol)
 
-    def assign_indices(self):
-        ConnectionRuleAssignIndices(self)
-
     def required_for(self, expressions):
         return ConnectionRuleRequiredDefinitions(self, expressions)
 
-    def _find_element(self, element):
-        return ConnectionRuleElementFinder(element).found_in(self)
+    def dimension_of(self, element):
+        if self._dimension_resolver is None:
+            self._dimension_resolver = ConnectionRuleDimensionResolver(self)
+        return self._dimension_resolver.dimension_of(element)
 
-    def validate(self):
-        ConnectionRuleValidator.validate_componentclass(self)
+    def validate(self, **kwargs):
+        ConnectionRuleValidator.validate_componentclass(self, **kwargs)
 
     @property
-    def standard_library(self):
-        return self._main_block.standard_library
+    def all_expressions(self):
+        extractor = ConnectionRuleExpressionExtractor()
+        extractor.visit(self)
+        return extractor.expressions
 
-from .utils.cloner import ConnectionRuleCloner
-from .utils.modifiers import (
-    ConnectionRuleRenameSymbol, ConnectionRuleAssignIndices)
-from .utils.visitors import (
-    ConnectionRuleRequiredDefinitions, ConnectionRuleElementFinder)
-from .validators import ConnectionRuleValidator
+    # connection_rule
+    def serialize_node(self, node, **options):  # @UnusedVariable @IgnorePep8
+        node.attr('name', self.name, **options)
+        node.children(self.parameters, **options)
+        node.attr('standard_library', self.standard_library, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        standard_library = node.attr('standard_library', **options)
+        return cls(
+            name=node.attr('name', **options),
+            standard_library=standard_library,
+            parameters=node.children(Parameter, **options))
+
+    # connection_rule
+    def serialize_node_v1(self, node, **options):  # @UnusedVariable @IgnorePep8
+        node.attr('name', self.name, **options)
+        node.children(self.parameters, **options)
+        cr_elem = node.visitor.create_elem(
+            'ConnectionRule', parent=node.serial_element, **options)
+        node.visitor.set_attr(cr_elem, 'standard_library',
+                              self.standard_library, **options)
+
+    @classmethod
+    def unserialize_node_v1(cls, node, **options):  # @UnusedVariable
+        cr_elem = node.visitor.get_child(node.serial_element, 'ConnectionRule',
+                                         **options)
+        node.unprocessed_children.remove('ConnectionRule')
+        if list(node.visitor.get_all_children(cr_elem)):
+            raise NineMLSerializationError(
+                "Not expecting {} blocks within 'ConnectionRule' block"
+                .format(', '.join(node.visitor.get_children(cr_elem))))
+        standard_library = node.visitor.get_attr(
+            cr_elem, 'standard_library', **options)
+        return cls(
+            name=node.attr('name', **options),
+            standard_library=standard_library,
+            parameters=node.children(Parameter, **options))
+
+    @property
+    def lib_type(self):
+        return self.standard_library[self._base_len:]
+
+    def is_random(self):
+        return self.lib_type in ('Probabilistic', 'RandomFanIn',
+                                 'RandomFanOut')
+
+
+from .visitors.modifiers import ConnectionRuleRenameSymbol  # @IgnorePep8
+from .visitors.queriers import (  # @IgnorePep8
+    ConnectionRuleRequiredDefinitions,
+    ConnectionRuleExpressionExtractor, ConnectionRuleDimensionResolver)
+from .visitors.validators import ConnectionRuleValidator  # @IgnorePep8
+
+
+one_to_one_connection_rule = ConnectionRule(
+    name='one_to_one',
+    standard_library=(ConnectionRule.standard_library_basepath + 'OneToOne'))
+
+all_to_all_connection_rule = ConnectionRule(
+    name='all_to_all',
+    standard_library=(ConnectionRule.standard_library_basepath + 'AllToAll'))
+
+explicit_connection_rule = ConnectionRule(
+    name='explicit',
+    standard_library=(ConnectionRule.standard_library_basepath + 'Explicit'),
+    parameters=[
+        Parameter(dimension=un.dimensionless,
+                  name="destinationIndices"),
+        Parameter(dimension=un.dimensionless,
+                  name="sourceIndices")])
+
+probabilistic_connection_rule = ConnectionRule(
+    name='probabilistic',
+    standard_library=(ConnectionRule.standard_library_basepath +
+                      'Probabilistic'),
+    parameters=[Parameter(dimension=un.dimensionless,
+                          name='probability')])
+
+random_fan_in_connection_rule = ConnectionRule(
+    name='random_fan_in',
+    standard_library=(ConnectionRule.standard_library_basepath +
+                      'RandomFanIn'),
+    parameters=[Parameter(dimension=un.dimensionless,
+                          name='number')])
+
+random_fan_out_connection_rule = ConnectionRule(
+    name='random_fan_out',
+    standard_library=(ConnectionRule.standard_library_basepath +
+                      'RandomFanOut'),
+    parameters=[Parameter(dimension=un.dimensionless,
+                          name='number')])

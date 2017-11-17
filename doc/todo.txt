@@ -1,0 +1,7 @@
+- Add more notes on Document and check getting started for accuracy
+- API reference
+ - Trim down methods documented in API and make sure all have doc strings
+ - Add base classes and general methods (serialize, clone, equals, etc...)
+- Finish off and tidy up serialization
+- Tidy up release notes
+- Write short developer guide

@@ -1,12 +1,19 @@
 language: python
-python:
-  - "2.7"
-# command to install dependencies
+sudo: false
+matrix:
+    include:
+        - python: 2.7
+        - python: 3.4
+        - python: 3.6
+addons:
+  apt:
+    packages:
+    - libhdf5-serial-dev 
 install:
-  - pip install -r requirements.txt --use-mirrors
-  - pip install coveralls --use-mirrors
-# command to run tests, e.g. python setup.py test
+  - pip install -r requirements.txt
+  - pip install coveralls
+  - pip install numpy
 script:
-  nosetests test/unit --with-coverage --cover-package=nineml
+  nosetests test/unittests --with-coverage --cover-package=nineml
 after_success:
   coveralls

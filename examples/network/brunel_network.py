@@ -12,8 +12,12 @@ June 2014
 """
 
 from __future__ import division
-import nineml.user
+from nineml.user import (
+    DynamicsProperties, Population, RandomDistributionProperties,
+    Projection, ConnectionRuleProperties, AnalogPortConnection,
+    EventPortConnection, Network, Selection, Concatenate)
 from nineml.units import ms, mV, nA, unitless, Hz, Mohm
+import ninemlcatalog
 
 
 def create_brunel(g, eta, name=None):
@@ -50,43 +54,43 @@ def create_brunel(g, eta, name=None):
     input_rate = 1000.0 * nu_ext * Cext   # mean input spiking rate
 
     # Parameters
-    neuron_parameters = nineml.user.PropertySet(tau=(tau, ms),
-                                                v_threshold=(theta, mV),
-                                                refractory_period=(2.0, ms),
-                                                v_reset=(10.0, mV),
-                                                R=(1.5, Mohm))  # units??
-    psr_parameters = nineml.user.PropertySet(tau=(tau_syn, ms))
+    neuron_parameters = dict(tau=tau * ms,
+                             v_threshold=theta * mV,
+                             refractory_period=2.0 * ms,
+                             v_reset=10.0 * mV,
+                             R=1.5 * Mohm)  # units??
+    psr_parameters = dict(tau=tau_syn * ms)
 
     # Initial Values
-    v_init = nineml.user.RandomDistributionComponent(
+    v_init = RandomDistributionProperties(
         "uniform_rest_to_threshold",
         ninemlcatalog.load("randomdistribution/Uniform",
-                             'UniformDistribution'),
+                           'UniformDistribution'),
         {'minimum': (0.0, unitless),
          'maximum': (theta, unitless)})
 #     v_init = 0.0
-    neuron_initial_values = {"v": (v_init, mV),
-                             "refractory_end": (0.0, ms)}
-    synapse_initial_values = {"a": (0.0, nA), "b": (0.0, nA)}
-    tpoisson_init = nineml.user.RandomDistributionComponent(
+    neuron_initial_values = {"v": (v_init * mV),
+                             "refractory_end": (0.0 * ms)}
+    synapse_initial_values = {"a": (0.0 * nA), "b": (0.0 * nA)}
+    tpoisson_init = RandomDistributionProperties(
         "exponential_beta",
-        ninemlcatalog.load("randomdistribution/Exponential",
-                             'ExponentialDistribution'),
-        {"rate": (1000.0 / input_rate, unitless)})
+        ninemlcatalog.load('randomdistribution/Exponential',
+                           'ExponentialDistribution'),
+        {"rate": (1000.0 / input_rate * unitless)})
 #     tpoisson_init = 5.0
 
     # Dynamics components
-    celltype = nineml.user.SpikingNodeType(
+    celltype = DynamicsProperties(
         "nrn",
         ninemlcatalog.load('neuron/LeakyIntegrateAndFire',
-                             'LeakyIntegrateAndFire'),
+                           'LeakyIntegrateAndFire'),
         neuron_parameters, initial_values=neuron_initial_values)
-    ext_stim = nineml.user.SpikingNodeType(
+    ext_stim = DynamicsProperties(
         "stim",
         ninemlcatalog.load('input/Poisson', 'Poisson'),
-        nineml.user.PropertySet(rate=(input_rate, Hz)),
+        dict(rate=(input_rate, Hz)),
         initial_values={"t_next": (tpoisson_init, ms)})
-    psr = nineml.user.SynapseType(
+    psr = DynamicsProperties(
         "syn",
         ninemlcatalog.load('postsynapticresponse/Alpha', 'Alpha'),
         psr_parameters,
@@ -99,83 +103,71 @@ def create_brunel(g, eta, name=None):
         '/connectionrule/RandomFanIn', 'RandomFanIn')
 
     # Populations
-    exc_cells = nineml.user.Population("Exc", Ne, celltype, positions=None)
-    inh_cells = nineml.user.Population("Inh", Ni, celltype, positions=None)
-    external = nineml.user.Population("Ext", Ne + Ni, ext_stim, positions=None)
+    exc_cells = Population("Exc", Ne, celltype, positions=None)
+    inh_cells = Population("Inh", Ni, celltype, positions=None)
+    external = Population("Ext", Ne + Ni, ext_stim, positions=None)
 
     # Selections
-    all_cells = nineml.user.Selection(
-        "All", nineml.user.Concatenate(exc_cells, inh_cells))
+    all_cells = Selection(
+        "All", Concatenate((exc_cells, inh_cells)))
 
     # Projections
-    input_prj = nineml.user.Projection(
+    input_prj = Projection(
         "External", external, all_cells,
-        connectivity=nineml.user.ConnectionRuleComponent(
+        connection_rule_properties=ConnectionRuleProperties(
             "OneToOne", one_to_one_class),
         response=psr,
-        plasticity=nineml.user.ConnectionType(
+        plasticity=DynamicsProperties(
             "ExternalPlasticity",
             ninemlcatalog.load("plasticity/Static", 'Static'),
             properties={"weight": (Jext, nA)}),
         port_connections=[
-            nineml.user.PortConnection(
+            EventPortConnection(
+                'pre', 'response', 'spike_output', 'spike'),
+            AnalogPortConnection(
                 "plasticity", "response", "fixed_weight", "weight"),
-            nineml.user.PortConnection(
+            AnalogPortConnection(
                 "response", "destination", "i_synaptic", "i_synaptic")],
         delay=(delay, ms))
 
-    exc_prj = nineml.user.Projection(
+    exc_prj = Projection(
         "Excitation", exc_cells, all_cells,
-        connectivity=nineml.user.ConnectionRuleComponent(
-            "RandomExc", random_fan_in_class, {"number": (Ce, unitless)}),
+        connection_rule_properties=ConnectionRuleProperties(
+            "RandomExc", random_fan_in_class, {"number": (Ce * unitless)}),
         response=psr,
-        plasticity=nineml.user.ConnectionType(
+        plasticity=DynamicsProperties(
             "ExcitatoryPlasticity",
             ninemlcatalog.load("plasticity/Static", 'Static'),
             properties={"weight": (Je, nA)}),
         port_connections=[
-            nineml.user.PortConnection(
+            EventPortConnection(
+                'pre', 'response', 'spike_output', 'spike'),
+            AnalogPortConnection(
                 "plasticity", "response", "fixed_weight", "weight"),
-            nineml.user.PortConnection(
+            AnalogPortConnection(
                 "response", "destination", "i_synaptic", "i_synaptic")],
         delay=(delay, ms))
 
-    inh_prj = nineml.user.Projection(
+    inh_prj = Projection(
         "Inhibition", inh_cells, all_cells,
-        connectivity=nineml.user.ConnectionRuleComponent(
-            "RandomInh", random_fan_in_class, {"number": (Ci, unitless)}),
+        connection_rule_properties=ConnectionRuleProperties(
+            "RandomInh", random_fan_in_class, {"number": (Ci * unitless)}),
         response=psr,
-        plasticity=nineml.user.ConnectionType(
+        plasticity=DynamicsProperties(
             "InhibitoryPlasticity",
             ninemlcatalog.load("plasticity/Static", 'Static'),
             properties={"weight": (Ji, nA)}),
         port_connections=[
-            nineml.user.PortConnection(
+            EventPortConnection(
+                'pre', 'response', 'spike_output', 'spike'),
+            AnalogPortConnection(
                 "plasticity", "response", "fixed_weight", "weight"),
-            nineml.user.PortConnection(
+            AnalogPortConnection(
                 "response", "destination", "i_synaptic", "i_synaptic")],
         delay=(delay, ms))
 
     # Save to document in NineML Catalog
-    network = nineml.user.Network(name if name else "BrunelNetwork")
+    network = Network(name if name else "BrunelNetwork")
     network.add(exc_cells, inh_cells, external, all_cells, input_prj, exc_prj,
                 inh_prj)
     return network
-
-
-if __name__ == "__main__":
-    import ninemlcatalog
-
-    cases = {
-        "SR": {"g": 3, "eta": 2},
-        "SR2": {"g": 2, "eta": 2},
-        "SR3": {"g": 0, "eta": 2},
-        "SIfast": {"g": 6, "eta": 4},
-        "AI": {"g": 5, "eta": 2},
-        "SIslow1": {"g": 4.5, "eta": 0.9},
-        "SIslow2": {"g": 4.5, "eta": 0.95}
-    }
-    for name, params in cases.iteritems():
-        network = create_brunel(**params)
-        ninemlcatalog.save(nineml.Document(*network.elements),
-                           'network/Brunel2000/' + name)

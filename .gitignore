@@ -17,6 +17,7 @@ cover
 *.project
 *.pydevproject
 *.settings
+/examples/Brunel2000/nineml_mechanisms/
 *.pdf
 *.synctex.gz
 .9build
@@ -30,3 +31,6 @@ cover
 .sass-cache
 /_site
 .texlipse
+*.bak
+__pycache__
+*.swp

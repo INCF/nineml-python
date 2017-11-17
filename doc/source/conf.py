@@ -25,9 +25,17 @@
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo',
-              'sphinx.ext.coverage', 'sphinx.ext.pngmath', 'sphinx.ext.autosummary',
-              'sphinx.ext.viewcode',]
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.doctest',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.viewcode',
+              'numpydoc']
+
+# Extension-specific Options
+numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -44,7 +52,7 @@ master_doc = 'index'
 # General information about the project.
 title = project = u'NineML Python library'
 authors = 'Mike Hull, Eilif Muller, Andrew Davison and Tom Close'
-copyright = u'2011-2015, ' + authors
+copyright = u'2011-2017, ' + authors
 base_filename = u'NineMLPythonAPI'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -95,7 +103,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "default" #"sphinx_rtd_theme"
+html_theme = "sphinx_rtd_theme"
 #html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -115,7 +123,7 @@ html_theme = "default" #"sphinx_rtd_theme"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = '_static/images/logo_small.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -188,7 +196,7 @@ latex_documents = [
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-#latex_logo = None
+latex_logo = '_static/images/logo.png'
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.

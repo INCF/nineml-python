@@ -1,19 +1,24 @@
 """
 This file defines the Port classes used in NineML
 
-:copyright: Copyright 2010-2013 by the Python lib9ML team, see AUTHORS.
+:copyright: Copyright 2010-2017 by the NineML Python team, see AUTHORS.
 :license: BSD-3, see LICENSE for details.
 """
+from builtins import object
 from abc import ABCMeta
+import sympy
 from . import BaseALObject
+from operator import add
 from nineml.units import dimensionless
-from nineml.utils import ensure_valid_identifier
-from nineml.exceptions import NineMLRuntimeError
+from nineml.utils import validate_identifier
+from nineml.exceptions import NineMLUsageError
 from .expressions import ExpressionSymbol
 from nineml.base import SendPortBase  # A work around to avoid circular imports
+from nineml.units import Dimension
+from future.utils import with_metaclass
 
 
-class Port(BaseALObject):
+class Port(with_metaclass(ABCMeta, BaseALObject)):
 
     """
     Base class for |AnalogSendPorts|, |AnalogReceivePorts|,
@@ -31,9 +36,8 @@ class Port(BaseALObject):
     single |AnalogSendPort| and |EventSendPort| respectively.
 
     """
-    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
 
-    defining_attributes = ('name',)
+    nineml_attr = ('name',)
 
     def __init__(self, name):
         """ Port Constructor.
@@ -41,9 +45,7 @@ class Port(BaseALObject):
         `name` -- The name of the port, as a `string`
         """
         super(Port, self).__init__()
-        name = name.strip()
-        ensure_valid_identifier(name)
-        self._name = name
+        self._name = validate_identifier(name)
 
     @property
     def name(self):
@@ -54,17 +56,25 @@ class Port(BaseALObject):
         classstring = self.__class__.__name__
         return "{}('{}')".format(classstring, self.name)
 
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        node.attr('name', self.name, **options)
 
-class DimensionedPort(Port, ExpressionSymbol):
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(name=node.attr('name', **options))
+
+
+class DimensionedPort(
+        with_metaclass(ABCMeta,
+                       type('NewBase', (Port, ExpressionSymbol), {}))):
     """DimensionedPort
 
     A |DimensionedPort| is the base class for ports with dimensions (e.g.
     Analog and Property ports).
     """
 
-    defining_attributes = ('name', 'dimension')
-
-    __metaclass__ = ABCMeta  # Ensure abstract base class isn't instantiated
+    nineml_attr = ('name',)
+    nineml_child = {'dimension': Dimension}
 
     def __init__(self, name, dimension=None):
         super(DimensionedPort, self).__init__(name)
@@ -82,8 +92,22 @@ class DimensionedPort(Port, ExpressionSymbol):
 
     def __repr__(self):
         classstring = self.__class__.__name__
+        try:
+            dim_name = self.dimension.name
+        except NineMLUsageError:
+            dim_name = '<unknown>'
         return "{}('{}', dimension='{}')".format(classstring, self.name,
-                                                 self.dimension)
+                                                 dim_name)
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        super(DimensionedPort, self).serialize_node(node, **options)
+        node.attr('dimension', self.dimension.name, **options)
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(
+            name=node.attr('name', **options),
+            dimension=node.visitor.document[node.attr('dimension', **options)])
 
 
 class SendPort(SendPortBase):
@@ -121,6 +145,7 @@ class AnalogPort(DimensionedPort):
     Component. For example, this could be the membrane-voltage into a synapse
     component, or the current provided by a ion-channel.
     """
+    communicates = 'analog'
 
     def type_matches(self, port):
         return isinstance(port, AnalogPort)
@@ -134,6 +159,7 @@ class EventPort(Port):
     notify other components that it had fired; or synapses could receive events
     to notify them to provide current to a post-synaptic neuron.
     """
+    communicates = 'event'
 
     def type_matches(self, port):
         return isinstance(port, AnalogPort)
@@ -148,9 +174,7 @@ class AnalogSendPort(AnalogPort, SendPort):
 
     """
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogsendport(self, **kwargs)
+    nineml_type = 'AnalogSendPort'
 
 
 class AnalogReceivePort(AnalogPort, ReceivePort):
@@ -162,9 +186,7 @@ class AnalogReceivePort(AnalogPort, ReceivePort):
 
     """
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogreceiveport(self, **kwargs)
+    nineml_type = 'AnalogReceivePort'
 
 
 class EventSendPort(EventPort, SendPort):
@@ -175,9 +197,7 @@ class EventSendPort(EventPort, SendPort):
     notify other components that it had fired.
     """
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_eventsendport(self, **kwargs)
+    nineml_type = 'EventSendPort'
 
 
 class EventReceivePort(EventPort, ReceivePort):
@@ -188,9 +208,7 @@ class EventReceivePort(EventPort, ReceivePort):
     to notify them to provide current to a post-synaptic neuron.
     """
 
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_eventreceiveport(self, **kwargs)
+    nineml_type = 'EventReceivePort'
 
 
 class AnalogReducePort(AnalogPort, ReceivePort):
@@ -199,34 +217,48 @@ class AnalogReducePort(AnalogPort, ReceivePort):
     An |AnalogReducePort| represents a collection of continuous inputs to a
     Component from a common type of input that can be reduced into a single
     input. For example, or the currents provided by a collection of
-    ion-channels.
-
-    .. note::
-
-        Currently support ``operator`` s are: ``+``.
+    ion-channels. NB: The only currently supported operators are: ``+``.
 
     """
+    nineml_type = 'AnalogReducePort'
     mode = "reduce"
+    nineml_attr = ('name', 'operator')
+    nineml_child = {'dimension': Dimension}
     _operator_map = {'add': '+', '+': '+', }
+    _to_python_operator = {'+': add}
 
     def __init__(self, name, dimension=None, operator='+'):
-        if operator not in self._operator_map.keys():
+        if operator not in list(self._operator_map.keys()):
             err = ("%s('%s')" + "specified undefined operator: '%s'") %\
                   (self.__class__.__name__, name, str(operator))
-            raise NineMLRuntimeError(err)
+            raise NineMLUsageError(err)
         super(AnalogReducePort, self).__init__(name, dimension)
-        self._operator = operator
-
-    def accept_visitor(self, visitor, **kwargs):
-        """ |VISITATION| """
-        return visitor.visit_analogreduceport(self, **kwargs)
+        self._operator = str(operator)
 
     @property
     def operator(self):
         return self._operator
+
+    @property
+    def python_op(self):
+        return self._to_python_operator[self.operator]
 
     def __repr__(self):
         classstring = self.__class__.__name__
         return ("{}('{}', dimension='{}', op='{}')"
                 .format(classstring, self.name, self.dimension,
                         self.operator))
+
+    def serialize_node(self, node, **options):  # @UnusedVariable
+        super(AnalogReducePort, self).serialize_node(node, **options)
+        node.attr('operator', self.operator, **options)
+
+    def combine_symbols(self, *syms):
+        return reduce(add, (sympy.Symbol(s) for s in syms))
+
+    @classmethod
+    def unserialize_node(cls, node, **options):  # @UnusedVariable
+        return cls(
+            name=node.attr('name', **options),
+            dimension=node.visitor.document[node.attr('dimension', **options)],
+            operator=node.attr('operator', **options))
