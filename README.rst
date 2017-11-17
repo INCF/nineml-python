@@ -4,11 +4,11 @@ NineML Python Library
 .. image:: https://travis-ci.org/INCF/nineml-python.svg?branch=master
    :target: https://travis-ci.org/ICNF/nineml-python
    :alt: Unit Test Status
-.. image:: https://coveralls.io/repos/INCF/nineml-python/badge.svg
-   :target: https://coveralls.io/github/ICNF/nineml-python
+.. image:: https://coveralls.io/repos/github/INCF/nineml-python/badge.svg?branch=master
+   :target: https://coveralls.io/github/INCF/nineml-python?branch=master
    :alt: Unit Test Coverage
-.. image:: https://readthedocs.org/projects/nineml/badge/?version=latest
-   :target: http://nineml.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/nineml-python/badge/?version=latest
+   :target: http://nineml-python.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
 NineML (9ML) is a language for describing the dynamics and connectivity of neuronal
