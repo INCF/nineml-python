@@ -34,3 +34,4 @@ cover
 *.bak
 __pycache__
 *.swp
+/build/
